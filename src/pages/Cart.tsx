@@ -11,19 +11,10 @@ import { Button } from '@/components/ui/button';
 
 const Cart = () => {
   const { cart, removeFromCart, updateQuantity, total, itemCount } = useCart();
+  const navigate = useNavigate();
   
   const handleCheckout = () => {
-    // Generiamo l'URL di checkout diretto di WooCommerce
-    // Formato: sito.it/checkout/?add-to-cart=ID1,ID2&quantity=Q1,Q2
-    const baseUrl = "https://www.lowdistrict.it/checkout/";
-    
-    // Nota: WooCommerce standard supporta un prodotto alla volta via URL, 
-    // ma reindirizzando al carrello con i parametri corretti o usando il checkout diretto
-    // è il modo più sicuro per mantenere le tue impostazioni.
-    
-    // Per ora usiamo il reindirizzamento al carrello del sito che è il più affidabile
-    const cartUrl = "https://www.lowdistrict.it/carrello/";
-    window.location.href = cartUrl;
+    navigate('/checkout');
   };
 
   if (itemCount === 0) {
@@ -34,7 +25,7 @@ const Cart = () => {
           <div className="w-24 h-24 bg-zinc-900 rounded-full flex items-center justify-center mb-6">
             <ShoppingBag size={40} className="text-gray-700" />
           </div>
-          <h1 className="text-3xl font-black uppercase tracking-tighter mb-2">Il carrello è vuoto</h1>
+          <h1 className="text-3xl font-black uppercase tracking-tighter mb-2 italic">Il carrello è vuoto</h1>
           <p className="text-gray-500 mb-8 uppercase text-xs font-bold tracking-widest">Non hai ancora aggiunto nulla</p>
           <Link to="/shop">
             <Button className="bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest px-12 py-6 rounded-none italic">
@@ -87,20 +78,17 @@ const Cart = () => {
             <span className="text-gray-500 font-black uppercase tracking-widest text-xs">Totale Provvisorio</span>
             <span className="text-3xl font-black italic">€{total.toFixed(2)}</span>
           </div>
-          <p className="text-[10px] text-gray-500 uppercase font-bold mb-8 tracking-widest">
-            Spedizioni e tasse calcolate al checkout sul sito ufficiale.
-          </p>
           
           <Button 
             onClick={handleCheckout}
             className="w-full bg-red-600 hover:bg-red-700 text-white py-8 text-xl font-black uppercase tracking-widest rounded-none italic flex items-center justify-center gap-4 shadow-2xl shadow-red-600/20"
           >
-            Vai al Pagamento Sicuro <ArrowRight size={24} />
+            Procedi al Checkout <ArrowRight size={24} />
           </Button>
 
           <div className="mt-6 flex items-center justify-center gap-2 text-gray-500">
             <ShieldCheck size={16} />
-            <span className="text-[9px] font-black uppercase tracking-widest">Pagamento gestito in sicurezza da LowDistrict.it</span>
+            <span className="text-[9px] font-black uppercase tracking-widest">Pagamento sicuro e crittografato</span>
           </div>
         </div>
       </div>

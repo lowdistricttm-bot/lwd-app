@@ -14,3 +14,19 @@ export const wcFetch = async (endpoint: string) => {
   if (!response.ok) throw new Error('Errore nel caricamento dati da WooCommerce');
   return response.json();
 };
+
+export const wcPost = async (endpoint: string, data: any) => {
+  const response = await fetch(`${URL}${endpoint}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Basic ${auth}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Errore durante l\'invio dei dati');
+  }
+  return response.json();
+};
