@@ -12,7 +12,7 @@ const Logo = ({ className, variant = 'white' }: LogoProps) => {
   return (
     <div className={cn("relative flex items-center", className)}>
       <img 
-        src="https://www.lowdistrict.it/wp-content/uploads/logo-low-district.png" 
+        src="https://www.lowdistrict.it/wp-content/uploads/new-logo-header-2025.png" 
         alt="Low District Logo" 
         className={cn(
           "h-full w-auto object-contain transition-all",
