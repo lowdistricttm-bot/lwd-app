@@ -60,7 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const jwtToken = resData.data?.jwt || resData.jwt;
       let userData: User | null = null;
 
-      // 2. Tentativo A: Recupero tramite endpoint "me" (il più preciso)
+      // 2. Tentativo A: Endpoint "me"
       try {
         const meResponse = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/me?JWT=${jwtToken}`);
         if (meResponse.ok) {
@@ -74,11 +74,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             avatar: meData.avatar_urls?.['96'] || `https://api.dicebear.com/7.x/avataaars/svg?seed=${meData.slug}`
           };
         }
-      } catch (e) {
-        console.warn("Metodo 'me' fallito, provo ricerca alternativa...");
-      }
+      } catch (e) {}
 
-      // 3. Tentativo B: Se "me" fallisce, cerchiamo l'utente per l'identificativo usato nel login
+      // 3. Tentativo B: Ricerca per identificativo
       if (!userData) {
         try {
           const searchResponse = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users?search=${encodeURIComponent(cleanUsername)}&JWT=${jwtToken}`);
@@ -96,30 +94,45 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               };
             }
           }
-        } catch (e) {
-          console.warn("Ricerca utente fallita, provo fallback dati login...");
+        } catch (e) {}
+      }
+
+      // 4. Tentativo C: Dati diretti dalla risposta login
+      if (!userData) {
+        const u = resData.data?.user || resData.user;
+        if (u) {
+          userData = {
+            id: u.id || u.ID || Date.now(),
+            username: u.user_login || u.username || cleanUsername,
+            email: u.user_email || u.email || '',
+            nicename: u.display_name || u.user_nicename || cleanUsername,
+            display_name: u.display_name || u.user_nicename || cleanUsername,
+            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.user_login || cleanUsername}`
+          };
         }
       }
 
-      // 4. Tentativo C: Fallback estremo sui dati restituiti direttamente dal login
-      if (!userData && resData.data?.user) {
-        const u = resData.data.user;
+      // 5. PIANO DI EMERGENZA FINALE (Plan D)
+      // Se il login è riuscito (abbiamo il token) ma non troviamo i dati, 
+      // creiamo un profilo locale per non bloccare l'utente.
+      if (!userData && jwtToken) {
+        console.warn("Utilizzo profilo di emergenza locale.");
         userData = {
-          id: u.id || u.ID,
-          username: u.user_login || u.username || cleanUsername,
-          email: u.user_email || u.email || '',
-          nicename: u.display_name || u.user_nicename || cleanUsername,
-          display_name: u.display_name || u.user_nicename || cleanUsername,
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.user_login || cleanUsername}`
+          id: Date.now(), // ID temporaneo
+          username: cleanUsername.split('@')[0],
+          email: cleanUsername.includes('@') ? cleanUsername : '',
+          nicename: cleanUsername.split('@')[0],
+          display_name: cleanUsername.split('@')[0],
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${cleanUsername}`
         };
       }
 
       if (!userData) {
-        throw new Error("Sincronizzazione profilo fallita. Contatta l'assistenza.");
+        throw new Error("Errore critico durante la creazione della sessione.");
       }
 
       saveAuth(jwtToken, userData);
-      showSuccess(`Bentornato, ${userData.display_name}`);
+      showSuccess(`Accesso effettuato come ${userData.display_name}`);
       
     } catch (error: any) {
       console.error('Login Error:', error);
