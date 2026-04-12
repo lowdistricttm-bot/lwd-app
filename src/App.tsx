@@ -20,6 +20,7 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Community from "./pages/Community";
 import Members from "./pages/Members";
+import WPPage from "./pages/WPPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,6 +49,7 @@ const App = () => (
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/checkout" element={<Checkout />} />
+                <Route path="/wp-portal" element={<WPPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

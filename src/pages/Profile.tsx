@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
-import { Settings as SettingsIcon, MapPin, User as UserIcon, MessageSquare, Loader2, RefreshCw, Package, ChevronRight, Heart, Car, Ticket, Camera } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Settings as SettingsIcon, MapPin, User as UserIcon, MessageSquare, Loader2, RefreshCw, Package, ChevronRight, Heart, Car, Ticket, Camera, ExternalLink } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
@@ -27,9 +27,9 @@ const Profile = () => {
   const updateAvatarMutation = useUpdateAvatar();
   
   const location = useLocation();
+  const navigate = useNavigate();
   const defaultAvatar = "https://www.lowdistrict.it/wp-content/uploads/placeholder.png";
 
-  // Estrazione dati XProfile
   const xProfileFields = useMemo(() => {
     if (!memberData?.xprofile?.groups) return {};
     const fields: Record<string, string> = {};
@@ -41,14 +41,12 @@ const Profile = () => {
     return fields;
   }, [memberData]);
 
-  // Filtro post personali
   const myActivities = useMemo(() => {
     const allPosts = activityData?.pages.flat() || [];
     if (!user?.id) return [];
     return allPosts.filter((post: any) => parseInt(post.user_id) === user.id);
   }, [activityData, user?.id]);
 
-  // SEPARAZIONE ORDINI E CANDIDATURE
   const { merchOrders, eventApplications } = useMemo(() => {
     const orders = allOrders || [];
     const merch = orders.filter((o: any) => 
@@ -86,12 +84,6 @@ const Profile = () => {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
-
-    if (!file.type.startsWith('image/')) {
-      showError("Per favore seleziona un'immagine valida");
-      return;
-    }
-
     try {
       await updateAvatarMutation.mutateAsync({ userId: user.id, file });
       showSuccess("Foto profilo aggiornata!");
@@ -99,6 +91,10 @@ const Profile = () => {
     } catch (err: any) {
       showError(err.message || "Errore durante il caricamento");
     }
+  };
+
+  const openWpPortal = (title: string, path: string) => {
+    navigate('/wp-portal', { state: { title, url: `https://www.lowdistrict.it/${path}` } });
   };
 
   if (isLoading) {
@@ -134,16 +130,9 @@ const Profile = () => {
       <Navbar />
       
       <div className="pt-24 px-6 max-w-2xl mx-auto">
-        {/* Header Profilo */}
         <div className="flex items-start justify-between mb-8">
           <div className="relative group cursor-pointer" onClick={handleAvatarClick}>
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              className="hidden" 
-              accept="image/*" 
-              onChange={handleFileChange} 
-            />
+            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
             <div className="w-24 h-24 rounded-[2rem] bg-zinc-900 border-2 border-red-600 p-1 rotate-3 flex items-center justify-center overflow-hidden transition-transform group-hover:scale-105">
               {updateAvatarMutation.isPending ? (
                 <Loader2 className="animate-spin text-red-600" size={32} />
@@ -161,17 +150,10 @@ const Profile = () => {
                 <Camera className="text-white" size={24} />
               </div>
             </div>
-            <div className="absolute -bottom-2 -right-2 bg-red-600 text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-lg">
-              MEMBER
-            </div>
           </div>
           
           <div className="flex gap-2">
-            <button 
-              onClick={handleRefresh} 
-              disabled={isRefreshing}
-              className="p-3 bg-zinc-900 border border-white/5 rounded-2xl hover:bg-zinc-800 transition-all disabled:opacity-50"
-            >
+            <button onClick={handleRefresh} disabled={isRefreshing} className="p-3 bg-zinc-900 border border-white/5 rounded-2xl hover:bg-zinc-800 transition-all">
               <RefreshCw size={20} className={cn("text-gray-400", isRefreshing && "animate-spin text-red-600")} />
             </button>
             <Link to="/settings" className="p-3 bg-zinc-900 border border-white/5 rounded-2xl hover:bg-zinc-800 transition-all">
@@ -180,7 +162,6 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Info Utente */}
         <div className="mb-8">
           <h1 className="text-3xl font-black tracking-tighter uppercase mb-1 italic">{user.display_name}</h1>
           <p className="text-red-600 text-xs font-black uppercase tracking-widest mb-4">@{user.username}</p>
@@ -195,9 +176,24 @@ const Profile = () => {
               <span>{xProfileFields['Auto'] || xProfileFields['Modello Auto'] || 'Nessun veicolo nel garage'}</span>
             </div>
           </div>
+
+          {/* Link Rapidi al Sito */}
+          <div className="grid grid-cols-2 gap-3 mb-8">
+            <button 
+              onClick={() => openWpPortal("Modifica Profilo", "mio-account/edit-address/")}
+              className="flex items-center justify-center gap-2 p-3 bg-zinc-900 border border-white/5 text-[9px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all italic"
+            >
+              <ExternalLink size={12} /> Dati Spedizione
+            </button>
+            <button 
+              onClick={() => openWpPortal("I Miei Ordini", "mio-account/orders/")}
+              className="flex items-center justify-center gap-2 p-3 bg-zinc-900 border border-white/5 text-[9px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all italic"
+            >
+              <ExternalLink size={12} /> Storico Ordini
+            </button>
+          </div>
         </div>
 
-        {/* Statistiche Personali */}
         <div className="grid grid-cols-3 gap-2 py-6 border-y border-white/5 mb-8">
           <div className="text-center border-r border-white/5">
             <p className="font-black text-xl tracking-tighter italic">{myActivities.length}</p>
@@ -213,38 +209,12 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="flex justify-between mb-8 border-b border-white/5">
-          <button 
-            onClick={() => setActiveTab('activity')}
-            className={cn(
-              "pb-4 text-[9px] font-black uppercase tracking-widest transition-all flex-1",
-              activeTab === 'activity' ? "border-b-2 border-red-600 text-white" : "text-gray-600"
-            )}
-          >
-            Bacheca
-          </button>
-          <button 
-            onClick={() => setActiveTab('orders')}
-            className={cn(
-              "pb-4 text-[9px] font-black uppercase tracking-widest transition-all flex-1",
-              activeTab === 'orders' ? "border-b-2 border-red-600 text-white" : "text-gray-600"
-            )}
-          >
-            Ordini
-          </button>
-          <button 
-            onClick={() => setActiveTab('applications')}
-            className={cn(
-              "pb-4 text-[9px] font-black uppercase tracking-widest transition-all flex-1",
-              activeTab === 'applications' ? "border-b-2 border-red-600 text-white" : "text-gray-600"
-            )}
-          >
-            Candidature
-          </button>
+          <button onClick={() => setActiveTab('activity')} className={cn("pb-4 text-[9px] font-black uppercase tracking-widest transition-all flex-1", activeTab === 'activity' ? "border-b-2 border-red-600 text-white" : "text-gray-600")}>Bacheca</button>
+          <button onClick={() => setActiveTab('orders')} className={cn("pb-4 text-[9px] font-black uppercase tracking-widest transition-all flex-1", activeTab === 'orders' ? "border-b-2 border-red-600 text-white" : "text-gray-600")}>Ordini</button>
+          <button onClick={() => setActiveTab('applications')} className={cn("pb-4 text-[9px] font-black uppercase tracking-widest transition-all flex-1", activeTab === 'applications' ? "border-b-2 border-red-600 text-white" : "text-gray-600")}>Candidature</button>
         </div>
 
-        {/* Contenuto Tab */}
         <div className="min-h-[300px]">
           {activeTab === 'activity' && (
             <div className="space-y-6">
@@ -264,10 +234,7 @@ const Profile = () => {
                       </span>
                       <Heart size={14} className="text-gray-700" />
                     </div>
-                    <div 
-                      className="text-sm text-gray-300 prose prose-invert max-w-none line-clamp-4 activity-content"
-                      dangerouslySetInnerHTML={{ __html: post.content }}
-                    />
+                    <div className="text-sm text-gray-300 prose prose-invert max-w-none line-clamp-4 activity-content" dangerouslySetInnerHTML={{ __html: post.content }} />
                   </div>
                 ))
               )}
@@ -287,24 +254,14 @@ const Profile = () => {
                 merchOrders.map((order: any) => (
                   <div key={order.id} className="bg-zinc-900/50 border border-white/5 p-4 flex items-center gap-4 group hover:border-white/10 transition-all">
                     <div className="w-12 h-12 shrink-0 overflow-hidden bg-zinc-800 rounded-xl">
-                      <img 
-                        src={order.line_items[0]?.image?.src || defaultAvatar} 
-                        alt="" 
-                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" 
-                      />
+                      <img src={order.line_items[0]?.image?.src || defaultAvatar} alt="" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <h3 className="font-black text-xs uppercase tracking-tight italic truncate max-w-[150px]">
-                          {order.line_items[0]?.name}
-                        </h3>
-                        <span className="text-[8px] font-black uppercase px-2 py-0.5 bg-white/5 text-gray-400">
-                          {order.status}
-                        </span>
+                        <h3 className="font-black text-xs uppercase tracking-tight italic truncate max-w-[150px]">{order.line_items[0]?.name}</h3>
+                        <span className="text-[8px] font-black uppercase px-2 py-0.5 bg-white/5 text-gray-400">{order.status}</span>
                       </div>
-                      <p className="text-[9px] text-gray-500 font-bold uppercase mt-1">
-                        #{order.id} • €{order.total}
-                      </p>
+                      <p className="text-[9px] text-gray-500 font-bold uppercase mt-1">#{order.id} • €{order.total}</p>
                     </div>
                     <ChevronRight size={16} className="text-gray-700" />
                   </div>
@@ -326,27 +283,16 @@ const Profile = () => {
                 eventApplications.map((app: any) => (
                   <div key={app.id} className="bg-zinc-900/50 border border-red-600/10 p-4 flex items-center gap-4 group hover:border-red-600/30 transition-all">
                     <div className="w-12 h-12 shrink-0 overflow-hidden bg-zinc-800 rounded-xl">
-                      <img 
-                        src={app.line_items[0]?.image?.src || defaultAvatar} 
-                        alt="" 
-                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" 
-                      />
+                      <img src={app.line_items[0]?.image?.src || defaultAvatar} alt="" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <h3 className="font-black text-xs uppercase tracking-tight italic truncate max-w-[150px]">
-                          {app.line_items[0]?.name}
-                        </h3>
-                        <span className={cn(
-                          "text-[8px] font-black uppercase px-2 py-0.5",
-                          app.status === 'completed' ? "bg-green-500/10 text-green-500" : "bg-amber-500/10 text-amber-500"
-                        )}>
+                        <h3 className="font-black text-xs uppercase tracking-tight italic truncate max-w-[150px]">{app.line_items[0]?.name}</h3>
+                        <span className={cn("text-[8px] font-black uppercase px-2 py-0.5", app.status === 'completed' ? "bg-green-500/10 text-green-500" : "bg-amber-500/10 text-amber-500")}>
                           {app.status === 'completed' ? 'Approvato' : 'In Revisione'}
                         </span>
                       </div>
-                      <p className="text-[9px] text-gray-500 font-bold uppercase mt-1">
-                        Candidatura #{app.id} • {format(new Date(app.date_created), 'dd MMM yyyy', { locale: it })}
-                      </p>
+                      <p className="text-[9px] text-gray-500 font-bold uppercase mt-1">Candidatura #{app.id} • {format(new Date(app.date_created), 'dd MMM yyyy', { locale: it })}</p>
                     </div>
                     <ChevronRight size={16} className="text-gray-700" />
                   </div>
@@ -357,17 +303,12 @@ const Profile = () => {
         </div>
 
         <div className="mt-12">
-          <Button 
-            onClick={logout}
-            variant="outline" 
-            className="w-full border-white/10 text-gray-500 hover:text-red-600 hover:border-red-600/50 font-black uppercase tracking-widest py-6 rounded-none italic"
-          >
+          <Button onClick={logout} variant="outline" className="w-full border-white/10 text-gray-500 hover:text-red-600 hover:border-red-600/50 font-black uppercase tracking-widest py-6 rounded-none italic">
             Disconnetti Account
           </Button>
         </div>
       </div>
       <BottomNav />
-      
       <style>{`
         .activity-content a { color: #ef4444; font-weight: 900; }
         .activity-content img { border-radius: 0.5rem; margin-top: 0.5rem; }
