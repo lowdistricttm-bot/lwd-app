@@ -2,7 +2,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./globals.css";
 
-// Registrazione Service Worker per PWA e Notifiche Push
+// Registrazione Service Worker per PWA
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
