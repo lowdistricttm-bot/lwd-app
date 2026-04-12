@@ -1,46 +1,38 @@
 import { useQuery } from "@tanstack/react-query";
 
 const BASE_URL = "https://www.lowdistrict.it/wp-json";
-const MEMBERS_CACHE_KEY = 'ld_members_directory';
 
 export const useBpActivity = () => {
   return useQuery({
     queryKey: ['bp-activity'],
     queryFn: async () => {
       const token = localStorage.getItem('ld_auth_token');
-      
-      if (!token) {
-        throw new Error("Effettua l'accesso per vedere la bacheca");
-      }
+      if (!token) throw new Error("Effettua l'accesso");
 
-      const url = `${BASE_URL}/buddypress/v1/activity?per_page=20`;
-      
+      // Proviamo prima con l'header standard (più sicuro)
       try {
-        const response = await fetch(url, { 
+        const response = await fetch(`${BASE_URL}/buddypress/v1/activity?per_page=20`, { 
           method: 'GET',
           headers: { 
             'Accept': 'application/json',
-            'Authorization': `Bearer ${token}`,
-            // Alcuni server bloccano 'Authorization', proviamo con un header alternativo
-            'X-Authorization': `Bearer ${token}`
-          },
-          mode: 'cors'
+            'Authorization': `Bearer ${token}`
+          }
         });
         
-        const data = await response.json();
+        if (response.status === 401 || response.status === 403 || response.status === 400) {
+          // Se fallisce con errore di autorizzazione, proviamo il fallback con parametro URL
+          const fallbackRes = await fetch(`${BASE_URL}/buddypress/v1/activity?per_page=20&JWT=${token}`);
+          if (!fallbackRes.ok) throw new Error(`Errore: ${fallbackRes.status}`);
+          return await fallbackRes.json();
+        }
 
-        if (!response.ok) {
-          const error: any = new Error(data.message || `Errore Server: ${response.status}`);
-          error.status = response.status;
-          throw error;
-        }
-        
-        return data;
+        if (!response.ok) throw new Error(`Errore: ${response.status}`);
+        return await response.json();
       } catch (err: any) {
-        if (err.name === 'TypeError' && err.message === 'Failed to fetch') {
-          throw new Error("Errore di rete o CORS. Verifica che il server accetti chiamate esterne.");
-        }
-        throw err;
+        // Se è un errore di rete (CORS), tentiamo l'ultima spiaggia: il parametro URL
+        const lastRes = await fetch(`${BASE_URL}/buddypress/v1/activity?per_page=20&JWT=${token}`);
+        if (!lastRes.ok) throw new Error("Il server rifiuta la connessione (CORS)");
+        return await lastRes.json();
       }
     },
     staleTime: 1000 * 30,
@@ -53,24 +45,11 @@ export const useBpMembers = (perPage = 100) => {
     queryKey: ['bp-members', perPage],
     queryFn: async () => {
       const token = localStorage.getItem('ld_auth_token');
-      const url = `${BASE_URL}/buddypress/v1/members?per_page=${perPage}&type=active`;
-      
-      const response = await fetch(url, {
-        headers: { 
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`,
-          'X-Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) throw new Error("Errore sincronizzazione membri");
+      const url = `${BASE_URL}/buddypress/v1/members?per_page=${perPage}&type=active&JWT=${token}`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Errore membri");
       return response.json();
     },
     staleTime: 1000 * 60 * 10,
   });
-};
-
-export const getCachedMembers = () => {
-  const cached = localStorage.getItem(MEMBERS_CACHE_KEY);
-  return cached ? JSON.parse(cached) : null;
 };
