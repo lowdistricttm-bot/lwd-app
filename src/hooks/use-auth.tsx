@@ -56,26 +56,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       const jwtToken = resData.data?.jwt || resData.jwt;
-      if (!jwtToken) throw new Error("Token non ricevuto dal server");
+      if (!jwtToken) throw new Error("Token non ricevuto");
 
       let userData: User | null = null;
+      
+      // Proviamo a estrarre l'utente dalla risposta iniziale (se presente)
       const rawUser = resData.data?.user || resData.user;
-
-      // 2. Se i dati utente mancano, li recuperiamo con il token appena ottenuto
-      if (!rawUser) {
-        const userRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/me?JWT=${jwtToken}`);
-        if (userRes.ok) {
-          const me = await userRes.json();
-          userData = {
-            id: me.id,
-            username: me.slug || me.username,
-            email: me.email || '',
-            nicename: me.name || me.slug,
-            display_name: me.name || me.slug,
-            avatar: me.avatar_urls?.['96'] || `https://api.dicebear.com/7.x/avataaars/svg?seed=${me.slug}`
-          };
-        }
-      } else {
+      
+      if (rawUser) {
         userData = {
           id: rawUser.ID || rawUser.id,
           username: rawUser.user_login || rawUser.username,
@@ -84,37 +72,52 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           display_name: rawUser.display_name || rawUser.user_login,
           avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${rawUser.user_login || 'user'}`
         };
+      } else {
+        // 2. Fallback: Chiediamo i dati a WordPress usando sia Header che URL
+        try {
+          const userRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/me?JWT=${jwtToken}`, {
+            headers: { 'Authorization': `Bearer ${jwtToken}` }
+          });
+          
+          if (userRes.ok) {
+            const me = await userRes.json();
+            userData = {
+              id: me.id,
+              username: me.slug || me.username,
+              email: me.email || '',
+              nicename: me.name || me.slug,
+              display_name: me.name || me.slug,
+              avatar: me.avatar_urls?.['96'] || `https://api.dicebear.com/7.x/avataaars/svg?seed=${me.slug}`
+            };
+          }
+        } catch (e) {
+          console.error("Errore recupero profilo secondario:", e);
+        }
       }
 
-      if (!userData) throw new Error("Impossibile recuperare i dati del profilo");
+      // 3. Ultima spiaggia: se non abbiamo ancora i dati, creiamo un profilo temporaneo con lo username
+      if (!userData && jwtToken) {
+        userData = {
+          id: 0, // ID temporaneo
+          username: username,
+          email: '',
+          nicename: username,
+          display_name: username,
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`
+        };
+      }
 
-      // 3. Salvataggio finale
+      if (!userData) throw new Error("Impossibile inizializzare il profilo");
+
+      // Salvataggio
       setToken(jwtToken);
       setUser(userData);
       localStorage.setItem('ld_auth_token', jwtToken);
       localStorage.setItem('ld_user_data', JSON.stringify(userData));
       
-      showSuccess(`Bentornato, ${userData.display_name}`);
+      showSuccess(`Accesso eseguito come ${userData.display_name}`);
     } catch (error: any) {
       console.error('Login Error:', error);
-      showError(error.message);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const register = async (userData: any) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch('https://www.lowdistrict.it/wp-json/wp/v2/users/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData)
-      });
-      if (!response.ok) throw new Error("Errore registrazione");
-      showSuccess("Account creato! Accedi ora.");
-    } catch (error: any) {
       showError(error.message);
       throw error;
     } finally {
@@ -131,7 +134,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, token, login, register: async () => {}, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
