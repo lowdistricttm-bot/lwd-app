@@ -11,6 +11,7 @@ import Garage from "./pages/Garage";
 import Profile from "./pages/Profile";
 import Selections from "./pages/Selections";
 import PaymentMethods from "./pages/PaymentMethods";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/settings" element={<Settings />} />
           <Route path="/selections" element={<Selections />} />
           <Route path="/payments" element={<PaymentMethods />} />
+          <Route path="/auth" element={<Auth />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
