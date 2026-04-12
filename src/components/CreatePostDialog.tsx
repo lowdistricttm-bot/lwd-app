@@ -32,7 +32,10 @@ const CreatePostDialog = () => {
       setOpen(false);
       setContent("");
     } catch (err: any) {
-      showError("Errore durante la pubblicazione.");
+      // Mostriamo l'errore specifico se disponibile
+      const errorMsg = err.message || "Errore durante la pubblicazione.";
+      showError(errorMsg);
+      console.error("Post creation failed:", err);
     }
   };
 

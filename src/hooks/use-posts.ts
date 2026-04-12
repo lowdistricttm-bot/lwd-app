@@ -11,7 +11,10 @@ export const usePosts = () => {
         .order('created_at', { ascending: false })
         .range(pageParam, pageParam + 9);
 
-      if (error) throw error;
+      if (error) {
+        console.error("[Supabase Fetch Error]:", error);
+        throw error;
+      }
       return data || [];
     },
     initialPageParam: 0,
@@ -37,7 +40,10 @@ export const useCreatePost = () => {
         .insert([newPost])
         .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("[Supabase Insert Error]:", error);
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
