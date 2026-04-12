@@ -1,20 +1,17 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
-import { useBpMembers, getCachedMembers } from '@/hooks/use-buddypress';
-import { ChevronLeft, Loader2, Search, UserPlus, RefreshCw, ShieldCheck } from 'lucide-react';
+import { useBpMembers } from '@/hooks/use-buddypress';
+import { ChevronLeft, Loader2, Search, UserPlus, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { format } from 'date-fns';
-import { it } from 'date-fns/locale';
 
 const Members = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const { data: members, isLoading, isFetching, refetch } = useBpMembers(100);
-  const cacheInfo = getCachedMembers();
 
   const filteredMembers = members?.filter((m: any) => 
     m.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -33,12 +30,7 @@ const Members = () => {
             </button>
             <div>
               <h1 className="text-3xl font-black tracking-tighter uppercase italic">Directory</h1>
-              {cacheInfo && (
-                <p className="text-[8px] text-gray-500 font-black uppercase tracking-widest flex items-center gap-1">
-                  <ShieldCheck size={10} className="text-green-500" /> 
-                  Sincronizzati: {cacheInfo.count} utenti • {format(new Date(cacheInfo.lastSync), 'HH:mm', { locale: it })}
-                </p>
-              )}
+              <p className="text-[8px] text-gray-500 font-black uppercase tracking-widest">Membri della Community</p>
             </div>
           </div>
           <button 
@@ -86,7 +78,6 @@ const Members = () => {
                   <div>
                     <h3 className="font-black text-sm uppercase italic leading-none mb-1">{member.name}</h3>
                     <p className="text-[10px] text-red-600 font-black uppercase tracking-widest mb-1">@{member.user_login}</p>
-                    {/* Qui BuddyPress inserisce i campi XProfile se popolati */}
                     <p className="text-[9px] text-gray-500 font-bold uppercase">
                       {member.latest_update?.status ? member.latest_update.status.replace(/<[^>]*>?/gm, '').substring(0, 30) + '...' : 'Membro Attivo'}
                     </p>
