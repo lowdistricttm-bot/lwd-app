@@ -2,51 +2,65 @@
 
 import React from 'react';
 import Navbar from '@/components/Navbar';
+import Stories from '@/components/Stories';
 import Hero from '@/components/Hero';
 import FeaturedProducts from '@/components/FeaturedProducts';
+import GaragePreview from '@/components/GaragePreview';
 import EventsSection from '@/components/EventsSection';
 import Footer from '@/components/Footer';
+import BottomNav from '@/components/BottomNav';
 import { MadeWithDyad } from "@/components/made-with-dyad";
 
 const Index = () => {
   return (
-    <main className="min-h-screen bg-black text-white selection:bg-red-600 selection:text-white">
+    <main className="min-h-screen bg-black text-white selection:bg-red-600 selection:text-white pb-20 md:pb-0">
       <Navbar />
+      
+      {/* Mobile Header Spacer */}
+      <div className="h-16 md:hidden"></div>
+      
+      <Stories />
+      
       <Hero />
       
-      {/* Brand Philosophy Section */}
-      <section className="py-24 bg-black px-6 border-y border-white/5">
-        <div className="max-w-7xl mx-auto text-center">
-          <h2 className="text-4xl md:text-7xl font-black tracking-tighter mb-8">
-            RESPECT THE <span className="text-red-600 italic">FITMENT</span>
-          </h2>
-          <p className="text-gray-400 text-xl max-w-3xl mx-auto font-light leading-relaxed">
-            Low District nasce dalla passione per le auto rasoterra, i cerchi a filo e la cura maniacale del dettaglio. 
-            Siamo più di un brand, siamo il punto di riferimento per chi vive la strada a pochi centimetri dall'asfalto.
-          </p>
+      {/* Quick Stats / Brand Bar */}
+      <div className="bg-red-600 py-4 overflow-hidden whitespace-nowrap">
+        <div className="flex animate-marquee gap-12 items-center">
+          {[1,2,3,4,5].map((i) => (
+            <span key={i} className="text-white font-black text-2xl tracking-tighter italic uppercase">
+              Low District • Respect the Fitment • Static vs Air • Low District •
+            </span>
+          ))}
         </div>
-      </section>
+      </div>
 
+      <GaragePreview />
+      
       <FeaturedProducts />
       
-      {/* Full Width Image Break */}
-      <section className="h-[60vh] w-full relative overflow-hidden">
-        <img 
-          src="https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&q=80&w=2070" 
-          alt="Stance Detail" 
-          className="w-full h-full object-cover grayscale"
-        />
-        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-          <div className="text-center">
-            <h3 className="text-white text-5xl md:text-8xl font-black tracking-tighter opacity-20">LOW & SLOW</h3>
-          </div>
-        </div>
-      </section>
-
       <EventsSection />
       
       <Footer />
+      
+      <BottomNav />
       <MadeWithDyad />
+
+      <style>{`
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+          animation: marquee 20s linear infinite;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </main>
   );
 };
