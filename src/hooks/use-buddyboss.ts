@@ -10,15 +10,27 @@ export const useBbActivity = () => {
   return useQuery({
     queryKey: ['bb-activity'],
     queryFn: async () => {
-      const response = await fetch(`${URL}/activity?per_page=20&display=full`, {
-        headers: {
-          'Authorization': `Basic ${auth}`,
-          'Content-Type': 'application/json'
+      try {
+        const response = await fetch(`${URL}/activity?per_page=10`, {
+          headers: {
+            'Authorization': `Basic ${auth}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('BuddyBoss API Error:', errorText);
+          throw new Error(`Errore API: ${response.status}`);
         }
-      });
-      if (!response.ok) throw new Error('Errore nel caricamento della bacheca');
-      return response.json();
+        
+        return response.json();
+      } catch (err) {
+        console.error('Fetch Error:', err);
+        throw err;
+      }
     },
-    staleTime: 1000 * 60 * 2, // 2 minuti
+    staleTime: 1000 * 60 * 2,
+    retry: 1
   });
 };
