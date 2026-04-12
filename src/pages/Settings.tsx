@@ -4,19 +4,27 @@ import React from 'react';
 import { ChevronLeft, User, Shield, CreditCard, Bell, HelpCircle, ListChecks, Languages } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import NotificationToggle from '@/components/NotificationToggle';
-import { useTranslation } from '@/hooks/use-translation';
+import { useTranslation, Language } from '@/hooks/use-translation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const languageNames: Record<Language, string> = {
+  it: 'Italiano', en: 'English', fr: 'Français', de: 'Deutsch', es: 'Español',
+  pt: 'Português', nl: 'Nederlands', pl: 'Polski', ro: 'Română', sv: 'Svenska',
+  da: 'Dansk', fi: 'Suomi', el: 'Ελληνικά', hu: 'Magyar', cs: 'Čeština',
+  bg: 'Български', sk: 'Slovenčina', hr: 'Hrvatski', lt: 'Lietuvių', sl: 'Slovenščina',
+  lv: 'Latviešu', et: 'Eesti', mt: 'Malti', ga: 'Gaeilge'
+};
 
 const Settings = () => {
   const navigate = useNavigate();
   const { language, setLanguage, t } = useTranslation();
 
   const sections = [
-    { icon: User, label: t.settings.account, desc: 'Gestisci i tuoi dati personali', href: '/profile' },
-    { icon: ListChecks, label: t.settings.selections, desc: 'Stato candidature eventi', href: '/selections' },
-    { icon: CreditCard, label: t.settings.payments, desc: 'Metodi di pagamento salvati', href: '/payments' },
-    { icon: Shield, label: 'Privacy', desc: 'Sicurezza e permessi', href: '#' },
-    { icon: HelpCircle, label: 'Supporto', desc: 'Centro assistenza e FAQ', href: '#' },
+    { icon: User, label: t.settings.account, desc: 'Account details', href: '/profile' },
+    { icon: ListChecks, label: t.settings.selections, desc: 'Event applications', href: '/selections' },
+    { icon: CreditCard, label: t.settings.payments, desc: 'Payment methods', href: '/payments' },
+    { icon: Shield, label: 'Privacy', desc: 'Security & Permissions', href: '#' },
+    { icon: HelpCircle, label: 'Support', desc: 'Help center & FAQ', href: '#' },
   ];
 
   return (
@@ -29,7 +37,6 @@ const Settings = () => {
       </div>
 
       <div className="p-6 space-y-8">
-        {/* Selettore Lingua */}
         <section>
           <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">{t.settings.language}</h2>
           <div className="flex items-center justify-between p-4 bg-zinc-900/50 border border-white/5 rounded-2xl">
@@ -37,15 +44,16 @@ const Settings = () => {
               <div className="p-2 bg-white/5 rounded-xl">
                 <Languages size={20} className="text-gray-400" />
               </div>
-              <p className="text-sm font-bold text-white">{language === 'it' ? 'Italiano' : 'English'}</p>
+              <p className="text-sm font-bold text-white">{languageNames[language]}</p>
             </div>
-            <Select value={language} onValueChange={(val: any) => setLanguage(val)}>
-              <SelectTrigger className="w-[120px] bg-zinc-800 border-none text-xs font-bold uppercase tracking-widest">
+            <Select value={language} onValueChange={(val: Language) => setLanguage(val)}>
+              <SelectTrigger className="w-[140px] bg-zinc-800 border-none text-xs font-bold uppercase tracking-widest">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-900 border-white/10 text-white">
-                <SelectItem value="it">Italiano</SelectItem>
-                <SelectItem value="en">English</SelectItem>
+              <SelectContent className="bg-zinc-900 border-white/10 text-white max-h-[300px]">
+                {(Object.keys(languageNames) as Language[]).map((lang) => (
+                  <SelectItem key={lang} value={lang}>{languageNames[lang]}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
