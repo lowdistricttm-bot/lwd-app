@@ -54,12 +54,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }),
       });
 
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Il server ha risposto con un formato non valido (HTML). Verifica i Permalink su WordPress.");
+      const text = await response.text();
+      let data;
+      
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        console.error("Server response was not JSON:", text);
+        throw new Error("Il server ha risposto con un formato non valido. Verifica i Permalink su WordPress.");
       }
-
-      const data = await response.json();
 
       if (response.ok && data.token) {
         const userData = {
@@ -91,7 +94,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const register = async (userData: any) => {
     setIsLoading(true);
     try {
-      // Registrazione tramite API standard WP
       const response = await fetch('https://www.lowdistrict.it/wp-json/wp/v2/users/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
