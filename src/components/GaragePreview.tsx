@@ -24,7 +24,6 @@ const GaragePreview = () => {
   const [likedPosts, setLikedPosts] = useState<Record<number, boolean>>({});
   const observerTarget = useRef(null);
 
-  // Filtriamo i post per ID per evitare duplicati visivi
   const allPosts = useMemo(() => {
     const posts = data?.pages.flat() || [];
     const uniquePosts = [];
@@ -46,10 +45,7 @@ const GaragePreview = () => {
           fetchNextPage();
         }
       },
-      { 
-        threshold: 0.1,
-        rootMargin: '600px' // Carichiamo ancora più in anticipo
-      }
+      { threshold: 0.1, rootMargin: '400px' }
     );
 
     if (observerTarget.current) {
@@ -142,26 +138,9 @@ const GaragePreview = () => {
                 <div className="px-4 pb-4">
                   <div 
                     className="activity-content text-sm leading-relaxed text-gray-300 prose prose-invert max-w-none break-words"
-                    dangerouslySetInnerHTML={{ __html: post.content }}
+                    dangerouslySetInnerHTML={{ __html: post.content?.rendered || post.content }}
                   />
                 </div>
-
-                {post.media && post.media.length > 0 && (
-                  <div className={cn(
-                    "grid gap-1 mb-2",
-                    post.media.length === 1 ? "grid-cols-1" : "grid-cols-2"
-                  )}>
-                    {post.media.map((item: any, idx: number) => (
-                      <div key={idx} className="aspect-square bg-zinc-800 overflow-hidden">
-                        <img 
-                          src={item.url || item} 
-                          alt="Post media" 
-                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
 
                 <div className="px-4 py-4 flex items-center justify-between border-t border-white/5">
                   <div className="flex items-center gap-6">
@@ -186,7 +165,7 @@ const GaragePreview = () => {
           {isFetchingNextPage && (
             <div className="flex flex-col items-center gap-2">
               <Loader2 className="animate-spin text-red-600" size={24} />
-              <span className="text-[8px] font-black uppercase tracking-widest text-gray-600">Caricamento cronologia...</span>
+              <span className="text-[8px] font-black uppercase tracking-widest text-gray-600">Caricamento...</span>
             </div>
           )}
         </div>
@@ -197,8 +176,7 @@ const GaragePreview = () => {
           width: 100%;
           height: auto;
           border-radius: 1rem;
-          margin-top: 1rem;
-          margin-bottom: 1rem;
+          margin: 1rem 0;
           border: 1px solid rgba(255, 255, 255, 0.05);
         }
         .activity-content a {

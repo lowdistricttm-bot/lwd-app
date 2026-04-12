@@ -6,9 +6,10 @@ export const useBpActivity = (userId?: number) => {
   return useInfiniteQuery({
     queryKey: ['bp-activity', userId],
     queryFn: async ({ pageParam = 1 }) => {
-      // Usiamo il token nell'URL per evitare problemi di header su mobile
       const token = localStorage.getItem('ld_auth_token');
-      let url = `${BASE_URL}/lowdistrict/v1/activity?page=${pageParam}&per_page=20`;
+      // Utilizziamo l'endpoint standard di BuddyPress che è più affidabile
+      let url = `${BASE_URL}/buddypress/v1/activity?page=${pageParam}&per_page=20&display_comments=threaded`;
+      
       if (userId) url += `&user_id=${userId}`;
       if (token) url += `&JWT=${token}`;
       
@@ -62,7 +63,6 @@ export const useUpdateAvatar = () => {
       formData.append('file', file);
       formData.append('action', 'bp_avatar_upload');
 
-      // Passiamo il JWT nell'URL per bypassare i blocchi degli header
       const response = await fetch(`${BASE_URL}/buddypress/v1/members/${userId}/avatar?JWT=${token}`, {
         method: 'POST',
         body: formData,
@@ -70,7 +70,7 @@ export const useUpdateAvatar = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: "Il server ha rifiutato la richiesta" }));
+        const errorData = await response.json().catch(() => ({ message: "Errore caricamento" }));
         throw new Error(errorData.message || `Errore ${response.status}`);
       }
 
