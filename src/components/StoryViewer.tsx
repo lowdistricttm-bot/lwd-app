@@ -2,14 +2,16 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
-import { X, Send, MessageCircle, ChevronUp, MoreHorizontal } from 'lucide-react';
-import { showSuccess } from '@/utils/toast';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Eye, Send } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
+import { useViewStory } from '@/hooks/use-stories';
 
 interface Story {
-  id: string | number;
+  id: string;
   name: string;
   img: string;
+  views: number;
 }
 
 interface StoryViewerProps {
@@ -19,50 +21,40 @@ interface StoryViewerProps {
 }
 
 const STORY_DURATION = 5000;
-const REACTIONS = ['🔥', '😂', '❤️', '😍', '😮', '😢', '👏', '🎉'];
 
 const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [progress, setProgress] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const [comment, setComment] = useState("");
-  const [showInput, setShowInput] = useState(false);
-  const [showReactions, setShowReactions] = useState(false);
-
-  const dragX = useMotionValue(0);
-  const dragOpacity = useTransform(dragX, [-100, 0, 100], [0.5, 1, 0.5]);
+  const { user } = useAuth();
+  const viewStory = useViewStory();
 
   const handleNext = useCallback(() => {
     if (currentIndex < stories.length - 1) {
       setCurrentIndex(prev => prev + 1);
       setProgress(0);
-      setComment("");
-      setShowInput(false);
-      setShowReactions(false);
-      setIsPaused(false);
-      dragX.set(0);
     } else {
       onClose();
     }
-  }, [currentIndex, stories.length, onClose, dragX]);
+  }, [currentIndex, stories.length, onClose]);
 
   const handlePrev = useCallback(() => {
     if (currentIndex > 0) {
       setCurrentIndex(prev => prev - 1);
       setProgress(0);
-      setComment("");
-      setShowInput(false);
-      setShowReactions(false);
-      setIsPaused(false);
-      dragX.set(0);
-    } else {
-      setProgress(0);
-      dragX.set(0);
     }
-  }, [currentIndex, dragX]);
+  }, [currentIndex]);
+
+  // Traccia visualizzazione
+  useEffect(() => {
+    if (user && stories[currentIndex]) {
+      viewStory.mutate({ 
+        storyId: stories[currentIndex].id, 
+        userId: String(user.id) 
+      });
+    }
+  }, [currentIndex, user, stories]);
 
   useEffect(() => {
-    if (isPaused) return;
     const interval = 50;
     const increment = (interval / STORY_DURATION) * 100;
     const timer = setInterval(() => {
@@ -72,65 +64,69 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
       });
     }, interval);
     return () => clearInterval(timer);
-  }, [currentIndex, isPaused]);
+  }, [currentIndex]);
 
   useEffect(() => {
     if (progress >= 100) handleNext();
   }, [progress, handleNext]);
 
-  const handleDragEnd = (event: any, info: any) => {
-    const threshold = 50;
-    if (info.offset.x < -threshold) handleNext();
-    else if (info.offset.x > threshold) handlePrev();
-    else dragX.set(0);
-  };
-
-  const handleScreenClick = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('.story-controls')) return;
-    if (showInput || showReactions) {
-      setShowInput(false);
-      setShowReactions(false);
-      setIsPaused(false);
-      return;
-    }
-    const x = e.clientX;
-    const width = window.innerWidth;
-    if (x < width * 0.3) handlePrev();
-    else handleNext();
-  };
-
   return createPortal(
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[99999] bg-black flex items-center justify-center touch-none overflow-hidden">
-      <div className="relative w-full h-full md:max-w-[480px] md:h-[96vh] bg-black md:rounded-3xl overflow-hidden flex flex-col">
-        <div className="absolute top-4 left-4 right-4 z-[60] flex gap-1.5">
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.9 }} 
+      animate={{ opacity: 1, scale: 1 }} 
+      exit={{ opacity: 0, scale: 0.9 }} 
+      className="fixed inset-0 z-[9999] bg-black flex items-center justify-center"
+    >
+      <div className="relative w-full h-full md:max-w-[450px] md:h-[90vh] bg-zinc-950 md:rounded-3xl overflow-hidden">
+        {/* Progress Bars */}
+        <div className="absolute top-4 left-4 right-4 z-50 flex gap-1">
           {stories.map((_, i) => (
-            <div key={i} className="h-[2px] flex-1 bg-white/20 rounded-full overflow-hidden">
-              <div className="h-full bg-white transition-all duration-100 ease-linear" style={{ width: i === currentIndex ? `${progress}%` : i < currentIndex ? '100%' : '0%' }} />
+            <div key={i} className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-white transition-all duration-100 ease-linear" 
+                style={{ width: i === currentIndex ? `${progress}%` : i < currentIndex ? '100%' : '0%' }} 
+              />
             </div>
           ))}
         </div>
 
-        <div className="absolute top-10 left-4 right-4 z-[60] flex items-center justify-between story-controls">
+        {/* Header */}
+        <div className="absolute top-10 left-4 right-4 z-50 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/10">
-              <img src={stories[currentIndex].img} alt="" className="w-full h-full object-cover" />
+            <div className="w-10 h-10 rounded-full border-2 border-red-600 p-0.5">
+              <img src={stories[currentIndex].img} className="w-full h-full object-cover rounded-full" alt="" />
             </div>
-            <span className="text-white font-black text-sm uppercase italic">{stories[currentIndex].name}</span>
+            <div>
+              <p className="text-white font-black text-xs uppercase italic">{stories[currentIndex].name}</p>
+              <div className="flex items-center gap-1 text-[8px] text-white/60 font-bold uppercase">
+                <Eye size={10} /> {stories[currentIndex].views} visualizzazioni
+              </div>
+            </div>
           </div>
-          <button onClick={onClose} className="text-white p-1"><X size={32} /></button>
+          <button onClick={onClose} className="text-white/80 hover:text-white"><X size={28} /></button>
         </div>
 
-        <motion.div className="relative flex-1 w-full overflow-hidden bg-zinc-950" onClick={handleScreenClick} drag="x" dragConstraints={{ left: 0, right: 0 }} onDragStart={() => setIsPaused(true)} onDragEnd={handleDragEnd} style={{ x: dragX, opacity: dragOpacity }}>
-          <AnimatePresence mode="wait">
-            <motion.img key={currentIndex} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} src={stories[currentIndex].img} className="w-full h-full object-cover pointer-events-none" />
-          </AnimatePresence>
-        </motion.div>
+        {/* Story Image */}
+        <div className="w-full h-full flex items-center justify-center bg-black">
+          <img src={stories[currentIndex].img} className="w-full h-full object-cover" alt="" />
+        </div>
 
-        <div className="p-6 pb-14 bg-black story-controls z-[80]">
-          <div className="flex items-center gap-6">
-            <button onClick={() => { setShowInput(true); setIsPaused(true); }} className="flex-1 bg-transparent border border-white/30 rounded-full py-4 px-6 text-white/60 text-left text-sm">Invia un messaggio...</button>
-            <button onClick={() => showSuccess('Inviato!')} className="text-white/80"><Send size={28} /></button>
+        {/* Navigation Taps */}
+        <div className="absolute inset-0 flex">
+          <div className="w-1/3 h-full cursor-pointer" onClick={handlePrev} />
+          <div className="w-2/3 h-full cursor-pointer" onClick={handleNext} />
+        </div>
+
+        {/* Footer Input */}
+        <div className="absolute bottom-8 left-4 right-4 z-50 flex items-center gap-4">
+          <div className="flex-1 bg-black/40 backdrop-blur-md border border-white/20 rounded-full px-6 py-3">
+            <input 
+              type="text" 
+              placeholder="Invia un messaggio..." 
+              className="bg-transparent border-none w-full text-xs text-white focus:ring-0 outline-none"
+            />
           </div>
+          <button className="text-white"><Send size={20} /></button>
         </div>
       </div>
     </motion.div>,
