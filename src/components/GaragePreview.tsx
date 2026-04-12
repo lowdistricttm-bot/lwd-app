@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal } from 'lucide-react';
+import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Share2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { showSuccess } from '@/utils/toast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,24 +9,28 @@ import CommentDrawer from './CommentDrawer';
 import CreatePostDialog from './CreatePostDialog';
 import { cn } from '@/lib/utils';
 
-const cars = [
+const activities = [
   { 
     id: 1, 
-    owner: "marco_ld", 
-    car: "BMW M3 E46 Static", 
+    user: "marco_ld", 
+    action: "ha aggiornato il suo stato",
+    content: "Finalmente montato il nuovo assetto statico. Il fitment ora è perfetto. 🔥 #lowdistrict #static #fitment",
     location: "Milano, Italy", 
     image: "https://www.lowdistrict.it/wp-content/uploads/DSC01359-1-scaled-e1751832356345.jpg", 
     likes: 1240, 
-    comments: "48" 
+    comments: "48",
+    time: "2 ore fa"
   },
   { 
     id: 2, 
-    owner: "stance_daily", 
-    car: "Porsche 911 Airride", 
+    user: "stance_daily", 
+    action: "ha pubblicato una nuova foto",
+    content: "Sunset vibes con la nuova configurazione. Cosa ne pensate? 🌅",
     location: "Roma, Italy", 
     image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=1000", 
     likes: 856, 
-    comments: "24" 
+    comments: "24",
+    time: "5 ore fa"
   }
 ];
 
@@ -52,27 +56,30 @@ const GaragePreview = () => {
 
         <div className="flex items-center justify-between border-b border-white/5 pb-6 mb-8">
           <div>
-            <h3 className="text-lg font-black tracking-tighter uppercase italic">Community Feed</h3>
-            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Attività recente dai membri</p>
+            <h3 className="text-lg font-black tracking-tighter uppercase italic">Attività Community</h3>
+            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Cosa succede in Low District</p>
           </div>
-          <Link to="/garage" className="text-red-600 text-xs font-black uppercase tracking-widest border border-red-600/20 px-4 py-2 hover:bg-red-600 hover:text-white transition-all">
-            Esplora
-          </Link>
+          <div className="flex gap-2">
+            <button className="text-[9px] font-black uppercase tracking-widest bg-zinc-900 px-3 py-1.5 border border-white/5 text-white">Tutti</button>
+            <button className="text-[9px] font-black uppercase tracking-widest text-gray-500 px-3 py-1.5">Amici</button>
+          </div>
         </div>
         
         <div className="space-y-12">
-          {cars.map((post) => (
+          {activities.map((post) => (
             <div key={post.id} className="bg-zinc-900/20 border border-white/5 rounded-3xl overflow-hidden">
               {/* Post Header */}
               <div className="px-4 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full p-[2px] bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]">
                     <div className="w-full h-full rounded-full border-2 border-black overflow-hidden">
-                      <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${post.owner}`} alt="" />
+                      <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${post.user}`} alt="" />
                     </div>
                   </div>
                   <div>
-                    <p className="text-sm font-black leading-none mb-1 uppercase italic">{post.owner}</p>
+                    <p className="text-sm font-black leading-none mb-1 uppercase italic">
+                      {post.user} <span className="text-[10px] text-white/40 font-bold lowercase not-italic">{post.action}</span>
+                    </p>
                     <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">{post.location}</p>
                   </div>
                 </div>
@@ -113,7 +120,7 @@ const GaragePreview = () => {
                   </button>
                   <CommentDrawer count={post.comments} />
                   <button className="text-white hover:text-red-600 transition-colors">
-                    <Send size={24} strokeWidth={2} />
+                    <Share2 size={24} strokeWidth={2} />
                   </button>
                 </div>
                 <button 
@@ -130,13 +137,13 @@ const GaragePreview = () => {
                   {likedPosts[post.id] ? post.likes + 1 : post.likes} Likes
                 </p>
                 <p className="text-sm leading-relaxed text-gray-300">
-                  <span className="font-black text-white mr-2 uppercase italic">{post.owner}</span>
-                  Finalmente montato il nuovo assetto statico. Il fitment ora è perfetto. 🔥 #lowdistrict #static #fitment
+                  <span className="font-black text-white mr-2 uppercase italic">{post.user}</span>
+                  {post.content}
                 </p>
                 <button className="text-xs font-bold text-white/40 uppercase tracking-widest mt-2 hover:text-white transition-colors">
-                  Mostra tutti e {post.comments} i commenti
+                  Visualizza tutti i commenti
                 </button>
-                <p className="text-[9px] text-white/20 font-black uppercase tracking-[0.2em] mt-4">2 ore fa</p>
+                <p className="text-[9px] text-white/20 font-black uppercase tracking-[0.2em] mt-4">{post.time}</p>
               </div>
             </div>
           ))}

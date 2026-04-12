@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
-import { Settings as SettingsIcon, Grid, Package, MapPin, Link as LinkIcon, ChevronRight, User as UserIcon, Users } from 'lucide-react';
+import { Settings as SettingsIcon, Grid, Package, MapPin, Link as LinkIcon, ChevronRight, User as UserIcon, Users, MessageSquare } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useWcCustomerCount } from '@/hooks/use-woocommerce';
 
 const Profile = () => {
-  const [activeTab, setActiveTab] = useState<'posts' | 'orders'>('posts');
+  const [activeTab, setActiveTab] = useState<'activity' | 'orders'>('activity');
   const { user, logout } = useAuth();
   const { data: customerCount } = useWcCustomerCount();
   const navigate = useNavigate();
@@ -36,9 +36,9 @@ const Profile = () => {
   }
 
   const stats = [
-    { label: 'Post', value: '0' },
-    { label: 'Follower', value: '0' },
-    { label: 'Following', value: '0' },
+    { label: 'Attività', value: '0' },
+    { label: 'Amici', value: '0' },
+    { label: 'Gruppi', value: '0' },
   ];
 
   return (
@@ -99,13 +99,13 @@ const Profile = () => {
 
         <div className="flex gap-8 mb-8 border-b border-white/5">
           <button 
-            onClick={() => setActiveTab('posts')}
+            onClick={() => setActiveTab('activity')}
             className={cn(
               "pb-4 text-[10px] font-black uppercase tracking-widest transition-all",
-              activeTab === 'posts' ? "border-b-2 border-red-600 text-white" : "text-gray-600"
+              activeTab === 'activity' ? "border-b-2 border-red-600 text-white" : "text-gray-600"
             )}
           >
-            I Miei Post
+            Attività
           </button>
           <button 
             onClick={() => setActiveTab('orders')}
@@ -118,12 +118,14 @@ const Profile = () => {
           </button>
         </div>
 
-        {activeTab === 'posts' ? (
+        {activeTab === 'activity' ? (
           <div className="py-20 text-center border border-dashed border-white/5">
-            <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Nessun post ancora caricato</p>
+            <MessageSquare className="mx-auto text-gray-800 mb-4" size={40} />
+            <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Nessuna attività recente</p>
           </div>
         ) : (
           <div className="py-20 text-center border border-dashed border-white/5">
+            <Package className="mx-auto text-gray-800 mb-4" size={40} />
             <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Nessun ordine trovato</p>
           </div>
         )}
