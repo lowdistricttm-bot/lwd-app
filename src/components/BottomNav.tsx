@@ -10,8 +10,8 @@ const BottomNav = () => {
   
   const items = [
     { icon: Home, label: 'Home', href: '/' },
-    { icon: ShoppingBag, label: 'Shop', href: '/shop' },
     { icon: MessageSquare, label: 'Feed', href: '/community' },
+    { icon: ShoppingBag, label: 'Shop', href: '/shop' },
     { icon: Calendar, label: 'Events', href: '/events' },
     { icon: User, label: 'Profile', href: '/profile' },
   ];
