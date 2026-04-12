@@ -8,27 +8,20 @@ import ProductCard from '@/components/ProductCard';
 import { Filter, Search, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/use-translation';
+import { products } from '@/data/products';
 
-const categories = ["All", "Hoodies", "T-Shirts", "Accessories", "Stickers", "Limited Edition"];
-
-const products = [
-  { id: 1, name: "LD 'Static' Hoodie - Jet Black", price: "€65.00", category: "Hoodies", image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800", isNew: true },
-  { id: 2, name: "Respect the Fitment Tee", price: "€35.00", category: "T-Shirts", image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=800", isNew: true },
-  { id: 3, name: "Low District Logo Sticker Pack", price: "€15.00", category: "Stickers", image: "https://images.unsplash.com/photo-1572375927902-d62360355c57?auto=format&fit=crop&q=80&w=800" },
-  { id: 4, name: "Forged Carbon Keychain", price: "€18.00", category: "Accessories", image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=800", isLimited: true },
-  { id: 5, name: "LD Racing Windbreaker", price: "€85.00", category: "Accessories", image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&q=80&w=800" },
-  { id: 6, name: "Stance Culture Snapback", price: "€30.00", category: "Accessories", image: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&q=80&w=800" },
-  { id: 7, name: "Classic Logo Hoodie - Heather Grey", price: "€65.00", category: "Hoodies", image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800" },
-  { id: 8, name: "Low District Banner Sticker", price: "€12.00", category: "Stickers", image: "https://images.unsplash.com/photo-1572375927902-d62360355c57?auto=format&fit=crop&q=80&w=800" },
-];
+const categories = ["All", "Stickers", "Apparel", "Car Care", "Accessories", "Lifestyle"];
 
 const Shop = () => {
   const [activeCategory, setActiveCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
   const { t } = useTranslation();
 
-  const filteredProducts = activeCategory === "All" 
-    ? products 
-    : products.filter(p => p.category === activeCategory);
+  const filteredProducts = products.filter(p => {
+    const matchesCategory = activeCategory === "All" || p.category === activeCategory;
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   return (
     <div className="min-h-screen bg-black text-white pb-24">
@@ -71,6 +64,8 @@ const Shop = () => {
             <input 
               type="text" 
               placeholder={t.shop.search} 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-zinc-900 border-none py-5 pl-12 pr-4 text-sm focus:ring-1 focus:ring-red-600 outline-none font-bold"
             />
           </div>
