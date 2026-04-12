@@ -172,7 +172,7 @@ const Checkout = () => {
                 </div>
                 <div>
                   <h3 className="text-sm font-black uppercase tracking-widest">Finalizzazione Ordine</h3>
-                  <p className="text-[10px] text-gray-500 font-bold uppercase">L'ordine verrà creato direttamente su WooCommerce</p>
+                  <p className="text-[10px] text-gray-500 font-bold uppercase">L'ordine verrà creato direttamente sul sito web</p>
                 </div>
               </div>
               
@@ -205,7 +205,7 @@ const Checkout = () => {
               </Button>
               
               <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest text-center mt-6 leading-relaxed">
-                Cliccando su conferma, il tuo ordine verrà creato nel database di WooCommerce. <br />
+                Cliccando su conferma, il tuo ordine verrà creato nel database del sito web. <br />
                 Potrai poi procedere al pagamento tramite WhatsApp.
               </p>
             </div>
