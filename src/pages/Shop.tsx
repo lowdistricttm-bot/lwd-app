@@ -5,29 +5,30 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import BottomNav from '@/components/BottomNav';
 import ProductCard from '@/components/ProductCard';
-import { Filter, Search, ChevronDown } from 'lucide-react';
+import { Filter, Search, ChevronDown, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useTranslation } from '@/hooks/use-translation';
 import { products } from '@/data/products';
 
 const categories = ["All", "Adesivi", "Abbigliamento", "Detailing", "Accessori", "Summer Kit"];
+const collections = ["Signed 2026", "New Logo 2026", "Loose Logo", "Official 2025"];
 
 const Shop = () => {
   const [activeCategory, setActiveCategory] = useState("All");
+  const [activeCollection, setActiveCollection] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const { t } = useTranslation();
 
   const filteredProducts = products.filter(p => {
     const matchesCategory = activeCategory === "All" || p.category === activeCategory;
+    const matchesCollection = !activeCollection || p.collection === activeCollection;
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    return matchesCategory && matchesCollection && matchesSearch;
   });
 
   return (
     <div className="min-h-screen bg-black text-white pb-24">
       <Navbar />
       
-      <div className="relative h-[45vh] w-full flex items-center justify-center overflow-hidden pt-16">
+      <div className="relative h-[40vh] w-full flex items-center justify-center overflow-hidden pt-16">
         <img 
           src="https://www.lowdistrict.it/wp-content/uploads/DSC01359-1-scaled-e1751832356345.jpg" 
           className="absolute inset-0 w-full h-full object-cover opacity-40 grayscale"
@@ -35,19 +36,20 @@ const Shop = () => {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
         <div className="relative z-10 text-center px-6">
-          <h1 className="text-6xl md:text-8xl font-black tracking-tighter uppercase mb-4 italic">SHOP</h1>
-          <p className="text-red-600 text-xs md:text-sm font-black uppercase tracking-[0.4em]">OFFICIAL MERCHANDISE</p>
+          <h1 className="text-6xl md:text-8xl font-black tracking-tighter uppercase mb-2 italic">SHOP</h1>
+          <p className="text-red-600 text-xs font-black uppercase tracking-[0.4em]">OFFICIAL CATALOG</p>
         </div>
       </div>
 
-      <div className="px-6 max-w-7xl mx-auto -mt-12 relative z-20">
-        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-8">
+      <div className="px-6 max-w-7xl mx-auto -mt-8 relative z-20">
+        {/* Categories Filter */}
+        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-4">
           {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
               className={cn(
-                "whitespace-nowrap px-8 py-4 text-[10px] font-black uppercase tracking-widest transition-all border italic",
+                "whitespace-nowrap px-6 py-3 text-[10px] font-black uppercase tracking-widest transition-all border italic",
                 activeCategory === cat 
                   ? "bg-red-600 border-red-600 text-white" 
                   : "bg-zinc-900 border-white/5 text-gray-500 hover:border-white/20"
@@ -58,12 +60,39 @@ const Shop = () => {
           ))}
         </div>
 
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-12 py-8 border-y border-white/5">
+        {/* Collections Filter */}
+        <div className="flex items-center gap-4 overflow-x-auto no-scrollbar pb-8 border-b border-white/5">
+          <span className="text-[9px] font-black uppercase text-gray-600 tracking-widest shrink-0">Collections:</span>
+          {collections.map((col) => (
+            <button
+              key={col}
+              onClick={() => setActiveCollection(activeCollection === col ? null : col)}
+              className={cn(
+                "whitespace-nowrap px-4 py-2 text-[9px] font-bold uppercase tracking-tighter transition-all rounded-full border",
+                activeCollection === col 
+                  ? "bg-white text-black border-white" 
+                  : "bg-transparent border-white/10 text-gray-400 hover:border-white/30"
+              )}
+            >
+              {col}
+            </button>
+          ))}
+          {activeCollection && (
+            <button 
+              onClick={() => setActiveCollection(null)}
+              className="text-red-600 hover:text-white transition-colors"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
+        <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-12 py-8">
           <div className="relative w-full md:w-96">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
             <input 
               type="text" 
-              placeholder="Cerca prodotti..." 
+              placeholder="Cerca nel catalogo..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-zinc-900 border-none py-5 pl-12 pr-4 text-sm focus:ring-1 focus:ring-red-600 outline-none font-bold"
@@ -72,9 +101,6 @@ const Shop = () => {
           <div className="flex items-center gap-4 w-full md:w-auto">
             <button className="flex-1 md:flex-none flex items-center justify-between gap-6 bg-zinc-900 px-8 py-5 text-[10px] font-black uppercase tracking-widest italic">
               ORDINA PER <ChevronDown size={14} />
-            </button>
-            <button className="p-5 bg-zinc-900 text-white hover:bg-red-600 transition-colors">
-              <Filter size={18} />
             </button>
           </div>
         </div>
@@ -87,7 +113,7 @@ const Shop = () => {
 
         {filteredProducts.length === 0 && (
           <div className="py-32 text-center">
-            <p className="text-gray-500 font-black uppercase tracking-widest italic">Nessun prodotto trovato.</p>
+            <p className="text-gray-500 font-black uppercase tracking-widest italic">Nessun prodotto trovato in questa selezione.</p>
           </div>
         )}
       </div>
