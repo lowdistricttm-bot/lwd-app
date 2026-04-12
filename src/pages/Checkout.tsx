@@ -32,7 +32,6 @@ const Checkout = () => {
   const finalizeOrder = async () => {
     setIsProcessing(true);
     try {
-      // Creiamo l'ordine su WooCommerce come "In attesa di pagamento"
       const orderData = {
         payment_method: "cod", 
         payment_method_title: "WhatsApp / Contatto Diretto",
@@ -46,7 +45,7 @@ const Checkout = () => {
         customer_note: "Ordine effettuato tramite App - Finalizzazione via WhatsApp"
       };
 
-      const response = await wcPost('/orders', orderData);
+      await wcPost('/orders', orderData);
       setStep(3);
       showSuccess("Ordine prenotato con successo!");
       clearCart();
@@ -60,7 +59,7 @@ const Checkout = () => {
   const openWhatsApp = () => {
     const message = `Ciao Low District! Ho appena effettuato un ordine dall'App.\n\nNome: ${formData.first_name} ${formData.last_name}\nTotale: €${total.toFixed(2)}\n\nVorrei procedere con il pagamento.`;
     const encodedMessage = encodeURIComponent(message);
-    window.open(`https://wa.me/393470000000?text=${encodedMessage}`, '_blank'); // Sostituisci con il tuo numero reale
+    window.open(`https://wa.me/393470000000?text=${encodedMessage}`, '_blank');
   };
 
   if (step === 3) {
@@ -101,37 +100,11 @@ const Checkout = () => {
           <ChevronLeft size={24} />
         </button>
         <h1 className="text-2xl font-black tracking-tighter uppercase italic">
-          {step === 1 ? "Spedizione" :think
-The user is pointing out that my previous response was cut off. I need to continue the code block for `src/pages/Checkout.tsx` exactly where it stopped.
-
-Looking at the previous output:
-```tsx
-        <h1 className="text-2xl font-black tracking-tighter uppercase italic">
-          {step === 1 ? "Spedizione" :
-```
-It stopped right there. I need to complete the `Checkout.tsx` file.
-
-Plan:
-1. Complete the `Checkout.tsx` file starting from `{step === 1 ? "Spedizione" : "Riepilogo"}`.
-2. Ensure all tags are closed.
-3. Provide the concise summary.
-4. Provide the chat summary.
-
-Wait, I should check if I need to write the *entire* file again or just the continuation. The instructions say: "do NOT be lazy and ALWAYS write the entire file. It needs to be a complete file."
-
-So I will rewrite the entire `src/pages/Checkout.tsx` file to ensure it's complete and correct.
-
-The flow:
-- Step 1: Shipping info.
-- Step 2: Summary and "Finalize" button (which creates the order in WC).
-- Step 3: Success screen with WhatsApp button.
-
-Let's write the full file."Riepilogo"}
+          {step === 1 ? "Spedizione" : "Riepilogo"}
         </h1>
       </div>
 
       <div className="p-6 max-w-2xl mx-auto">
-        {/* Progress Bar */}
         <div className="flex gap-2 mb-12">
           <div className={`h-1 flex-1 ${step >= 1 ? 'bg-red-600' : 'bg-zinc-800'}`}></div>
           <div className={`h-1 flex-1 ${step >= 2 ? 'bg-red-600' : 'bg-zinc-800'}`}></div>
