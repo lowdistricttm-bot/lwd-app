@@ -1,19 +1,7 @@
-// Service Worker ottimizzato per Low District
-const CACHE_NAME = 'low-district-v1';
-
-// File da memorizzare nella cache immediatamente
-const PRECACHE_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json'
-];
+// Service Worker per Low District - Versione Live Sync
+const CACHE_NAME = 'low-district-v2';
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(PRECACHE_ASSETS);
-    })
-  );
   self.skipWaiting();
 });
 
@@ -22,9 +10,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
+          return caches.delete(cacheName);
         })
       );
     })
@@ -33,17 +19,8 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Gestione speciale per le navigazioni (permette il refresh su rotte interne)
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request).catch(() => {
-        return caches.match('/index.html');
-      })
-    );
-    return;
-  }
-
-  // Strategia Network-First per gli altri file
+  // Strategia: Prova prima la rete, se fallisce usa la cache
+  // Questo garantisce che l'utente veda sempre l'ultima versione live
   event.respondWith(
     fetch(event.request).catch(() => {
       return caches.match(event.request);

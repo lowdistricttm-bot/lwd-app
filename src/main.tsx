@@ -2,16 +2,23 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./globals.css";
 
-// Registrazione Service Worker più robusta
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' })
-      .then(registration => {
-        console.log('Low District SW pronto:', registration.scope);
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => {
+        reg.onupdatefound = () => {
+          const installingWorker = reg.installing;
+          if (installingWorker) {
+            installingWorker.onstatechange = () => {
+              if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                // Nuova versione disponibile, ricarica la pagina
+                window.location.reload();
+              }
+            };
+          }
+        };
       })
-      .catch(err => {
-        console.error('Errore registrazione SW:', err);
-      });
+      .catch(err => console.error('SW registration failed:', err));
   });
 }
 
