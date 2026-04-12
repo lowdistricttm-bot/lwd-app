@@ -59,18 +59,21 @@ export const useUpdateAvatar = () => {
 
       const formData = new FormData();
       formData.append('file', file);
+      // Alcune configurazioni di BuddyPress richiedono esplicitamente l'azione
+      formData.append('action', 'bp_avatar_upload');
 
-      // Utilizziamo il token JWT come parametro query per massimizzare la compatibilità con i plugin WP
-      const response = await fetch(`${BASE_URL}/buddypress/v1/members/${userId}/avatar?JWT=${token}`, {
+      const response = await fetch(`${BASE_URL}/buddypress/v1/members/${userId}/avatar`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         body: formData,
         mode: 'cors'
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: "Errore sconosciuto del server" }));
-        console.error("Server Upload Error:", errorData);
-        throw new Error(errorData.message || `Errore server (${response.status})`);
+        const errorData = await response.json().catch(() => ({ message: "Il server ha rifiutato la richiesta (400)" }));
+        throw new Error(errorData.message || `Errore ${response.status}`);
       }
 
       return response.json();
