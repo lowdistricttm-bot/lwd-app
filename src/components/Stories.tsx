@@ -4,74 +4,90 @@ import React, { useState, useRef, useEffect } from 'react';
 import { cn } from "@/lib/utils";
 import StoryViewer from './StoryViewer';
 import { AnimatePresence } from 'framer-motion';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useAuth } from '@/hooks/use-auth';
-import { saveStoryToDB, getStoryFromDB, deleteStoryFromDB } from '@/utils/db';
+import { supabase } from '@/lib/supabase';
 
-interface PersistedStory {
-  img: string;
-  timestamp: number;
+interface StoryData {
+  image_url: string;
+  created_at: string;
 }
 
 const Stories = () => {
   const { user } = useAuth();
   const [imgError, setImgError] = useState(false);
   const [showViewer, setShowViewer] = useState(false);
-  const [myStory, setMyStory] = useState<PersistedStory | null>(null);
+  const [myStory, setMyStory] = useState<StoryData | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Carica la storia dal database all'avvio
+  // Carica la storia da Supabase all'avvio
   useEffect(() => {
     const loadStory = async () => {
-      const savedStory = await getStoryFromDB();
-      if (savedStory) {
-        setMyStory(savedStory);
+      if (!user?.id) return;
+
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+      const { data, error } = await supabase
+        .from('stories')
+        .select('image_url, created_at')
+        .eq('user_id', user.id)
+        .gt('created_at', twentyFourHoursAgo)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (data) {
+        setMyStory(data);
       }
     };
-    loadStory();
-  }, []);
 
-  // Controllo scadenza ogni minuto
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      if (myStory) {
-        const now = Date.now();
-        const twentyFourHours = 24 * 60 * 60 * 1000;
-        if (now - myStory.timestamp >= twentyFourHours) {
-          setMyStory(null);
-          await deleteStoryFromDB();
-        }
-      }
-    }, 60000);
-    return () => clearInterval(interval);
-  }, [myStory]);
+    loadStory();
+  }, [user?.id]);
 
   const defaultAvatar = "https://www.lowdistrict.it/wp-content/uploads/placeholder.png";
   const userAvatar = imgError || !user?.avatar ? defaultAvatar : user.avatar;
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      showError("Seleziona un'immagine");
-      return;
-    }
+    if (!file || !user?.id) return;
 
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const result = event.target?.result as string;
-      const storyData = { img: result, timestamp: Date.now() };
+    setIsUploading(true);
+    try {
+      // 1. Carica l'immagine nello Storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
       
-      try {
-        await saveStoryToDB(result);
-        setMyStory(storyData);
-        showSuccess("Storia pubblicata!");
-      } catch (err) {
-        showError("Errore nel salvataggio della storia");
-      }
-    };
-    reader.readAsDataURL(file);
+      const { error: uploadError } = await supabase.storage
+        .from('stories')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      // 2. Ottieni l'URL pubblico
+      const { data: { publicUrl } } = supabase.storage
+        .from('stories')
+        .getPublicUrl(fileName);
+
+      // 3. Salva il record nel database
+      const { error: dbError } = await supabase
+        .from('stories')
+        .insert([{ 
+          user_id: user.id, 
+          image_url: publicUrl,
+          created_at: new Date().toISOString()
+        }]);
+
+      if (dbError) throw dbError;
+
+      setMyStory({ image_url: publicUrl, created_at: new Date().toISOString() });
+      showSuccess("Storia pubblicata sul cloud!");
+    } catch (err: any) {
+      showError("Errore durante il caricamento: " + err.message);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleAvatarClick = () => {
@@ -90,6 +106,7 @@ const Stories = () => {
         <div className="flex flex-col items-center gap-1.5 shrink-0">
           <button 
             onClick={handleAvatarClick}
+            disabled={isUploading}
             className="flex flex-col items-center gap-1.5 outline-none group relative"
           >
             <div className={cn(
@@ -98,17 +115,21 @@ const Stories = () => {
                 ? "bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]" 
                 : "bg-zinc-800"
             )}>
-              <div className="w-full h-full rounded-full border-2 border-black overflow-hidden relative bg-zinc-900">
-                <img 
-                  src={myStory ? myStory.img : userAvatar} 
-                  alt="La tua storia" 
-                  className="w-full h-full object-cover" 
-                  onError={() => setImgError(true)}
-                />
+              <div className="w-full h-full rounded-full border-2 border-black overflow-hidden relative bg-zinc-900 flex items-center justify-center">
+                {isUploading ? (
+                  <Loader2 className="animate-spin text-red-600" size={20} />
+                ) : (
+                  <img 
+                    src={myStory ? myStory.image_url : userAvatar} 
+                    alt="La tua storia" 
+                    className="w-full h-full object-cover" 
+                    onError={() => setImgError(true)}
+                  />
+                )}
               </div>
             </div>
             
-            {!myStory && (
+            {!myStory && !isUploading && (
               <div className="absolute bottom-5 right-0 bg-red-600 text-white rounded-full p-0.5 border-[2px] border-black">
                 <Plus size={12} strokeWidth={4} />
               </div>
@@ -118,12 +139,12 @@ const Stories = () => {
               "text-[10px] font-black uppercase tracking-tighter transition-colors",
               myStory ? "text-white" : "text-white/60"
             )}>
-              {myStory ? "Tua Storia" : "Aggiungi"}
+              {isUploading ? "Caricamento..." : myStory ? "Tua Storia" : "Aggiungi"}
             </span>
           </button>
         </div>
 
-        {/* Esempio di altre storie (Mock) */}
+        {/* Mock per altre storie */}
         {[1, 2, 3].map((i) => (
           <button key={i} className="flex flex-col items-center gap-1.5 shrink-0 group">
             <div className="w-[66px] h-[66px] rounded-full p-[2.5px] bg-zinc-800 group-hover:bg-white/20 transition-all">
@@ -139,7 +160,7 @@ const Stories = () => {
       <AnimatePresence>
         {showViewer && myStory && (
           <StoryViewer 
-            stories={[{ id: 1, name: user?.display_name || 'Tu', img: myStory.img }]} 
+            stories={[{ id: 1, name: user?.display_name || 'Tu', img: myStory.image_url }]} 
             initialIndex={0} 
             onClose={() => setShowViewer(false)} 
           />
