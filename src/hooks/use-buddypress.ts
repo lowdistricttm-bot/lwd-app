@@ -7,7 +7,7 @@ export const useBpActivity = () => {
     queryKey: ['bp-activity'],
     queryFn: async () => {
       const token = localStorage.getItem('ld_auth_token');
-      const headers: HeadersInit = {
+      const headers: Record<string, string> = {
         'Accept': 'application/json'
       };
       
@@ -15,7 +15,6 @@ export const useBpActivity = () => {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      // Proviamo l'endpoint standard di BuddyPress
       try {
         const response = await fetch(`${BASE_URL}/buddypress/v1/activity?per_page=10`, { 
           headers,

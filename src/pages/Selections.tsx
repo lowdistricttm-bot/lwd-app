@@ -7,7 +7,7 @@ import { Clock, CheckCircle2, XCircle, ChevronRight, Loader2, Package } from 'lu
 import { useAuth } from '@/hooks/use-auth';
 import { useWcUserOrders } from '@/hooks/use-woocommerce';
 import { format } from 'date-fns';
-import { it } from 'date-fns/locale';
+import { it } from 'date-fns/locale/it';
 
 const Selections = () => {
   const { user } = useAuth();
