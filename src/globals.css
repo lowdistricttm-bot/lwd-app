@@ -6,8 +6,15 @@
   :root {
     --background: 0 0% 0%;
     --foreground: 0 0% 100%;
-    --primary: 0 72% 51%;
+    --primary: 0 84% 60%;
     --primary-foreground: 0 0% 100%;
+    --card: 0 0% 3%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 3%;
+    --popover-foreground: 0 0% 100%;
+    --border: 0 0% 12%;
+    --input: 0 0% 12%;
+    --ring: 0 84% 60%;
     --radius: 0rem;
   }
 }
@@ -15,11 +22,25 @@
 body {
   @apply bg-black text-white antialiased;
   font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Custom scrollbar for automotive feel */
+/* Tipografia Low District */
+h1, h2, h3, h4, h5, h6 {
+  @apply font-black uppercase italic tracking-tighter;
+}
+
+.text-brand-red {
+  color: #ef4444;
+}
+
+.bg-brand-red {
+  background-color: #ef4444;
+}
+
+/* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -34,7 +55,16 @@ body {
   background: #ef4444;
 }
 
-.selection-red::selection {
-  background-color: #ef4444;
-  color: white;
+/* Animazioni */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 25s linear infinite;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }

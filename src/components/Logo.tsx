@@ -5,12 +5,11 @@ import { cn } from "@/lib/utils";
 
 interface LogoProps {
   className?: string;
-  variant?: 'white' | 'red';
+  variant?: 'white' | 'red' | 'original';
 }
 
 const Logo = ({ className, variant = 'white' }: LogoProps) => {
-  // Aggiungiamo un timestamp per forzare il refresh dell'immagine se la cache è ostinata
-  const logoUrl = `https://www.lowdistrict.it/wp-content/uploads/new-logo-header-2025.png?v=${Date.now()}`;
+  const logoUrl = "https://www.lowdistrict.it/wp-content/uploads/new-logo-header-2025.png";
 
   return (
     <div className={cn("relative flex items-center", className)}>
@@ -18,8 +17,10 @@ const Logo = ({ className, variant = 'white' }: LogoProps) => {
         src={logoUrl} 
         alt="Low District Logo" 
         className={cn(
-          "h-full w-auto object-contain transition-all",
-          variant === 'red' ? "brightness-100" : "brightness-0 invert"
+          "h-full w-auto object-contain transition-all duration-500",
+          variant === 'white' && "brightness-0 invert",
+          variant === 'red' && "sepia(1) saturate(10000%) hue-rotate(350deg)",
+          variant === 'original' && "brightness-100"
         )}
       />
     </div>
