@@ -8,7 +8,12 @@ import { Plus } from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
 
 const stories = [
-  { id: 1, name: 'La tua storia', img: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=800', isUser: true },
+  { 
+    id: 1, 
+    name: 'La tua storia', 
+    img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=LowDistrict', 
+    isUser: true 
+  },
   { id: 2, name: 'm3_static', img: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&q=80&w=800' },
   { id: 3, name: 'low_911', img: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=800' },
   { id: 4, name: 'jdm_vibes', img: 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&q=80&w=800' },
@@ -35,25 +40,25 @@ const Stories = () => {
             <div className={cn(
               "w-[68px] h-[68px] rounded-full p-[2.5px] transition-all duration-300 group-active:scale-90",
               story.isUser 
-                ? "bg-zinc-800" 
+                ? "bg-transparent" 
                 : "bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]"
             )}>
-              <div className="w-full h-full rounded-full border-2 border-black overflow-hidden relative">
+              <div className="w-full h-full rounded-full border-2 border-black overflow-hidden relative bg-zinc-900">
                 <img src={story.img} alt={story.name} className="w-full h-full object-cover" />
               </div>
             </div>
 
-            {/* Instagram Style Plus Button for User Story */}
+            {/* Instagram Style Plus Badge */}
             {story.isUser && (
               <div 
                 onClick={handleAddStory}
-                className="absolute bottom-6 right-0 bg-[#0095f6] text-white rounded-full p-0.5 border-2 border-black hover:scale-110 transition-transform"
+                className="absolute bottom-6 right-0 bg-[#0095f6] text-white rounded-full p-0.5 border-[2.5px] border-black hover:scale-110 transition-transform z-10"
               >
                 <Plus size={14} strokeWidth={4} />
               </div>
             )}
 
-            <span className="text-[11px] text-white/80 truncate w-16 text-center">
+            <span className="text-[11px] text-white/60 truncate w-16 text-center font-medium">
               {story.name}
             </span>
           </button>
