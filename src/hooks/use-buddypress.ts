@@ -6,12 +6,10 @@ export const useBpActivity = (userId?: number) => {
   return useInfiniteQuery({
     queryKey: ['bp-activity', userId],
     queryFn: async ({ pageParam = 1 }) => {
-      const token = localStorage.getItem('ld_auth_token');
-      // Utilizziamo l'endpoint standard di BuddyPress che è più affidabile
+      // Endpoint pulito senza parametri JWT che possono causare 401 se scaduti
       let url = `${BASE_URL}/buddypress/v1/activity?page=${pageParam}&per_page=20&display_comments=threaded`;
       
       if (userId) url += `&user_id=${userId}`;
-      if (token) url += `&JWT=${token}`;
       
       try {
         const response = await fetch(url, {
@@ -41,8 +39,7 @@ export const useBpMemberData = (userId: number | undefined) => {
     queryKey: ['bp-member-data', userId],
     queryFn: async () => {
       if (!userId) return null;
-      const token = localStorage.getItem('ld_auth_token');
-      const response = await fetch(`${BASE_URL}/buddypress/v1/members/${userId}?context=view&JWT=${token}`);
+      const response = await fetch(`${BASE_URL}/buddypress/v1/members/${userId}?context=view`);
       if (!response.ok) throw new Error("Errore caricamento dati membro");
       return await response.json();
     },
@@ -118,8 +115,7 @@ export const useBpMembers = (perPage = 100) => {
   return useQuery({
     queryKey: ['bp-members', perPage],
     queryFn: async () => {
-      const token = localStorage.getItem('ld_auth_token');
-      const url = `${BASE_URL}/buddypress/v1/members?per_page=${perPage}&type=active&JWT=${token}`;
+      const url = `${BASE_URL}/buddypress/v1/members?per_page=${perPage}&type=active`;
       const response = await fetch(url);
       if (!response.ok) throw new Error("Errore caricamento membri");
       return await response.json();
