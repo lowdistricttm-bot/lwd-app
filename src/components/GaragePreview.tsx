@@ -5,7 +5,7 @@ import { Heart, MessageCircle, Send, MoreHorizontal, Share2, Loader2, AlertCircl
 import CommentDrawer from './CommentDrawer';
 import CreatePostDialog from './CreatePostDialog';
 import { cn } from '@/lib/utils';
-import { useBpActivity } from '@/hooks/use-buddypress';
+import { usePosts } from '@/hooks/use-posts';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -19,23 +19,13 @@ const GaragePreview = () => {
     fetchNextPage, 
     hasNextPage, 
     isFetchingNextPage 
-  } = useBpActivity();
+  } = usePosts();
   
-  const [likedPosts, setLikedPosts] = useState<Record<number, boolean>>({});
+  const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({});
   const observerTarget = useRef(null);
 
   const allPosts = useMemo(() => {
-    const posts = data?.pages.flat() || [];
-    const uniquePosts = [];
-    const seenIds = new Set();
-
-    for (const post of posts) {
-      if (!seenIds.has(post.id)) {
-        seenIds.add(post.id);
-        uniquePosts.push(post);
-      }
-    }
-    return uniquePosts;
+    return data?.pages.flat() || [];
   }, [data?.pages]);
 
   useEffect(() => {
@@ -59,7 +49,7 @@ const GaragePreview = () => {
     };
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const handleLike = (id: number) => {
+  const handleLike = (id: string) => {
     setLikedPosts(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
@@ -72,24 +62,6 @@ const GaragePreview = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="text-center py-16 px-6 bg-zinc-900/30 border border-white/5 rounded-3xl mx-4">
-        <AlertCircle className="mx-auto text-red-600 mb-4" size={32} />
-        <h3 className="text-sm font-black uppercase tracking-tighter mb-2">Accesso alla Bacheca</h3>
-        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-relaxed mb-6">
-          Impossibile caricare i post. Riprova tra poco.
-        </p>
-        <Button 
-          onClick={() => refetch()}
-          className="bg-white text-black hover:bg-red-600 hover:text-white font-black uppercase tracking-widest text-[10px] px-8 py-4 rounded-none italic"
-        >
-          <RefreshCw size={14} className="mr-2" /> Ricarica
-        </Button>
-      </div>
-    );
-  }
-
   return (
     <section className="bg-black py-12">
       <div className="max-w-xl mx-auto px-4">
@@ -98,24 +70,24 @@ const GaragePreview = () => {
         <div className="flex items-center justify-between border-b border-white/5 pb-6 mb-8">
           <div>
             <h3 className="text-lg font-black tracking-tighter uppercase italic">Community Feed</h3>
-            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Live dal sito web</p>
+            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Live Database</p>
           </div>
         </div>
         
         <div className="space-y-12">
           {allPosts.length === 0 ? (
-            <div className="text-center py-20">
-              <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Nessuna attività trovata</p>
+            <div className="text-center py-20 border border-dashed border-white/5 rounded-3xl">
+              <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Nessun post presente. Sii il primo!</p>
             </div>
           ) : (
             allPosts.map((post: any) => (
               <div key={post.id} className="bg-zinc-900/20 border border-white/5 rounded-3xl overflow-hidden">
                 <div className="px-4 py-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full p-[2px] bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]">
+                    <div className="w-10 h-10 rounded-full p-[2px] bg-red-600">
                       <div className="w-full h-full rounded-full border-2 border-black overflow-hidden">
                         <img 
-                          src={post.user_avatar?.thumb || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.user_id}`} 
+                          src={post.user_avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.user_id}`} 
                           alt="" 
                           className="w-full h-full object-cover"
                         />
@@ -126,7 +98,7 @@ const GaragePreview = () => {
                         {post.user_name || 'Membro Low District'}
                       </p>
                       <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">
-                        {post.date ? formatDistanceToNow(new Date(post.date), { addSuffix: true, locale: it }) : 'Recentemente'}
+                        {post.created_at ? formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: it }) : 'Recentemente'}
                       </p>
                     </div>
                   </div>
@@ -136,10 +108,14 @@ const GaragePreview = () => {
                 </div>
                 
                 <div className="px-4 pb-4">
-                  <div 
-                    className="activity-content text-sm leading-relaxed text-gray-300 prose prose-invert max-w-none break-words"
-                    dangerouslySetInnerHTML={{ __html: post.content?.rendered || post.content }}
-                  />
+                  <p className="text-sm leading-relaxed text-gray-300 whitespace-pre-wrap">
+                    {post.content}
+                  </p>
+                  {post.image_url && (
+                    <div className="mt-4 rounded-2xl overflow-hidden border border-white/5">
+                      <img src={post.image_url} alt="" className="w-full h-auto" />
+                    </div>
+                  )}
                 </div>
 
                 <div className="px-4 py-4 flex items-center justify-between border-t border-white/5">
@@ -162,29 +138,9 @@ const GaragePreview = () => {
         </div>
 
         <div ref={observerTarget} className="h-20 flex items-center justify-center mt-8">
-          {isFetchingNextPage && (
-            <div className="flex flex-col items-center gap-2">
-              <Loader2 className="animate-spin text-red-600" size={24} />
-              <span className="text-[8px] font-black uppercase tracking-widest text-gray-600">Caricamento...</span>
-            </div>
-          )}
+          {isFetchingNextPage && <Loader2 className="animate-spin text-red-600" size={24} />}
         </div>
       </div>
-
-      <style>{`
-        .activity-content img {
-          width: 100%;
-          height: auto;
-          border-radius: 1rem;
-          margin: 1rem 0;
-          border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        .activity-content a {
-          color: #ef4444;
-          font-weight: 800;
-          text-decoration: none;
-        }
-      `}</style>
     </section>
   );
 };
