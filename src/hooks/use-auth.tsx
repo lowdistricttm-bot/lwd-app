@@ -58,26 +58,47 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       const jwtToken = resData.data?.jwt || resData.jwt;
+      const userId = resData.data?.user?.ID || resData.user?.ID;
       
-      // 2. Recupero dati utente (Metodo base senza restrizioni context=edit)
-      const meRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/me?JWT=${jwtToken}`);
-      if (!meRes.ok) throw new Error("Errore sincronizzazione profilo");
+      // 2. Recupero dati utente con strategia di fallback
+      let meData: any = null;
       
-      const meData = await meRes.json();
-      
-      // Cerchiamo l'avatar originale
-      let finalAvatar = meData.avatar_urls?.['96'] || meData.avatar_urls?.['48'];
-      
-      // Se l'avatar sembra quello di default, proviamo BuddyPress ma senza bloccare il login se fallisce
-      if (!finalAvatar || finalAvatar.includes('gravatar.com/avatar/0000')) {
+      // Prova 1: Header Bearer (Standard)
+      try {
+        const meRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/me`, {
+          headers: { 'Authorization': `Bearer ${jwtToken}` }
+        });
+        if (meRes.ok) meData = await meRes.json();
+      } catch (e) {}
+
+      // Prova 2: Parametro JWT (Fallback)
+      if (!meData) {
         try {
-          const bpRes = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${meData.id}`);
-          if (bpRes.ok) {
-            const bpData = await bpRes.json();
-            if (bpData.avatar_urls?.full) finalAvatar = bpData.avatar_urls.full;
-          }
+          const meRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/me?JWT=${jwtToken}`);
+          if (meRes.ok) meData = await meRes.json();
         } catch (e) {}
       }
+
+      // Prova 3: Se abbiamo l'ID dal login, usiamo quello
+      if (!meData && userId) {
+        try {
+          const userRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${userId}`);
+          if (userRes.ok) meData = await userRes.json();
+        } catch (e) {}
+      }
+
+      if (!meData) throw new Error("Sincronizzazione fallita. Riprova tra poco.");
+
+      // 3. Recupero Avatar specifico da BuddyPress
+      let finalAvatar = meData.avatar_urls?.['96'] || meData.avatar_urls?.['48'];
+      
+      try {
+        const bpRes = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${meData.id}`);
+        if (bpRes.ok) {
+          const bpData = await bpRes.json();
+          if (bpData.avatar_urls?.full) finalAvatar = bpData.avatar_urls.full;
+        }
+      } catch (e) {}
 
       const userData: User = {
         id: meData.id,
