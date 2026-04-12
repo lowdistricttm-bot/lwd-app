@@ -39,11 +39,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setIsLoading(false);
   }, []);
 
+  const fetchUserProfile = async (jwtToken: string) => {
+    try {
+      const response = await fetch('https://www.lowdistrict.it/wp-json/wp/v2/users/me', {
+        headers: {
+          'Authorization': `Bearer ${jwtToken}`,
+          'Accept': 'application/json'
+        }
+      });
+      if (response.ok) {
+        const wpUser = await response.json();
+        return {
+          id: wpUser.id,
+          username: wpUser.slug,
+          email: wpUser.email || '',
+          nicename: wpUser.nickname || wpUser.name,
+          display_name: wpUser.name || wpUser.slug,
+          avatar: wpUser.avatar_urls?.['96'] || `https://api.dicebear.com/7.x/avataaars/svg?seed=${wpUser.slug}`
+        };
+      }
+    } catch (e) {
+      console.error("Errore nel recupero profilo manuale:", e);
+    }
+    return null;
+  };
+
   const login = async (username: string, password: string) => {
     setIsLoading(true);
     try {
-      console.log('Tentativo di login per:', username);
-      
       const response = await fetch('https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth', {
         method: 'POST',
         headers: { 
@@ -57,26 +80,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       const data = await response.json();
-      console.log('Risposta completa dal server:', data);
 
       if (response.ok && data.success && data.data.jwt) {
-        // Controllo di sicurezza: i dati utente sono presenti?
-        if (!data.data.user) {
-          throw new Error('Login riuscito, ma i dati utente non sono stati inviati dal server. Abilita "Include User in Response" nelle impostazioni del plugin.');
+        const jwtToken = data.data.jwt;
+        let userData = null;
+
+        // Se il plugin ha inviato l'utente, lo usiamo
+        if (data.data.user) {
+          userData = {
+            id: data.data.user.ID || 0,
+            username: data.data.user.user_login || '',
+            email: data.data.user.user_email || '',
+            nicename: data.data.user.user_nicename || '',
+            display_name: data.data.user.display_name || data.data.user.user_login || 'Utente',
+            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.data.user.user_login || 'default'}`
+          };
+        } else {
+          // Altrimenti lo recuperiamo noi manualmente usando il token
+          userData = await fetchUserProfile(jwtToken);
         }
 
-        const userData = {
-          id: data.data.user.ID || 0,
-          username: data.data.user.user_login || '',
-          email: data.data.user.user_email || '',
-          nicename: data.data.user.user_nicename || '',
-          display_name: data.data.user.display_name || data.data.user.user_login || 'Utente',
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.data.user.user_login || 'default'}`
-        };
+        if (!userData) {
+          throw new Error("Login riuscito ma impossibile recuperare i dati del profilo. Contatta l'assistenza.");
+        }
 
-        setToken(data.data.jwt);
+        setToken(jwtToken);
         setUser(userData);
-        localStorage.setItem('ld_auth_token', data.data.jwt);
+        localStorage.setItem('ld_auth_token', jwtToken);
         localStorage.setItem('ld_user_data', JSON.stringify(userData));
         showSuccess(`Bentornato, ${userData.display_name}!`);
       } else {
@@ -84,7 +114,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw new Error(errorMsg);
       }
     } catch (error: any) {
-      console.error('Login Error Detail:', error);
       showError(error.message);
       throw error;
     } finally {
