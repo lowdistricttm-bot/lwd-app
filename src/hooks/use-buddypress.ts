@@ -8,54 +8,6 @@ const BASE_URL = "https://www.lowdistrict.it/wp-json";
 const bpFetch = async (endpoint: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('ld_auth_token');
   
-  // Costruiamo l'URL. Usiamo il parametro JWT che è il più compatibile con il tuo server.
-  const url = new URL(`${BASE_URL}${endpoint}`);
-  if (token) {
-    url.searchParams.set('JWT', token);
-  }
-
-  try {
-    const response = await fetch(url.toString(), {
-      ...options,
-      headers: {
-        'Accept': 'application/json',
-        ...options.headers,
-      },
-      mode: 'cors'
-    });
-
-    // Se il server risponde con errore, proviamo a recuperare i dati in modalità pubblica
-    if (!response.ok) {
-      if (token && (response.status === 401 || response.status === 400)) {
-        const publicUrl = new URL(`${BASE_URL}${endpoint}`);
-        const publicRes = await fetch(publicUrl.toString(), { mode: 'cors' });
-        if (publicRes.ok) return await publicRes.json();
-      }
-      
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Errore ${response.status}`);
-    }
-
-    return await response.json();
-  } catch (err: any) {
-    console.error(`[BuddyPress Error] ${endpoint}:`, err.message);
-    throw err;
-  }
-};
-
-export const useBpActivity = (userId?: number) => {
-  return useInfiniteQuery({
-    queryKey: ['bp-activity', userId],<dyad-write path="src/hooks/use-buddypress.ts" description="Completing BuddyPress hooks with favorite/like functionality">
-import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-
-const BASE_URL = "https://www.lowdistrict.it/wp-json";
-
-/**
- * Funzione di fetch ottimizzata per la massima compatibilità con il server lowdistrict.it
- */
-const bpFetch = async (endpoint: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('ld_auth_token');
-  
   const url = new URL(`${BASE_URL}${endpoint}`);
   if (token) {
     url.searchParams.set('JWT', token);
