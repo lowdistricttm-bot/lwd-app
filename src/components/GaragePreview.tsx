@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Heart, MessageCircle, Send, MoreHorizontal, Share2, Loader2, AlertCircle } from 'lucide-react';
+import { Heart, MessageCircle, Send, MoreHorizontal, Share2, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import CommentDrawer from './CommentDrawer';
 import CreatePostDialog from './CreatePostDialog';
@@ -9,9 +9,10 @@ import { cn } from '@/lib/utils';
 import { useBpActivity } from '@/hooks/use-buddypress';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
+import { Button } from '@/components/ui/button';
 
 const GaragePreview = () => {
-  const { data: activities, isLoading, error } = useBpActivity();
+  const { data: activities, isLoading, error, refetch } = useBpActivity();
   const [likedPosts, setLikedPosts] = useState<Record<number, boolean>>({});
 
   const handleLike = (id: number) => {
@@ -22,7 +23,7 @@ const GaragePreview = () => {
     return (
       <div className="flex flex-col items-center justify-center py-32">
         <Loader2 className="animate-spin text-red-600 mb-4" size={32} />
-        <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Sincronizzazione BuddyPress...</p>
+        <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Sincronizzazione Community...</p>
       </div>
     );
   }
@@ -31,10 +32,21 @@ const GaragePreview = () => {
     return (
       <div className="text-center py-20 px-6 bg-zinc-900/30 border border-white/5 rounded-3xl mx-4">
         <AlertCircle className="mx-auto text-red-600 mb-4" size={32} />
-        <h3 className="text-sm font-black uppercase tracking-tighter mb-2">Errore BuddyPress</h3>
-        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-relaxed">
-          Impossibile sincronizzare la bacheca con il sito.<br />Verifica che il plugin BuddyPress REST API sia attivo.
-        </p>
+        <h3 className="text-sm font-black uppercase tracking-tighter mb-4">API BuddyPress non rilevata</h3>
+        <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-relaxed space-y-4 mb-8">
+          <p>Per risolvere, segui questi passaggi sul tuo sito WordPress:</p>
+          <ul className="space-y-2 text-left max-w-xs mx-auto list-disc pl-4">
+            <li>Vai in <span className="text-white">Impostazioni > Permalink</span> e seleziona <span className="text-white">"Nome articolo"</span>.</li>
+            <li>Assicurati che BuddyPress sia installato e attivo.</li>
+            <li>Controlla che non ci siano plugin di sicurezza che bloccano <span className="text-white">/wp-json/</span>.</li>
+          </ul>
+        </div>
+        <Button 
+          onClick={() => refetch()}
+          className="bg-white text-black hover:bg-red-600 hover:text-white font-black uppercase tracking-widest text-[10px] px-8 py-4 rounded-none italic"
+        >
+          <RefreshCw size={14} className="mr-2" /> Riprova Sincronizzazione
+        </Button>
       </div>
     );
   }
@@ -47,7 +59,7 @@ const GaragePreview = () => {
         <div className="flex items-center justify-between border-b border-white/5 pb-6 mb-8">
           <div>
             <h3 className="text-lg font-black tracking-tighter uppercase italic">Community Feed</h3>
-            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Sincronizzato con BuddyPress</p>
+            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Live dal sito web</p>
           </div>
         </div>
         

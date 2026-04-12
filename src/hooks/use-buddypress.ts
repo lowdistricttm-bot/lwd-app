@@ -1,40 +1,28 @@
 import { useQuery } from "@tanstack/react-query";
 
-const URL = "https://www.lowdistrict.it/wp-json/buddypress/v1";
+const BASE_URL = "https://www.lowdistrict.it/wp-json";
 
 export const useBpActivity = () => {
   return useQuery({
     queryKey: ['bp-activity'],
     queryFn: async () => {
       const token = localStorage.getItem('ld_auth_token');
+      const headers: HeadersInit = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      // Proviamo prima l'endpoint standard di BuddyPress
+      const endpoints = ['/buddypress/v1/activity', '/bp/v1/activity'];
       
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json'
-      };
-
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      try {
-        // Endpoint ufficiale BuddyPress per l'attività
-        const response = await fetch(`${URL}/activity?per_page=10&display_name=true`, {
-          headers
-        });
-        
-        if (!response.ok) {
-          if (token && response.status === 401) {
-            const publicRes = await fetch(`${URL}/activity?per_page=10`);
-            if (publicRes.ok) return publicRes.json();
-          }
-          throw new Error(`Errore BuddyPress: ${response.status}`);
+      for (const endpoint of endpoints) {
+        try {
+          const response = await fetch(`${BASE_URL}${endpoint}?per_page=10&display_name=true`, { headers });
+          if (response.ok) return response.json();
+        } catch (e) {
+          console.error(`Fallito tentativo su ${endpoint}`);
         }
-        
-        return response.json();
-      } catch (err) {
-        console.error('BuddyPress Fetch Error:', err);
-        throw err;
       }
+
+      throw new Error("Impossibile trovare l'API di BuddyPress sul sito.");
     },
     staleTime: 1000 * 60 * 2,
     retry: 1
