@@ -57,7 +57,7 @@ const Checkout = () => {
       console.log('Order created:', response);
       
       setStep(3);
-      showSuccess("Ordine inviato con successo a WooCommerce!");
+      showSuccess("Ordine inviato con successo!");
       clearCart();
     } catch (err: any) {
       console.error('Checkout Error:', err);
@@ -70,7 +70,6 @@ const Checkout = () => {
   const openWhatsApp = () => {
     const message = `Ciao Low District! Ho appena effettuato un ordine dall'App.\n\nNome: ${formData.first_name} ${formData.last_name}\nTotale: €${total.toFixed(2)}\n\nVorrei procedere con il pagamento.`;
     const encodedMessage = encodeURIComponent(message);
-    // Numero aggiornato fornito dall'utente
     window.open(`https://wa.me/393200290721?text=${encodedMessage}`, '_blank');
   };
 
@@ -82,7 +81,7 @@ const Checkout = () => {
         </div>
         <h1 className="text-4xl font-black uppercase tracking-tighter mb-4 italic">Ordine Ricevuto!</h1>
         <p className="text-gray-400 text-sm font-bold uppercase tracking-widest max-w-xs mx-auto mb-12">
-          Il tuo ordine è stato registrato su WooCommerce. Clicca qui sotto per finalizzare il pagamento su WhatsApp.
+          Il tuo ordine è stato ricevuto correttamente. Clicca qui sotto per finalizzare il pagamento su WhatsApp.
         </p>
         
         <div className="space-y-4 w-full max-w-xs">
@@ -201,7 +200,7 @@ const Checkout = () => {
                 className="w-full bg-red-600 hover:bg-red-700 text-white py-8 text-xl font-black uppercase tracking-widest rounded-none italic shadow-2xl shadow-red-600/20"
               >
                 {isProcessing ? (
-                  <span className="flex items-center gap-2"><Loader2 className="animate-spin" /> Invio a WooCommerce...</span>
+                  <span className="flex items-center gap-2"><Loader2 className="animate-spin" /> Invio in corso...</span>
                 ) : "Conferma e Invia Ordine"}
               </Button>
               
