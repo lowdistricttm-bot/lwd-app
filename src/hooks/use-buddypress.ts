@@ -6,8 +6,8 @@ export const useBpActivity = () => {
   return useInfiniteQuery({
     queryKey: ['bp-activity'],
     queryFn: async ({ pageParam = 1 }) => {
-      // Aggiungiamo page e per_page per gestire lo scroll infinito
-      const url = `${BASE_URL}/lowdistrict/v1/activity?page=${pageParam}&per_page=10&_=${Date.now()}`;
+      // Carichiamo 20 post alla volta per coprire più velocemente la cronologia
+      const url = `${BASE_URL}/lowdistrict/v1/activity?page=${pageParam}&per_page=20&_=${Date.now()}`;
       
       try {
         const response = await fetch(url, {
@@ -23,7 +23,8 @@ export const useBpActivity = () => {
           throw new Error(errorData.message || `Errore ${response.status}`);
         }
 
-        return await response.json();
+        const data = await response.json();
+        return data;
       } catch (err: any) {
         console.error("Dettaglio Errore Bridge:", err);
         throw err;
@@ -31,11 +32,11 @@ export const useBpActivity = () => {
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
-      // Se l'ultima pagina ha meno di 10 elementi, probabilmente non ce ne sono altri
-      return lastPage.length === 10 ? allPages.length + 1 : undefined;
+      // Se l'ultima pagina ricevuta ha 20 elementi, significa che probabilmente ce ne sono altri
+      return lastPage.length === 20 ? allPages.length + 1 : undefined;
     },
-    staleTime: 1000 * 30,
-    refetchInterval: 1000 * 60,
+    staleTime: 1000 * 10, // Considera i dati vecchi dopo 10 secondi per favorire il refresh
+    refetchInterval: 1000 * 30, // Controlla nuovi post ogni 30 secondi
   });
 };
 
