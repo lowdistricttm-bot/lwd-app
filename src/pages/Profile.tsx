@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
-import { Settings as SettingsIcon, MapPin, User as UserIcon, MessageSquare, Loader2, RefreshCw, Package, ChevronRight, Heart, Car, Ticket } from 'lucide-react';
+import { Settings as SettingsIcon, MapPin, User as UserIcon, MessageSquare, Loader2, RefreshCw, Package, ChevronRight, Heart, Car, Ticket, Camera } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { useWcUserOrders } from '@/hooks/use-woocommerce';
-import { useBpActivity, useBpMemberData } from '@/hooks/use-buddypress';
-import { showSuccess } from '@/utils/toast';
+import { useBpActivity, useBpMemberData, useUpdateAvatar } from '@/hooks/use-buddypress';
+import { showSuccess, showError } from '@/utils/toast';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 
@@ -18,11 +18,13 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState<'activity' | 'orders' | 'applications'>('activity');
   const [imgError, setImgError] = useState(false);
   const [refreshKey, setRefreshKey] = useState(Date.now());
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { user, logout, refreshUser, isLoading, isRefreshing } = useAuth();
   const { data: allOrders, isLoading: isLoadingOrders } = useWcUserOrders(user?.id);
   const { data: activityData, isLoading: isLoadingActivity } = useBpActivity(user?.id);
   const { data: memberData } = useBpMemberData(user?.id);
+  const updateAvatarMutation = useUpdateAvatar();
   
   const location = useLocation();
   const defaultAvatar = "https://www.lowdistrict.it/wp-content/uploads/placeholder.png";
@@ -77,6 +79,28 @@ const Profile = () => {
     showSuccess("Dati sincronizzati");
   };
 
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    if (!file.type.startsWith('image/')) {
+      showError("Per favore seleziona un'immagine valida");
+      return;
+    }
+
+    try {
+      await updateAvatarMutation.mutateAsync({ userId: user.id, file });
+      showSuccess("Foto profilo aggiornata!");
+      handleRefresh();
+    } catch (err: any) {
+      showError(err.message || "Errore durante il caricamento");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
@@ -112,16 +136,30 @@ const Profile = () => {
       <div className="pt-24 px-6 max-w-2xl mx-auto">
         {/* Header Profilo */}
         <div className="flex items-start justify-between mb-8">
-          <div className="relative">
-            <div className="w-24 h-24 rounded-[2rem] bg-zinc-900 border-2 border-red-600 p-1 rotate-3 flex items-center justify-center overflow-hidden">
-              <img 
-                key={`${user.avatar}-${refreshKey}`}
-                src={imgError || !user.avatar ? defaultAvatar : user.avatar} 
-                alt="avatar" 
-                crossOrigin="anonymous"
-                className="w-full h-full rounded-[1.8rem] object-cover -rotate-3" 
-                onError={() => setImgError(true)}
-              />
+          <div className="relative group cursor-pointer" onClick={handleAvatarClick}>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              className="hidden" 
+              accept="image/*" 
+              onChange={handleFileChange} 
+            />
+            <div className="w-24 h-24 rounded-[2rem] bg-zinc-900 border-2 border-red-600 p-1 rotate-3 flex items-center justify-center overflow-hidden transition-transform group-hover:scale-105">
+              {updateAvatarMutation.isPending ? (
+                <Loader2 className="animate-spin text-red-600" size={32} />
+              ) : (
+                <img 
+                  key={`${user.avatar}-${refreshKey}`}
+                  src={imgError || !user.avatar ? defaultAvatar : user.avatar} 
+                  alt="avatar" 
+                  crossOrigin="anonymous"
+                  className="w-full h-full rounded-[1.8rem] object-cover -rotate-3" 
+                  onError={() => setImgError(true)}
+                />
+              )}
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-[1.8rem]">
+                <Camera className="text-white" size={24} />
+              </div>
             </div>
             <div className="absolute -bottom-2 -right-2 bg-red-600 text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-lg">
               MEMBER

@@ -49,6 +49,39 @@ export const useBpMemberData = (userId: number | undefined) => {
   });
 };
 
+export const useUpdateAvatar = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ userId, file }: { userId: number, file: File }) => {
+      const token = localStorage.getItem('ld_auth_token');
+      if (!token) throw new Error("Sessione scaduta");
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('action', 'bp_avatar_upload');
+
+      const response = await fetch(`${BASE_URL}/buddypress/v1/members/${userId}/avatar`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Errore durante il caricamento dell'immagine");
+      }
+
+      return response.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['bp-member-data', variables.userId] });
+    }
+  });
+};
+
 export const useCreateActivity = () => {
   const queryClient = useQueryClient();
   
