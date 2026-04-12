@@ -24,12 +24,20 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  // Inizializzazione immediata dallo storage
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem('ld_auth_token'));
-  const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('ld_user_data');
-    return saved ? JSON.parse(saved) : null;
+  // Inizializzazione immediata per evitare il logout al refresh
+  const [token, setToken] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('ld_auth_token');
+    return null;
   });
+  
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('ld_user_data');
+      return saved ? JSON.parse(saved) : null;
+    }
+    return null;
+  });
+  
   const [isLoading, setIsLoading] = useState(false);
 
   const login = async (username: string, password: string) => {
@@ -41,17 +49,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         body: JSON.stringify({ username: username.trim(), password: password }),
       });
 
-      const data = await response.json();
+      const resData = await response.json();
+      console.log('Login Response:', resData); // Utile per debug
 
-      if (response.ok && data.success && data.data.jwt) {
-        const jwtToken = data.data.jwt;
-        const userData = {
-          id: data.data.user.ID,
-          username: data.data.user.user_login,
-          email: data.data.user.user_email,
-          nicename: data.data.user.user_nicename,
-          display_name: data.data.user.display_name || data.data.user.user_login,
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.data.user.user_login}`
+      if (response.ok && resData.success) {
+        // Estrazione flessibile del token e dell'utente
+        const jwtToken = resData.data?.jwt || resData.jwt;
+        const rawUser = resData.data?.user || resData.user;
+
+        if (!jwtToken || !rawUser) {
+          throw new Error("Risposta del server incompleta");
+        }
+
+        const userData: User = {
+          id: rawUser.ID || rawUser.id,
+          username: rawUser.user_login || rawUser.username,
+          email: rawUser.user_email || rawUser.email,
+          nicename: rawUser.user_nicename || rawUser.nicename || rawUser.user_login,
+          display_name: rawUser.display_name || rawUser.user_login,
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${rawUser.user_login || 'user'}`
         };
 
         setToken(jwtToken);
@@ -62,9 +78,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         showSuccess(`Bentornato, ${userData.display_name}`);
       } else {
-        throw new Error(data.message || 'Credenziali non valide');
+        throw new Error(resData.message || 'Credenziali non valide');
       }
     } catch (error: any) {
+      console.error('Login Error:', error);
       showError(error.message);
       throw error;
     } finally {
