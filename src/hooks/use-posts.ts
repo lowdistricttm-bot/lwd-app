@@ -5,7 +5,8 @@ export const usePosts = () => {
   return useInfiniteQuery({
     queryKey: ['supabase-posts'],
     queryFn: async ({ pageParam = 0 }) => {
-      // Usiamo una query più esplicita per evitare problemi di cache dello schema
+      // Recuperiamo i post. Se la relazione con i conteggi fallisce, 
+      // recuperiamo almeno i dati base per non bloccare l'app.
       const { data, error } = await supabase
         .from('posts')
         .select(`
@@ -24,6 +25,19 @@ export const usePosts = () => {
 
       if (error) {
         console.error("[Supabase Fetch Error]:", error);
+        
+        // Fallback: prova a caricare senza i conteggi se il join fallisce
+        if (error.code === 'PGRST200') {
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('posts')
+            .select('id, content, image_url, user_id, user_name, user_avatar, created_at')
+            .order('created_at', { ascending: false })
+            .range(pageParam, pageParam + 9);
+          
+          if (fallbackError) throw fallbackError;
+          return fallbackData || [];
+        }
+        
         throw error;
       }
       return data || [];
@@ -70,8 +84,8 @@ export const usePostInteractions = (postId: string) => {
         .from('post_likes')
         .select('user_id')
         .eq('post_id', postId);
-      if (error) throw error;
-      return data;
+      if (error) return [];
+      return data || [];
     }
   });
 
@@ -110,8 +124,8 @@ export const useComments = (postId: string) => {
         .select('*')
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
-      if (error) throw error;
-      return data;
+      if (error) return [];
+      return data || [];
     }
   });
 
