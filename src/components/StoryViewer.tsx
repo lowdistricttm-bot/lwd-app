@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import { X, Send, MessageCircle, ChevronUp, MoreHorizontal } from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
 
@@ -29,6 +29,10 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
   const [showInput, setShowInput] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
 
+  // Valori per il trascinamento
+  const dragX = useMotionValue(0);
+  const dragOpacity = useTransform(dragX, [-100, 0, 100], [0.5, 1, 0.5]);
+
   const handleNext = useCallback(() => {
     if (currentIndex < stories.length - 1) {
       setCurrentIndex(prev => prev + 1);
@@ -37,10 +41,11 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
       setShowInput(false);
       setShowReactions(false);
       setIsPaused(false);
+      dragX.set(0);
     } else {
       onClose();
     }
-  }, [currentIndex, stories.length, onClose]);
+  }, [currentIndex, stories.length, onClose, dragX]);
 
   const handlePrev = useCallback(() => {
     if (currentIndex > 0) {
@@ -50,10 +55,12 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
       setShowInput(false);
       setShowReactions(false);
       setIsPaused(false);
+      dragX.set(0);
     } else {
       setProgress(0);
+      dragX.set(0);
     }
-  }, [currentIndex]);
+  }, [currentIndex, dragX]);
 
   useEffect(() => {
     if (isPaused) return;
@@ -77,7 +84,19 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
     }
   }, [progress, handleNext]);
 
+  const handleDragEnd = (event: any, info: any) => {
+    const threshold = 50;
+    if (info.offset.x < -threshold) {
+      handleNext();
+    } else if (info.offset.x > threshold) {
+      handlePrev();
+    } else {
+      dragX.set(0);
+    }
+  };
+
   const handleScreenClick = (e: React.MouseEvent) => {
+    // Evita il click se stiamo interagendo con i controlli o se c'è stato un trascinamento significativo
     if ((e.target as HTMLElement).closest('.story-controls')) return;
     
     if (showInput || showReactions) {
@@ -106,16 +125,13 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
     setIsPaused(false);
   };
 
-  // Il portale renderizza il componente direttamente nel body
   return createPortal(
     <motion.div 
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 1.1 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
       className="fixed inset-0 z-[99999] bg-black flex items-center justify-center touch-none overflow-hidden"
     >
-      {/* Container Story - Full Screen su Mobile, Centrato su Desktop */}
       <div className="relative w-full h-full md:max-w-[480px] md:h-[96vh] bg-black md:rounded-3xl overflow-hidden flex flex-col shadow-[0_0_100px_rgba(0,0,0,0.9)]">
         
         {/* Barre di progresso */}
@@ -153,28 +169,31 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
           </div>
         </div>
 
-        {/* Area Immagine */}
-        <div 
-          className="relative flex-1 w-full overflow-hidden bg-zinc-950"
+        {/* Area Immagine con supporto Swipe */}
+        <motion.div 
+          className="relative flex-1 w-full overflow-hidden bg-zinc-950 cursor-grab active:cursor-grabbing"
           onClick={handleScreenClick}
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          onDragStart={() => setIsPaused(true)}
+          onDragEnd={handleDragEnd}
+          style={{ x: dragX, opacity: dragOpacity }}
         >
           <AnimatePresence mode="wait">
             <motion.img 
               key={currentIndex}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.4 }}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
               src={stories[currentIndex].img} 
               alt="" 
               className="w-full h-full object-cover pointer-events-none"
             />
           </AnimatePresence>
           
-          {/* Gradienti per leggibilità */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/60 pointer-events-none" />
 
-          {/* Swipe up hint */}
           {!showReactions && !showInput && (
             <motion.div 
               initial={{ opacity: 0 }}
@@ -212,7 +231,7 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
+        </motion.div>
 
         {/* Footer Controlli */}
         <div className="p-6 pb-14 md:pb-10 bg-black story-controls z-[80]">
