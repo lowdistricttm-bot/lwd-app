@@ -43,22 +43,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = async (username: string, password: string) => {
     setIsLoading(true);
     try {
+      // Endpoint standard per il plugin JWT Authentication
       const response = await fetch('https://www.lowdistrict.it/wp-json/jwt-auth/v1/token', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ 
+          username: username.trim(), 
+          password: password 
+        }),
       });
 
       const data = await response.json();
 
-      if (response.ok) {
+      if (response.ok && data.token) {
         const userData = {
           id: data.user_id || 0,
-          username: data.user_nicename,
-          email: data.user_email,
-          nicename: data.user_nicename,
-          display_name: data.user_display_name,
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.user_nicename}`
+          username: data.user_nicename || username,
+          email: data.user_email || '',
+          nicename: data.user_nicename || '',
+          display_name: data.user_display_name || username,
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.user_nicename || username}`
         };
 
         setToken(data.token);
@@ -67,10 +74,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         localStorage.setItem('ld_user_data', JSON.stringify(userData));
         showSuccess(`Bentornato, ${userData.display_name}!`);
       } else {
-        throw new Error(data.message || 'Credenziali non valide');
+        // Se il server risponde con un errore specifico (es. password errata)
+        const errorMsg = data.message || 'Credenziali non valide o errore server';
+        throw new Error(errorMsg);
       }
     } catch (error: any) {
-      showError(error.message);
+      console.error('Login Error:', error);
+      // Se l'errore è il 404 rest_no_route, diamo un consiglio all'utente
+      if (error.message.includes('Nessun percorso') || error.message.includes('rest_no_route')) {
+        showError("Errore API: Verifica che il plugin JWT sia attivo sul sito.");
+      } else {
+        showError(error.message);
+      }
       throw error;
     } finally {
       setIsLoading(false);
@@ -80,19 +95,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const register = async (userData: any) => {
     setIsLoading(true);
     try {
-      // Creazione cliente su WooCommerce
       const customerData = {
         email: userData.email,
         first_name: userData.first_name,
         last_name: userData.last_name,
-        username: userData.email.split('@')[0], // Genera username dall'email
+        username: userData.email.split('@')[0],
         password: userData.password,
       };
 
       await wcPost('/customers', customerData);
-      
       showSuccess("Account creato con successo! Ora puoi accedere.");
-      return;
     } catch (error: any) {
       showError(error.message || "Errore durante la registrazione");
       throw error;
