@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Heart, MessageCircle, Send, MoreHorizontal, Share2, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import CommentDrawer from './CommentDrawer';
 import CreatePostDialog from './CreatePostDialog';
@@ -9,7 +9,6 @@ import { useBpActivity } from '@/hooks/use-buddypress';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
-import { useInView } from 'framer-motion';
 
 const GaragePreview = () => {
   const { 
@@ -23,21 +22,37 @@ const GaragePreview = () => {
   } = useBpActivity();
   
   const [likedPosts, setLikedPosts] = useState<Record<number, boolean>>({});
-  const loadMoreRef = React.useRef(null);
-  const isInView = useInView(loadMoreRef);
+  const observerTarget = useRef(null);
 
-  // Trigger per caricare la pagina successiva quando l'elemento finale entra in vista
+  // Implementazione di un IntersectionObserver più robusto per lo scroll automatico
   useEffect(() => {
-    if (isInView && hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { 
+        threshold: 0.1, // Scatta quando anche solo il 10% del sensore è visibile
+        rootMargin: '400px' // Inizia a caricare quando mancano 400px alla fine (caricamento anticipato)
+      }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
     }
-  }, [isInView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleLike = (id: number) => {
     setLikedPosts(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // Appiattiamo le pagine di post in un unico array
   const allPosts = data?.pages.flat() || [];
 
   if (isLoading) {
@@ -87,7 +102,6 @@ const GaragePreview = () => {
           ) : (
             allPosts.map((post: any) => (
               <div key={post.id} className="bg-zinc-900/20 border border-white/5 rounded-3xl overflow-hidden">
-                {/* Header del Post */}
                 <div className="px-4 py-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full p-[2px] bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]">
@@ -113,7 +127,6 @@ const GaragePreview = () => {
                   </button>
                 </div>
                 
-                {/* Contenuto Testuale */}
                 <div className="px-4 pb-4">
                   <div 
                     className="activity-content text-sm leading-relaxed text-gray-300 prose prose-invert max-w-none break-words"
@@ -121,7 +134,6 @@ const GaragePreview = () => {
                   />
                 </div>
 
-                {/* Visualizzazione Media */}
                 {post.media && post.media.length > 0 && (
                   <div className={cn(
                     "grid gap-1 mb-2",
@@ -139,7 +151,6 @@ const GaragePreview = () => {
                   </div>
                 )}
 
-                {/* Footer Azioni */}
                 <div className="px-4 py-4 flex items-center justify-between border-t border-white/5">
                   <div className="flex items-center gap-6">
                     <button 
@@ -159,15 +170,14 @@ const GaragePreview = () => {
           )}
         </div>
 
-        {/* Elemento sentinella per lo scroll infinito */}
-        <div ref={loadMoreRef} className="py-12 flex justify-center">
-          {isFetchingNextPage ? (
-            <Loader2 className="animate-spin text-red-600" size={24} />
-          ) : hasNextPage ? (
-            <p className="text-[10px] text-gray-600 font-black uppercase tracking-widest">Scorri per caricare altro</p>
-          ) : allPosts.length > 0 ? (
-            <p className="text-[10px] text-gray-600 font-black uppercase tracking-widest">Hai raggiunto la fine del feed</p>
-          ) : null}
+        {/* Sensore per lo scroll infinito (invisibile ma funzionale) */}
+        <div ref={observerTarget} className="h-20 flex items-center justify-center mt-8">
+          {isFetchingNextPage && (
+            <div className="flex flex-col items-center gap-2">
+              <Loader2 className="animate-spin text-red-600" size={24} />
+              <span className="text-[8px] font-black uppercase tracking-widest text-gray-600">Caricamento cronologia...</span>
+            </div>
+          )}
         </div>
       </div>
 
