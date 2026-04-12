@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, MessageCircle, ChevronUp, MoreHorizontal } from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
@@ -73,8 +73,10 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
     return () => clearInterval(timer);
   }, [currentIndex, isPaused, handleNext]);
 
-  const handleScreenClick = (e: React.MouseEvent | React.TouchEvent) => {
+  const handleScreenClick = (e: React.MouseEvent) => {
+    // Evita che il clic sui controlli attivi il cambio storia
     if ((e.target as HTMLElement).closest('.story-controls')) return;
+    
     if (showInput || showReactions) {
       setShowInput(false);
       setShowReactions(false);
@@ -82,7 +84,7 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
       return;
     }
 
-    const x = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+    const x = e.clientX;
     const width = window.innerWidth;
     
     if (x < width * 0.3) {
@@ -106,7 +108,7 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] bg-black flex items-center justify-center"
+      className="fixed inset-0 z-[100] bg-black flex items-center justify-center touch-none"
     >
       <div className="relative w-full h-full md:max-w-[420px] md:h-[92vh] bg-black md:rounded-xl overflow-hidden flex flex-col">
         
@@ -125,7 +127,7 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
         </div>
 
         {/* Header */}
-        <div className="absolute top-6 left-4 right-4 z-30 flex items-center justify-between">
+        <div className="absolute top-6 left-4 right-4 z-30 flex items-center justify-between story-controls">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full overflow-hidden border border-white/10">
               <img src={stories[currentIndex].img} alt="" className="w-full h-full object-cover" />
@@ -137,21 +139,15 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
           </div>
           <div className="flex items-center gap-3">
             <MoreHorizontal size={20} className="text-white" />
-            <button onClick={onClose} className="text-white">
+            <button onClick={onClose} className="text-white p-1">
               <X size={26} strokeWidth={1.5} />
             </button>
           </div>
         </div>
 
         {/* Content */}
-        <motion.div 
-          className="relative flex-1 w-full overflow-hidden touch-none"
-          onPanEnd={(_, info) => {
-            if (info.offset.y < -40) {
-              setIsPaused(true);
-              setShowReactions(true);
-            }
-          }}
+        <div 
+          className="relative flex-1 w-full overflow-hidden"
           onClick={handleScreenClick}
         >
           <AnimatePresence mode="wait">
@@ -162,7 +158,7 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
               exit={{ opacity: 0 }}
               src={stories[currentIndex].img} 
               alt="" 
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover pointer-events-none"
             />
           </AnimatePresence>
           
@@ -206,7 +202,7 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
               </motion.div>
             )}
           </AnimatePresence>
-        </motion.div>
+        </div>
 
         {/* Footer Controls */}
         <div className="p-4 pb-10 md:pb-6 bg-black story-controls z-50">
@@ -223,7 +219,7 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
                 <input 
                   autoFocus
                   type="text" 
-                  placeholder={`Invia un messaggio a ${stories[currentIndex].name}...`} 
+                  placeholder={`Invia un messaggio...`} 
                   className="flex-1 bg-zinc-900 border border-white/10 rounded-full py-2.5 px-5 text-[13px] text-white focus:outline-none"
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
@@ -234,7 +230,7 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
               <div className="flex items-center gap-4">
                 <button 
                   onClick={() => { setShowInput(true); setIsPaused(true); }}
-                  className="flex-1 flex items-center gap-3 bg-transparent border border-white/40 rounded-full py-2.5 px-5 text-white/80"
+                  className="flex-1 flex items-center gap-3 bg-transparent border border-white/40 rounded-full py-2.5 px-5 text-white/80 text-left"
                 >
                   <span className="text-[13px]">Invia un messaggio...</span>
                 </button>

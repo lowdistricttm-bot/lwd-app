@@ -29,7 +29,7 @@ const Stories = () => {
   };
 
   return (
-    <>
+    <div className="relative z-10">
       <div className="flex gap-4 overflow-x-auto py-4 px-4 no-scrollbar bg-black border-b border-white/5">
         {stories.map((story, index) => (
           <button 
@@ -73,7 +73,7 @@ const Stories = () => {
           />
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 };
 
