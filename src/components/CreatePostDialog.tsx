@@ -13,10 +13,12 @@ const CreatePostDialog = () => {
   const [open, setOpen] = useState(false);
   const [content, setContent] = useState("");
   const [image, setImage] = useState<string | null>(null);
+  const [imgError, setImgError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   
   const createActivity = useCreateActivity();
+  const defaultAvatar = "https://www.lowdistrict.it/wp-content/uploads/placeholder.png";
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -55,7 +57,12 @@ const CreatePostDialog = () => {
       <DialogTrigger asChild>
         <button className="flex items-center gap-3 bg-zinc-900/50 border border-white/5 p-4 rounded-2xl w-full mb-8 hover:bg-zinc-900 transition-all group">
           <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10">
-            <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+            <img 
+              src={imgError || !user.avatar ? defaultAvatar : user.avatar} 
+              alt="" 
+              className="w-full h-full object-cover" 
+              onError={() => setImgError(true)}
+            />
           </div>
           <span className="text-gray-500 text-sm font-medium">Cosa c'è di nuovo nel tuo garage?</span>
           <ImagePlus className="ml-auto text-gray-600 group-hover:text-red-600 transition-colors" size={20} />
@@ -72,7 +79,12 @@ const CreatePostDialog = () => {
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="flex gap-4">
             <div className="w-12 h-12 rounded-full overflow-hidden shrink-0">
-              <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+              <img 
+                src={imgError || !user.avatar ? defaultAvatar : user.avatar} 
+                alt="" 
+                className="w-full h-full object-cover" 
+                onError={() => setImgError(true)}
+              />
             </div>
             <Textarea 
               placeholder="Racconta i progressi del tuo progetto..." 
