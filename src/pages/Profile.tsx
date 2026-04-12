@@ -3,26 +3,32 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
-import { Settings as SettingsIcon, MapPin, Link as LinkIcon, User as UserIcon, Users, MessageSquare, Loader2, RefreshCw } from 'lucide-react';
+import { Settings as SettingsIcon, MapPin, Link as LinkIcon, User as UserIcon, Users, MessageSquare, Loader2, RefreshCw, Package } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { useWcCustomerCount } from '@/hooks/use-woocommerce';
+import { showSuccess } from '@/utils/toast';
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState<'activity' | 'orders'>('activity');
   const [imgError, setImgError] = useState(false);
-  const { user, logout, refreshUser, isLoading } = useAuth();
+  const { user, logout, refreshUser, isLoading, isRefreshing } = useAuth();
   const { data: customerCount } = useWcCustomerCount();
   const location = useLocation();
 
   const defaultAvatar = "https://www.lowdistrict.it/wp-content/uploads/placeholder.png";
 
-  // Sincronizza i dati quando si entra nel profilo
   useEffect(() => {
     if (user) refreshUser();
   }, []);
+
+  const handleRefresh = async () => {
+    setImgError(false); // Resettiamo l'errore per forzare il ricaricamento dell'immagine
+    await refreshUser();
+    showSuccess("Profilo aggiornato");
+  };
 
   if (isLoading) {
     return (
@@ -67,6 +73,7 @@ const Profile = () => {
           <div className="relative">
             <div className="w-24 h-24 rounded-[2rem] bg-zinc-900 border-2 border-red-600 p-1 rotate-3 flex items-center justify-center overflow-hidden">
               <img 
+                key={user.avatar} // Forziamo il re-render dell'immagine quando l'URL cambia
                 src={imgError || !user.avatar ? defaultAvatar : user.avatar} 
                 alt="avatar" 
                 className="w-full h-full rounded-[1.8rem] object-cover -rotate-3" 
@@ -79,8 +86,12 @@ const Profile = () => {
           </div>
           
           <div className="flex gap-2">
-            <button onClick={() => refreshUser()} className="p-3 bg-zinc-900 border border-white/5 rounded-2xl hover:bg-zinc-800 transition-all">
-              <RefreshCw size={20} className="text-gray-400" />
+            <button 
+              onClick={handleRefresh} 
+              disabled={isRefreshing}
+              className="p-3 bg-zinc-900 border border-white/5 rounded-2xl hover:bg-zinc-800 transition-all disabled:opacity-50"
+            >
+              <RefreshCw size={20} className={cn("text-gray-400", isRefreshing && "animate-spin text-red-600")} />
             </button>
             <Link to="/settings" className="p-3 bg-zinc-900 border border-white/5 rounded-2xl hover:bg-zinc-800 transition-all">
               <SettingsIcon size={20} />

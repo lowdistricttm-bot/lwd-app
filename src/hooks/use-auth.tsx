@@ -21,6 +21,7 @@ interface AuthContextType {
   logout: () => void;
   refreshUser: () => Promise<void>;
   isLoading: boolean;
+  isRefreshing: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -42,44 +43,44 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   });
   
   const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchLatestUserData = useCallback(async (userId: number, currentToken: string) => {
+    setIsRefreshing(true);
     try {
       // Proviamo a recuperare i dati da BuddyPress che contiene l'avatar personalizzato corretto
       const bpRes = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${userId}?JWT=${currentToken}`);
       
       if (bpRes.ok) {
         const bpData = await bpRes.json();
-        const bpAvatar = bpData[0]?.avatar_urls?.full || bpData[0]?.avatar_urls?.thumb;
+        // BuddyPress può restituire un array o un oggetto
+        const member = Array.isArray(bpData) ? bpData[0] : bpData;
+        const bpAvatar = member?.avatar_urls?.full || member?.avatar_urls?.thumb;
         
         if (bpAvatar) {
-          setUser(prev => {
-            if (!prev) return null;
-            const updated = { ...prev, avatar: bpAvatar };
-            localStorage.setItem('ld_user_data', JSON.stringify(updated));
-            return updated;
-          });
+          const updatedUser = { ...user!, avatar: bpAvatar };
+          setUser(updatedUser);
+          localStorage.setItem('ld_user_data', JSON.stringify(updatedUser));
           return;
         }
       }
 
-      // Fallback su WordPress standard se BuddyPress fallisce
+      // Fallback su WordPress standard
       const userRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${userId}?JWT=${currentToken}`);
       if (userRes.ok) {
         const userData = await userRes.json();
         const wpAvatar = userData.avatar_urls?.['96'] || userData.avatar_urls?.['48'];
         
-        setUser(prev => {
-          if (!prev) return null;
-          const updated = { ...prev, avatar: wpAvatar || defaultAvatar };
-          localStorage.setItem('ld_user_data', JSON.stringify(updated));
-          return updated;
-        });
+        const updatedUser = { ...user!, avatar: wpAvatar || defaultAvatar };
+        setUser(updatedUser);
+        localStorage.setItem('ld_user_data', JSON.stringify(updatedUser));
       }
     } catch (e) {
       console.error("Errore sincronizzazione utente:", e);
+    } finally {
+      setIsRefreshing(false);
     }
-  }, [defaultAvatar]);
+  }, [user, defaultAvatar]);
 
   useEffect(() => {
     if (user?.id && token) {
@@ -116,26 +117,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (!userId) throw new Error("ID utente non trovato");
 
-      // Recuperiamo subito l'avatar da BuddyPress dopo il login
-      let finalAvatar = defaultAvatar;
-      try {
-        const bpRes = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${userId}`);
-        if (bpRes.ok) {
-          const bpData = await bpRes.json();
-          finalAvatar = bpData[0]?.avatar_urls?.full || bpData[0]?.avatar_urls?.thumb || defaultAvatar;
-        }
-      } catch (e) {}
-
       const userData: User = {
         id: parseInt(userId),
         username: wpUser?.user_login || cleanUsername,
         email: wpUser?.user_email || '',
         nicename: wpUser?.display_name || cleanUsername,
         display_name: wpUser?.display_name || cleanUsername,
-        avatar: finalAvatar
+        avatar: defaultAvatar
       };
 
       saveAuth(jwtToken, userData);
+      await fetchLatestUserData(userData.id, jwtToken);
       showSuccess(`Bentornato ${userData.display_name}`);
       
     } catch (error: any) {
@@ -168,7 +160,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register: async () => {}, logout, refreshUser, isLoading }}>
+    <AuthContext.Provider value={{ user, token, login, register: async () => {}, logout, refreshUser, isLoading, isRefreshing }}>
       {children}
     </AuthContext.Provider>
   );
