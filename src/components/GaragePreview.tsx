@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Heart, MessageCircle, Send, MoreHorizontal, Share2, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Heart, MessageCircle, Send, MoreHorizontal, Share2, Loader2, AlertCircle, RefreshCw, ShieldAlert } from 'lucide-react';
 import CommentDrawer from './CommentDrawer';
 import CreatePostDialog from './CreatePostDialog';
 import { cn } from '@/lib/utils';
@@ -29,23 +28,34 @@ const GaragePreview = () => {
   }
 
   if (error) {
+    const errorMessage = error instanceof Error ? error.message : "Errore sconosciuto";
+    const isCorsError = errorMessage.toLowerCase().includes('cors') || errorMessage.toLowerCase().includes('fetch');
+
     return (
-      <div className="text-center py-20 px-6 bg-zinc-900/30 border border-white/5 rounded-3xl mx-4">
-        <AlertCircle className="mx-auto text-red-600 mb-4" size={32} />
-        <h3 className="text-sm font-black uppercase tracking-tighter mb-4">API BuddyPress non rilevata</h3>
-        <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-relaxed space-y-4 mb-8">
-          <p>Per risolvere, segui questi passaggi sul tuo sito WordPress:</p>
-          <ul className="space-y-2 text-left max-w-xs mx-auto list-disc pl-4">
-            <li>Vai in <span className="text-white">Impostazioni > Permalink</span> e seleziona <span className="text-white">"Nome articolo"</span>.</li>
-            <li>Assicurati che BuddyPress sia installato e attivo.</li>
-            <li>Controlla che non ci siano plugin di sicurezza che bloccano <span className="text-white">/wp-json/</span>.</li>
-          </ul>
+      <div className="text-center py-16 px-6 bg-zinc-900/30 border border-white/5 rounded-3xl mx-4">
+        {isCorsError ? <ShieldAlert className="mx-auto text-amber-500 mb-4" size={32} /> : <AlertCircle className="mx-auto text-red-600 mb-4" size={32} />}
+        
+        <h3 className="text-sm font-black uppercase tracking-tighter mb-2">
+          {isCorsError ? "Blocco di Sicurezza (CORS)" : "Errore di Sincronizzazione"}
+        </h3>
+        
+        <div className="bg-black/50 p-3 rounded-lg mb-6 border border-white/5">
+          <p className="text-[10px] font-mono text-red-400 break-all">{errorMessage}</p>
         </div>
+
+        <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-relaxed space-y-4 mb-8 text-left max-w-xs mx-auto">
+          {isCorsError ? (
+            <p>Il tuo sito WordPress sta bloccando la richiesta per motivi di sicurezza. Devi abilitare le richieste da domini esterni (CORS) nel tuo file <span className="text-white">.htaccess</span> o tramite un plugin.</p>
+          ) : (
+            <p>Verifica in <span className="text-white">Impostazioni > BuddyPress > Opzioni</span> che la voce <span className="text-white">"BP REST API"</span> sia attiva.</p>
+          )}
+        </div>
+
         <Button 
           onClick={() => refetch()}
           className="bg-white text-black hover:bg-red-600 hover:text-white font-black uppercase tracking-widest text-[10px] px-8 py-4 rounded-none italic"
         >
-          <RefreshCw size={14} className="mr-2" /> Riprova Sincronizzazione
+          <RefreshCw size={14} className="mr-2" /> Riprova
         </Button>
       </div>
     );
