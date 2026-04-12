@@ -3,12 +3,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
-import { Settings as SettingsIcon, MapPin, Link as LinkIcon, User as UserIcon, Users, MessageSquare, Loader2, RefreshCw, Package, ChevronRight, Heart } from 'lucide-react';
+import { Settings as SettingsIcon, MapPin, Link as LinkIcon, User as UserIcon, MessageSquare, Loader2, RefreshCw, Package, ChevronRight, Heart, Car } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
-import { useWcCustomerCount, useWcUserOrders } from '@/hooks/use-woocommerce';
+import { useWcUserOrders } from '@/hooks/use-woocommerce';
 import { useBpActivity, useBpMemberData } from '@/hooks/use-buddypress';
 import { showSuccess } from '@/utils/toast';
 import { format } from 'date-fns';
@@ -20,13 +20,24 @@ const Profile = () => {
   const [refreshKey, setRefreshKey] = useState(Date.now());
   
   const { user, logout, refreshUser, isLoading, isRefreshing } = useAuth();
-  const { data: customerCount } = useWcCustomerCount();
   const { data: orders, isLoading: isLoadingOrders } = useWcUserOrders(user?.id);
   const { data: activityData, isLoading: isLoadingActivity } = useBpActivity(user?.id);
   const { data: memberData } = useBpMemberData(user?.id);
   
   const location = useLocation();
   const defaultAvatar = "https://www.lowdistrict.it/wp-content/uploads/placeholder.png";
+
+  // Estrazione dati XProfile (Città, Auto, ecc)
+  const xProfileFields = useMemo(() => {
+    if (!memberData?.xprofile?.groups) return {};
+    const fields: Record<string, string> = {};
+    memberData.xprofile.groups.forEach((group: any) => {
+      group.fields.forEach((field: any) => {
+        fields[field.name] = field.value?.raw || field.value || '';
+      });
+    });
+    return fields;
+  }, [memberData]);
 
   const activities = useMemo(() => activityData?.pages.flat() || [], [activityData]);
 
@@ -38,14 +49,14 @@ const Profile = () => {
     setImgError(false);
     setRefreshKey(Date.now());
     await refreshUser();
-    showSuccess("Profilo sincronizzato con il sito");
+    showSuccess("Dati sincronizzati");
   };
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
         <Loader2 className="animate-spin text-red-600 mb-4" size={40} />
-        <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Sincronizzazione dati...</p>
+        <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Caricamento profilo...</p>
       </div>
     );
   }
@@ -58,7 +69,7 @@ const Profile = () => {
           <UserIcon size={40} className="text-gray-700" />
         </div>
         <h1 className="text-3xl font-black uppercase tracking-tighter mb-2 italic">Area Riservata</h1>
-        <p className="text-gray-500 mb-8 uppercase text-[10px] font-black tracking-widest">Accedi per gestire il tuo garage e i tuoi ordini</p>
+        <p className="text-gray-500 mb-8 uppercase text-[10px] font-black tracking-widest">Accedi per gestire il tuo profilo</p>
         <Link to="/auth" state={{ from: location.pathname }}>
           <Button className="bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest px-12 py-6 rounded-none italic">
             Accedi / Registrati
@@ -74,6 +85,7 @@ const Profile = () => {
       <Navbar />
       
       <div className="pt-24 px-6 max-w-2xl mx-auto">
+        {/* Header Profilo */}
         <div className="flex items-start justify-between mb-8">
           <div className="relative">
             <div className="w-24 h-24 rounded-[2rem] bg-zinc-900 border-2 border-red-600 p-1 rotate-3 flex items-center justify-center overflow-hidden">
@@ -105,41 +117,36 @@ const Profile = () => {
           </div>
         </div>
 
+        {/* Info Utente */}
         <div className="mb-8">
           <h1 className="text-3xl font-black tracking-tighter uppercase mb-1 italic">{user.display_name}</h1>
           <p className="text-red-600 text-xs font-black uppercase tracking-widest mb-4">@{user.username}</p>
           
-          <div className="flex flex-wrap gap-4 text-gray-500 text-[10px] font-black uppercase tracking-tight mb-6">
-            <span className="flex items-center gap-1"><MapPin size={14} /> {memberData?.xprofile?.groups?.[0]?.fields?.find((f: any) => f.name === 'Città')?.value || 'Community Member'}</span>
-            <span className="flex items-center gap-1"><LinkIcon size={14} /> lowdistrict.it</span>
-          </div>
-
-          <div className="bg-zinc-900/50 border border-white/5 p-4 rounded-2xl flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-600/10 rounded-xl">
-                <Users className="text-red-600" size={18} />
-              </div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Membri Community</span>
+          <div className="flex flex-col gap-2 mb-6">
+            <div className="flex items-center gap-2 text-gray-400 text-[10px] font-black uppercase tracking-tight">
+              <MapPin size={14} className="text-red-600" /> 
+              <span>{xProfileFields['Città'] || 'Località non impostata'}</span>
             </div>
-            <span className="text-xl font-black italic">{customerCount || "..."}</span>
+            <div className="flex items-center gap-2 text-gray-400 text-[10px] font-black uppercase tracking-tight">
+              <Car size={14} className="text-red-600" /> 
+              <span>{xProfileFields['Auto'] || xProfileFields['Modello Auto'] || 'Nessun veicolo nel garage'}</span>
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 py-6 border-y border-white/5 mb-8">
-          <div className="text-center">
+        {/* Statistiche Personali */}
+        <div className="grid grid-cols-2 gap-4 py-6 border-y border-white/5 mb-8">
+          <div className="text-center border-r border-white/5">
             <p className="font-black text-2xl tracking-tighter italic">{activities.length}</p>
-            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Post</p>
+            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">I Miei Post</p>
           </div>
           <div className="text-center">
             <p className="font-black text-2xl tracking-tighter italic">{orders?.length || 0}</p>
-            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Ordini</p>
-          </div>
-          <div className="text-center">
-            <p className="font-black text-2xl tracking-tighter italic">0</p>
-            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Amici</p>
+            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Ordini & Selezioni</p>
           </div>
         </div>
 
+        {/* Tabs */}
         <div className="flex gap-8 mb-8 border-b border-white/5">
           <button 
             onClick={() => setActiveTab('activity')}
@@ -148,7 +155,7 @@ const Profile = () => {
               activeTab === 'activity' ? "border-b-2 border-red-600 text-white" : "text-gray-600"
             )}
           >
-            Attività
+            La Mia Bacheca
           </button>
           <button 
             onClick={() => setActiveTab('orders')}
@@ -157,30 +164,31 @@ const Profile = () => {
               activeTab === 'orders' ? "border-b-2 border-red-600 text-white" : "text-gray-600"
             )}
           >
-            Ordini & Selezioni
+            Storico Ordini
           </button>
         </div>
 
+        {/* Contenuto Tab */}
         {activeTab === 'activity' ? (
           <div className="space-y-6">
             {isLoadingActivity ? (
               <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-red-600" /></div>
             ) : activities.length === 0 ? (
-              <div className="py-20 text-center border border-dashed border-white/5">
+              <div className="py-20 text-center border border-dashed border-white/5 rounded-3xl">
                 <MessageSquare className="mx-auto text-gray-800 mb-4" size={40} />
-                <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Nessun post pubblicato</p>
+                <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Non hai ancora pubblicato nulla</p>
               </div>
             ) : (
               activities.map((post: any) => (
-                <div key={post.id} className="bg-zinc-900/30 border border-white/5 p-4 rounded-2xl">
-                  <div className="flex items-center justify-between mb-3">
+                <div key={post.id} className="bg-zinc-900/30 border border-white/5 p-5 rounded-2xl">
+                  <div className="flex items-center justify-between mb-4">
                     <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest">
                       {format(new Date(post.date), 'dd MMM yyyy', { locale: it })}
                     </span>
                     <Heart size={14} className="text-gray-700" />
                   </div>
                   <div 
-                    className="text-sm text-gray-300 prose prose-invert max-w-none line-clamp-3"
+                    className="text-sm text-gray-300 prose prose-invert max-w-none line-clamp-4 activity-content"
                     dangerouslySetInnerHTML={{ __html: post.content }}
                   />
                 </div>
@@ -192,13 +200,13 @@ const Profile = () => {
             {isLoadingOrders ? (
               <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-red-600" /></div>
             ) : !orders || orders.length === 0 ? (
-              <div className="py-20 text-center border border-dashed border-white/5">
+              <div className="py-20 text-center border border-dashed border-white/5 rounded-3xl">
                 <Package className="mx-auto text-gray-800 mb-4" size={40} />
-                <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Nessun ordine trovato</p>
+                <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Nessun ordine o candidatura</p>
               </div>
             ) : (
               orders.map((order: any) => (
-                <div key={order.id} className="bg-zinc-900/50 border border-white/5 p-4 flex items-center gap-4 group">
+                <div key={order.id} className="bg-zinc-900/50 border border-white/5 p-4 flex items-center gap-4 group hover:border-white/10 transition-all">
                   <div className="w-12 h-12 shrink-0 overflow-hidden bg-zinc-800 rounded-xl">
                     <img 
                       src={order.line_items[0]?.image?.src || defaultAvatar} 
@@ -240,6 +248,11 @@ const Profile = () => {
         </div>
       </div>
       <BottomNav />
+      
+      <style>{`
+        .activity-content a { color: #ef4444; font-weight: 900; }
+        .activity-content img { border-radius: 0.5rem; margin-top: 0.5rem; }
+      `}</style>
     </div>
   );
 };
