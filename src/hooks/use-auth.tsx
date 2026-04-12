@@ -60,20 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const jwtToken = resData.data?.jwt || resData.jwt;
       let wpUser = resData.data?.user || resData.user;
       
-      // 2. Se i dati utente mancano, interroghiamo l'endpoint di validazione
-      if (!wpUser) {
-        try {
-          const valRes = await fetch(`https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth/validate?JWT=${jwtToken}`);
-          const valData = await valRes.json();
-          if (valData.success && valData.data?.user) {
-            wpUser = valData.data.user;
-          }
-        } catch (e) {
-          console.error("Validazione fallita");
-        }
-      }
-
-      // 3. Se mancano ancora, proviamo a decodificare il JWT (metodo d'emergenza)
+      // 2. Recupero ID
       let userId = wpUser?.ID || wpUser?.id;
       if (!userId && jwtToken) {
         try {
@@ -82,18 +69,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } catch (e) {}
       }
 
-      if (!userId) throw new Error("Il server non ha fornito l'ID utente. Contatta l'amministratore.");
+      if (!userId) throw new Error("ID utente non trovato");
 
-      // 4. Costruzione profilo
-      const avatarUrl = `https://www.lowdistrict.it/wp-content/uploads/avatars/${userId}/avatar-full.jpg`;
+      // 3. Recupero dati reali e Avatar ufficiale da WP
+      let finalAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${cleanUsername}`;
+      
+      try {
+        const userRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${userId}`);
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          if (userData.avatar_urls?.['96']) {
+            finalAvatar = userData.avatar_urls['96'];
+          }
+          // Se abbiamo dati più freschi da WP, usiamoli
+          wpUser = { ...wpUser, ...userData };
+        }
+      } catch (e) {
+        console.log("Impossibile recuperare avatar ufficiale, uso fallback");
+      }
 
       const userData: User = {
         id: parseInt(userId),
-        username: wpUser?.user_login || cleanUsername,
-        email: wpUser?.user_email || '',
-        nicename: wpUser?.display_name || cleanUsername,
-        display_name: wpUser?.display_name || cleanUsername,
-        avatar: avatarUrl
+        username: wpUser?.user_login || wpUser?.slug || cleanUsername,
+        email: wpUser?.user_email || wpUser?.email || '',
+        nicename: wpUser?.display_name || wpUser?.name || cleanUsername,
+        display_name: wpUser?.display_name || wpUser?.name || cleanUsername,
+        avatar: finalAvatar
       };
 
       saveAuth(jwtToken, userData);

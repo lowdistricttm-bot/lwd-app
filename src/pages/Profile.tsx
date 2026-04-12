@@ -14,6 +14,7 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState<'activity' | 'orders'>('activity');
   const { user, logout, isLoading } = useAuth();
   const { data: customerCount } = useWcCustomerCount();
+  const [imgError, setImgError] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -51,6 +52,10 @@ const Profile = () => {
     { label: 'Gruppi', value: '0' },
   ];
 
+  const avatarUrl = imgError || !user.avatar 
+    ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`
+    : user.avatar;
+
   return (
     <div className="min-h-screen bg-black text-white pb-24">
       <Navbar />
@@ -60,8 +65,9 @@ const Profile = () => {
           <div className="relative">
             <div className="w-24 h-24 rounded-[2rem] bg-zinc-800 border-2 border-red-600 p-1 rotate-3">
               <img 
-                src={user.avatar} 
+                src={avatarUrl} 
                 alt="avatar" 
+                onError={() => setImgError(true)}
                 className="w-full h-full rounded-[1.8rem] object-cover -rotate-3" 
               />
             </div>
