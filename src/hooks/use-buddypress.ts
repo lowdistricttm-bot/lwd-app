@@ -44,14 +44,12 @@ export const useCreateActivity = () => {
       const token = localStorage.getItem('ld_auth_token');
       if (!token) throw new Error("Devi essere loggato per pubblicare");
 
-      // Rimuoviamo X-Requested-With che spesso causa il "Failed to fetch" (CORS preflight failure)
       const response = await fetch(`${BASE_URL}/buddypress/v1/activity`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        mode: 'cors', // Esplicitiamo la modalità CORS
         body: JSON.stringify({
           content: content,
           component: 'activity',
@@ -61,7 +59,11 @@ export const useCreateActivity = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Errore server");
+        // Se il server dice che non siamo autorizzati, potrebbe essere il token scaduto
+        if (response.status === 401 || response.status === 403) {
+          throw new Error("Sessione scaduta o permessi insufficienti. Prova a rifare il login.");
+        }
+        throw new Error(errorData.message || "Errore del server");
       }
 
       return response.json();

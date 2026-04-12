@@ -1,52 +1,24 @@
+<?php
 /**
- * LOW DISTRICT - FINAL CONTENT BRIDGE
- * Estrae il testo pulito dai post di BuddyPress.
+ * Sblocco CORS e Autorizzazione per App Low District
  */
+add_action( 'rest_api_init', function() {
+    remove_filter( 'rest_pre_serve_request', 'rest_send_cors_headers' );
+    add_filter( 'rest_pre_serve_request', function( $value ) {
+        header( 'Access-Control-Allow-Origin: *' );
+        header( 'Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE' );
+        header( 'Access-Control-Allow-Credentials: true' );
+        header( 'Access-Control-Allow-Headers: Authorization, Content-Type, X-WP-Nonce, X-Requested-With' );
+        
+        // Se è una richiesta OPTIONS (pre-flight), terminiamo qui con successo
+        if ( 'OPTIONS' == $_SERVER['REQUEST_METHOD'] ) {
+            status_header( 200 );
+            exit();
+        }
+        
+        return $value;
+    });
+}, 15 );
 
-add_action('rest_api_init', function () {
-    register_rest_route('lowdistrict/v1', '/activity', array(
-        'methods' => 'GET',
-        'callback' => function($request) {
-            if (!function_exists('bp_activity_get')) {
-                return array();
-            }
-
-            $activities_data = bp_activity_get(array(
-                'per_page' => 20,
-                'display_comments' => 'stream'
-            ));
-
-            $response = array();
-            if (!empty($activities_data['activities'])) {
-                foreach ($activities_data['activities'] as $at) {
-                    
-                    // 1. Prendiamo il contenuto o l'azione
-                    $raw_content = !empty($at->content) ? $at->content : $at->action;
-                    
-                    // 2. Puliamo il testo: BuddyPress spesso mette link HTML nell'azione
-                    // Rimuoviamo i tag ma teniamo il testo (es. "User ha postato" invece di "<a...>User</a> ha postato")
-                    $clean_content = wp_strip_all_tags($raw_content);
-                    
-                    // Se dopo la pulizia è ancora vuoto, mettiamo un fallback
-                    if (empty($clean_content)) {
-                        $clean_content = "Ha aggiornato il suo profilo.";
-                    }
-
-                    $response[] = array(
-                        'id' => (int)$at->id,
-                        'user_id' => (int)$at->user_id,
-                        'user_name' => bp_core_get_user_displayname($at->user_id),
-                        'user_avatar' => array(
-                            'thumb' => bp_core_fetch_avatar(array('item_id' => $at->user_id, 'html' => false))
-                        ),
-                        'content' => $clean_content,
-                        'date' => $at->date_recorded
-                    );
-                }
-            }
-
-            return rest_ensure_response($response);
-        },
-        'permission_callback' => '__return_true',
-    ));
-});
+// Assicura che BuddyPress accetti le pubblicazioni via REST API
+add_filter( 'bp_rest_activity_create_item_permissions_check', '__return_true' );
