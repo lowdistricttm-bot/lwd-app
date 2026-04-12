@@ -1,68 +1,31 @@
 "use client";
 
-import React, { useState, useRef } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ImagePlus, X, Send, Loader2 } from 'lucide-react';
+import { ImagePlus, Send, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
-import { useCreatePost } from '@/hooks/use-posts';
+import { useCreateActivity } from '@/hooks/use-buddypress';
 import { showSuccess, showError } from '@/utils/toast';
-import { supabase } from '@/integrations/supabase/client';
 
 const CreatePostDialog = () => {
   const [open, setOpen] = useState(false);
   const [content, setContent] = useState("");
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
+  const createActivity = useCreateActivity();
   
-  const createPost = useCreatePost();
   const defaultAvatar = "https://www.lowdistrict.it/wp-content/uploads/placeholder.png";
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onload = (event) => setImagePreview(event.target?.result as string);
-      reader.readAsDataURL(file);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!content.trim() || !user) return;
 
     try {
-      let image_url = "";
-      
-      if (imageFile) {
-        const fileExt = imageFile.name.split('.').pop();
-        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-          .from('stories') // Usiamo lo stesso bucket per semplicità
-          .upload(fileName, imageFile);
-        
-        if (uploadError) throw uploadError;
-        const { data: { publicUrl } } = supabase.storage.from('stories').getPublicUrl(fileName);
-        image_url = publicUrl;
-      }
-
-      await createPost.mutateAsync({ 
-        content, 
-        user_id: user.id.toString(),
-        user_name: user.display_name,
-        user_avatar: user.avatar || defaultAvatar,
-        image_url
-      });
-
-      showSuccess("Post pubblicato!");
+      await createActivity.mutateAsync({ content });
+      showSuccess("Post pubblicato sul sito!");
       setOpen(false);
       setContent("");
-      setImagePreview(null);
-      setImageFile(null);
     } catch (err: any) {
       showError("Errore durante la pubblicazione");
     }
@@ -99,22 +62,13 @@ const CreatePostDialog = () => {
             />
           </div>
 
-          {imagePreview && (
-            <div className="relative aspect-video rounded-2xl overflow-hidden border border-white/10">
-              <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-              <button type="button" onClick={() => {setImagePreview(null); setImageFile(null);}} className="absolute top-2 right-2 bg-black/50 p-1.5 rounded-full"><X size={16} /></button>
-            </div>
-          )}
-
           <div className="flex items-center justify-between pt-4 border-t border-white/5">
-            <button type="button" onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 text-gray-400 hover:text-white">
-              <ImagePlus size={20} />
-              <span className="text-xs font-bold uppercase tracking-widest">Foto</span>
-            </button>
-            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+            <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">
+              Il post apparirà sulla bacheca del sito
+            </p>
             
-            <Button type="submit" disabled={!content.trim() || createPost.isPending} className="bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest px-8 rounded-none italic">
-              {createPost.isPending ? <Loader2 className="animate-spin" /> : "Pubblica"}
+            <Button type="submit" disabled={!content.trim() || createActivity.isPending} className="bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest px-8 rounded-none italic">
+              {createActivity.isPending ? <Loader2 className="animate-spin" /> : "Pubblica"}
             </Button>
           </div>
         </form>
