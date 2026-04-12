@@ -9,6 +9,8 @@ import Shop from "./pages/Shop";
 import Events from "./pages/Events";
 import Garage from "./pages/Garage";
 import Profile from "./pages/Profile";
+import Selections from "./pages/Selections";
+import PaymentMethods from "./pages/PaymentMethods";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +28,8 @@ const App = () => (
           <Route path="/garage" element={<Garage />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/selections" element={<Selections />} />
+          <Route path="/payments" element={<PaymentMethods />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
