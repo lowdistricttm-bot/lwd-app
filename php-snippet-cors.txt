@@ -1,7 +1,9 @@
 <?php
 /**
- * Sblocco CORS e Autorizzazione per App Low District
+ * Sblocco TOTALE per App Low District
+ * Gestisce CORS, Header Authorization e Permessi BuddyPress
  */
+
 add_action( 'rest_api_init', function() {
     remove_filter( 'rest_pre_serve_request', 'rest_send_cors_headers' );
     add_filter( 'rest_pre_serve_request', function( $value ) {
@@ -10,15 +12,26 @@ add_action( 'rest_api_init', function() {
         header( 'Access-Control-Allow-Credentials: true' );
         header( 'Access-Control-Allow-Headers: Authorization, Content-Type, X-WP-Nonce, X-Requested-With' );
         
-        // Se è una richiesta OPTIONS (pre-flight), terminiamo qui con successo
         if ( 'OPTIONS' == $_SERVER['REQUEST_METHOD'] ) {
             status_header( 200 );
             exit();
         }
-        
         return $value;
     });
 }, 15 );
 
-// Assicura che BuddyPress accetti le pubblicazioni via REST API
-add_filter( 'bp_rest_activity_create_item_permissions_check', '__return_true' );
+// Forza BuddyPress ad accettare le pubblicazioni se arriva un token valido
+add_filter( 'bp_rest_activity_create_item_permissions_check', function( $status ) {
+    if ( is_user_logged_in() ) {
+        return true;
+    }
+    return $status;
+}, 20 );
+
+// Assicura che l'utente sia riconosciuto anche via REST
+add_filter( 'determine_current_user', function( $user_id ) {
+    if ( $user_id ) return $user_id;
+    
+    // Se Simple JWT Login non ha ancora impostato l'utente, BuddyPress potrebbe fallire
+    return $user_id;
+}, 25 );

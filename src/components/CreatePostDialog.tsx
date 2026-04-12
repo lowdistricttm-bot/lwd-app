@@ -29,19 +29,21 @@ const CreatePostDialog = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim()) {
+    if (!content.trim() || !user) {
       showError("Scrivi qualcosa prima di pubblicare");
       return;
     }
 
     try {
-      await createActivity.mutateAsync({ content });
+      await createActivity.mutateAsync({ 
+        content, 
+        userId: user.id 
+      });
       showSuccess("Post pubblicato con successo!");
       setOpen(false);
       setContent("");
       setImage(null);
     } catch (err: any) {
-      // L'errore viene già loggato nell'hook, qui mostriamo un messaggio più specifico se disponibile
       showError(err.message || "Errore durante la pubblicazione. Riprova.");
     }
   };

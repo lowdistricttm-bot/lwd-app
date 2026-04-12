@@ -40,7 +40,7 @@ export const useCreateActivity = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async ({ content }: { content: string }) => {
+    mutationFn: async ({ content, userId }: { content: string, userId: number }) => {
       const token = localStorage.getItem('ld_auth_token');
       if (!token) throw new Error("Devi essere loggato per pubblicare");
 
@@ -52,6 +52,7 @@ export const useCreateActivity = () => {
         },
         body: JSON.stringify({
           content: content,
+          user_id: userId, // BuddyPress richiede spesso l'ID esplicito
           component: 'activity',
           type: 'activity_update'
         })
@@ -59,11 +60,7 @@ export const useCreateActivity = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        // Se il server dice che non siamo autorizzati, potrebbe essere il token scaduto
-        if (response.status === 401 || response.status === 403) {
-          throw new Error("Sessione scaduta o permessi insufficienti. Prova a rifare il login.");
-        }
-        throw new Error(errorData.message || "Errore del server");
+        throw new Error(errorData.message || `Errore ${response.status}`);
       }
 
       return response.json();
