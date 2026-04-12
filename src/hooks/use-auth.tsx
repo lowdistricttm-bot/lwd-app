@@ -10,7 +10,6 @@ interface User {
   nicename: string;
   display_name: string;
   avatar?: string;
-  mention_name?: string;
 }
 
 interface AuthContextType {
@@ -48,57 +47,50 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchLatestUserData = useCallback(async (userId: number, currentToken: string) => {
     setIsRefreshing(true);
     try {
-      // Usiamo l'header Authorization Bearer che è più standard e affidabile
-      const response = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${currentToken}`,
-          'Content-Type': 'application/json'
-        }
+      // 1. Proviamo BuddyPress (Sorgente primaria per avatar personalizzati)
+      const bpResponse = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${userId}`, {
+        headers: { 'Authorization': `Bearer ${currentToken}` }
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        // BuddyPress può restituire un oggetto o un array di un elemento
-        const member = Array.isArray(data) ? data[0] : data;
-        const rawAvatar = member?.avatar_urls?.full || member?.avatar_urls?.thumb;
+      if (bpResponse.ok) {
+        const bpData = await bpResponse.json();
+        const member = Array.isArray(bpData) ? bpData[0] : bpData;
+        const avatarUrl = member?.avatar_urls?.full || member?.avatar_urls?.thumb;
         
-        if (rawAvatar) {
-          // Aggiungiamo un timestamp per evitare la cache del browser
-          const bpAvatar = `${rawAvatar}${rawAvatar.includes('?') ? '&' : '?'}t=${Date.now()}`;
-          
-          setUser(prev => {
-            if (!prev) return null;
-            const updated = { ...prev, avatar: bpAvatar };
-            localStorage.setItem('ld_user_data', JSON.stringify(updated));
-            return updated;
-          });
+        if (avatarUrl && typeof avatarUrl === 'string' && avatarUrl.includes('http')) {
+          const finalUrl = `${avatarUrl}${avatarUrl.includes('?') ? '&' : '?'}v=${Date.now()}`;
+          updateUserInState({ avatar: finalUrl });
           return;
         }
       }
 
-      // Fallback su WP Users se BuddyPress non risponde correttamente
-      const wpRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${userId}`, {
+      // 2. Fallback su WordPress Core (Sorgente secondaria)
+      const wpResponse = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${userId}`, {
         headers: { 'Authorization': `Bearer ${currentToken}` }
       });
-      if (wpRes.ok) {
-        const wpData = await wpRes.json();
+      
+      if (wpResponse.ok) {
+        const wpData = await wpResponse.json();
         const wpAvatar = wpData.avatar_urls?.['96'] || wpData.avatar_urls?.['48'];
         if (wpAvatar) {
-          const finalWpAvatar = `${wpAvatar}&t=${Date.now()}`;
-          setUser(prev => {
-            if (!prev) return null;
-            const updated = { ...prev, avatar: finalWpAvatar };
-            localStorage.setItem('ld_user_data', JSON.stringify(updated));
-            return updated;
-          });
+          updateUserInState({ avatar: wpAvatar });
         }
       }
     } catch (e) {
-      console.error("Errore critico sincronizzazione:", e);
+      console.error("Errore sync:", e);
     } finally {
       setIsRefreshing(false);
     }
   }, [user]);
+
+  const updateUserInState = (newData: Partial<User>) => {
+    setUser(prev => {
+      if (!prev) return null;
+      const updated = { ...prev, ...newData };
+      localStorage.setItem('ld_user_data', JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   useEffect(() => {
     if (user?.id && token) {
@@ -116,15 +108,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       const resData = await response.json();
-      if (!response.ok || !resData.success) {
-        throw new Error(resData.message || 'Credenziali non valide');
-      }
+      if (!response.ok || !resData.success) throw new Error(resData.message || 'Errore login');
 
       const jwtToken = resData.data?.jwt || resData.jwt;
       const wpUser = resData.data?.user || resData.user;
       const userId = wpUser?.ID || wpUser?.id;
-
-      if (!userId) throw new Error("ID utente non trovato");
 
       const userData: User = {
         id: parseInt(userId),
@@ -141,8 +129,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.setItem('ld_user_data', JSON.stringify(userData));
       
       await fetchLatestUserData(userData.id, jwtToken);
-      showSuccess(`Bentornato ${userData.display_name}`);
-      
+      showSuccess(`Benvenuto ${userData.display_name}`);
     } catch (error: any) {
       showError(error.message);
       throw error;
@@ -160,9 +147,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const refreshUser = async () => {
-    if (user?.id && token) {
-      await fetchLatestUserData(user.id, token);
-    }
+    if (user?.id && token) await fetchLatestUserData(user.id, token);
   };
 
   return (
