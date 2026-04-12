@@ -14,7 +14,8 @@ const Auth = () => {
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
-    email: '',
+    username: '', // Usiamo username per coprire sia email che nickname
+    email: '',    // Solo per la registrazione
     password: ''
   });
   
@@ -29,11 +30,16 @@ const Auth = () => {
     e.preventDefault();
     try {
       if (isLogin) {
-        await login(formData.email, formData.password);
+        // Nel login, passiamo il valore del campo 'username' che può contenere email o nickname
+        await login(formData.username, formData.password);
         navigate('/profile');
       } else {
-        await register(formData);
-        setIsLogin(true); // Dopo la registrazione, passa al login
+        // Nella registrazione usiamo l'email specifica
+        await register({
+          ...formData,
+          email: formData.email // Assicuriamoci di passare l'email corretta per la creazione account
+        });
+        setIsLogin(true);
       }
     } catch (err) {
       // Errori gestiti dai toast
@@ -57,7 +63,7 @@ const Auth = () => {
             {isLogin ? "Bentornato" : "Nuovo Profilo"}
           </h1>
           <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em]">
-            {isLogin ? "Accedi con il tuo account Low District" : "Entra a far parte della community"}
+            {isLogin ? "Accedi con Email o Username" : "Entra a far parte della community"}
           </p>
         </div>
 
@@ -90,13 +96,15 @@ const Auth = () => {
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Email</Label>
+            <Label htmlFor={isLogin ? "username" : "email"} className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">
+              {isLogin ? "Email o Username" : "Email"}
+            </Label>
             <Input 
-              id="email"
-              type="email"
-              value={formData.email}
+              id={isLogin ? "username" : "email"}
+              type={isLogin ? "text" : "email"}
+              value={isLogin ? formData.username : formData.email}
               onChange={handleInputChange}
-              placeholder="tua@email.com" 
+              placeholder={isLogin ? "Nickname o email" : "tua@email.com"} 
               className="bg-zinc-900 border-white/5 rounded-none py-6 focus:ring-red-600"
               required
             />
