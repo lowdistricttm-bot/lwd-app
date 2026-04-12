@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchLatestUserData = useCallback(async (userId: number, currentToken: string) => {
     setIsRefreshing(true);
     try {
-      // 1. Proviamo BuddyPress (Metodo più probabile per avatar personalizzati)
+      // 1. Proviamo BuddyPress (Metodo primario per Low District)
       const bpResponse = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${userId}?context=view`, {
         headers: { 'Authorization': `Bearer ${currentToken}` }
       });
@@ -58,15 +58,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const member = Array.isArray(data) ? data[0] : data;
         const rawAvatar = member?.avatar_urls?.full || member?.avatar_urls?.thumb;
         
-        if (rawAvatar) {
-          // Bypass totale della cache con timestamp unico
-          const finalAvatar = `${rawAvatar}${rawAvatar.includes('?') ? '&' : '?'}nocache=${Date.now()}`;
+        if (rawAvatar && !rawAvatar.includes('gravatar.com')) {
+          // Forza il refresh dell'immagine con un timestamp
+          const finalAvatar = `${rawAvatar}${rawAvatar.includes('?') ? '&' : '?'}v=${Date.now()}`;
           updateUserAvatar(finalAvatar);
           return;
         }
       }
 
-      // 2. Fallback su WP Users standard
+      // 2. Fallback su WP Users standard se BuddyPress non restituisce un avatar personalizzato
       const wpResponse = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${userId}`, {
         headers: { 'Authorization': `Bearer ${currentToken}` }
       });
@@ -74,17 +74,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (wpResponse.ok) {
         const wpData = await wpResponse.json();
         const wpAvatar = wpData.avatar_urls?.['96'] || wpData.avatar_urls?.['48'];
-        if (wpAvatar) {
-          const finalWpAvatar = `${wpAvatar}&nocache=${Date.now()}`;
+        if (wpAvatar && !wpAvatar.includes('gravatar.com')) {
+          const finalWpAvatar = `${wpAvatar}${wpAvatar.includes('?') ? '&' : '?'}v=${Date.now()}`;
           updateUserAvatar(finalWpAvatar);
         }
       }
     } catch (e) {
-      console.error("Errore critico sync:", e);
+      console.error("Errore durante la sincronizzazione dell'avatar:", e);
     } finally {
       setIsRefreshing(false);
     }
-  }, [user]);
+  }, []);
 
   const updateUserAvatar = (newAvatar: string) => {
     setUser(prev => {
@@ -97,9 +97,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (user?.id && token) {
-      // Piccolo ritardo per permettere al server di stabilizzare la sessione
-      const timer = setTimeout(() => fetchLatestUserData(user.id, token), 500);
-      return () => clearTimeout(timer);
+      fetchLatestUserData(user.id, token);
     }
   }, []);
 
@@ -135,6 +133,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.setItem('ld_auth_token', jwtToken);
       localStorage.setItem('ld_user_data', JSON.stringify(userData));
       
+      // Sincronizza immediatamente l'avatar dopo il login
       await fetchLatestUserData(userData.id, jwtToken);
       showSuccess(`Bentornato ${userData.display_name}`);
       
