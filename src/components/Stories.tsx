@@ -1,18 +1,19 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { cn } from "@/lib/utils";
 import StoryViewer from './StoryViewer';
 import { AnimatePresence } from 'framer-motion';
 import { Plus } from 'lucide-react';
-import { showSuccess } from '@/utils/toast';
+import { showSuccess, showError } from '@/utils/toast';
 
-const stories = [
+const INITIAL_STORIES = [
   { 
     id: 1, 
     name: 'La tua storia', 
     img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=LowDistrict', 
-    isUser: true 
+    isUser: true,
+    hasContent: false
   },
   { id: 2, name: 'm3_static', img: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&q=80&w=800' },
   { id: 3, name: 'low_911', img: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=800' },
@@ -21,9 +22,10 @@ const stories = [
 ];
 
 const Stories = () => {
+  const [allStories, setAllStories] = useState(INITIAL_STORIES);
   const [selectedStoryIndex, setSelectedStoryIndex] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Blocca lo scroll della pagina quando le storie sono aperte
   useEffect(() => {
     if (selectedStoryIndex !== null) {
       document.body.style.overflow = 'hidden';
@@ -35,23 +37,65 @@ const Stories = () => {
     };
   }, [selectedStoryIndex]);
 
-  const handleAddStory = (e: React.MouseEvent) => {
+  const handleAddStoryClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    showSuccess("Apertura fotocamera per nuova storia...");
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showError("Per favore seleziona un'immagine");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const imageUrl = event.target?.result as string;
+      
+      // Aggiorna la storia dell'utente con la nuova immagine
+      setAllStories(prev => prev.map(s => 
+        s.isUser ? { ...s, img: imageUrl, hasContent: true } : s
+      ));
+      
+      showSuccess("Storia caricata con successo!");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleStoryClick = (index: number) => {
+    const story = allStories[index];
+    // Se è l'utente e non ha ancora caricato nulla, apri il selettore
+    if (story.isUser && !story.hasContent) {
+      fileInputRef.current?.click();
+    } else {
+      setSelectedStoryIndex(index);
+    }
   };
 
   return (
     <div className="relative z-10">
+      {/* Input nascosto per fotocamera/galleria */}
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        className="hidden" 
+        accept="image/*" 
+        onChange={handleFileChange}
+      />
+
       <div className="flex gap-4 overflow-x-auto py-4 px-4 no-scrollbar bg-black border-b border-white/5">
-        {stories.map((story, index) => (
+        {allStories.map((story, index) => (
           <button 
             key={story.id} 
-            onClick={() => setSelectedStoryIndex(index)}
+            onClick={() => handleStoryClick(index)}
             className="flex flex-col items-center gap-1.5 shrink-0 outline-none group relative"
           >
             <div className={cn(
               "w-[68px] h-[68px] rounded-full p-[2.5px] transition-all duration-300 group-active:scale-90",
-              story.isUser 
+              story.isUser && !story.hasContent
                 ? "bg-transparent" 
                 : "bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]"
             )}>
@@ -62,8 +106,8 @@ const Stories = () => {
 
             {story.isUser && (
               <div 
-                onClick={handleAddStory}
-                className="absolute bottom-6 right-0 bg-zinc-700 text-white rounded-full p-0.5 border-[2.5px] border-black hover:scale-110 transition-transform z-10"
+                onClick={handleAddStoryClick}
+                className="absolute bottom-6 right-0 bg-red-600 text-white rounded-full p-0.5 border-[2.5px] border-black hover:scale-110 transition-transform z-10"
               >
                 <Plus size={14} strokeWidth={4} />
               </div>
@@ -79,7 +123,7 @@ const Stories = () => {
       <AnimatePresence>
         {selectedStoryIndex !== null && (
           <StoryViewer 
-            stories={stories} 
+            stories={allStories} 
             initialIndex={selectedStoryIndex} 
             onClose={() => setSelectedStoryIndex(null)} 
           />
