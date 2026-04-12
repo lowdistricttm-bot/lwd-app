@@ -9,30 +9,42 @@ export const useBpActivity = () => {
     queryFn: async () => {
       const token = localStorage.getItem('ld_auth_token');
       
-      // Semplifichiamo l'URL al massimo: niente context, niente cache-buster
-      // Proviamo anche a vedere se il server preferisce il parametro 'jwt' (minuscolo) o 'JWT'
-      const url = `${BASE_URL}/buddypress/v1/activity?per_page=20${token ? `&JWT=${token}` : ''}`;
+      // Proviamo l'URL senza parametri JWT per vedere se il server lo accetta
+      const url = `${BASE_URL}/buddypress/v1/activity?per_page=20`;
+      
+      const headers: Record<string, string> = {
+        'Accept': 'application/json'
+      };
+
+      // Se abbiamo il token, lo passiamo nell'Header Authorization (metodo standard)
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
       
       try {
         const response = await fetch(url, { 
           method: 'GET',
-          headers: { 
-            'Accept': 'application/json'
-          },
+          headers: headers,
           mode: 'cors'
         });
         
         if (!response.ok) {
-          const errorText = await response.text();
-          let errorMessage = `Errore ${response.status}`;
-          try {
-            const errorJson = JSON.parse(errorText);
-            // Se WordPress ci dà un codice specifico (es. rest_no_route), lo mostriamo
-            errorMessage = errorJson.message || errorJson.code || errorMessage;
-          } catch (e) {
-            errorMessage = errorText.substring(0, 100) || errorMessage;
+          // Se fallisce con l'header, facciamo un ultimo tentativo col parametro URL (ma minuscolo 'jwt')
+          const fallbackUrl = `${url}&jwt=${token}`;
+          const fallbackRes = await fetch(fallbackUrl, { headers: { 'Accept': 'application/json' } });
+          
+          if (!fallbackRes.ok) {
+            const errorText = await fallbackRes.text();
+            let errorMessage = `Errore ${fallbackRes.status}`;
+            try {
+              const errorJson = JSON.parse(errorText);
+              errorMessage = errorJson.message || errorJson.code || errorMessage;
+            } catch (e) {
+              errorMessage = errorText.substring(0, 100) || errorMessage;
+            }
+            throw new Error(errorMessage);
           }
-          throw new Error(errorMessage);
+          return fallbackRes.json();
         }
         
         return response.json();
@@ -51,11 +63,14 @@ export const useBpMembers = (perPage = 100) => {
     queryKey: ['bp-members', perPage],
     queryFn: async () => {
       const token = localStorage.getItem('ld_auth_token');
-      const url = `${BASE_URL}/buddypress/v1/members?per_page=${perPage}&type=active&populate_extras=true${token ? `&JWT=${token}` : ''}`;
+      const url = `${BASE_URL}/buddypress/v1/members?per_page=${perPage}&type=active&populate_extras=true`;
+      
+      const headers: Record<string, string> = { 'Accept': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
 
       const response = await fetch(url, {
         method: 'GET',
-        headers: { 'Accept': 'application/json' },
+        headers: headers,
         mode: 'cors'
       });
       
