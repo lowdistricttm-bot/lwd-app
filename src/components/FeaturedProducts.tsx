@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ShoppingCart } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { showSuccess } from '@/utils/toast';
+import { useCart } from '@/hooks/use-cart';
 
 const products = [
   { id: 1, name: "Classic Logo Hoodie", price: "€55.00", image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800", tag: "Best Seller" },
@@ -14,6 +14,19 @@ const products = [
 ];
 
 const FeaturedProducts = () => {
+  const { addToCart } = useCart();
+
+  const handleAdd = (product: any) => {
+    const numericPrice = parseFloat(product.price.replace('€', '').replace(',', '.'));
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: numericPrice,
+      image: product.image,
+      quantity: 1
+    });
+  };
+
   return (
     <section className="py-24 bg-black px-6">
       <div className="max-w-7xl mx-auto">
@@ -41,7 +54,7 @@ const FeaturedProducts = () => {
                 <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                 <div className="absolute top-4 left-4 bg-red-600 text-white text-[10px] font-black uppercase px-2 py-1 tracking-widest">{product.tag}</div>
                 <button 
-                  onClick={() => showSuccess(`${product.name} aggiunto al carrello!`)}
+                  onClick={() => handleAdd(product)}
                   className="absolute bottom-4 right-4 bg-white text-black p-3 rounded-full opacity-0 translate-y-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0"
                 >
                   <ShoppingCart size={20} />

@@ -8,14 +8,14 @@ import BottomNav from '@/components/BottomNav';
 import { ChevronLeft, ShoppingBag, ShieldCheck, Truck, RefreshCcw, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { showSuccess } from '@/utils/toast';
 import { useWcProduct } from '@/hooks/use-woocommerce';
+import { useCart } from '@/hooks/use-cart';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addToCart } = useCart();
   const { data: product, isLoading } = useWcProduct(id);
-  const [selectedSize, setSelectedSize] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -28,7 +28,15 @@ const ProductDetail = () => {
   if (!product) return <div className="min-h-screen bg-black flex items-center justify-center">Prodotto non trovato</div>;
 
   const handleAddToCart = () => {
-    showSuccess(`${product.name} aggiunto al carrello!`);
+    const numericPrice = parseFloat(product.price.replace('€', '').replace(',', '.'));
+    
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: numericPrice,
+      image: product.images[0]?.src || "",
+      quantity: 1
+    });
   };
 
   return (

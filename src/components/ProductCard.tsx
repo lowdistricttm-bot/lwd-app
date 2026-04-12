@@ -4,7 +4,7 @@ import React from 'react';
 import { Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { showSuccess } from '@/utils/toast';
+import { useCart } from '@/hooks/use-cart';
 
 interface ProductProps {
   product: {
@@ -20,6 +20,21 @@ interface ProductProps {
 
 const ProductCard = ({ product }: ProductProps) => {
   const navigate = useNavigate();
+  const { addToCart } = useCart();
+
+  const handleQuickAdd = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Puliamo il prezzo (rimuovendo € e convertendo in numero)
+    const numericPrice = parseFloat(product.price.replace('€', '').replace(',', '.'));
+    
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: numericPrice,
+      image: product.image,
+      quantity: 1
+    });
+  };
 
   return (
     <motion.div 
@@ -52,10 +67,7 @@ const ProductCard = ({ product }: ProductProps) => {
 
         {/* Quick Add Button */}
         <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            showSuccess(`${product.name} aggiunto al carrello!`);
-          }}
+          onClick={handleQuickAdd}
           className="absolute bottom-4 right-4 bg-white text-black p-3 rounded-full opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-xl"
         >
           <Plus size={20} />
