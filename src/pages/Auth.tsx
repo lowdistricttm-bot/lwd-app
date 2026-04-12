@@ -11,23 +11,32 @@ import Logo from '@/components/Logo';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const { login, isLoading } = useAuth();
+  const [formData, setFormData] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    password: ''
+  });
+  
+  const { login, register, isLoading } = useAuth();
   const navigate = useNavigate();
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLogin) {
-      try {
-        await login(username, password);
+    try {
+      if (isLogin) {
+        await login(formData.email, formData.password);
         navigate('/profile');
-      } catch (err) {
-        // Errore gestito dal toast nel hook
+      } else {
+        await register(formData);
+        setIsLogin(true); // Dopo la registrazione, passa al login
       }
-    } else {
-      // Per la registrazione, rimandiamo al sito web per sicurezza
-      window.open('https://www.lowdistrict.it/mio-account/', '_blank');
+    } catch (err) {
+      // Errori gestiti dai toast
     }
   };
 
@@ -45,30 +54,61 @@ const Auth = () => {
             <Logo className="h-16" />
           </div>
           <h1 className="text-4xl font-black tracking-tighter uppercase mb-2 italic">
-            {isLogin ? "Bentornato" : "Unisciti a noi"}
+            {isLogin ? "Bentornato" : "Nuovo Profilo"}
           </h1>
           <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em]">
-            {isLogin ? "Accedi con il tuo account Low District" : "Crea il tuo profilo sul sito ufficiale"}
+            {isLogin ? "Accedi con il tuo account Low District" : "Entra a far parte della community"}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6 max-w-sm mx-auto w-full">
+        <form onSubmit={handleSubmit} className="space-y-5 max-w-sm mx-auto w-full">
+          {!isLogin && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="first_name" className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Nome</Label>
+                <Input 
+                  id="first_name"
+                  value={formData.first_name}
+                  onChange={handleInputChange}
+                  placeholder="Es. Marco" 
+                  className="bg-zinc-900 border-white/5 rounded-none py-6 focus:ring-red-600"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="last_name" className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Cognome</Label>
+                <Input 
+                  id="last_name"
+                  value={formData.last_name}
+                  onChange={handleInputChange}
+                  placeholder="Es. Rossi" 
+                  className="bg-zinc-900 border-white/5 rounded-none py-6 focus:ring-red-600"
+                  required
+                />
+              </div>
+            </div>
+          )}
+
           <div className="space-y-2">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Username o Email</Label>
+            <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Email</Label>
             <Input 
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Il tuo username" 
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              placeholder="tua@email.com" 
               className="bg-zinc-900 border-white/5 rounded-none py-6 focus:ring-red-600"
               required
             />
           </div>
+          
           <div className="space-y-2">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Password</Label>
+            <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Password</Label>
             <Input 
+              id="password"
               type="password" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={formData.password}
+              onChange={handleInputChange}
               placeholder="••••••••" 
               className="bg-zinc-900 border-white/5 rounded-none py-6 focus:ring-red-600"
               required
@@ -78,9 +118,9 @@ const Auth = () => {
           <Button 
             type="submit" 
             disabled={isLoading}
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest py-7 rounded-none shadow-xl shadow-red-600/20 italic"
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest py-7 rounded-none shadow-xl shadow-red-600/20 italic mt-4"
           >
-            {isLoading ? <Loader2 className="animate-spin" /> : (isLogin ? "Accedi" : "Vai alla Registrazione")}
+            {isLoading ? <Loader2 className="animate-spin" /> : (isLogin ? "Accedi" : "Crea Account")}
           </Button>
         </form>
 
@@ -89,7 +129,7 @@ const Auth = () => {
             onClick={() => setIsLogin(!isLogin)}
             className="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-colors"
           >
-            {isLogin ? "Non hai un account? Registrati sul sito" : "Hai già un account? Accedi"}
+            {isLogin ? "Non hai un account? Registrati ora" : "Hai già un account? Accedi"}
           </button>
         </div>
       </div>

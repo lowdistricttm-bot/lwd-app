@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { showSuccess, showError } from '@/utils/toast';
+import { wcPost } from '@/lib/woocommerce';
 
 interface User {
   id: number;
@@ -16,6 +17,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (username: string, password: string) => Promise<void>;
+  register: (userData: any) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -75,6 +77,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const register = async (userData: any) => {
+    setIsLoading(true);
+    try {
+      // Creazione cliente su WooCommerce
+      const customerData = {
+        email: userData.email,
+        first_name: userData.first_name,
+        last_name: userData.last_name,
+        username: userData.email.split('@')[0], // Genera username dall'email
+        password: userData.password,
+      };
+
+      await wcPost('/customers', customerData);
+      
+      showSuccess("Account creato con successo! Ora puoi accedere.");
+      return;
+    } catch (error: any) {
+      showError(error.message || "Errore durante la registrazione");
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = () => {
     setToken(null);
     setUser(null);
@@ -84,7 +110,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, token, login, register, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
