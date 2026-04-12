@@ -17,9 +17,10 @@ const Index = () => {
     <main className="min-h-screen bg-black text-white selection:bg-red-600 selection:text-white pb-20 md:pb-0">
       <Navbar />
       
-      <div className="h-20 md:hidden"></div>
-      
-      <Stories />
+      {/* Padding top per compensare la Navbar fixed su tutte le risoluzioni */}
+      <div className="pt-20 md:pt-24">
+        <Stories />
+      </div>
       
       <Hero />
       
