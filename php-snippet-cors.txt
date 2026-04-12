@@ -1,13 +1,13 @@
 /**
- * LOW DISTRICT - ULTIMATE BRIDGE
- * Recupera i post della bacheca indipendentemente dal nome della pagina.
+ * LOW DISTRICT - EMERGENCY BRIDGE
+ * Forza il recupero dei dati ignorando i filtri di privacy.
  */
 
 add_action('rest_api_init', function () {
     register_rest_route('lowdistrict/v1', '/activity', array(
         'methods' => 'GET',
         'callback' => function($request) {
-            // 1. Autenticazione forzata tramite JWT
+            // 1. Proviamo a forzare l'utente se il token è presente
             $token = $request->get_param('JWT');
             if (!empty($token) && class_exists('T_JWT_Authentication')) {
                 $jwt_auth = new T_JWT_Authentication();
@@ -17,49 +17,49 @@ add_action('rest_api_init', function () {
                 }
             }
 
-            // 2. Recupero attività (Bacheca)
+            // 2. Recupero brutale di TUTTE le attività recenti
             if (function_exists('bp_activity_get')) {
-                $args = array(
+                $activities = bp_activity_get(array(
                     'per_page' => 20,
-                    'display_comments' => 'stream',
-                    'show_hidden' => true, // Mostra anche post che potrebbero essere filtrati
-                    'spam' => 'ham_only',
-                );
+                    'spam'     => 'ham_only',
+                    'privacy'  => 'public', // Proviamo a chiedere solo quelle pubbliche prima
+                ));
 
-                $activities = bp_activity_get($args);
-                
+                // Se è ancora vuoto, proviamo senza alcun filtro di tipo
                 if (empty($activities['activities'])) {
-                    // Se è ancora vuoto, proviamo a recuperare gli ultimi post globali senza filtri
-                    $activities = bp_activity_get(array('per_page' => 10));
+                    $activities = bp_activity_get(array(
+                        'per_page' => 10,
+                        'show_hidden' => true
+                    ));
                 }
 
                 $response = array();
-                foreach ($activities['activities'] as $at) {
-                    // Pulizia del contenuto (rimuove tag HTML pesanti ma mantiene lo stile)
-                    $clean_content = $at->content;
-                    
-                    $response[] = array(
-                        'id' => $at->id,
-                        'user_id' => $at->user_id,
-                        'user_name' => bp_core_get_user_displayname($at->user_id),
-                        'user_avatar' => array(
-                            'thumb' => bp_core_fetch_avatar(array('item_id' => $at->user_id, 'html' => false))
-                        ),
-                        'content' => $clean_content,
-                        'date' => $at->date_recorded,
-                        'type' => $at->type
-                    );
+                if (!empty($activities['activities'])) {
+                    foreach ($activities['activities'] as $at) {
+                        $response[] = array(
+                            'id' => $at->id,
+                            'user_id' => $at->user_id,
+                            'user_name' => bp_core_get_user_displayname($at->user_id),
+                            'user_avatar' => array(
+                                'thumb' => bp_core_fetch_avatar(array('item_id' => $at->user_id, 'html' => false))
+                            ),
+                            'content' => $at->content,
+                            'date' => $at->date_recorded,
+                            'type' => $at->type
+                        );
+                    }
                 }
+                
                 return rest_ensure_response($response);
             }
             
-            return new WP_Error('no_bp', 'BuddyPress non trovato', array('status' => 500));
+            return new WP_Error('no_bp', 'BuddyPress non attivo', array('status' => 500));
         },
         'permission_callback' => '__return_true',
     ));
 });
 
-// Header CORS
+// Header CORS per evitare blocchi browser
 add_filter('rest_pre_serve_request', function($value) {
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
