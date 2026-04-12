@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const cleanUsername = username.trim();
     
     try {
-      // 1. Ottieni il Token
+      // 1. Autenticazione
       const response = await fetch('https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -58,27 +58,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       const jwtToken = resData.data?.jwt || resData.jwt;
-
-      // 2. Recupero dati utente REALI dal server (Endpoint ME è il più affidabile)
-      const meRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/me?context=edit&JWT=${jwtToken}`);
-      if (!meRes.ok) throw new Error("Impossibile recuperare i dati del profilo");
+      
+      // 2. Recupero dati utente (Metodo base senza restrizioni context=edit)
+      const meRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/me?JWT=${jwtToken}`);
+      if (!meRes.ok) throw new Error("Errore sincronizzazione profilo");
       
       const meData = await meRes.json();
       
-      // Cerchiamo l'avatar in tutte le posizioni possibili restituite da WP
-      let finalAvatar = meData.avatar_urls?.['96'] || meData.avatar_urls?.['48'] || meData.avatar_urls?.['24'];
+      // Cerchiamo l'avatar originale
+      let finalAvatar = meData.avatar_urls?.['96'] || meData.avatar_urls?.['48'];
       
-      // Se l'avatar di WP sembra quello di default, proviamo a chiedere a BuddyPress
+      // Se l'avatar sembra quello di default, proviamo BuddyPress ma senza bloccare il login se fallisce
       if (!finalAvatar || finalAvatar.includes('gravatar.com/avatar/0000')) {
         try {
-          const bpRes = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${meData.id}?JWT=${jwtToken}`);
+          const bpRes = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${meData.id}`);
           if (bpRes.ok) {
             const bpData = await bpRes.json();
             if (bpData.avatar_urls?.full) finalAvatar = bpData.avatar_urls.full;
           }
-        } catch (e) {
-          console.error("BP Avatar fetch failed", e);
-        }
+        } catch (e) {}
       }
 
       const userData: User = {
@@ -91,7 +89,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       };
 
       saveAuth(jwtToken, userData);
-      showSuccess(`Profilo sincronizzato: ${userData.display_name}`);
+      showSuccess(`Bentornato ${userData.display_name}`);
       
     } catch (error: any) {
       showError(error.message);
