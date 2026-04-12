@@ -9,40 +9,27 @@ export const useBpActivity = () => {
     queryFn: async () => {
       const token = localStorage.getItem('ld_auth_token');
       
-      // Proviamo l'URL senza parametri JWT per vedere se il server lo accetta
-      const url = `${BASE_URL}/buddypress/v1/activity?per_page=20`;
-      
-      const headers: Record<string, string> = {
-        'Accept': 'application/json'
-      };
-
-      // Se abbiamo il token, lo passiamo nell'Header Authorization (metodo standard)
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
+      // Proviamo a usare un URL pulitissimo
+      const url = `${BASE_URL}/buddypress/v1/activity?per_page=10`;
       
       try {
         const response = await fetch(url, { 
           method: 'GET',
-          headers: headers,
+          headers: { 
+            'Accept': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
           mode: 'cors'
         });
         
         if (!response.ok) {
-          // Se fallisce con l'header, facciamo un ultimo tentativo col parametro URL (ma minuscolo 'jwt')
+          // Se fallisce, proviamo l'ultimo metodo disperato: passare il token come parametro 'jwt' minuscolo
           const fallbackUrl = `${url}&jwt=${token}`;
-          const fallbackRes = await fetch(fallbackUrl, { headers: { 'Accept': 'application/json' } });
+          const fallbackRes = await fetch(fallbackUrl);
           
           if (!fallbackRes.ok) {
-            const errorText = await fallbackRes.text();
-            let errorMessage = `Errore ${fallbackRes.status}`;
-            try {
-              const errorJson = JSON.parse(errorText);
-              errorMessage = errorJson.message || errorJson.code || errorMessage;
-            } catch (e) {
-              errorMessage = errorText.substring(0, 100) || errorMessage;
-            }
-            throw new Error(errorMessage);
+            const errorData = await fallbackRes.json().catch(() => ({ message: `Errore ${fallbackRes.status}` }));
+            throw new Error(errorData.message || errorData.code || "Errore API");
           }
           return fallbackRes.json();
         }
@@ -63,31 +50,17 @@ export const useBpMembers = (perPage = 100) => {
     queryKey: ['bp-members', perPage],
     queryFn: async () => {
       const token = localStorage.getItem('ld_auth_token');
-      const url = `${BASE_URL}/buddypress/v1/members?per_page=${perPage}&type=active&populate_extras=true`;
+      const url = `${BASE_URL}/buddypress/v1/members?per_page=${perPage}&type=active`;
       
-      const headers: Record<string, string> = { 'Accept': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-
       const response = await fetch(url, {
-        method: 'GET',
-        headers: headers,
-        mode: 'cors'
+        headers: { 
+          'Accept': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        }
       });
       
       if (!response.ok) throw new Error("Errore sincronizzazione membri");
-      
-      const data = await response.json();
-      localStorage.setItem(MEMBERS_CACHE_KEY, JSON.stringify({
-        lastSync: new Date().toISOString(),
-        count: data.length,
-        users: data
-      }));
-      
-      return data;
-    },
-    initialData: () => {
-      const cached = localStorage.getItem(MEMBERS_CACHE_KEY);
-      return cached ? JSON.parse(cached).users : undefined;
+      return response.json();
     },
     staleTime: 1000 * 60 * 10,
   });
