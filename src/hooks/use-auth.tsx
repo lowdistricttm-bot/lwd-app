@@ -48,61 +48,58 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchLatestUserData = useCallback(async (userId: number, currentToken: string) => {
     setIsRefreshing(true);
     try {
-      // Usiamo l'header Authorization Bearer che è più standard e affidabile
-      const response = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${currentToken}`,
-          'Content-Type': 'application/json'
-        }
+      // 1. Proviamo BuddyPress (Metodo più probabile per avatar personalizzati)
+      const bpResponse = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${userId}?context=view`, {
+        headers: { 'Authorization': `Bearer ${currentToken}` }
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        // BuddyPress può restituire un oggetto o un array di un elemento
+      if (bpResponse.ok) {
+        const data = await bpResponse.json();
         const member = Array.isArray(data) ? data[0] : data;
         const rawAvatar = member?.avatar_urls?.full || member?.avatar_urls?.thumb;
         
         if (rawAvatar) {
-          // Aggiungiamo un timestamp per evitare la cache del browser
-          const bpAvatar = `${rawAvatar}${rawAvatar.includes('?') ? '&' : '?'}t=${Date.now()}`;
-          
-          setUser(prev => {
-            if (!prev) return null;
-            const updated = { ...prev, avatar: bpAvatar };
-            localStorage.setItem('ld_user_data', JSON.stringify(updated));
-            return updated;
-          });
+          // Bypass totale della cache con timestamp unico
+          const finalAvatar = `${rawAvatar}${rawAvatar.includes('?') ? '&' : '?'}nocache=${Date.now()}`;
+          updateUserAvatar(finalAvatar);
           return;
         }
       }
 
-      // Fallback su WP Users se BuddyPress non risponde correttamente
-      const wpRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${userId}`, {
+      // 2. Fallback su WP Users standard
+      const wpResponse = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${userId}`, {
         headers: { 'Authorization': `Bearer ${currentToken}` }
       });
-      if (wpRes.ok) {
-        const wpData = await wpRes.json();
+      
+      if (wpResponse.ok) {
+        const wpData = await wpResponse.json();
         const wpAvatar = wpData.avatar_urls?.['96'] || wpData.avatar_urls?.['48'];
         if (wpAvatar) {
-          const finalWpAvatar = `${wpAvatar}&t=${Date.now()}`;
-          setUser(prev => {
-            if (!prev) return null;
-            const updated = { ...prev, avatar: finalWpAvatar };
-            localStorage.setItem('ld_user_data', JSON.stringify(updated));
-            return updated;
-          });
+          const finalWpAvatar = `${wpAvatar}&nocache=${Date.now()}`;
+          updateUserAvatar(finalWpAvatar);
         }
       }
     } catch (e) {
-      console.error("Errore critico sincronizzazione:", e);
+      console.error("Errore critico sync:", e);
     } finally {
       setIsRefreshing(false);
     }
   }, [user]);
 
+  const updateUserAvatar = (newAvatar: string) => {
+    setUser(prev => {
+      if (!prev) return null;
+      const updated = { ...prev, avatar: newAvatar };
+      localStorage.setItem('ld_user_data', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   useEffect(() => {
     if (user?.id && token) {
-      fetchLatestUserData(user.id, token);
+      // Piccolo ritardo per permettere al server di stabilizzare la sessione
+      const timer = setTimeout(() => fetchLatestUserData(user.id, token), 500);
+      return () => clearTimeout(timer);
     }
   }, []);
 
@@ -123,8 +120,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const jwtToken = resData.data?.jwt || resData.jwt;
       const wpUser = resData.data?.user || resData.user;
       const userId = wpUser?.ID || wpUser?.id;
-
-      if (!userId) throw new Error("ID utente non trovato");
 
       const userData: User = {
         id: parseInt(userId),

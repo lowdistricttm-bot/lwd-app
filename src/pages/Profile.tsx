@@ -14,7 +14,7 @@ import { showSuccess } from '@/utils/toast';
 const Profile = () => {
   const [activeTab, setActiveTab] = useState<'activity' | 'orders'>('activity');
   const [imgError, setImgError] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshKey, setRefreshKey] = useState(Date.now());
   const { user, logout, refreshUser, isLoading, isRefreshing } = useAuth();
   const { data: customerCount } = useWcCustomerCount();
   const location = useLocation();
@@ -27,7 +27,7 @@ const Profile = () => {
 
   const handleRefresh = async () => {
     setImgError(false);
-    setRefreshKey(prev => prev + 1);
+    setRefreshKey(Date.now());
     await refreshUser();
     showSuccess("Profilo sincronizzato");
   };
@@ -60,12 +60,6 @@ const Profile = () => {
     );
   }
 
-  const stats = [
-    { label: 'Attività', value: '0' },
-    { label: 'Amici', value: '0' },
-    { label: 'Gruppi', value: '0' },
-  ];
-
   return (
     <div className="min-h-screen bg-black text-white pb-24">
       <Navbar />
@@ -78,8 +72,12 @@ const Profile = () => {
                 key={`${user.avatar}-${refreshKey}`}
                 src={imgError || !user.avatar ? defaultAvatar : user.avatar} 
                 alt="avatar" 
+                crossOrigin="anonymous"
                 className="w-full h-full rounded-[1.8rem] object-cover -rotate-3" 
-                onError={() => setImgError(true)}
+                onError={() => {
+                  console.log("Errore caricamento immagine, provo fallback...");
+                  setImgError(true);
+                }}
               />
             </div>
             <div className="absolute -bottom-2 -right-2 bg-red-600 text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-lg">
@@ -122,12 +120,18 @@ const Profile = () => {
         </div>
 
         <div className="grid grid-cols-3 gap-4 py-6 border-y border-white/5 mb-8">
-          {stats.map((stat, i) => (
-            <div key={i} className="text-center">
-              <p className="font-black text-2xl tracking-tighter italic">{stat.value}</p>
-              <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">{stat.label}</p>
-            </div>
-          ))}
+          <div className="text-center">
+            <p className="font-black text-2xl tracking-tighter italic">0</p>
+            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Attività</p>
+          </div>
+          <div className="text-center">
+            <p className="font-black text-2xl tracking-tighter italic">0</p>
+            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Amici</p>
+          </div>
+          <div className="text-center">
+            <p className="font-black text-2xl tracking-tighter italic">0</p>
+            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Gruppi</p>
+          </div>
         </div>
 
         <div className="flex gap-8 mb-8 border-b border-white/5">
