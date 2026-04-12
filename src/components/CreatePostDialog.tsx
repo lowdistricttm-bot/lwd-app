@@ -6,15 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ImagePlus, X, Send, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
+import { useCreateActivity } from '@/hooks/use-buddypress';
 import { showSuccess, showError } from '@/utils/toast';
 
 const CreatePostDialog = () => {
   const [open, setOpen] = useState(false);
   const [content, setContent] = useState("");
   const [image, setImage] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
+  
+  // Hook per la creazione reale del post
+  const createActivity = useCreateActivity();
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -27,17 +30,20 @@ const CreatePostDialog = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content && !image) return;
+    if (!content.trim()) {
+      showError("Scrivi qualcosa prima di pubblicare");
+      return;
+    }
 
-    setIsSubmitting(true);
-    // Qui in futuro collegheremo l'API di BuddyBoss (/wp-json/buddyboss/v1/activity)
-    setTimeout(() => {
-      showSuccess("Post pubblicato sulla bacheca!");
-      setIsSubmitting(false);
+    try {
+      await createActivity.mutateAsync({ content });
+      showSuccess("Post pubblicato con successo!");
       setOpen(false);
       setContent("");
       setImage(null);
-    }, 1500);
+    } catch (err: any) {
+      showError(err.message || "Errore durante la pubblicazione");
+    }
   };
 
   if (!user) return null;
@@ -97,10 +103,10 @@ const CreatePostDialog = () => {
             
             <Button 
               type="submit" 
-              disabled={(!content && !image) || isSubmitting}
+              disabled={!content.trim() || createActivity.isPending}
               className="bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest px-8 rounded-none italic"
             >
-              {isSubmitting ? <Loader2 className="animate-spin" /> : "Pubblica"}
+              {createActivity.isPending ? <Loader2 className="animate-spin" /> : "Pubblica"}
             </Button>
           </div>
         </form>

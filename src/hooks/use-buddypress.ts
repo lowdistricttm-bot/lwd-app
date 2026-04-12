@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const BASE_URL = "https://www.lowdistrict.it/wp-json";
 
@@ -6,7 +6,6 @@ export const useBpActivity = () => {
   return useInfiniteQuery({
     queryKey: ['bp-activity'],
     queryFn: async ({ pageParam = 1 }) => {
-      // Rimuoviamo il timestamp per le pagine successive per mantenere la coerenza della cache
       const url = `${BASE_URL}/lowdistrict/v1/activity?page=${pageParam}&per_page=20`;
       
       try {
@@ -23,7 +22,6 @@ export const useBpActivity = () => {
         }
 
         const data = await response.json();
-        // Assicuriamoci che data sia un array
         return Array.isArray(data) ? data : [];
       } catch (err: any) {
         console.error("Errore caricamento bacheca:", err);
@@ -32,10 +30,45 @@ export const useBpActivity = () => {
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
-      // Se l'ultima pagina ha 20 elementi, chiediamo la successiva
       return lastPage.length === 20 ? allPages.length + 1 : undefined;
     },
-    staleTime: 1000 * 60, // Aumentiamo a 1 minuto per evitare refresh troppo frequenti che causano salti
+    staleTime: 1000 * 30,
+  });
+};
+
+// Nuovo Hook per creare un post reale
+export const useCreateActivity = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ content }: { content: string }) => {
+      const token = localStorage.getItem('ld_auth_token');
+      if (!token) throw new Error("Devi essere loggato per pubblicare");
+
+      const response = await fetch(`${BASE_URL}/buddypress/v1/activity`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          content: content,
+          component: 'activity',
+          type: 'activity_update'
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Errore durante la pubblicazione");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      // Forza il refresh della bacheca per mostrare il nuovo post
+      queryClient.invalidateQueries({ queryKey: ['bp-activity'] });
+    }
   });
 };
 
