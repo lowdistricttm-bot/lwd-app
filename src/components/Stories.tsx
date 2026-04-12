@@ -22,6 +22,7 @@ const Stories = () => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Carica la storia più recente dell'utente (se creata nelle ultime 24 ore)
   useEffect(() => {
     const loadStory = async () => {
       if (!user?.id) return;
@@ -42,7 +43,7 @@ const Stories = () => {
           setMyStory(data);
         }
       } catch (err) {
-        console.error("Errore caricamento storia:", err);
+        console.error("Errore nel caricamento della storia:", err);
       }
     };
 
@@ -61,16 +62,19 @@ const Stories = () => {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
       
+      // 1. Caricamento nel bucket 'stories'
       const { error: uploadError } = await supabase.storage
         .from('stories')
         .upload(fileName, file);
 
       if (uploadError) throw uploadError;
 
+      // 2. Generazione URL pubblico
       const { data: { publicUrl } } = supabase.storage
         .from('stories')
         .getPublicUrl(fileName);
 
+      // 3. Inserimento record nel database
       const { error: dbError } = await supabase
         .from('stories')
         .insert([{ 
@@ -144,6 +148,7 @@ const Stories = () => {
           </button>
         </div>
 
+        {/* Mock per altri utenti */}
         {[1, 2, 3].map((i) => (
           <button key={i} className="flex flex-col items-center gap-1.5 shrink-0 group">
             <div className="w-[66px] h-[66px] rounded-full p-[2.5px] bg-zinc-800 group-hover:bg-white/20 transition-all">
