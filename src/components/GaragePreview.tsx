@@ -5,12 +5,15 @@ import { Heart, MessageCircle, Send, MoreHorizontal, Share2, Loader2, AlertCircl
 import CommentDrawer from './CommentDrawer';
 import CreatePostDialog from './CreatePostDialog';
 import { cn } from '@/lib/utils';
-import { useBpActivity } from '@/hooks/use-buddypress';
+import { useBpActivity, useFavoriteActivity } from '@/hooks/use-buddypress';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/use-auth';
+import { showError } from '@/utils/toast';
 
 const GaragePreview = () => {
+  const { user } = useAuth();
   const { 
     data, 
     isLoading, 
@@ -21,7 +24,7 @@ const GaragePreview = () => {
     isFetchingNextPage 
   } = useBpActivity();
   
-  const [likedPosts, setLikedPosts] = useState<Record<number, boolean>>({});
+  const favoriteMutation = useFavoriteActivity();
   const observerTarget = useRef(null);
 
   const allPosts = useMemo(() => {
@@ -58,8 +61,22 @@ const GaragePreview = () => {
     };
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const handleLike = (id: number) => {
-    setLikedPosts(prev => ({ ...prev, [id]: !prev[id] }));
+  const handleLike = async (post: any) => {
+    if (!user) {
+      showError("Accedi per mettere like");
+      return;
+    }
+    
+    const isCurrentlyFavorite = post.favorite_count > 0; // Semplificazione per il mock/UI
+    
+    try {
+      await favoriteMutation.mutateAsync({ 
+        activityId: post.id, 
+        isFavorite: !isCurrentlyFavorite 
+      });
+    } catch (err) {
+      // Errore gestito dal hook
+    }
   };
 
   if (isLoading) {
@@ -144,10 +161,15 @@ const GaragePreview = () => {
                 <div className="px-4 py-4 flex items-center justify-between border-t border-white/5">
                   <div className="flex items-center gap-6">
                     <button 
-                      onClick={() => handleLike(post.id)}
-                      className={cn("transition-all active:scale-125", likedPosts[post.id] ? "text-red-600" : "text-white")}
+                      onClick={() => handleLike(post)}
+                      disabled={favoriteMutation.isPending}
+                      className={cn(
+                        "transition-all active:scale-125 flex items-center gap-2", 
+                        post.favorite_count > 0 ? "text-red-600" : "text-white"
+                      )}
                     >
-                      <Heart size={26} strokeWidth={2} fill={likedPosts[post.id] ? "currentColor" : "none"} />
+                      <Heart size={26} strokeWidth={2} fill={post.favorite_count > 0 ? "currentColor" : "none"} />
+                      <span className="text-xs font-black">{post.favorite_count || 0}</span>
                     </button>
                     <CommentDrawer count="0" />
                     <button className="text-white hover:text-red-600 transition-colors">

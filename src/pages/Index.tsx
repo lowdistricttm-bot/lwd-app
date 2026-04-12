@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import Stories from '@/components/Stories';
 import Hero from '@/components/Hero';
 import FeaturedProducts from '@/components/FeaturedProducts';
+import FeaturedProjects from '@/components/FeaturedProjects';
 import EventsSection from '@/components/EventsSection';
 import Footer from '@/components/Footer';
 import BottomNav from '@/components/BottomNav';
@@ -36,6 +37,7 @@ const Index = () => {
 
       <div className="max-w-7xl mx-auto w-full">
         <FeaturedProducts />
+        <FeaturedProjects />
         <EventsSection />
       </div>
       
