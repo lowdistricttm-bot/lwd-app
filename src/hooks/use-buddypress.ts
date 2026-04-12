@@ -6,8 +6,12 @@ export const useBpActivity = (userId?: number) => {
   return useInfiniteQuery({
     queryKey: ['bp-activity', userId],
     queryFn: async ({ pageParam = 1 }) => {
+      const token = localStorage.getItem('ld_auth_token');
+      // Aggiungiamo il JWT anche alla GET per i siti che richiedono login per vedere la bacheca
       let url = `${BASE_URL}/buddypress/v1/activity?page=${pageParam}&per_page=10&display_comments=threaded`;
+      
       if (userId) url += `&user_id=${userId}`;
+      if (token) url += `&JWT=${token}`;
       
       try {
         const response = await fetch(url, {
@@ -18,9 +22,22 @@ export const useBpActivity = (userId?: number) => {
           mode: 'cors'
         });
 
-        if (!response.ok) throw new Error(`Errore server: ${response.status}`);
+        if (!response.ok) {
+          // Se fallisce con token, proviamo senza (magari il token è scaduto)
+          if (token) {
+            const fallbackUrl = url.replace(`&JWT=${token}`, '');
+            const fallbackRes = await fetch(fallbackUrl);
+            if (fallbackRes.ok) return await fallbackRes.json();
+          }
+          throw new Error(`Errore server: ${response.status}`);
+        }
+        
         const data = await response.json();
-        return Array.isArray(data) ? data : [];
+        // BuddyPress può restituire un array o un oggetto con proprietà 'activities'
+        if (Array.isArray(data)) return data;
+        if (data && typeof data === 'object' && Array.isArray(data.activities)) return data.activities;
+        
+        return [];
       } catch (err: any) {
         console.error("Errore caricamento bacheca:", err);
         throw err;
@@ -75,7 +92,9 @@ export const useBpMemberData = (userId: number | undefined) => {
     queryKey: ['bp-member-data', userId],
     queryFn: async () => {
       if (!userId) return null;
-      const url = `${BASE_URL}/buddypress/v1/members/${userId}?context=view`;
+      const token = localStorage.getItem('ld_auth_token');
+      let url = `${BASE_URL}/buddypress/v1/members/${userId}?context=view`;
+      if (token) url += `&JWT=${token}`;
       
       const response = await fetch(url, { mode: 'cors' });
       if (!response.ok) throw new Error("Errore caricamento dati membro");
@@ -90,7 +109,10 @@ export const useBpMembers = (perPage = 100) => {
   return useQuery({
     queryKey: ['bp-members', perPage],
     queryFn: async () => {
-      const url = `${BASE_URL}/buddypress/v1/members?per_page=${perPage}&type=active`;
+      const token = localStorage.getItem('ld_auth_token');
+      let url = `${BASE_URL}/buddypress/v1/members?per_page=${perPage}&type=active`;
+      if (token) url += `&JWT=${token}`;
+      
       const response = await fetch(url, { mode: 'cors' });
       if (!response.ok) throw new Error("Errore caricamento membri");
       return await response.json();
