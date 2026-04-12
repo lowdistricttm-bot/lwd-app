@@ -8,8 +8,10 @@ export const wcFetch = async (endpoint: string) => {
   const response = await fetch(`${URL}${endpoint}`, {
     headers: {
       'Authorization': `Basic ${auth}`,
-      'Content-Type': 'application/json'
-    }
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    },
+    mode: 'cors'
   });
   if (!response.ok) throw new Error('Errore nel caricamento dati da WooCommerce');
   return response.json();
@@ -20,8 +22,10 @@ export const wcPost = async (endpoint: string, data: any) => {
     method: 'POST',
     headers: {
       'Authorization': `Basic ${auth}`,
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
     },
+    mode: 'cors',
     body: JSON.stringify(data)
   });
   if (!response.ok) {
