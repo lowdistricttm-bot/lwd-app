@@ -60,10 +60,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       let userData: User | null = null;
       
-      // Proviamo a estrarre l'utente dalla risposta iniziale (se presente)
+      // Proviamo a vedere se l'utente è già nella risposta del login
       const rawUser = resData.data?.user || resData.user;
       
-      if (rawUser) {
+      if (rawUser && (rawUser.ID || rawUser.id)) {
         userData = {
           id: rawUser.ID || rawUser.id,
           username: rawUser.user_login || rawUser.username,
@@ -73,43 +73,47 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${rawUser.user_login || 'user'}`
         };
       } else {
-        // 2. Fallback: Chiediamo i dati a WordPress usando sia Header che URL
-        try {
-          const userRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/me?JWT=${jwtToken}`, {
-            headers: { 'Authorization': `Bearer ${jwtToken}` }
-          });
-          
-          if (userRes.ok) {
-            const me = await userRes.json();
-            userData = {
-              id: me.id,
-              username: me.slug || me.username,
-              email: me.email || '',
-              nicename: me.name || me.slug,
-              display_name: me.name || me.slug,
-              avatar: me.avatar_urls?.['96'] || `https://api.dicebear.com/7.x/avataaars/svg?seed=${me.slug}`
-            };
+        // 2. Fallback 1: Chiediamo i dati a /users/me
+        const userRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/me?JWT=${jwtToken}`, {
+          headers: { 'Authorization': `Bearer ${jwtToken}` }
+        });
+        
+        if (userRes.ok) {
+          const me = await userRes.json();
+          userData = {
+            id: me.id,
+            username: me.slug || me.username,
+            email: me.email || '',
+            nicename: me.name || me.slug,
+            display_name: me.name || me.slug,
+            avatar: me.avatar_urls?.['96'] || `https://api.dicebear.com/7.x/avataaars/svg?seed=${me.slug}`
+          };
+        } else {
+          // 3. Fallback 2: Cerchiamo l'utente tramite lo slug (username) se /me è bloccato
+          const slugRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users?slug=${username.trim()}`);
+          if (slugRes.ok) {
+            const users = await slugRes.json();
+            if (users && users.length > 0) {
+              const u = users[0];
+              userData = {
+                id: u.id,
+                username: u.slug,
+                email: '',
+                nicename: u.name,
+                display_name: u.name,
+                avatar: u.avatar_urls?.['96'] || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.slug}`
+              };
+            }
           }
-        } catch (e) {
-          console.error("Errore recupero profilo secondario:", e);
         }
       }
 
-      // 3. Ultima spiaggia: se non abbiamo ancora i dati, creiamo un profilo temporaneo con lo username
-      if (!userData && jwtToken) {
-        userData = {
-          id: 0, // ID temporaneo
-          username: username,
-          email: '',
-          nicename: username,
-          display_name: username,
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`
-        };
+      // Se dopo tutti i tentativi non abbiamo un ID reale, fermiamo tutto
+      if (!userData || !userData.id) {
+        throw new Error("Sincronizzazione profilo fallita. Verifica i permessi del sito.");
       }
 
-      if (!userData) throw new Error("Impossibile inizializzare il profilo");
-
-      // Salvataggio
+      // Salvataggio dati reali
       setToken(jwtToken);
       setUser(userData);
       localStorage.setItem('ld_auth_token', jwtToken);
