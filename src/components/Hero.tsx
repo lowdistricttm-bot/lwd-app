@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from '@/hooks/use-translation';
+import Logo from './Logo';
 
 const Hero = () => {
   const { t } = useTranslation();
@@ -30,9 +31,11 @@ const Hero = () => {
           <h2 className="text-red-600 font-black tracking-[0.5em] uppercase mb-6 text-xs md:text-sm italic">
             {t.hero.subtitle}
           </h2>
-          <h1 className="text-6xl md:text-9xl font-black text-white mb-8 tracking-tighter leading-none italic">
-            LOW <span className="text-transparent border-text">DISTRICT</span>
-          </h1>
+          
+          <div className="flex justify-center mb-8">
+            <Logo className="h-16 md:h-24" />
+          </div>
+
           <p className="text-gray-300 text-lg md:text-xl mb-12 max-w-2xl mx-auto font-medium leading-relaxed">
             {t.hero.desc}
           </p>
@@ -58,12 +61,6 @@ const Hero = () => {
       >
         <ChevronDown size={32} />
       </motion.div>
-
-      <style>{`
-        .border-text {
-          -webkit-text-stroke: 1.5px white;
-        }
-      `}</style>
     </section>
   );
 };

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Instagram, Facebook, Youtube, Twitter } from 'lucide-react';
+import Logo from './Logo';
 
 const Footer = () => {
   return (
@@ -9,8 +10,8 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
           <div className="col-span-1 md:col-span-2">
-            <a href="/" className="text-3xl font-black tracking-tighter text-white mb-6 block">
-              LOW<span className="text-red-600">DISTRICT</span>
+            <a href="/" className="mb-6 block">
+              <Logo className="h-8" />
             </a>
             <p className="text-gray-400 max-w-sm mb-8">
               Definiamo lo standard della cultura stance in Italia. Qualità, stile e passione in ogni dettaglio.

@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { showSuccess } from '@/utils/toast';
-import { ChevronLeft, Car } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
+import Logo from '@/components/Logo';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -28,8 +29,8 @@ const Auth = () => {
 
       <div className="flex-1 flex flex-col justify-center px-8 pb-20">
         <div className="mb-12 text-center">
-          <div className="w-20 h-20 bg-red-600 rounded-3xl flex items-center justify-center mx-auto mb-6 rotate-3 shadow-2xl shadow-red-600/20">
-            <Car size={40} className="text-white -rotate-3" />
+          <div className="flex justify-center mb-8">
+            <Logo className="h-16" />
           </div>
           <h1 className="text-4xl font-black tracking-tighter uppercase mb-2">
             {isLogin ? "Bentornato" : "Unisciti a noi"}

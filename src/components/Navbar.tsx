@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from '@/hooks/use-translation';
 import { useCart } from '@/hooks/use-cart';
+import Logo from './Logo';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -37,9 +38,7 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-12">
           <Link to="/" className="flex items-center">
-            <span className="text-xl md:text-2xl font-black tracking-tighter text-white italic">
-              LOW<span className="text-red-600">DISTRICT</span>
-            </span>
+            <Logo className="h-6 md:h-8" />
           </Link>
           
           <div className="hidden md:flex items-center gap-8">
