@@ -71,32 +71,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (!userId) throw new Error("ID utente non trovato");
 
-      // 3. RECUPERO FOTO ORIGINALE DA BUDDYPRESS
-      // Usiamo il token appena ottenuto per avere il permesso di vedere i dati del profilo
+      // 3. RECUPERO AVATAR REALE (Custom o Default del sito)
+      // Interroghiamo l'API utenti standard che restituisce sempre l'avatar_url corretto del sito
       let finalAvatar = "";
       
       try {
-        const bpRes = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${userId}?JWT=${jwtToken}`);
-        if (bpRes.ok) {
-          const bpData = await bpRes.json();
-          // BuddyPress restituisce 'full' (grande) e 'thumb' (piccola)
-          if (bpData.avatar_urls?.full) {
-            finalAvatar = bpData.avatar_urls.full;
-          }
-          // Aggiorniamo anche il nome visualizzato se BuddyPress ne ha uno più preciso
-          if (bpData.name) wpUser.display_name = bpData.name;
+        const userRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${userId}`);
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          // Prendiamo la versione più grande disponibile (96px o superiore)
+          finalAvatar = userData.avatar_urls?.['96'] || userData.avatar_urls?.['48'] || "";
         }
       } catch (e) {
-        console.log("Errore nel recupero dati BuddyPress");
+        console.log("Errore recupero avatar da WP API");
       }
 
-      // Se BuddyPress fallisce, proviamo WP standard come ultima spiaggia
+      // Se WP API non risponde, proviamo a vedere se BuddyPress ha qualcosa di specifico
       if (!finalAvatar) {
         try {
-          const userRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${userId}`);
-          if (userRes.ok) {
-            const userData = await userRes.json();
-            finalAvatar = userData.avatar_urls?.['96'] || "";
+          const bpRes = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${userId}?JWT=${jwtToken}`);
+          if (bpRes.ok) {
+            const bpData = await bpRes.json();
+            finalAvatar = bpData.avatar_urls?.full || bpData.avatar_urls?.thumb || "";
           }
         } catch (e) {}
       }
@@ -107,7 +103,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         email: wpUser?.user_email || '',
         nicename: wpUser?.display_name || cleanUsername,
         display_name: wpUser?.display_name || cleanUsername,
-        avatar: finalAvatar // Ora è l'URL reale del sito
+        avatar: finalAvatar // Questo URL ora punta all'immagine di default del tuo sito se l'utente non ne ha una
       };
 
       saveAuth(jwtToken, userData);

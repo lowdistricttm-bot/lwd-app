@@ -59,17 +59,13 @@ const Profile = () => {
         <div className="flex items-start justify-between mb-8">
           <div className="relative">
             <div className="w-24 h-24 rounded-[2rem] bg-zinc-900 border-2 border-red-600 p-1 rotate-3 flex items-center justify-center overflow-hidden">
-              {user.avatar ? (
-                <img 
-                  src={user.avatar} 
-                  alt="avatar" 
-                  className="w-full h-full rounded-[1.8rem] object-cover -rotate-3" 
-                />
-              ) : (
-                <div className="w-full h-full bg-zinc-800 rounded-[1.8rem] flex items-center justify-center -rotate-3">
-                  <UserIcon size={40} className="text-gray-600" />
-                </div>
-              )}
+              {/* Usiamo direttamente l'URL dell'avatar. Se l'utente non ha foto, 
+                  l'URL punterà all'immagine di default del tuo sito. */}
+              <img 
+                src={user.avatar || "https://www.lowdistrict.it/wp-content/uploads/placeholder.png"} 
+                alt="avatar" 
+                className="w-full h-full rounded-[1.8rem] object-cover -rotate-3" 
+              />
             </div>
             <div className="absolute -bottom-2 -right-2 bg-red-600 text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-lg">
               MEMBER
