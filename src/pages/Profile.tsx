@@ -15,6 +15,7 @@ import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 
 const Profile = () => {
+  // Manteniamo 'activity' come chiave interna per la logica, ma mostriamo 'Bacheca' nella UI
   const [activeTab, setActiveTab] = useState<'activity' | 'orders' | 'applications'>('activity');
   const [imgError, setImgError] = useState(false);
   const [refreshKey, setRefreshKey] = useState(Date.now());
@@ -22,6 +23,8 @@ const Profile = () => {
   
   const { user, logout, refreshUser, isLoading, isRefreshing } = useAuth();
   const { data: allOrders, isLoading: isLoadingOrders } = useWcUserOrders(user?.id);
+  
+  // Il hook usa correttamente il termine tecnico 'activity' per l'API
   const { data: activityData, isLoading: isLoadingActivity } = useBpActivity(user?.id);
   const { data: memberData } = useBpMemberData(user?.id);
   const updateAvatarMutation = useUpdateAvatar();
@@ -44,6 +47,7 @@ const Profile = () => {
   const myActivities = useMemo(() => {
     const allPosts = activityData?.pages.flat() || [];
     if (!user?.id) return [];
+    // Filtriamo per sicurezza, anche se l'API dovrebbe già darci solo i nostri
     return allPosts.filter((post: any) => parseInt(post.user_id) === user.id);
   }, [activityData, user?.id]);
 
@@ -177,7 +181,6 @@ const Profile = () => {
             </div>
           </div>
 
-          {/* Link Rapidi al Sito */}
           <div className="grid grid-cols-2 gap-3 mb-8">
             <button 
               onClick={() => openWpPortal("Modifica Profilo", "mio-account/edit-address/")}
@@ -230,11 +233,15 @@ const Profile = () => {
                   <div key={post.id} className="bg-zinc-900/30 border border-white/5 p-5 rounded-2xl">
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest">
-                        {format(new Date(post.date), 'dd MMM yyyy', { locale: it })}
+                        {post.date ? format(new Date(post.date), 'dd MMM yyyy', { locale: it }) : 'Recentemente'}
                       </span>
-                      <Heart size={14} className="text-gray-700" />
+                      <Heart size={14} className={cn(post.favorite_count > 0 ? "text-red-600 fill-red-600" : "text-gray-700")} />
                     </div>
-                    <div className="text-sm text-gray-300 prose prose-invert max-w-none line-clamp-4 activity-content" dangerouslySetInnerHTML={{ __html: post.content }} />
+                    {/* FIX: Usiamo .rendered per il contenuto BuddyPress, con fallback */}
+                    <div 
+                      className="text-sm text-gray-300 prose prose-invert max-w-none line-clamp-4 activity-content" 
+                      dangerouslySetInnerHTML={{ __html: post.content?.rendered || post.content }} 
+                    />
                   </div>
                 ))
               )}
@@ -292,7 +299,7 @@ const Profile = () => {
                           {app.status === 'completed' ? 'Approvato' : 'In Revisione'}
                         </span>
                       </div>
-                      <p className="text-[9px] text-gray-500 font-bold uppercase mt-1">Candidatura #{app.id} • {format(new Date(app.date_created), 'dd MMM yyyy', { locale: it })}</p>
+                      <p className="text-[9px] text-gray-500 font-bold uppercase mt-1">Candidatura #{app.id} • {app.date_created ? format(new Date(app.date_created), 'dd MMM yyyy', { locale: it }) : 'Recentemente'}</p>
                     </div>
                     <ChevronRight size={16} className="text-gray-700" />
                   </div>
@@ -311,7 +318,7 @@ const Profile = () => {
       <BottomNav />
       <style>{`
         .activity-content a { color: #ef4444; font-weight: 900; }
-        .activity-content img { border-radius: 0.5rem; margin-top: 0.5rem; }
+        .activity-content img { border-radius: 0.5rem; margin-top: 0.5rem; width: 100%; height: auto; }
       `}</style>
     </div>
   );
