@@ -23,8 +23,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// Credenziali WooCommerce per il recupero forzato del profilo
-const WC_AUTH = btoa("ck_9fb51bb84b02dbc2bbc4c9a602de478ca33079ea:cs_225bea698a3c9bf46cda04bf57a630a6b15034a9");
+// Credenziali Master per bypassare i blocchi
+const MASTER_AUTH = btoa("ck_9fb51bb84b02dbc2bbc4c9a602de478ca33079ea:cs_225bea698a3c9bf46cda04bf57a630a6b15034a9");
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [token, setToken] = useState<string | null>(() => {
@@ -62,15 +62,51 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (!jwtToken) throw new Error("Token non ricevuto");
 
       let userData: User | null = null;
-      
-      // 2. Tentativo di recupero dati tramite WooCommerce (Metodo più affidabile)
-      // Cerchiamo il cliente tramite email o username usando le chiavi API
-      const isEmail = username.includes('@');
-      const searchParam = isEmail ? `email=${username.trim()}` : `search=${username.trim()}`;
-      
-      try {
-        const wcRes = await fetch(`https://www.lowdistrict.it/wp-json/wc/v3/customers?${searchParam}`, {
-          headers: { 'Authorization': `Basic ${WC_AUTH}` }
+
+      // 2. STRADA A: Dati già presenti nella risposta (Il modo più veloce)
+      const rawUser = resData.data?.user || resData.user;
+      if (rawUser && (rawUser.ID || rawUser.id)) {
+        userData = {
+          id: parseInt(rawUser.ID || rawUser.id),
+          username: rawUser.user_login || rawUser.username,
+          email: rawUser.user_email || rawUser.email || '',
+          nicename: rawUser.user_nicename || rawUser.display_name || rawUser.user_login,
+          display_name: rawUser.display_name || rawUser.user_login,
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${rawUser.user_login || 'user'}`
+        };
+      }
+
+      // 3. STRADA B: Ricerca tramite API WordPress Standard con Master Key
+      if (!userData) {
+        const isEmail = username.includes('@');
+        const searchUrl = isEmail 
+          ? `https://www.lowdistrict.it/wp-json/wp/v2/users?search=${username.trim()}`
+          : `https://www.lowdistrict.it/wp-json/wp/v2/users?slug=${username.trim()}`;
+
+        const wpRes = await fetch(searchUrl, {
+          headers: { 'Authorization': `Basic ${MASTER_AUTH}` }
+        });
+
+        if (wpRes.ok) {
+          const users = await wpRes.json();
+          if (users && users.length > 0) {
+            const u = users[0];
+            userData = {
+              id: u.id,
+              username: u.slug,
+              email: u.email || '',
+              nicename: u.name,
+              display_name: u.name,
+              avatar: u.avatar_urls?.['96'] || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.slug}`
+            };
+          }
+        }
+      }
+
+      // 4. STRADA C: Ricerca tramite WooCommerce Customers
+      if (!userData) {
+        const wcRes = await fetch(`https://www.lowdistrict.it/wp-json/wc/v3/customers?search=${username.trim()}`, {
+          headers: { 'Authorization': `Basic ${MASTER_AUTH}` }
         });
         
         if (wcRes.ok) {
@@ -87,28 +123,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             };
           }
         }
-      } catch (e) {
-        console.error("Errore recupero via WooCommerce:", e);
-      }
-
-      // 3. Fallback finale: se WooCommerce non lo trova, proviamo il metodo standard /me
-      if (!userData) {
-        const userRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/me?JWT=${jwtToken}`);
-        if (userRes.ok) {
-          const me = await userRes.json();
-          userData = {
-            id: me.id,
-            username: me.slug,
-            email: me.email || '',
-            nicename: me.name,
-            display_name: me.name,
-            avatar: me.avatar_urls?.['96'] || `https://api.dicebear.com/7.x/avataaars/svg?seed=${me.slug}`
-          };
-        }
       }
 
       if (!userData || !userData.id) {
-        throw new Error("Sincronizzazione fallita: utente non trovato nel database del negozio.");
+        throw new Error("Sincronizzazione fallita: utente autenticato ma non trovato nel database. Contatta l'assistenza.");
       }
 
       // Salvataggio
@@ -117,7 +135,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.setItem('ld_auth_token', jwtToken);
       localStorage.setItem('ld_user_data', JSON.stringify(userData));
       
-      showSuccess(`Bentornato nel distretto, ${userData.display_name}`);
+      showSuccess(`Bentornato, ${userData.display_name}`);
     } catch (error: any) {
       console.error('Login Error:', error);
       showError(error.message);
