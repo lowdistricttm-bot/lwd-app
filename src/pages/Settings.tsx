@@ -12,7 +12,8 @@ const languageNames: Record<Language, string> = {
   pt: 'Português', nl: 'Nederlands', pl: 'Polski', ro: 'Română', sv: 'Svenska',
   da: 'Dansk', fi: 'Suomi', el: 'Ελληνικά', hu: 'Magyar', cs: 'Čeština',
   bg: 'Български', sk: 'Slovenčina', hr: 'Hrvatski', lt: 'Lietuvių', sl: 'Slovenščina',
-  lv: 'Latviešu', et: 'Eesti', mt: 'Malti', ga: 'Gaeilge'
+  lv: 'Latviešu', et: 'Eesti', mt: 'Malti', ga: 'Gaeilge', no: 'Norsk',
+  tr: 'Türkçe', ru: 'Русский'
 };
 
 const Settings = () => {

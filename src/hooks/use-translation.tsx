@@ -2,7 +2,10 @@
 
 import React, { useState, createContext, useContext, useEffect } from 'react';
 
-export type Language = 'it' | 'en' | 'fr' | 'de' | 'es' | 'pt' | 'nl' | 'pl' | 'ro' | 'sv' | 'da' | 'fi' | 'el' | 'hu' | 'cs' | 'bg' | 'sk' | 'hr' | 'lt' | 'sl' | 'lv' | 'et' | 'mt' | 'ga';
+export type Language = 
+  | 'it' | 'en' | 'fr' | 'de' | 'es' | 'pt' | 'nl' | 'pl' | 'ro' | 'sv' 
+  | 'da' | 'fi' | 'el' | 'hu' | 'cs' | 'bg' | 'sk' | 'hr' | 'lt' | 'sl' 
+  | 'lv' | 'et' | 'mt' | 'ga' | 'no' | 'tr' | 'ru';
 
 const translations: Record<string, any> = {
   it: {
@@ -47,9 +50,9 @@ const translations: Record<string, any> = {
   }
 };
 
-// Fallback per le altre lingue UE (usano l'inglese per ora)
-const euLanguages = ['pt', 'nl', 'pl', 'ro', 'sv', 'da', 'fi', 'el', 'hu', 'cs', 'bg', 'sk', 'hr', 'lt', 'sl', 'lv', 'et', 'mt', 'ga'];
-euLanguages.forEach(lang => {
+// Fallback per tutte le altre lingue (usano l'inglese come base)
+const otherLangs = ['pt', 'nl', 'pl', 'ro', 'sv', 'da', 'fi', 'el', 'hu', 'cs', 'bg', 'sk', 'hr', 'lt', 'sl', 'lv', 'et', 'mt', 'ga', 'no', 'tr', 'ru'];
+otherLangs.forEach(lang => {
   if (!translations[lang]) translations[lang] = translations.en;
 });
 
