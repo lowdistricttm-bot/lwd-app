@@ -23,9 +23,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// Chiavi Master per il recupero dati sicuro
-const WC_AUTH = btoa("ck_9fb51bb84b02dbc2bbc4c9a602de478ca33079ea:cs_225bea698a3c9bf46cda04bf57a630a6b15034a9");
-
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [token, setToken] = useState<string | null>(() => {
     if (typeof window !== 'undefined') return localStorage.getItem('ld_auth_token');
@@ -44,14 +41,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login = async (username: string, password: string) => {
     setIsLoading(true);
-    const inputIdentifier = username.trim().toLowerCase();
     
     try {
-      // 1. Autenticazione JWT (Verifica password)
+      // 1. Autenticazione JWT
       const response = await fetch('https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: inputIdentifier, password: password }),
+        body: JSON.stringify({ username: username.trim(), password: password }),
       });
 
       const resData = await response.json();
@@ -62,80 +58,42 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       const jwtToken = resData.data?.jwt || resData.jwt;
       
-      // 2. Ricerca Mirata dell'utente (Per evitare di caricare l'ultimo registrato)
-      let userData: User | null = null;
-
-      // Proviamo prima tramite WooCommerce Customers (più completo)
-      const wcSearchUrl = inputIdentifier.includes('@') 
-        ? `https://www.lowdistrict.it/wp-json/wc/v3/customers?email=${encodeURIComponent(inputIdentifier)}`
-        : `https://www.lowdistrict.it/wp-json/wc/v3/customers?search=${encodeURIComponent(inputIdentifier)}`;
-
-      const wcRes = await fetch(wcSearchUrl, {
-        headers: { 'Authorization': `Basic ${WC_AUTH}` }
-      });
-
-      if (wcRes.ok) {
-        const customers = await wcRes.json();
-        // Filtriamo i risultati per trovare il match esatto
-        const match = customers.find((c: any) => 
-          c.email.toLowerCase() === inputIdentifier || 
-          c.username.toLowerCase() === inputIdentifier
-        );
-
-        if (match) {
-          userData = {
-            id: match.id,
-            username: match.username,
-            email: match.email,
-            nicename: `${match.first_name} ${match.last_name}`.trim() || match.username,
-            display_name: `${match.first_name} ${match.last_name}`.trim() || match.username,
-            avatar: match.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${match.username}`
-          };
-        }
-      }
-
-      // 3. Fallback: Ricerca tramite WordPress Users (se non è un cliente WC)
-      if (!userData) {
-        const wpSearchUrl = inputIdentifier.includes('@')
-          ? `https://www.lowdistrict.it/wp-json/wp/v2/users?search=${encodeURIComponent(inputIdentifier)}`
-          : `https://www.lowdistrict.it/wp-json/wp/v2/users?slug=${encodeURIComponent(inputIdentifier)}`;
-
-        const wpRes = await fetch(wpSearchUrl, {
-          headers: { 'Authorization': `Basic ${WC_AUTH}` }
-        });
-        
-        if (wpRes.ok) {
-          const users = await wpRes.json();
-          const match = users.find((u: any) => 
-            u.email?.toLowerCase() === inputIdentifier || 
-            u.slug?.toLowerCase() === inputIdentifier ||
-            u.name?.toLowerCase() === inputIdentifier
-          );
-
-          if (match) {
-            userData = {
-              id: match.id,
-              username: match.slug,
-              email: match.email || '',
-              nicename: match.name,
-              display_name: match.name,
-              avatar: match.avatar_urls?.['96'] || `https://api.dicebear.com/7.x/avataaars/svg?seed=${match.slug}`
-            };
-          }
-        }
-      }
-
-      if (!userData) {
-        throw new Error("Sincronizzazione fallita: non riesco a trovare i dati del tuo profilo specifico.");
-      }
-
-      // 4. Salvataggio dati corretti
-      setToken(jwtToken);
-      setUser(userData);
-      localStorage.setItem('ld_auth_token', jwtToken);
-      localStorage.setItem('ld_user_data', JSON.stringify(userData));
+      // 2. Recupero dati dell'utente autenticato (Metodo Diretto "ME")
+      // Usiamo il token appena ottenuto per chiedere al server i dati dell'utente corrente
+      const meResponse = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/me?JWT=${jwtToken}`);
       
+      if (!meResponse.ok) {
+        // Se il metodo "me" fallisce, proviamo a vedere se i dati sono già nel resData del login
+        if (resData.data?.user) {
+          const u = resData.data.user;
+          const userData = {
+            id: u.id || u.ID,
+            username: u.user_login || u.username,
+            email: u.user_email || u.email,
+            nicename: u.display_name || u.user_nicename,
+            display_name: u.display_name || u.user_nicename,
+            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.user_login || u.username}`
+          };
+          saveAuth(jwtToken, userData);
+          return;
+        }
+        throw new Error("Impossibile recuperare i dati del profilo dopo il login.");
+      }
+
+      const meData = await meResponse.json();
+      
+      const userData: User = {
+        id: meData.id,
+        username: meData.slug,
+        email: meData.email || '',
+        nicename: meData.name,
+        display_name: meData.name,
+        avatar: meData.avatar_urls?.['96'] || `https://api.dicebear.com/7.x/avataaars/svg?seed=${meData.slug}`
+      };
+
+      saveAuth(jwtToken, userData);
       showSuccess(`Bentornato, ${userData.display_name}`);
+      
     } catch (error: any) {
       console.error('Login Error:', error);
       showError(error.message);
@@ -143,6 +101,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const saveAuth = (jwtToken: string, userData: User) => {
+    setToken(jwtToken);
+    setUser(userData);
+    localStorage.setItem('ld_auth_token', jwtToken);
+    localStorage.setItem('ld_user_data', JSON.stringify(userData));
   };
 
   const logout = () => {
