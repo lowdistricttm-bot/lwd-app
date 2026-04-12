@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const cleanUsername = username.trim();
     
     try {
-      // 1. Autenticazione - Otteniamo il token e i dati base dell'utente
+      // 1. Autenticazione
       const response = await fetch('https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -57,36 +57,44 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw new Error(resData.message || 'Credenziali non valide');
       }
 
-      // Estraiamo i dati dalla risposta del login (che il server invia sempre)
       const jwtToken = resData.data?.jwt || resData.jwt;
-      const wpUser = resData.data?.user || resData.user;
-      const userId = wpUser?.ID || wpUser?.id;
+      let wpUser = resData.data?.user || resData.user;
+      
+      // 2. Se i dati utente mancano, interroghiamo l'endpoint di validazione
+      if (!wpUser) {
+        try {
+          const valRes = await fetch(`https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth/validate?JWT=${jwtToken}`);
+          const valData = await valRes.json();
+          if (valData.success && valData.data?.user) {
+            wpUser = valData.data.user;
+          }
+        } catch (e) {
+          console.error("Validazione fallita");
+        }
+      }
 
-      if (!userId) throw new Error("Dati utente non ricevuti dal server");
+      // 3. Se mancano ancora, proviamo a decodificare il JWT (metodo d'emergenza)
+      let userId = wpUser?.ID || wpUser?.id;
+      if (!userId && jwtToken) {
+        try {
+          const payload = JSON.parse(atob(jwtToken.split('.')[1]));
+          userId = payload.id || payload.user_id || payload.sub;
+        } catch (e) {}
+      }
 
-      // 2. Costruiamo l'utente con i dati che abbiamo già (senza fare altre chiamate bloccabili)
-      // Proviamo a generare l'URL dell'avatar di BuddyPress che solitamente è pubblico
+      if (!userId) throw new Error("Il server non ha fornito l'ID utente. Contatta l'amministratore.");
+
+      // 4. Costruzione profilo
       const avatarUrl = `https://www.lowdistrict.it/wp-content/uploads/avatars/${userId}/avatar-full.jpg`;
 
       const userData: User = {
         id: parseInt(userId),
-        username: wpUser.user_login || cleanUsername,
-        email: wpUser.user_email || '',
-        nicename: wpUser.display_name || cleanUsername,
-        display_name: wpUser.display_name || cleanUsername,
-        avatar: avatarUrl // Proviamo a caricare questa, se non esiste caricherà il fallback nel componente
+        username: wpUser?.user_login || cleanUsername,
+        email: wpUser?.user_email || '',
+        nicename: wpUser?.display_name || cleanUsername,
+        display_name: wpUser?.display_name || cleanUsername,
+        avatar: avatarUrl
       };
-
-      // 3. Tentativo opzionale di recupero dati extra (se fallisce non blocca il login)
-      try {
-        const meRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${userId}`);
-        if (meRes.ok) {
-          const meData = await meRes.json();
-          if (meData.avatar_urls?.['96']) userData.avatar = meData.avatar_urls['96'];
-        }
-      } catch (e) {
-        console.log("Recupero avatar extra bloccato, uso quello di default");
-      }
 
       saveAuth(jwtToken, userData);
       showSuccess(`Bentornato ${userData.display_name}`);
