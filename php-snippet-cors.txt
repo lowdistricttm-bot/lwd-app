@@ -1,58 +1,43 @@
 /**
- * LOW DISTRICT - BRIDGE DIAGNOSTIC
- * Versione per risolvere l'errore 400.
+ * LOW DISTRICT - CONTENT BRIDGE
+ * Assicura che il testo dei post sia sempre inviato all'App.
  */
 
 add_action('rest_api_init', function () {
     register_rest_route('lowdistrict/v1', '/activity', array(
         'methods' => 'GET',
         'callback' => function($request) {
-            // Verifichiamo se BuddyPress è attivo
             if (!function_exists('bp_activity_get')) {
-                return new WP_Error('bp_missing', 'BuddyPress non è installato o attivo', array('status' => 500));
+                return array();
             }
 
-            // Proviamo a recuperare le attività (senza filtri utente per ora)
             $activities_data = bp_activity_get(array(
-                'per_page' => 10,
+                'per_page' => 20,
                 'display_comments' => 'stream'
             ));
 
-            if (empty($activities_data['activities'])) {
-                return rest_ensure_response(array(
-                    array(
-                        'id' => 0,
-                        'user_name' => 'Sistema',
-                        'content' => 'Nessun post trovato nella bacheca.',
-                        'date' => date('Y-m-d H:i:s')
-                    )
-                ));
-            }
-
             $response = array();
-            foreach ($activities_data['activities'] as $at) {
-                $response[] = array(
-                    'id' => $at->id,
-                    'user_id' => $at->user_id,
-                    'user_name' => bp_core_get_user_displayname($at->user_id),
-                    'user_avatar' => array(
-                        'thumb' => bp_core_fetch_avatar(array('item_id' => $at->user_id, 'html' => false))
-                    ),
-                    'content' => $at->content,
-                    'date' => $at->date_recorded
-                );
+            if (!empty($activities_data['activities'])) {
+                foreach ($activities_data['activities'] as $at) {
+                    // Se il contenuto è vuoto, usiamo l'azione (es. "X ha postato un aggiornamento")
+                    $text = !empty($at->content) ? $at->content : $at->action;
+                    
+                    $response[] = array(
+                        'id' => (int)$at->id,
+                        'user_id' => (int)$at->user_id,
+                        'user_name' => bp_core_get_user_displayname($at->user_id),
+                        'user_avatar' => array(
+                            'thumb' => bp_core_fetch_avatar(array('item_id' => $at->user_id, 'html' => false))
+                        ),
+                        'content' => $text,
+                        'date' => $at->date_recorded,
+                        'type' => $at->type
+                    );
+                }
             }
 
             return rest_ensure_response($response);
         },
-        'permission_callback' => '__return_true', // Permettiamo l'accesso pubblico per test
+        'permission_callback' => '__return_true',
     ));
 });
-
-// Header CORS
-add_filter('rest_pre_serve_request', function($value) {
-    header('Access-Control-Allow-Origin: *');
-    header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-    header('Access-Control-Allow-Headers: Authorization, Content-Type, JWT, X-Requested-With');
-    return $value;
-}, 15);

@@ -36,19 +36,11 @@ const GaragePreview = () => {
         <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-relaxed mb-6">
           {err.message}
         </p>
-        <div className="bg-black/50 p-4 rounded-lg mb-8 text-left">
-          <p className="text-[9px] font-mono text-red-400 uppercase mb-2">Diagnostica Reale:</p>
-          <ul className="text-[8px] font-mono text-gray-500 space-y-1">
-            <li>• Endpoint: /lowdistrict/v1/activity</li>
-            <li>• Token: {localStorage.getItem('ld_auth_token') ? 'Presente' : 'Mancante'}</li>
-            <li>• Dettaglio: {JSON.stringify(err).substring(0, 100)}</li>
-          </ul>
-        </div>
         <Button 
           onClick={() => refetch()}
           className="bg-white text-black hover:bg-red-600 hover:text-white font-black uppercase tracking-widest text-[10px] px-8 py-4 rounded-none italic"
         >
-          <RefreshCw size={14} className="mr-2" /> Riprova Sincronizzazione
+          <RefreshCw size={14} className="mr-2" /> Riprova
         </Button>
       </div>
     );
@@ -78,7 +70,11 @@ const GaragePreview = () => {
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full p-[2px] bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]">
                       <div className="w-full h-full rounded-full border-2 border-black overflow-hidden">
-                        <img src={post.user_avatar?.thumb || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.user_id}`} alt="" />
+                        <img 
+                          src={post.user_avatar?.thumb || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.user_id}`} 
+                          alt="" 
+                          className="w-full h-full object-cover"
+                        />
                       </div>
                     </div>
                     <div>
@@ -97,8 +93,8 @@ const GaragePreview = () => {
                 
                 <div className="px-4 pb-6">
                   <div 
-                    className="text-sm leading-relaxed text-gray-300 prose prose-invert max-w-none"
-                    dangerouslySetInnerHTML={{ __html: post.content?.rendered || post.content }}
+                    className="text-sm leading-relaxed text-gray-300 prose prose-invert max-w-none break-words"
+                    dangerouslySetInnerHTML={{ __html: post.content }}
                   />
                 </div>
 
