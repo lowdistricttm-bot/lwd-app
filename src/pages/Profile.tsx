@@ -12,10 +12,14 @@ import { useWcCustomerCount } from '@/hooks/use-woocommerce';
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState<'activity' | 'orders'>('activity');
+  const [imgError, setImgError] = useState(false);
   const { user, logout, isLoading } = useAuth();
   const { data: customerCount } = useWcCustomerCount();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // URL dell'immagine di default ufficiale del tuo sito
+  const defaultAvatar = "https://www.lowdistrict.it/wp-content/uploads/placeholder.png";
 
   if (isLoading) {
     return (
@@ -59,12 +63,11 @@ const Profile = () => {
         <div className="flex items-start justify-between mb-8">
           <div className="relative">
             <div className="w-24 h-24 rounded-[2rem] bg-zinc-900 border-2 border-red-600 p-1 rotate-3 flex items-center justify-center overflow-hidden">
-              {/* Usiamo direttamente l'URL dell'avatar. Se l'utente non ha foto, 
-                  l'URL punterà all'immagine di default del tuo sito. */}
               <img 
-                src={user.avatar || "https://www.lowdistrict.it/wp-content/uploads/placeholder.png"} 
+                src={imgError || !user.avatar ? defaultAvatar : user.avatar} 
                 alt="avatar" 
                 className="w-full h-full rounded-[1.8rem] object-cover -rotate-3" 
+                onError={() => setImgError(true)}
               />
             </div>
             <div className="absolute -bottom-2 -right-2 bg-red-600 text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-lg">
