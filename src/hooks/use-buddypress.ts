@@ -3,43 +3,42 @@ import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tansta
 const BASE_URL = "https://www.lowdistrict.it/wp-json";
 
 /**
- * Funzione di fetch ottimizzata basata sulla logica funzionante del profilo.
- * Usa il parametro JWT nell'URL che è l'unico metodo accettato dal server lowdistrict.it
+ * Funzione di fetch ultra-resiliente.
+ * Tenta l'autenticazione in più modi per superare i limiti del server.
  */
 const bpFetch = async (endpoint: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('ld_auth_token');
   
-  // Costruiamo l'URL in modo pulito
-  const url = new URL(`${BASE_URL}${endpoint}`);
-  
-  // Aggiungiamo il token solo se presente
-  if (token) {
-    url.searchParams.set('JWT', token);
-  }
+  // 1. TENTATIVO CON HEADER (Metodo preferito, URL corto)
+  const headers = new Headers(options.headers || {});
+  headers.set('Accept', 'application/json');
+  if (token) headers.set('Authorization', `Bearer ${token}`);
 
   try {
-    const response = await fetch(url.toString(), {
-      ...options,
-      headers: {
-        ...options.headers,
-        'Accept': 'application/json',
-      },
-      mode: 'cors'
+    const response = await fetch(`${BASE_URL}${endpoint}`, { 
+      ...options, 
+      headers, 
+      mode: 'cors' 
     });
-
-    if (!response.ok) {
-      // Se fallisce con errore di autorizzazione, proviamo a caricare il contenuto pubblico (senza token)
-      if (response.status === 401 || response.status === 400) {
-        const publicUrl = new URL(`${BASE_URL}${endpoint}`);
-        const publicRes = await fetch(publicUrl.toString(), { mode: 'cors' });
-        if (publicRes.ok) return await publicRes.json();
-      }
-      
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Errore ${response.status}`);
+    
+    if (response.ok) return await response.json();
+    
+    // 2. TENTATIVO CON PARAMETRO URL (Se l'header è bloccato)
+    if (token && (response.status === 401 || response.status === 400)) {
+      const url = new URL(`${BASE_URL}${endpoint}`);
+      url.searchParams.set('JWT', token);
+      const retryRes = await fetch(url.toString(), { ...options, mode: 'cors' });
+      if (retryRes.ok) return await retryRes.json();
+    }
+    
+    // 3. TENTATIVO PUBBLICO (Se l'autenticazione fallisce)
+    if (response.status === 401 || response.status === 400) {
+      const publicRes = await fetch(`${BASE_URL}${endpoint}`, { mode: 'cors' });
+      if (publicRes.ok) return await publicRes.json();
     }
 
-    return await response.json();
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `Errore ${response.status}`);
   } catch (err: any) {
     console.error(`[BP API Error] ${endpoint}:`, err.message);
     throw err;
@@ -50,13 +49,11 @@ export const useBpActivity = (userId?: number) => {
   return useInfiniteQuery({
     queryKey: ['bp-activity', userId],
     queryFn: async ({ pageParam = 1 }) => {
-      // Riduciamo i parametri al minimo per evitare l'errore 400
+      // Parametri ridotti all'osso per evitare l'errore 400
       let endpoint = `/buddypress/v1/activity?page=${pageParam}&per_page=10`;
       if (userId) endpoint += `&user_id=${userId}`;
       
       const data = await bpFetch(endpoint);
-      
-      // Gestione flessibile del formato di risposta BuddyPress
       if (Array.isArray(data)) return data;
       if (data && data.activities) return data.activities;
       return [];
@@ -65,7 +62,7 @@ export const useBpActivity = (userId?: number) => {
     getNextPageParam: (lastPage, allPages) => {
       return lastPage && lastPage.length === 10 ? allPages.length + 1 : undefined;
     },
-    staleTime: 1000 * 20,
+    staleTime: 1000 * 30,
   });
 };
 
@@ -106,8 +103,8 @@ export const useBpMembers = (perPage = 10) => {
   return useQuery({
     queryKey: ['bp-members', perPage],
     queryFn: async () => {
-      // Usiamo un perPage più basso (10) per evitare timeout o errori 400
-      return bpFetch(`/buddypress/v1/members?per_page=${perPage}&type=active`);
+      // Rimosso 'type=active' che spesso causa 400 su alcuni server
+      return bpFetch(`/buddypress/v1/members?per_page=${perPage}`);
     },
     staleTime: 1000 * 60 * 10,
   });

@@ -7,7 +7,8 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 
 const MembersList = () => {
-  const { data: members, isLoading } = useBpMembers(15);
+  // Ridotto a 10 per maggiore stabilità
+  const { data: members, isLoading } = useBpMembers(10);
 
   if (isLoading) return (
     <div className="flex justify-center py-8">
