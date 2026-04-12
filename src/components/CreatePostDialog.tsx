@@ -19,12 +19,12 @@ const CreatePostDialog = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim() || !user) return;
+    if (!content.trim() || !user || !user.id) return;
 
     try {
       await createPost.mutateAsync({ 
         content,
-        user_id: user.id.toString(),
+        user_id: String(user.id),
         user_name: user.display_name,
         user_avatar: user.avatar || defaultAvatar
       });

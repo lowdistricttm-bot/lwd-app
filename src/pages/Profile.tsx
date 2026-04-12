@@ -28,7 +28,8 @@ const Profile = () => {
   const myPosts = useMemo(() => {
     const allPosts = postsData?.pages.flat() || [];
     if (!user?.id) return [];
-    return allPosts.filter((post: any) => post.user_id === user.id.toString());
+    const userIdStr = String(user.id);
+    return allPosts.filter((post: any) => String(post.user_id) === userIdStr);
   }, [postsData, user?.id]);
 
   const { merchOrders, eventApplications } = useMemo(() => {
@@ -51,10 +52,6 @@ const Profile = () => {
   const handleRefresh = async () => {
     await refreshUser();
     showSuccess("Dati aggiornati");
-  };
-
-  const openWpPortal = (title: string, path: string) => {
-    navigate('/wp-portal', { state: { title, url: `https://www.lowdistrict.it/${path}` } });
   };
 
   if (isLoading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-red-600" /></div>;
@@ -128,13 +125,50 @@ const Profile = () => {
                   <p className="text-sm text-gray-300 mb-4">{post.content}</p>
                   {post.image_url && <img src={post.image_url} className="rounded-xl w-full mb-4" />}
                   <span className="text-[9px] text-gray-500 font-black uppercase">
-                    {format(new Date(post.created_at), 'dd MMM yyyy', { locale: it })}
+                    {post.created_at ? format(new Date(post.created_at), 'dd MMM yyyy', { locale: it }) : 'Recentemente'}
                   </span>
                 </div>
               ))
             )
           )}
-          {/* Altri tab rimangono simili ma puliti */}
+          
+          {activeTab === 'orders' && (
+            merchOrders.length === 0 ? (
+              <div className="py-20 text-center border border-dashed border-white/5 rounded-3xl">
+                <Package className="mx-auto text-gray-800 mb-4" size={40} />
+                <p className="text-gray-500 text-[10px] font-black uppercase">Nessun ordine trovato</p>
+              </div>
+            ) : (
+              merchOrders.map((order: any) => (
+                <div key={order.id} className="bg-zinc-900/30 border border-white/5 p-4 rounded-2xl flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-black uppercase italic">Ordine #{order.id}</p>
+                    <p className="text-[10px] text-gray-500 font-bold uppercase">{order.status}</p>
+                  </div>
+                  <p className="font-black italic">€{order.total}</p>
+                </div>
+              ))
+            )
+          )}
+
+          {activeTab === 'applications' && (
+            eventApplications.length === 0 ? (
+              <div className="py-20 text-center border border-dashed border-white/5 rounded-3xl">
+                <Ticket className="mx-auto text-gray-800 mb-4" size={40} />
+                <p className="text-gray-500 text-[10px] font-black uppercase">Nessuna candidatura</p>
+              </div>
+            ) : (
+              eventApplications.map((app: any) => (
+                <div key={app.id} className="bg-zinc-900/30 border border-white/5 p-4 rounded-2xl flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-black uppercase italic">{app.line_items[0]?.name}</p>
+                    <p className="text-[10px] text-red-600 font-black uppercase tracking-widest">{app.status}</p>
+                  </div>
+                  <ChevronRight size={16} className="text-gray-700" />
+                </div>
+              ))
+            )
+          )}
         </div>
 
         <Button onClick={logout} variant="outline" className="w-full mt-12 border-white/10 text-gray-500 font-black uppercase italic">Esci</Button>
