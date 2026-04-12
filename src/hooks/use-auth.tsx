@@ -62,80 +62,89 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       let userData: User | null = null;
       let wpUserId: number | null = null;
 
-      // 2. Recupero ID Utente (necessario per BuddyPress)
-      try {
-        const meResponse = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/me?JWT=${jwtToken}`);
-        if (meResponse.ok) {
-          const meData = await meResponse.json();
-          wpUserId = meData.id;
-        }
-      } catch (e) {}
+      // 2. Recupero ID Utente
+      const meResponse = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/me?JWT=${jwtToken}`);
+      if (meResponse.ok) {
+        const meData = await meResponse.json();
+        wpUserId = meData.id;
+      }
 
       if (!wpUserId && resData.data?.user?.id) {
         wpUserId = resData.data.user.id;
       }
 
-      // 3. SINCRONIZZAZIONE BUDDYPRESS (Tentativo prioritario)
+      // 3. RECUPERO AVATAR MULTI-SORGENTE
+      let finalAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${cleanUsername}`;
+
       if (wpUserId) {
+        // Prova BuddyPress
         try {
           const bpResponse = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${wpUserId}?JWT=${jwtToken}`);
           if (bpResponse.ok) {
             const bpData = await bpResponse.json();
+            const bpAvatar = bpData.avatar_urls?.full || bpData.avatar_urls?.thumb;
+            if (bpAvatar && !bpAvatar.includes('mystery-man')) {
+              finalAvatar = bpAvatar;
+            }
+            
             userData = {
               id: bpData.id,
               username: bpData.user_login || bpData.mention_name,
-              email: '', // BP non espone l'email per privacy, la prenderemo dal fallback se serve
+              email: '',
               nicename: bpData.name,
               display_name: bpData.name,
-              avatar: bpData.avatar_urls?.full || bpData.avatar_urls?.thumb || `https://api.dicebear.com/7.x/avataaars/svg?seed=${bpData.user_login}`,
+              avatar: finalAvatar,
               mention_name: bpData.mention_name
-            };
-            console.log("Profilo BuddyPress sincronizzato con successo");
-          }
-        } catch (e) {
-          console.warn("Impossibile recuperare dati BuddyPress, uso fallback WordPress...");
-        }
-      }
-
-      // 4. Fallback WordPress (se BuddyPress fallisce)
-      if (!userData && wpUserId) {
-        try {
-          const wpResponse = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${wpUserId}?JWT=${jwtToken}`);
-          if (wpResponse.ok) {
-            const wpData = await wpResponse.json();
-            userData = {
-              id: wpData.id,
-              username: wpData.slug,
-              email: wpData.email || '',
-              nicename: wpData.name,
-              display_name: wpData.name,
-              avatar: wpData.avatar_urls?.['96'] || `https://api.dicebear.com/7.x/avataaars/svg?seed=${wpData.slug}`
             };
           }
         } catch (e) {}
+
+        // Prova WordPress (Gravatar) se BuddyPress non ha dato risultati certi
+        if (!userData || finalAvatar.includes('dicebear')) {
+          try {
+            const wpResponse = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${wpUserId}?JWT=${jwtToken}`);
+            if (wpResponse.ok) {
+              const wpData = await wpResponse.json();
+              const wpAvatar = wpData.avatar_urls?.['96'] || wpData.avatar_urls?.['48'];
+              if (wpAvatar && !wpAvatar.includes('gravatar.com/avatar/0000')) {
+                finalAvatar = wpAvatar;
+              }
+              
+              if (!userData) {
+                userData = {
+                  id: wpData.id,
+                  username: wpData.slug,
+                  email: wpData.email || '',
+                  nicename: wpData.name,
+                  display_name: wpData.name,
+                  avatar: finalAvatar
+                };
+              } else {
+                userData.avatar = finalAvatar;
+              }
+            }
+          } catch (e) {}
+        }
       }
 
-      // 5. Piano di Emergenza Finale (Dati locali)
-      if (!userData && jwtToken) {
+      // 4. Fallback finale
+      if (!userData) {
         userData = {
           id: wpUserId || Date.now(),
           username: cleanUsername.split('@')[0],
           email: cleanUsername.includes('@') ? cleanUsername : '',
           nicename: cleanUsername.split('@')[0],
           display_name: cleanUsername.split('@')[0],
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${cleanUsername}`
+          avatar: finalAvatar
         };
       }
 
-      if (!userData) {
-        throw new Error("Errore durante la creazione della sessione.");
-      }
-
+      // Forza aggiornamento pulendo la vecchia sessione
+      localStorage.removeItem('ld_user_data');
       saveAuth(jwtToken, userData);
-      showSuccess(`Profilo Community sincronizzato!`);
+      showSuccess(`Profilo sincronizzato!`);
       
     } catch (error: any) {
-      console.error('Login Error:', error);
       showError(error.message);
       throw error;
     } finally {
