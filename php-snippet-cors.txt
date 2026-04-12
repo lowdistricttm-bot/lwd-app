@@ -1,32 +1,53 @@
 /**
- * LOW DISTRICT - API BRIDGE
- * Crea un endpoint semplificato per l'App che non attiva i blocchi CORS standard.
+ * LOW DISTRICT - POWER BRIDGE
+ * Forza l'identità dell'utente e recupera i dati della bacheca.
  */
 
 add_action('rest_api_init', function () {
     register_rest_route('lowdistrict/v1', '/activity', array(
         'methods' => 'GET',
         'callback' => function($request) {
-            // Recupera il token JWT dalla richiesta
             $token = $request->get_param('JWT');
             
-            // Simula l'autenticazione se il token è presente
-            if (!empty($token)) {
-                $_GET['JWT'] = $token;
+            // Se c'è un token, dobbiamo dire a WordPress chi è l'utente
+            if (!empty($token) && class_exists('T_JWT_Authentication')) {
+                $jwt_auth = new T_JWT_Authentication();
+                $user_data = $jwt_auth->validate_token($token);
+                if (isset($user_data->data->user->id)) {
+                    wp_set_current_user($user_data->data->user->id);
+                }
             }
 
-            // Chiama internamente BuddyPress e restituisce i dati
-            $bp_request = new WP_REST_Request('GET', '/buddypress/v1/activity');
-            $bp_request->set_query_params($request->get_query_params());
-            $response = rest_do_request($bp_request);
+            // Ora chiediamo i dati a BuddyPress
+            if (function_exists('bp_activity_get')) {
+                $activities = bp_activity_get(array(
+                    'per_page' => 20,
+                    'display_comments' => 'stream'
+                ));
+                
+                // Puliamo i dati per l'App
+                $response = array();
+                foreach ($activities['activities'] as $at) {
+                    $response[] = array(
+                        'id' => $at->id,
+                        'user_id' => $at->user_id,
+                        'user_name' => bp_core_get_user_displayname($at->user_id),
+                        'user_avatar' => array('thumb' => bp_core_fetch_avatar(array('item_id' => $at->user_id, 'html' => false))),
+                        'content' => $at->content,
+                        'date' => $at->date_recorded,
+                        'type' => $at->type
+                    );
+                }
+                return rest_ensure_response($response);
+            }
             
-            return rest_ensure_response($response->get_data());
+            return new WP_Error('no_buddypress', 'BuddyPress non è attivo', array('status' => 500));
         },
         'permission_callback' => '__return_true',
     ));
 });
 
-// Forza gli header CORS per il nuovo endpoint
+// Header CORS sempre attivi
 add_filter('rest_pre_serve_request', function($value) {
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
