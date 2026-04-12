@@ -14,6 +14,7 @@ import { showSuccess } from '@/utils/toast';
 const Profile = () => {
   const [activeTab, setActiveTab] = useState<'activity' | 'orders'>('activity');
   const [imgError, setImgError] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const { user, logout, refreshUser, isLoading, isRefreshing } = useAuth();
   const { data: customerCount } = useWcCustomerCount();
   const location = useLocation();
@@ -25,9 +26,10 @@ const Profile = () => {
   }, []);
 
   const handleRefresh = async () => {
-    setImgError(false); // Resettiamo l'errore per forzare il ricaricamento dell'immagine
+    setImgError(false);
+    setRefreshKey(prev => prev + 1);
     await refreshUser();
-    showSuccess("Profilo aggiornato");
+    showSuccess("Profilo sincronizzato");
   };
 
   if (isLoading) {
@@ -73,7 +75,7 @@ const Profile = () => {
           <div className="relative">
             <div className="w-24 h-24 rounded-[2rem] bg-zinc-900 border-2 border-red-600 p-1 rotate-3 flex items-center justify-center overflow-hidden">
               <img 
-                key={user.avatar} // Forziamo il re-render dell'immagine quando l'URL cambia
+                key={`${user.avatar}-${refreshKey}`}
                 src={imgError || !user.avatar ? defaultAvatar : user.avatar} 
                 alt="avatar" 
                 className="w-full h-full rounded-[1.8rem] object-cover -rotate-3" 

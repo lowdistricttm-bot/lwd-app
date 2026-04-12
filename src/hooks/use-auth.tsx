@@ -48,39 +48,57 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchLatestUserData = useCallback(async (userId: number, currentToken: string) => {
     setIsRefreshing(true);
     try {
-      // Proviamo a recuperare i dati da BuddyPress che contiene l'avatar personalizzato corretto
-      const bpRes = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${userId}?JWT=${currentToken}`);
+      // Usiamo l'header Authorization Bearer che è più standard e affidabile
+      const response = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${currentToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
       
-      if (bpRes.ok) {
-        const bpData = await bpRes.json();
-        // BuddyPress può restituire un array o un oggetto
-        const member = Array.isArray(bpData) ? bpData[0] : bpData;
-        const bpAvatar = member?.avatar_urls?.full || member?.avatar_urls?.thumb;
+      if (response.ok) {
+        const data = await response.json();
+        // BuddyPress può restituire un oggetto o un array di un elemento
+        const member = Array.isArray(data) ? data[0] : data;
+        const rawAvatar = member?.avatar_urls?.full || member?.avatar_urls?.thumb;
         
-        if (bpAvatar) {
-          const updatedUser = { ...user!, avatar: bpAvatar };
-          setUser(updatedUser);
-          localStorage.setItem('ld_user_data', JSON.stringify(updatedUser));
+        if (rawAvatar) {
+          // Aggiungiamo un timestamp per evitare la cache del browser
+          const bpAvatar = `${rawAvatar}${rawAvatar.includes('?') ? '&' : '?'}t=${Date.now()}`;
+          
+          setUser(prev => {
+            if (!prev) return null;
+            const updated = { ...prev, avatar: bpAvatar };
+            localStorage.setItem('ld_user_data', JSON.stringify(updated));
+            return updated;
+          });
           return;
         }
       }
 
-      // Fallback su WordPress standard
-      const userRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${userId}?JWT=${currentToken}`);
-      if (userRes.ok) {
-        const userData = await userRes.json();
-        const wpAvatar = userData.avatar_urls?.['96'] || userData.avatar_urls?.['48'];
-        
-        const updatedUser = { ...user!, avatar: wpAvatar || defaultAvatar };
-        setUser(updatedUser);
-        localStorage.setItem('ld_user_data', JSON.stringify(updatedUser));
+      // Fallback su WP Users se BuddyPress non risponde correttamente
+      const wpRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${userId}`, {
+        headers: { 'Authorization': `Bearer ${currentToken}` }
+      });
+      if (wpRes.ok) {
+        const wpData = await wpRes.json();
+        const wpAvatar = wpData.avatar_urls?.['96'] || wpData.avatar_urls?.['48'];
+        if (wpAvatar) {
+          const finalWpAvatar = `${wpAvatar}&t=${Date.now()}`;
+          setUser(prev => {
+            if (!prev) return null;
+            const updated = { ...prev, avatar: finalWpAvatar };
+            localStorage.setItem('ld_user_data', JSON.stringify(updated));
+            return updated;
+          });
+        }
       }
     } catch (e) {
-      console.error("Errore sincronizzazione utente:", e);
+      console.error("Errore critico sincronizzazione:", e);
     } finally {
       setIsRefreshing(false);
     }
-  }, [user, defaultAvatar]);
+  }, [user]);
 
   useEffect(() => {
     if (user?.id && token) {
@@ -90,13 +108,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login = async (username: string, password: string) => {
     setIsLoading(true);
-    const cleanUsername = username.trim();
-    
     try {
       const response = await fetch('https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: cleanUsername, password: password }),
+        body: JSON.stringify({ username: username.trim(), password: password }),
       });
 
       const resData = await response.json();
@@ -105,28 +121,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       const jwtToken = resData.data?.jwt || resData.jwt;
-      let wpUser = resData.data?.user || resData.user;
-      
-      let userId = wpUser?.ID || wpUser?.id;
-      if (!userId && jwtToken) {
-        try {
-          const payload = JSON.parse(atob(jwtToken.split('.')[1]));
-          userId = payload.id || payload.user_id || payload.sub;
-        } catch (e) {}
-      }
+      const wpUser = resData.data?.user || resData.user;
+      const userId = wpUser?.ID || wpUser?.id;
 
       if (!userId) throw new Error("ID utente non trovato");
 
       const userData: User = {
         id: parseInt(userId),
-        username: wpUser?.user_login || cleanUsername,
+        username: wpUser?.user_login || username,
         email: wpUser?.user_email || '',
-        nicename: wpUser?.display_name || cleanUsername,
-        display_name: wpUser?.display_name || cleanUsername,
+        nicename: wpUser?.display_name || username,
+        display_name: wpUser?.display_name || username,
         avatar: defaultAvatar
       };
 
-      saveAuth(jwtToken, userData);
+      setToken(jwtToken);
+      setUser(userData);
+      localStorage.setItem('ld_auth_token', jwtToken);
+      localStorage.setItem('ld_user_data', JSON.stringify(userData));
+      
       await fetchLatestUserData(userData.id, jwtToken);
       showSuccess(`Bentornato ${userData.display_name}`);
       
@@ -136,13 +149,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const saveAuth = (jwtToken: string, userData: User) => {
-    setToken(jwtToken);
-    setUser(userData);
-    localStorage.setItem('ld_auth_token', jwtToken);
-    localStorage.setItem('ld_user_data', JSON.stringify(userData));
   };
 
   const logout = () => {
