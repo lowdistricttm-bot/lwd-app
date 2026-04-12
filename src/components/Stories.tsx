@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { cn } from "@/lib/utils";
 import StoryViewer from './StoryViewer';
 import { AnimatePresence } from 'framer-motion';
+import { Plus } from 'lucide-react';
+import { showSuccess } from '@/utils/toast';
 
 const stories = [
   { id: 1, name: 'La tua storia', img: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=800', isUser: true },
@@ -16,6 +18,11 @@ const stories = [
 const Stories = () => {
   const [selectedStoryIndex, setSelectedStoryIndex] = useState<number | null>(null);
 
+  const handleAddStory = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    showSuccess("Apertura fotocamera per nuova storia...");
+  };
+
   return (
     <>
       <div className="flex gap-4 overflow-x-auto py-4 px-4 no-scrollbar bg-black border-b border-white/5">
@@ -23,7 +30,7 @@ const Stories = () => {
           <button 
             key={story.id} 
             onClick={() => setSelectedStoryIndex(index)}
-            className="flex flex-col items-center gap-1.5 shrink-0 outline-none group"
+            className="flex flex-col items-center gap-1.5 shrink-0 outline-none group relative"
           >
             <div className={cn(
               "w-[68px] h-[68px] rounded-full p-[2.5px] transition-all duration-300 group-active:scale-90",
@@ -31,10 +38,21 @@ const Stories = () => {
                 ? "bg-zinc-800" 
                 : "bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]"
             )}>
-              <div className="w-full h-full rounded-full border-2 border-black overflow-hidden">
+              <div className="w-full h-full rounded-full border-2 border-black overflow-hidden relative">
                 <img src={story.img} alt={story.name} className="w-full h-full object-cover" />
               </div>
             </div>
+
+            {/* Instagram Style Plus Button for User Story */}
+            {story.isUser && (
+              <div 
+                onClick={handleAddStory}
+                className="absolute bottom-6 right-0 bg-[#0095f6] text-white rounded-full p-0.5 border-2 border-black hover:scale-110 transition-transform"
+              >
+                <Plus size={14} strokeWidth={4} />
+              </div>
+            )}
+
             <span className="text-[11px] text-white/80 truncate w-16 text-center">
               {story.name}
             </span>
