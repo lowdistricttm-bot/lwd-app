@@ -45,10 +45,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchLatestUserData = useCallback(async (userId: number, currentToken: string) => {
     try {
+      // Proviamo a recuperare i dati da BuddyPress che contiene l'avatar personalizzato corretto
+      const bpRes = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${userId}?JWT=${currentToken}`);
+      
+      if (bpRes.ok) {
+        const bpData = await bpRes.json();
+        const bpAvatar = bpData[0]?.avatar_urls?.full || bpData[0]?.avatar_urls?.thumb;
+        
+        if (bpAvatar) {
+          setUser(prev => {
+            if (!prev) return null;
+            const updated = { ...prev, avatar: bpAvatar };
+            localStorage.setItem('ld_user_data', JSON.stringify(updated));
+            return updated;
+          });
+          return;
+        }
+      }
+
+      // Fallback su WordPress standard se BuddyPress fallisce
       const userRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${userId}?JWT=${currentToken}`);
       if (userRes.ok) {
         const userData = await userRes.json();
-        // Prendiamo l'avatar più grande disponibile
         const wpAvatar = userData.avatar_urls?.['96'] || userData.avatar_urls?.['48'];
         
         setUser(prev => {
@@ -63,7 +81,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [defaultAvatar]);
 
-  // Sincronizza i dati all'avvio se loggato
   useEffect(() => {
     if (user?.id && token) {
       fetchLatestUserData(user.id, token);
@@ -99,13 +116,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (!userId) throw new Error("ID utente non trovato");
 
-      // Recuperiamo subito l'avatar aggiornato
+      // Recuperiamo subito l'avatar da BuddyPress dopo il login
       let finalAvatar = defaultAvatar;
       try {
-        const userRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${userId}`);
-        if (userRes.ok) {
-          const userData = await userRes.json();
-          finalAvatar = userData.avatar_urls?.['96'] || userData.avatar_urls?.['48'] || defaultAvatar;
+        const bpRes = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${userId}`);
+        if (bpRes.ok) {
+          const bpData = await bpRes.json();
+          finalAvatar = bpData[0]?.avatar_urls?.full || bpData[0]?.avatar_urls?.thumb || defaultAvatar;
         }
       } catch (e) {}
 
