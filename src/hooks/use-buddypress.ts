@@ -44,13 +44,14 @@ export const useCreateActivity = () => {
       const token = localStorage.getItem('ld_auth_token');
       if (!token) throw new Error("Devi essere loggato per pubblicare");
 
-      // Passiamo il token nell'URL per evitare che il server lo cancelli dagli header
-      const url = `${BASE_URL}/buddypress/v1/activity?JWT=${token}`;
+      // Endpoint standard BuddyPress per l'attività
+      const url = `${BASE_URL}/buddypress/v1/activity`;
 
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // Usiamo il formato Bearer standard
         },
         body: JSON.stringify({
           content: content,
@@ -62,12 +63,29 @@ export const useCreateActivity = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
+        // Se fallisce con Bearer, proviamo il fallback con parametro URL (alcuni plugin WP lo preferiscono)
+        if (response.status === 401 || response.status === 400) {
+           const fallbackUrl = `${url}?JWT=${token}`;
+           const fallbackResponse = await fetch(fallbackUrl, {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({
+               content: content,
+               user_id: userId,
+               component: 'activity',
+               type: 'activity_update'
+             })
+           });
+           
+           if (fallbackResponse.ok) return fallbackResponse.json();
+        }
         throw new Error(errorData.message || `Errore ${response.status}`);
       }
 
       return response.json();
     },
     onSuccess: () => {
+      // Reset della cache per mostrare il nuovo post
       queryClient.invalidateQueries({ queryKey: ['bp-activity'] });
     }
   });
