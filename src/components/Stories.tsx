@@ -67,21 +67,22 @@ const Stories = () => {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
       
+      // Caricamento nel bucket 'stories'
       const { error: uploadError } = await supabase.storage
         .from('stories')
-        .upload(fileName, file);
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
-      if (uploadError) {
-        if (uploadError.message.includes("bucket not found")) {
-          throw new Error("Il bucket 'stories' non esiste. Crealo su Supabase Storage e impostalo come PUBLIC.");
-        }
-        throw uploadError;
-      }
+      if (uploadError) throw uploadError;
 
+      // Ottenimento URL pubblico
       const { data: { publicUrl } } = supabase.storage
         .from('stories')
         .getPublicUrl(fileName);
 
+      // Inserimento record nel database
       const { error: dbError } = await supabase
         .from('stories')
         .insert([{ 
@@ -92,7 +93,7 @@ const Stories = () => {
       if (dbError) throw dbError;
 
       showSuccess("Storia pubblicata!");
-      loadStories();
+      await loadStories();
     } catch (err: any) {
       console.error("Upload error:", err);
       showError(err.message || "Errore durante il caricamento");
