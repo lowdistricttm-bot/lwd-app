@@ -3,15 +3,17 @@
 import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
-import { Settings as SettingsIcon, Grid, Package, MapPin, Link as LinkIcon, ChevronRight, User as UserIcon } from 'lucide-react';
+import { Settings as SettingsIcon, Grid, Package, MapPin, Link as LinkIcon, ChevronRight, User as UserIcon, Users } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
+import { useWcCustomerCount } from '@/hooks/use-woocommerce';
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState<'posts' | 'orders'>('posts');
   const { user, logout } = useAuth();
+  const { data: customerCount } = useWcCustomerCount();
   const navigate = useNavigate();
 
   if (!user) {
@@ -72,6 +74,17 @@ const Profile = () => {
           <div className="flex flex-wrap gap-4 text-gray-500 text-[10px] font-black uppercase tracking-tight mb-6">
             <span className="flex items-center gap-1"><MapPin size={14} /> Community Member</span>
             <span className="flex items-center gap-1"><LinkIcon size={14} /> lowdistrict.it</span>
+          </div>
+
+          {/* Community Counter Card */}
+          <div className="bg-zinc-900/50 border border-white/5 p-4 rounded-2xl flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-red-600/10 rounded-xl">
+                <Users className="text-red-600" size={18} />
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Membri Community</span>
+            </div>
+            <span className="text-xl font-black italic">{customerCount || "..."}</span>
           </div>
         </div>
 

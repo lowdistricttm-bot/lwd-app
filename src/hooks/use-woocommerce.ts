@@ -39,3 +39,20 @@ export const useWcProduct = (id: string | undefined) => {
     ...DEFAULT_QUERY_OPTIONS,
   });
 };
+
+export const useWcCustomerCount = () => {
+  return useQuery({
+    queryKey: ['wc-customer-count'],
+    queryFn: async () => {
+      // Chiediamo solo 1 elemento per ottenere il totale dagli header o dal conteggio
+      const response = await fetch('https://www.lowdistrict.it/wp-json/wc/v3/customers?per_page=1', {
+        headers: {
+          'Authorization': `Basic ${btoa("ck_9fb51bb84b02dbc2bbc4c9a602de478ca33079ea:cs_225bea698a3c9bf46cda04bf57a630a6b15034a9")}`
+        }
+      });
+      // Il totale è solitamente nell'header X-WP-Total
+      return response.headers.get('X-WP-Total') || "0";
+    },
+    ...DEFAULT_QUERY_OPTIONS,
+  });
+};
