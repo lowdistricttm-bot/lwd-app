@@ -10,6 +10,7 @@ interface User {
   nicename: string;
   display_name: string;
   avatar?: string;
+  mention_name?: string;
 }
 
 interface AuthContextType {
@@ -59,66 +60,65 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       const jwtToken = resData.data?.jwt || resData.jwt;
       let userData: User | null = null;
+      let wpUserId: number | null = null;
 
-      // 2. Tentativo A: Endpoint "me"
+      // 2. Recupero ID Utente (necessario per BuddyPress)
       try {
         const meResponse = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/me?JWT=${jwtToken}`);
         if (meResponse.ok) {
           const meData = await meResponse.json();
-          userData = {
-            id: meData.id,
-            username: meData.slug,
-            email: meData.email || '',
-            nicename: meData.name,
-            display_name: meData.name,
-            avatar: meData.avatar_urls?.['96'] || `https://api.dicebear.com/7.x/avataaars/svg?seed=${meData.slug}`
-          };
+          wpUserId = meData.id;
         }
       } catch (e) {}
 
-      // 3. Tentativo B: Ricerca per identificativo
-      if (!userData) {
+      if (!wpUserId && resData.data?.user?.id) {
+        wpUserId = resData.data.user.id;
+      }
+
+      // 3. SINCRONIZZAZIONE BUDDYPRESS (Tentativo prioritario)
+      if (wpUserId) {
         try {
-          const searchResponse = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users?search=${encodeURIComponent(cleanUsername)}&JWT=${jwtToken}`);
-          if (searchResponse.ok) {
-            const users = await searchResponse.json();
-            if (users && users.length > 0) {
-              const u = users[0];
-              userData = {
-                id: u.id,
-                username: u.slug,
-                email: u.email || '',
-                nicename: u.name,
-                display_name: u.name,
-                avatar: u.avatar_urls?.['96'] || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.slug}`
-              };
-            }
+          const bpResponse = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${wpUserId}?JWT=${jwtToken}`);
+          if (bpResponse.ok) {
+            const bpData = await bpResponse.json();
+            userData = {
+              id: bpData.id,
+              username: bpData.user_login || bpData.mention_name,
+              email: '', // BP non espone l'email per privacy, la prenderemo dal fallback se serve
+              nicename: bpData.name,
+              display_name: bpData.name,
+              avatar: bpData.avatar_urls?.full || bpData.avatar_urls?.thumb || `https://api.dicebear.com/7.x/avataaars/svg?seed=${bpData.user_login}`,
+              mention_name: bpData.mention_name
+            };
+            console.log("Profilo BuddyPress sincronizzato con successo");
+          }
+        } catch (e) {
+          console.warn("Impossibile recuperare dati BuddyPress, uso fallback WordPress...");
+        }
+      }
+
+      // 4. Fallback WordPress (se BuddyPress fallisce)
+      if (!userData && wpUserId) {
+        try {
+          const wpResponse = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${wpUserId}?JWT=${jwtToken}`);
+          if (wpResponse.ok) {
+            const wpData = await wpResponse.json();
+            userData = {
+              id: wpData.id,
+              username: wpData.slug,
+              email: wpData.email || '',
+              nicename: wpData.name,
+              display_name: wpData.name,
+              avatar: wpData.avatar_urls?.['96'] || `https://api.dicebear.com/7.x/avataaars/svg?seed=${wpData.slug}`
+            };
           }
         } catch (e) {}
       }
 
-      // 4. Tentativo C: Dati diretti dalla risposta login
-      if (!userData) {
-        const u = resData.data?.user || resData.user;
-        if (u) {
-          userData = {
-            id: u.id || u.ID || Date.now(),
-            username: u.user_login || u.username || cleanUsername,
-            email: u.user_email || u.email || '',
-            nicename: u.display_name || u.user_nicename || cleanUsername,
-            display_name: u.display_name || u.user_nicename || cleanUsername,
-            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.user_login || cleanUsername}`
-          };
-        }
-      }
-
-      // 5. PIANO DI EMERGENZA FINALE (Plan D)
-      // Se il login è riuscito (abbiamo il token) ma non troviamo i dati, 
-      // creiamo un profilo locale per non bloccare l'utente.
+      // 5. Piano di Emergenza Finale (Dati locali)
       if (!userData && jwtToken) {
-        console.warn("Utilizzo profilo di emergenza locale.");
         userData = {
-          id: Date.now(), // ID temporaneo
+          id: wpUserId || Date.now(),
           username: cleanUsername.split('@')[0],
           email: cleanUsername.includes('@') ? cleanUsername : '',
           nicename: cleanUsername.split('@')[0],
@@ -128,11 +128,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       if (!userData) {
-        throw new Error("Errore critico durante la creazione della sessione.");
+        throw new Error("Errore durante la creazione della sessione.");
       }
 
       saveAuth(jwtToken, userData);
-      showSuccess(`Accesso effettuato come ${userData.display_name}`);
+      showSuccess(`Profilo Community sincronizzato!`);
       
     } catch (error: any) {
       console.error('Login Error:', error);
