@@ -1,12 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 
-const URL = "https://www.lowdistrict.it/wp-json/buddyboss/v1";
+const URL = "https://www.lowdistrict.it/wp-json/buddypress/v1";
 
-export const useBbActivity = () => {
+export const useBpActivity = () => {
   return useQuery({
-    queryKey: ['bb-activity'],
+    queryKey: ['bp-activity'],
     queryFn: async () => {
-      // Recuperiamo il token JWT se l'utente è loggato
       const token = localStorage.getItem('ld_auth_token');
       
       const headers: HeadersInit = {
@@ -18,27 +17,26 @@ export const useBbActivity = () => {
       }
 
       try {
-        // Parametri ottimizzati per la bacheca: 10 post, includendo i dati dell'utente
+        // Endpoint ufficiale BuddyPress per l'attività
         const response = await fetch(`${URL}/activity?per_page=10&display_name=true`, {
           headers
         });
         
         if (!response.ok) {
-          // Se fallisce con auth, proviamo senza (alcuni feed sono pubblici)
           if (token && response.status === 401) {
             const publicRes = await fetch(`${URL}/activity?per_page=10`);
             if (publicRes.ok) return publicRes.json();
           }
-          throw new Error(`Errore API: ${response.status}`);
+          throw new Error(`Errore BuddyPress: ${response.status}`);
         }
         
         return response.json();
       } catch (err) {
-        console.error('BuddyBoss Fetch Error:', err);
+        console.error('BuddyPress Fetch Error:', err);
         throw err;
       }
     },
-    staleTime: 1000 * 60 * 2, // Cache di 2 minuti
+    staleTime: 1000 * 60 * 2,
     retry: 1
   });
 };

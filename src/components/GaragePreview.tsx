@@ -1,18 +1,17 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Share2, Loader2, AlertCircle } from 'lucide-react';
-import { showSuccess } from '@/utils/toast';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Heart, MessageCircle, Send, MoreHorizontal, Share2, Loader2, AlertCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
 import CommentDrawer from './CommentDrawer';
 import CreatePostDialog from './CreatePostDialog';
 import { cn } from '@/lib/utils';
-import { useBbActivity } from '@/hooks/use-buddyboss';
+import { useBpActivity } from '@/hooks/use-buddypress';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 
 const GaragePreview = () => {
-  const { data: activities, isLoading, error } = useBbActivity();
+  const { data: activities, isLoading, error } = useBpActivity();
   const [likedPosts, setLikedPosts] = useState<Record<number, boolean>>({});
 
   const handleLike = (id: number) => {
@@ -23,7 +22,7 @@ const GaragePreview = () => {
     return (
       <div className="flex flex-col items-center justify-center py-32">
         <Loader2 className="animate-spin text-red-600 mb-4" size={32} />
-        <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Sincronizzazione Bacheca...</p>
+        <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Sincronizzazione BuddyPress...</p>
       </div>
     );
   }
@@ -32,9 +31,9 @@ const GaragePreview = () => {
     return (
       <div className="text-center py-20 px-6 bg-zinc-900/30 border border-white/5 rounded-3xl mx-4">
         <AlertCircle className="mx-auto text-red-600 mb-4" size={32} />
-        <h3 className="text-sm font-black uppercase tracking-tighter mb-2">Connessione al sito fallita</h3>
+        <h3 className="text-sm font-black uppercase tracking-tighter mb-2">Errore BuddyPress</h3>
         <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-relaxed">
-          Non riusciamo a recuperare i post dal server.<br />Verifica la tua connessione o riprova più tardi.
+          Impossibile sincronizzare la bacheca con il sito.<br />Verifica che il plugin BuddyPress REST API sia attivo.
         </p>
       </div>
     );
@@ -47,15 +46,15 @@ const GaragePreview = () => {
 
         <div className="flex items-center justify-between border-b border-white/5 pb-6 mb-8">
           <div>
-            <h3 className="text-lg font-black tracking-tighter uppercase italic">Attività Community</h3>
-            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Live dal sito web</p>
+            <h3 className="text-lg font-black tracking-tighter uppercase italic">Community Feed</h3>
+            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Sincronizzato con BuddyPress</p>
           </div>
         </div>
         
         <div className="space-y-12">
           {activities?.length === 0 ? (
             <div className="text-center py-20">
-              <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Nessun post recente in bacheca</p>
+              <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Nessuna attività trovata</p>
             </div>
           ) : (
             activities?.map((post: any) => (
@@ -69,7 +68,7 @@ const GaragePreview = () => {
                     </div>
                     <div>
                       <p className="text-sm font-black leading-none mb-1 uppercase italic">
-                        {post.name || 'Utente Low District'}
+                        {post.user_name || 'Membro Low District'}
                       </p>
                       <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">
                         {post.date ? formatDistanceToNow(new Date(post.date), { addSuffix: true, locale: it }) : 'Recentemente'}
@@ -84,7 +83,7 @@ const GaragePreview = () => {
                 <div className="px-4 pb-6">
                   <div 
                     className="text-sm leading-relaxed text-gray-300 prose prose-invert max-w-none"
-                    dangerouslySetInnerHTML={{ __html: post.content }}
+                    dangerouslySetInnerHTML={{ __html: post.content?.rendered || post.content }}
                   />
                 </div>
 
@@ -96,7 +95,7 @@ const GaragePreview = () => {
                     >
                       <Heart size={26} strokeWidth={2} fill={likedPosts[post.id] ? "currentColor" : "none"} />
                     </button>
-                    <CommentDrawer count={post.comment_count || "0"} />
+                    <CommentDrawer count="0" />
                     <button className="text-white hover:text-red-600 transition-colors">
                       <Share2 size={24} strokeWidth={2} />
                     </button>
