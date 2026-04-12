@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { cn } from "@/lib/utils";
 import StoryViewer from './StoryViewer';
 import { AnimatePresence } from 'framer-motion';
@@ -8,12 +8,54 @@ import { Plus } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useAuth } from '@/hooks/use-auth';
 
+interface PersistedStory {
+  img: string;
+  timestamp: number;
+}
+
 const Stories = () => {
   const { user } = useAuth();
   const [imgError, setImgError] = useState(false);
   const [showViewer, setShowViewer] = useState(false);
-  const [myStory, setMyStory] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Stato per la storia con caricamento da localStorage
+  const [myStory, setMyStory] = useState<PersistedStory | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const saved = localStorage.getItem('ld_my_story');
+    if (saved) {
+      try {
+        const parsed: PersistedStory = JSON.parse(saved);
+        const now = Date.now();
+        const twentyFourHours = 24 * 60 * 60 * 1000;
+        
+        // Verifica se la storia è ancora valida (meno di 24h)
+        if (now - parsed.timestamp < twentyFourHours) {
+          return parsed;
+        } else {
+          localStorage.removeItem('ld_my_story');
+        }
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
+
+  // Effetto per controllare la scadenza ogni minuto
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (myStory) {
+        const now = Date.now();
+        const twentyFourHours = 24 * 60 * 60 * 1000;
+        if (now - myStory.timestamp >= twentyFourHours) {
+          setMyStory(null);
+          localStorage.removeItem('ld_my_story');
+        }
+      }
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [myStory]);
 
   const defaultAvatar = "https://www.lowdistrict.it/wp-content/uploads/placeholder.png";
   const userAvatar = imgError || !user?.avatar ? defaultAvatar : user.avatar;
@@ -29,7 +71,9 @@ const Stories = () => {
     const reader = new FileReader();
     reader.onload = (event) => {
       const result = event.target?.result as string;
-      setMyStory(result);
+      const storyData = { img: result, timestamp: Date.now() };
+      setMyStory(storyData);
+      localStorage.setItem('ld_my_story', JSON.stringify(storyData));
       showSuccess("Storia caricata!");
     };
     reader.readAsDataURL(file);
@@ -61,7 +105,7 @@ const Stories = () => {
             )}>
               <div className="w-full h-full rounded-full border-2 border-black overflow-hidden relative bg-zinc-900">
                 <img 
-                  src={userAvatar} 
+                  src={myStory ? myStory.img : userAvatar} 
                   alt="La tua storia" 
                   className="w-full h-full object-cover" 
                   onError={() => setImgError(true)}
@@ -100,7 +144,7 @@ const Stories = () => {
       <AnimatePresence>
         {showViewer && myStory && (
           <StoryViewer 
-            stories={[{ id: 1, name: user?.display_name || 'Tu', img: myStory }]} 
+            stories={[{ id: 1, name: user?.display_name || 'Tu', img: myStory.img }]} 
             initialIndex={0} 
             onClose={() => setShowViewer(false)} 
           />
