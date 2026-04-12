@@ -5,7 +5,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ImagePlus, Loader2 } from 'lucide-react';
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useAuth } from '@/hooks/use-auth';
 import { useCreatePost } from '@/hooks/use-posts';
 import { showSuccess, showError } from '@/utils/toast';
@@ -33,7 +32,6 @@ const CreatePostDialog = () => {
       setOpen(false);
       setContent("");
     } catch (err: any) {
-      // Logghiamo l'errore in modo che sia leggibile anche se è un oggetto complesso
       console.error("Post creation failed details:", JSON.stringify(err, null, 2));
       const errorMsg = err.message || "Errore di connessione al database social.";
       showError(errorMsg);
@@ -56,9 +54,9 @@ const CreatePostDialog = () => {
       <DialogContent className="bg-zinc-950 border-white/10 text-white sm:max-w-[500px] p-0 overflow-hidden">
         <DialogHeader className="p-6 border-b border-white/5">
           <DialogTitle className="text-xl font-black uppercase tracking-tighter italic">Crea Post</DialogTitle>
-          <VisuallyHidden>
-            <DialogDescription>Crea un nuovo post per la community di Low District</DialogDescription>
-          </VisuallyHidden>
+          <DialogDescription className="sr-only">
+            Crea un nuovo post per la community di Low District
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
