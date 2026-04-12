@@ -44,32 +44,24 @@ export const useCreateActivity = () => {
       const token = localStorage.getItem('ld_auth_token');
       if (!token) throw new Error("Devi essere loggato per pubblicare");
 
-      // Proviamo a inviare la richiesta con i parametri corretti per BuddyPress
+      // Rimuoviamo X-Requested-With che spesso causa il "Failed to fetch" (CORS preflight failure)
       const response = await fetch(`${BASE_URL}/buddypress/v1/activity`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-          'X-Requested-With': 'XMLHttpRequest' // Alcuni server WP lo richiedono per evitare blocchi
+          'Authorization': `Bearer ${token}`
         },
+        mode: 'cors', // Esplicitiamo la modalità CORS
         body: JSON.stringify({
           content: content,
           component: 'activity',
-          type: 'activity_update',
-          status: 'published'
+          type: 'activity_update'
         })
       });
 
       if (!response.ok) {
-        let errorMessage = "Errore durante la pubblicazione";
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.message || errorMessage;
-          console.error("Dettagli errore API:", errorData);
-        } catch (e) {
-          console.error("Errore risposta non JSON:", response.status);
-        }
-        throw new Error(errorMessage);
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Errore server");
       }
 
       return response.json();
