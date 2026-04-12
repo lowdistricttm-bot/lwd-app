@@ -5,7 +5,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import BottomNav from '@/components/BottomNav';
-import { ChevronLeft, ShoppingBag, ShieldCheck, Truck, RefreshCcw, Loader2 } from 'lucide-react';
+import { ChevronLeft, ShoppingBag, ShieldCheck, Truck, RefreshCcw, Loader2 } from 'lucide-center';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useWcProduct } from '@/hooks/use-woocommerce';
