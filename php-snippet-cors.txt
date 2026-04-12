@@ -1,39 +1,9 @@
-<?php
-/**
- * LOW DISTRICT APP - FIX DEFINITIVO CORS & BUDDYPRESS
- */
-
-// 1. Abilita CORS totale
-add_action('init', function() {
+add_action( 'init', function() {
     header("Access-Control-Allow-Origin: *");
-    header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-    header("Access-Control-Allow-Headers: Authorization, Content-Type, X-WP-Nonce, X-Requested-With");
-    
-    if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    header("Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE");
+    header("Access-Control-Allow-Headers: Origin, Content-Type, Accept, Authorization, X-Request-With");
+    if ( 'OPTIONS' == $_SERVER['REQUEST_METHOD'] ) {
         status_header(200);
-        exit;
+        exit();
     }
 });
-
-// 2. Rendi PUBBLICA la bacheca BuddyPress per le API
-// Questo rimuove il blocco "Spiacenti, non sei autorizzato"
-add_filter('bp_rest_api_is_user_authorized', '__return_true', 999);
-
-// 3. Forza l'accesso pubblico specificamente per l'endpoint activity
-add_filter('rest_request_before_callbacks', function($response, $handler, $request) {
-    if (strpos($request->get_route(), '/buddypress/v1/activity') !== false) {
-        return $response; // Salta i controlli di autorizzazione standard
-    }
-    return $response;
-}, 10, 3);
-
-// 4. Fix per gli header Authorization su server Apache
-add_filter('determine_current_user', function($user) {
-    if (empty($user) && isset($_SERVER['HTTP_AUTHORIZATION'])) {
-        preg_match('/Bearer\s+(.*)$/i', $_SERVER['HTTP_AUTHORIZATION'], $matches);
-        if (isset($matches[1])) {
-            // Il plugin JWT Auth gestirà la decodifica
-        }
-    }
-    return $user;
-}, 20);
