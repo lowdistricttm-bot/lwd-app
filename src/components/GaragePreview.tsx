@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Heart, MessageCircle, Send, MoreHorizontal, Share2, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Heart, MessageCircle, Send, MoreHorizontal, Share2, Loader2, AlertCircle, RefreshCw, Image as ImageIcon } from 'lucide-react';
 import CommentDrawer from './CommentDrawer';
 import CreatePostDialog from './CreatePostDialog';
 import { cn } from '@/lib/utils';
@@ -66,6 +66,7 @@ const GaragePreview = () => {
           ) : (
             activities?.map((post: any) => (
               <div key={post.id} className="bg-zinc-900/20 border border-white/5 rounded-3xl overflow-hidden">
+                {/* Header del Post */}
                 <div className="px-4 py-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full p-[2px] bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]">
@@ -91,13 +92,33 @@ const GaragePreview = () => {
                   </button>
                 </div>
                 
-                <div className="px-4 pb-6">
+                {/* Contenuto Testuale */}
+                <div className="px-4 pb-4">
                   <div 
-                    className="text-sm leading-relaxed text-gray-300 prose prose-invert max-w-none break-words"
+                    className="activity-content text-sm leading-relaxed text-gray-300 prose prose-invert max-w-none break-words"
                     dangerouslySetInnerHTML={{ __html: post.content }}
                   />
                 </div>
 
+                {/* Visualizzazione Media (se presenti come array separato) */}
+                {post.media && post.media.length > 0 && (
+                  <div className={cn(
+                    "grid gap-1 mb-2",
+                    post.media.length === 1 ? "grid-cols-1" : "grid-cols-2"
+                  )}>
+                    {post.media.map((item: any, idx: number) => (
+                      <div key={idx} className="aspect-square bg-zinc-800 overflow-hidden">
+                        <img 
+                          src={item.url || item} 
+                          alt="Post media" 
+                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Footer Azioni */}
                 <div className="px-4 py-4 flex items-center justify-between border-t border-white/5">
                   <div className="flex items-center gap-6">
                     <button 
@@ -117,6 +138,28 @@ const GaragePreview = () => {
           )}
         </div>
       </div>
+
+      <style>{`
+        .activity-content img {
+          width: 100%;
+          height: auto;
+          border-radius: 1rem;
+          margin-top: 1rem;
+          margin-bottom: 1rem;
+          border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .activity-content a {
+          color: #ef4444;
+          font-weight: 800;
+          text-decoration: none;
+        }
+        .activity-content blockquote {
+          border-left: 4px solid #ef4444;
+          padding-left: 1rem;
+          font-style: italic;
+          color: #9ca3af;
+        }
+      `}</style>
     </section>
   );
 };
