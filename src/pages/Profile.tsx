@@ -37,7 +37,7 @@ const Profile = () => {
 
   const stats = [
     { label: 'Post', value: '0' },
-    { label: 'Ordini', value: '0' },
+    { label: 'Follower', value: '0' },
     { label: 'Following', value: '0' },
   ];
 

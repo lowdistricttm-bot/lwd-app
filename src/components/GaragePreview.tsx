@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { showSuccess } from '@/utils/toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import CommentDrawer from './CommentDrawer';
+import CreatePostDialog from './CreatePostDialog';
 import { cn } from '@/lib/utils';
 
 const cars = [
@@ -46,20 +47,22 @@ const GaragePreview = () => {
 
   return (
     <section className="bg-black py-12">
-      <div className="max-w-xl mx-auto">
-        <div className="px-4 py-6 flex items-center justify-between border-b border-white/5 mb-4">
+      <div className="max-w-xl mx-auto px-4">
+        <CreatePostDialog />
+
+        <div className="flex items-center justify-between border-b border-white/5 pb-6 mb-8">
           <div>
-            <h3 className="text-lg font-black tracking-tighter uppercase italic">Community Garage</h3>
-            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">I migliori progetti della scena</p>
+            <h3 className="text-lg font-black tracking-tighter uppercase italic">Community Feed</h3>
+            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Attività recente dai membri</p>
           </div>
           <Link to="/garage" className="text-red-600 text-xs font-black uppercase tracking-widest border border-red-600/20 px-4 py-2 hover:bg-red-600 hover:text-white transition-all">
-            Vedi tutti
+            Esplora
           </Link>
         </div>
         
         <div className="space-y-12">
           {cars.map((post) => (
-            <div key={post.id} className="bg-zinc-900/20 border border-white/5 md:rounded-3xl overflow-hidden">
+            <div key={post.id} className="bg-zinc-900/20 border border-white/5 rounded-3xl overflow-hidden">
               {/* Post Header */}
               <div className="px-4 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
