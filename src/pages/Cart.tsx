@@ -6,12 +6,25 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import BottomNav from '@/components/BottomNav';
 import { useCart } from '@/hooks/use-cart';
-import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Cart = () => {
   const { cart, removeFromCart, updateQuantity, total, itemCount } = useCart();
-  const navigate = useNavigate();
+  
+  const handleCheckout = () => {
+    // Generiamo l'URL di checkout diretto di WooCommerce
+    // Formato: sito.it/checkout/?add-to-cart=ID1,ID2&quantity=Q1,Q2
+    const baseUrl = "https://www.lowdistrict.it/checkout/";
+    
+    // Nota: WooCommerce standard supporta un prodotto alla volta via URL, 
+    // ma reindirizzando al carrello con i parametri corretti o usando il checkout diretto
+    // è il modo più sicuro per mantenere le tue impostazioni.
+    
+    // Per ora usiamo il reindirizzamento al carrello del sito che è il più affidabile
+    const cartUrl = "https://www.lowdistrict.it/carrello/";
+    window.location.href = cartUrl;
+  };
 
   if (itemCount === 0) {
     return (
@@ -49,7 +62,7 @@ const Cart = () => {
               <div className="flex-1 flex flex-col justify-between">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="font-bold text-lg leading-tight uppercase italic">{item.name}</h3>
+                    <h3 className="font-bold text-lg leading-tight uppercase italic" dangerouslySetInnerHTML={{ __html: item.name }} />
                     {item.size && <p className="text-[10px] text-red-600 font-black uppercase tracking-widest mt-1">Taglia: {item.size}</p>}
                   </div>
                   <button onClick={() => removeFromCart(item.id)} className="text-gray-600 hover:text-red-600 transition-colors">
@@ -70,16 +83,25 @@ const Cart = () => {
         </div>
 
         <div className="bg-zinc-900 p-8 border-t-4 border-red-600">
-          <div className="flex justify-between items-center mb-8">
-            <span className="text-gray-500 font-black uppercase tracking-widest text-xs">Totale Ordine</span>
+          <div className="flex justify-between items-center mb-4">
+            <span className="text-gray-500 font-black uppercase tracking-widest text-xs">Totale Provvisorio</span>
             <span className="text-3xl font-black italic">€{total.toFixed(2)}</span>
           </div>
+          <p className="text-[10px] text-gray-500 uppercase font-bold mb-8 tracking-widest">
+            Spedizioni e tasse calcolate al checkout sul sito ufficiale.
+          </p>
+          
           <Button 
-            onClick={() => navigate('/checkout')}
-            className="w-full bg-red-600 hover:bg-red-700 text-white py-8 text-xl font-black uppercase tracking-widest rounded-none italic flex items-center justify-center gap-4"
+            onClick={handleCheckout}
+            className="w-full bg-red-600 hover:bg-red-700 text-white py-8 text-xl font-black uppercase tracking-widest rounded-none italic flex items-center justify-center gap-4 shadow-2xl shadow-red-600/20"
           >
-            Procedi al Checkout <ArrowRight size={24} />
+            Vai al Pagamento Sicuro <ArrowRight size={24} />
           </Button>
+
+          <div className="mt-6 flex items-center justify-center gap-2 text-gray-500">
+            <ShieldCheck size={16} />
+            <span className="text-[9px] font-black uppercase tracking-widest">Pagamento gestito in sicurezza da LowDistrict.it</span>
+          </div>
         </div>
       </div>
       <Footer />
