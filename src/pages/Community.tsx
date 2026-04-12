@@ -5,8 +5,9 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import BottomNav from '@/components/BottomNav';
 import GaragePreview from '@/components/GaragePreview';
+import MembersList from '@/components/MembersList';
 import { useAuth } from '@/hooks/use-auth';
-import { Lock, UserPlus } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
@@ -23,7 +24,10 @@ const Community = () => {
         </div>
 
         {user ? (
-          <GaragePreview />
+          <div className="max-w-xl mx-auto">
+            <MembersList />
+            <GaragePreview />
+          </div>
         ) : (
           <div className="max-w-xl mx-auto px-6 py-20 text-center">
             <div className="w-20 h-20 bg-zinc-900 rounded-[2rem] flex items-center justify-center mx-auto mb-8 border border-white/5">
@@ -40,9 +44,6 @@ const Community = () => {
                   Accedi / Registrati
                 </Button>
               </Link>
-              <p className="text-[9px] text-gray-600 font-black uppercase tracking-[0.2em]">
-                Unisciti a +{/* Qui potremmo mettere il counter */} membri ufficiali
-              </p>
             </div>
           </div>
         )}
