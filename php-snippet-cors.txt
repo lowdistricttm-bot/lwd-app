@@ -1,10 +1,27 @@
-add_action( 'init', function() {
+<?php
+// 1. Abilita CORS per l'App Dyad
+add_action('init', function() {
     header("Access-Control-Allow-Origin: *");
-    header("Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE");
-    header("Access-Control-Allow-Headers: Origin, Content-Type, Accept, Authorization, X-Request-With, X-WP-Nonce");
+    header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+    header("Access-Control-Allow-Headers: Authorization, Content-Type, X-WP-Nonce");
     
-    if ( 'OPTIONS' == $_SERVER['REQUEST_METHOD'] ) {
+    if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
         status_header(200);
-        exit();
+        exit;
     }
 });
+
+// 2. Forza la visibilità pubblica delle API di BuddyPress
+add_filter('bp_rest_api_is_user_authorized', '__return_true', 999);
+
+// 3. Risolve il problema degli header Authorization bloccati da alcuni server (Apache/Nginx)
+add_filter('determine_current_user', function($user) {
+    if (empty($user) && isset($_SERVER['HTTP_AUTHORIZATION'])) {
+        preg_match('/Bearer\s+(.*)$/i', $_SERVER['HTTP_AUTHORIZATION'], $matches);
+        if (isset($matches[1])) {
+            $token = $matches[1];
+            // Qui il plugin JWT Auth farà il resto
+        }
+    }
+    return $user;
+}, 10);
