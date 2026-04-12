@@ -42,7 +42,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = async (username: string, password: string) => {
     setIsLoading(true);
     try {
-      // Endpoint per Simple JWT Login
+      console.log('Tentativo di login per:', username);
+      
       const response = await fetch('https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth', {
         method: 'POST',
         headers: { 
@@ -56,6 +57,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       const data = await response.json();
+      console.log('Risposta completa dal server:', data);
 
       if (response.ok && data.success && data.data.jwt) {
         const userData = {
@@ -73,10 +75,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         localStorage.setItem('ld_user_data', JSON.stringify(userData));
         showSuccess(`Bentornato, ${userData.display_name}!`);
       } else {
-        throw new Error(data.message || 'Credenziali non valide');
+        // Mostra l'errore specifico restituito dal plugin
+        const errorMsg = data.message || (data.data && data.data.message) || 'Credenziali non valide';
+        throw new Error(errorMsg);
       }
     } catch (error: any) {
-      console.error('Login Error:', error);
+      console.error('Login Error Detail:', error);
       showError(error.message);
       throw error;
     } finally {
