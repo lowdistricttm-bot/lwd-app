@@ -1,6 +1,6 @@
 /**
- * LOW DISTRICT - CONTENT BRIDGE
- * Assicura che il testo dei post sia sempre inviato all'App.
+ * LOW DISTRICT - FINAL CONTENT BRIDGE
+ * Estrae il testo pulito dai post di BuddyPress.
  */
 
 add_action('rest_api_init', function () {
@@ -19,9 +19,19 @@ add_action('rest_api_init', function () {
             $response = array();
             if (!empty($activities_data['activities'])) {
                 foreach ($activities_data['activities'] as $at) {
-                    // Se il contenuto è vuoto, usiamo l'azione (es. "X ha postato un aggiornamento")
-                    $text = !empty($at->content) ? $at->content : $at->action;
                     
+                    // 1. Prendiamo il contenuto o l'azione
+                    $raw_content = !empty($at->content) ? $at->content : $at->action;
+                    
+                    // 2. Puliamo il testo: BuddyPress spesso mette link HTML nell'azione
+                    // Rimuoviamo i tag ma teniamo il testo (es. "User ha postato" invece di "<a...>User</a> ha postato")
+                    $clean_content = wp_strip_all_tags($raw_content);
+                    
+                    // Se dopo la pulizia è ancora vuoto, mettiamo un fallback
+                    if (empty($clean_content)) {
+                        $clean_content = "Ha aggiornato il suo profilo.";
+                    }
+
                     $response[] = array(
                         'id' => (int)$at->id,
                         'user_id' => (int)$at->user_id,
@@ -29,9 +39,8 @@ add_action('rest_api_init', function () {
                         'user_avatar' => array(
                             'thumb' => bp_core_fetch_avatar(array('item_id' => $at->user_id, 'html' => false))
                         ),
-                        'content' => $text,
-                        'date' => $at->date_recorded,
-                        'type' => $at->type
+                        'content' => $clean_content,
+                        'date' => $at->date_recorded
                     );
                 }
             }
