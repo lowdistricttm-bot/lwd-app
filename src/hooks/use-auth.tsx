@@ -41,13 +41,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login = async (username: string, password: string) => {
     setIsLoading(true);
+    const cleanUsername = username.trim();
     
     try {
       // 1. Autenticazione JWT
       const response = await fetch('https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: username.trim(), password: password }),
+        body: JSON.stringify({ username: cleanUsername, password: password }),
       });
 
       const resData = await response.json();
@@ -57,39 +58,65 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       const jwtToken = resData.data?.jwt || resData.jwt;
-      
-      // 2. Recupero dati dell'utente autenticato (Metodo Diretto "ME")
-      // Usiamo il token appena ottenuto per chiedere al server i dati dell'utente corrente
-      const meResponse = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/me?JWT=${jwtToken}`);
-      
-      if (!meResponse.ok) {
-        // Se il metodo "me" fallisce, proviamo a vedere se i dati sono già nel resData del login
-        if (resData.data?.user) {
-          const u = resData.data.user;
-          const userData = {
-            id: u.id || u.ID,
-            username: u.user_login || u.username,
-            email: u.user_email || u.email,
-            nicename: u.display_name || u.user_nicename,
-            display_name: u.display_name || u.user_nicename,
-            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.user_login || u.username}`
+      let userData: User | null = null;
+
+      // 2. Tentativo A: Recupero tramite endpoint "me" (il più preciso)
+      try {
+        const meResponse = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/me?JWT=${jwtToken}`);
+        if (meResponse.ok) {
+          const meData = await meResponse.json();
+          userData = {
+            id: meData.id,
+            username: meData.slug,
+            email: meData.email || '',
+            nicename: meData.name,
+            display_name: meData.name,
+            avatar: meData.avatar_urls?.['96'] || `https://api.dicebear.com/7.x/avataaars/svg?seed=${meData.slug}`
           };
-          saveAuth(jwtToken, userData);
-          return;
         }
-        throw new Error("Impossibile recuperare i dati del profilo dopo il login.");
+      } catch (e) {
+        console.warn("Metodo 'me' fallito, provo ricerca alternativa...");
       }
 
-      const meData = await meResponse.json();
-      
-      const userData: User = {
-        id: meData.id,
-        username: meData.slug,
-        email: meData.email || '',
-        nicename: meData.name,
-        display_name: meData.name,
-        avatar: meData.avatar_urls?.['96'] || `https://api.dicebear.com/7.x/avataaars/svg?seed=${meData.slug}`
-      };
+      // 3. Tentativo B: Se "me" fallisce, cerchiamo l'utente per l'identificativo usato nel login
+      if (!userData) {
+        try {
+          const searchResponse = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users?search=${encodeURIComponent(cleanUsername)}&JWT=${jwtToken}`);
+          if (searchResponse.ok) {
+            const users = await searchResponse.json();
+            if (users && users.length > 0) {
+              const u = users[0];
+              userData = {
+                id: u.id,
+                username: u.slug,
+                email: u.email || '',
+                nicename: u.name,
+                display_name: u.name,
+                avatar: u.avatar_urls?.['96'] || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.slug}`
+              };
+            }
+          }
+        } catch (e) {
+          console.warn("Ricerca utente fallita, provo fallback dati login...");
+        }
+      }
+
+      // 4. Tentativo C: Fallback estremo sui dati restituiti direttamente dal login
+      if (!userData && resData.data?.user) {
+        const u = resData.data.user;
+        userData = {
+          id: u.id || u.ID,
+          username: u.user_login || u.username || cleanUsername,
+          email: u.user_email || u.email || '',
+          nicename: u.display_name || u.user_nicename || cleanUsername,
+          display_name: u.display_name || u.user_nicename || cleanUsername,
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.user_login || cleanUsername}`
+        };
+      }
+
+      if (!userData) {
+        throw new Error("Sincronizzazione profilo fallita. Contatta l'assistenza.");
+      }
 
       saveAuth(jwtToken, userData);
       showSuccess(`Bentornato, ${userData.display_name}`);
