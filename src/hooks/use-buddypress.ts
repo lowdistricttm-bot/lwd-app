@@ -8,13 +8,17 @@ export const useBpActivity = () => {
     queryKey: ['bp-activity'],
     queryFn: async () => {
       const token = localStorage.getItem('ld_auth_token');
-      // Aggiungiamo context=view e un timestamp per evitare cache vecchie del server
-      const url = `${BASE_URL}/buddypress/v1/activity?per_page=20&context=view&_=${Date.now()}${token ? `&JWT=${token}` : ''}`;
+      
+      // Semplifichiamo l'URL al massimo: niente context, niente cache-buster
+      // Proviamo anche a vedere se il server preferisce il parametro 'jwt' (minuscolo) o 'JWT'
+      const url = `${BASE_URL}/buddypress/v1/activity?per_page=20${token ? `&JWT=${token}` : ''}`;
       
       try {
         const response = await fetch(url, { 
           method: 'GET',
-          headers: { 'Accept': 'application/json' },
+          headers: { 
+            'Accept': 'application/json'
+          },
           mode: 'cors'
         });
         
@@ -23,9 +27,10 @@ export const useBpActivity = () => {
           let errorMessage = `Errore ${response.status}`;
           try {
             const errorJson = JSON.parse(errorText);
-            errorMessage = errorJson.message || errorMessage;
+            // Se WordPress ci dà un codice specifico (es. rest_no_route), lo mostriamo
+            errorMessage = errorJson.message || errorJson.code || errorMessage;
           } catch (e) {
-            errorMessage = errorText || errorMessage;
+            errorMessage = errorText.substring(0, 100) || errorMessage;
           }
           throw new Error(errorMessage);
         }
