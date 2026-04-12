@@ -13,18 +13,15 @@ export const useBpActivity = () => {
         throw new Error("Effettua l'accesso per vedere la bacheca");
       }
 
-      // Triplo metodo di invio token per massima compatibilità con i server WordPress
-      // 1. Parametro 'JWT' (Standard Simple JWT Login)
-      // 2. Parametro 'jwt' (Fallback comune)
-      // 3. Parametro '_' (Cache busting)
-      const url = `${BASE_URL}/buddypress/v1/activity?per_page=20&JWT=${token}&jwt=${token}&_=${Date.now()}`;
+      // Usiamo un timestamp per evitare che il server risponda con una versione "cacheata" dell'errore
+      const timestamp = Date.now();
+      const url = `${BASE_URL}/buddypress/v1/activity?per_page=20&JWT=${token}&_=${timestamp}`;
       
       try {
         const response = await fetch(url, { 
           method: 'GET',
           headers: { 
             'Accept': 'application/json',
-            // 4. Header Authorization (Metodo standard REST API)
             'Authorization': `Bearer ${token}`
           },
           mode: 'cors'
@@ -33,23 +30,19 @@ export const useBpActivity = () => {
         const data = await response.json();
 
         if (!response.ok) {
-          console.error("Server Response Error:", data);
-          
-          // Se il server dice che non siamo autorizzati, il token potrebbe essere scaduto
-          if (response.status === 401 || data.code === 'bp_rest_authorization_required') {
-            throw new Error("Sessione non valida. Prova a fare Logout e rientrare.");
+          console.error("BP Error Details:", data);
+          if (response.status === 401) {
+            throw new Error("Il server non riconosce il tuo accesso. Verifica il codice PHP su WordPress.");
           }
-          
-          throw new Error(data.message || `Errore server (${response.status})`);
+          throw new Error(data.message || "Errore di connessione alla bacheca");
         }
         
         return data;
       } catch (err: any) {
-        console.error("BP Activity Fetch Error:", err);
         throw err;
       }
     },
-    staleTime: 1000 * 60, // 1 minuto di cache
+    staleTime: 1000 * 30, // 30 secondi
     retry: 1
   });
 };
