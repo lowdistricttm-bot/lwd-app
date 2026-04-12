@@ -48,11 +48,11 @@ const Stories = () => {
               </div>
             </div>
 
-            {/* Instagram Style Plus Badge */}
+            {/* Instagram Style Plus Badge with Gray Background */}
             {story.isUser && (
               <div 
                 onClick={handleAddStory}
-                className="absolute bottom-6 right-0 bg-[#0095f6] text-white rounded-full p-0.5 border-[2.5px] border-black hover:scale-110 transition-transform z-10"
+                className="absolute bottom-6 right-0 bg-zinc-700 text-white rounded-full p-0.5 border-[2.5px] border-black hover:scale-110 transition-transform z-10"
               >
                 <Plus size={14} strokeWidth={4} />
               </div>
