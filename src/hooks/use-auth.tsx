@@ -42,8 +42,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = async (username: string, password: string) => {
     setIsLoading(true);
     try {
-      console.log("Tentativo di login per:", username);
-      const response = await fetch('https://www.lowdistrict.it/wp-json/jwt-auth/v1/token', {
+      // Endpoint per Simple JWT Login
+      const response = await fetch('https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -55,39 +55,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }),
       });
 
-      const text = await response.text();
-      console.log("Risposta grezza dal server:", text.substring(0, 100));
+      const data = await response.json();
 
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch (e) {
-        if (text.includes("<!DOCTYPE")) {
-          throw new Error("Il server ha risposto con una pagina HTML invece di dati. Verifica i Permalink nelle impostazioni di WordPress.");
-        }
-        throw new Error("Risposta del server non valida. Controlla la configurazione del plugin JWT.");
-      }
-
-      if (response.ok && data.token) {
+      if (response.ok && data.success && data.data.jwt) {
         const userData = {
-          id: data.user_id || 0,
-          username: data.user_nicename || username,
-          email: data.user_email || '',
-          nicename: data.user_nicename || '',
-          display_name: data.user_display_name || username,
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.user_nicename || username}`
+          id: data.data.user.ID,
+          username: data.data.user.user_login,
+          email: data.data.user.user_email,
+          nicename: data.data.user.user_nicename,
+          display_name: data.data.user.display_name,
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.data.user.user_login}`
         };
 
-        setToken(data.token);
+        setToken(data.data.jwt);
         setUser(userData);
-        localStorage.setItem('ld_auth_token', data.token);
+        localStorage.setItem('ld_auth_token', data.data.jwt);
         localStorage.setItem('ld_user_data', JSON.stringify(userData));
         showSuccess(`Bentornato, ${userData.display_name}!`);
       } else {
-        throw new Error(data.message || 'Credenziali non valide o errore del server');
+        throw new Error(data.message || 'Credenziali non valide');
       }
     } catch (error: any) {
-      console.error('Login Error Details:', error);
+      console.error('Login Error:', error);
       showError(error.message);
       throw error;
     } finally {
