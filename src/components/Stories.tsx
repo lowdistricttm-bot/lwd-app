@@ -4,10 +4,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { cn } from "@/lib/utils";
 import StoryViewer from './StoryViewer';
 import { AnimatePresence } from 'framer-motion';
-import { Plus, Loader2, AlertTriangle } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useAuth } from '@/hooks/use-auth';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 interface StoryData {
   id: string;
@@ -25,14 +25,7 @@ const Stories = () => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const isConfigured = import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY;
-
   const loadStories = async () => {
-    if (!isConfigured) {
-      setIsLoadingStories(false);
-      return;
-    }
-    
     setIsLoadingStories(true);
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
@@ -62,11 +55,6 @@ const Stories = () => {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     
-    if (!isConfigured) {
-      showError("Configurazione Supabase mancante nelle variabili d'ambiente!");
-      return;
-    }
-
     if (!user) {
       showError("Devi essere loggato per caricare una storia");
       return;
@@ -79,24 +67,21 @@ const Stories = () => {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
       
-      // 1. Upload su Storage
       const { error: uploadError } = await supabase.storage
         .from('stories')
         .upload(fileName, file);
 
       if (uploadError) {
         if (uploadError.message.includes("bucket not found")) {
-          throw new Error("Il bucket 'stories' non esiste su Supabase Storage. Crealo e impostalo come PUBLIC.");
+          throw new Error("Il bucket 'stories' non esiste. Crealo su Supabase Storage e impostalo come PUBLIC.");
         }
         throw uploadError;
       }
 
-      // 2. Recupero URL pubblico
       const { data: { publicUrl } } = supabase.storage
         .from('stories')
         .getPublicUrl(fileName);
 
-      // 3. Inserimento nel Database
       const { error: dbError } = await supabase
         .from('stories')
         .insert([{ 
@@ -106,7 +91,7 @@ const Stories = () => {
 
       if (dbError) throw dbError;
 
-      showSuccess("Storia pubblicata con successo!");
+      showSuccess("Storia pubblicata!");
       loadStories();
     } catch (err: any) {
       console.error("Upload error:", err);
@@ -127,7 +112,6 @@ const Stories = () => {
       <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
 
       <div className="flex gap-4 overflow-x-auto pt-2 pb-3 px-4 no-scrollbar bg-black border-b border-white/5">
-        {/* Slot "La tua storia" */}
         <div className="flex flex-col items-center gap-1.5 shrink-0">
           <button 
             onClick={() => {
@@ -167,14 +151,8 @@ const Stories = () => {
           </button>
         </div>
 
-        {/* Storie degli altri utenti */}
         {isLoadingStories ? (
           <div className="flex items-center px-4"><Loader2 className="animate-spin text-zinc-700" size={20} /></div>
-        ) : !isConfigured ? (
-          <div className="flex items-center gap-2 px-4 text-amber-500">
-            <AlertTriangle size={14} />
-            <span className="text-[8px] font-black uppercase">Configura Supabase</span>
-          </div>
         ) : (
           otherStories.map((story) => (
             <button 
