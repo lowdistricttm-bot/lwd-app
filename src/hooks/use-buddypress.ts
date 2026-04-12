@@ -10,27 +10,19 @@ export const useBpActivity = () => {
       const token = localStorage.getItem('ld_auth_token');
       if (!token) throw new Error("Effettua l'accesso");
 
+      // Proviamo prima con il token nell'URL per evitare il preflight OPTIONS che spesso causa errori CORS
       try {
-        const response = await fetch(`${BASE_URL}/buddypress/v1/activity?per_page=20`, { 
+        const url = `${BASE_URL}/buddypress/v1/activity?per_page=20&JWT=${token}`;
+        const response = await fetch(url, { 
           method: 'GET',
-          headers: { 
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
+          headers: { 'Accept': 'application/json' }
         });
         
-        if (response.status === 401 || response.status === 403 || response.status === 400) {
-          const fallbackRes = await fetch(`${BASE_URL}/buddypress/v1/activity?per_page=20&JWT=${token}`);
-          if (!fallbackRes.ok) throw new Error(`Errore: ${fallbackRes.status}`);
-          return await fallbackRes.json();
-        }
-
         if (!response.ok) throw new Error(`Errore: ${response.status}`);
         return await response.json();
       } catch (err: any) {
-        const lastRes = await fetch(`${BASE_URL}/buddypress/v1/activity?per_page=20&JWT=${token}`);
-        if (!lastRes.ok) throw new Error("Il server rifiuta la connessione (CORS)");
-        return await lastRes.json();
+        console.error("Errore attività:", err);
+        throw new Error("Il server rifiuta la connessione (CORS). Verifica lo snippet PHP su WordPress.");
       }
     },
     staleTime: 1000 * 30,
@@ -48,7 +40,6 @@ export const useBpMembers = (perPage = 100) => {
       if (!response.ok) throw new Error("Errore membri");
       const data = await response.json();
       
-      // Aggiorna la cache per la directory
       localStorage.setItem(MEMBERS_CACHE_KEY, JSON.stringify({
         count: data.length,
         lastSync: new Date().toISOString()
