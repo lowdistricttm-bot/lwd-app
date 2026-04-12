@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Home, ShoppingBag, Car, Calendar, User } from 'lucide-react';
+import { Home, ShoppingBag, MessageSquare, Calendar, User } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { Link, useLocation } from 'react-router-dom';
 
@@ -11,7 +11,7 @@ const BottomNav = () => {
   const items = [
     { icon: Home, label: 'Home', href: '/' },
     { icon: ShoppingBag, label: 'Shop', href: '/shop' },
-    { icon: Car, label: 'Garage', href: '/garage' },
+    { icon: MessageSquare, label: 'Feed', href: '/community' },
     { icon: Calendar, label: 'Events', href: '/events' },
     { icon: User, label: 'Profile', href: '/profile' },
   ];

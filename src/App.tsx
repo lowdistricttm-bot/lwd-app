@@ -18,6 +18,7 @@ import PaymentMethods from "./pages/PaymentMethods";
 import Auth from "./pages/Auth";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
+import Community from "./pages/Community";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/shop" element={<Shop />} />
+                <Route path="/community" element={<Community />} />
                 <Route path="/product/:id" element={<ProductDetail />} />
                 <Route path="/events" element={<Events />} />
                 <Route path="/garage" element={<Garage />} />
