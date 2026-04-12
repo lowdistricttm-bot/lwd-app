@@ -45,6 +45,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const cleanUsername = username.trim();
     
     try {
+      // 1. Ottieni il Token
       const response = await fetch('https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -57,82 +58,40 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       const jwtToken = resData.data?.jwt || resData.jwt;
-      let userData: User | null = null;
-      let wpUserId = resData.data?.user?.id;
 
-      // Recupero ID se mancante
-      if (!wpUserId) {
-        const meRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/me?JWT=${jwtToken}`);
-        if (meRes.ok) {
-          const meData = await meRes.json();
-          wpUserId = meData.id;
-        }
-      }
-
-      // Sorgente Avatar predefinita
-      let finalAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${cleanUsername}`;
-
-      if (wpUserId) {
-        // 1. TENTATIVO BUDDYPRESS (Priorità assoluta)
+      // 2. Recupero dati utente REALI dal server (Endpoint ME è il più affidabile)
+      const meRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/me?context=edit&JWT=${jwtToken}`);
+      if (!meRes.ok) throw new Error("Impossibile recuperare i dati del profilo");
+      
+      const meData = await meRes.json();
+      
+      // Cerchiamo l'avatar in tutte le posizioni possibili restituite da WP
+      let finalAvatar = meData.avatar_urls?.['96'] || meData.avatar_urls?.['48'] || meData.avatar_urls?.['24'];
+      
+      // Se l'avatar di WP sembra quello di default, proviamo a chiedere a BuddyPress
+      if (!finalAvatar || finalAvatar.includes('gravatar.com/avatar/0000')) {
         try {
-          const bpRes = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${wpUserId}`);
+          const bpRes = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${meData.id}?JWT=${jwtToken}`);
           if (bpRes.ok) {
-            const bpData = await bpRes.ok ? await bpRes.json() : null;
-            if (bpData && bpData.avatar_urls) {
-              finalAvatar = bpData.avatar_urls.full || bpData.avatar_urls.thumb;
-            }
-            userData = {
-              id: bpData.id,
-              username: bpData.user_login || cleanUsername,
-              email: '',
-              nicename: bpData.name,
-              display_name: bpData.name,
-              avatar: finalAvatar,
-              mention_name: bpData.mention_name
-            };
+            const bpData = await bpRes.json();
+            if (bpData.avatar_urls?.full) finalAvatar = bpData.avatar_urls.full;
           }
-        } catch (e) {}
-
-        // 2. TENTATIVO WORDPRESS (Se BP fallisce o non ha avatar)
-        if (!userData || finalAvatar.includes('dicebear')) {
-          try {
-            const wpRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${wpUserId}`);
-            if (wpRes.ok) {
-              const wpData = await wpRes.json();
-              if (wpData.avatar_urls) {
-                finalAvatar = wpData.avatar_urls['96'] || wpData.avatar_urls['48'] || finalAvatar;
-              }
-              if (!userData) {
-                userData = {
-                  id: wpData.id,
-                  username: wpData.slug,
-                  email: wpData.email || '',
-                  nicename: wpData.name,
-                  display_name: wpData.name,
-                  avatar: finalAvatar
-                };
-              } else {
-                userData.avatar = finalAvatar;
-              }
-            }
-          } catch (e) {}
+        } catch (e) {
+          console.error("BP Avatar fetch failed", e);
         }
       }
 
-      // Fallback finale
-      if (!userData) {
-        userData = {
-          id: wpUserId || Date.now(),
-          username: cleanUsername,
-          email: '',
-          nicename: cleanUsername,
-          display_name: cleanUsername,
-          avatar: finalAvatar
-        };
-      }
+      const userData: User = {
+        id: meData.id,
+        username: meData.slug || cleanUsername,
+        email: meData.email || '',
+        nicename: meData.name,
+        display_name: meData.name,
+        avatar: finalAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${cleanUsername}`
+      };
 
       saveAuth(jwtToken, userData);
-      showSuccess(`Bentornato, ${userData.display_name}!`);
+      showSuccess(`Profilo sincronizzato: ${userData.display_name}`);
       
     } catch (error: any) {
       showError(error.message);
