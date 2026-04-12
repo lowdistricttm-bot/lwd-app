@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchLatestUserData = useCallback(async (userId: number, currentToken: string) => {
     setIsRefreshing(true);
     try {
-      // Usiamo JWT nell'URL per evitare errori 401 su mobile
+      // Usiamo JWT nell'URL per evitare errori 401 su mobile e server restrittivi
       const bpResponse = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${userId}?context=view&JWT=${currentToken}`);
       
       if (bpResponse.ok) {
@@ -63,6 +63,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
 
+      // Fallback su API WordPress standard se BuddyPress non restituisce l'avatar
       const wpResponse = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${userId}?JWT=${currentToken}`);
       
       if (wpResponse.ok) {

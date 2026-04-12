@@ -3,44 +3,42 @@ import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tansta
 const BASE_URL = "https://www.lowdistrict.it/wp-json";
 
 /**
- * Funzione di fetch ultra-resiliente.
- * Tenta l'autenticazione in più modi per superare i limiti del server.
+ * Funzione di fetch ottimizzata per la massima compatibilità con il server lowdistrict.it
  */
 const bpFetch = async (endpoint: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('ld_auth_token');
   
-  // 1. TENTATIVO CON HEADER (Metodo preferito, URL corto)
-  const headers = new Headers(options.headers || {});
-  headers.set('Accept', 'application/json');
-  if (token) headers.set('Authorization', `Bearer ${token}`);
+  // Costruiamo l'URL. Usiamo il parametro JWT che è il più compatibile con il tuo server.
+  const url = new URL(`${BASE_URL}${endpoint}`);
+  if (token) {
+    url.searchParams.set('JWT', token);
+  }
 
   try {
-    const response = await fetch(`${BASE_URL}${endpoint}`, { 
-      ...options, 
-      headers, 
-      mode: 'cors' 
+    const response = await fetch(url.toString(), {
+      ...options,
+      headers: {
+        'Accept': 'application/json',
+        ...options.headers,
+      },
+      mode: 'cors'
     });
-    
-    if (response.ok) return await response.json();
-    
-    // 2. TENTATIVO CON PARAMETRO URL (Se l'header è bloccato)
-    if (token && (response.status === 401 || response.status === 400)) {
-      const url = new URL(`${BASE_URL}${endpoint}`);
-      url.searchParams.set('JWT', token);
-      const retryRes = await fetch(url.toString(), { ...options, mode: 'cors' });
-      if (retryRes.ok) return await retryRes.json();
-    }
-    
-    // 3. TENTATIVO PUBBLICO (Se l'autenticazione fallisce)
-    if (response.status === 401 || response.status === 400) {
-      const publicRes = await fetch(`${BASE_URL}${endpoint}`, { mode: 'cors' });
-      if (publicRes.ok) return await publicRes.json();
+
+    // Se il server risponde con errore, proviamo a recuperare i dati in modalità pubblica
+    if (!response.ok) {
+      if (token && (response.status === 401 || response.status === 400)) {
+        const publicUrl = new URL(`${BASE_URL}${endpoint}`);
+        const publicRes = await fetch(publicUrl.toString(), { mode: 'cors' });
+        if (publicRes.ok) return await publicRes.json();
+      }
+      
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Errore ${response.status}`);
     }
 
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `Errore ${response.status}`);
+    return await response.json();
   } catch (err: any) {
-    console.error(`[BP API Error] ${endpoint}:`, err.message);
+    console.error(`[BuddyPress Error] ${endpoint}:`, err.message);
     throw err;
   }
 };
@@ -49,11 +47,13 @@ export const useBpActivity = (userId?: number) => {
   return useInfiniteQuery({
     queryKey: ['bp-activity', userId],
     queryFn: async ({ pageParam = 1 }) => {
-      // Parametri ridotti all'osso per evitare l'errore 400
+      // Usiamo solo i parametri essenziali per evitare l'errore 400
       let endpoint = `/buddypress/v1/activity?page=${pageParam}&per_page=10`;
       if (userId) endpoint += `&user_id=${userId}`;
       
       const data = await bpFetch(endpoint);
+      
+      // BuddyPress può restituire i dati in formati diversi a seconda della versione
       if (Array.isArray(data)) return data;
       if (data && data.activities) return data.activities;
       return [];
@@ -99,11 +99,11 @@ export const useBpMemberData = (userId: number | undefined) => {
   });
 };
 
-export const useBpMembers = (perPage = 10) => {
+export const useBpMembers = (perPage = 15) => {
   return useQuery({
     queryKey: ['bp-members', perPage],
     queryFn: async () => {
-      // Rimosso 'type=active' che spesso causa 400 su alcuni server
+      // Rimosso 'type=active' perché causa spesso errore 400 su configurazioni server rigide
       return bpFetch(`/buddypress/v1/members?per_page=${perPage}`);
     },
     staleTime: 1000 * 60 * 10,
