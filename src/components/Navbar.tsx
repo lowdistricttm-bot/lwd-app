@@ -3,10 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X, ShoppingBag, User } from 'lucide-react';
 import { cn } from "@/lib/utils";
+import { Link, useLocation } from 'react-router-dom';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -17,11 +19,10 @@ const Navbar = () => {
   }, []);
 
   const navLinks = [
-    { name: 'Home', href: '#' },
-    { name: 'Shop', href: '#' },
-    { name: 'Events', href: '#' },
-    { name: 'Gallery', href: '#' },
-    { name: 'About', href: '#' },
+    { name: 'Home', href: '/' },
+    { name: 'Shop', href: '/shop' },
+    { name: 'Events', href: '/events' },
+    { name: 'Garage', href: '/garage' },
   ];
 
   return (
@@ -31,27 +32,30 @@ const Navbar = () => {
     )}>
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-8">
-          <a href="/" className="text-2xl font-black tracking-tighter text-white">
+          <Link to="/" className="text-2xl font-black tracking-tighter text-white">
             LOW<span className="text-red-600">DISTRICT</span>
-          </a>
+          </Link>
           
           <div className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => (
-              <a 
+              <Link 
                 key={link.name} 
-                href={link.href}
-                className="text-sm font-medium text-gray-300 hover:text-white transition-colors uppercase tracking-widest"
+                to={link.href}
+                className={cn(
+                  "text-sm font-medium transition-colors uppercase tracking-widest",
+                  location.pathname === link.href ? "text-red-600" : "text-gray-300 hover:text-white"
+                )}
               >
                 {link.name}
-              </a>
+              </Link>
             ))}
           </div>
         </div>
 
         <div className="flex items-center gap-4">
-          <button className="text-gray-300 hover:text-white transition-colors">
+          <Link to="/profile" className="text-gray-300 hover:text-white transition-colors">
             <User size={20} />
-          </button>
+          </Link>
           <button className="text-gray-300 hover:text-white transition-colors relative">
             <ShoppingBag size={20} />
             <span className="absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">0</span>
@@ -69,14 +73,14 @@ const Navbar = () => {
       {isMobileMenuOpen && (
         <div className="md:hidden absolute top-full left-0 right-0 bg-black border-b border-white/10 p-6 flex flex-col gap-4 animate-in slide-in-from-top duration-300">
           {navLinks.map((link) => (
-            <a 
+            <Link 
               key={link.name} 
-              href={link.href}
+              to={link.href}
               className="text-lg font-bold text-white uppercase tracking-widest"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               {link.name}
-            </a>
+            </Link>
           ))}
         </div>
       )}
