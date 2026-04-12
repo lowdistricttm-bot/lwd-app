@@ -55,7 +55,6 @@ const Stories = () => {
     reader.onload = (event) => {
       const imageUrl = event.target?.result as string;
       
-      // Aggiorna la storia dell'utente con la nuova immagine
       setAllStories(prev => prev.map(s => 
         s.isUser ? { ...s, img: imageUrl, hasContent: true } : s
       ));
@@ -67,7 +66,6 @@ const Stories = () => {
 
   const handleStoryClick = (index: number) => {
     const story = allStories[index];
-    // Se è l'utente e non ha ancora caricato nulla, apri il selettore
     if (story.isUser && !story.hasContent) {
       fileInputRef.current?.click();
     } else {
@@ -77,7 +75,6 @@ const Stories = () => {
 
   return (
     <div className="relative z-10">
-      {/* Input nascosto per fotocamera/galleria */}
       <input 
         type="file" 
         ref={fileInputRef} 
@@ -86,7 +83,7 @@ const Stories = () => {
         onChange={handleFileChange}
       />
 
-      <div className="flex gap-4 overflow-x-auto py-4 px-4 no-scrollbar bg-black border-b border-white/5">
+      <div className="flex gap-4 overflow-x-auto pt-2 pb-3 px-4 no-scrollbar bg-black border-b border-white/5">
         {allStories.map((story, index) => (
           <button 
             key={story.id} 
@@ -94,7 +91,7 @@ const Stories = () => {
             className="flex flex-col items-center gap-1.5 shrink-0 outline-none group relative"
           >
             <div className={cn(
-              "w-[68px] h-[68px] rounded-full p-[2.5px] transition-all duration-300 group-active:scale-90",
+              "w-[62px] h-[62px] rounded-full p-[2px] transition-all duration-300 group-active:scale-90",
               story.isUser && !story.hasContent
                 ? "bg-transparent" 
                 : "bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]"
@@ -107,13 +104,13 @@ const Stories = () => {
             {story.isUser && (
               <div 
                 onClick={handleAddStoryClick}
-                className="absolute bottom-6 right-0 bg-red-600 text-white rounded-full p-0.5 border-[2.5px] border-black hover:scale-110 transition-transform z-10"
+                className="absolute bottom-5 right-0 bg-red-600 text-white rounded-full p-0.5 border-[2px] border-black hover:scale-110 transition-transform z-10"
               >
-                <Plus size={14} strokeWidth={4} />
+                <Plus size={12} strokeWidth={4} />
               </div>
             )}
 
-            <span className="text-[11px] text-white/60 truncate w-16 text-center font-medium">
+            <span className="text-[10px] text-white/60 truncate w-14 text-center font-medium">
               {story.name}
             </span>
           </button>

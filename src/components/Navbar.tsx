@@ -17,7 +17,7 @@ const Navbar = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      setIsScrolled(window.scrollY > 10);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -32,16 +32,16 @@ const Navbar = () => {
 
   return (
     <nav className={cn(
-      "fixed top-0 left-0 right-0 z-50 transition-all duration-500 px-6 flex flex-col justify-center",
-      "pt-[env(safe-area-inset-top)]", // Supporto per Notch iPhone
+      "fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-6 flex flex-col justify-center",
+      "pt-[env(safe-area-inset-top)]",
       isScrolled 
-        ? "bg-black/80 backdrop-blur-xl border-b border-white/5 h-[calc(4rem+env(safe-area-inset-top))]" 
-        : "bg-black border-b border-transparent h-[calc(5rem+env(safe-area-inset-top))]"
+        ? "bg-black/90 backdrop-blur-xl border-b border-white/5 h-[calc(3.5rem+env(safe-area-inset-top))]" 
+        : "bg-black border-b border-transparent h-[calc(4.2rem+env(safe-area-inset-top))]"
     )}>
       <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
         <div className="flex items-center gap-12">
           <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
-            <Logo className="h-6 md:h-8" />
+            <Logo className="h-5 md:h-7" />
           </Link>
           
           <div className="hidden md:flex items-center gap-10">
@@ -50,7 +50,7 @@ const Navbar = () => {
                 key={link.name} 
                 to={link.href}
                 className={cn(
-                  "text-[11px] font-black transition-all uppercase tracking-[0.25em] italic relative group",
+                  "text-[10px] font-black transition-all uppercase tracking-[0.25em] italic relative group",
                   location.pathname === link.href ? "text-red-600" : "text-gray-400 hover:text-white"
                 )}
               >
@@ -67,18 +67,18 @@ const Navbar = () => {
         <div className="flex items-center gap-4 md:gap-8">
           <div className="hidden md:flex items-center gap-6 border-r border-white/10 pr-6 mr-2">
             <Link to="/profile" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2">
-              <User size={18} />
-              <span className="text-[10px] font-black uppercase tracking-widest">Account</span>
+              <User size={16} />
+              <span className="text-[9px] font-black uppercase tracking-widest">Account</span>
             </Link>
             <Link to="/settings" className="text-gray-400 hover:text-white transition-colors">
-              <Settings size={18} />
+              <Settings size={16} />
             </Link>
           </div>
 
           <Link to="/cart" className="text-gray-400 hover:text-white transition-colors relative group p-2">
-            <ShoppingBag size={20} />
+            <ShoppingBag size={18} />
             {itemCount > 0 && (
-              <span className="absolute top-0 right-0 bg-red-600 text-white text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full animate-in zoom-in">
+              <span className="absolute top-0 right-0 bg-red-600 text-white text-[8px] font-black w-3.5 h-3.5 flex items-center justify-center rounded-full animate-in zoom-in">
                 {itemCount}
               </span>
             )}
@@ -88,7 +88,7 @@ const Navbar = () => {
             className="md:hidden text-white p-2"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
       </div>
@@ -109,10 +109,6 @@ const Navbar = () => {
             {link.name}
           </Link>
         ))}
-        <div className="mt-12 flex gap-8">
-          <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-400 font-black uppercase tracking-widest text-xs">Profilo</Link>
-          <Link to="/settings" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-400 font-black uppercase tracking-widest text-xs">Impostazioni</Link>
-        </div>
       </div>
     </nav>
   );
