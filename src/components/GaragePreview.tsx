@@ -9,8 +9,24 @@ import CommentDrawer from './CommentDrawer';
 import { cn } from '@/lib/utils';
 
 const cars = [
-  { id: 1, owner: "marco_ld", car: "BMW M3 E46 Static", location: "Milano, Italy", image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&q=80&w=1000", likes: 1240, comments: "48" },
-  { id: 2, owner: "sara_stance", car: "VW Golf MK4 Airride", location: "Roma, Italy", image: "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&q=80&w=1000", likes: 856, comments: "24" }
+  { 
+    id: 1, 
+    owner: "marco_ld", 
+    car: "BMW M3 E46 Static", 
+    location: "Milano, Italy", 
+    image: "https://www.lowdistrict.it/wp-content/uploads/DSC01359-1-scaled-e1751832356345.jpg", 
+    likes: 1240, 
+    comments: "48" 
+  },
+  { 
+    id: 2, 
+    owner: "stance_daily", 
+    car: "Porsche 911 Airride", 
+    location: "Roma, Italy", 
+    image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=1000", 
+    likes: 856, 
+    comments: "24" 
+  }
 ];
 
 const GaragePreview = () => {

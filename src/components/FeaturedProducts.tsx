@@ -7,10 +7,34 @@ import { Link } from 'react-router-dom';
 import { useCart } from '@/hooks/use-cart';
 
 const products = [
-  { id: 1, name: "Classic Logo Hoodie", price: "€55.00", image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800", tag: "Best Seller" },
-  { id: 2, name: "Stance Culture Tee", price: "€30.00", image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=800", tag: "New" },
-  { id: 3, name: "Low District Sticker Pack", price: "€12.00", image: "https://images.unsplash.com/photo-1572375927902-d62360355c57?auto=format&fit=crop&q=80&w=800", tag: "Essential" },
-  { id: 4, name: "Limited Edition Cap", price: "€25.00", image: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&q=80&w=800", tag: "Limited" }
+  { 
+    id: 10675, 
+    name: "EXTREME STICKER 2025", 
+    price: "€30.00", 
+    image: "https://www.lowdistrict.it/wp-content/uploads/new4.png", 
+    tag: "New Drop" 
+  },
+  { 
+    id: 11171, 
+    name: "HOODIE NEW LOGO 2026", 
+    price: "€75.00", 
+    image: "https://www.lowdistrict.it/wp-content/uploads/unisex-heavy-blend-hoodie-black-front-680d3b04b9913.jpg", 
+    tag: "Premium" 
+  },
+  { 
+    id: 10758, 
+    name: "WINDSHIELD STICKER", 
+    price: "€15.00", 
+    image: "https://www.lowdistrict.it/wp-content/uploads/new6.png", 
+    tag: "Essential" 
+  },
+  { 
+    id: 17001, 
+    name: "T-SHIRT OVERSIZE SIGNED", 
+    price: "€40.00", 
+    image: "https://www.lowdistrict.it/wp-content/uploads/tshirt-over-grigio.png", 
+    tag: "Limited" 
+  }
 ];
 
 const FeaturedProducts = () => {
@@ -60,8 +84,8 @@ const FeaturedProducts = () => {
                   <ShoppingCart size={20} />
                 </button>
               </div>
-              <h4 className="text-white font-bold text-lg mb-1">{product.name}</h4>
-              <p className="text-gray-400 font-medium">{product.price}</p>
+              <h4 className="text-white font-bold text-lg mb-1 uppercase italic tracking-tighter">{product.name}</h4>
+              <p className="text-red-600 font-black italic">{product.price}</p>
             </motion.div>
           ))}
         </div>

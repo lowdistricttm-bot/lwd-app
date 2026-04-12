@@ -15,9 +15,9 @@ const Hero = () => {
     <section className="relative min-h-[80vh] md:h-[90vh] w-full flex items-center justify-center overflow-hidden bg-black">
       <div className="absolute inset-0 z-0">
         <img 
-          src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=2070" 
-          alt="Stance Car" 
-          className="w-full h-full object-cover opacity-40 grayscale hover:grayscale-0 transition-all duration-1000 scale-105"
+          src="https://www.lowdistrict.it/wp-content/uploads/DSC01359-1-scaled-e1751832356345.jpg" 
+          alt="Low District Stance" 
+          className="w-full h-full object-cover opacity-50 grayscale hover:grayscale-0 transition-all duration-1000 scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black"></div>
       </div>
