@@ -82,15 +82,6 @@ const Stories = () => {
               {myStory ? "Tua Storia" : "Aggiungi"}
             </span>
           </button>
-          
-          {myStory && (
-            <button 
-              onClick={() => fileInputRef.current?.click()}
-              className="text-[8px] font-black text-red-600 uppercase tracking-widest mt-0.5"
-            >
-              Nuova
-            </button>
-          )}
         </div>
 
         {/* Esempio di altre storie (Mock) */}
