@@ -5,6 +5,7 @@ export const usePosts = () => {
   return useInfiniteQuery({
     queryKey: ['supabase-posts'],
     queryFn: async ({ pageParam = 0 }) => {
+      // Tentativo 1: Query completa con conteggi (Join)
       const { data, error } = await supabase
         .from('posts')
         .select(`
@@ -22,7 +23,24 @@ export const usePosts = () => {
         .range(pageParam, pageParam + 9);
 
       if (error) {
-        console.error("[Supabase Fetch Error]:", error);
+        // Se l'errore è PGRST200 (relazione non trovata), usiamo il fallback
+        if (error.code === 'PGRST200') {
+          console.warn("[Supabase] Schema cache non aggiornato, uso fallback senza conteggi.");
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('posts')
+            .select('id, content, image_url, user_id, user_name, user_avatar, created_at')
+            .order('created_at', { ascending: false })
+            .range(pageParam, pageParam + 9);
+          
+          if (fallbackError) throw fallbackError;
+          
+          // Mappiamo i dati per mantenere la struttura attesa dai componenti
+          return (fallbackData || []).map(post => ({
+            ...post,
+            likes: [{ count: 0 }],
+            comments: [{ count: 0 }]
+          }));
+        }
         throw error;
       }
       return data || [];
