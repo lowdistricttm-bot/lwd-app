@@ -45,7 +45,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const cleanUsername = username.trim();
     
     try {
-      // 1. Autenticazione JWT
       const response = await fetch('https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -53,43 +52,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       const resData = await response.json();
-
       if (!response.ok || !resData.success) {
         throw new Error(resData.message || 'Credenziali non valide');
       }
 
       const jwtToken = resData.data?.jwt || resData.jwt;
       let userData: User | null = null;
-      let wpUserId: number | null = null;
+      let wpUserId = resData.data?.user?.id;
 
-      // 2. Recupero ID Utente
-      const meResponse = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/me?JWT=${jwtToken}`);
-      if (meResponse.ok) {
-        const meData = await meResponse.json();
-        wpUserId = meData.id;
+      // Recupero ID se mancante
+      if (!wpUserId) {
+        const meRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/me?JWT=${jwtToken}`);
+        if (meRes.ok) {
+          const meData = await meRes.json();
+          wpUserId = meData.id;
+        }
       }
 
-      if (!wpUserId && resData.data?.user?.id) {
-        wpUserId = resData.data.user.id;
-      }
-
-      // 3. RECUPERO AVATAR MULTI-SORGENTE
+      // Sorgente Avatar predefinita
       let finalAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${cleanUsername}`;
 
       if (wpUserId) {
-        // Prova BuddyPress
+        // 1. TENTATIVO BUDDYPRESS (Priorità assoluta)
         try {
-          const bpResponse = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${wpUserId}?JWT=${jwtToken}`);
-          if (bpResponse.ok) {
-            const bpData = await bpResponse.json();
-            const bpAvatar = bpData.avatar_urls?.full || bpData.avatar_urls?.thumb;
-            if (bpAvatar && !bpAvatar.includes('mystery-man')) {
-              finalAvatar = bpAvatar;
+          const bpRes = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${wpUserId}`);
+          if (bpRes.ok) {
+            const bpData = await bpRes.ok ? await bpRes.json() : null;
+            if (bpData && bpData.avatar_urls) {
+              finalAvatar = bpData.avatar_urls.full || bpData.avatar_urls.thumb;
             }
-            
             userData = {
               id: bpData.id,
-              username: bpData.user_login || bpData.mention_name,
+              username: bpData.user_login || cleanUsername,
               email: '',
               nicename: bpData.name,
               display_name: bpData.name,
@@ -99,17 +93,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           }
         } catch (e) {}
 
-        // Prova WordPress (Gravatar) se BuddyPress non ha dato risultati certi
+        // 2. TENTATIVO WORDPRESS (Se BP fallisce o non ha avatar)
         if (!userData || finalAvatar.includes('dicebear')) {
           try {
-            const wpResponse = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${wpUserId}?JWT=${jwtToken}`);
-            if (wpResponse.ok) {
-              const wpData = await wpResponse.json();
-              const wpAvatar = wpData.avatar_urls?.['96'] || wpData.avatar_urls?.['48'];
-              if (wpAvatar && !wpAvatar.includes('gravatar.com/avatar/0000')) {
-                finalAvatar = wpAvatar;
+            const wpRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${wpUserId}`);
+            if (wpRes.ok) {
+              const wpData = await wpRes.json();
+              if (wpData.avatar_urls) {
+                finalAvatar = wpData.avatar_urls['96'] || wpData.avatar_urls['48'] || finalAvatar;
               }
-              
               if (!userData) {
                 userData = {
                   id: wpData.id,
@@ -127,22 +119,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
 
-      // 4. Fallback finale
+      // Fallback finale
       if (!userData) {
         userData = {
           id: wpUserId || Date.now(),
-          username: cleanUsername.split('@')[0],
-          email: cleanUsername.includes('@') ? cleanUsername : '',
-          nicename: cleanUsername.split('@')[0],
-          display_name: cleanUsername.split('@')[0],
+          username: cleanUsername,
+          email: '',
+          nicename: cleanUsername,
+          display_name: cleanUsername,
           avatar: finalAvatar
         };
       }
 
-      // Forza aggiornamento pulendo la vecchia sessione
-      localStorage.removeItem('ld_user_data');
       saveAuth(jwtToken, userData);
-      showSuccess(`Profilo sincronizzato!`);
+      showSuccess(`Bentornato, ${userData.display_name}!`);
       
     } catch (error: any) {
       showError(error.message);

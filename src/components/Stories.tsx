@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { cn } from "@/lib/utils";
 import StoryViewer from './StoryViewer';
 import { AnimatePresence } from 'framer-motion';
@@ -11,11 +11,18 @@ import { useAuth } from '@/hooks/use-auth';
 const Stories = () => {
   const { user } = useAuth();
   const [userStory, setUserStory] = useState<{img: string, hasContent: boolean}>({
-    img: user?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=LowDistrict',
+    img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=LowDistrict',
     hasContent: false
   });
   const [showViewer, setShowViewer] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Sincronizza l'avatar della storia con l'utente loggato
+  useEffect(() => {
+    if (user?.avatar) {
+      setUserStory(prev => ({ ...prev, img: user.avatar || prev.img }));
+    }
+  }, [user]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
