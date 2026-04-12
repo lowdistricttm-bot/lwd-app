@@ -17,28 +17,29 @@ const Index = () => {
     <main className="min-h-screen bg-black text-white selection:bg-red-600 selection:text-white pb-20 md:pb-0">
       <Navbar />
       
-      {/* Padding top fisso di 80px (h-20) per far apparire le storie esattamente sotto la Navbar */}
-      <div className="pt-20">
-        <Stories />
+      <div className="pt-20 md:pt-16">
+        <div className="max-w-7xl mx-auto">
+          <Stories />
+        </div>
       </div>
       
       <Hero />
       
-      <div className="bg-red-600 py-4 overflow-hidden whitespace-nowrap">
+      <div className="bg-red-600 py-4 md:py-6 overflow-hidden whitespace-nowrap border-y border-white/10">
         <div className="flex animate-marquee gap-12 items-center">
-          {[1,2,3,4,5].map((i) => (
-            <span key={i} className="text-white font-black text-2xl tracking-tighter italic uppercase">
+          {[1,2,3,4,5,6,7,8].map((i) => (
+            <span key={i} className="text-white font-black text-2xl md:text-4xl tracking-tighter italic uppercase opacity-90">
               Low District • Respect the Fitment • Static vs Air • Low District •
             </span>
           ))}
         </div>
       </div>
 
-      <GaragePreview />
-      
-      <FeaturedProducts />
-      
-      <EventsSection />
+      <div className="max-w-7xl mx-auto w-full">
+        <GaragePreview />
+        <FeaturedProducts />
+        <EventsSection />
+      </div>
       
       <Footer />
       
@@ -52,7 +53,7 @@ const Index = () => {
           100% { transform: translateX(-50%); }
         }
         .animate-marquee {
-          animation: marquee 20s linear infinite;
+          animation: marquee 30s linear infinite;
         }
         .no-scrollbar::-webkit-scrollbar {
           display: none;
