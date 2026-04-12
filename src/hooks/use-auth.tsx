@@ -28,25 +28,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Caricamento immediato all'avvio
   useEffect(() => {
-    const initAuth = () => {
+    const savedToken = localStorage.getItem('ld_auth_token');
+    const savedUser = localStorage.getItem('ld_user_data');
+    
+    if (savedToken && savedUser) {
       try {
-        const savedToken = localStorage.getItem('ld_auth_token');
-        const savedUser = localStorage.getItem('ld_user_data');
-        
-        if (savedToken && savedUser) {
-          setToken(savedToken);
-          setUser(JSON.parse(savedUser));
-        }
+        setToken(savedToken);
+        setUser(JSON.parse(savedUser));
       } catch (e) {
-        console.error("Errore nel recupero sessione:", e);
-      } finally {
-        // Diamo un piccolo delay per evitare flicker grafici
-        setTimeout(() => setIsLoading(false), 500);
+        localStorage.removeItem('ld_auth_token');
+        localStorage.removeItem('ld_user_data');
       }
-    };
-
-    initAuth();
+    }
+    setIsLoading(false);
   }, []);
 
   const login = async (username: string, password: string) => {
@@ -54,41 +50,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const response = await fetch('https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({ 
-          username: username.trim(), 
-          password: password 
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: username.trim(), password: password }),
       });
 
       const data = await response.json();
 
       if (response.ok && data.success && data.data.jwt) {
         const jwtToken = data.data.jwt;
-        
-        const userData = data.data.user ? {
-          id: data.data.user.ID || 0,
-          username: data.data.user.user_login || '',
-          email: data.data.user.user_email || '',
-          nicename: data.data.user.user_nicename || '',
-          display_name: data.data.user.display_name || data.data.user.user_login || 'Utente',
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.data.user.user_login || 'default'}`
-        } : {
-          id: 0,
-          username: username.split('@')[0],
-          email: username.includes('@') ? username : '',
-          nicename: username,
-          display_name: username,
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`
+        const userData = {
+          id: data.data.user.ID,
+          username: data.data.user.user_login,
+          email: data.data.user.user_email,
+          nicename: data.data.user.user_nicename,
+          display_name: data.data.user.display_name || data.data.user.user_login,
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.data.user.user_login}`
         };
 
         setToken(jwtToken);
         setUser(userData);
+        
+        // Salvataggio persistente
         localStorage.setItem('ld_auth_token', jwtToken);
         localStorage.setItem('ld_user_data', JSON.stringify(userData));
+        
         showSuccess(`Bentornato, ${userData.display_name}`);
       } else {
         throw new Error(data.message || 'Credenziali non valide');
@@ -107,21 +92,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const response = await fetch('https://www.lowdistrict.it/wp-json/wp/v2/users/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: userData.username || userData.email.split('@')[0],
-          email: userData.email,
-          password: userData.password,
-          first_name: userData.first_name,
-          last_name: userData.last_name
-        })
+        body: JSON.stringify(userData)
       });
-      
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || "Errore durante la registrazione");
-      }
-
-      showSuccess("Account creato! Ora puoi accedere.");
+      if (!response.ok) throw new Error("Errore registrazione");
+      showSuccess("Account creato! Accedi ora.");
     } catch (error: any) {
       showError(error.message);
       throw error;
