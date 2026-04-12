@@ -36,8 +36,12 @@ const Navbar = () => {
     )}>
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-12">
-          <Link to="/" className="text-2xl font-black tracking-tighter text-white italic">
-            LOW<span className="text-red-600">DISTRICT</span>
+          <Link to="/" className="flex items-center">
+            <img 
+              src="https://www.lowdistrict.it/wp-content/uploads/logo-low-district-bianco.png" 
+              alt="Low District" 
+              className="h-6 md:h-8 w-auto object-contain"
+            />
           </Link>
           
           <div className="hidden md:flex items-center gap-8">
