@@ -3,22 +3,40 @@
 import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
-import { Settings as SettingsIcon, Grid, ShoppingBag, Package, MapPin, Link as LinkIcon, ChevronRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Settings as SettingsIcon, Grid, Package, MapPin, Link as LinkIcon, ChevronRight, User as UserIcon } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
+import { Button } from '@/components/ui/button';
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState<'posts' | 'orders'>('posts');
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center">
+        <Navbar />
+        <div className="w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center mb-6">
+          <UserIcon size={40} className="text-gray-700" />
+        </div>
+        <h1 className="text-3xl font-black uppercase tracking-tighter mb-2 italic">Area Riservata</h1>
+        <p className="text-gray-500 mb-8 uppercase text-[10px] font-black tracking-widest">Accedi per gestire il tuo garage e i tuoi ordini</p>
+        <Link to="/auth">
+          <Button className="bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest px-12 py-6 rounded-none italic">
+            Accedi / Registrati
+          </Button>
+        </Link>
+        <BottomNav />
+      </div>
+    );
+  }
 
   const stats = [
-    { label: 'Post', value: '24' },
-    { label: 'Ordini', value: '2' },
-    { label: 'Following', value: '450' },
-  ];
-
-  const mockOrders = [
-    { id: '#LD-8921', date: '12 Feb 2024', total: '€85.00', status: 'In Consegna' },
-    { id: '#LD-7742', date: '05 Gen 2024', total: '€40.00', status: 'Consegnato' },
+    { label: 'Post', value: '0' },
+    { label: 'Ordini', value: '0' },
+    { label: 'Following', value: '0' },
   ];
 
   return (
@@ -30,13 +48,13 @@ const Profile = () => {
           <div className="relative">
             <div className="w-24 h-24 rounded-[2rem] bg-zinc-800 border-2 border-red-600 p-1 rotate-3">
               <img 
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=LowDistrict" 
+                src={user.avatar} 
                 alt="avatar" 
                 className="w-full h-full rounded-[1.8rem] object-cover -rotate-3" 
               />
             </div>
             <div className="absolute -bottom-2 -right-2 bg-red-600 text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-lg">
-              PRO
+              MEMBER
             </div>
           </div>
           
@@ -48,11 +66,11 @@ const Profile = () => {
         </div>
 
         <div className="mb-8">
-          <h1 className="text-3xl font-black tracking-tighter uppercase mb-1 italic">Marco LD</h1>
-          <p className="text-red-600 text-xs font-black uppercase tracking-widest mb-4">@marco_stance_it</p>
+          <h1 className="text-3xl font-black tracking-tighter uppercase mb-1 italic">{user.display_name}</h1>
+          <p className="text-red-600 text-xs font-black uppercase tracking-widest mb-4">@{user.username}</p>
           
-          <div className="flex flex-wrap gap-4 text-gray-500 text-xs font-bold uppercase tracking-tight mb-6">
-            <span className="flex items-center gap-1"><MapPin size={14} /> Milano, IT</span>
+          <div className="flex flex-wrap gap-4 text-gray-500 text-[10px] font-black uppercase tracking-tight mb-6">
+            <span className="flex items-center gap-1"><MapPin size={14} /> Community Member</span>
             <span className="flex items-center gap-1"><LinkIcon size={14} /> lowdistrict.it</span>
           </div>
         </div>
@@ -66,12 +84,11 @@ const Profile = () => {
           ))}
         </div>
 
-        {/* Tabs */}
         <div className="flex gap-8 mb-8 border-b border-white/5">
           <button 
             onClick={() => setActiveTab('posts')}
             className={cn(
-              "pb-4 text-xs font-black uppercase tracking-widest transition-all",
+              "pb-4 text-[10px] font-black uppercase tracking-widest transition-all",
               activeTab === 'posts' ? "border-b-2 border-red-600 text-white" : "text-gray-600"
             )}
           >
@@ -80,7 +97,7 @@ const Profile = () => {
           <button 
             onClick={() => setActiveTab('orders')}
             className={cn(
-              "pb-4 text-xs font-black uppercase tracking-widest transition-all",
+              "pb-4 text-[10px] font-black uppercase tracking-widest transition-all",
               activeTab === 'orders' ? "border-b-2 border-red-600 text-white" : "text-gray-600"
             )}
           >
@@ -89,43 +106,24 @@ const Profile = () => {
         </div>
 
         {activeTab === 'posts' ? (
-          <div className="grid grid-cols-3 gap-2">
-            {[1,2,3,4,5,6].map((i) => (
-              <div key={i} className="aspect-square bg-zinc-900 rounded-xl overflow-hidden group cursor-pointer">
-                <img 
-                  src={`https://images.unsplash.com/photo-${1500000000000 + i * 1234567}?auto=format&fit=crop&q=80&w=400`} 
-                  alt="post" 
-                  className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" 
-                />
-              </div>
-            ))}
+          <div className="py-20 text-center border border-dashed border-white/5">
+            <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Nessun post ancora caricato</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {mockOrders.map((order) => (
-              <div key={order.id} className="bg-zinc-900/50 border border-white/5 p-6 flex items-center justify-between group hover:border-red-600/30 transition-all">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-black rounded-xl">
-                    <Package size={20} className="text-red-600" />
-                  </div>
-                  <div>
-                    <p className="font-black text-sm uppercase tracking-tight italic">{order.id}</p>
-                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">{order.date} • {order.total}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className={cn(
-                    "text-[9px] font-black uppercase tracking-widest px-2 py-1",
-                    order.status === 'Consegnato' ? "bg-green-500/10 text-green-500" : "bg-red-600/10 text-red-600"
-                  )}>
-                    {order.status}
-                  </span>
-                  <ChevronRight size={16} className="text-gray-700 group-hover:text-white transition-colors" />
-                </div>
-              </div>
-            ))}
+          <div className="py-20 text-center border border-dashed border-white/5">
+            <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Nessun ordine trovato</p>
           </div>
         )}
+
+        <div className="mt-12">
+          <Button 
+            onClick={logout}
+            variant="outline" 
+            className="w-full border-white/10 text-gray-500 hover:text-red-600 hover:border-red-600/50 font-black uppercase tracking-widest py-6 rounded-none italic"
+          >
+            Disconnetti Account
+          </Button>
+        </div>
       </div>
       <BottomNav />
     </div>

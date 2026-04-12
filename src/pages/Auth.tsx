@@ -5,18 +5,30 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { showSuccess } from '@/utils/toast';
-import { ChevronLeft } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
+import { ChevronLeft, Loader2 } from 'lucide-react';
 import Logo from '@/components/Logo';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const { login, isLoading } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    showSuccess(isLogin ? "Bentornato in Low District!" : "Account creato con successo!");
-    navigate('/profile');
+    if (isLogin) {
+      try {
+        await login(username, password);
+        navigate('/profile');
+      } catch (err) {
+        // Errore gestito dal toast nel hook
+      }
+    } else {
+      // Per la registrazione, rimandiamo al sito web per sicurezza
+      window.open('https://www.lowdistrict.it/mio-account/', '_blank');
+    }
   };
 
   return (
@@ -32,31 +44,22 @@ const Auth = () => {
           <div className="flex justify-center mb-8">
             <Logo className="h-16" />
           </div>
-          <h1 className="text-4xl font-black tracking-tighter uppercase mb-2">
+          <h1 className="text-4xl font-black tracking-tighter uppercase mb-2 italic">
             {isLogin ? "Bentornato" : "Unisciti a noi"}
           </h1>
-          <p className="text-gray-500 text-sm font-bold uppercase tracking-widest">
-            {isLogin ? "Accedi al tuo garage" : "Crea il tuo profilo stance"}
+          <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em]">
+            {isLogin ? "Accedi con il tuo account Low District" : "Crea il tuo profilo sul sito ufficiale"}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6 max-w-sm mx-auto w-full">
-          {!isLogin && (
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Username</Label>
-              <Input 
-                placeholder="@tuo_nome" 
-                className="bg-zinc-900 border-white/5 rounded-2xl py-6 focus:ring-red-600"
-                required
-              />
-            </div>
-          )}
           <div className="space-y-2">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Email</Label>
+            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Username o Email</Label>
             <Input 
-              type="email" 
-              placeholder="email@esempio.it" 
-              className="bg-zinc-900 border-white/5 rounded-2xl py-6 focus:ring-red-600"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Il tuo username" 
+              className="bg-zinc-900 border-white/5 rounded-none py-6 focus:ring-red-600"
               required
             />
           </div>
@@ -64,23 +67,29 @@ const Auth = () => {
             <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Password</Label>
             <Input 
               type="password" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••" 
-              className="bg-zinc-900 border-white/5 rounded-2xl py-6 focus:ring-red-600"
+              className="bg-zinc-900 border-white/5 rounded-none py-6 focus:ring-red-600"
               required
             />
           </div>
 
-          <Button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest py-7 rounded-2xl shadow-xl shadow-red-600/20">
-            {isLogin ? "Accedi" : "Registrati"}
+          <Button 
+            type="submit" 
+            disabled={isLoading}
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest py-7 rounded-none shadow-xl shadow-red-600/20 italic"
+          >
+            {isLoading ? <Loader2 className="animate-spin" /> : (isLogin ? "Accedi" : "Vai alla Registrazione")}
           </Button>
         </form>
 
         <div className="mt-8 text-center">
           <button 
             onClick={() => setIsLogin(!isLogin)}
-            className="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-colors"
+            className="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-colors"
           >
-            {isLogin ? "Non hai un account? Registrati" : "Hai già un account? Accedi"}
+            {isLogin ? "Non hai un account? Registrati sul sito" : "Hai già un account? Accedi"}
           </button>
         </div>
       </div>
