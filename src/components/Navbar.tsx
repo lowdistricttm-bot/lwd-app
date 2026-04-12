@@ -4,11 +4,13 @@ import React, { useState, useEffect } from 'react';
 import { Menu, X, ShoppingBag, User } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from '@/hooks/use-translation';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -19,10 +21,10 @@ const Navbar = () => {
   }, []);
 
   const navLinks = [
-    { name: 'Home', href: '/' },
-    { name: 'Shop', href: '/shop' },
-    { name: 'Events', href: '/events' },
-    { name: 'Garage', href: '/garage' },
+    { name: t.nav.home, href: '/' },
+    { name: t.nav.shop, href: '/shop' },
+    { name: t.nav.events, href: '/events' },
+    { name: t.nav.garage, href: '/garage' },
   ];
 
   return (
