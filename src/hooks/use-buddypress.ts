@@ -2,25 +2,21 @@ import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tansta
 
 const BASE_URL = "https://www.lowdistrict.it/wp-json";
 
-export const useBpActivity = () => {
+export const useBpActivity = (userId?: number) => {
   return useInfiniteQuery({
-    queryKey: ['bp-activity'],
+    queryKey: ['bp-activity', userId],
     queryFn: async ({ pageParam = 1 }) => {
-      const url = `${BASE_URL}/lowdistrict/v1/activity?page=${pageParam}&per_page=20`;
+      let url = `${BASE_URL}/lowdistrict/v1/activity?page=${pageParam}&per_page=20`;
+      if (userId) url += `&user_id=${userId}`;
       
       try {
         const response = await fetch(url, {
           method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-          },
+          headers: { 'Accept': 'application/json' },
           mode: 'cors',
         });
 
-        if (!response.ok) {
-          throw new Error(`Errore server: ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error(`Errore server: ${response.status}`);
         const data = await response.json();
         return Array.isArray(data) ? data : [];
       } catch (err: any) {
@@ -36,6 +32,23 @@ export const useBpActivity = () => {
   });
 };
 
+export const useBpMemberData = (userId: number | undefined) => {
+  return useQuery({
+    queryKey: ['bp-member-data', userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      const token = localStorage.getItem('ld_auth_token');
+      const response = await fetch(`${BASE_URL}/buddypress/v1/members/${userId}?context=view`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error("Errore caricamento dati membro");
+      return await response.json();
+    },
+    enabled: !!userId,
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
 export const useCreateActivity = () => {
   const queryClient = useQueryClient();
   
@@ -44,17 +57,10 @@ export const useCreateActivity = () => {
       const token = localStorage.getItem('ld_auth_token');
       if (!token) throw new Error("Devi essere loggato per pubblicare");
 
-      // Endpoint BuddyPress
       const url = `${BASE_URL}/buddypress/v1/activity?JWT=${token}`;
-
-      // Semplifichiamo al massimo: BuddyPress spesso rifiuta la richiesta se l'ID utente 
-      // nel body non coincide esattamente con quello del token o se è formattato male.
-      // Inviando solo content, component e type, il server usa l'utente del token.
       const response = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           content: content,
           component: 'activity',
@@ -87,9 +93,4 @@ export const useBpMembers = (perPage = 100) => {
     },
     staleTime: 1000 * 60 * 10,
   });
-};
-
-export const getCachedMembers = () => {
-  const cached = localStorage.getItem('ld_members_directory');
-  return cached ? JSON.parse(cached) : null;
 };
