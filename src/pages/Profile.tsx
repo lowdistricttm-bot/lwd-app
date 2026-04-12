@@ -39,7 +39,12 @@ const Profile = () => {
     return fields;
   }, [memberData]);
 
-  const activities = useMemo(() => activityData?.pages.flat() || [], [activityData]);
+  // FILTRO RIGOROSO: Mostriamo solo i post dove l'ID dell'autore corrisponde all'ID dell'utente loggato
+  const myActivities = useMemo(() => {
+    const allPosts = activityData?.pages.flat() || [];
+    if (!user?.id) return [];
+    return allPosts.filter((post: any) => parseInt(post.user_id) === user.id);
+  }, [activityData, user?.id]);
 
   useEffect(() => {
     if (user) refreshUser();
@@ -137,7 +142,7 @@ const Profile = () => {
         {/* Statistiche Personali */}
         <div className="grid grid-cols-2 gap-4 py-6 border-y border-white/5 mb-8">
           <div className="text-center border-r border-white/5">
-            <p className="font-black text-2xl tracking-tighter italic">{activities.length}</p>
+            <p className="font-black text-2xl tracking-tighter italic">{myActivities.length}</p>
             <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">I Miei Post</p>
           </div>
           <div className="text-center">
@@ -173,13 +178,13 @@ const Profile = () => {
           <div className="space-y-6">
             {isLoadingActivity ? (
               <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-red-600" /></div>
-            ) : activities.length === 0 ? (
+            ) : myActivities.length === 0 ? (
               <div className="py-20 text-center border border-dashed border-white/5 rounded-3xl">
                 <MessageSquare className="mx-auto text-gray-800 mb-4" size={40} />
                 <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Non hai ancora pubblicato nulla</p>
               </div>
             ) : (
-              activities.map((post: any) => (
+              myActivities.map((post: any) => (
                 <div key={post.id} className="bg-zinc-900/30 border border-white/5 p-5 rounded-2xl">
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest">
