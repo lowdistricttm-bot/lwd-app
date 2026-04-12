@@ -59,19 +59,18 @@ export const useUpdateAvatar = () => {
 
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('action', 'bp_avatar_upload');
 
-      const response = await fetch(`${BASE_URL}/buddypress/v1/members/${userId}/avatar`, {
+      // Utilizziamo il token JWT come parametro query per massimizzare la compatibilità con i plugin WP
+      const response = await fetch(`${BASE_URL}/buddypress/v1/members/${userId}/avatar?JWT=${token}`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
+        body: formData,
+        mode: 'cors'
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Errore durante il caricamento dell'immagine");
+        const errorData = await response.json().catch(() => ({ message: "Errore sconosciuto del server" }));
+        console.error("Server Upload Error:", errorData);
+        throw new Error(errorData.message || `Errore server (${response.status})`);
       }
 
       return response.json();
