@@ -5,46 +5,47 @@ export const usePosts = () => {
   return useInfiniteQuery({
     queryKey: ['supabase-posts'],
     queryFn: async ({ pageParam = 0 }) => {
-      // Recuperiamo i post. Se la relazione con i conteggi fallisce, 
-      // recuperiamo almeno i dati base per non bloccare l'app.
-      const { data, error } = await supabase
-        .from('posts')
-        .select(`
-          id,
-          content,
-          image_url,
-          user_id,
-          user_name,
-          user_avatar,
-          created_at,
-          likes:post_likes(count),
-          comments:post_comments(count)
-        `)
-        .order('created_at', { ascending: false })
-        .range(pageParam, pageParam + 9);
+      try {
+        // Tentativo query completa con conteggi
+        const { data, error } = await supabase
+          .from('posts')
+          .select(`
+            id,
+            content,
+            image_url,
+            user_id,
+            user_name,
+            user_avatar,
+            created_at,
+            likes:post_likes(count),
+            comments:post_comments(count)
+          `)
+          .order('created_at', { ascending: false })
+          .range(pageParam, pageParam + 9);
 
-      if (error) {
-        console.error("[Supabase Fetch Error]:", error);
-        
-        // Fallback: prova a caricare senza i conteggi se il join fallisce
-        if (error.code === 'PGRST200') {
-          const { data: fallbackData, error: fallbackError } = await supabase
-            .from('posts')
-            .select('id, content, image_url, user_id, user_name, user_avatar, created_at')
-            .order('created_at', { ascending: false })
-            .range(pageParam, pageParam + 9);
-          
-          if (fallbackError) throw fallbackError;
-          return fallbackData || [];
+        if (error) {
+          // Se l'errore è dovuto alle relazioni mancanti, passiamo al fallback silenzioso
+          if (error.code === 'PGRST200' || error.code === 'PGRST204') {
+            const { data: fallbackData, error: fallbackError } = await supabase
+              .from('posts')
+              .select('id, content, image_url, user_id, user_name, user_avatar, created_at')
+              .order('created_at', { ascending: false })
+              .range(pageParam, pageParam + 9);
+            
+            if (fallbackError) throw fallbackError;
+            return fallbackData || [];
+          }
+          throw error;
         }
-        
-        throw error;
+        return data || [];
+      } catch (err) {
+        console.error("[Supabase Fetch Error Handled]:", err);
+        return [];
       }
-      return data || [];
     },
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) => {
-      return lastPage.length === 10 ? allPages.length * 10 : undefined;
+      return lastPage && lastPage.length === 10 ? allPages.length * 10 : undefined;
     },
   });
 };
