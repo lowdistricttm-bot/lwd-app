@@ -25,6 +25,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const defaultAvatar = "https://www.lowdistrict.it/wp-content/uploads/placeholder.png";
+
   const [token, setToken] = useState<string | null>(() => {
     if (typeof window !== 'undefined') return localStorage.getItem('ld_auth_token');
     return null;
@@ -33,7 +35,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('ld_user_data');
-      return saved ? JSON.parse(saved) : null;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // PULIZIA AUTOMATICA: Se l'avatar è Gravatar o vuoto, usa il placeholder
+        if (!parsed.avatar || parsed.avatar.includes('gravatar.com') || parsed.avatar.includes('secure.gravatar')) {
+          parsed.avatar = defaultAvatar;
+        }
+        return parsed;
+      }
     }
     return null;
   });
@@ -45,7 +54,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const cleanUsername = username.trim();
     
     try {
-      // 1. Autenticazione
       const response = await fetch('https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -60,7 +68,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const jwtToken = resData.data?.jwt || resData.jwt;
       let wpUser = resData.data?.user || resData.user;
       
-      // 2. Recupero ID
       let userId = wpUser?.ID || wpUser?.id;
       if (!userId && jwtToken) {
         try {
@@ -71,31 +78,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (!userId) throw new Error("ID utente non trovato");
 
-      // 3. RECUPERO AVATAR REALE (Custom o Default del sito)
-      // Interroghiamo l'API utenti standard che restituisce sempre l'avatar_url corretto del sito
-      let finalAvatar = "";
+      let finalAvatar = defaultAvatar;
       
       try {
         const userRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${userId}`);
         if (userRes.ok) {
           const userData = await userRes.json();
-          // Prendiamo la versione più grande disponibile (96px o superiore)
-          finalAvatar = userData.avatar_urls?.['96'] || userData.avatar_urls?.['48'] || "";
-        }
-      } catch (e) {
-        console.log("Errore recupero avatar da WP API");
-      }
-
-      // Se WP API non risponde, proviamo a vedere se BuddyPress ha qualcosa di specifico
-      if (!finalAvatar) {
-        try {
-          const bpRes = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${userId}?JWT=${jwtToken}`);
-          if (bpRes.ok) {
-            const bpData = await bpRes.json();
-            finalAvatar = bpData.avatar_urls?.full || bpData.avatar_urls?.thumb || "";
+          const wpAvatar = userData.avatar_urls?.['96'] || userData.avatar_urls?.['48'];
+          // Se l'avatar di WP non è Gravatar, usalo, altrimenti tieni il default
+          if (wpAvatar && !wpAvatar.includes('gravatar.com')) {
+            finalAvatar = wpAvatar;
           }
-        } catch (e) {}
-      }
+        }
+      } catch (e) {}
 
       const userData: User = {
         id: parseInt(userId),
@@ -103,7 +98,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         email: wpUser?.user_email || '',
         nicename: wpUser?.display_name || cleanUsername,
         display_name: wpUser?.display_name || cleanUsername,
-        avatar: finalAvatar // Questo URL ora punta all'immagine di default del tuo sito se l'utente non ne ha una
+        avatar: finalAvatar
       };
 
       saveAuth(jwtToken, userData);
@@ -138,6 +133,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     </AuthContext.Provider>
   );
 };
+
+export default AuthProvider;
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
