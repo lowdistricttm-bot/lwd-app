@@ -8,11 +8,12 @@ import GaragePreview from '@/components/GaragePreview';
 import MembersList from '@/components/MembersList';
 import { useAuth } from '@/hooks/use-auth';
 import { Lock } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
 const Community = () => {
   const { user } = useAuth();
+  const location = useLocation();
 
   return (
     <div className="min-h-screen bg-black text-white pb-24">
@@ -39,7 +40,7 @@ const Community = () => {
             </p>
             
             <div className="space-y-4">
-              <Link to="/auth">
+              <Link to="/auth" state={{ from: location.pathname }}>
                 <Button className="w-full bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest py-8 rounded-none italic shadow-xl shadow-red-600/10">
                   Accedi / Registrati
                 </Button>

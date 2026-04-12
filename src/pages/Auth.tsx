@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,13 +14,17 @@ const Auth = () => {
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
-    username: '', // Usiamo username per coprire sia email che nickname
-    email: '',    // Solo per la registrazione
+    username: '',
+    email: '',
     password: ''
   });
   
   const { login, register, isLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Recuperiamo la pagina di provenienza dallo stato, altrimenti andiamo al profilo
+  const from = location.state?.from || '/profile';
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -30,14 +34,13 @@ const Auth = () => {
     e.preventDefault();
     try {
       if (isLogin) {
-        // Nel login, passiamo il valore del campo 'username' che può contenere email o nickname
         await login(formData.username, formData.password);
-        navigate('/profile');
+        // Reindirizziamo alla pagina corretta
+        navigate(from, { replace: true });
       } else {
-        // Nella registrazione usiamo l'email specifica
         await register({
           ...formData,
-          email: formData.email // Assicuriamoci di passare l'email corretta per la creazione account
+          email: formData.email
         });
         setIsLogin(true);
       }

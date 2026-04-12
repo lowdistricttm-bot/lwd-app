@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import { Settings as SettingsIcon, Grid, Package, MapPin, Link as LinkIcon, ChevronRight, User as UserIcon, Users, MessageSquare, Loader2 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ const Profile = () => {
   const { user, logout, isLoading } = useAuth();
   const { data: customerCount } = useWcCustomerCount();
   const navigate = useNavigate();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -34,7 +35,7 @@ const Profile = () => {
         </div>
         <h1 className="text-3xl font-black uppercase tracking-tighter mb-2 italic">Area Riservata</h1>
         <p className="text-gray-500 mb-8 uppercase text-[10px] font-black tracking-widest">Accedi per gestire il tuo garage e i tuoi ordini</p>
-        <Link to="/auth">
+        <Link to="/auth" state={{ from: location.pathname }}>
           <Button className="bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest px-12 py-6 rounded-none italic">
             Accedi / Registrati
           </Button>
