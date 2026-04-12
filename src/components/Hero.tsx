@@ -33,12 +33,13 @@ const Hero = () => {
           </h2>
           
           <div className="flex justify-center mb-8">
-            <Logo className="h-16 md:h-24" />
+            <Logo className="h-20 md:h-32" />
           </div>
 
           <p className="text-gray-300 text-lg md:text-xl mb-12 max-w-2xl mx-auto font-medium leading-relaxed">
             {t.hero.desc}
           </p>
+          
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
             <Link to="/shop" className="w-full sm:w-auto">
               <Button size="lg" className="bg-red-600 text-white hover:bg-white hover:text-black rounded-none px-12 py-8 text-lg font-black uppercase tracking-widest w-full italic transition-all duration-300">
