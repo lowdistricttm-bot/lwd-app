@@ -25,9 +25,17 @@ export const useBpActivity = () => {
         if (response.ok) return response.json();
         
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Errore ${response.status}`);
+        
+        if (response.status === 404) {
+          throw new Error("API BuddyPress non trovata. Assicurati che il plugin BuddyPress sia attivo e che le 'BP REST API' siano abilitate nelle impostazioni.");
+        }
+        
+        throw new Error(errorData.message || `Errore server: ${response.status}`);
       } catch (e: any) {
-        throw new Error("Errore di connessione: verifica la configurazione CORS su AlterVista.");
+        if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
+          throw new Error("Errore di connessione (CORS): Il server WordPress sta bloccando la richiesta. Verifica lo snippet su WPCode.");
+        }
+        throw e;
       }
     },
     staleTime: 1000 * 60 * 2,
