@@ -10,19 +10,17 @@ export const useBpActivity = () => {
       const token = localStorage.getItem('ld_auth_token');
       if (!token) throw new Error("Effettua l'accesso");
 
-      // Proviamo prima con il token nell'URL per evitare il preflight OPTIONS che spesso causa errori CORS
+      // Usiamo il nuovo endpoint "Bridge" che abbiamo creato con lo snippet PHP
+      // Questo evita i blocchi standard di BuddyPress
+      const url = `${BASE_URL}/lowdistrict/v1/activity?per_page=20&JWT=${token}`;
+      
       try {
-        const url = `${BASE_URL}/buddypress/v1/activity?per_page=20&JWT=${token}`;
-        const response = await fetch(url, { 
-          method: 'GET',
-          headers: { 'Accept': 'application/json' }
-        });
-        
-        if (!response.ok) throw new Error(`Errore: ${response.status}`);
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Errore server: ${response.status}`);
         return await response.json();
-      } catch (err: any) {
-        console.error("Errore attività:", err);
-        throw new Error("Il server rifiuta la connessione (CORS). Verifica lo snippet PHP su WordPress.");
+      } catch (err) {
+        console.error("Errore Bridge:", err);
+        throw new Error("Connessione fallita. Assicurati di aver attivato l'ultimo snippet PHP su WordPress.");
       }
     },
     staleTime: 1000 * 30,
@@ -35,9 +33,10 @@ export const useBpMembers = (perPage = 100) => {
     queryKey: ['bp-members', perPage],
     queryFn: async () => {
       const token = localStorage.getItem('ld_auth_token');
+      // Usiamo lo stesso trucco del JWT nell'URL per i membri
       const url = `${BASE_URL}/buddypress/v1/members?per_page=${perPage}&type=active&JWT=${token}`;
       const response = await fetch(url);
-      if (!response.ok) throw new Error("Errore membri");
+      if (!response.ok) throw new Error("Errore caricamento membri");
       const data = await response.json();
       
       localStorage.setItem(MEMBERS_CACHE_KEY, JSON.stringify({

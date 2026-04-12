@@ -1,46 +1,35 @@
 /**
- * LOW DISTRICT - UNIVERSAL CORS & AUTH FIX
- * Questo codice forza i permessi di accesso per l'App e gestisce l'autenticazione JWT.
+ * LOW DISTRICT - API BRIDGE
+ * Crea un endpoint semplificato per l'App che non attiva i blocchi CORS standard.
  */
 
-// 1. Forza gli Header CORS all'inizio del caricamento
-function ld_force_cors_headers() {
-    // Permetti l'accesso da qualsiasi origine (necessario per l'App)
-    header("Access-Control-Allow-Origin: *");
-    header("Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE");
-    header("Access-Control-Allow-Headers: Authorization, Content-Type, JWT, X-WP-Nonce, X-Requested-With, Accept, Origin");
-    header("Access-Control-Expose-Headers: X-WP-Total, X-WP-TotalPages");
+add_action('rest_api_init', function () {
+    register_rest_route('lowdistrict/v1', '/activity', array(
+        'methods' => 'GET',
+        'callback' => function($request) {
+            // Recupera il token JWT dalla richiesta
+            $token = $request->get_param('JWT');
+            
+            // Simula l'autenticazione se il token è presente
+            if (!empty($token)) {
+                $_GET['JWT'] = $token;
+            }
 
-    // Rispondi immediatamente alle richieste di controllo (OPTIONS)
-    if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-        status_header(200);
-        exit;
-    }
-}
-add_action('init', 'ld_force_cors_headers', 1);
-add_action('rest_api_init', 'ld_force_cors_headers', 15);
+            // Chiama internamente BuddyPress e restituisce i dati
+            $bp_request = new WP_REST_Request('GET', '/buddypress/v1/activity');
+            $bp_request->set_query_params($request->get_query_params());
+            $response = rest_do_request($bp_request);
+            
+            return rest_ensure_response($response->get_data());
+        },
+        'permission_callback' => '__return_true',
+    ));
+});
 
-// 2. Assicura che WordPress riconosca il token JWT anche se il server lo blocca negli header
-add_filter('determine_current_user', function($user_id) {
-    if ($user_id) return $user_id;
-
-    $token = '';
-    // Cerca il token in tutti i posti possibili
-    if (isset($_GET['JWT'])) {
-        $token = $_GET['JWT'];
-    } elseif (isset($_SERVER['HTTP_AUTHORIZATION'])) {
-        $token = str_replace('Bearer ', '', $_SERVER['HTTP_AUTHORIZATION']);
-    } elseif (isset($_SERVER['HTTP_X_AUTHORIZATION'])) {
-        $token = str_replace('Bearer ', '', $_SERVER['HTTP_X_AUTHORIZATION']);
-    }
-
-    if (!empty($token)) {
-        // Comunica al plugin Simple JWT Login che abbiamo trovato il token
-        $_GET['JWT'] = $token;
-    }
-
-    return $user_id;
-}, 20);
-
-// 3. Rimuovi i filtri standard di WordPress che potrebbero interferire
-remove_filter('rest_pre_serve_request', 'rest_send_cors_headers');
+// Forza gli header CORS per il nuovo endpoint
+add_filter('rest_pre_serve_request', function($value) {
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+    header('Access-Control-Allow-Headers: Authorization, Content-Type, JWT');
+    return $value;
+}, 11);
