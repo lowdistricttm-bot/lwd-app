@@ -5,18 +5,24 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import BottomNav from '@/components/BottomNav';
 import ProductCard from '@/components/ProductCard';
-import { Search, ChevronDown, Loader2 } from 'lucide-react';
+import { Search, ChevronDown, Loader2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useWcProducts, useWcCategories } from '@/hooks/use-woocommerce';
+import { useWcProducts, useWcCategories, useWcTags } from '@/hooks/use-woocommerce';
 
 const Shop = () => {
   const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
+  const [activeTagId, setActiveTagId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: categories, isLoading: loadingCats } = useWcCategories();
-  const { data: products, isLoading: loadingProducts } = useWcProducts(
-    activeCategoryId ? `category=${activeCategoryId}` : ""
-  );
+  const { data: tags, isLoading: loadingTags } = useWcTags();
+  
+  // Costruiamo i parametri di ricerca
+  let params = "";
+  if (activeCategoryId) params += `category=${activeCategoryId}`;
+  if (activeTagId) params += `${params ? '&' : ''}tag=${activeTagId}`;
+
+  const { data: products, isLoading: loadingProducts } = useWcProducts(params);
 
   const filteredProducts = products?.filter((p: any) => 
     p.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -40,8 +46,8 @@ const Shop = () => {
       </div>
 
       <div className="px-6 max-w-7xl mx-auto -mt-8 relative z-20">
-        {/* Categories Filter Dinamico */}
-        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-8">
+        {/* Categorie Dinamiche */}
+        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-4">
           <button
             onClick={() => setActiveCategoryId(null)}
             className={cn(
@@ -68,7 +74,28 @@ const Shop = () => {
           ))}
         </div>
 
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-12 py-8 border-t border-white/5">
+        {/* Collezioni (Tag) Dinamiche */}
+        <div className="flex items-center gap-4 overflow-x-auto no-scrollbar pb-8 border-b border-white/5">
+          <span className="text-[9px] font-black uppercase text-gray-600 tracking-widest shrink-0">Collezioni:</span>
+          {tags?.map((tag: any) => (
+            <button
+              key={tag.id}
+              onClick={() => setActiveTagId(activeTagId === tag.id ? null : tag.id)}
+              className={cn(
+                "whitespace-nowrap px-4 py-2 text-[9px] font-bold uppercase tracking-tighter transition-all rounded-full border",
+                activeTagId === tag.id 
+                  ? "bg-white text-black border-white" 
+                  : "bg-transparent border-white/10 text-gray-400 hover:border-white/30"
+              )}
+              dangerouslySetInnerHTML={{ __html: tag.name.toUpperCase() }}
+            />
+          ))}
+          {activeTagId && (
+            <button onClick={() => setActiveTagId(null)} className="text-red-600"><X size={14} /></button>
+          )}
+        </div>
+
+        <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-12 py-8">
           <div className="relative w-full md:w-96">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
             <input 
@@ -79,17 +106,12 @@ const Shop = () => {
               className="w-full bg-zinc-900 border-none py-5 pl-12 pr-4 text-sm focus:ring-1 focus:ring-red-600 outline-none font-bold"
             />
           </div>
-          <div className="flex items-center gap-4 w-full md:w-auto">
-            <button className="flex-1 md:flex-none flex items-center justify-between gap-6 bg-zinc-900 px-8 py-5 text-[10px] font-black uppercase tracking-widest italic">
-              ORDINA PER <ChevronDown size={14} />
-            </button>
-          </div>
         </div>
 
         {loadingProducts ? (
           <div className="py-32 flex flex-col items-center justify-center gap-4">
             <Loader2 className="animate-spin text-red-600" size={40} />
-            <p className="text-xs font-black uppercase tracking-widest text-gray-500">Sincronizzazione con il sito...</p>
+            <p className="text-xs font-black uppercase tracking-widest text-gray-500">Sincronizzazione...</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-12 md:gap-x-8 md:gap-y-16">
@@ -106,12 +128,6 @@ const Shop = () => {
                 }} 
               />
             ))}
-          </div>
-        )}
-
-        {!loadingProducts && filteredProducts?.length === 0 && (
-          <div className="py-32 text-center">
-            <p className="text-gray-500 font-black uppercase tracking-widest italic">Nessun prodotto trovato.</p>
           </div>
         )}
       </div>

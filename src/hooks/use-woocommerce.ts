@@ -15,6 +15,13 @@ export const useWcCategories = () => {
   });
 };
 
+export const useWcTags = () => {
+  return useQuery({
+    queryKey: ['wc-tags'],
+    queryFn: () => wcFetch('/products/tags?per_page=100&hide_empty=true'),
+  });
+};
+
 export const useWcProduct = (id: string | undefined) => {
   return useQuery({
     queryKey: ['wc-product', id],
