@@ -1,13 +1,13 @@
 /**
- * LOW DISTRICT - EMERGENCY BRIDGE
- * Forza il recupero dei dati ignorando i filtri di privacy.
+ * LOW DISTRICT - CORS & BRIDGE ULTIMATE
+ * Risolve i problemi di connessione tra App e WordPress.
  */
 
 add_action('rest_api_init', function () {
     register_rest_route('lowdistrict/v1', '/activity', array(
         'methods' => 'GET',
         'callback' => function($request) {
-            // 1. Proviamo a forzare l'utente se il token è presente
+            // Forza l'utente tramite JWT se presente
             $token = $request->get_param('JWT');
             if (!empty($token) && class_exists('T_JWT_Authentication')) {
                 $jwt_auth = new T_JWT_Authentication();
@@ -17,52 +17,31 @@ add_action('rest_api_init', function () {
                 }
             }
 
-            // 2. Recupero brutale di TUTTE le attività recenti
             if (function_exists('bp_activity_get')) {
-                $activities = bp_activity_get(array(
-                    'per_page' => 20,
-                    'spam'     => 'ham_only',
-                    'privacy'  => 'public', // Proviamo a chiedere solo quelle pubbliche prima
-                ));
-
-                // Se è ancora vuoto, proviamo senza alcun filtro di tipo
-                if (empty($activities['activities'])) {
-                    $activities = bp_activity_get(array(
-                        'per_page' => 10,
-                        'show_hidden' => true
-                    ));
-                }
-
+                $activities = bp_activity_get(array('per_page' => 20, 'display_comments' => 'stream'));
                 $response = array();
-                if (!empty($activities['activities'])) {
-                    foreach ($activities['activities'] as $at) {
-                        $response[] = array(
-                            'id' => $at->id,
-                            'user_id' => $at->user_id,
-                            'user_name' => bp_core_get_user_displayname($at->user_id),
-                            'user_avatar' => array(
-                                'thumb' => bp_core_fetch_avatar(array('item_id' => $at->user_id, 'html' => false))
-                            ),
-                            'content' => $at->content,
-                            'date' => $at->date_recorded,
-                            'type' => $at->type
-                        );
-                    }
+                foreach ($activities['activities'] as $at) {
+                    $response[] = array(
+                        'id' => $at->id,
+                        'user_name' => bp_core_get_user_displayname($at->user_id),
+                        'user_avatar' => array('thumb' => bp_core_fetch_avatar(array('item_id' => $at->user_id, 'html' => false))),
+                        'content' => $at->content,
+                        'date' => $at->date_recorded
+                    );
                 }
-                
                 return rest_ensure_response($response);
             }
-            
-            return new WP_Error('no_bp', 'BuddyPress non attivo', array('status' => 500));
+            return array();
         },
         'permission_callback' => '__return_true',
     ));
 });
 
-// Header CORS per evitare blocchi browser
+// Forza i permessi CORS per l'App
+remove_filter('rest_pre_serve_request', 'rest_send_cors_headers');
 add_filter('rest_pre_serve_request', function($value) {
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-    header('Access-Control-Allow-Headers: Authorization, Content-Type, JWT');
+    header('Access-Control-Allow-Headers: Authorization, Content-Type, JWT, X-Requested-With');
     return $value;
-}, 11);
+}, 99);
