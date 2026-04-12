@@ -7,7 +7,7 @@ export const useBpActivity = () => {
     queryKey: ['bp-activity'],
     queryFn: async () => {
       const token = localStorage.getItem('ld_auth_token');
-      // Per ora proviamo a chiamare l'endpoint anche senza token se necessario
+      // Aggiungiamo un timestamp per evitare la cache del browser e avere dati sempre freschi
       const url = `${BASE_URL}/lowdistrict/v1/activity?_=${Date.now()}`;
       
       try {
@@ -30,7 +30,9 @@ export const useBpActivity = () => {
         throw err;
       }
     },
-    staleTime: 1000 * 10,
+    staleTime: 1000 * 30, // I dati sono considerati "vecchi" dopo 30 secondi
+    refetchInterval: 1000 * 60, // Controlla automaticamente nuovi post ogni minuto
+    refetchOnWindowFocus: true, // Aggiorna quando l'utente torna sull'app
     retry: 1
   });
 };
