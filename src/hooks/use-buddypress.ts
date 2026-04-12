@@ -8,7 +8,6 @@ export const useBpActivity = () => {
     queryFn: async () => {
       const token = localStorage.getItem('ld_auth_token');
       const headers: HeadersInit = { 
-        'Content-Type': 'application/json',
         'Accept': 'application/json'
       };
       
@@ -16,22 +15,24 @@ export const useBpActivity = () => {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const endpoints = ['/buddypress/v1/activity', '/bp/v1/activity'];
-      let lastError = "";
+      // AlterVista spesso preferisce l'endpoint abbreviato
+      const endpoints = ['/bp/v1/activity', '/buddypress/v1/activity'];
+      let lastError = "Impossibile connettersi al server.";
       
       for (const endpoint of endpoints) {
         try {
-          const response = await fetch(`${BASE_URL}${endpoint}?per_page=10&display_name=true`, { 
+          const response = await fetch(`${BASE_URL}${endpoint}?per_page=10`, { 
             headers,
-            mode: 'cors' // Forza il controllo CORS
+            method: 'GET',
+            mode: 'cors'
           });
           
           if (response.ok) return response.json();
           
           const errorData = await response.json().catch(() => ({}));
-          lastError = errorData.message || `Errore ${response.status}`;
+          lastError = errorData.message || `Errore Server ${response.status}`;
         } catch (e: any) {
-          lastError = e.message || "Errore di connessione di rete (CORS?)";
+          lastError = "Errore di rete: AlterVista potrebbe bloccare la connessione (CORS).";
         }
       }
 
