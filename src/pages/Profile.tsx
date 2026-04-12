@@ -14,6 +14,7 @@ import { showSuccess } from '@/utils/toast';
 const Profile = () => {
   const [activeTab, setActiveTab] = useState<'activity' | 'orders'>('activity');
   const [imgError, setImgError] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const { user, logout, refreshUser, isLoading, isRefreshing } = useAuth();
   const { data: customerCount } = useWcCustomerCount();
   const location = useLocation();
@@ -26,15 +27,16 @@ const Profile = () => {
 
   const handleRefresh = async () => {
     setImgError(false);
+    setRefreshKey(prev => prev + 1);
     await refreshUser();
-    showSuccess("Dati aggiornati");
+    showSuccess("Profilo sincronizzato");
   };
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
         <Loader2 className="animate-spin text-red-600 mb-4" size={40} />
-        <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Caricamento...</p>
+        <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Verifica sessione...</p>
       </div>
     );
   }
@@ -47,15 +49,22 @@ const Profile = () => {
           <UserIcon size={40} className="text-gray-700" />
         </div>
         <h1 className="text-3xl font-black uppercase tracking-tighter mb-2 italic">Area Riservata</h1>
+        <p className="text-gray-500 mb-8 uppercase text-[10px] font-black tracking-widest">Accedi per gestire il tuo garage e i tuoi ordini</p>
         <Link to="/auth" state={{ from: location.pathname }}>
-          <Button className="bg-red-600 text-white font-black uppercase tracking-widest px-12 py-6 rounded-none italic">
-            Accedi
+          <Button className="bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest px-12 py-6 rounded-none italic">
+            Accedi / Registrati
           </Button>
         </Link>
         <BottomNav />
       </div>
     );
   }
+
+  const stats = [
+    { label: 'Attività', value: '0' },
+    { label: 'Amici', value: '0' },
+    { label: 'Gruppi', value: '0' },
+  ];
 
   return (
     <div className="min-h-screen bg-black text-white pb-24">
@@ -64,20 +73,17 @@ const Profile = () => {
       <div className="pt-24 px-6 max-w-2xl mx-auto">
         <div className="flex items-start justify-between mb-8">
           <div className="relative">
-            {/* Container Avatar Semplificato */}
-            <div className="w-24 h-24 rounded-full bg-zinc-900 border-2 border-red-600 overflow-hidden flex items-center justify-center">
+            <div className="w-24 h-24 rounded-[2rem] bg-zinc-900 border-2 border-red-600 p-1 rotate-3 flex items-center justify-center overflow-hidden">
               <img 
+                key={`${user.avatar}-${refreshKey}`}
                 src={imgError || !user.avatar ? defaultAvatar : user.avatar} 
-                alt="Profile" 
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  console.log("Errore caricamento immagine, provo fallback");
-                  setImgError(true);
-                }}
+                alt="avatar" 
+                className="w-full h-full rounded-[1.8rem] object-cover -rotate-3" 
+                onError={() => setImgError(true)}
               />
             </div>
-            <div className="absolute -bottom-1 -right-1 bg-red-600 text-white text-[8px] font-black px-2 py-1 rounded-full">
-              PRO
+            <div className="absolute -bottom-2 -right-2 bg-red-600 text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-lg">
+              MEMBER
             </div>
           </div>
           
@@ -85,7 +91,7 @@ const Profile = () => {
             <button 
               onClick={handleRefresh} 
               disabled={isRefreshing}
-              className="p-3 bg-zinc-900 border border-white/5 rounded-2xl hover:bg-zinc-800 transition-all"
+              className="p-3 bg-zinc-900 border border-white/5 rounded-2xl hover:bg-zinc-800 transition-all disabled:opacity-50"
             >
               <RefreshCw size={20} className={cn("text-gray-400", isRefreshing && "animate-spin text-red-600")} />
             </button>
@@ -101,6 +107,7 @@ const Profile = () => {
           
           <div className="flex flex-wrap gap-4 text-gray-500 text-[10px] font-black uppercase tracking-tight mb-6">
             <span className="flex items-center gap-1"><MapPin size={14} /> Community Member</span>
+            <span className="flex items-center gap-1"><LinkIcon size={14} /> lowdistrict.it</span>
           </div>
 
           <div className="bg-zinc-900/50 border border-white/5 p-4 rounded-2xl flex items-center justify-between">
@@ -115,18 +122,12 @@ const Profile = () => {
         </div>
 
         <div className="grid grid-cols-3 gap-4 py-6 border-y border-white/5 mb-8">
-          <div className="text-center">
-            <p className="font-black text-2xl tracking-tighter italic">0</p>
-            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Attività</p>
-          </div>
-          <div className="text-center">
-            <p className="font-black text-2xl tracking-tighter italic">0</p>
-            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Amici</p>
-          </div>
-          <div className="text-center">
-            <p className="font-black text-2xl tracking-tighter italic">0</p>
-            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Gruppi</p>
-          </div>
+          {stats.map((stat, i) => (
+            <div key={i} className="text-center">
+              <p className="font-black text-2xl tracking-tighter italic">{stat.value}</p>
+              <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">{stat.label}</p>
+            </div>
+          ))}
         </div>
 
         <div className="flex gap-8 mb-8 border-b border-white/5">
@@ -150,19 +151,17 @@ const Profile = () => {
           </button>
         </div>
 
-        <div className="py-20 text-center border border-dashed border-white/5">
-          {activeTab === 'activity' ? (
-            <>
-              <MessageSquare className="mx-auto text-gray-800 mb-4" size={40} />
-              <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Nessuna attività recente</p>
-            </>
-          ) : (
-            <>
-              <Package className="mx-auto text-gray-800 mb-4" size={40} />
-              <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Nessun ordine trovato</p>
-            </>
-          )}
-        </div>
+        {activeTab === 'activity' ? (
+          <div className="py-20 text-center border border-dashed border-white/5">
+            <MessageSquare className="mx-auto text-gray-800 mb-4" size={40} />
+            <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Nessuna attività recente</p>
+          </div>
+        ) : (
+          <div className="py-20 text-center border border-dashed border-white/5">
+            <Package className="mx-auto text-gray-800 mb-4" size={40} />
+            <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Nessun ordine trovato</p>
+          </div>
+        )}
 
         <div className="mt-12">
           <Button 
