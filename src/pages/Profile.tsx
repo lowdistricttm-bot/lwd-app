@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
-import { Settings as SettingsIcon, MapPin, Link as LinkIcon, User as UserIcon, MessageSquare, Loader2, RefreshCw, Package, ChevronRight, Heart, Car } from 'lucide-react';
+import { Settings as SettingsIcon, MapPin, User as UserIcon, MessageSquare, Loader2, RefreshCw, Package, ChevronRight, Heart, Car, Ticket } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
@@ -15,19 +15,19 @@ import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 
 const Profile = () => {
-  const [activeTab, setActiveTab] = useState<'activity' | 'orders'>('activity');
+  const [activeTab, setActiveTab] = useState<'activity' | 'orders' | 'applications'>('activity');
   const [imgError, setImgError] = useState(false);
   const [refreshKey, setRefreshKey] = useState(Date.now());
   
   const { user, logout, refreshUser, isLoading, isRefreshing } = useAuth();
-  const { data: orders, isLoading: isLoadingOrders } = useWcUserOrders(user?.id);
+  const { data: allOrders, isLoading: isLoadingOrders } = useWcUserOrders(user?.id);
   const { data: activityData, isLoading: isLoadingActivity } = useBpActivity(user?.id);
   const { data: memberData } = useBpMemberData(user?.id);
   
   const location = useLocation();
   const defaultAvatar = "https://www.lowdistrict.it/wp-content/uploads/placeholder.png";
 
-  // Estrazione dati XProfile (Città, Auto, ecc)
+  // Estrazione dati XProfile
   const xProfileFields = useMemo(() => {
     if (!memberData?.xprofile?.groups) return {};
     const fields: Record<string, string> = {};
@@ -39,12 +39,34 @@ const Profile = () => {
     return fields;
   }, [memberData]);
 
-  // FILTRO RIGOROSO: Mostriamo solo i post dove l'ID dell'autore corrisponde all'ID dell'utente loggato
+  // Filtro post personali
   const myActivities = useMemo(() => {
     const allPosts = activityData?.pages.flat() || [];
     if (!user?.id) return [];
     return allPosts.filter((post: any) => parseInt(post.user_id) === user.id);
   }, [activityData, user?.id]);
+
+  // SEPARAZIONE ORDINI E CANDIDATURE
+  // Assumiamo che le candidature siano ordini che contengono prodotti legati agli eventi (ID categoria 31 o simili)
+  // Per ora filtriamo in base al nome del prodotto o metadati se disponibili
+  const { merchOrders, eventApplications } = useMemo(() => {
+    const orders = allOrders || [];
+    const merch = orders.filter((o: any) => 
+      !o.line_items.some((item: any) => 
+        item.name.toLowerCase().includes('evento') || 
+        item.name.toLowerCase().includes('selection') ||
+        item.name.toLowerCase().includes('candidatura')
+      )
+    );
+    const apps = orders.filter((o: any) => 
+      o.line_items.some((item: any) => 
+        item.name.toLowerCase().includes('evento') || 
+        item.name.toLowerCase().includes('selection') ||
+        item.name.toLowerCase().includes('candidatura')
+      )
+    );
+    return { merchOrders: merch, eventApplications: apps };
+  }, [allOrders]);
 
   useEffect(() => {
     if (user) refreshUser();
@@ -140,107 +162,163 @@ const Profile = () => {
         </div>
 
         {/* Statistiche Personali */}
-        <div className="grid grid-cols-2 gap-4 py-6 border-y border-white/5 mb-8">
+        <div className="grid grid-cols-3 gap-2 py-6 border-y border-white/5 mb-8">
           <div className="text-center border-r border-white/5">
-            <p className="font-black text-2xl tracking-tighter italic">{myActivities.length}</p>
-            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">I Miei Post</p>
+            <p className="font-black text-xl tracking-tighter italic">{myActivities.length}</p>
+            <p className="text-[8px] text-gray-500 uppercase font-black tracking-widest">Post</p>
+          </div>
+          <div className="text-center border-r border-white/5">
+            <p className="font-black text-xl tracking-tighter italic">{merchOrders.length}</p>
+            <p className="text-[8px] text-gray-500 uppercase font-black tracking-widest">Ordini</p>
           </div>
           <div className="text-center">
-            <p className="font-black text-2xl tracking-tighter italic">{orders?.length || 0}</p>
-            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Ordini & Selezioni</p>
+            <p className="font-black text-xl tracking-tighter italic">{eventApplications.length}</p>
+            <p className="text-[8px] text-gray-500 uppercase font-black tracking-widest">Selezioni</p>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-8 mb-8 border-b border-white/5">
+        <div className="flex justify-between mb-8 border-b border-white/5">
           <button 
             onClick={() => setActiveTab('activity')}
             className={cn(
-              "pb-4 text-[10px] font-black uppercase tracking-widest transition-all",
+              "pb-4 text-[9px] font-black uppercase tracking-widest transition-all flex-1",
               activeTab === 'activity' ? "border-b-2 border-red-600 text-white" : "text-gray-600"
             )}
           >
-            La Mia Bacheca
+            Bacheca
           </button>
           <button 
             onClick={() => setActiveTab('orders')}
             className={cn(
-              "pb-4 text-[10px] font-black uppercase tracking-widest transition-all",
+              "pb-4 text-[9px] font-black uppercase tracking-widest transition-all flex-1",
               activeTab === 'orders' ? "border-b-2 border-red-600 text-white" : "text-gray-600"
             )}
           >
-            Storico Ordini
+            Ordini
+          </button>
+          <button 
+            onClick={() => setActiveTab('applications')}
+            className={cn(
+              "pb-4 text-[9px] font-black uppercase tracking-widest transition-all flex-1",
+              activeTab === 'applications' ? "border-b-2 border-red-600 text-white" : "text-gray-600"
+            )}
+          >
+            Candidature
           </button>
         </div>
 
         {/* Contenuto Tab */}
-        {activeTab === 'activity' ? (
-          <div className="space-y-6">
-            {isLoadingActivity ? (
-              <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-red-600" /></div>
-            ) : myActivities.length === 0 ? (
-              <div className="py-20 text-center border border-dashed border-white/5 rounded-3xl">
-                <MessageSquare className="mx-auto text-gray-800 mb-4" size={40} />
-                <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Non hai ancora pubblicato nulla</p>
-              </div>
-            ) : (
-              myActivities.map((post: any) => (
-                <div key={post.id} className="bg-zinc-900/30 border border-white/5 p-5 rounded-2xl">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest">
-                      {format(new Date(post.date), 'dd MMM yyyy', { locale: it })}
-                    </span>
-                    <Heart size={14} className="text-gray-700" />
-                  </div>
-                  <div 
-                    className="text-sm text-gray-300 prose prose-invert max-w-none line-clamp-4 activity-content"
-                    dangerouslySetInnerHTML={{ __html: post.content }}
-                  />
+        <div className="min-h-[300px]">
+          {activeTab === 'activity' && (
+            <div className="space-y-6">
+              {isLoadingActivity ? (
+                <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-red-600" /></div>
+              ) : myActivities.length === 0 ? (
+                <div className="py-20 text-center border border-dashed border-white/5 rounded-3xl">
+                  <MessageSquare className="mx-auto text-gray-800 mb-4" size={40} />
+                  <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Nessun post pubblicato</p>
                 </div>
-              ))
-            )}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {isLoadingOrders ? (
-              <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-red-600" /></div>
-            ) : !orders || orders.length === 0 ? (
-              <div className="py-20 text-center border border-dashed border-white/5 rounded-3xl">
-                <Package className="mx-auto text-gray-800 mb-4" size={40} />
-                <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Nessun ordine o candidatura</p>
-              </div>
-            ) : (
-              orders.map((order: any) => (
-                <div key={order.id} className="bg-zinc-900/50 border border-white/5 p-4 flex items-center gap-4 group hover:border-white/10 transition-all">
-                  <div className="w-12 h-12 shrink-0 overflow-hidden bg-zinc-800 rounded-xl">
-                    <img 
-                      src={order.line_items[0]?.image?.src || defaultAvatar} 
-                      alt="" 
-                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" 
+              ) : (
+                myActivities.map((post: any) => (
+                  <div key={post.id} className="bg-zinc-900/30 border border-white/5 p-5 rounded-2xl">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest">
+                        {format(new Date(post.date), 'dd MMM yyyy', { locale: it })}
+                      </span>
+                      <Heart size={14} className="text-gray-700" />
+                    </div>
+                    <div 
+                      className="text-sm text-gray-300 prose prose-invert max-w-none line-clamp-4 activity-content"
+                      dangerouslySetInnerHTML={{ __html: post.content }}
                     />
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-black text-xs uppercase tracking-tight italic truncate max-w-[150px]">
-                        {order.line_items[0]?.name}
-                      </h3>
-                      <span className={cn(
-                        "text-[8px] font-black uppercase px-2 py-0.5",
-                        order.status === 'completed' ? "bg-green-500/10 text-green-500" : "bg-amber-500/10 text-amber-500"
-                      )}>
-                        {order.status}
-                      </span>
-                    </div>
-                    <p className="text-[9px] text-gray-500 font-bold uppercase mt-1">
-                      #{order.id} • €{order.total}
-                    </p>
-                  </div>
-                  <ChevronRight size={16} className="text-gray-700" />
+                ))
+              )}
+            </div>
+          )}
+
+          {activeTab === 'orders' && (
+            <div className="space-y-4">
+              {isLoadingOrders ? (
+                <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-red-600" /></div>
+              ) : merchOrders.length === 0 ? (
+                <div className="py-20 text-center border border-dashed border-white/5 rounded-3xl">
+                  <Package className="mx-auto text-gray-800 mb-4" size={40} />
+                  <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Nessun ordine di merchandising</p>
                 </div>
-              ))
-            )}
-          </div>
-        )}
+              ) : (
+                merchOrders.map((order: any) => (
+                  <div key={order.id} className="bg-zinc-900/50 border border-white/5 p-4 flex items-center gap-4 group hover:border-white/10 transition-all">
+                    <div className="w-12 h-12 shrink-0 overflow-hidden bg-zinc-800 rounded-xl">
+                      <img 
+                        src={order.line_items[0]?.image?.src || defaultAvatar} 
+                        alt="" 
+                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" 
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-black text-xs uppercase tracking-tight italic truncate max-w-[150px]">
+                          {order.line_items[0]?.name}
+                        </h3>
+                        <span className="text-[8px] font-black uppercase px-2 py-0.5 bg-white/5 text-gray-400">
+                          {order.status}
+                        </span>
+                      </div>
+                      <p className="text-[9px] text-gray-500 font-bold uppercase mt-1">
+                        #{order.id} • €{order.total}
+                      </p>
+                    </div>
+                    <ChevronRight size={16} className="text-gray-700" />
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
+          {activeTab === 'applications' && (
+            <div className="space-y-4">
+              {isLoadingOrders ? (
+                <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-red-600" /></div>
+              ) : eventApplications.length === 0 ? (
+                <div className="py-20 text-center border border-dashed border-white/5 rounded-3xl">
+                  <Ticket className="mx-auto text-gray-800 mb-4" size={40} />
+                  <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Nessuna candidatura inviata</p>
+                </div>
+              ) : (
+                eventApplications.map((app: any) => (
+                  <div key={app.id} className="bg-zinc-900/50 border border-red-600/10 p-4 flex items-center gap-4 group hover:border-red-600/30 transition-all">
+                    <div className="w-12 h-12 shrink-0 overflow-hidden bg-zinc-800 rounded-xl">
+                      <img 
+                        src={app.line_items[0]?.image?.src || defaultAvatar} 
+                        alt="" 
+                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" 
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-black text-xs uppercase tracking-tight italic truncate max-w-[150px]">
+                          {app.line_items[0]?.name}
+                        </h3>
+                        <span className={cn(
+                          "text-[8px] font-black uppercase px-2 py-0.5",
+                          app.status === 'completed' ? "bg-green-500/10 text-green-500" : "bg-amber-500/10 text-amber-500"
+                        )}>
+                          {app.status === 'completed' ? 'Approvato' : 'In Revisione'}
+                        </span>
+                      </div>
+                      <p className="text-[9px] text-gray-500 font-bold uppercase mt-1">
+                        Candidatura #{app.id} • {format(new Date(app.date_created), 'dd MMM yyyy', { locale: it })}
+                      </p>
+                    </div>
+                    <ChevronRight size={16} className="text-gray-700" />
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
 
         <div className="mt-12">
           <Button 
