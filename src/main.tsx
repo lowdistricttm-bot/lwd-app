@@ -2,15 +2,15 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./globals.css";
 
-// Registrazione Service Worker per PWA
+// Registrazione Service Worker più robusta
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
+    navigator.serviceWorker.register('/sw.js', { scope: '/' })
       .then(registration => {
-        console.log('SW registrato con successo:', registration.scope);
+        console.log('Low District SW pronto:', registration.scope);
       })
       .catch(err => {
-        console.log('Registrazione SW fallita:', err);
+        console.error('Errore registrazione SW:', err);
       });
   });
 }
