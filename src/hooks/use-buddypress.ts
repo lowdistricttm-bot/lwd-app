@@ -3,45 +3,45 @@ import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tansta
 const BASE_URL = "https://www.lowdistrict.it/wp-json";
 
 /**
- * Funzione di fetch ultra-robusta per BuddyPress
- * Gestisce i problemi di CORS e Autenticazione JWT
+ * Funzione di fetch ottimizzata basata sulla logica funzionante del profilo.
+ * Usa il parametro JWT nell'URL che è l'unico metodo accettato dal server lowdistrict.it
  */
 const bpFetch = async (endpoint: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('ld_auth_token');
+  
+  // Costruiamo l'URL in modo pulito
   const url = new URL(`${BASE_URL}${endpoint}`);
   
-  const headers = new Headers(options.headers || {});
-  headers.set('Accept', 'application/json');
-
-  // Se abbiamo un token, lo passiamo sia nell'Header che come parametro di sicurezza
-  // Questo massimizza la compatibilità con diverse configurazioni di server/firewall
+  // Aggiungiamo il token solo se presente
   if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
     url.searchParams.set('JWT', token);
   }
 
   try {
     const response = await fetch(url.toString(), {
       ...options,
-      headers,
-      mode: 'cors',
-      cache: 'no-cache' // Evita di ricevere risposte 401/400 memorizzate
+      headers: {
+        ...options.headers,
+        'Accept': 'application/json',
+      },
+      mode: 'cors'
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: `Errore ${response.status}` }));
-      console.error(`[BuddyPress API Error ${response.status}]`, errorData);
-      throw new Error(errorData.message || `Errore server ${response.status}`);
+      // Se fallisce con errore di autorizzazione, proviamo a caricare il contenuto pubblico (senza token)
+      if (response.status === 401 || response.status === 400) {
+        const publicUrl = new URL(`${BASE_URL}${endpoint}`);
+        const publicRes = await fetch(publicUrl.toString(), { mode: 'cors' });
+        if (publicRes.ok) return await publicRes.json();
+      }
+      
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Errore ${response.status}`);
     }
 
     return await response.json();
   } catch (err: any) {
-    // Se fallisce con il token (magari è scaduto), proviamo una volta senza token per i contenuti pubblici
-    if (token && !options.method || options.method === 'GET') {
-      url.searchParams.delete('JWT');
-      const publicRes = await fetch(url.toString(), { mode: 'cors' });
-      if (publicRes.ok) return await publicRes.json();
-    }
+    console.error(`[BP API Error] ${endpoint}:`, err.message);
     throw err;
   }
 };
@@ -50,25 +50,22 @@ export const useBpActivity = (userId?: number) => {
   return useInfiniteQuery({
     queryKey: ['bp-activity', userId],
     queryFn: async ({ pageParam = 1 }) => {
-      let endpoint = `/buddypress/v1/activity?page=${pageParam}&per_page=10&display_comments=threaded`;
+      // Riduciamo i parametri al minimo per evitare l'errore 400
+      let endpoint = `/buddypress/v1/activity?page=${pageParam}&per_page=10`;
       if (userId) endpoint += `&user_id=${userId}`;
       
-      try {
-        const data = await bpFetch(endpoint);
-        // BuddyPress può restituire l'array direttamente o dentro un oggetto
-        if (Array.isArray(data)) return data;
-        if (data && data.activities && Array.isArray(data.activities)) return data.activities;
-        return [];
-      } catch (err: any) {
-        console.error("Errore critico bacheca:", err.message);
-        throw err;
-      }
+      const data = await bpFetch(endpoint);
+      
+      // Gestione flessibile del formato di risposta BuddyPress
+      if (Array.isArray(data)) return data;
+      if (data && data.activities) return data.activities;
+      return [];
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
-      return lastPage.length === 10 ? allPages.length + 1 : undefined;
+      return lastPage && lastPage.length === 10 ? allPages.length + 1 : undefined;
     },
-    staleTime: 1000 * 15, // Aggiorna più spesso per sincronizzazione real-time
+    staleTime: 1000 * 20,
   });
 };
 
@@ -105,10 +102,11 @@ export const useBpMemberData = (userId: number | undefined) => {
   });
 };
 
-export const useBpMembers = (perPage = 100) => {
+export const useBpMembers = (perPage = 10) => {
   return useQuery({
     queryKey: ['bp-members', perPage],
     queryFn: async () => {
+      // Usiamo un perPage più basso (10) per evitare timeout o errori 400
       return bpFetch(`/buddypress/v1/members?per_page=${perPage}&type=active`);
     },
     staleTime: 1000 * 60 * 10,
