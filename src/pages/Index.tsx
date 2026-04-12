@@ -17,8 +17,8 @@ const Index = () => {
     <main className="min-h-screen bg-black text-white selection:bg-red-600 selection:text-white pb-20 md:pb-0">
       <Navbar />
       
-      {/* Padding top per compensare la Navbar fixed su tutte le risoluzioni */}
-      <div className="pt-20 md:pt-24">
+      {/* Padding top fisso di 80px (h-20) per far apparire le storie esattamente sotto la Navbar */}
+      <div className="pt-20">
         <Stories />
       </div>
       
