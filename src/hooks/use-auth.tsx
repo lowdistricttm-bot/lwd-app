@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { showSuccess, showError } from '@/utils/toast';
 
 interface User {
@@ -19,6 +19,7 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<void>;
   register: (userData: any) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -35,19 +36,39 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('ld_user_data');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        // PULIZIA AUTOMATICA: Se l'avatar è Gravatar o vuoto, usa il placeholder
-        if (!parsed.avatar || parsed.avatar.includes('gravatar.com') || parsed.avatar.includes('secure.gravatar')) {
-          parsed.avatar = defaultAvatar;
-        }
-        return parsed;
-      }
+      return saved ? JSON.parse(saved) : null;
     }
     return null;
   });
   
   const [isLoading, setIsLoading] = useState(false);
+
+  const fetchLatestUserData = useCallback(async (userId: number, currentToken: string) => {
+    try {
+      const userRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${userId}?JWT=${currentToken}`);
+      if (userRes.ok) {
+        const userData = await userRes.json();
+        // Prendiamo l'avatar più grande disponibile
+        const wpAvatar = userData.avatar_urls?.['96'] || userData.avatar_urls?.['48'];
+        
+        setUser(prev => {
+          if (!prev) return null;
+          const updated = { ...prev, avatar: wpAvatar || defaultAvatar };
+          localStorage.setItem('ld_user_data', JSON.stringify(updated));
+          return updated;
+        });
+      }
+    } catch (e) {
+      console.error("Errore sincronizzazione utente:", e);
+    }
+  }, [defaultAvatar]);
+
+  // Sincronizza i dati all'avvio se loggato
+  useEffect(() => {
+    if (user?.id && token) {
+      fetchLatestUserData(user.id, token);
+    }
+  }, []);
 
   const login = async (username: string, password: string) => {
     setIsLoading(true);
@@ -78,17 +99,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (!userId) throw new Error("ID utente non trovato");
 
+      // Recuperiamo subito l'avatar aggiornato
       let finalAvatar = defaultAvatar;
-      
       try {
         const userRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${userId}`);
         if (userRes.ok) {
           const userData = await userRes.json();
-          const wpAvatar = userData.avatar_urls?.['96'] || userData.avatar_urls?.['48'];
-          // Se l'avatar di WP non è Gravatar, usalo, altrimenti tieni il default
-          if (wpAvatar && !wpAvatar.includes('gravatar.com')) {
-            finalAvatar = wpAvatar;
-          }
+          finalAvatar = userData.avatar_urls?.['96'] || userData.avatar_urls?.['48'] || defaultAvatar;
         }
       } catch (e) {}
 
@@ -127,8 +144,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     showSuccess("Sessione chiusa");
   };
 
+  const refreshUser = async () => {
+    if (user?.id && token) {
+      await fetchLatestUserData(user.id, token);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, login, register: async () => {}, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, token, login, register: async () => {}, logout, refreshUser, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

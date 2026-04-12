@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
-import { Settings as SettingsIcon, Grid, Package, MapPin, Link as LinkIcon, ChevronRight, User as UserIcon, Users, MessageSquare, Loader2 } from 'lucide-react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Settings as SettingsIcon, MapPin, Link as LinkIcon, User as UserIcon, Users, MessageSquare, Loader2, RefreshCw } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
@@ -13,23 +13,16 @@ import { useWcCustomerCount } from '@/hooks/use-woocommerce';
 const Profile = () => {
   const [activeTab, setActiveTab] = useState<'activity' | 'orders'>('activity');
   const [imgError, setImgError] = useState(false);
-  const { user, logout, isLoading } = useAuth();
+  const { user, logout, refreshUser, isLoading } = useAuth();
   const { data: customerCount } = useWcCustomerCount();
-  const navigate = useNavigate();
   const location = useLocation();
 
-  // URL dell'immagine di default ufficiale del tuo sito
   const defaultAvatar = "https://www.lowdistrict.it/wp-content/uploads/placeholder.png";
 
-  // Logica ultra-robusta per l'avatar
-  const avatarSrc = useMemo(() => {
-    if (imgError || !user?.avatar) return defaultAvatar;
-    
-    // Se l'URL contiene gravatar, spesso è quello che genera l'icona rotta
-    if (user.avatar.includes('gravatar.com')) return defaultAvatar;
-    
-    return user.avatar;
-  }, [user?.avatar, imgError]);
+  // Sincronizza i dati quando si entra nel profilo
+  useEffect(() => {
+    if (user) refreshUser();
+  }, []);
 
   if (isLoading) {
     return (
@@ -74,8 +67,7 @@ const Profile = () => {
           <div className="relative">
             <div className="w-24 h-24 rounded-[2rem] bg-zinc-900 border-2 border-red-600 p-1 rotate-3 flex items-center justify-center overflow-hidden">
               <img 
-                key={avatarSrc} // Forza il refresh se l'URL cambia
-                src={avatarSrc} 
+                src={imgError || !user.avatar ? defaultAvatar : user.avatar} 
                 alt="avatar" 
                 className="w-full h-full rounded-[1.8rem] object-cover -rotate-3" 
                 onError={() => setImgError(true)}
@@ -87,6 +79,9 @@ const Profile = () => {
           </div>
           
           <div className="flex gap-2">
+            <button onClick={() => refreshUser()} className="p-3 bg-zinc-900 border border-white/5 rounded-2xl hover:bg-zinc-800 transition-all">
+              <RefreshCw size={20} className="text-gray-400" />
+            </button>
             <Link to="/settings" className="p-3 bg-zinc-900 border border-white/5 rounded-2xl hover:bg-zinc-800 transition-all">
               <SettingsIcon size={20} />
             </Link>

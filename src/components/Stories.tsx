@@ -27,7 +27,6 @@ const Stories = () => {
 
     const reader = new FileReader();
     reader.onload = (event) => {
-      // In un'app reale qui caricheresti sul server, qui simuliamo
       showSuccess("Storia caricata!");
     };
     reader.readAsDataURL(file);
