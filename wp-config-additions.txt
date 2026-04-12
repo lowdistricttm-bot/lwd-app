@@ -1,0 +1,2 @@
+define('JWT_AUTH_SECRET_KEY', 'una-stringa-molto-lunga-e-casuale-qui');
+define('JWT_AUTH_CORS_ENABLE', true);
