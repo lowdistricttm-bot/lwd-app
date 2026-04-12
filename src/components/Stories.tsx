@@ -7,6 +7,7 @@ import { AnimatePresence } from 'framer-motion';
 import { Plus } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useAuth } from '@/hooks/use-auth';
+import { saveStoryToDB, getStoryFromDB, deleteStoryFromDB } from '@/utils/db';
 
 interface PersistedStory {
   img: string;
@@ -17,40 +18,29 @@ const Stories = () => {
   const { user } = useAuth();
   const [imgError, setImgError] = useState(false);
   const [showViewer, setShowViewer] = useState(false);
+  const [myStory, setMyStory] = useState<PersistedStory | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Stato per la storia con caricamento da localStorage
-  const [myStory, setMyStory] = useState<PersistedStory | null>(() => {
-    if (typeof window === 'undefined') return null;
-    const saved = localStorage.getItem('ld_my_story');
-    if (saved) {
-      try {
-        const parsed: PersistedStory = JSON.parse(saved);
-        const now = Date.now();
-        const twentyFourHours = 24 * 60 * 60 * 1000;
-        
-        // Verifica se la storia è ancora valida (meno di 24h)
-        if (now - parsed.timestamp < twentyFourHours) {
-          return parsed;
-        } else {
-          localStorage.removeItem('ld_my_story');
-        }
-      } catch (e) {
-        return null;
-      }
-    }
-    return null;
-  });
-
-  // Effetto per controllare la scadenza ogni minuto
+  // Carica la storia dal database all'avvio
   useEffect(() => {
-    const interval = setInterval(() => {
+    const loadStory = async () => {
+      const savedStory = await getStoryFromDB();
+      if (savedStory) {
+        setMyStory(savedStory);
+      }
+    };
+    loadStory();
+  }, []);
+
+  // Controllo scadenza ogni minuto
+  useEffect(() => {
+    const interval = setInterval(async () => {
       if (myStory) {
         const now = Date.now();
         const twentyFourHours = 24 * 60 * 60 * 1000;
         if (now - myStory.timestamp >= twentyFourHours) {
           setMyStory(null);
-          localStorage.removeItem('ld_my_story');
+          await deleteStoryFromDB();
         }
       }
     }, 60000);
@@ -60,7 +50,7 @@ const Stories = () => {
   const defaultAvatar = "https://www.lowdistrict.it/wp-content/uploads/placeholder.png";
   const userAvatar = imgError || !user?.avatar ? defaultAvatar : user.avatar;
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
@@ -69,12 +59,17 @@ const Stories = () => {
     }
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       const result = event.target?.result as string;
       const storyData = { img: result, timestamp: Date.now() };
-      setMyStory(storyData);
-      localStorage.setItem('ld_my_story', JSON.stringify(storyData));
-      showSuccess("Storia caricata!");
+      
+      try {
+        await saveStoryToDB(result);
+        setMyStory(storyData);
+        showSuccess("Storia pubblicata!");
+      } catch (err) {
+        showError("Errore nel salvataggio della storia");
+      }
     };
     reader.readAsDataURL(file);
   };
