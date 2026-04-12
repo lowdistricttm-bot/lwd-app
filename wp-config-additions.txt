@@ -1,2 +1,3 @@
-define('JWT_AUTH_SECRET_KEY', 'una-stringa-molto-lunga-e-casuale-qui');
+/** Configurazione per JWT Authentication */
+define('JWT_AUTH_SECRET_KEY', 'LowDistrict_Secret_Key_2025_!_Secure_String');
 define('JWT_AUTH_CORS_ENABLE', true);
