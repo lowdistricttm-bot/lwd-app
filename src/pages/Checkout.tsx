@@ -23,8 +23,8 @@ const Checkout = () => {
     postcode: '',
     email: '',
     phone: '',
-    country: 'IT', // Campo obbligatorio per WooCommerce
-    state: 'MI'    // Campo spesso richiesto
+    country: 'IT',
+    state: 'MI'
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,7 +34,6 @@ const Checkout = () => {
   const finalizeOrder = async () => {
     setIsProcessing(true);
     try {
-      // Struttura dati corretta per WooCommerce Order API
       const orderData = {
         payment_method: "cod", 
         payment_method_title: "WhatsApp / Contatto Diretto",
@@ -71,7 +70,8 @@ const Checkout = () => {
   const openWhatsApp = () => {
     const message = `Ciao Low District! Ho appena effettuato un ordine dall'App.\n\nNome: ${formData.first_name} ${formData.last_name}\nTotale: €${total.toFixed(2)}\n\nVorrei procedere con il pagamento.`;
     const encodedMessage = encodeURIComponent(message);
-    window.open(`https://wa.me/393470000000?text=${encodedMessage}`, '_blank');
+    // Numero aggiornato fornito dall'utente
+    window.open(`https://wa.me/393200290721?text=${encodedMessage}`, '_blank');
   };
 
   if (step === 3) {
