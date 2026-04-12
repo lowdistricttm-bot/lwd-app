@@ -13,7 +13,6 @@ export const useBpActivity = () => {
         throw new Error("Effettua l'accesso per vedere la bacheca");
       }
 
-      // Usiamo l'endpoint pulito senza parametri extra che possono causare 400
       const url = `${BASE_URL}/buddypress/v1/activity?per_page=20`;
       
       try {
@@ -21,7 +20,9 @@ export const useBpActivity = () => {
           method: 'GET',
           headers: { 
             'Accept': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
+            // Alcuni server bloccano 'Authorization', proviamo con un header alternativo
+            'X-Authorization': `Bearer ${token}`
           },
           mode: 'cors'
         });
@@ -57,7 +58,8 @@ export const useBpMembers = (perPage = 100) => {
       const response = await fetch(url, {
         headers: { 
           'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'X-Authorization': `Bearer ${token}`
         }
       });
       

@@ -40,7 +40,7 @@ const GaragePreview = () => {
           <p className="text-[9px] font-mono text-red-400 uppercase mb-2">Diagnostica:</p>
           <ul className="text-[8px] font-mono text-gray-500 space-y-1">
             <li>• Endpoint: /buddypress/v1/activity</li>
-            <li>• Auth: JWT URL Parameter</li>
+            <li>• Auth: Bearer Header (Standard + X-Auth)</li>
             <li>• Status Code: {err.status || 'Network Error'}</li>
           </ul>
         </div>
