@@ -36,7 +36,6 @@ export const useBpActivity = () => {
   });
 };
 
-// Nuovo Hook per creare un post reale
 export const useCreateActivity = () => {
   const queryClient = useQueryClient();
   
@@ -45,28 +44,37 @@ export const useCreateActivity = () => {
       const token = localStorage.getItem('ld_auth_token');
       if (!token) throw new Error("Devi essere loggato per pubblicare");
 
+      // Proviamo a inviare la richiesta con i parametri corretti per BuddyPress
       const response = await fetch(`${BASE_URL}/buddypress/v1/activity`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'X-Requested-With': 'XMLHttpRequest' // Alcuni server WP lo richiedono per evitare blocchi
         },
         body: JSON.stringify({
           content: content,
           component: 'activity',
-          type: 'activity_update'
+          type: 'activity_update',
+          status: 'published'
         })
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Errore durante la pubblicazione");
+        let errorMessage = "Errore durante la pubblicazione";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+          console.error("Dettagli errore API:", errorData);
+        } catch (e) {
+          console.error("Errore risposta non JSON:", response.status);
+        }
+        throw new Error(errorMessage);
       }
 
       return response.json();
     },
     onSuccess: () => {
-      // Forza il refresh della bacheca per mostrare il nuovo post
       queryClient.invalidateQueries({ queryKey: ['bp-activity'] });
     }
   });

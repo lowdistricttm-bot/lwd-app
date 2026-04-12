@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ImagePlus, X, Send, Loader2 } from 'lucide-react';
@@ -16,7 +16,6 @@ const CreatePostDialog = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   
-  // Hook per la creazione reale del post
   const createActivity = useCreateActivity();
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,7 +41,8 @@ const CreatePostDialog = () => {
       setContent("");
       setImage(null);
     } catch (err: any) {
-      showError(err.message || "Errore durante la pubblicazione");
+      // L'errore viene già loggato nell'hook, qui mostriamo un messaggio più specifico se disponibile
+      showError(err.message || "Errore durante la pubblicazione. Riprova.");
     }
   };
 
@@ -62,6 +62,9 @@ const CreatePostDialog = () => {
       <DialogContent className="bg-zinc-950 border-white/10 text-white sm:max-w-[500px] p-0 overflow-hidden">
         <DialogHeader className="p-6 border-b border-white/5">
           <DialogTitle className="text-xl font-black uppercase tracking-tighter italic">Crea Post</DialogTitle>
+          <DialogDescription className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">
+            Condividi un aggiornamento con la community di Low District
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
