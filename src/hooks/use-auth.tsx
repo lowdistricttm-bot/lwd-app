@@ -24,7 +24,6 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  // Inizializzazione immediata per evitare il logout al refresh
   const [token, setToken] = useState<string | null>(() => {
     if (typeof window !== 'undefined') return localStorage.getItem('ld_auth_token');
     return null;
@@ -43,6 +42,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = async (username: string, password: string) => {
     setIsLoading(true);
     try {
+      // 1. Richiesta del Token
       const response = await fetch('https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -50,18 +50,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       const resData = await response.json();
-      console.log('Login Response:', resData); // Utile per debug
 
-      if (response.ok && resData.success) {
-        // Estrazione flessibile del token e dell'utente
-        const jwtToken = resData.data?.jwt || resData.jwt;
-        const rawUser = resData.data?.user || resData.user;
+      if (!response.ok || !resData.success) {
+        throw new Error(resData.message || 'Credenziali non valide');
+      }
 
-        if (!jwtToken || !rawUser) {
-          throw new Error("Risposta del server incompleta");
+      const jwtToken = resData.data?.jwt || resData.jwt;
+      if (!jwtToken) throw new Error("Token non ricevuto dal server");
+
+      let userData: User | null = null;
+      const rawUser = resData.data?.user || resData.user;
+
+      // 2. Se i dati utente mancano, li recuperiamo con il token appena ottenuto
+      if (!rawUser) {
+        const userRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/me?JWT=${jwtToken}`);
+        if (userRes.ok) {
+          const me = await userRes.json();
+          userData = {
+            id: me.id,
+            username: me.slug || me.username,
+            email: me.email || '',
+            nicename: me.name || me.slug,
+            display_name: me.name || me.slug,
+            avatar: me.avatar_urls?.['96'] || `https://api.dicebear.com/7.x/avataaars/svg?seed=${me.slug}`
+          };
         }
-
-        const userData: User = {
+      } else {
+        userData = {
           id: rawUser.ID || rawUser.id,
           username: rawUser.user_login || rawUser.username,
           email: rawUser.user_email || rawUser.email,
@@ -69,17 +84,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           display_name: rawUser.display_name || rawUser.user_login,
           avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${rawUser.user_login || 'user'}`
         };
-
-        setToken(jwtToken);
-        setUser(userData);
-        
-        localStorage.setItem('ld_auth_token', jwtToken);
-        localStorage.setItem('ld_user_data', JSON.stringify(userData));
-        
-        showSuccess(`Bentornato, ${userData.display_name}`);
-      } else {
-        throw new Error(resData.message || 'Credenziali non valide');
       }
+
+      if (!userData) throw new Error("Impossibile recuperare i dati del profilo");
+
+      // 3. Salvataggio finale
+      setToken(jwtToken);
+      setUser(userData);
+      localStorage.setItem('ld_auth_token', jwtToken);
+      localStorage.setItem('ld_user_data', JSON.stringify(userData));
+      
+      showSuccess(`Bentornato, ${userData.display_name}`);
     } catch (error: any) {
       console.error('Login Error:', error);
       showError(error.message);
