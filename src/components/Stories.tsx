@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { cn } from "@/lib/utils";
 import StoryViewer from './StoryViewer';
 import { AnimatePresence } from 'framer-motion';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Loader2, AlertTriangle } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/lib/supabase';
@@ -14,12 +14,10 @@ interface StoryData {
   user_id: number;
   image_url: string;
   created_at: string;
-  display_name?: string; // Opzionale, se vogliamo mostrare il nome
 }
 
 const Stories = () => {
   const { user } = useAuth();
-  const [imgError, setImgError] = useState(false);
   const [showViewer, setShowViewer] = useState(false);
   const [selectedStoryIndex, setSelectedStoryIndex] = useState(0);
   const [allStories, setAllStories] = useState<StoryData[]>([]);
@@ -27,7 +25,14 @@ const Stories = () => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const isConfigured = import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY;
+
   const loadStories = async () => {
+    if (!isConfigured) {
+      setIsLoadingStories(false);
+      return;
+    }
+    
     setIsLoadingStories(true);
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
@@ -40,7 +45,7 @@ const Stories = () => {
 
       if (error) throw error;
       setAllStories(data || []);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Errore caricamento storie:", err);
     } finally {
       setIsLoadingStories(false);
@@ -56,23 +61,42 @@ const Stories = () => {
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !user?.id) return;
+    
+    if (!isConfigured) {
+      showError("Configurazione Supabase mancante nelle variabili d'ambiente!");
+      return;
+    }
+
+    if (!user) {
+      showError("Devi essere loggato per caricare una storia");
+      return;
+    }
+
+    if (!file) return;
 
     setIsUploading(true);
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
       
+      // 1. Upload su Storage
       const { error: uploadError } = await supabase.storage
         .from('stories')
         .upload(fileName, file);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        if (uploadError.message.includes("bucket not found")) {
+          throw new Error("Il bucket 'stories' non esiste su Supabase Storage. Crealo e impostalo come PUBLIC.");
+        }
+        throw uploadError;
+      }
 
+      // 2. Recupero URL pubblico
       const { data: { publicUrl } } = supabase.storage
         .from('stories')
         .getPublicUrl(fileName);
 
+      // 3. Inserimento nel Database
       const { error: dbError } = await supabase
         .from('stories')
         .insert([{ 
@@ -82,12 +106,14 @@ const Stories = () => {
 
       if (dbError) throw dbError;
 
-      showSuccess("Storia pubblicata!");
-      loadStories(); // Ricarica la lista
+      showSuccess("Storia pubblicata con successo!");
+      loadStories();
     } catch (err: any) {
-      showError("Errore: " + err.message);
+      console.error("Upload error:", err);
+      showError(err.message || "Errore durante il caricamento");
     } finally {
       setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -104,7 +130,13 @@ const Stories = () => {
         {/* Slot "La tua storia" */}
         <div className="flex flex-col items-center gap-1.5 shrink-0">
           <button 
-            onClick={() => myStory ? openViewer(allStories.indexOf(myStory)) : fileInputRef.current?.click()}
+            onClick={() => {
+              if (!user) {
+                showError("Accedi per aggiungere una storia");
+                return;
+              }
+              myStory ? openViewer(allStories.indexOf(myStory)) : fileInputRef.current?.click();
+            }}
             disabled={isUploading}
             className="flex flex-col items-center gap-1.5 outline-none group relative"
           >
@@ -138,6 +170,11 @@ const Stories = () => {
         {/* Storie degli altri utenti */}
         {isLoadingStories ? (
           <div className="flex items-center px-4"><Loader2 className="animate-spin text-zinc-700" size={20} /></div>
+        ) : !isConfigured ? (
+          <div className="flex items-center gap-2 px-4 text-amber-500">
+            <AlertTriangle size={14} />
+            <span className="text-[8px] font-black uppercase">Configura Supabase</span>
+          </div>
         ) : (
           otherStories.map((story) => (
             <button 
