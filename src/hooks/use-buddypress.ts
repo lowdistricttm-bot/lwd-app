@@ -13,16 +13,15 @@ export const useBpActivity = () => {
         throw new Error("Effettua l'accesso per vedere la bacheca");
       }
 
-      const timestamp = Date.now();
-      // Proviamo a usare solo il parametro JWT nell'URL, che è il più compatibile con lo snippet PHP
-      const url = `${BASE_URL}/buddypress/v1/activity?per_page=20&JWT=${token}&_=${timestamp}`;
+      // Usiamo l'endpoint pulito senza parametri extra che possono causare 400
+      const url = `${BASE_URL}/buddypress/v1/activity?per_page=20`;
       
       try {
         const response = await fetch(url, { 
           method: 'GET',
           headers: { 
-            'Accept': 'application/json'
-            // Rimosso Bearer header per evitare conflitti con il parametro URL
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${token}`
           },
           mode: 'cors'
         });
@@ -30,7 +29,6 @@ export const useBpActivity = () => {
         const data = await response.json();
 
         if (!response.ok) {
-          // Creiamo un errore che contenga lo status code per la diagnostica
           const error: any = new Error(data.message || `Errore Server: ${response.status}`);
           error.status = response.status;
           throw error;
@@ -54,10 +52,13 @@ export const useBpMembers = (perPage = 100) => {
     queryKey: ['bp-members', perPage],
     queryFn: async () => {
       const token = localStorage.getItem('ld_auth_token');
-      const url = `${BASE_URL}/buddypress/v1/members?per_page=${perPage}&type=active&JWT=${token}`;
+      const url = `${BASE_URL}/buddypress/v1/members?per_page=${perPage}&type=active`;
       
       const response = await fetch(url, {
-        headers: { 'Accept': 'application/json' }
+        headers: { 
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
       });
       
       if (!response.ok) throw new Error("Errore sincronizzazione membri");
