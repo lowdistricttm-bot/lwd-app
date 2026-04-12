@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { showSuccess } from '@/utils/toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import CommentDrawer from './CommentDrawer';
+import { cn } from '@/lib/utils';
 
 const cars = [
   { id: 1, owner: "Marco_LD", car: "BMW M3 E46 Static", image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&q=80&w=1000", likes: 1240, comments: "48" },
