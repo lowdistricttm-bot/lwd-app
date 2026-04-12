@@ -60,13 +60,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log('Risposta completa dal server:', data);
 
       if (response.ok && data.success && data.data.jwt) {
+        // Controllo di sicurezza: i dati utente sono presenti?
+        if (!data.data.user) {
+          throw new Error('Login riuscito, ma i dati utente non sono stati inviati dal server. Abilita "Include User in Response" nelle impostazioni del plugin.');
+        }
+
         const userData = {
-          id: data.data.user.ID,
-          username: data.data.user.user_login,
-          email: data.data.user.user_email,
-          nicename: data.data.user.user_nicename,
-          display_name: data.data.user.display_name,
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.data.user.user_login}`
+          id: data.data.user.ID || 0,
+          username: data.data.user.user_login || '',
+          email: data.data.user.user_email || '',
+          nicename: data.data.user.user_nicename || '',
+          display_name: data.data.user.display_name || data.data.user.user_login || 'Utente',
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.data.user.user_login || 'default'}`
         };
 
         setToken(data.data.jwt);
@@ -75,7 +80,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         localStorage.setItem('ld_user_data', JSON.stringify(userData));
         showSuccess(`Bentornato, ${userData.display_name}!`);
       } else {
-        // Mostra l'errore specifico restituito dal plugin
         const errorMsg = data.message || (data.data && data.data.message) || 'Credenziali non valide';
         throw new Error(errorMsg);
       }
