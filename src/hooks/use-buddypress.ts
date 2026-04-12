@@ -7,10 +7,8 @@ export const useBpActivity = () => {
     queryKey: ['bp-activity'],
     queryFn: async () => {
       const token = localStorage.getItem('ld_auth_token');
-      if (!token) throw new Error("Effettua l'accesso per vedere la bacheca");
-
-      // Usiamo il parametro JWT nell'URL per massima compatibilità
-      const url = `${BASE_URL}/lowdistrict/v1/activity?JWT=${token}&_=${Date.now()}`;
+      // Per ora proviamo a chiamare l'endpoint anche senza token se necessario
+      const url = `${BASE_URL}/lowdistrict/v1/activity?_=${Date.now()}`;
       
       try {
         const response = await fetch(url, {
@@ -18,18 +16,18 @@ export const useBpActivity = () => {
           headers: {
             'Accept': 'application/json',
           },
-          mode: 'cors', // Forza la modalità CORS
+          mode: 'cors',
         });
 
         if (!response.ok) {
-          throw new Error(`Errore Server (${response.status})`);
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || `Errore ${response.status}: ${response.statusText}`);
         }
 
         return await response.json();
       } catch (err: any) {
         console.error("Dettaglio Errore Bridge:", err);
-        // Se l'errore è vuoto, è quasi certamente un problema di CORS o SSL
-        throw new Error(err.message || "Errore di connessione (CORS). Verifica lo snippet su WordPress.");
+        throw err;
       }
     },
     staleTime: 1000 * 10,

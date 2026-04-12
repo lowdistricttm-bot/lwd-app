@@ -1,61 +1,58 @@
 /**
- * LOW DISTRICT - ROBUST BRIDGE
- * Versione ultra-compatibile per evitare errori 400.
+ * LOW DISTRICT - BRIDGE DIAGNOSTIC
+ * Versione per risolvere l'errore 400.
  */
 
 add_action('rest_api_init', function () {
     register_rest_route('lowdistrict/v1', '/activity', array(
         'methods' => 'GET',
         'callback' => function($request) {
-            // 1. Autenticazione
-            $token = $request->get_param('JWT');
-            if (!empty($token) && class_exists('T_JWT_Authentication')) {
-                $jwt_auth = new T_JWT_Authentication();
-                $user_data = $jwt_auth->validate_token($token);
-                if (isset($user_data->data->user->id)) {
-                    wp_set_current_user($user_data->data->user->id);
-                }
+            // Verifichiamo se BuddyPress è attivo
+            if (!function_exists('bp_activity_get')) {
+                return new WP_Error('bp_missing', 'BuddyPress non è installato o attivo', array('status' => 500));
             }
 
-            // 2. Recupero dati con protezione
-            if (function_exists('bp_activity_get')) {
-                $activities_data = bp_activity_get(array(
-                    'per_page' => 20,
-                    'display_comments' => 'stream'
+            // Proviamo a recuperare le attività (senza filtri utente per ora)
+            $activities_data = bp_activity_get(array(
+                'per_page' => 10,
+                'display_comments' => 'stream'
+            ));
+
+            if (empty($activities_data['activities'])) {
+                return rest_ensure_response(array(
+                    array(
+                        'id' => 0,
+                        'user_name' => 'Sistema',
+                        'content' => 'Nessun post trovato nella bacheca.',
+                        'date' => date('Y-m-d H:i:s')
+                    )
                 ));
-                
-                $response = array();
-                
-                // Verifichiamo che ci siano effettivamente delle attività
-                if (isset($activities_data['activities']) && is_array($activities_data['activities'])) {
-                    foreach ($activities_data['activities'] as $at) {
-                        $response[] = array(
-                            'id' => $at->id,
-                            'user_id' => $at->user_id,
-                            'user_name' => bp_core_get_user_displayname($at->user_id),
-                            'user_avatar' => array(
-                                'thumb' => bp_core_fetch_avatar(array('item_id' => $at->user_id, 'html' => false))
-                            ),
-                            'content' => $at->content,
-                            'date' => $at->date_recorded,
-                            'type' => $at->type
-                        );
-                    }
-                }
-                
-                return rest_ensure_response($response);
             }
-            
-            return array(); // Ritorna array vuoto invece di errore se BP non c'è
+
+            $response = array();
+            foreach ($activities_data['activities'] as $at) {
+                $response[] = array(
+                    'id' => $at->id,
+                    'user_id' => $at->user_id,
+                    'user_name' => bp_core_get_user_displayname($at->user_id),
+                    'user_avatar' => array(
+                        'thumb' => bp_core_fetch_avatar(array('item_id' => $at->user_id, 'html' => false))
+                    ),
+                    'content' => $at->content,
+                    'date' => $at->date_recorded
+                );
+            }
+
+            return rest_ensure_response($response);
         },
-        'permission_callback' => '__return_true',
+        'permission_callback' => '__return_true', // Permettiamo l'accesso pubblico per test
     ));
 });
 
-// Header CORS definitivi
+// Header CORS
 add_filter('rest_pre_serve_request', function($value) {
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
     header('Access-Control-Allow-Headers: Authorization, Content-Type, JWT, X-Requested-With');
     return $value;
-}, 11);
+}, 15);
