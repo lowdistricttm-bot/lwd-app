@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/use-translation';
 import { products } from '@/data/products';
 
-const categories = ["All", "Stickers", "Apparel", "Car Care", "Accessories", "Lifestyle"];
+const categories = ["All", "Adesivi", "Abbigliamento", "Detailing", "Accessori", "Summer Kit"];
 
 const Shop = () => {
   const [activeCategory, setActiveCategory] = useState("All");
@@ -29,14 +29,14 @@ const Shop = () => {
       
       <div className="relative h-[45vh] w-full flex items-center justify-center overflow-hidden pt-16">
         <img 
-          src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=2000" 
+          src="https://www.lowdistrict.it/wp-content/uploads/DSC01359-1-scaled-e1751832356345.jpg" 
           className="absolute inset-0 w-full h-full object-cover opacity-40 grayscale"
           alt="Shop Banner"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
         <div className="relative z-10 text-center px-6">
           <h1 className="text-6xl md:text-8xl font-black tracking-tighter uppercase mb-4 italic">SHOP</h1>
-          <p className="text-red-600 text-xs md:text-sm font-black uppercase tracking-[0.4em]">{t.shop.subtitle}</p>
+          <p className="text-red-600 text-xs md:text-sm font-black uppercase tracking-[0.4em]">OFFICIAL MERCHANDISE</p>
         </div>
       </div>
 
@@ -63,7 +63,7 @@ const Shop = () => {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
             <input 
               type="text" 
-              placeholder={t.shop.search} 
+              placeholder="Cerca prodotti..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-zinc-900 border-none py-5 pl-12 pr-4 text-sm focus:ring-1 focus:ring-red-600 outline-none font-bold"
@@ -71,7 +71,7 @@ const Shop = () => {
           </div>
           <div className="flex items-center gap-4 w-full md:w-auto">
             <button className="flex-1 md:flex-none flex items-center justify-between gap-6 bg-zinc-900 px-8 py-5 text-[10px] font-black uppercase tracking-widest italic">
-              {t.shop.sort} <ChevronDown size={14} />
+              ORDINA PER <ChevronDown size={14} />
             </button>
             <button className="p-5 bg-zinc-900 text-white hover:bg-red-600 transition-colors">
               <Filter size={18} />
