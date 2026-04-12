@@ -9,29 +9,32 @@ export const useBpActivity = () => {
     queryFn: async () => {
       const token = localStorage.getItem('ld_auth_token');
       
-      // Proviamo a usare un URL pulitissimo
-      const url = `${BASE_URL}/buddypress/v1/activity?per_page=10`;
+      // Se non c'è il token, non proviamo nemmeno la chiamata per evitare errori inutili
+      if (!token) {
+        throw new Error("Devi accedere per vedere la bacheca");
+      }
+
+      // Usiamo il parametro JWT (maiuscolo) che è lo standard di Simple JWT Login
+      // Aggiungiamo anche un parametro casuale per evitare la cache del server
+      const url = `${BASE_URL}/buddypress/v1/activity?per_page=20&JWT=${token}&_=${Date.now()}`;
       
       try {
         const response = await fetch(url, { 
           method: 'GET',
           headers: { 
-            'Accept': 'application/json',
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            'Accept': 'application/json'
           },
           mode: 'cors'
         });
         
         if (!response.ok) {
-          // Se fallisce, proviamo l'ultimo metodo disperato: passare il token come parametro 'jwt' minuscolo
-          const fallbackUrl = `${url}&jwt=${token}`;
-          const fallbackRes = await fetch(fallbackUrl);
+          const errorData = await response.json().catch(() => ({}));
           
-          if (!fallbackRes.ok) {
-            const errorData = await fallbackRes.json().catch(() => ({ message: `Errore ${fallbackRes.status}` }));
-            throw new Error(errorData.message || errorData.code || "Errore API");
+          if (response.status === 401 || response.status === 403) {
+            throw new Error("Sessione scaduta o non autorizzata. Prova a rifare il login.");
           }
-          return fallbackRes.json();
+          
+          throw new Error(errorData.message || `Errore ${response.status}`);
         }
         
         return response.json();
@@ -50,13 +53,10 @@ export const useBpMembers = (perPage = 100) => {
     queryKey: ['bp-members', perPage],
     queryFn: async () => {
       const token = localStorage.getItem('ld_auth_token');
-      const url = `${BASE_URL}/buddypress/v1/members?per_page=${perPage}&type=active`;
+      const url = `${BASE_URL}/buddypress/v1/members?per_page=${perPage}&type=active${token ? `&JWT=${token}` : ''}`;
       
       const response = await fetch(url, {
-        headers: { 
-          'Accept': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        }
+        headers: { 'Accept': 'application/json' }
       });
       
       if (!response.ok) throw new Error("Errore sincronizzazione membri");
