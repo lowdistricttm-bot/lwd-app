@@ -1,30 +1,26 @@
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const BASE_URL = "https://www.lowdistrict.it/wp-json";
+// Usiamo un proxy pubblico per evitare i blocchi CORS del server WordPress in lettura
+const PROXY_URL = "https://api.allorigins.win/raw?url=";
 
 export const useBpActivity = (userId?: number) => {
   return useInfiniteQuery({
     queryKey: ['bp-activity', userId],
     queryFn: async ({ pageParam = 1 }) => {
-      // Rimuoviamo il JWT dalla GET: la bacheca è pubblica e il token spesso causa blocchi CORS o 401
-      let url = `${BASE_URL}/buddypress/v1/activity?page=${pageParam}&per_page=10&display_comments=threaded`;
+      let wpUrl = `${BASE_URL}/buddypress/v1/activity?page=${pageParam}&per_page=10&display_comments=threaded`;
+      if (userId) wpUrl += `&user_id=${userId}`;
       
-      if (userId) url += `&user_id=${userId}`;
+      // Codifichiamo l'URL per il proxy
+      const url = `${PROXY_URL}${encodeURIComponent(wpUrl)}`;
       
       try {
-        const response = await fetch(url, {
-          method: 'GET',
-          headers: { 
-            'Accept': 'application/json'
-          },
-          mode: 'cors',
-        });
-
+        const response = await fetch(url);
         if (!response.ok) throw new Error(`Errore server: ${response.status}`);
         const data = await response.json();
         return Array.isArray(data) ? data : [];
       } catch (err: any) {
-        console.error("Errore caricamento bacheca:", err);
+        console.error("Errore caricamento bacheca via proxy:", err);
         throw err;
       }
     },
@@ -44,7 +40,8 @@ export const useCreateActivity = () => {
       const token = localStorage.getItem('ld_auth_token');
       if (!token) throw new Error("Devi essere loggato per pubblicare");
 
-      // Il token serve solo per SCRIVERE (POST)
+      // Per la scrittura (POST) dobbiamo andare diretti al server. 
+      // È fondamentale che il server WordPress abbia il plugin JWT e il fix CORS attivo.
       const url = `${BASE_URL}/buddypress/v1/activity?JWT=${token}`;
       const response = await fetch(url, {
         method: 'POST',
@@ -74,8 +71,10 @@ export const useBpMemberData = (userId: number | undefined) => {
     queryKey: ['bp-member-data', userId],
     queryFn: async () => {
       if (!userId) return null;
-      // Anche qui, proviamo senza token per la visualizzazione pubblica
-      const response = await fetch(`${BASE_URL}/buddypress/v1/members/${userId}?context=view`);
+      const wpUrl = `${BASE_URL}/buddypress/v1/members/${userId}?context=view`;
+      const url = `${PROXY_URL}${encodeURIComponent(wpUrl)}`;
+      
+      const response = await fetch(url);
       if (!response.ok) throw new Error("Errore caricamento dati membro");
       return await response.json();
     },
@@ -88,7 +87,9 @@ export const useBpMembers = (perPage = 100) => {
   return useQuery({
     queryKey: ['bp-members', perPage],
     queryFn: async () => {
-      const url = `${BASE_URL}/buddypress/v1/members?per_page=${perPage}&type=active`;
+      const wpUrl = `${BASE_URL}/buddypress/v1/members?per_page=${perPage}&type=active`;
+      const url = `${PROXY_URL}${encodeURIComponent(wpUrl)}`;
+      
       const response = await fetch(url);
       if (!response.ok) throw new Error("Errore caricamento membri");
       return await response.json();
