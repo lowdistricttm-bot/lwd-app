@@ -19,6 +19,7 @@ import Auth from "./pages/Auth";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Community from "./pages/Community";
+import Members from "./pages/Members";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/shop" element={<Shop />} />
                 <Route path="/community" element={<Community />} />
+                <Route path="/members" element={<Members />} />
                 <Route path="/product/:id" element={<ProductDetail />} />
                 <Route path="/events" element={<Events />} />
                 <Route path="/garage" element={<Garage />} />

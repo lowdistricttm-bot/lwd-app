@@ -2,11 +2,12 @@
 
 import React from 'react';
 import { useBpMembers } from '@/hooks/use-buddypress';
-import { Loader2, Users } from 'lucide-react';
+import { Loader2, Users, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 const MembersList = () => {
-  const { data: members, isLoading } = useBpMembers();
+  const { data: members, isLoading } = useBpMembers(15);
 
   if (isLoading) return (
     <div className="flex justify-center py-8">
@@ -21,9 +22,9 @@ const MembersList = () => {
           <Users size={18} className="text-red-600" />
           <h3 className="text-sm font-black uppercase tracking-widest italic">Membri Ufficiali</h3>
         </div>
-        <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
-          {members?.length || 0} Attivi
-        </span>
+        <Link to="/members" className="flex items-center gap-1 text-[10px] font-black text-gray-500 hover:text-white uppercase tracking-widest transition-colors">
+          Vedi Tutti <ChevronRight size={12} />
+        </Link>
       </div>
 
       <div className="flex gap-4 overflow-x-auto no-scrollbar px-4 pb-2">
