@@ -10,7 +10,6 @@ interface User {
   nicename: string;
   display_name: string;
   avatar?: string;
-  mention_name?: string;
 }
 
 interface AuthContextType {
@@ -45,57 +44,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const fetchLatestUserData = useCallback(async (userId: number, currentToken: string) => {
-    setIsRefreshing(true);
-    try {
-      // Usiamo JWT nell'URL per evitare errori 401 su mobile e server restrittivi
-      const bpResponse = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${userId}?context=view&JWT=${currentToken}`);
-      
-      if (bpResponse.ok) {
-        const data = await bpResponse.json();
-        const member = Array.isArray(data) ? data[0] : data;
-        const rawAvatar = member?.avatar_urls?.full || member?.avatar_urls?.thumb;
-        
-        if (rawAvatar && !rawAvatar.includes('gravatar.com')) {
-          const finalAvatar = `${rawAvatar}${rawAvatar.includes('?') ? '&' : '?'}v=${Date.now()}`;
-          updateUserAvatar(finalAvatar);
-          return;
-        }
-      }
-
-      // Fallback su API WordPress standard se BuddyPress non restituisce l'avatar
-      const wpResponse = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${userId}?JWT=${currentToken}`);
-      
-      if (wpResponse.ok) {
-        const wpData = await wpResponse.json();
-        const wpAvatar = wpData.avatar_urls?.['96'] || wpData.avatar_urls?.['48'];
-        if (wpAvatar && !wpAvatar.includes('gravatar.com')) {
-          const finalWpAvatar = `${wpAvatar}${wpAvatar.includes('?') ? '&' : '?'}v=${Date.now()}`;
-          updateUserAvatar(finalWpAvatar);
-        }
-      }
-    } catch (e) {
-      console.error("Errore durante la sincronizzazione dell'avatar:", e);
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, []);
-
-  const updateUserAvatar = (newAvatar: string) => {
-    setUser(prev => {
-      if (!prev) return null;
-      const updated = { ...prev, avatar: newAvatar };
-      localStorage.setItem('ld_user_data', JSON.stringify(updated));
-      return updated;
-    });
-  };
-
-  useEffect(() => {
-    if (user?.id && token) {
-      fetchLatestUserData(user.id, token);
-    }
-  }, []);
-
   const login = async (username: string, password: string) => {
     setIsLoading(true);
     try {
@@ -128,7 +76,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.setItem('ld_auth_token', jwtToken);
       localStorage.setItem('ld_user_data', JSON.stringify(userData));
       
-      await fetchLatestUserData(userData.id, jwtToken);
       showSuccess(`Bentornato ${userData.display_name}`);
       
     } catch (error: any) {
@@ -148,9 +95,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const refreshUser = async () => {
-    if (user?.id && token) {
-      await fetchLatestUserData(user.id, token);
-    }
+    // In futuro qui potremo sincronizzare i dati con una tabella 'profiles' su Supabase
+    setIsRefreshing(true);
+    setTimeout(() => setIsRefreshing(false), 500);
   };
 
   return (
