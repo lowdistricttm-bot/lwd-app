@@ -32,10 +32,11 @@ const Navbar = () => {
 
   return (
     <nav className={cn(
-      "fixed top-0 left-0 right-0 z-50 transition-all duration-500 px-6 h-20 flex items-center",
+      "fixed top-0 left-0 right-0 z-50 transition-all duration-500 px-6 flex flex-col justify-center",
+      "pt-[env(safe-area-inset-top)]", // Supporto per Notch iPhone
       isScrolled 
-        ? "bg-black/80 backdrop-blur-xl border-b border-white/5 h-16" 
-        : "bg-black border-b border-transparent"
+        ? "bg-black/80 backdrop-blur-xl border-b border-white/5 h-[calc(4rem+env(safe-area-inset-top))]" 
+        : "bg-black border-b border-transparent h-[calc(5rem+env(safe-area-inset-top))]"
     )}>
       <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
         <div className="flex items-center gap-12">

@@ -17,7 +17,7 @@ const Index = () => {
     <main className="min-h-screen bg-black text-white selection:bg-red-600 selection:text-white pb-20 md:pb-0">
       <Navbar />
       
-      <div className="pt-20 md:pt-16">
+      <div className="pt-[calc(5rem+env(safe-area-inset-top))] md:pt-24">
         <div className="max-w-7xl mx-auto">
           <Stories />
         </div>
