@@ -5,12 +5,14 @@ import { Menu, X, ShoppingBag, User } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from '@/hooks/use-translation';
+import { useCart } from '@/hooks/use-cart';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { t } = useTranslation();
+  const { itemCount } = useCart();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -58,10 +60,14 @@ const Navbar = () => {
           <Link to="/profile" className="text-gray-400 hover:text-white transition-colors">
             <User size={20} />
           </Link>
-          <button className="text-gray-400 hover:text-white transition-colors relative group">
+          <Link to="/cart" className="text-gray-400 hover:text-white transition-colors relative group">
             <ShoppingBag size={20} />
-            <span className="absolute -top-2 -right-2 bg-red-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full group-hover:scale-110 transition-transform">0</span>
-          </button>
+            {itemCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full group-hover:scale-110 transition-transform">
+                {itemCount}
+              </span>
+            )}
+          </Link>
           <button 
             className="md:hidden text-white"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
