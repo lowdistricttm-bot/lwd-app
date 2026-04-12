@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Heart, MessageCircle, Send, MoreHorizontal, Share2, Loader2, AlertCircle, RefreshCw, ShieldAlert, Settings } from 'lucide-react';
+import { Heart, MessageCircle, Send, MoreHorizontal, Share2, Loader2, AlertCircle, RefreshCw, ShieldAlert, Settings, Lock } from 'lucide-react';
 import CommentDrawer from './CommentDrawer';
 import CreatePostDialog from './CreatePostDialog';
 import { cn } from '@/lib/utils';
@@ -30,7 +30,8 @@ const GaragePreview = () => {
   if (error) {
     const errorMessage = error instanceof Error ? error.message : "Errore sconosciuto";
     const isCorsError = errorMessage.toLowerCase().includes('cors') || errorMessage.toLowerCase().includes('connessione');
-    const is404Error = errorMessage.toLowerCase().includes('non trovata');
+    const is404Error = errorMessage.toLowerCase().includes('non trovata') || errorMessage.includes('404');
+    const isAuthError = errorMessage.includes('401') || errorMessage.includes('rest_cannot_view');
 
     return (
       <div className="text-center py-16 px-6 bg-zinc-900/30 border border-white/5 rounded-3xl mx-4">
@@ -38,12 +39,16 @@ const GaragePreview = () => {
           <ShieldAlert className="mx-auto text-amber-500 mb-4" size={32} />
         ) : is404Error ? (
           <Settings className="mx-auto text-blue-500 mb-4" size={32} />
+        ) : isAuthError ? (
+          <Lock className="mx-auto text-red-500 mb-4" size={32} />
         ) : (
           <AlertCircle className="mx-auto text-red-600 mb-4" size={32} />
         )}
         
         <h3 className="text-sm font-black uppercase tracking-tighter mb-2">
-          {isCorsError ? "Blocco di Sicurezza (CORS)" : is404Error ? "Configurazione Mancante" : "Errore di Sincronizzazione"}
+          {isCorsError ? "Blocco di Sicurezza (CORS)" : 
+           is404Error ? "API non trovata" : 
+           isAuthError ? "Accesso Negato" : "Errore del Server"}
         </h3>
         
         <div className="bg-black/50 p-3 rounded-lg mb-6 border border-white/5">
@@ -52,11 +57,13 @@ const GaragePreview = () => {
 
         <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-relaxed space-y-4 mb-8 text-left max-w-xs mx-auto">
           {isCorsError ? (
-            <p>Lo snippet che hai aggiunto su <span className="text-white">WPCode</span> non sembra essere attivo o correttamente configurato. Assicurati che sia impostato su "Active".</p>
+            <p>Lo snippet su <span className="text-white">WPCode</span> deve essere impostato come <span className="text-white">PHP Snippet</span> e deve essere <span className="text-white">Attivo</span>.</p>
           ) : is404Error ? (
-            <p>Vai in <span className="text-white">Impostazioni > BuddyPress > Opzioni</span> e verifica che la voce <span className="text-white">"BP REST API"</span> sia spuntata.</p>
+            <p>Verifica che il plugin <span className="text-white">BuddyPress</span> sia installato e attivo sul tuo sito.</p>
+          ) : isAuthError ? (
+            <p>BuddyPress è impostato come "Privato". Devi abilitare l'accesso pubblico alle API o effettuare il login nell'app.</p>
           ) : (
-            <p>Si è verificato un errore imprevisto. Prova a ricaricare o controlla lo stato del tuo sito WordPress.</p>
+            <p>Il server ha risposto con un errore. Controlla di non aver commesso errori di battitura nel codice incollato su WPCode.</p>
           )}
         </div>
 
@@ -64,7 +71,7 @@ const GaragePreview = () => {
           onClick={() => refetch()}
           className="bg-white text-black hover:bg-red-600 hover:text-white font-black uppercase tracking-widest text-[10px] px-8 py-4 rounded-none italic"
         >
-          <RefreshCw size={14} className="mr-2" /> Riprova Sincronizzazione
+          <RefreshCw size={14} className="mr-2" /> Ricarica Feed
         </Button>
       </div>
     );
