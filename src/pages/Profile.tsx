@@ -47,8 +47,6 @@ const Profile = () => {
   }, [activityData, user?.id]);
 
   // SEPARAZIONE ORDINI E CANDIDATURE
-  // Assumiamo che le candidature siano ordini che contengono prodotti legati agli eventi (ID categoria 31 o simili)
-  // Per ora filtriamo in base al nome del prodotto o metadati se disponibili
   const { merchOrders, eventApplications } = useMemo(() => {
     const orders = allOrders || [];
     const merch = orders.filter((o: any) => 
@@ -245,7 +243,7 @@ const Profile = () => {
               ) : merchOrders.length === 0 ? (
                 <div className="py-20 text-center border border-dashed border-white/5 rounded-3xl">
                   <Package className="mx-auto text-gray-800 mb-4" size={40} />
-                  <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Nessun ordine di merchandising</p>
+                  <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">NESSUN ORDINE</p>
                 </div>
               ) : (
                 merchOrders.map((order: any) => (
