@@ -4,7 +4,8 @@ import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import BottomNav from '@/components/BottomNav';
-import { Calendar, MapPin, Ticket } from 'lucide-react';
+import EventApplicationDialog from '@/components/EventApplicationDialog';
+import { Calendar, MapPin } from 'lucide-react';
 
 const events = [
   { title: "Low District Season Opener", date: "15 Maggio 2024", location: "Milano, IT", image: "https://images.unsplash.com/photo-1562141961-b5d185666096?auto=format&fit=crop&q=80&w=800", status: "Aperto" },
@@ -34,9 +35,14 @@ const Events = () => {
                   <h2 className="text-2xl font-bold mb-4">{event.title}</h2>
                   <p className="flex items-center gap-1 text-gray-400 mb-6"><MapPin size={16} /> {event.location}</p>
                 </div>
-                <button className="w-full md:w-max bg-white text-black px-8 py-3 font-bold uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2">
-                  <Ticket size={18} /> Prenota Posto
-                </button>
+                
+                {event.status === "Aperto" ? (
+                  <EventApplicationDialog eventTitle={event.title} />
+                ) : (
+                  <button disabled className="w-full md:w-max bg-zinc-800 text-gray-500 px-8 py-3 font-bold uppercase tracking-widest cursor-not-allowed">
+                    Coming Soon
+                  </button>
+                )}
               </div>
             </div>
           ))}
