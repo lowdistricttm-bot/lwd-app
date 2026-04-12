@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Heart, MessageCircle, Send, MoreHorizontal, Share2, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Heart, MessageCircle, Send, MoreHorizontal, Share2, Loader2, AlertCircle, RefreshCw } from 'lucide-center';
 import CommentDrawer from './CommentDrawer';
 import CreatePostDialog from './CreatePostDialog';
 import { cn } from '@/lib/utils';
@@ -37,11 +37,11 @@ const GaragePreview = () => {
           {err.message}
         </p>
         <div className="bg-black/50 p-4 rounded-lg mb-8 text-left">
-          <p className="text-[9px] font-mono text-red-400 uppercase mb-2">Diagnostica:</p>
+          <p className="text-[9px] font-mono text-red-400 uppercase mb-2">Diagnostica Reale:</p>
           <ul className="text-[8px] font-mono text-gray-500 space-y-1">
-            <li>• Endpoint: /buddypress/v1/activity</li>
-            <li>• Auth: Bearer Header (Standard + X-Auth)</li>
-            <li>• Status Code: {err.status || 'Network Error'}</li>
+            <li>• Endpoint: /lowdistrict/v1/activity</li>
+            <li>• Token: {localStorage.getItem('ld_auth_token') ? 'Presente' : 'Mancante'}</li>
+            <li>• Dettaglio: {JSON.stringify(err).substring(0, 100)}</li>
           </ul>
         </div>
         <Button 
