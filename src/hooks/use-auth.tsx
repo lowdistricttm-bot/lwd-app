@@ -41,12 +41,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchUserProfile = async (jwtToken: string) => {
     try {
+      // Tentativo 1: Usiamo l'endpoint di validazione del plugin (più probabile che funzioni)
+      const valResponse = await fetch(`https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth/validate?JWT=${jwtToken}`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+      });
+      
+      const valData = await valResponse.json();
+      
+      if (valResponse.ok && valData.success && valData.data && valData.data.user) {
+        const u = valData.data.user;
+        return {
+          id: u.ID || u.id || 0,
+          username: u.user_login || u.username || '',
+          email: u.user_email || u.email || '',
+          nicename: u.user_nicename || u.nicename || u.display_name || '',
+          display_name: u.display_name || u.user_login || 'Utente',
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.user_login || 'user'}`
+        };
+      }
+
+      // Tentativo 2: Fallback alle API standard di WordPress
       const response = await fetch('https://www.lowdistrict.it/wp-json/wp/v2/users/me', {
         headers: {
           'Authorization': `Bearer ${jwtToken}`,
           'Accept': 'application/json'
         }
       });
+      
       if (response.ok) {
         const wpUser = await response.json();
         return {
@@ -59,7 +81,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         };
       }
     } catch (e) {
-      console.error("Errore nel recupero profilo manuale:", e);
+      console.error("Errore nel recupero profilo:", e);
     }
     return null;
   };
@@ -85,7 +107,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const jwtToken = data.data.jwt;
         let userData = null;
 
-        // Se il plugin ha inviato l'utente, lo usiamo
+        // Se il plugin ha già i dati, li usiamo
         if (data.data.user) {
           userData = {
             id: data.data.user.ID || 0,
@@ -96,12 +118,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.data.user.user_login || 'default'}`
           };
         } else {
-          // Altrimenti lo recuperiamo noi manualmente usando il token
+          // Altrimenti proviamo i due metodi di recupero manuale
           userData = await fetchUserProfile(jwtToken);
         }
 
         if (!userData) {
-          throw new Error("Login riuscito ma impossibile recuperare i dati del profilo. Contatta l'assistenza.");
+          throw new Error("Login riuscito ma il server non restituisce i dati del tuo profilo. Verifica i permessi API su WordPress.");
         }
 
         setToken(jwtToken);
