@@ -31,18 +31,25 @@ const GaragePreview = () => {
     return (
       <div className="text-center py-16 px-6 bg-zinc-900/30 border border-white/5 rounded-3xl mx-4">
         <AlertCircle className="mx-auto text-red-600 mb-4" size={32} />
-        <h3 className="text-sm font-black uppercase tracking-tighter mb-2">Errore di Connessione</h3>
-        <p className="text-[10px] font-mono text-red-400 bg-black/50 p-3 rounded-lg mb-6 break-all">
-          {error instanceof Error ? error.message : "Impossibile caricare la bacheca"}
+        <h3 className="text-sm font-black uppercase tracking-tighter mb-2">Accesso alla Bacheca</h3>
+        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-relaxed mb-6">
+          {error instanceof Error && error.message.includes("401") 
+            ? "Il server richiede l'autenticazione. Verifica le impostazioni JWT su WordPress." 
+            : error instanceof Error ? error.message : "Impossibile caricare i post."}
         </p>
-        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-relaxed mb-8">
-          Verifica che le API di BuddyPress siano attive e che il plugin JWT abbia i permessi per la bacheca.
-        </p>
+        <div className="bg-black/50 p-4 rounded-lg mb-8 text-left">
+          <p className="text-[9px] font-mono text-red-400 uppercase mb-2">Diagnostica:</p>
+          <ul className="text-[8px] font-mono text-gray-500 space-y-1">
+            <li>• Endpoint: /buddypress/v1/activity</li>
+            <li>• Auth: JWT Parameter + Bearer Header</li>
+            <li>• Status: {error instanceof Error ? "Error" : "Unknown"}</li>
+          </ul>
+        </div>
         <Button 
           onClick={() => refetch()}
           className="bg-white text-black hover:bg-red-600 hover:text-white font-black uppercase tracking-widest text-[10px] px-8 py-4 rounded-none italic"
         >
-          <RefreshCw size={14} className="mr-2" /> Riprova
+          <RefreshCw size={14} className="mr-2" /> Riprova Sincronizzazione
         </Button>
       </div>
     );
