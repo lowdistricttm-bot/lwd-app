@@ -15,8 +15,10 @@ add_action('rest_api_init', function() {
     });
 }, 15);
 
+// Questo pezzo serve a far capire a WordPress chi è l'utente che sta scrivendo dall'App
 add_filter('determine_current_user', function($user_id) {
     if ($user_id) return $user_id;
+    
     $token = '';
     if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
         $token = $_SERVER['HTTP_AUTHORIZATION'];
@@ -25,8 +27,10 @@ add_filter('determine_current_user', function($user_id) {
     } elseif (isset($_SERVER['HTTP_X_AUTHORIZATION'])) {
         $token = $_SERVER['HTTP_X_AUTHORIZATION'];
     }
+    
     if (!empty($token) && strpos($token, 'Bearer ') === 0) {
         $_GET['JWT'] = str_replace('Bearer ', '', $token);
     }
+    
     return $user_id;
 }, 20);
