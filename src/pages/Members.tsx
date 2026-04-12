@@ -1,71 +1,108 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
-import { useBpMembers } from '@/hooks/use-buddypress';
-import { ChevronLeft, Loader2, Search, UserPlus } from 'lucide-react';
+import { useBpMembers, getCachedMembers } from '@/hooks/use-buddypress';
+import { ChevronLeft, Loader2, Search, UserPlus, RefreshCw, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { format } from 'date-fns';
+import { it } from 'date-fns/locale';
 
 const Members = () => {
   const navigate = useNavigate();
-  const { data: members, isLoading } = useBpMembers(100); // Carichiamo i primi 100 membri
+  const [searchQuery, setSearchQuery] = useState("");
+  const { data: members, isLoading, isFetching, refetch } = useBpMembers(100);
+  const cacheInfo = getCachedMembers();
+
+  const filteredMembers = members?.filter((m: any) => 
+    m.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    m.user_login.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen bg-black text-white pb-24">
       <Navbar />
       
       <div className="pt-24 px-6 max-w-2xl mx-auto">
-        <div className="flex items-center gap-4 mb-8">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-white/5 rounded-full transition-colors">
-            <ChevronLeft size={24} />
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <button onClick={() => navigate(-1)} className="p-2 hover:bg-white/5 rounded-full transition-colors">
+              <ChevronLeft size={24} />
+            </button>
+            <div>
+              <h1 className="text-3xl font-black tracking-tighter uppercase italic">Directory</h1>
+              {cacheInfo && (
+                <p className="text-[8px] text-gray-500 font-black uppercase tracking-widest flex items-center gap-1">
+                  <ShieldCheck size={10} className="text-green-500" /> 
+                  Sincronizzati: {cacheInfo.count} utenti • {format(new Date(cacheInfo.lastSync), 'HH:mm', { locale: it })}
+                </p>
+              )}
+            </div>
+          </div>
+          <button 
+            onClick={() => refetch()} 
+            className={`p-3 bg-zinc-900 rounded-2xl transition-all ${isFetching ? 'animate-spin text-red-600' : 'text-gray-400'}`}
+          >
+            <RefreshCw size={20} />
           </button>
-          <h1 className="text-3xl font-black tracking-tighter uppercase italic">Membri Community</h1>
         </div>
 
         <div className="relative mb-8">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
           <input 
             type="text" 
-            placeholder="Cerca un membro..." 
+            placeholder="Cerca per nome o username..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-zinc-900 border-none py-4 pl-12 pr-4 rounded-2xl text-sm font-bold focus:ring-1 focus:ring-red-600 outline-none"
           />
         </div>
 
-        {isLoading ? (
+        {isLoading && !members ? (
           <div className="flex flex-col items-center justify-center py-20">
             <Loader2 className="animate-spin text-red-600 mb-4" size={32} />
-            <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Caricamento directory...</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Inizializzazione database...</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4">
-            {members?.map((member: any, i: number) => (
+            {filteredMembers?.map((member: any, i: number) => (
               <motion.div 
                 key={member.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.03 }}
-                className="flex items-center justify-between p-4 bg-zinc-900/50 border border-white/5 rounded-2xl hover:border-white/10 transition-all"
+                transition={{ delay: i * 0.01 }}
+                className="flex items-center justify-between p-4 bg-zinc-900/50 border border-white/5 rounded-2xl hover:border-white/10 transition-all group"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl overflow-hidden bg-zinc-800 border border-white/5">
+                  <div className="w-14 h-14 rounded-2xl overflow-hidden bg-zinc-800 border border-white/5 p-0.5">
                     <img 
                       src={member.avatar_urls?.thumb || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.user_login}`} 
                       alt="" 
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover rounded-xl grayscale group-hover:grayscale-0 transition-all"
                     />
                   </div>
                   <div>
                     <h3 className="font-black text-sm uppercase italic leading-none mb-1">{member.name}</h3>
-                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">@{member.user_login}</p>
+                    <p className="text-[10px] text-red-600 font-black uppercase tracking-widest mb-1">@{member.user_login}</p>
+                    {/* Qui BuddyPress inserisce i campi XProfile se popolati */}
+                    <p className="text-[9px] text-gray-500 font-bold uppercase">
+                      {member.latest_update?.status ? member.latest_update.status.replace(/<[^>]*>?/gm, '').substring(0, 30) + '...' : 'Membro Attivo'}
+                    </p>
                   </div>
                 </div>
-                <button className="p-2 text-gray-500 hover:text-red-600 transition-colors">
-                  <UserPlus size={20} />
+                <button className="p-3 bg-white/5 rounded-xl text-gray-500 hover:text-red-600 hover:bg-white/10 transition-all">
+                  <UserPlus size={18} />
                 </button>
               </motion.div>
             ))}
+            
+            {filteredMembers?.length === 0 && (
+              <div className="text-center py-20">
+                <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Nessun membro trovato</p>
+              </div>
+            )}
           </div>
         )}
       </div>
