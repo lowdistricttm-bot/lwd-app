@@ -1,9 +1,14 @@
-add_action( 'init', function() {
-    header("Access-Control-Allow-Origin: *");
-    header("Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE");
-    header("Access-Control-Allow-Headers: Origin, Content-Type, Accept, Authorization, X-Request-With");
-    if ( 'OPTIONS' == $_SERVER['REQUEST_METHOD'] ) {
-        status_header(200);
-        exit();
+<?php
+add_filter('determine_current_user', function($user_id) {
+    if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+        return $user_id;
     }
-});
+    
+    // Se il server (Altervista) taglia l'header, proviamo a recuperarlo
+    $headers = apache_request_headers();
+    if (isset($headers['Authorization'])) {
+        $_SERVER['HTTP_AUTHORIZATION'] = $headers['Authorization'];
+    }
+    
+    return $user_id;
+}, 10);
