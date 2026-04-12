@@ -28,21 +28,20 @@ const GaragePreview = () => {
   }
 
   if (error) {
+    const err = error as any;
     return (
       <div className="text-center py-16 px-6 bg-zinc-900/30 border border-white/5 rounded-3xl mx-4">
         <AlertCircle className="mx-auto text-red-600 mb-4" size={32} />
         <h3 className="text-sm font-black uppercase tracking-tighter mb-2">Accesso alla Bacheca</h3>
         <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-relaxed mb-6">
-          {error instanceof Error && error.message.includes("401") 
-            ? "Il server richiede l'autenticazione. Verifica le impostazioni JWT su WordPress." 
-            : error instanceof Error ? error.message : "Impossibile caricare i post."}
+          {err.message}
         </p>
         <div className="bg-black/50 p-4 rounded-lg mb-8 text-left">
           <p className="text-[9px] font-mono text-red-400 uppercase mb-2">Diagnostica:</p>
           <ul className="text-[8px] font-mono text-gray-500 space-y-1">
             <li>• Endpoint: /buddypress/v1/activity</li>
-            <li>• Auth: JWT Parameter + Bearer Header</li>
-            <li>• Status: {error instanceof Error ? "Error" : "Unknown"}</li>
+            <li>• Auth: JWT URL Parameter</li>
+            <li>• Status Code: {err.status || 'Network Error'}</li>
           </ul>
         </div>
         <Button 
