@@ -6,7 +6,7 @@ import { useCart } from '@/hooks/use-cart';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ChevronLeft, CreditCard, Truck, ShieldCheck, CheckCircle2, Loader2 } from 'lucide-react';
+import { ChevronLeft, MessageCircle, Truck, ShieldCheck, CheckCircle2, Loader2, Phone } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { wcPost } from '@/lib/woocommerce';
 
@@ -29,32 +29,38 @@ const Checkout = () => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
-  const createWooOrder = async () => {
+  const finalizeOrder = async () => {
     setIsProcessing(true);
     try {
+      // Creiamo l'ordine su WooCommerce come "In attesa di pagamento"
       const orderData = {
-        payment_method: "bacs", // Qui andrebbe il metodo scelto (es. stripe)
-        payment_method_title: "Bonifico Bancario / Carta",
+        payment_method: "cod", 
+        payment_method_title: "WhatsApp / Contatto Diretto",
         set_paid: false,
         billing: formData,
         shipping: formData,
         line_items: cart.map(item => ({
           product_id: item.id,
           quantity: item.quantity
-        }))
+        })),
+        customer_note: "Ordine effettuato tramite App - Finalizzazione via WhatsApp"
       };
 
       const response = await wcPost('/orders', orderData);
-      console.log('Ordine creato:', response);
-      
       setStep(3);
-      showSuccess("Ordine creato con successo!");
+      showSuccess("Ordine prenotato con successo!");
       clearCart();
     } catch (err: any) {
-      showError(err.message || "Errore durante la creazione dell'ordine");
+      showError("Errore durante la prenotazione. Riprova.");
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const openWhatsApp = () => {
+    const message = `Ciao Low District! Ho appena effettuato un ordine dall'App.\n\nNome: ${formData.first_name} ${formData.last_name}\nTotale: €${total.toFixed(2)}\n\nVorrei procedere con il pagamento.`;
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`https://wa.me/393470000000?text=${encodedMessage}`, '_blank'); // Sostituisci con il tuo numero reale
   };
 
   if (step === 3) {
@@ -63,16 +69,27 @@ const Checkout = () => {
         <div className="w-24 h-24 bg-green-500/20 rounded-full flex items-center justify-center mb-8 animate-bounce">
           <CheckCircle2 size={48} className="text-green-500" />
         </div>
-        <h1 className="text-4xl font-black uppercase tracking-tighter mb-4 italic">Ordine Ricevuto!</h1>
+        <h1 className="text-4xl font-black uppercase tracking-tighter mb-4 italic">Ordine Prenotato!</h1>
         <p className="text-gray-400 text-sm font-bold uppercase tracking-widest max-w-xs mx-auto mb-12">
-          Grazie per il tuo acquisto. Riceverai a breve una mail con i dettagli della spedizione.
+          Il tuo ordine è stato registrato. Ora clicca qui sotto per finalizzare il pagamento su WhatsApp.
         </p>
-        <Button 
-          onClick={() => navigate('/')}
-          className="bg-white text-black hover:bg-red-600 hover:text-white px-12 py-6 font-black uppercase tracking-widest rounded-none italic transition-all"
-        >
-          Torna alla Home
-        </Button>
+        
+        <div className="space-y-4 w-full max-w-xs">
+          <Button 
+            onClick={openWhatsApp}
+            className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white py-8 font-black uppercase tracking-widest rounded-none italic flex items-center justify-center gap-3"
+          >
+            <MessageCircle size={24} /> Paga su WhatsApp
+          </Button>
+          
+          <Button 
+            variant="outline"
+            onClick={() => navigate('/')}
+            className="w-full border-white/10 text-gray-500 hover:text-white py-6 font-black uppercase tracking-widest rounded-none italic"
+          >
+            Torna alla Home
+          </Button>
+        </div>
       </div>
     );
   }
@@ -84,7 +101,32 @@ const Checkout = () => {
           <ChevronLeft size={24} />
         </button>
         <h1 className="text-2xl font-black tracking-tighter uppercase italic">
-          {step === 1 ? "Spedizione" : "Pagamento"}
+          {step === 1 ? "Spedizione" :think
+The user is pointing out that my previous response was cut off. I need to continue the code block for `src/pages/Checkout.tsx` exactly where it stopped.
+
+Looking at the previous output:
+```tsx
+        <h1 className="text-2xl font-black tracking-tighter uppercase italic">
+          {step === 1 ? "Spedizione" :
+```
+It stopped right there. I need to complete the `Checkout.tsx` file.
+
+Plan:
+1. Complete the `Checkout.tsx` file starting from `{step === 1 ? "Spedizione" : "Riepilogo"}`.
+2. Ensure all tags are closed.
+3. Provide the concise summary.
+4. Provide the chat summary.
+
+Wait, I should check if I need to write the *entire* file again or just the continuation. The instructions say: "do NOT be lazy and ALWAYS write the entire file. It needs to be a complete file."
+
+So I will rewrite the entire `src/pages/Checkout.tsx` file to ensure it's complete and correct.
+
+The flow:
+- Step 1: Shipping info.
+- Step 2: Summary and "Finalize" button (which creates the order in WC).
+- Step 3: Success screen with WhatsApp button.
+
+Let's write the full file."Riepilogo"}
         </h1>
       </div>
 
@@ -100,71 +142,88 @@ const Checkout = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="first_name" className="text-[10px] font-black uppercase tracking-widest text-gray-500">Nome</Label>
-                <Input id="first_name" value={formData.first_name} onChange={handleInputChange} className="bg-zinc-900 border-white/5 rounded-none py-6" />
+                <Input id="first_name" value={formData.first_name} onChange={handleInputChange} className="bg-zinc-900 border-white/5 rounded-none py-6 focus:ring-red-600" required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="last_name" className="text-[10px] font-black uppercase tracking-widest text-gray-500">Cognome</Label>
-                <Input id="last_name" value={formData.last_name} onChange={handleInputChange} className="bg-zinc-900 border-white/5 rounded-none py-6" />
+                <Input id="last_name" value={formData.last_name} onChange={handleInputChange} className="bg-zinc-900 border-white/5 rounded-none py-6 focus:ring-red-600" required />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-gray-500">Email</Label>
-              <Input id="email" type="email" value={formData.email} onChange={handleInputChange} className="bg-zinc-900 border-white/5 rounded-none py-6" />
+              <Input id="email" type="email" value={formData.email} onChange={handleInputChange} className="bg-zinc-900 border-white/5 rounded-none py-6 focus:ring-red-600" required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="address_1" className="text-[10px] font-black uppercase tracking-widest text-gray-500">Indirizzo</Label>
-              <Input id="address_1" value={formData.address_1} onChange={handleInputChange} className="bg-zinc-900 border-white/5 rounded-none py-6" />
+              <Label htmlFor="phone" className="text-[10px] font-black uppercase tracking-widest text-gray-500">Telefono / WhatsApp</Label>
+              <Input id="phone" type="tel" value={formData.phone} onChange={handleInputChange} className="bg-zinc-900 border-white/5 rounded-none py-6 focus:ring-red-600" required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="address_1" className="text-[10px] font-black uppercase tracking-widest text-gray-500">Indirizzo e Numero Civico</Label>
+              <Input id="address_1" value={formData.address_1} onChange={handleInputChange} className="bg-zinc-900 border-white/5 rounded-none py-6 focus:ring-red-600" required />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="city" className="text-[10px] font-black uppercase tracking-widest text-gray-500">Città</Label>
-                <Input id="city" value={formData.city} onChange={handleInputChange} className="bg-zinc-900 border-white/5 rounded-none py-6" />
+                <Input id="city" value={formData.city} onChange={handleInputChange} className="bg-zinc-900 border-white/5 rounded-none py-6 focus:ring-red-600" required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="postcode" className="text-[10px] font-black uppercase tracking-widest text-gray-500">CAP</Label>
-                <Input id="postcode" value={formData.postcode} onChange={handleInputChange} className="bg-zinc-900 border-white/5 rounded-none py-6" />
+                <Input id="postcode" value={formData.postcode} onChange={handleInputChange} className="bg-zinc-900 border-white/5 rounded-none py-6 focus:ring-red-600" required />
               </div>
             </div>
             <Button 
               onClick={() => setStep(2)}
+              disabled={!formData.email || !formData.first_name || !formData.address_1}
               className="w-full bg-red-600 hover:bg-red-700 text-white py-8 text-lg font-black uppercase tracking-widest rounded-none italic"
             >
-              Continua al Pagamento
+              Continua al Riepilogo
             </Button>
           </div>
         ) : (
           <div className="space-y-8">
             <div className="bg-zinc-900 p-6 border border-white/5 space-y-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  <CreditCard className="text-red-600" />
-                  <span className="text-sm font-bold uppercase tracking-widest">Carta di Credito</span>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-3 bg-red-600/10 rounded-full">
+                  <Phone className="text-red-600" size={20} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black uppercase tracking-widest">Finalizzazione Ordine</h3>
+                  <p className="text-[10px] text-gray-500 font-bold uppercase">Verrai contattato su WhatsApp per il pagamento</p>
                 </div>
               </div>
-              <div className="space-y-4">
-                <Input placeholder="Numero Carta" className="bg-black border-white/10 rounded-none py-6" />
-                <div className="grid grid-cols-2 gap-4">
-                  <Input placeholder="MM/AA" className="bg-black border-white/10 rounded-none py-6" />
-                  <Input placeholder="CVV" className="bg-black border-white/10 rounded-none py-6" />
+              
+              <div className="space-y-4 pt-4 border-t border-white/5">
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-500 font-bold uppercase tracking-widest">Spedizione a:</span>
+                  <span className="text-white font-black uppercase tracking-tighter">{formData.first_name} {formData.last_name}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-500 font-bold uppercase tracking-widest">Indirizzo:</span>
+                  <span className="text-white font-black uppercase tracking-tighter text-right">{formData.address_1}, {formData.city}</span>
                 </div>
               </div>
             </div>
 
             <div className="pt-6 border-t border-white/10">
               <div className="flex justify-between items-center mb-8">
-                <span className="text-gray-400 font-black uppercase tracking-widest text-sm">Totale da pagare</span>
+                <span className="text-gray-400 font-black uppercase tracking-widest text-sm">Totale Ordine</span>
                 <span className="text-3xl font-black italic">€{total.toFixed(2)}</span>
               </div>
               
               <Button 
-                onClick={createWooOrder}
+                onClick={finalizeOrder}
                 disabled={isProcessing}
                 className="w-full bg-red-600 hover:bg-red-700 text-white py-8 text-xl font-black uppercase tracking-widest rounded-none italic shadow-2xl shadow-red-600/20"
               >
                 {isProcessing ? (
                   <span className="flex items-center gap-2"><Loader2 className="animate-spin" /> Elaborazione...</span>
-                ) : "Conferma e Paga"}
+                ) : "Conferma e Prenota"}
               </Button>
+              
+              <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest text-center mt-6 leading-relaxed">
+                Cliccando su conferma, il tuo ordine verrà registrato nel nostro sistema. <br />
+                Riceverai una notifica per procedere al pagamento tramite WhatsApp.
+              </p>
             </div>
           </div>
         )}
@@ -172,11 +231,11 @@ const Checkout = () => {
         <div className="mt-12 flex items-center justify-center gap-8 opacity-30">
           <div className="flex items-center gap-2">
             <ShieldCheck size={16} />
-            <span className="text-[8px] font-black uppercase tracking-widest">Secure SSL</span>
+            <span className="text-[8px] font-black uppercase tracking-widest">Official Store</span>
           </div>
           <div className="flex items-center gap-2">
             <Truck size={16} />
-            <span className="text-[8px] font-black uppercase tracking-widest">Official Shipping</span>
+            <span className="text-[8px] font-black uppercase tracking-widest">Fast Shipping</span>
           </div>
         </div>
       </div>
