@@ -12,7 +12,7 @@ const Community = () => {
       <Navbar />
       <div className="pt-24">
         <div className="px-6 mb-8 max-w-xl mx-auto">
-          <h1 className="text-4xl font-black tracking-tighter uppercase italic">Community</h1>
+          <h1 className="text-4xl font-black tracking-tighter uppercase italic">Bacheca</h1>
           <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mt-1">Activity Stream & Updates</p>
         </div>
         <GaragePreview />
