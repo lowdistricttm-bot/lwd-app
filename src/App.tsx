@@ -7,6 +7,7 @@ import { LanguageProvider } from "./hooks/use-translation";
 import Index from "./pages/Index";
 import Settings from "./pages/Settings";
 import Shop from "./pages/Shop";
+import ProductDetail from "./pages/ProductDetail";
 import Events from "./pages/Events";
 import Garage from "./pages/Garage";
 import Profile from "./pages/Profile";
@@ -27,6 +28,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/shop" element={<Shop />} />
+            <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/events" element={<Events />} />
             <Route path="/garage" element={<Garage />} />
             <Route path="/profile" element={<Profile />} />

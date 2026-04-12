@@ -1,8 +1,9 @@
 "use client";
 
 import React from 'react';
-import { ShoppingCart, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { showSuccess } from '@/utils/toast';
 
 interface ProductProps {
@@ -18,12 +19,15 @@ interface ProductProps {
 }
 
 const ProductCard = ({ product }: ProductProps) => {
+  const navigate = useNavigate();
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       className="group cursor-pointer"
+      onClick={() => navigate(`/product/${product.id}`)}
     >
       <div className="aspect-[3/4] bg-zinc-900 overflow-hidden relative mb-4">
         <img 
