@@ -42,6 +42,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = async (username: string, password: string) => {
     setIsLoading(true);
     try {
+      console.log("Tentativo di login per:", username);
       const response = await fetch('https://www.lowdistrict.it/wp-json/jwt-auth/v1/token', {
         method: 'POST',
         headers: { 
@@ -55,13 +56,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       const text = await response.text();
+      console.log("Risposta grezza dal server:", text.substring(0, 100));
+
       let data;
-      
       try {
         data = JSON.parse(text);
       } catch (e) {
-        console.error("Server response was not JSON:", text);
-        throw new Error("Il server ha risposto con un formato non valido. Verifica i Permalink su WordPress.");
+        if (text.includes("<!DOCTYPE")) {
+          throw new Error("Il server ha risposto con una pagina HTML invece di dati. Verifica i Permalink nelle impostazioni di WordPress.");
+        }
+        throw new Error("Risposta del server non valida. Controlla la configurazione del plugin JWT.");
       }
 
       if (response.ok && data.token) {
@@ -80,10 +84,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         localStorage.setItem('ld_user_data', JSON.stringify(userData));
         showSuccess(`Bentornato, ${userData.display_name}!`);
       } else {
-        throw new Error(data.message || 'Credenziali non valide');
+        throw new Error(data.message || 'Credenziali non valide o errore del server');
       }
     } catch (error: any) {
-      console.error('Login Error:', error);
+      console.error('Login Error Details:', error);
       showError(error.message);
       throw error;
     } finally {
