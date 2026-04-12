@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { cn } from "@/lib/utils";
 import StoryViewer from './StoryViewer';
 import { AnimatePresence } from 'framer-motion';
@@ -22,6 +22,18 @@ const stories = [
 
 const Stories = () => {
   const [selectedStoryIndex, setSelectedStoryIndex] = useState<number | null>(null);
+
+  // Blocca lo scroll della pagina quando le storie sono aperte
+  useEffect(() => {
+    if (selectedStoryIndex !== null) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [selectedStoryIndex]);
 
   const handleAddStory = (e: React.MouseEvent) => {
     e.stopPropagation();

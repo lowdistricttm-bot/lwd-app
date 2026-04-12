@@ -112,13 +112,15 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] bg-black flex items-center justify-center touch-none"
+      className="fixed inset-0 z-[9999] bg-black flex items-center justify-center touch-none"
     >
-      <div className="relative w-full h-full md:max-w-[420px] md:h-[92vh] bg-black md:rounded-xl overflow-hidden flex flex-col">
+      {/* Container principale che occupa tutto lo schermo */}
+      <div className="relative w-full h-full md:max-w-[450px] md:h-[95vh] bg-black md:rounded-2xl overflow-hidden flex flex-col shadow-2xl">
         
-        <div className="absolute top-3 left-2 right-2 z-30 flex gap-1">
+        {/* Barre di progresso */}
+        <div className="absolute top-4 left-3 right-3 z-50 flex gap-1.5">
           {stories.map((_, i) => (
-            <div key={i} className="h-[2px] flex-1 bg-white/30 rounded-full overflow-hidden">
+            <div key={i} className="h-[2px] flex-1 bg-white/20 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-white transition-all duration-100 ease-linear"
                 style={{ 
@@ -129,69 +131,77 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
           ))}
         </div>
 
-        <div className="absolute top-6 left-4 right-4 z-30 flex items-center justify-between story-controls">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full overflow-hidden border border-white/10">
+        {/* Header Storia */}
+        <div className="absolute top-8 left-4 right-4 z-50 flex items-center justify-between story-controls">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full overflow-hidden border border-white/20">
               <img src={stories[currentIndex].img} alt="" className="w-full h-full object-cover" />
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-white font-semibold text-[13px]">{stories[currentIndex].name}</span>
-              <span className="text-white/60 text-[13px]">2h</span>
+            <div className="flex flex-col">
+              <span className="text-white font-bold text-sm leading-none">{stories[currentIndex].name}</span>
+              <span className="text-white/50 text-[10px] font-bold uppercase tracking-widest mt-1">2 ore fa</span>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <MoreHorizontal size={20} className="text-white" />
-            <button onClick={onClose} className="text-white p-1">
-              <X size={26} strokeWidth={1.5} />
+          <div className="flex items-center gap-4">
+            <button className="text-white/80 hover:text-white transition-colors">
+              <MoreHorizontal size={20} />
+            </button>
+            <button onClick={onClose} className="text-white p-1 hover:scale-110 transition-transform">
+              <X size={28} strokeWidth={1.5} />
             </button>
           </div>
         </div>
 
+        {/* Area Immagine */}
         <div 
-          className="relative flex-1 w-full overflow-hidden"
+          className="relative flex-1 w-full overflow-hidden bg-zinc-950"
           onClick={handleScreenClick}
         >
           <AnimatePresence mode="wait">
             <motion.img 
               key={currentIndex}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={{ opacity: 0, scale: 1.1 }}
+              animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
               src={stories[currentIndex].img} 
               alt="" 
               className="w-full h-full object-cover pointer-events-none"
             />
           </AnimatePresence>
           
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/40 pointer-events-none" />
+          {/* Gradienti per leggibilità */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/60 pointer-events-none" />
 
+          {/* Swipe up hint */}
           {!showReactions && !showInput && (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="absolute bottom-24 left-0 right-0 flex flex-col items-center text-white/80 pointer-events-none"
+              className="absolute bottom-28 left-0 right-0 flex flex-col items-center text-white/60 pointer-events-none"
             >
-              <ChevronUp size={18} className="animate-bounce mb-1" />
-              <span className="text-[10px] font-medium tracking-wider">Reazioni</span>
+              <ChevronUp size={20} className="animate-bounce mb-1" />
+              <span className="text-[9px] font-black uppercase tracking-[0.2em]">Reazioni</span>
             </motion.div>
           )}
 
+          {/* Overlay Reazioni */}
           <AnimatePresence>
             {showReactions && (
               <motion.div 
                 initial={{ y: "100%" }}
                 animate={{ y: 0 }}
                 exit={{ y: "100%" }}
-                className="absolute inset-0 flex items-end z-40 story-controls"
+                className="absolute inset-0 flex items-end z-[60] story-controls"
               >
-                <div className="w-full p-6 bg-black/80 backdrop-blur-2xl rounded-t-3xl border-t border-white/10">
-                  <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-8" />
-                  <div className="grid grid-cols-4 gap-y-8 gap-x-4 mb-10">
+                <div className="w-full p-8 bg-black/90 backdrop-blur-xl rounded-t-[2.5rem] border-t border-white/10">
+                  <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-10" />
+                  <div className="grid grid-cols-4 gap-y-10 gap-x-4 mb-12">
                     {REACTIONS.map((emoji) => (
                       <button 
                         key={emoji} 
                         onClick={() => { showSuccess(`Reazione ${emoji} inviata`); setShowReactions(false); setIsPaused(false); }}
-                        className="text-4xl hover:scale-110 transition-transform active:scale-90"
+                        className="text-4xl hover:scale-125 transition-transform active:scale-90"
                       >
                         {emoji}
                       </button>
@@ -203,7 +213,8 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
           </AnimatePresence>
         </div>
 
-        <div className="p-4 pb-10 md:pb-6 bg-black story-controls z-50">
+        {/* Footer Controlli */}
+        <div className="p-5 pb-12 md:pb-8 bg-black story-controls z-[70]">
           <AnimatePresence mode="wait">
             {showInput ? (
               <motion.form 
@@ -212,31 +223,31 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
                 onSubmit={handleSendMessage} 
-                className="flex items-center gap-3"
+                className="flex items-center gap-4"
               >
                 <input 
                   autoFocus
                   type="text" 
-                  placeholder={`Invia un messaggio...`} 
-                  className="flex-1 bg-zinc-900 border border-white/10 rounded-full py-2.5 px-5 text-[13px] text-white focus:outline-none"
+                  placeholder={`Rispondi a ${stories[currentIndex].name}...`} 
+                  className="flex-1 bg-zinc-900 border border-white/10 rounded-full py-3.5 px-6 text-sm text-white focus:outline-none focus:ring-1 focus:ring-red-600"
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                 />
-                <button type="submit" className="text-white font-semibold text-[13px]">Invia</button>
+                <button type="submit" className="text-red-600 font-black uppercase tracking-widest text-xs">Invia</button>
               </motion.form>
             ) : (
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-5">
                 <button 
                   onClick={() => { setShowInput(true); setIsPaused(true); }}
-                  className="flex-1 flex items-center gap-3 bg-transparent border border-white/40 rounded-full py-2.5 px-5 text-white/80 text-left"
+                  className="flex-1 flex items-center gap-3 bg-transparent border border-white/30 rounded-full py-3 px-6 text-white/60 text-left"
                 >
-                  <span className="text-[13px]">Invia un messaggio...</span>
+                  <span className="text-sm font-medium">Invia un messaggio...</span>
                 </button>
-                <button onClick={() => { setShowInput(true); setIsPaused(true); }} className="text-white">
-                  <MessageCircle size={24} strokeWidth={1.5} />
+                <button onClick={() => { setShowReactions(true); setIsPaused(true); }} className="text-white/80 hover:text-white transition-colors">
+                  <MessageCircle size={26} strokeWidth={1.5} />
                 </button>
-                <button onClick={() => showSuccess('Inviato!')} className="text-white">
-                  <Send size={24} strokeWidth={1.5} />
+                <button onClick={() => showSuccess('Inviato!')} className="text-white/80 hover:text-white transition-colors">
+                  <Send size={26} strokeWidth={1.5} />
                 </button>
               </div>
             )}
