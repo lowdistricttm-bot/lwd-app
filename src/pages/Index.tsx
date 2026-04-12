@@ -16,8 +16,8 @@ const Index = () => {
     <main className="min-h-screen bg-black text-white selection:bg-red-600 selection:text-white pb-20 md:pb-0">
       <Navbar />
       
-      {/* Mobile Header Spacer */}
-      <div className="h-16 md:hidden"></div>
+      {/* Mobile Header Spacer - Increased for better visibility */}
+      <div className="h-20 md:hidden"></div>
       
       <Stories />
       
