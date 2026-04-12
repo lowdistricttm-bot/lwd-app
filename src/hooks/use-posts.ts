@@ -5,10 +5,17 @@ export const usePosts = () => {
   return useInfiniteQuery({
     queryKey: ['supabase-posts'],
     queryFn: async ({ pageParam = 0 }) => {
+      // Usiamo una query più esplicita per evitare problemi di cache dello schema
       const { data, error } = await supabase
         .from('posts')
         .select(`
-          *,
+          id,
+          content,
+          image_url,
+          user_id,
+          user_name,
+          user_avatar,
+          created_at,
           likes:post_likes(count),
           comments:post_comments(count)
         `)
@@ -61,7 +68,8 @@ export const usePostInteractions = (postId: string) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('post_likes')
-        .select('user_id');
+        .select('user_id')
+        .eq('post_id', postId);
       if (error) throw error;
       return data;
     }
@@ -69,13 +77,12 @@ export const usePostInteractions = (postId: string) => {
 
   const likeMutation = useMutation({
     mutationFn: async (userId: string) => {
-      // Controlla se il like esiste già
       const { data: existing } = await supabase
         .from('post_likes')
         .select('id')
         .eq('post_id', postId)
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (existing) {
         return supabase.from('post_likes').delete().eq('id', existing.id);
