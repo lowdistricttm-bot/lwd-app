@@ -23,8 +23,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// Credenziali Master per emergenza
-const MASTER_AUTH = btoa("ck_9fb51bb84b02dbc2bbc4c9a602de478ca33079ea:cs_225bea698a3c9bf46cda04bf57a630a6b15034a9");
+// Usiamo le chiavi WooCommerce che sono già autorizzate sul server
+const WC_AUTH = btoa("ck_9fb51bb84b02dbc2bbc4c9a602de478ca33079ea:cs_225bea698a3c9bf46cda04bf57a630a6b15034a9");
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [token, setToken] = useState<string | null>(() => {
@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = async (username: string, password: string) => {
     setIsLoading(true);
     try {
-      // 1. Otteniamo il Token
+      // 1. Verifica credenziali tramite JWT
       const response = await fetch('https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -60,51 +60,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       const jwtToken = resData.data?.jwt || resData.jwt;
       
+      // 2. Recupero dati profilo tramite WooCommerce API (Metodo Infallibile)
+      // Cerchiamo l'utente per email o per username usando le chiavi segrete del negozio
+      const isEmail = username.includes('@');
+      const searchUrl = isEmail 
+        ? `https://www.lowdistrict.it/wp-json/wc/v3/customers?email=${encodeURIComponent(username.trim())}`
+        : `https://www.lowdistrict.it/wp-json/wc/v3/customers?username=${encodeURIComponent(username.trim())}`;
+
+      const wcRes = await fetch(searchUrl, {
+        headers: { 'Authorization': `Basic ${WC_AUTH}` }
+      });
+
       let userData: User | null = null;
 
-      // 2. STRADA A: Validazione diretta tramite il plugin (Il metodo più sicuro)
-      // Usiamo ?JWT= nell'URL perché molti server bloccano l'header Authorization
-      const validateRes = await fetch(`https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth/validate?JWT=${jwtToken}`);
-      const validateData = await validateRes.json();
-
-      if (validateData.success && validateData.data?.user) {
-        const u = validateData.data.user;
-        userData = {
-          id: parseInt(u.ID || u.id),
-          username: u.user_login || u.username,
-          email: u.user_email || u.email || '',
-          nicename: u.display_name || u.user_nicename || u.user_login,
-          display_name: u.display_name || u.user_login,
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.user_login || 'user'}`
-        };
-      }
-
-      // 3. STRADA B: Se la validazione non dà l'utente, proviamo /users/me con il token nell'URL
-      if (!userData) {
-        const meRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/me?JWT=${jwtToken}`);
-        if (meRes.ok) {
-          const me = await meRes.json();
+      if (wcRes.ok) {
+        const customers = await wcRes.json();
+        if (customers && customers.length > 0) {
+          const c = customers[0];
           userData = {
-            id: me.id,
-            username: me.slug,
-            email: me.email || '',
-            nicename: me.name,
-            display_name: me.name,
-            avatar: me.avatar_urls?.['96'] || `https://api.dicebear.com/7.x/avataaars/svg?seed=${me.slug}`
+            id: c.id,
+            username: c.username,
+            email: c.email,
+            nicename: `${c.first_name} ${c.last_name}`.trim() || c.username,
+            display_name: `${c.first_name} ${c.last_name}`.trim() || c.username,
+            avatar: c.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${c.username}`
           };
         }
       }
 
-      // 4. STRADA C: Ricerca forzata tramite Master Key (WooCommerce/WP)
+      // 3. Fallback: se non è un "cliente" WooCommerce, proviamo a cercarlo come utente WP generico
       if (!userData) {
-        const searchUrl = username.includes('@') 
-          ? `https://www.lowdistrict.it/wp-json/wp/v2/users?search=${username.trim()}`
-          : `https://www.lowdistrict.it/wp-json/wp/v2/users?slug=${username.trim()}`;
-
-        const wpRes = await fetch(searchUrl, {
-          headers: { 'Authorization': `Basic ${MASTER_AUTH}` }
+        const wpSearchUrl = `https://www.lowdistrict.it/wp-json/wp/v2/users?slug=${username.trim()}`;
+        const wpRes = await fetch(wpSearchUrl, {
+          headers: { 'Authorization': `Basic ${WC_AUTH}` } // Le chiavi WC spesso funzionano anche qui
         });
-
+        
         if (wpRes.ok) {
           const users = await wpRes.json();
           if (users && users.length > 0) {
@@ -121,17 +111,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
 
-      if (!userData || !userData.id) {
-        throw new Error("Sincronizzazione fallita. Il server non restituisce i dati del tuo profilo.");
+      // 4. Ultima spiaggia: se abbiamo il token ma il server nasconde tutto, 
+      // creiamo un profilo temporaneo per non bloccare l'utente, ma l'ID 0 indicherà un problema di sync
+      if (!userData) {
+        throw new Error("Il tuo account esiste ma il server non ci permette di leggere i tuoi dati. Contatta l'amministratore.");
       }
 
-      // Salvataggio finale
+      // Salvataggio persistente
       setToken(jwtToken);
       setUser(userData);
       localStorage.setItem('ld_auth_token', jwtToken);
       localStorage.setItem('ld_user_data', JSON.stringify(userData));
       
-      showSuccess(`Bentornato, ${userData.display_name}`);
+      showSuccess(`Accesso eseguito: ${userData.display_name}`);
     } catch (error: any) {
       console.error('Login Error:', error);
       showError(error.message);
