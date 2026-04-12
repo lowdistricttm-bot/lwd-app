@@ -48,10 +48,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchLatestUserData = useCallback(async (userId: number, currentToken: string) => {
     setIsRefreshing(true);
     try {
-      // 1. Proviamo BuddyPress (Metodo primario per Low District)
-      const bpResponse = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${userId}?context=view`, {
-        headers: { 'Authorization': `Bearer ${currentToken}` }
-      });
+      // Usiamo JWT nell'URL per evitare errori 401 su mobile
+      const bpResponse = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${userId}?context=view&JWT=${currentToken}`);
       
       if (bpResponse.ok) {
         const data = await bpResponse.json();
@@ -59,17 +57,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const rawAvatar = member?.avatar_urls?.full || member?.avatar_urls?.thumb;
         
         if (rawAvatar && !rawAvatar.includes('gravatar.com')) {
-          // Forza il refresh dell'immagine con un timestamp
           const finalAvatar = `${rawAvatar}${rawAvatar.includes('?') ? '&' : '?'}v=${Date.now()}`;
           updateUserAvatar(finalAvatar);
           return;
         }
       }
 
-      // 2. Fallback su WP Users standard se BuddyPress non restituisce un avatar personalizzato
-      const wpResponse = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${userId}`, {
-        headers: { 'Authorization': `Bearer ${currentToken}` }
-      });
+      const wpResponse = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${userId}?JWT=${currentToken}`);
       
       if (wpResponse.ok) {
         const wpData = await wpResponse.json();
@@ -133,7 +127,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.setItem('ld_auth_token', jwtToken);
       localStorage.setItem('ld_user_data', JSON.stringify(userData));
       
-      // Sincronizza immediatamente l'avatar dopo il login
       await fetchLatestUserData(userData.id, jwtToken);
       showSuccess(`Bentornato ${userData.display_name}`);
       
