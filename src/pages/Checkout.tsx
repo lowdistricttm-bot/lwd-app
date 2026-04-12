@@ -22,7 +22,9 @@ const Checkout = () => {
     city: '',
     postcode: '',
     email: '',
-    phone: ''
+    phone: '',
+    country: 'IT', // Campo obbligatorio per WooCommerce
+    state: 'MI'    // Campo spesso richiesto
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,12 +34,19 @@ const Checkout = () => {
   const finalizeOrder = async () => {
     setIsProcessing(true);
     try {
+      // Struttura dati corretta per WooCommerce Order API
       const orderData = {
         payment_method: "cod", 
         payment_method_title: "WhatsApp / Contatto Diretto",
         set_paid: false,
-        billing: formData,
-        shipping: formData,
+        billing: {
+          ...formData,
+          email: formData.email,
+          phone: formData.phone
+        },
+        shipping: {
+          ...formData
+        },
         line_items: cart.map(item => ({
           product_id: item.id,
           quantity: item.quantity
@@ -45,12 +54,15 @@ const Checkout = () => {
         customer_note: "Ordine effettuato tramite App - Finalizzazione via WhatsApp"
       };
 
-      await wcPost('/orders', orderData);
+      const response = await wcPost('/orders', orderData);
+      console.log('Order created:', response);
+      
       setStep(3);
-      showSuccess("Ordine prenotato con successo!");
+      showSuccess("Ordine inviato con successo a WooCommerce!");
       clearCart();
     } catch (err: any) {
-      showError("Errore durante la prenotazione. Riprova.");
+      console.error('Checkout Error:', err);
+      showError(err.message || "Errore durante la prenotazione. Riprova.");
     } finally {
       setIsProcessing(false);
     }
@@ -68,9 +80,9 @@ const Checkout = () => {
         <div className="w-24 h-24 bg-green-500/20 rounded-full flex items-center justify-center mb-8 animate-bounce">
           <CheckCircle2 size={48} className="text-green-500" />
         </div>
-        <h1 className="text-4xl font-black uppercase tracking-tighter mb-4 italic">Ordine Prenotato!</h1>
+        <h1 className="text-4xl font-black uppercase tracking-tighter mb-4 italic">Ordine Ricevuto!</h1>
         <p className="text-gray-400 text-sm font-bold uppercase tracking-widest max-w-xs mx-auto mb-12">
-          Il tuo ordine è stato registrato. Ora clicca qui sotto per finalizzare il pagamento su WhatsApp.
+          Il tuo ordine è stato registrato su WooCommerce. Clicca qui sotto per finalizzare il pagamento su WhatsApp.
         </p>
         
         <div className="space-y-4 w-full max-w-xs">
@@ -161,7 +173,7 @@ const Checkout = () => {
                 </div>
                 <div>
                   <h3 className="text-sm font-black uppercase tracking-widest">Finalizzazione Ordine</h3>
-                  <p className="text-[10px] text-gray-500 font-bold uppercase">Verrai contattato su WhatsApp per il pagamento</p>
+                  <p className="text-[10px] text-gray-500 font-bold uppercase">L'ordine verrà creato direttamente su WooCommerce</p>
                 </div>
               </div>
               
@@ -189,13 +201,13 @@ const Checkout = () => {
                 className="w-full bg-red-600 hover:bg-red-700 text-white py-8 text-xl font-black uppercase tracking-widest rounded-none italic shadow-2xl shadow-red-600/20"
               >
                 {isProcessing ? (
-                  <span className="flex items-center gap-2"><Loader2 className="animate-spin" /> Elaborazione...</span>
-                ) : "Conferma e Prenota"}
+                  <span className="flex items-center gap-2"><Loader2 className="animate-spin" /> Invio a WooCommerce...</span>
+                ) : "Conferma e Invia Ordine"}
               </Button>
               
               <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest text-center mt-6 leading-relaxed">
-                Cliccando su conferma, il tuo ordine verrà registrato nel nostro sistema. <br />
-                Riceverai una notifica per procedere al pagamento tramite WhatsApp.
+                Cliccando su conferma, il tuo ordine verrà creato nel database di WooCommerce. <br />
+                Potrai poi procedere al pagamento tramite WhatsApp.
               </p>
             </div>
           </div>
