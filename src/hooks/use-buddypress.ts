@@ -44,15 +44,17 @@ export const useCreateActivity = () => {
       const token = localStorage.getItem('ld_auth_token');
       if (!token) throw new Error("Devi essere loggato per pubblicare");
 
-      const response = await fetch(`${BASE_URL}/buddypress/v1/activity`, {
+      // Passiamo il token nell'URL per evitare che il server lo cancelli dagli header
+      const url = `${BASE_URL}/buddypress/v1/activity?JWT=${token}`;
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           content: content,
-          user_id: userId, // BuddyPress richiede spesso l'ID esplicito
+          user_id: userId,
           component: 'activity',
           type: 'activity_update'
         })

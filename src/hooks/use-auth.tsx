@@ -24,26 +24,13 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Caricamento immediato all'avvio
-  useEffect(() => {
-    const savedToken = localStorage.getItem('ld_auth_token');
-    const savedUser = localStorage.getItem('ld_user_data');
-    
-    if (savedToken && savedUser) {
-      try {
-        setToken(savedToken);
-        setUser(JSON.parse(savedUser));
-      } catch (e) {
-        localStorage.removeItem('ld_auth_token');
-        localStorage.removeItem('ld_user_data');
-      }
-    }
-    setIsLoading(false);
-  }, []);
+  // Inizializzazione immediata dallo storage
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem('ld_auth_token'));
+  const [user, setUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem('ld_user_data');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
   const login = async (username: string, password: string) => {
     setIsLoading(true);
@@ -70,7 +57,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setToken(jwtToken);
         setUser(userData);
         
-        // Salvataggio persistente
         localStorage.setItem('ld_auth_token', jwtToken);
         localStorage.setItem('ld_user_data', JSON.stringify(userData));
         

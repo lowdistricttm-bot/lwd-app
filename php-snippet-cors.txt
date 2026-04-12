@@ -1,6 +1,6 @@
 <?php
 /**
- * Sblocco DEFINITIVO App Low District
+ * Sblocco App Low District - Versione URL-Auth
  */
 
 add_action( 'rest_api_init', function() {
@@ -19,17 +19,14 @@ add_action( 'rest_api_init', function() {
     });
 }, 15 );
 
-// Bridge per l'header Authorization se il server lo nasconde
+// Forza il login se il token è presente nell'URL (?JWT=...)
 add_filter( 'determine_current_user', function( $user_id ) {
     if ( $user_id ) return $user_id;
 
-    $header = isset( $_SERVER['HTTP_AUTHORIZATION'] ) ? $_SERVER['HTTP_AUTHORIZATION'] : ( isset( $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ) ? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] : '' );
-    
-    if ( ! empty( $header ) && strpos( $header, 'Bearer ' ) !== false ) {
-        // Il plugin Simple JWT Login dovrebbe gestire il resto, 
-        // ma questo assicura che l'header sia visibile.
+    if ( isset( $_GET['JWT'] ) ) {
+        // Il plugin Simple JWT Login processerà il parametro JWT nell'URL
     }
     return $user_id;
-}, 10 );
+}, 30 );
 
 add_filter( 'bp_rest_activity_create_item_permissions_check', '__return_true', 100 );
