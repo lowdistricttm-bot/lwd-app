@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { showSuccess, showError } from '@/utils/toast';
-import { wcPost } from '@/lib/woocommerce';
 
 interface User {
   id: number;
@@ -43,7 +42,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = async (username: string, password: string) => {
     setIsLoading(true);
     try {
-      // Endpoint standard per il plugin JWT Authentication
       const response = await fetch('https://www.lowdistrict.it/wp-json/jwt-auth/v1/token', {
         method: 'POST',
         headers: { 
@@ -55,6 +53,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           password: password 
         }),
       });
+
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Il server ha risposto con un formato non valido (HTML). Verifica i Permalink su WordPress.");
+      }
 
       const data = await response.json();
 
@@ -74,18 +77,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         localStorage.setItem('ld_user_data', JSON.stringify(userData));
         showSuccess(`Bentornato, ${userData.display_name}!`);
       } else {
-        // Se il server risponde con un errore specifico (es. password errata)
-        const errorMsg = data.message || 'Credenziali non valide o errore server';
-        throw new Error(errorMsg);
+        throw new Error(data.message || 'Credenziali non valide');
       }
     } catch (error: any) {
       console.error('Login Error:', error);
-      // Se l'errore è il 404 rest_no_route, diamo un consiglio all'utente
-      if (error.message.includes('Nessun percorso') || error.message.includes('rest_no_route')) {
-        showError("Errore API: Verifica che il plugin JWT sia attivo sul sito.");
-      } else {
-        showError(error.message);
-      }
+      showError(error.message);
       throw error;
     } finally {
       setIsLoading(false);
@@ -95,18 +91,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const register = async (userData: any) => {
     setIsLoading(true);
     try {
-      const customerData = {
-        email: userData.email,
-        first_name: userData.first_name,
-        last_name: userData.last_name,
-        username: userData.email.split('@')[0],
-        password: userData.password,
-      };
+      // Registrazione tramite API standard WP
+      const response = await fetch('https://www.lowdistrict.it/wp-json/wp/v2/users/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: userData.username || userData.email.split('@')[0],
+          email: userData.email,
+          password: userData.password,
+          first_name: userData.first_name,
+          last_name: userData.last_name
+        })
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || "Errore durante la registrazione");
+      }
 
-      await wcPost('/customers', customerData);
-      showSuccess("Account creato con successo! Ora puoi accedere.");
+      showSuccess("Account creato! Ora puoi accedere.");
     } catch (error: any) {
-      showError(error.message || "Errore durante la registrazione");
+      showError(error.message);
       throw error;
     } finally {
       setIsLoading(false);
@@ -118,7 +123,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(null);
     localStorage.removeItem('ld_auth_token');
     localStorage.removeItem('ld_user_data');
-    showSuccess("Sessione chiusa correttamente");
+    showSuccess("Sessione chiusa");
   };
 
   return (
