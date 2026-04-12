@@ -22,24 +22,27 @@ const Stories = () => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Carica la storia da Supabase all'avvio
   useEffect(() => {
     const loadStory = async () => {
       if (!user?.id) return;
 
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-      const { data, error } = await supabase
-        .from('stories')
-        .select('image_url, created_at')
-        .eq('user_id', user.id)
-        .gt('created_at', twentyFourHoursAgo)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('stories')
+          .select('image_url, created_at')
+          .eq('user_id', user.id)
+          .gt('created_at', twentyFourHoursAgo)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-      if (data) {
-        setMyStory(data);
+        if (data) {
+          setMyStory(data);
+        }
+      } catch (err) {
+        console.error("Errore caricamento storia:", err);
       }
     };
 
@@ -55,7 +58,6 @@ const Stories = () => {
 
     setIsUploading(true);
     try {
-      // 1. Carica l'immagine nello Storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
       
@@ -65,12 +67,10 @@ const Stories = () => {
 
       if (uploadError) throw uploadError;
 
-      // 2. Ottieni l'URL pubblico
       const { data: { publicUrl } } = supabase.storage
         .from('stories')
         .getPublicUrl(fileName);
 
-      // 3. Salva il record nel database
       const { error: dbError } = await supabase
         .from('stories')
         .insert([{ 
@@ -82,9 +82,9 @@ const Stories = () => {
       if (dbError) throw dbError;
 
       setMyStory({ image_url: publicUrl, created_at: new Date().toISOString() });
-      showSuccess("Storia pubblicata sul cloud!");
+      showSuccess("Storia pubblicata!");
     } catch (err: any) {
-      showError("Errore durante il caricamento: " + err.message);
+      showError("Errore: " + err.message);
     } finally {
       setIsUploading(false);
     }
@@ -144,7 +144,6 @@ const Stories = () => {
           </button>
         </div>
 
-        {/* Mock per altre storie */}
         {[1, 2, 3].map((i) => (
           <button key={i} className="flex flex-col items-center gap-1.5 shrink-0 group">
             <div className="w-[66px] h-[66px] rounded-full p-[2.5px] bg-zinc-800 group-hover:bg-white/20 transition-all">
