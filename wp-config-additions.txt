@@ -1,3 +1,6 @@
-/** Configurazione per JWT Authentication */
+/* Aggiungi questo blocco qui sotto */
 define('JWT_AUTH_SECRET_KEY', 'LowDistrict_Secret_Key_2025_!_Secure_String');
 define('JWT_AUTH_CORS_ENABLE', true);
+
+/* Questa deve rimanere l'ultima riga */
+require_once( ABSPATH . 'wp-settings.php' );
