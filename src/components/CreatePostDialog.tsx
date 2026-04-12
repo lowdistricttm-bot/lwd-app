@@ -4,16 +4,16 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ImagePlus, Send, Loader2 } from 'lucide-react';
+import { ImagePlus, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
-import { useCreateActivity } from '@/hooks/use-buddypress';
+import { useCreatePost } from '@/hooks/use-posts';
 import { showSuccess, showError } from '@/utils/toast';
 
 const CreatePostDialog = () => {
   const [open, setOpen] = useState(false);
   const [content, setContent] = useState("");
   const { user } = useAuth();
-  const createActivity = useCreateActivity();
+  const createPost = useCreatePost();
   
   const defaultAvatar = "https://www.lowdistrict.it/wp-content/uploads/placeholder.png";
 
@@ -22,12 +22,17 @@ const CreatePostDialog = () => {
     if (!content.trim() || !user) return;
 
     try {
-      await createActivity.mutateAsync({ content });
-      showSuccess("Post pubblicato sul sito!");
+      await createPost.mutateAsync({ 
+        content,
+        user_id: user.id.toString(),
+        user_name: user.display_name,
+        user_avatar: user.avatar || defaultAvatar
+      });
+      showSuccess("Post pubblicato nella community!");
       setOpen(false);
       setContent("");
     } catch (err: any) {
-      showError("Errore durante la pubblicazione. Verifica il fix CORS sul sito.");
+      showError("Errore durante la pubblicazione.");
     }
   };
 
@@ -64,11 +69,11 @@ const CreatePostDialog = () => {
 
           <div className="flex items-center justify-between pt-4 border-t border-white/5">
             <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">
-              Il post apparirà sulla bacheca del sito
+              Il post sarà visibile a tutti i membri dell'app
             </p>
             
-            <Button type="submit" disabled={!content.trim() || createActivity.isPending} className="bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest px-8 rounded-none italic">
-              {createActivity.isPending ? <Loader2 className="animate-spin" /> : "Pubblica"}
+            <Button type="submit" disabled={!content.trim() || createPost.isPending} className="bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest px-8 rounded-none italic">
+              {createPost.isPending ? <Loader2 className="animate-spin" /> : "Pubblica"}
             </Button>
           </div>
         </form>

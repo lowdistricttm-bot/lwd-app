@@ -25,7 +25,13 @@ export const useCreatePost = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (newPost: { content: string, user_id: string, user_name: string, user_avatar: string, image_url?: string }) => {
+    mutationFn: async (newPost: { 
+      content: string, 
+      user_id: string, 
+      user_name: string, 
+      user_avatar: string, 
+      image_url?: string 
+    }) => {
       const { data, error } = await supabase
         .from('posts')
         .insert([newPost])

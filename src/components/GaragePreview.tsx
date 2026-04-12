@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Heart, MessageCircle, Send, MoreHorizontal, Share2, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
-import CommentDrawer from './CommentDrawer';
+import React, { useEffect, useRef, useMemo } from 'react';
+import { Heart, MessageCircle, Share2, MoreHorizontal, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import CreatePostDialog from './CreatePostDialog';
 import { cn } from '@/lib/utils';
-import { useBpActivity, useFavoriteActivity } from '@/hooks/use-buddypress';
+import { usePosts } from '@/hooks/use-posts';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -22,22 +21,12 @@ const GaragePreview = () => {
     fetchNextPage, 
     hasNextPage, 
     isFetchingNextPage 
-  } = useBpActivity();
+  } = usePosts();
   
-  const favoriteMutation = useFavoriteActivity();
   const observerTarget = useRef(null);
 
   const allPosts = useMemo(() => {
-    const posts = data?.pages.flat() || [];
-    const uniquePosts = [];
-    const seenIds = new Set();
-    for (const post of posts) {
-      if (!seenIds.has(post.id)) {
-        seenIds.add(post.id);
-        uniquePosts.push(post);
-      }
-    }
-    return uniquePosts;
+    return data?.pages.flat() || [];
   }, [data?.pages]);
 
   useEffect(() => {
@@ -61,29 +50,11 @@ const GaragePreview = () => {
     };
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const handleLike = async (post: any) => {
-    if (!user) {
-      showError("Accedi per mettere like");
-      return;
-    }
-    
-    const isCurrentlyFavorite = post.favorite_count > 0; // Semplificazione per il mock/UI
-    
-    try {
-      await favoriteMutation.mutateAsync({ 
-        activityId: post.id, 
-        isFavorite: !isCurrentlyFavorite 
-      });
-    } catch (err) {
-      // Errore gestito dal hook
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-32">
         <Loader2 className="animate-spin text-red-600 mb-4" size={32} />
-        <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Sincronizzazione Community...</p>
+        <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Caricamento Feed...</p>
       </div>
     );
   }
@@ -92,10 +63,7 @@ const GaragePreview = () => {
     return (
       <div className="text-center py-16 px-6 bg-zinc-900/30 border border-white/5 rounded-3xl mx-4">
         <AlertCircle className="mx-auto text-red-600 mb-4" size={32} />
-        <h3 className="text-sm font-black uppercase tracking-tighter mb-2">Errore di Sincronizzazione</h3>
-        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-relaxed mb-6">
-          Impossibile connettersi al database del sito.
-        </p>
+        <h3 className="text-sm font-black uppercase tracking-tighter mb-2">Errore di Connessione</h3>
         <Button 
           onClick={() => refetch()}
           className="bg-white text-black hover:bg-red-600 hover:text-white font-black uppercase tracking-widest text-[10px] px-8 py-4 rounded-none italic"
@@ -113,15 +81,15 @@ const GaragePreview = () => {
 
         <div className="flex items-center justify-between border-b border-white/5 pb-6 mb-8">
           <div>
-            <h3 className="text-lg font-black tracking-tighter uppercase italic">Community Feed</h3>
-            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Sincronizzato con lowdistrict.it</p>
+            <h3 className="text-lg font-black tracking-tighter uppercase italic">Bacheca Community</h3>
+            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Social Network Interno</p>
           </div>
         </div>
         
         <div className="space-y-12">
           {allPosts.length === 0 ? (
             <div className="text-center py-20">
-              <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Nessuna attività trovata</p>
+              <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Nessun post ancora. Sii il primo!</p>
             </div>
           ) : (
             allPosts.map((post: any) => (
@@ -131,7 +99,7 @@ const GaragePreview = () => {
                     <div className="w-10 h-10 rounded-full p-[2px] bg-red-600">
                       <div className="w-full h-full rounded-full border-2 border-black overflow-hidden">
                         <img 
-                          src={post.user_avatar?.thumb || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.user_id}`} 
+                          src={post.user_avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.user_id}`} 
                           alt="" 
                           className="w-full h-full object-cover"
                         />
@@ -142,7 +110,7 @@ const GaragePreview = () => {
                         {post.user_name || 'Membro Low District'}
                       </p>
                       <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">
-                        {post.date ? formatDistanceToNow(new Date(post.date), { addSuffix: true, locale: it }) : 'Recentemente'}
+                        {post.created_at ? formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: it }) : 'Recentemente'}
                       </p>
                     </div>
                   </div>
@@ -152,26 +120,26 @@ const GaragePreview = () => {
                 </div>
                 
                 <div className="px-4 pb-4">
-                  <div 
-                    className="activity-content text-sm leading-relaxed text-gray-300 prose prose-invert max-w-none break-words"
-                    dangerouslySetInnerHTML={{ __html: post.content?.rendered || post.content }}
-                  />
+                  <p className="text-sm leading-relaxed text-gray-300 whitespace-pre-wrap">
+                    {post.content}
+                  </p>
+                  {post.image_url && (
+                    <div className="mt-4 rounded-2xl overflow-hidden border border-white/5">
+                      <img src={post.image_url} alt="Post content" className="w-full h-auto" />
+                    </div>
+                  )}
                 </div>
 
                 <div className="px-4 py-4 flex items-center justify-between border-t border-white/5">
                   <div className="flex items-center gap-6">
-                    <button 
-                      onClick={() => handleLike(post)}
-                      disabled={favoriteMutation.isPending}
-                      className={cn(
-                        "transition-all active:scale-125 flex items-center gap-2", 
-                        post.favorite_count > 0 ? "text-red-600" : "text-white"
-                      )}
-                    >
-                      <Heart size={26} strokeWidth={2} fill={post.favorite_count > 0 ? "currentColor" : "none"} />
-                      <span className="text-xs font-black">{post.favorite_count || 0}</span>
+                    <button className="text-white hover:text-red-600 transition-all flex items-center gap-2">
+                      <Heart size={24} strokeWidth={2} />
+                      <span className="text-xs font-black">0</span>
                     </button>
-                    <CommentDrawer count="0" />
+                    <button className="text-white hover:text-red-600 transition-all flex items-center gap-2">
+                      <MessageCircle size={24} strokeWidth={2} />
+                      <span className="text-xs font-black">0</span>
+                    </button>
                     <button className="text-white hover:text-red-600 transition-colors">
                       <Share2 size={24} strokeWidth={2} />
                     </button>
@@ -186,21 +154,6 @@ const GaragePreview = () => {
           {isFetchingNextPage && <Loader2 className="animate-spin text-red-600" size={24} />}
         </div>
       </div>
-
-      <style>{`
-        .activity-content img {
-          width: 100%;
-          height: auto;
-          border-radius: 1rem;
-          margin: 1rem 0;
-          border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        .activity-content a {
-          color: #ef4444;
-          font-weight: 800;
-          text-decoration: none;
-        }
-      `}</style>
     </section>
   );
 };
