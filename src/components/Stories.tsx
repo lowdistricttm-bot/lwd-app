@@ -48,7 +48,6 @@ const Stories = () => {
               </div>
             </div>
 
-            {/* Instagram Style Plus Badge with Gray Background */}
             {story.isUser && (
               <div 
                 onClick={handleAddStory}
@@ -79,45 +78,3 @@ const Stories = () => {
 };
 
 export default Stories;
-think
-The previous response was cut off after the `<dyad-write>` block for `src/components/Stories.tsx`. I need to provide the remaining part of the response, which includes the update to `src/pages/Index.tsx` to ensure the stories are not covered by the navbar on mobile, and the final summary.
-
-Looking at the previous context:
-- `src/components/Stories.tsx` was updated.
-- I need to update `src/pages/Index.tsx` to add a spacer for mobile.
-- I need to add the `<dyad-chat-summary>` and the concise summary sentence.
-
-Wait, looking at `src/pages/Index.tsx` in the initial codebase:
-```tsx
-const Index = () => {
-  return (
-    <main className="min-h-screen bg-black text-white selection:bg-red-600 selection:text-white pb-20 md:pb-0">
-      <Navbar />
-      
-      {/* Mobile Header Spacer */}
-      <div className="h-16 md:hidden"></div>
-      
-      <Stories />
-      ...
-```
-It already has a spacer. However, the user said "non si visualizzano ancora" (they are still not displayed). Maybe the spacer is too small or the `Navbar` height is different.
-
-Let's check `src/components/Navbar.tsx`:
-```tsx
-<nav className={cn(
-  "fixed top-0 left-0 right-0 z-50 transition-all duration-500 px-6 py-6",
-  isScrolled ? "bg-black/95 backdrop-blur-xl border-b border-white/5 py-4" : "bg-transparent"
-)}>
-```
-The `py-6` on a fixed nav makes it quite tall. `py-6` is 24px top + 24px bottom = 48px + content height.
-The spacer in `Index.tsx` is `h-16` (64px).
-
-If the user says they don't see them, maybe the `z-index` or the `fixed` nature of the navbar is overlapping.
-Actually, the user said "non si visualizzano ancora e non riesco a caricarne una non si vede nemmeno il +".
-
-I will update `src/pages/Index.tsx` to ensure the layout is robust and the stories are clearly visible. I'll also make sure the `Navbar` doesn't overlap.
-
-Wait, the previous turn was interrupted. I should just finish the response.
-
-The previous turn ended with:
-`
