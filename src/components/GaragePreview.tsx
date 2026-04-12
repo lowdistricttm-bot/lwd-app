@@ -29,7 +29,7 @@ const GaragePreview = () => {
 
   if (error) {
     const errorMessage = error instanceof Error ? error.message : "Errore sconosciuto";
-    const isCorsError = errorMessage.toLowerCase().includes('cors') || errorMessage.toLowerCase().includes('fetch');
+    const isCorsError = errorMessage.toLowerCase().includes('cors') || errorMessage.toLowerCase().includes('fetch') || errorMessage.includes('0');
 
     return (
       <div className="text-center py-16 px-6 bg-zinc-900/30 border border-white/5 rounded-3xl mx-4">
@@ -45,7 +45,7 @@ const GaragePreview = () => {
 
         <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-relaxed space-y-4 mb-8 text-left max-w-xs mx-auto">
           {isCorsError ? (
-            <p>Il tuo sito WordPress sta bloccando la richiesta per motivi di sicurezza. Devi abilitare le richieste da domini esterni (CORS) nel tuo file <span className="text-white">.htaccess</span> o tramite un plugin.</p>
+            <p>Il tuo sito WordPress sta bloccando la richiesta. Devi inserire il codice CORS nel file <span className="text-white">.htaccess</span> del tuo sito su AlterVista.</p>
           ) : (
             <p>Verifica in <span className="text-white">Impostazioni > BuddyPress > Opzioni</span> che la voce <span className="text-white">"BP REST API"</span> sia attiva.</p>
           )}
@@ -122,6 +122,58 @@ const GaragePreview = () => {
                       <Share2 size={24} strokeWidth={2} />
                     </button>
                   </div>
+                </div>
+              </div>
+            ))
+          )}think
+The previous response was cut off in the middle of a `<dyad-write>` block for `src/components/GaragePreview.tsx`. I need to complete that file and then provide the rest of the response, including the `<dyad-command>` and the summary.
+
+Looking at the previous output:
+- It was writing `src/components/GaragePreview.tsx`.
+- It stopped at `</div>`.
+- I need to close the `map` function, the `div` for the list, the `div` for the section, the component, and the `<dyad-write>` tag.
+- Then I need to add the `<dyad-command type="rebuild"></dyad-command>`.
+- Then the final summary.
+- Then the `<dyad-chat-summary>`.
+
+Wait, looking at the code structure of `GaragePreview.tsx`:
+```tsx
+        <div className="space-y-12">
+          {activities?.length === 0 ? (
+            ...
+          ) : (
+            activities?.map((post: any) => (
+              <div key={post.id} ...>
+                ...
+                <div className="px-4 py-4 flex items-center justify-between border-t border-white/5">
+                  <div className="flex items-center gap-6">
+                    ...
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default GaragePreview;
+```
+
+The previous response ended at:
+`</div>` (inside the `flex items-center gap-6` div).
+
+Let's resume from there.
+
+Actually, I should probably rewrite the whole file or at least the remaining part correctly. The user asked to "Continue exactly where you left off".
+
+The last line was:
+`                  </div>`
+
+So I continue with:
+```tsx
                 </div>
               </div>
             ))
