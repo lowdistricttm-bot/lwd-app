@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import { Settings as SettingsIcon, Grid, Package, MapPin, Link as LinkIcon, ChevronRight, User as UserIcon, Users, MessageSquare, Loader2 } from 'lucide-react';
@@ -20,6 +20,16 @@ const Profile = () => {
 
   // URL dell'immagine di default ufficiale del tuo sito
   const defaultAvatar = "https://www.lowdistrict.it/wp-content/uploads/placeholder.png";
+
+  // Logica ultra-robusta per l'avatar
+  const avatarSrc = useMemo(() => {
+    if (imgError || !user?.avatar) return defaultAvatar;
+    
+    // Se l'URL contiene gravatar, spesso è quello che genera l'icona rotta
+    if (user.avatar.includes('gravatar.com')) return defaultAvatar;
+    
+    return user.avatar;
+  }, [user?.avatar, imgError]);
 
   if (isLoading) {
     return (
@@ -64,7 +74,8 @@ const Profile = () => {
           <div className="relative">
             <div className="w-24 h-24 rounded-[2rem] bg-zinc-900 border-2 border-red-600 p-1 rotate-3 flex items-center justify-center overflow-hidden">
               <img 
-                src={imgError || !user.avatar ? defaultAvatar : user.avatar} 
+                key={avatarSrc} // Forza il refresh se l'URL cambia
+                src={avatarSrc} 
                 alt="avatar" 
                 className="w-full h-full rounded-[1.8rem] object-cover -rotate-3" 
                 onError={() => setImgError(true)}
