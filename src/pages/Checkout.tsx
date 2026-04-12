@@ -6,12 +6,14 @@ import { useCart } from '@/hooks/use-cart';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ChevronLeft, MessageCircle, Truck, ShieldCheck, CheckCircle2, Loader2, Phone } from 'lucide-react';
+import { ChevronLeft, MessageCircle, Truck, ShieldCheck, CheckCircle2, Loader2, Phone, CreditCard } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { wcPost } from '@/lib/woocommerce';
+import { useAuth } from '@/hooks/use-auth';
 
 const Checkout = () => {
   const { total, clearCart, cart } = useCart();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -21,7 +23,7 @@ const Checkout = () => {
     address_1: '',
     city: '',
     postcode: '',
-    email: '',
+    email: user?.email || '',
     phone: '',
     country: 'IT',
     state: 'MI'
@@ -35,22 +37,22 @@ const Checkout = () => {
     setIsProcessing(true);
     try {
       const orderData = {
+        customer_id: user?.id || 0,
         payment_method: "cod", 
         payment_method_title: "WhatsApp / Contatto Diretto",
         set_paid: false,
         billing: {
           ...formData,
-          email: formData.email,
-          phone: formData.phone
         },
         shipping: {
           ...formData
         },
         line_items: cart.map(item => ({
           product_id: item.id,
-          quantity: item.quantity
+          quantity: item.quantity,
+          variation_id: item.size ? undefined : undefined // Qui andrebbe l'ID variante se implementato a fondo
         })),
-        customer_note: "Ordine effettuato tramite App - Finalizzazione via WhatsApp"
+        customer_note: "Ordine effettuato tramite App Low District - Finalizzazione via WhatsApp"
       };
 
       const response = await wcPost('/orders', orderData);
@@ -81,7 +83,7 @@ const Checkout = () => {
         </div>
         <h1 className="text-4xl font-black uppercase tracking-tighter mb-4 italic">Ordine Ricevuto!</h1>
         <p className="text-gray-400 text-sm font-bold uppercase tracking-widest max-w-xs mx-auto mb-12">
-          Il tuo ordine è stato ricevuto correttamente. Clicca qui sotto per finalizzare il pagamento su WhatsApp.
+          Il tuo ordine è stato sincronizzato con il sito. Clicca qui sotto per finalizzare il pagamento su WhatsApp.
         </p>
         
         <div className="space-y-4 w-full max-w-xs">
@@ -168,29 +170,27 @@ const Checkout = () => {
             <div className="bg-zinc-900 p-6 border border-white/5 space-y-6">
               <div className="flex items-center gap-4 mb-4">
                 <div className="p-3 bg-red-600/10 rounded-full">
-                  <Phone className="text-red-600" size={20} />
+                  <CreditCard className="text-red-600" size={20} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black uppercase tracking-widest">Finalizzazione Ordine</h3>
-                  <p className="text-[10px] text-gray-500 font-bold uppercase">L'ordine verrà creato direttamente sul sito web</p>
+                  <h3 className="text-sm font-black uppercase tracking-widest">Riepilogo Ordine</h3>
+                  <p className="text-[10px] text-gray-500 font-bold uppercase">Sincronizzato con lowdistrict.it</p>
                 </div>
               </div>
               
               <div className="space-y-4 pt-4 border-t border-white/5">
-                <div className="flex justify-between text-xs">
-                  <span className="text-gray-500 font-bold uppercase tracking-widest">Spedizione a:</span>
-                  <span className="text-white font-black uppercase tracking-tighter">{formData.first_name} {formData.last_name}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-gray-500 font-bold uppercase tracking-widest">Indirizzo:</span>
-                  <span className="text-white font-black uppercase tracking-tighter text-right">{formData.address_1}, {formData.city}</span>
-                </div>
+                {cart.map((item, i) => (
+                  <div key={i} className="flex justify-between text-xs">
+                    <span className="text-gray-400 font-bold uppercase">{item.quantity}x {item.name} {item.size ? `(${item.size})` : ''}</span>
+                    <span className="text-white font-black">€{(item.price * item.quantity).toFixed(2)}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
             <div className="pt-6 border-t border-white/10">
               <div className="flex justify-between items-center mb-8">
-                <span className="text-gray-400 font-black uppercase tracking-widest text-sm">Totale Ordine</span>
+                <span className="text-gray-400 font-black uppercase tracking-widest text-sm">Totale Finale</span>
                 <span className="text-3xl font-black italic">€{total.toFixed(2)}</span>
               </div>
               
@@ -200,28 +200,12 @@ const Checkout = () => {
                 className="w-full bg-red-600 hover:bg-red-700 text-white py-8 text-xl font-black uppercase tracking-widest rounded-none italic shadow-2xl shadow-red-600/20"
               >
                 {isProcessing ? (
-                  <span className="flex items-center gap-2"><Loader2 className="animate-spin" /> Invio in corso...</span>
-                ) : "Conferma e Invia Ordine"}
+                  <span className="flex items-center gap-2"><Loader2 className="animate-spin" /> Sincronizzazione...</span>
+                ) : "Conferma e Crea Ordine"}
               </Button>
-              
-              <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest text-center mt-6 leading-relaxed">
-                Cliccando su conferma, il tuo ordine verrà creato nel database del sito web. <br />
-                Potrai poi procedere al pagamento tramite WhatsApp.
-              </p>
             </div>
           </div>
         )}
-
-        <div className="mt-12 flex items-center justify-center gap-8 opacity-30">
-          <div className="flex items-center gap-2">
-            <ShieldCheck size={16} />
-            <span className="text-[8px] font-black uppercase tracking-widest">Official Store</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Truck size={16} />
-            <span className="text-[8px] font-black uppercase tracking-widest">Fast Shipping</span>
-          </div>
-        </div>
       </div>
     </div>
   );

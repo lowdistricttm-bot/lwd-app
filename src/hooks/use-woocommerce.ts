@@ -14,16 +14,14 @@ export const useWcProducts = (params?: string) => {
   });
 };
 
-// Hook per recuperare gli eventi ufficiali (prodotti in categoria eventi)
 export const useWcEvents = () => {
   return useQuery({
     queryKey: ['wc-events'],
-    queryFn: () => wcFetch('/products?category=31'), // ID categoria eventi sul tuo sito
+    queryFn: () => wcFetch('/products?category=31'), 
     ...DEFAULT_QUERY_OPTIONS,
   });
 };
 
-// Hook per recuperare le selezioni/ordini dell'utente loggato
 export const useWcUserOrders = (customerId: number | undefined) => {
   return useQuery({
     queryKey: ['wc-user-orders', customerId],
@@ -54,6 +52,15 @@ export const useWcProduct = (id: string | undefined) => {
     queryKey: ['wc-product', id],
     queryFn: () => wcFetch(`/products/${id}`),
     enabled: !!id,
+    ...DEFAULT_QUERY_OPTIONS,
+  });
+};
+
+export const useWcVariations = (productId: number | undefined) => {
+  return useQuery({
+    queryKey: ['wc-variations', productId],
+    queryFn: () => wcFetch(`/products/${productId}/variations`),
+    enabled: !!productId,
     ...DEFAULT_QUERY_OPTIONS,
   });
 };
