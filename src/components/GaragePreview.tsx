@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
-import { Heart, MessageCircle, Send, MoreHorizontal, Share2, Loader2, AlertCircle, RefreshCw, Image as ImageIcon } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Heart, MessageCircle, Send, MoreHorizontal, Share2, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import CommentDrawer from './CommentDrawer';
 import CreatePostDialog from './CreatePostDialog';
 import { cn } from '@/lib/utils';
@@ -9,14 +9,36 @@ import { useBpActivity } from '@/hooks/use-buddypress';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
+import { useInView } from 'framer-motion';
 
 const GaragePreview = () => {
-  const { data: activities, isLoading, error, refetch } = useBpActivity();
+  const { 
+    data, 
+    isLoading, 
+    error, 
+    refetch, 
+    fetchNextPage, 
+    hasNextPage, 
+    isFetchingNextPage 
+  } = useBpActivity();
+  
   const [likedPosts, setLikedPosts] = useState<Record<number, boolean>>({});
+  const loadMoreRef = React.useRef(null);
+  const isInView = useInView(loadMoreRef);
+
+  // Trigger per caricare la pagina successiva quando l'elemento finale entra in vista
+  useEffect(() => {
+    if (isInView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [isInView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleLike = (id: number) => {
     setLikedPosts(prev => ({ ...prev, [id]: !prev[id] }));
   };
+
+  // Appiattiamo le pagine di post in un unico array
+  const allPosts = data?.pages.flat() || [];
 
   if (isLoading) {
     return (
@@ -28,19 +50,18 @@ const GaragePreview = () => {
   }
 
   if (error) {
-    const err = error as any;
     return (
       <div className="text-center py-16 px-6 bg-zinc-900/30 border border-white/5 rounded-3xl mx-4">
         <AlertCircle className="mx-auto text-red-600 mb-4" size={32} />
         <h3 className="text-sm font-black uppercase tracking-tighter mb-2">Accesso alla Bacheca</h3>
         <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-relaxed mb-6">
-          {err.message}
+          Impossibile caricare i post. Riprova tra poco.
         </p>
         <Button 
           onClick={() => refetch()}
           className="bg-white text-black hover:bg-red-600 hover:text-white font-black uppercase tracking-widest text-[10px] px-8 py-4 rounded-none italic"
         >
-          <RefreshCw size={14} className="mr-2" /> Riprova
+          <RefreshCw size={14} className="mr-2" /> Ricarica
         </Button>
       </div>
     );
@@ -59,12 +80,12 @@ const GaragePreview = () => {
         </div>
         
         <div className="space-y-12">
-          {activities?.length === 0 ? (
+          {allPosts.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Nessuna attività trovata</p>
             </div>
           ) : (
-            activities?.map((post: any) => (
+            allPosts.map((post: any) => (
               <div key={post.id} className="bg-zinc-900/20 border border-white/5 rounded-3xl overflow-hidden">
                 {/* Header del Post */}
                 <div className="px-4 py-4 flex items-center justify-between">
@@ -100,7 +121,7 @@ const GaragePreview = () => {
                   />
                 </div>
 
-                {/* Visualizzazione Media (se presenti come array separato) */}
+                {/* Visualizzazione Media */}
                 {post.media && post.media.length > 0 && (
                   <div className={cn(
                     "grid gap-1 mb-2",
@@ -137,6 +158,17 @@ const GaragePreview = () => {
             ))
           )}
         </div>
+
+        {/* Elemento sentinella per lo scroll infinito */}
+        <div ref={loadMoreRef} className="py-12 flex justify-center">
+          {isFetchingNextPage ? (
+            <Loader2 className="animate-spin text-red-600" size={24} />
+          ) : hasNextPage ? (
+            <p className="text-[10px] text-gray-600 font-black uppercase tracking-widest">Scorri per caricare altro</p>
+          ) : allPosts.length > 0 ? (
+            <p className="text-[10px] text-gray-600 font-black uppercase tracking-widest">Hai raggiunto la fine del feed</p>
+          ) : null}
+        </div>
       </div>
 
       <style>{`
@@ -152,12 +184,6 @@ const GaragePreview = () => {
           color: #ef4444;
           font-weight: 800;
           text-decoration: none;
-        }
-        .activity-content blockquote {
-          border-left: 4px solid #ef4444;
-          padding-left: 1rem;
-          font-style: italic;
-          color: #9ca3af;
         }
       `}</style>
     </section>

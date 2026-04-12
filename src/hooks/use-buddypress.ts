@@ -1,14 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
 const BASE_URL = "https://www.lowdistrict.it/wp-json";
 
 export const useBpActivity = () => {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: ['bp-activity'],
-    queryFn: async () => {
-      const token = localStorage.getItem('ld_auth_token');
-      // Aggiungiamo un timestamp per evitare la cache del browser e avere dati sempre freschi
-      const url = `${BASE_URL}/lowdistrict/v1/activity?_=${Date.now()}`;
+    queryFn: async ({ pageParam = 1 }) => {
+      // Aggiungiamo page e per_page per gestire lo scroll infinito
+      const url = `${BASE_URL}/lowdistrict/v1/activity?page=${pageParam}&per_page=10&_=${Date.now()}`;
       
       try {
         const response = await fetch(url, {
@@ -21,7 +20,7 @@ export const useBpActivity = () => {
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || `Errore ${response.status}: ${response.statusText}`);
+          throw new Error(errorData.message || `Errore ${response.status}`);
         }
 
         return await response.json();
@@ -30,10 +29,13 @@ export const useBpActivity = () => {
         throw err;
       }
     },
-    staleTime: 1000 * 30, // I dati sono considerati "vecchi" dopo 30 secondi
-    refetchInterval: 1000 * 60, // Controlla automaticamente nuovi post ogni minuto
-    refetchOnWindowFocus: true, // Aggiorna quando l'utente torna sull'app
-    retry: 1
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      // Se l'ultima pagina ha meno di 10 elementi, probabilmente non ce ne sono altri
+      return lastPage.length === 10 ? allPages.length + 1 : undefined;
+    },
+    staleTime: 1000 * 30,
+    refetchInterval: 1000 * 60,
   });
 };
 
