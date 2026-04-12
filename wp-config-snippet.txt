@@ -1,0 +1,7 @@
+// Questo codice simula le costanti necessarie per il plugin JWT
+if (!defined('JWT_AUTH_SECRET_KEY')) {
+    define('JWT_AUTH_SECRET_KEY', 'una-stringa-casuale-e-lunghissima-di-tua-scelta');
+}
+if (!defined('JWT_AUTH_CORS_ENABLE')) {
+    define('JWT_AUTH_CORS_ENABLE', true);
+}
