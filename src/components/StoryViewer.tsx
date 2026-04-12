@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence, useDragControls } from 'framer-motion';
-import { X, Send, MessageCircle, ChevronUp } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Send, MessageCircle, ChevronUp, MoreHorizontal } from 'lucide-react';
 import { showSuccess } from '@/utils/toast';
 
 interface Story {
@@ -18,7 +18,7 @@ interface StoryViewerProps {
 }
 
 const STORY_DURATION = 5000;
-const REACTIONS = ['🔥', '😂', '❤️', '😍', '😮', '😢'];
+const REACTIONS = ['🔥', '😂', '❤️', '😍', '😮', '😢', '👏', '🎉'];
 
 const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
@@ -27,7 +27,6 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
   const [comment, setComment] = useState("");
   const [showInput, setShowInput] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleNext = useCallback(() => {
     if (currentIndex < stories.length - 1) {
@@ -96,16 +95,9 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!comment.trim()) return;
-    
-    showSuccess(`Messaggio inviato a ${stories[currentIndex].name}`);
+    showSuccess(`Messaggio inviato`);
     setComment("");
     setShowInput(false);
-    setIsPaused(false);
-  };
-
-  const handleReaction = (emoji: string) => {
-    showSuccess(`Reazione ${emoji} inviata!`);
-    setShowReactions(false);
     setIsPaused(false);
   };
 
@@ -116,12 +108,12 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[100] bg-black flex items-center justify-center"
     >
-      <div className="relative w-full h-full md:max-w-[450px] md:h-[90vh] bg-zinc-900 md:rounded-2xl overflow-hidden shadow-2xl flex flex-col">
+      <div className="relative w-full h-full md:max-w-[420px] md:h-[92vh] bg-black md:rounded-xl overflow-hidden flex flex-col">
         
         {/* Progress Bars */}
-        <div className="absolute top-4 left-4 right-4 z-30 flex gap-1.5">
+        <div className="absolute top-3 left-2 right-2 z-30 flex gap-1">
           {stories.map((_, i) => (
-            <div key={i} className="h-[2px] flex-1 bg-white/20 rounded-full overflow-hidden">
+            <div key={i} className="h-[2px] flex-1 bg-white/30 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-white transition-all duration-100 ease-linear"
                 style={{ 
@@ -132,29 +124,30 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
           ))}
         </div>
 
-        {/* Header Info */}
-        <div className="absolute top-8 left-4 right-4 z-30 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full border border-white/20 overflow-hidden">
+        {/* Header */}
+        <div className="absolute top-6 left-4 right-4 z-30 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full overflow-hidden border border-white/10">
               <img src={stories[currentIndex].img} alt="" className="w-full h-full object-cover" />
             </div>
-            <span className="text-white font-bold text-xs uppercase tracking-widest">
-              {stories[currentIndex].name}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-white font-semibold text-[13px]">{stories[currentIndex].name}</span>
+              <span className="text-white/60 text-[13px]">2h</span>
+            </div>
           </div>
-          <button 
-            onClick={(e) => { e.stopPropagation(); onClose(); }} 
-            className="text-white p-2 hover:bg-white/10 rounded-full transition-colors"
-          >
-            <X size={24} />
-          </button>
+          <div className="flex items-center gap-3">
+            <MoreHorizontal size={20} className="text-white" />
+            <button onClick={onClose} className="text-white">
+              <X size={26} strokeWidth={1.5} />
+            </button>
+          </div>
         </div>
 
-        {/* Main Content Area with Swipe Detection */}
+        {/* Content */}
         <motion.div 
           className="relative flex-1 w-full overflow-hidden touch-none"
           onPanEnd={(_, info) => {
-            if (info.offset.y < -50) { // Swipe Up
+            if (info.offset.y < -40) {
               setIsPaused(true);
               setShowReactions(true);
             }
@@ -169,61 +162,54 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
               exit={{ opacity: 0 }}
               src={stories[currentIndex].img} 
               alt="" 
-              className="w-full h-full object-cover pointer-events-none"
+              className="w-full h-full object-cover"
             />
           </AnimatePresence>
           
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/40 pointer-events-none" />
 
-          {/* Swipe Up Indicator */}
+          {/* Swipe Up Hint */}
           {!showReactions && !showInput && (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="absolute bottom-20 left-0 right-0 flex flex-col items-center text-white/60 pointer-events-none"
+              className="absolute bottom-24 left-0 right-0 flex flex-col items-center text-white/80 pointer-events-none"
             >
-              <ChevronUp size={20} className="animate-bounce" />
-              <span className="text-[8px] font-black uppercase tracking-[0.3em]">Reactions</span>
+              <ChevronUp size={18} className="animate-bounce mb-1" />
+              <span className="text-[10px] font-medium tracking-wider">Reazioni</span>
             </motion.div>
           )}
 
-          {/* Quick Reactions Overlay (Swipe Up) */}
+          {/* Reactions Grid */}
           <AnimatePresence>
             {showReactions && (
               <motion.div 
                 initial={{ y: "100%" }}
                 animate={{ y: 0 }}
                 exit={{ y: "100%" }}
-                transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="absolute inset-0 flex items-end justify-center z-40 story-controls"
+                className="absolute inset-0 flex items-end z-40 story-controls"
               >
-                <div className="w-full p-8 bg-black/60 backdrop-blur-xl rounded-t-[3rem] border-t border-white/10">
-                  <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mb-8" />
-                  <div className="grid grid-cols-3 gap-8 mb-8">
+                <div className="w-full p-6 bg-black/80 backdrop-blur-2xl rounded-t-3xl border-t border-white/10">
+                  <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-8" />
+                  <div className="grid grid-cols-4 gap-y-8 gap-x-4 mb-10">
                     {REACTIONS.map((emoji) => (
                       <button 
                         key={emoji} 
-                        onClick={() => handleReaction(emoji)}
-                        className="text-5xl hover:scale-125 transition-transform active:scale-90"
+                        onClick={() => { showSuccess(`Reazione ${emoji} inviata`); setShowReactions(false); setIsPaused(false); }}
+                        className="text-4xl hover:scale-110 transition-transform active:scale-90"
                       >
                         {emoji}
                       </button>
                     ))}
                   </div>
-                  <button 
-                    onClick={() => { setShowReactions(false); setIsPaused(false); }}
-                    className="w-full py-4 text-xs font-black uppercase tracking-widest text-gray-500"
-                  >
-                    Chiudi
-                  </button>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
         </motion.div>
 
-        {/* Bottom Controls */}
-        <div className="p-4 pb-10 md:pb-6 bg-black/20 backdrop-blur-sm story-controls z-50">
+        {/* Footer Controls */}
+        <div className="p-4 pb-10 md:pb-6 bg-black story-controls z-50">
           <AnimatePresence mode="wait">
             {showInput ? (
               <motion.form 
@@ -232,34 +218,33 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
                 onSubmit={handleSendMessage} 
-                className="flex items-center gap-4"
+                className="flex items-center gap-3"
               >
                 <input 
                   autoFocus
                   type="text" 
-                  placeholder="Scrivi un messaggio..." 
-                  className="flex-1 bg-zinc-900/80 border border-white/20 rounded-full py-3 px-6 text-sm text-white focus:outline-none focus:border-red-600 transition-colors"
+                  placeholder={`Invia un messaggio a ${stories[currentIndex].name}...`} 
+                  className="flex-1 bg-zinc-900 border border-white/10 rounded-full py-2.5 px-5 text-[13px] text-white focus:outline-none"
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                 />
-                <button type="submit" className="bg-red-600 text-white p-3 rounded-full">
-                  <Send size={18} />
-                </button>
+                <button type="submit" className="text-white font-semibold text-[13px]">Invia</button>
               </motion.form>
             ) : (
-              <motion.div 
-                key="icon"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex justify-center"
-              >
+              <div className="flex items-center gap-4">
                 <button 
                   onClick={() => { setShowInput(true); setIsPaused(true); }}
-                  className="p-4 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all active:scale-90"
+                  className="flex-1 flex items-center gap-3 bg-transparent border border-white/40 rounded-full py-2.5 px-5 text-white/80"
                 >
-                  <MessageCircle size={28} />
+                  <span className="text-[13px]">Invia un messaggio...</span>
                 </button>
-              </motion.div>
+                <button onClick={() => { setShowInput(true); setIsPaused(true); }} className="text-white">
+                  <MessageCircle size={24} strokeWidth={1.5} />
+                </button>
+                <button onClick={() => showSuccess('Inviato!')} className="text-white">
+                  <Send size={24} strokeWidth={1.5} />
+                </button>
+              </div>
             )}
           </AnimatePresence>
         </div>
