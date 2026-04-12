@@ -28,14 +28,12 @@ const Stories = () => {
   const loadStories = async () => {
     setIsLoadingStories(true);
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-
     try {
       const { data, error } = await supabase
         .from('stories')
         .select('*')
         .gt('created_at', twentyFourHoursAgo)
         .order('created_at', { ascending: false });
-
       if (error) throw error;
       setAllStories(data || []);
     } catch (err: any) {
@@ -54,52 +52,22 @@ const Stories = () => {
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    
-    if (!user) {
-      showError("Devi essere loggato per caricare una storia");
-      return;
-    }
-
-    if (!file) return;
-
+    if (!user || !file) return;
     setIsUploading(true);
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-      
-      // Caricamento nel bucket 'stories'
-      const { error: uploadError } = await supabase.storage
-        .from('stories')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
+      const { error: uploadError } = await supabase.storage.from('stories').upload(fileName, file);
       if (uploadError) throw uploadError;
-
-      // Ottenimento URL pubblico
-      const { data: { publicUrl } } = supabase.storage
-        .from('stories')
-        .getPublicUrl(fileName);
-
-      // Inserimento record nel database
-      const { error: dbError } = await supabase
-        .from('stories')
-        .insert([{ 
-          user_id: user.id, 
-          image_url: publicUrl
-        }]);
-
+      const { data: { publicUrl } } = supabase.storage.from('stories').getPublicUrl(fileName);
+      const { error: dbError } = await supabase.from('stories').insert([{ user_id: user.id, image_url: publicUrl }]);
       if (dbError) throw dbError;
-
       showSuccess("Storia pubblicata!");
       await loadStories();
     } catch (err: any) {
-      console.error("Upload error:", err);
       showError(err.message || "Errore durante il caricamento");
     } finally {
       setIsUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -111,77 +79,30 @@ const Stories = () => {
   return (
     <div className="relative z-10">
       <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
-
       <div className="flex gap-4 overflow-x-auto pt-2 pb-3 px-4 no-scrollbar bg-black border-b border-white/5">
-        <div className="flex flex-col items-center gap-1.5 shrink-0">
-          <button 
-            onClick={() => {
-              if (!user) {
-                showError("Accedi per aggiungere una storia");
-                return;
-              }
-              myStory ? openViewer(allStories.indexOf(myStory)) : fileInputRef.current?.click();
-            }}
-            disabled={isUploading}
-            className="flex flex-col items-center gap-1.5 outline-none group relative"
-          >
-            <div className={cn(
-              "w-[66px] h-[66px] rounded-full p-[2.5px] transition-all duration-500",
-              myStory ? "bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]" : "bg-zinc-800"
-            )}>
-              <div className="w-full h-full rounded-full border-2 border-black overflow-hidden relative bg-zinc-900 flex items-center justify-center">
-                {isUploading ? (
-                  <Loader2 className="animate-spin text-red-600" size={20} />
-                ) : (
-                  <img 
-                    src={myStory ? myStory.image_url : (user?.avatar || "https://www.lowdistrict.it/wp-content/uploads/placeholder.png")} 
-                    alt="Tu" 
-                    className="w-full h-full object-cover" 
-                  />
-                )}
+        <button onClick={() => myStory ? openViewer(allStories.indexOf(myStory)) : fileInputRef.current?.click()} className="flex flex-col items-center gap-1.5 shrink-0 relative">
+          <div className={cn("w-[66px] h-[66px] rounded-full p-[2.5px]", myStory ? "bg-red-600" : "bg-zinc-800")}>
+            <div className="w-full h-full rounded-full border-2 border-black overflow-hidden bg-zinc-900 flex items-center justify-center">
+              {isUploading ? <Loader2 className="animate-spin text-red-600" /> : <img src={myStory ? myStory.image_url : (user?.avatar || "https://www.lowdistrict.it/wp-content/uploads/placeholder.png")} className="w-full h-full object-cover" />}
+            </div>
+          </div>
+          {!myStory && <div className="absolute bottom-5 right-0 bg-red-600 rounded-full p-0.5 border-2 border-black"><Plus size={12} /></div>}
+          <span className="text-[10px] font-black uppercase text-white/60">{myStory ? "Tua Storia" : "Aggiungi"}</span>
+        </button>
+
+        {allStories.map((story, idx) => story.user_id !== user?.id && (
+          <button key={story.id} onClick={() => openViewer(idx)} className="flex flex-col items-center gap-1.5 shrink-0">
+            <div className="w-[66px] h-[66px] rounded-full p-[2.5px] bg-red-600">
+              <div className="w-full h-full rounded-full border-2 border-black overflow-hidden bg-zinc-900">
+                <img src={story.image_url} className="w-full h-full object-cover" />
               </div>
             </div>
-            {!myStory && !isUploading && (
-              <div className="absolute bottom-5 right-0 bg-red-600 text-white rounded-full p-0.5 border-[2px] border-black">
-                <Plus size={12} strokeWidth={4} />
-              </div>
-            )}
-            <span className="text-[10px] font-black uppercase tracking-tighter text-white/60">
-              {myStory ? "Tua Storia" : "Aggiungi"}
-            </span>
+            <span className="text-[10px] text-white/40 font-black uppercase truncate w-16">User_{story.user_id}</span>
           </button>
-        </div>
-
-        {isLoadingStories ? (
-          <div className="flex items-center px-4"><Loader2 className="animate-spin text-zinc-700" size={20} /></div>
-        ) : (
-          otherStories.map((story) => (
-            <button 
-              key={story.id} 
-              onClick={() => openViewer(allStories.indexOf(story))}
-              className="flex flex-col items-center gap-1.5 shrink-0 group"
-            >
-              <div className="w-[66px] h-[66px] rounded-full p-[2.5px] bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]">
-                <div className="w-full h-full rounded-full border-2 border-black overflow-hidden bg-zinc-900">
-                  <img src={story.image_url} alt="" className="w-full h-full object-cover" />
-                </div>
-              </div>
-              <span className="text-[10px] text-white/40 font-black uppercase tracking-tighter truncate w-16 text-center">
-                User_{story.user_id}
-              </span>
-            </button>
-          ))
-        )}
+        ))}
       </div>
-
       <AnimatePresence>
-        {showViewer && (
-          <StoryViewer 
-            stories={allStories.map(s => ({ id: parseInt(s.id), name: `User_${s.user_id}`, img: s.image_url }))} 
-            initialIndex={selectedStoryIndex} 
-            onClose={() => setShowViewer(false)} 
-          />
-        )}
+        {showViewer && <StoryViewer stories={allStories.map(s => ({ id: s.id, name: `User_${s.user_id}`, img: s.image_url }))} initialIndex={selectedStoryIndex} onClose={() => setShowViewer(false)} />}
       </AnimatePresence>
     </div>
   );

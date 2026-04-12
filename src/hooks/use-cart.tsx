@@ -5,6 +5,7 @@ import { showSuccess } from '@/utils/toast';
 
 export interface CartItem {
   id: number;
+  variationId?: number;
   name: string;
   price: number;
   image: string;
@@ -15,8 +16,8 @@ export interface CartItem {
 interface CartContextType {
   cart: CartItem[];
   addToCart: (item: CartItem) => void;
-  removeFromCart: (id: number) => void;
-  updateQuantity: (id: number, quantity: number) => void;
+  removeFromCart: (id: number, variationId?: number) => void;
+  updateQuantity: (id: number, quantity: number, variationId?: number) => void;
   clearCart: () => void;
   total: number;
   itemCount: number;
@@ -36,9 +37,9 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
   const addToCart = (item: CartItem) => {
     setCart(prev => {
-      const existing = prev.find(i => i.id === item.id && i.size === item.size);
+      const existing = prev.find(i => i.id === item.id && i.variationId === item.variationId);
       if (existing) {
-        return prev.map(i => i.id === item.id && i.size === item.size 
+        return prev.map(i => i.id === item.id && i.variationId === item.variationId 
           ? { ...i, quantity: i.quantity + 1 } 
           : i
         );
@@ -48,13 +49,13 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     showSuccess(`${item.name} aggiunto al carrello!`);
   };
 
-  const removeFromCart = (id: number) => {
-    setCart(prev => prev.filter(i => i.id !== id));
+  const removeFromCart = (id: number, variationId?: number) => {
+    setCart(prev => prev.filter(i => !(i.id === id && i.variationId === variationId)));
   };
 
-  const updateQuantity = (id: number, quantity: number) => {
+  const updateQuantity = (id: number, quantity: number, variationId?: number) => {
     if (quantity < 1) return;
-    setCart(prev => prev.map(i => i.id === id ? { ...i, quantity } : i));
+    setCart(prev => prev.map(i => (i.id === id && i.variationId === variationId) ? { ...i, quantity } : i));
   };
 
   const clearCart = () => setCart([]);
