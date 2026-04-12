@@ -5,24 +5,22 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import BottomNav from '@/components/BottomNav';
 import ProductCard from '@/components/ProductCard';
-import { Filter, Search, ChevronDown, X } from 'lucide-react';
+import { Search, ChevronDown, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { products } from '@/data/products';
-
-const categories = ["All", "Adesivi", "Abbigliamento", "Detailing", "Accessori", "Summer Kit"];
-const collections = ["Signed 2026", "New Logo 2026", "Loose Logo", "Official 2025"];
+import { useWcProducts, useWcCategories } from '@/hooks/use-woocommerce';
 
 const Shop = () => {
-  const [activeCategory, setActiveCategory] = useState("All");
-  const [activeCollection, setActiveCollection] = useState<string | null>(null);
+  const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredProducts = products.filter(p => {
-    const matchesCategory = activeCategory === "All" || p.category === activeCategory;
-    const matchesCollection = !activeCollection || p.collection === activeCollection;
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesCollection && matchesSearch;
-  });
+  const { data: categories, isLoading: loadingCats } = useWcCategories();
+  const { data: products, isLoading: loadingProducts } = useWcProducts(
+    activeCategoryId ? `category=${activeCategoryId}` : ""
+  );
+
+  const filteredProducts = products?.filter((p: any) => 
+    p.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen bg-black text-white pb-24">
@@ -37,62 +35,45 @@ const Shop = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
         <div className="relative z-10 text-center px-6">
           <h1 className="text-6xl md:text-8xl font-black tracking-tighter uppercase mb-2 italic">SHOP</h1>
-          <p className="text-red-600 text-xs font-black uppercase tracking-[0.4em]">OFFICIAL CATALOG</p>
+          <p className="text-red-600 text-xs font-black uppercase tracking-[0.4em]">LIVE FROM LOWDISTRICT.IT</p>
         </div>
       </div>
 
       <div className="px-6 max-w-7xl mx-auto -mt-8 relative z-20">
-        {/* Categories Filter */}
-        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-4">
-          {categories.map((cat) => (
+        {/* Categories Filter Dinamico */}
+        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-8">
+          <button
+            onClick={() => setActiveCategoryId(null)}
+            className={cn(
+              "whitespace-nowrap px-6 py-3 text-[10px] font-black uppercase tracking-widest transition-all border italic",
+              activeCategoryId === null 
+                ? "bg-red-600 border-red-600 text-white" 
+                : "bg-zinc-900 border-white/5 text-gray-500 hover:border-white/20"
+            )}
+          >
+            TUTTI
+          </button>
+          {categories?.map((cat: any) => (
             <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
+              key={cat.id}
+              onClick={() => setActiveCategoryId(cat.id)}
               className={cn(
                 "whitespace-nowrap px-6 py-3 text-[10px] font-black uppercase tracking-widest transition-all border italic",
-                activeCategory === cat 
+                activeCategoryId === cat.id 
                   ? "bg-red-600 border-red-600 text-white" 
                   : "bg-zinc-900 border-white/5 text-gray-500 hover:border-white/20"
               )}
-            >
-              {cat}
-            </button>
+              dangerouslySetInnerHTML={{ __html: cat.name.toUpperCase() }}
+            />
           ))}
         </div>
 
-        {/* Collections Filter */}
-        <div className="flex items-center gap-4 overflow-x-auto no-scrollbar pb-8 border-b border-white/5">
-          <span className="text-[9px] font-black uppercase text-gray-600 tracking-widest shrink-0">Collections:</span>
-          {collections.map((col) => (
-            <button
-              key={col}
-              onClick={() => setActiveCollection(activeCollection === col ? null : col)}
-              className={cn(
-                "whitespace-nowrap px-4 py-2 text-[9px] font-bold uppercase tracking-tighter transition-all rounded-full border",
-                activeCollection === col 
-                  ? "bg-white text-black border-white" 
-                  : "bg-transparent border-white/10 text-gray-400 hover:border-white/30"
-              )}
-            >
-              {col}
-            </button>
-          ))}
-          {activeCollection && (
-            <button 
-              onClick={() => setActiveCollection(null)}
-              className="text-red-600 hover:text-white transition-colors"
-            >
-              <X size={14} />
-            </button>
-          )}
-        </div>
-
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-12 py-8">
+        <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-12 py-8 border-t border-white/5">
           <div className="relative w-full md:w-96">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
             <input 
               type="text" 
-              placeholder="Cerca nel catalogo..." 
+              placeholder="Cerca nel catalogo reale..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-zinc-900 border-none py-5 pl-12 pr-4 text-sm focus:ring-1 focus:ring-red-600 outline-none font-bold"
@@ -105,15 +86,32 @@ const Shop = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-12 md:gap-x-8 md:gap-y-16">
-          {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {loadingProducts ? (
+          <div className="py-32 flex flex-col items-center justify-center gap-4">
+            <Loader2 className="animate-spin text-red-600" size={40} />
+            <p className="text-xs font-black uppercase tracking-widest text-gray-500">Sincronizzazione con il sito...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-12 md:gap-x-8 md:gap-y-16">
+            {filteredProducts?.map((product: any) => (
+              <ProductCard 
+                key={product.id} 
+                product={{
+                  id: product.id,
+                  name: product.name,
+                  price: `€${product.price}`,
+                  image: product.images[0]?.src || "https://via.placeholder.com/600x800",
+                  category: product.categories[0]?.name || "General",
+                  isNew: product.date_created_gmt > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+                }} 
+              />
+            ))}
+          </div>
+        )}
 
-        {filteredProducts.length === 0 && (
+        {!loadingProducts && filteredProducts?.length === 0 && (
           <div className="py-32 text-center">
-            <p className="text-gray-500 font-black uppercase tracking-widest italic">Nessun prodotto trovato in questa selezione.</p>
+            <p className="text-gray-500 font-black uppercase tracking-widest italic">Nessun prodotto trovato.</p>
           </div>
         )}
       </div>

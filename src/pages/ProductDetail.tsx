@@ -2,28 +2,32 @@
 
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { products } from '@/data/products';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import BottomNav from '@/components/BottomNav';
-import { ChevronLeft, ShoppingBag, ShieldCheck, Truck, RefreshCcw } from 'lucide-react';
+import { ChevronLeft, ShoppingBag, ShieldCheck, Truck, RefreshCcw, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { showSuccess } from '@/utils/toast';
+import { useWcProduct } from '@/hooks/use-woocommerce';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const product = products.find(p => p.id === Number(id));
+  const { data: product, isLoading } = useWcProduct(id);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
 
-  if (!product) return <div>Prodotto non trovato</div>;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <Loader2 className="animate-spin text-red-600" size={40} />
+      </div>
+    );
+  }
+
+  if (!product) return <div className="min-h-screen bg-black flex items-center justify-center">Prodotto non trovato</div>;
 
   const handleAddToCart = () => {
-    if (product.sizes && !selectedSize) {
-      showSuccess("Per favore seleziona una taglia");
-      return;
-    }
     showSuccess(`${product.name} aggiunto al carrello!`);
   };
 
@@ -40,68 +44,42 @@ const ProductDetail = () => {
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Immagine Prodotto */}
           <div className="aspect-[4/5] bg-zinc-900 overflow-hidden relative">
-            <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-            {product.isLimited && (
-              <div className="absolute top-6 left-6 bg-white text-black px-4 py-1 text-[10px] font-black uppercase tracking-widest">
-                Limited Edition
-              </div>
-            )}
+            <img src={product.images[0]?.src} alt={product.name} className="w-full h-full object-cover" />
           </div>
 
-          {/* Info Prodotto */}
           <div className="flex flex-col">
-            <p className="text-red-600 text-xs font-black uppercase tracking-[0.3em] mb-2">{product.category}</p>
-            <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase mb-4 italic">{product.name}</h1>
-            <p className="text-3xl font-black tracking-tighter mb-8">{product.price}</p>
+            <p className="text-red-600 text-xs font-black uppercase tracking-[0.3em] mb-2">
+              {product.categories[0]?.name}
+            </p>
+            <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase mb-4 italic" dangerouslySetInnerHTML={{ __html: product.name }} />
+            <p className="text-3xl font-black tracking-tighter mb-8">€{product.price}</p>
             
             <div className="space-y-8 mb-12">
-              <p className="text-gray-400 leading-relaxed text-lg">
-                {product.description}
-              </p>
-
-              {product.sizes && (
-                <div className="space-y-4">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Seleziona Taglia</p>
-                  <div className="flex flex-wrap gap-3">
-                    {product.sizes.map((size) => (
-                      <button
-                        key={size}
-                        onClick={() => setSelectedSize(size)}
-                        className={cn(
-                          "w-14 h-14 flex items-center justify-center border font-black text-sm transition-all",
-                          selectedSize === size 
-                            ? "bg-red-600 border-red-600 text-white" 
-                            : "border-white/10 text-gray-400 hover:border-white/30"
-                        )}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <div 
+                className="text-gray-400 leading-relaxed text-lg prose prose-invert"
+                dangerouslySetInnerHTML={{ __html: product.description || product.short_description }}
+              />
 
               <div className="space-y-4">
                 <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Disponibilità</p>
                 <p className={cn(
                   "text-sm font-bold",
-                  product.stock < 10 ? "text-amber-500" : "text-green-500"
+                  product.stock_status === "instock" ? "text-green-500" : "text-red-500"
                 )}>
-                  {product.stock < 10 ? `Solo ${product.stock} rimasti!` : "In Stock"}
+                  {product.stock_status === "instock" ? "In Stock" : "Esaurito"}
                 </p>
               </div>
             </div>
 
             <Button 
               onClick={handleAddToCart}
+              disabled={product.stock_status !== "instock"}
               className="w-full bg-red-600 hover:bg-red-700 text-white py-8 text-lg font-black uppercase tracking-widest rounded-none italic shadow-2xl shadow-red-600/20"
             >
-              <ShoppingBag className="mr-2" size={20} /> Aggiungi al Carrello
+              <ShoppingBag className="mr-2" size={20} /> {product.stock_status === "instock" ? "Aggiungi al Carrello" : "Esaurito"}
             </Button>
 
-            {/* Trust Badges */}
             <div className="grid grid-cols-3 gap-4 mt-12 pt-12 border-t border-white/5">
               <div className="text-center space-y-2">
                 <Truck size={20} className="mx-auto text-gray-500" />
