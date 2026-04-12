@@ -6,8 +6,8 @@ export const useBpActivity = () => {
   return useInfiniteQuery({
     queryKey: ['bp-activity'],
     queryFn: async ({ pageParam = 1 }) => {
-      // Carichiamo 20 post alla volta per coprire più velocemente la cronologia
-      const url = `${BASE_URL}/lowdistrict/v1/activity?page=${pageParam}&per_page=20&_=${Date.now()}`;
+      // Rimuoviamo il timestamp per le pagine successive per mantenere la coerenza della cache
+      const url = `${BASE_URL}/lowdistrict/v1/activity?page=${pageParam}&per_page=20`;
       
       try {
         const response = await fetch(url, {
@@ -19,24 +19,23 @@ export const useBpActivity = () => {
         });
 
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || `Errore ${response.status}`);
+          throw new Error(`Errore server: ${response.status}`);
         }
 
         const data = await response.json();
-        return data;
+        // Assicuriamoci che data sia un array
+        return Array.isArray(data) ? data : [];
       } catch (err: any) {
-        console.error("Dettaglio Errore Bridge:", err);
+        console.error("Errore caricamento bacheca:", err);
         throw err;
       }
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
-      // Se l'ultima pagina ricevuta ha 20 elementi, significa che probabilmente ce ne sono altri
+      // Se l'ultima pagina ha 20 elementi, chiediamo la successiva
       return lastPage.length === 20 ? allPages.length + 1 : undefined;
     },
-    staleTime: 1000 * 10, // Considera i dati vecchi dopo 10 secondi per favorire il refresh
-    refetchInterval: 1000 * 30, // Controlla nuovi post ogni 30 secondi
+    staleTime: 1000 * 60, // Aumentiamo a 1 minuto per evitare refresh troppo frequenti che causano salti
   });
 };
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Heart, MessageCircle, Send, MoreHorizontal, Share2, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import CommentDrawer from './CommentDrawer';
 import CreatePostDialog from './CreatePostDialog';
@@ -24,7 +24,21 @@ const GaragePreview = () => {
   const [likedPosts, setLikedPosts] = useState<Record<number, boolean>>({});
   const observerTarget = useRef(null);
 
-  // Implementazione di un IntersectionObserver più robusto per lo scroll automatico
+  // Filtriamo i post per ID per evitare duplicati visivi
+  const allPosts = useMemo(() => {
+    const posts = data?.pages.flat() || [];
+    const uniquePosts = [];
+    const seenIds = new Set();
+
+    for (const post of posts) {
+      if (!seenIds.has(post.id)) {
+        seenIds.add(post.id);
+        uniquePosts.push(post);
+      }
+    }
+    return uniquePosts;
+  }, [data?.pages]);
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -33,8 +47,8 @@ const GaragePreview = () => {
         }
       },
       { 
-        threshold: 0.1, // Scatta quando anche solo il 10% del sensore è visibile
-        rootMargin: '400px' // Inizia a caricare quando mancano 400px alla fine (caricamento anticipato)
+        threshold: 0.1,
+        rootMargin: '600px' // Carichiamo ancora più in anticipo
       }
     );
 
@@ -52,8 +66,6 @@ const GaragePreview = () => {
   const handleLike = (id: number) => {
     setLikedPosts(prev => ({ ...prev, [id]: !prev[id] }));
   };
-
-  const allPosts = data?.pages.flat() || [];
 
   if (isLoading) {
     return (
@@ -170,7 +182,6 @@ const GaragePreview = () => {
           )}
         </div>
 
-        {/* Sensore per lo scroll infinito (invisibile ma funzionale) */}
         <div ref={observerTarget} className="h-20 flex items-center justify-center mt-8">
           {isFetchingNextPage && (
             <div className="flex flex-col items-center gap-2">
