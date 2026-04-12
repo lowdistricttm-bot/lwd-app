@@ -63,18 +63,22 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
     const timer = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
-          handleNext();
-          return 0;
+          return 100;
         }
         return prev + increment;
       });
     }, interval);
 
     return () => clearInterval(timer);
-  }, [currentIndex, isPaused, handleNext]);
+  }, [currentIndex, isPaused]);
+
+  useEffect(() => {
+    if (progress >= 100) {
+      handleNext();
+    }
+  }, [progress, handleNext]);
 
   const handleScreenClick = (e: React.MouseEvent) => {
-    // Evita che il clic sui controlli attivi il cambio storia
     if ((e.target as HTMLElement).closest('.story-controls')) return;
     
     if (showInput || showReactions) {
@@ -112,7 +116,6 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
     >
       <div className="relative w-full h-full md:max-w-[420px] md:h-[92vh] bg-black md:rounded-xl overflow-hidden flex flex-col">
         
-        {/* Progress Bars */}
         <div className="absolute top-3 left-2 right-2 z-30 flex gap-1">
           {stories.map((_, i) => (
             <div key={i} className="h-[2px] flex-1 bg-white/30 rounded-full overflow-hidden">
@@ -126,7 +129,6 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
           ))}
         </div>
 
-        {/* Header */}
         <div className="absolute top-6 left-4 right-4 z-30 flex items-center justify-between story-controls">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full overflow-hidden border border-white/10">
@@ -145,7 +147,6 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
           </div>
         </div>
 
-        {/* Content */}
         <div 
           className="relative flex-1 w-full overflow-hidden"
           onClick={handleScreenClick}
@@ -164,7 +165,6 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
           
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/40 pointer-events-none" />
 
-          {/* Swipe Up Hint */}
           {!showReactions && !showInput && (
             <motion.div 
               initial={{ opacity: 0 }}
@@ -176,7 +176,6 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
             </motion.div>
           )}
 
-          {/* Reactions Grid */}
           <AnimatePresence>
             {showReactions && (
               <motion.div 
@@ -204,7 +203,6 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
           </AnimatePresence>
         </div>
 
-        {/* Footer Controls */}
         <div className="p-4 pb-10 md:pb-6 bg-black story-controls z-50">
           <AnimatePresence mode="wait">
             {showInput ? (
