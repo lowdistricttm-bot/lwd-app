@@ -14,7 +14,6 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState<'activity' | 'orders'>('activity');
   const { user, logout, isLoading } = useAuth();
   const { data: customerCount } = useWcCustomerCount();
-  const [imgError, setImgError] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -52,10 +51,6 @@ const Profile = () => {
     { label: 'Gruppi', value: '0' },
   ];
 
-  const avatarUrl = imgError || !user.avatar 
-    ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`
-    : user.avatar;
-
   return (
     <div className="min-h-screen bg-black text-white pb-24">
       <Navbar />
@@ -63,13 +58,18 @@ const Profile = () => {
       <div className="pt-24 px-6 max-w-2xl mx-auto">
         <div className="flex items-start justify-between mb-8">
           <div className="relative">
-            <div className="w-24 h-24 rounded-[2rem] bg-zinc-800 border-2 border-red-600 p-1 rotate-3">
-              <img 
-                src={avatarUrl} 
-                alt="avatar" 
-                onError={() => setImgError(true)}
-                className="w-full h-full rounded-[1.8rem] object-cover -rotate-3" 
-              />
+            <div className="w-24 h-24 rounded-[2rem] bg-zinc-900 border-2 border-red-600 p-1 rotate-3 flex items-center justify-center overflow-hidden">
+              {user.avatar ? (
+                <img 
+                  src={user.avatar} 
+                  alt="avatar" 
+                  className="w-full h-full rounded-[1.8rem] object-cover -rotate-3" 
+                />
+              ) : (
+                <div className="w-full h-full bg-zinc-800 rounded-[1.8rem] flex items-center justify-center -rotate-3">
+                  <UserIcon size={40} className="text-gray-600" />
+                </div>
+              )}
             </div>
             <div className="absolute -bottom-2 -right-2 bg-red-600 text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-lg">
               MEMBER

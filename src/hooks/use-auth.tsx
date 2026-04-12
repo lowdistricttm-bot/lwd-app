@@ -71,30 +71,43 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (!userId) throw new Error("ID utente non trovato");
 
-      // 3. Recupero dati reali e Avatar ufficiale da WP
-      let finalAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${cleanUsername}`;
+      // 3. RECUPERO FOTO ORIGINALE DA BUDDYPRESS
+      // Usiamo il token appena ottenuto per avere il permesso di vedere i dati del profilo
+      let finalAvatar = "";
       
       try {
-        const userRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${userId}`);
-        if (userRes.ok) {
-          const userData = await userRes.json();
-          if (userData.avatar_urls?.['96']) {
-            finalAvatar = userData.avatar_urls['96'];
+        const bpRes = await fetch(`https://www.lowdistrict.it/wp-json/buddypress/v1/members/${userId}?JWT=${jwtToken}`);
+        if (bpRes.ok) {
+          const bpData = await bpRes.json();
+          // BuddyPress restituisce 'full' (grande) e 'thumb' (piccola)
+          if (bpData.avatar_urls?.full) {
+            finalAvatar = bpData.avatar_urls.full;
           }
-          // Se abbiamo dati più freschi da WP, usiamoli
-          wpUser = { ...wpUser, ...userData };
+          // Aggiorniamo anche il nome visualizzato se BuddyPress ne ha uno più preciso
+          if (bpData.name) wpUser.display_name = bpData.name;
         }
       } catch (e) {
-        console.log("Impossibile recuperare avatar ufficiale, uso fallback");
+        console.log("Errore nel recupero dati BuddyPress");
+      }
+
+      // Se BuddyPress fallisce, proviamo WP standard come ultima spiaggia
+      if (!finalAvatar) {
+        try {
+          const userRes = await fetch(`https://www.lowdistrict.it/wp-json/wp/v2/users/${userId}`);
+          if (userRes.ok) {
+            const userData = await userRes.json();
+            finalAvatar = userData.avatar_urls?.['96'] || "";
+          }
+        } catch (e) {}
       }
 
       const userData: User = {
         id: parseInt(userId),
-        username: wpUser?.user_login || wpUser?.slug || cleanUsername,
-        email: wpUser?.user_email || wpUser?.email || '',
-        nicename: wpUser?.display_name || wpUser?.name || cleanUsername,
-        display_name: wpUser?.display_name || wpUser?.name || cleanUsername,
-        avatar: finalAvatar
+        username: wpUser?.user_login || cleanUsername,
+        email: wpUser?.user_email || '',
+        nicename: wpUser?.display_name || cleanUsername,
+        display_name: wpUser?.display_name || cleanUsername,
+        avatar: finalAvatar // Ora è l'URL reale del sito
       };
 
       saveAuth(jwtToken, userData);
