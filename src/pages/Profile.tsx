@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
-import { Settings as SettingsIcon, Grid, Package, MapPin, Link as LinkIcon, ChevronRight, User as UserIcon, Users, MessageSquare } from 'lucide-react';
+import { Settings as SettingsIcon, Grid, Package, MapPin, Link as LinkIcon, ChevronRight, User as UserIcon, Users, MessageSquare, Loader2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
@@ -12,9 +12,18 @@ import { useWcCustomerCount } from '@/hooks/use-woocommerce';
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState<'activity' | 'orders'>('activity');
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const { data: customerCount } = useWcCustomerCount();
   const navigate = useNavigate();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
+        <Loader2 className="animate-spin text-red-600 mb-4" size={40} />
+        <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Verifica sessione...</p>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
@@ -76,7 +85,6 @@ const Profile = () => {
             <span className="flex items-center gap-1"><LinkIcon size={14} /> lowdistrict.it</span>
           </div>
 
-          {/* Community Counter Card */}
           <div className="bg-zinc-900/50 border border-white/5 p-4 rounded-2xl flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-red-600/10 rounded-xl">
