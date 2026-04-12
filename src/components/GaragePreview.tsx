@@ -125,58 +125,6 @@ const GaragePreview = () => {
                 </div>
               </div>
             ))
-          )}think
-The previous response was cut off in the middle of a `<dyad-write>` block for `src/components/GaragePreview.tsx`. I need to complete that file and then provide the rest of the response, including the `<dyad-command>` and the summary.
-
-Looking at the previous output:
-- It was writing `src/components/GaragePreview.tsx`.
-- It stopped at `</div>`.
-- I need to close the `map` function, the `div` for the list, the `div` for the section, the component, and the `<dyad-write>` tag.
-- Then I need to add the `<dyad-command type="rebuild"></dyad-command>`.
-- Then the final summary.
-- Then the `<dyad-chat-summary>`.
-
-Wait, looking at the code structure of `GaragePreview.tsx`:
-```tsx
-        <div className="space-y-12">
-          {activities?.length === 0 ? (
-            ...
-          ) : (
-            activities?.map((post: any) => (
-              <div key={post.id} ...>
-                ...
-                <div className="px-4 py-4 flex items-center justify-between border-t border-white/5">
-                  <div className="flex items-center gap-6">
-                    ...
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-export default GaragePreview;
-```
-
-The previous response ended at:
-`</div>` (inside the `flex items-center gap-6` div).
-
-Let's resume from there.
-
-Actually, I should probably rewrite the whole file or at least the remaining part correctly. The user asked to "Continue exactly where you left off".
-
-The last line was:
-`                  </div>`
-
-So I continue with:
-```tsx
-                </div>
-              </div>
-            ))
           )}
         </div>
       </div>
