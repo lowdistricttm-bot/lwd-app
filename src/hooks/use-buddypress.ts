@@ -8,8 +8,23 @@ const WP_API_URL = "https://www.lowdistrict.it/wp-json/wp/v2";
 
 const getAuthHeader = () => {
   const token = localStorage.getItem('wp-jwt');
-  if (!token || token === 'null' || token === 'undefined') return {};
-  return { 'Authorization': `Bearer ${token}` };
+  
+  // Verifica che il token sia una stringa valida e non vuota
+  if (!token || token === 'null' || token === 'undefined' || token.trim() === '') {
+    console.warn("[BP] Token JWT non valido o mancante");
+    return {};
+  }
+
+  try {
+    // Verifichiamo che il token sia un JWT valido
+    const decoded = JSON.parse(atob(token.split('.')[1]));
+    console.log("[BP] Token JWT valido per utente:", decoded.sub || decoded.user_id || decoded.email);
+    
+    return { 'Authorization': `Bearer ${token}` };
+  } catch (error) {
+    console.error("[BP] Token JWT non valido:", error);
+    return {};
+  }
 };
 
 export interface BPActivity {
@@ -35,15 +50,24 @@ export const useBPActivity = () => {
   return useQuery({
     queryKey: ['bp-activity'],
     queryFn: async () => {
+      const headers = getAuthHeader();
+      
+      // Se non abbiamo un token valido, restituiamo un array vuoto
+      if (!headers.Authorization) {
+        console.warn("[BP] Nessun token JWT valido, impossibile caricare attività");
+        return [];
+      }
+
       const response = await fetch(`${BP_API_URL}/activity?per_page=20&context=view`, {
         headers: { 
           'Accept': 'application/json',
-          ...getAuthHeader() 
+          ...headers 
         }
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error("[BP] Errore caricamento attività:", errorData);
         throw new Error(errorData.message || 'Errore caricamento bacheca');
       }
       return response.json() as Promise<BPActivity[]>;
@@ -114,11 +138,11 @@ export const useBPActions = () => {
         content: content,
         component: 'activity',
         type: 'activity_update',
-        // Aggiungiamo un campo action per essere sicuri
         action: 'ha pubblicato un post'
       };
 
       console.log("[BP] Invio payload:", payload);
+      console.log("[BP] Header di autorizzazione:", headers.Authorization);
 
       const response = await fetch(`${BP_API_URL}/activity`, {
         method: 'POST',
@@ -173,8 +197,15 @@ export const useBPMember = (username?: string) => {
     queryKey: ['bp-member', username],
     queryFn: async () => {
       if (!username) return null;
+      const headers = getAuthHeader();
+      
+      if (!headers.Authorization) {
+        console.warn("[BP] Nessun token JWT valido, impossibile cercare membro");
+        return null;
+      }
+
       const response = await fetch(`${BP_API_URL}/members?search=${username}`, {
-        headers: { 'Accept': 'application/json', ...getAuthHeader() }
+        headers: { 'Accept': 'application/json', ...headers }
       });
       if (!response.ok) return null;
       const data = await response.json();
