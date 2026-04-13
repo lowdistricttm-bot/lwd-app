@@ -1,24 +1,50 @@
 "use client";
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import { useBpMembers } from '@/hooks/use-buddypress';
-import { ChevronLeft, Loader2, Search, UserPlus, RefreshCw, Users, AlertCircle } from 'lucide-react';
+import { ChevronLeft, Loader2, Search, UserPlus, RefreshCw, Users, Lock, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/use-auth';
 
 const Members = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  // Riduciamo a 20 per evitare blocchi del server
   const { data: members, isLoading, isFetching, error, refetch } = useBpMembers(20);
 
   const filteredMembers = members?.filter((m: any) => 
-    m.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    m.user_login?.toLowerCase().includes(searchQuery.toLowerCase())
+    (m.name || m.display_name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (m.user_login || m.slug || "").toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
+
+  // Gestione errore 401 (Login richiesto)
+  if (error?.message === "401") {
+    return (
+      <div className="min-h-screen bg-black text-white flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+          <div className="w-20 h-20 bg-zinc-900 rounded-[2rem] flex items-center justify-center mb-8 border border-white/5">
+            <Lock size={32} className="text-red-600" />
+          </div>
+          <h2 className="text-2xl font-black uppercase italic mb-4 tracking-tighter">Accesso Riservato</h2>
+          <p className="text-gray-500 text-xs font-bold uppercase tracking-widest leading-relaxed mb-10 max-w-xs">
+            La lista dei membri è visibile solo agli utenti registrati di Low District.
+          </p>
+          <Link to="/auth" state={{ from: location.pathname }} className="w-full max-w-xs">
+            <Button className="w-full bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest py-8 rounded-none italic shadow-xl shadow-red-600/10">
+              Accedi per Vedere i Membri
+            </Button>
+          </Link>
+        </div>
+        <BottomNav />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-white pb-24">
@@ -32,7 +58,7 @@ const Members = () => {
             </button>
             <div>
               <h1 className="text-3xl font-black tracking-tighter uppercase italic">Membri Ufficiali</h1>
-              <p className="text-[8px] text-gray-500 font-black uppercase tracking-widest">Directory sincronizzata dal sito</p>
+              <p className="text-[8px] text-gray-500 font-black uppercase tracking-widest">Directory Community</p>
             </div>
           </div>
           <button 
@@ -64,7 +90,7 @@ const Members = () => {
             <AlertCircle className="mx-auto text-red-600 mb-4" size={32} />
             <h3 className="text-sm font-black uppercase tracking-tighter mb-2">Errore di Connessione</h3>
             <p className="text-[10px] text-gray-500 uppercase font-bold mb-6">
-              Non è stato possibile recuperare i membri. Assicurati che il sito sia raggiungibile.
+              Impossibile recuperare i dati. Riprova più tardi.
             </p>
             <Button 
               onClick={() => refetch()}
@@ -87,14 +113,14 @@ const Members = () => {
                   <div className="flex items-center gap-4">
                     <div className="w-14 h-14 rounded-2xl overflow-hidden bg-zinc-800 border border-white/5 p-0.5">
                       <img 
-                        src={member.avatar_urls?.full || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.user_login}`} 
+                        src={member.avatar_urls?.full || member.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.user_login || member.slug}`} 
                         alt="" 
                         className="w-full h-full object-cover rounded-xl grayscale group-hover:grayscale-0 transition-all"
                       />
                     </div>
                     <div>
-                      <h3 className="font-black text-sm uppercase italic leading-none mb-1">{member.name}</h3>
-                      <p className="text-[9px] text-red-600 font-black uppercase tracking-widest">@{member.user_login}</p>
+                      <h3 className="font-black text-sm uppercase italic leading-none mb-1">{member.name || member.display_name}</h3>
+                      <p className="text-[9px] text-red-600 font-black uppercase tracking-widest">@{member.user_login || member.slug}</p>
                     </div>
                   </div>
                   <button className="p-3 bg-white/5 rounded-xl text-gray-500 hover:text-red-600 hover:bg-white/10 transition-all">
