@@ -3,12 +3,10 @@
 import { useQuery } from '@tanstack/react-query';
 
 const WC_URL = "https://www.lowdistrict.it/wp-json/wc/v3";
-// Inseriremo qui le chiavi appena disponibili
-const CK = ""; 
-const CS = "";
+const CK = "ck_3d72f4e97f4b104d76bcf2f156d7f47b0e92af9b"; 
+const CS = "cs_dfc8bfa35e29acf49067f1af13a98734142d2533";
 
 const getAuthHeader = () => {
-  if (!CK || !CS) return {};
   return {
     'Authorization': 'Basic ' + btoa(`${CK}:${CS}`)
   };

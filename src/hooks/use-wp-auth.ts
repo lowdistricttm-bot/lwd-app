@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
-const WP_URL = "https://www.lowdistrict.it/wp-json/jwt-auth/v1/token";
+// Proviamo l'endpoint standard di JWT Simple
+const WP_URL = "https://www.lowdistrict.it/wp-json/jwt-simple/v1/token";
 
 export const useWpAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -11,7 +12,6 @@ export const useWpAuth = () => {
   const loginWithWp = async (username: string, password: string) => {
     setIsLoading(true);
     try {
-      // 1. Tenta il login su WordPress
       const response = await fetch(WP_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -21,19 +21,17 @@ export const useWpAuth = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Credenziali WordPress non valide");
+        throw new Error(data.message || "Credenziali non valide");
       }
 
-      // 2. Se il login WP ha successo, creiamo/logghiamo l'utente su Supabase
-      // Usiamo l'email di WP per creare un account "ombra" su Supabase
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      // Sincronizzazione con Supabase per gestire la sessione nell'app
+      const { error: authError } = await supabase.auth.signInWithPassword({
         email: data.user_email,
-        password: password, // Nota: In produzione useremmo un sistema di link più complesso
+        password: password,
       });
 
-      // Se l'utente non esiste su Supabase, lo registriamo al volo
       if (authError) {
-        const { error: signUpError } = await supabase.auth.signUp({
+        await supabase.auth.signUp({
           email: data.user_email,
           password: password,
           options: {
@@ -43,7 +41,6 @@ export const useWpAuth = () => {
             }
           }
         });
-        if (signUpError) throw signUpError;
       }
 
       return { success: true, user: data };

@@ -11,7 +11,7 @@ const BottomNav = () => {
   const items = [
     { icon: Home, label: 'Home', href: '/' },
     { icon: MessageSquare, label: 'Bacheca', href: '/bacheca' },
-    { icon: ShoppingBag, label: 'Shop', href: '#' },
+    { icon: ShoppingBag, label: 'Shop', href: '/shop' },
     { icon: User, label: 'Profilo', href: '/profile' },
   ];
 
