@@ -13,8 +13,8 @@ export interface Vehicle {
   license_plate: string;
   suspension_type: string;
   description: string;
-  image_url?: string; // Immagine principale (legacy)
-  images?: string[]; // Array di immagini (nuovo)
+  image_url?: string;
+  images?: string[];
   is_main: boolean;
   created_at: string;
 }
@@ -36,7 +36,6 @@ export const useGarage = () => {
 
       if (error) throw error;
       
-      // Normalizzazione dati per gestire sia image_url che images array
       return data.map((v: any) => ({
         ...v,
         images: Array.isArray(v.images) ? v.images : (v.image_url ? [v.image_url] : [])
@@ -46,7 +45,6 @@ export const useGarage = () => {
 
   const uploadImages = async (files: File[]) => {
     const urls: string[] = [];
-    
     for (const file of files) {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
@@ -64,7 +62,6 @@ export const useGarage = () => {
         
       urls.push(publicUrl);
     }
-
     return urls;
   };
 
@@ -85,7 +82,7 @@ export const useGarage = () => {
           ...vehicleData, 
           user_id: user.id, 
           images: imageUrls,
-          image_url: imageUrls[0] || null // Imposta la prima come principale per compatibilità
+          image_url: imageUrls[0] || null
         }])
         .select()
         .single();
@@ -96,6 +93,34 @@ export const useGarage = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['garage-vehicles'] });
       showSuccess("Veicolo aggiunto al garage!");
+    },
+    onError: (error: any) => showError(error.message)
+  });
+
+  const updateVehicle = useMutation({
+    mutationFn: async (updatedVehicle: Partial<Vehicle> & { files?: File[], existingImages?: string[] }) => {
+      const { id, files, existingImages, ...vehicleData } = updatedVehicle;
+      
+      let imageUrls = existingImages || [];
+      if (files && files.length > 0) {
+        const newUrls = await uploadImages(files);
+        imageUrls = [...imageUrls, ...newUrls].slice(0, 6);
+      }
+
+      const { error } = await supabase
+        .from('vehicles')
+        .update({ 
+          ...vehicleData, 
+          images: imageUrls,
+          image_url: imageUrls[0] || null
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['garage-vehicles'] });
+      showSuccess("Veicolo aggiornato!");
     },
     onError: (error: any) => showError(error.message)
   });
@@ -111,5 +136,5 @@ export const useGarage = () => {
     }
   });
 
-  return { vehicles, isLoading, addVehicle, deleteVehicle };
+  return { vehicles, isLoading, addVehicle, updateVehicle, deleteVehicle };
 };

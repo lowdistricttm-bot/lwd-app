@@ -1,57 +1,100 @@
 "use client";
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useGarage, Vehicle } from '@/hooks/use-garage';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import { Plus, Car, Trash2, Camera, Loader2, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Car, Trash2, Camera, Loader2, X, Edit3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 const GarageTab = () => {
-  const { vehicles, isLoading, addVehicle, deleteVehicle } = useGarage();
-  const [isAdding, setIsAdding] = useState(false);
+  const { vehicles, isLoading, addVehicle, updateVehicle, deleteVehicle } = useGarage();
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  
   const [formData, setFormData] = useState({
     brand: '',
     model: '',
     year: '',
     license_plate: '',
-    suspension_type: '',
+    suspension_type: 'STATIC',
     description: ''
   });
+  
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleEdit = (vehicle: Vehicle) => {
+    setEditingId(vehicle.id);
+    setFormData({
+      brand: vehicle.brand,
+      model: vehicle.model,
+      year: vehicle.year || '',
+      license_plate: vehicle.license_plate || '',
+      suspension_type: vehicle.suspension_type || 'STATIC',
+      description: vehicle.description || ''
+    });
+    setExistingImages(vehicle.images || []);
+    setPreviews([]);
+    setSelectedFiles([]);
+    setIsFormOpen(true);
+  };
+
+  const handleCloseForm = () => {
+    setIsFormOpen(false);
+    setEditingId(null);
+    setFormData({ brand: '', model: '', year: '', license_plate: '', suspension_type: 'STATIC', description: '' });
+    setSelectedFiles([]);
+    setPreviews([]);
+    setExistingImages([]);
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
-      const newFiles = [...selectedFiles, ...files].slice(0, 6);
-      setSelectedFiles(newFiles);
+      const totalCount = selectedFiles.length + existingImages.length;
+      const remaining = 6 - totalCount;
+      const newFiles = [...selectedFiles, ...files].slice(0, remaining);
       
-      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
-      setPreviews(newPreviews);
+      setSelectedFiles(prev => [...prev, ...newFiles].slice(0, 6 - existingImages.length));
     }
   };
 
-  const removePreview = (index: number) => {
-    const newFiles = selectedFiles.filter((_, i) => i !== index);
-    const newPreviews = previews.filter((_, i) => i !== index);
-    setSelectedFiles(newFiles);
+  useEffect(() => {
+    const newPreviews = selectedFiles.map(file => URL.createObjectURL(file));
     setPreviews(newPreviews);
+    return () => newPreviews.forEach(url => URL.revokeObjectURL(url));
+  }, [selectedFiles]);
+
+  const removeExistingImage = (index: number) => {
+    setExistingImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeNewPreview = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await addVehicle.mutateAsync({
-      ...formData,
-      files: selectedFiles
-    });
-    setIsAdding(false);
-    setFormData({ brand: '', model: '', year: '', license_plate: '', suspension_type: '', description: '' });
-    setSelectedFiles([]);
-    setPreviews([]);
+    if (editingId) {
+      await updateVehicle.mutateAsync({
+        id: editingId,
+        ...formData,
+        files: selectedFiles,
+        existingImages
+      });
+    } else {
+      await addVehicle.mutateAsync({
+        ...formData,
+        files: selectedFiles
+      });
+    }
+    handleCloseForm();
   };
 
   if (isLoading) return <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-red-600" /></div>;
@@ -60,9 +103,9 @@ const GarageTab = () => {
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <h3 className="text-xl font-black italic uppercase">Il Mio Garage</h3>
-        {!isAdding && (
+        {!isFormOpen && (
           <Button 
-            onClick={() => setIsAdding(true)}
+            onClick={() => setIsFormOpen(true)}
             className="bg-red-600 hover:bg-white hover:text-black text-white rounded-none font-black uppercase italic text-[10px] tracking-widest"
           >
             <Plus size={14} className="mr-2" /> Aggiungi Veicolo
@@ -71,7 +114,7 @@ const GarageTab = () => {
       </div>
 
       <AnimatePresence>
-        {isAdding && (
+        {isFormOpen && (
           <motion.div 
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
@@ -114,15 +157,28 @@ const GarageTab = () => {
                     className="bg-transparent border-zinc-800 rounded-none h-12" 
                   />
                 </div>
+                
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-zinc-500">Assetto</Label>
-                  <Input 
-                    placeholder="es. Statico, Aria..."
-                    value={formData.suspension_type}
-                    onChange={e => setFormData({...formData, suspension_type: e.target.value})}
-                    className="bg-transparent border-zinc-800 rounded-none h-12" 
-                  />
+                  <Label className="text-[10px] font-black uppercase text-zinc-500">Tipo Assetto</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {['STATIC', 'AIR'].map((type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => setFormData({...formData, suspension_type: type})}
+                        className={cn(
+                          "h-12 border font-black uppercase italic text-xs tracking-widest transition-all",
+                          formData.suspension_type === type 
+                            ? "bg-red-600 border-red-600 text-white" 
+                            : "bg-transparent border-zinc-800 text-zinc-500 hover:border-zinc-600"
+                        )}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
                 </div>
+
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-zinc-500">Foto Veicolo (Max 6)</Label>
                   <div 
@@ -131,7 +187,7 @@ const GarageTab = () => {
                   >
                     <Camera size={18} className="text-zinc-600 mr-2" />
                     <span className="text-[10px] font-black uppercase text-zinc-500">
-                      {previews.length > 0 ? `${previews.length}/6 Foto` : 'Seleziona Foto'}
+                      {existingImages.length + selectedFiles.length}/6 Foto
                     </span>
                   </div>
                   <input 
@@ -145,15 +201,27 @@ const GarageTab = () => {
                 </div>
               </div>
 
-              {previews.length > 0 && (
+              {(existingImages.length > 0 || previews.length > 0) && (
                 <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-                  {previews.map((url, i) => (
-                    <div key={i} className="aspect-square relative bg-zinc-800 border border-white/5">
-                      <img src={url} className="w-full h-full object-cover" alt="Preview" />
+                  {existingImages.map((url, i) => (
+                    <div key={`existing-${i}`} className="aspect-square relative bg-zinc-800 border border-white/5">
+                      <img src={url} className="w-full h-full object-cover" alt="Existing" />
                       <button 
                         type="button"
-                        onClick={() => removePreview(i)}
+                        onClick={() => removeExistingImage(i)}
                         className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white flex items-center justify-center rounded-full"
+                      >
+                        <X size={10} />
+                      </button>
+                    </div>
+                  ))}
+                  {previews.map((url, i) => (
+                    <div key={`new-${i}`} className="aspect-square relative bg-zinc-800 border border-white/5 opacity-70">
+                      <img src={url} className="w-full h-full object-cover" alt="New" />
+                      <button 
+                        type="button"
+                        onClick={() => removeNewPreview(i)}
+                        className="absolute -top-1 -right-1 w-5 h-5 bg-zinc-600 text-white flex items-center justify-center rounded-full"
                       >
                         <X size={10} />
                       </button>
@@ -174,14 +242,14 @@ const GarageTab = () => {
               <div className="flex gap-4">
                 <Button 
                   type="submit" 
-                  disabled={addVehicle.isPending}
+                  disabled={addVehicle.isPending || updateVehicle.isPending}
                   className="flex-1 bg-red-600 hover:bg-white hover:text-black text-white rounded-none h-12 font-black uppercase italic tracking-widest"
                 >
-                  {addVehicle.isPending ? <Loader2 className="animate-spin" /> : 'Salva Veicolo'}
+                  {(addVehicle.isPending || updateVehicle.isPending) ? <Loader2 className="animate-spin" /> : editingId ? 'Aggiorna Veicolo' : 'Salva Veicolo'}
                 </Button>
                 <Button 
                   type="button" 
-                  onClick={() => setIsAdding(false)}
+                  onClick={handleCloseForm}
                   variant="outline"
                   className="border-zinc-800 rounded-none h-12 font-black uppercase italic tracking-widest"
                 >
@@ -194,7 +262,7 @@ const GarageTab = () => {
       </AnimatePresence>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {vehicles?.length === 0 && !isAdding ? (
+        {vehicles?.length === 0 && !isFormOpen ? (
           <div className="col-span-full bg-zinc-900/30 border border-white/5 p-12 text-center">
             <Car className="mx-auto text-zinc-800 mb-6" size={48} />
             <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Il tuo garage è vuoto.</p>
@@ -224,6 +292,21 @@ const GarageTab = () => {
                   </div>
                 )}
                 
+                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all z-10">
+                  <button 
+                    onClick={() => handleEdit(vehicle)}
+                    className="p-2 bg-black/60 text-white hover:bg-white hover:text-black transition-colors"
+                  >
+                    <Edit3 size={16} />
+                  </button>
+                  <button 
+                    onClick={() => deleteVehicle.mutate(vehicle.id)}
+                    className="p-2 bg-black/60 text-white hover:bg-red-600 transition-colors"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+
                 {vehicle.images && vehicle.images.length > 1 && (
                   <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
                     {vehicle.images.map((_, i) => (
@@ -231,13 +314,6 @@ const GarageTab = () => {
                     ))}
                   </div>
                 )}
-
-                <button 
-                  onClick={() => deleteVehicle.mutate(vehicle.id)}
-                  className="absolute top-4 right-4 p-2 bg-black/60 text-white hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100 z-10"
-                >
-                  <Trash2 size={16} />
-                </button>
               </div>
               <div className="p-6">
                 <div className="flex justify-between items-start mb-4">
@@ -252,11 +328,9 @@ const GarageTab = () => {
                   )}
                 </div>
                 <div className="space-y-2">
-                  {vehicle.suspension_type && (
-                    <p className="text-[10px] font-bold uppercase text-zinc-400">
-                      <span className="text-zinc-600">Assetto:</span> {vehicle.suspension_type}
-                    </p>
-                  )}
+                  <p className="text-[10px] font-bold uppercase text-zinc-400">
+                    <span className="text-zinc-600">Assetto:</span> {vehicle.suspension_type}
+                  </p>
                   {vehicle.description && (
                     <p className="text-xs text-zinc-500 line-clamp-2 italic">{vehicle.description}</p>
                   )}
