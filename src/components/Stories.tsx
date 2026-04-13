@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { cn } from "@/lib/utils";
 import StoryViewer from './StoryViewer';
 import { AnimatePresence } from 'framer-motion';
@@ -19,6 +19,14 @@ const Stories = () => {
   const [selectedStoryIndex, setSelectedStoryIndex] = React.useState(0);
   const [isUploading, setIsUploading] = React.useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Separiamo la mia storia dalle altre
+  const { myStory, otherStories } = useMemo(() => {
+    if (!stories) return { myStory: null, otherStories: [] };
+    const mine = stories.find((s: any) => String(s.user_id) === String(user?.id));
+    const others = stories.filter((s: any) => String(s.user_id) !== String(user?.id));
+    return { myStory: mine, otherStories: others };
+  }, [stories, user?.id]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -54,8 +62,15 @@ const Stories = () => {
     }
   };
 
-  const openViewer = (index: number) => {
-    setSelectedStoryIndex(index);
+  const openViewer = (index: number, isMine: boolean = false) => {
+    if (isMine) {
+      // Trova l'indice reale nel set completo di storie
+      const realIndex = stories.findIndex((s: any) => s.id === myStory.id);
+      setSelectedStoryIndex(realIndex);
+    } else {
+      const realIndex = stories.findIndex((s: any) => s.id === otherStories[index].id);
+      setSelectedStoryIndex(realIndex);
+    }
     setShowViewer(true);
   };
 
@@ -66,33 +81,48 @@ const Stories = () => {
       <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
       
       <div className="flex gap-4 overflow-x-auto pt-4 pb-6 px-6 no-scrollbar bg-black">
-        {/* Slot per aggiungere */}
+        {/* Slot Personale (La mia storia o tasto aggiungi) */}
         <div className="flex flex-col items-center gap-2 shrink-0">
-          <button 
-            onClick={() => !isUploading && fileInputRef.current?.click()}
-            disabled={isUploading}
-            className="relative w-[72px] h-[72px] rounded-full bg-zinc-900 border border-white/10 p-1 flex items-center justify-center overflow-hidden"
-          >
-            <img 
-              src={user?.avatar || "https://www.lowdistrict.it/wp-content/uploads/placeholder.png"} 
-              className="w-full h-full object-cover rounded-full opacity-50" 
-              alt=""
-            />
-            <div className="absolute inset-0 flex items-center justify-center">
-              {isUploading ? (
-                <Loader2 className="animate-spin text-white" size={20} />
-              ) : (
-                <div className="bg-red-600 rounded-full p-1 border-2 border-black">
-                  <Plus size={16} className="text-white" />
-                </div>
+          <div className="relative">
+            <button 
+              onClick={() => myStory ? openViewer(0, true) : fileInputRef.current?.click()}
+              className={cn(
+                "w-[72px] h-[72px] rounded-full p-[3px] transition-all",
+                myStory 
+                  ? "bg-gradient-to-tr from-yellow-400 via-red-600 to-purple-600" 
+                  : "bg-zinc-900 border border-white/10"
               )}
-            </div>
-          </button>
-          <span className="text-[10px] font-black uppercase text-white/40">Aggiungi</span>
+            >
+              <div className="w-full h-full rounded-full border-2 border-black overflow-hidden bg-zinc-900">
+                <img 
+                  src={myStory ? myStory.image_url : (user?.avatar || "https://www.lowdistrict.it/wp-content/uploads/placeholder.png")} 
+                  className={cn("w-full h-full object-cover", !myStory && "opacity-50")} 
+                  alt="La mia storia"
+                />
+              </div>
+            </button>
+            
+            {/* Tasto + in basso a destra */}
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                fileInputRef.current?.click();
+              }}
+              disabled={isUploading}
+              className="absolute bottom-0 right-0 bg-red-600 rounded-full p-1 border-2 border-black hover:scale-110 transition-transform z-20"
+            >
+              {isUploading ? (
+                <Loader2 className="animate-spin text-white" size={12} />
+              ) : (
+                <Plus size={12} className="text-white" />
+              )}
+            </button>
+          </div>
+          <span className="text-[10px] font-black uppercase text-white/40">La tua storia</span>
         </div>
 
-        {/* Lista storie */}
-        {stories?.map((story: any, idx: number) => (
+        {/* Lista altre storie */}
+        {otherStories.map((story: any, idx: number) => (
           <button 
             key={story.id} 
             onClick={() => openViewer(idx)}
