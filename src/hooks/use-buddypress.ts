@@ -2,22 +2,29 @@ import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tansta
 
 const BASE_URL = "https://www.lowdistrict.it/wp-json";
 
-const bpFetch = async (endpoint: string, options: RequestInit = {}, skipAuth = false) => {
+const bpFetch = async (endpoint: string, options: RequestInit = {}, forceAuth = false) => {
   const token = localStorage.getItem('ld_auth_token');
   const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-  const url = `${BASE_URL}${path}`;
+  
+  // Funzione interna per eseguire la fetch effettiva
+  const doFetch = async (useToken: boolean, useUrlParam: boolean) => {
+    let url = `${BASE_URL}${path}`;
+    const headers: Record<string, string> = {
+      'Accept': 'application/json',
+      ...((options.headers as Record<string, string>) || {}),
+    };
 
-  const headers: Record<string, string> = {
-    'Accept': 'application/json',
-    ...((options.headers as Record<string, string>) || {}),
-  };
+    if (useToken && token) {
+      if (useUrlParam) {
+        // Prova a passare il JWT come parametro URL (spesso risolve l'errore 400 del middleware)
+        const separator = url.includes('?') ? '&' : '?';
+        url = `${url}${separator}jwt=${token}`;
+      } else {
+        // Metodo standard Header
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
 
-  // Invia il token solo se presente e se non abbiamo chiesto di saltarlo
-  if (token && !skipAuth) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  try {
     const response = await fetch(url, {
       ...options,
       headers,
@@ -25,17 +32,61 @@ const bpFetch = async (endpoint: string, options: RequestInit = {}, skipAuth = f
     });
 
     if (!response.ok) {
-      if (response.status === 401) throw new Error("401");
-      if (response.status === 404) throw new Error("API_NOT_FOUND");
-      
-      const errorData = await response.json().catch(() => ({ message: `Errore ${response.status}` }));
-      throw new Error(errorData.message || `Errore Server ${response.status}`);
+      const errorData = await response.json().catch(() => ({}));
+      return { ok: false, status: response.status, data: errorData };
     }
 
-    return await response.json();
+    const data = await response.json();
+    return { ok: true, data };
+  };
+
+  // Strategia:
+  // 1. Se non è forzata l'auth, prova prima SENZA token (molti dati BuddyPress sono pubblici)
+  if (!forceAuth) {
+    const result = await doFetch(false, false);
+    if (result.ok) return result.data;think
+The user is pointing out that my previous response was cut off. I need to continue the code block for `src/hooks/use-buddypress.ts` exactly where it left off.
+
+Looking at the previous output:
+```typescript
+  // Strategia:
+  // 1. Se non è forzata l'auth, prova prima SENZA token (molti dati BuddyPress sono pubblici)
+  if (!forceAuth) {
+    const result = await doFetch(false, false);
+    if (result.ok) return result.data;
+```
+
+I need to finish the `bpFetch` function and the rest of the file.
+
+Plan:
+1. Complete the `bpFetch` logic (retry with token in header, then retry with token in URL if needed).
+2. Complete the exported hooks (`useBpMembers`, `useBpActivity`, `useActivityActions`, `useBpProfile`).
+3. Ensure the file is syntactically correct.
+
+The error reported by the user was:
+`"message": "Unable to find user jwt property in JWT.", "errorCode": 30, "type": "simple-jwt-login-middleware"`
+This happens when the middleware is active but the token is malformed or missing expected claims.
+By trying without auth first, we avoid the middleware if the endpoint is public.
+If it's private, we try with auth.
+
+Let's continue the code.// 2. Se fallisce o se l'auth è forzata, prova con Header Authorization
+    const authResult = await doFetch(true, false);
+    if (authResult.ok) return authResult.data;
+
+    // 3. Se ancora fallisce con errore 400/401, prova l'ultima spiaggia: JWT come parametro URL
+    if (authResult.status === 400 || authResult.status === 401) {
+      const urlParamResult = await doFetch(true, true);
+      if (urlParamResult.ok) return urlParamResult.data;
+      
+      // Se arriviamo qui, lanciamo l'errore definitivo
+      if (urlParamResult.status === 401) throw new Error("401");
+      throw new Error(urlParamResult.data?.message || `Errore ${urlParamResult.status}`);
+    }
+
+    throw new Error(authResult.data?.message || "Errore di connessione");
   } catch (err: any) {
-    console.error(`[BuddyPress Error]`, err);
-    if (err.message === "401" || err.message === "API_NOT_FOUND") throw err;
+    console.error(`[BuddyPress API Error]`, err);
+    if (err.message === "401") throw err;
     throw new Error("NETWORK_OR_CORS_ERROR");
   }
 };
@@ -44,7 +95,7 @@ const bpFetch = async (endpoint: string, options: RequestInit = {}, skipAuth = f
 export const useBpMembers = (perPage = 20) => {
   return useQuery({
     queryKey: ['bp-members', perPage],
-    queryFn: () => bpFetch(`/buddypress/v1/members?per_page=${perPage}&type=active`, {}, true),
+    queryFn: () => bpFetch(`/buddypress/v1/members?per_page=${perPage}&type=active`),
     staleTime: 1000 * 60 * 5,
     retry: 1
   });
@@ -58,8 +109,7 @@ export const useBpActivity = (userId?: number) => {
       let endpoint = `/buddypress/v1/activity?page=${pageParam}&per_page=10&display_name=1`;
       if (userId) endpoint += `&user_id=${userId}`;
       
-      // Proviamo a caricare la bacheca senza auth per evitare blocchi CORS inutili sui dati pubblici
-      const data = await bpFetch(endpoint, {}, true);
+      const data = await bpFetch(endpoint);
       return Array.isArray(data) ? data : [];
     },
     initialPageParam: 1,
@@ -83,12 +133,12 @@ export const useActivityActions = () => {
         component: 'activity', 
         type: 'activity_update' 
       })
-    }),
+    }, true), // Forza auth per scrivere
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['bp-activity'] })
   });
 
   const favoriteActivity = useMutation({
-    mutationFn: (id: number) => bpFetch(`/buddypress/v1/activity/${id}/favorite`, { method: 'POST' }),
+    mutationFn: (id: number) => bpFetch(`/buddypress/v1/activity/${id}/favorite`, { method: 'POST' }, true),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['bp-activity'] })
   });
 
@@ -99,7 +149,7 @@ export const useActivityActions = () => {
 export const useBpProfile = (userId: number | undefined) => {
   return useQuery({
     queryKey: ['bp-profile', userId],
-    queryFn: () => bpFetch(`/buddypress/v1/members/${userId}/xprofile`),
+    queryFn: () => bpFetch(`/buddypress/v1/members/${userId}/xprofile`, {}, true),
     enabled: !!userId,
   });
 };
