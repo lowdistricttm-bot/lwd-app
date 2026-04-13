@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
@@ -8,15 +8,34 @@ import Footer from '@/components/Footer';
 import ActivityItem from '@/components/ActivityItem';
 import CreatePostModal from '@/components/CreatePostModal';
 import { useBPActivity } from '@/hooks/use-buddypress';
-import { Loader2, Plus, AlertCircle } from 'lucide-react';
+import { Loader2, Plus, AlertCircle, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Bacheca = () => {
   const navigate = useNavigate();
   const { data: activities, isLoading, error, refetch } = useBPActivity();
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
-  
-  const hasWpToken = !!localStorage.getItem('wp-jwt');
+  const [hasWpToken, setHasWpToken] = useState(!!localStorage.getItem('wp-jwt'));
+
+  // Verifichiamo la sessione ogni volta che la pagina viene visualizzata
+  useEffect(() => {
+    const checkSession = () => {
+      const token = localStorage.getItem('wp-jwt');
+      setHasWpToken(!!token);
+    };
+    
+    checkSession();
+    window.addEventListener('focus', checkSession);
+    return () => window.removeEventListener('focus', checkSession);
+  }, []);
+
+  const handleCreatePost = () => {
+    if (hasWpToken) {
+      setIsPostModalOpen(true);
+    } else {
+      navigate('/login');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -33,12 +52,34 @@ const Bacheca = () => {
             </h1>
           </div>
           <button 
-            onClick={() => hasWpToken ? setIsPostModalOpen(true) : navigate('/login')}
+            onClick={handleCreatePost}
             className="w-12 h-12 bg-red-600 flex items-center justify-center hover:bg-white hover:text-black transition-all shadow-lg shadow-red-600/20"
           >
             <Plus size={24} />
           </button>
         </header>
+
+        {!hasWpToken && (
+          <div className="mb-8 p-6 bg-zinc-900/50 border border-red-600/20 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <AlertCircle className="text-red-600 shrink-0" size={24} />
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-red-600">
+                  Sincronizzazione Richiesta
+                </p>
+                <p className="text-[9px] text-zinc-500 font-bold uppercase mt-1">
+                  Accedi per pubblicare post e interagire con il District.
+                </p>
+              </div>
+            </div>
+            <Button 
+              onClick={() => navigate('/login')}
+              className="bg-red-600 hover:bg-white hover:text-black text-white rounded-none text-[9px] font-black uppercase tracking-widest h-10 px-6 italic"
+            >
+              <LogIn size={14} className="mr-2" /> Accedi
+            </Button>
+          </div>
+        )}
 
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
@@ -48,12 +89,9 @@ const Bacheca = () => {
         ) : error ? (
           <div className="text-center py-20 border border-red-600/20 bg-red-600/5 p-8">
             <AlertCircle className="mx-auto text-red-600 mb-4" size={32} />
-            <p className="text-sm font-black uppercase tracking-widest text-red-600">Accesso limitato o errore di rete</p>
-            <p className="text-[10px] text-zinc-500 mt-2 uppercase font-bold">Effettua il login per vedere tutti i contenuti e interagire.</p>
-            <div className="flex gap-4 justify-center mt-6">
-              <Button onClick={() => refetch()} variant="outline" className="border-white/10 text-[10px] font-black uppercase">Riprova</Button>
-              <Button onClick={() => navigate('/login')} className="bg-red-600 text-[10px] font-black uppercase">Login</Button>
-            </div>
+            <p className="text-sm font-black uppercase tracking-widest text-red-600">Errore di connessione</p>
+            <p className="text-[10px] text-zinc-500 mt-2 uppercase font-bold">Controlla la tua connessione o riprova più tardi.</p>
+            <Button onClick={() => refetch()} variant="outline" className="mt-6 border-white/10 text-[10px] font-black uppercase">Ricarica</Button>
           </div>
         ) : (
           <div className="space-y-2">

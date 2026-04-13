@@ -11,8 +11,9 @@ export const useWpAuth = () => {
   const loginWithWp = async (username: string, password: string) => {
     setIsLoading(true);
     try {
-      console.log("[Auth] Avvio verifica su WordPress per:", username);
+      console.log("[Auth] Sincronizzazione con Low District in corso...");
       
+      // 1. Chiediamo il permesso al sito ufficiale (WordPress)
       const response = await fetch(WP_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -22,27 +23,27 @@ export const useWpAuth = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        console.error("[Auth] Errore WordPress:", data);
         throw new Error(data.message || "Credenziali non valide sul sito ufficiale");
       }
 
-      // Salviamo il token JWT di WordPress per le chiamate BuddyPress/WooCommerce future
+      // 2. SALVIAMO LA CHIAVE (JWT) - Questo ti rende "online" sul sito ufficiale
       if (data.jwt) {
         localStorage.setItem('wp-jwt', data.jwt);
+        localStorage.setItem('wp-user', JSON.stringify(data));
+        console.log("[Auth] Chiave sincronizzata con successo.");
       }
 
       const userEmail = data.user_email || (username.includes('@') ? username : `${username}@lowdistrict.it`);
-      console.log("[Auth] WordPress OK. Email:", userEmail);
 
-      // Tentativo di Login su Supabase
-      let { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      // 3. Accediamo anche all'App (Supabase) per le funzioni social extra
+      let {data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: userEmail,
         password: password,
       });
 
-      // Se l'utente non esiste su Supabase, lo creiamo
+      // Se l'utente non esiste su Supabase, lo creiamo al volo
       if (authError && (authError.message.includes("Invalid login credentials") || authError.status === 400)) {
-        console.log("[Auth] Utente non trovato su App, creazione in corso...");
+        console.log("[Auth] Primo accesso all'App, creazione profilo...");
         
         const { error: signUpError } = await supabase.auth.signUp({
           email: userEmail,
@@ -54,6 +55,7 @@ export const useWpAuth = () => {
           throw signUpError;
         }
 
+        // Piccolo delay per permettere a Supabase di registrare l'utente
         await new Promise(resolve => setTimeout(resolve, 1500));
 
         const retry = await supabase.auth.signInWithPassword({
@@ -68,7 +70,7 @@ export const useWpAuth = () => {
 
       return { success: true, user: data };
     } catch (error: any) {
-      console.error("[Auth] Errore catturato:", error.message || error);
+      console.error("[Auth] Errore sincronizzazione:", error.message || error);
       throw error;
     } finally {
       setIsLoading(false);
