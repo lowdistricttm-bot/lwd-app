@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
@@ -11,13 +11,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Car, Loader2, Calendar, MapPin, ChevronRight, CheckCircle2, AlertCircle, X, Instagram, Phone, User, Map, Mail } from 'lucide-react';
+import { Car, Loader2, Calendar, MapPin, ChevronRight, CheckCircle2, AlertCircle, X, Instagram, Phone, User, Map, Mail, Camera } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
 
 const Events = () => {
   const navigate = useNavigate();
+  const interiorInputRef = useRef<HTMLInputElement>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [user, setUser] = useState<any>(null);
   
@@ -32,10 +33,12 @@ const Events = () => {
     modifications: ''
   });
 
+  const [interiorFiles, setInteriorFiles] = useState<File[]>([]);
+  const [interiorPreviews, setInteriorPreviews] = useState<string[]>([]);
+
   const { events, isLoading: eventsLoading, applyToEvent } = useEvents();
   const { vehicles, isLoading: vehiclesLoading } = useGarage();
 
-  // Sincronizza la descrizione quando cambia il veicolo selezionato
   useEffect(() => {
     if (formData.vehicleId && vehicles) {
       const vehicle = vehicles.find(v => v.id === formData.vehicleId);
@@ -54,26 +57,49 @@ const Events = () => {
         setUser(session.user);
         setFormData(prev => ({
           ...prev,
-          email: session.user.email || '',
+          email: '', // Email vuota di default come richiesto
           fullName: session.user.user_metadata?.full_name || ''
         }));
       }
     });
   }, []);
 
+  const handleInteriorFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      const newFiles = [...interiorFiles, ...files].slice(0, 10); // Max 10 foto
+      setInteriorFiles(newFiles);
+      
+      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+      setInteriorPreviews(newPreviews);
+    }
+  };
+
+  const removeInteriorPhoto = (index: number) => {
+    const newFiles = interiorFiles.filter((_, i) => i !== index);
+    setInteriorFiles(newFiles);
+    const newPreviews = interiorPreviews.filter((_, i) => i !== index);
+    setInteriorPreviews(newPreviews);
+  };
+
   const handleApply = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedEvent || !formData.vehicleId) return;
+    if (!selectedEvent || !formData.vehicleId || interiorFiles.length < 3) return;
     
     try {
       await applyToEvent.mutateAsync({
         eventId: selectedEvent.id,
-        ...formData
+        ...formData,
+        interiorFiles
       });
       setSelectedEvent(null);
-      setFormData(prev => ({ ...prev, vehicleId: '', modifications: '' }));
+      setFormData(prev => ({ ...prev, vehicleId: '', modifications: '', email: '' }));
+      setInteriorFiles([]);
+      setInteriorPreviews([]);
     } catch (error) {}
   };
+
+  const isFormValid = formData.fullName && formData.email && formData.phone && formData.city && formData.instagram && formData.vehicleId && interiorFiles.length >= 3;
 
   if (!user && !eventsLoading) {
     return (
@@ -254,6 +280,51 @@ const Events = () => {
                       )}
                     </div>
 
+                    {/* Foto Interni Obbligatorie */}
+                    <div className="space-y-6">
+                      <h4 className="text-xs font-black uppercase tracking-widest italic text-red-600 border-b border-white/5 pb-2">3. Foto Interni (Minimo 3)</h4>
+                      <div 
+                        onClick={() => interiorInputRef.current?.click()}
+                        className={cn(
+                          "h-24 border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all",
+                          interiorFiles.length >= 3 ? "border-green-600/50 bg-green-600/5" : "border-zinc-800 hover:border-red-600"
+                        )}
+                      >
+                        <Camera size={24} className={interiorFiles.length >= 3 ? "text-green-600" : "text-zinc-600"} />
+                        <span className="text-[10px] font-black uppercase mt-2 text-zinc-500">
+                          {interiorFiles.length}/3 Foto Caricate
+                        </span>
+                      </div>
+                      <input 
+                        type="file" 
+                        ref={interiorInputRef} 
+                        className="hidden" 
+                        accept="image/*" 
+                        multiple 
+                        onChange={handleInteriorFileChange} 
+                      />
+
+                      {interiorPreviews.length > 0 && (
+                        <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
+                          {interiorPreviews.map((url, i) => (
+                            <div key={i} className="aspect-square relative bg-zinc-900 border border-white/5">
+                              <img src={url} className="w-full h-full object-cover" alt={`Interno ${i+1}`} />
+                              <button 
+                                type="button"
+                                onClick={() => removeInteriorPhoto(i)}
+                                className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white flex items-center justify-center rounded-full"
+                              >
+                                <X size={10} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {interiorFiles.length < 3 && interiorFiles.length > 0 && (
+                        <p className="text-[9px] text-red-600 font-black uppercase italic">Carica almeno altre {3 - interiorFiles.length} foto per procedere.</p>
+                      )}
+                    </div>
+
                     {/* Modifiche */}
                     {formData.vehicleId && (
                       <motion.div 
@@ -261,7 +332,7 @@ const Events = () => {
                         animate={{ opacity: 1, height: 'auto' }}
                         className="space-y-4"
                       >
-                        <h4 className="text-xs font-black uppercase tracking-widest italic text-red-600 border-b border-white/5 pb-2">3. Lista Modifiche</h4>
+                        <h4 className="text-xs font-black uppercase tracking-widest italic text-red-600 border-b border-white/5 pb-2">4. Lista Modifiche</h4>
                         <Label className="text-[10px] font-black uppercase text-zinc-500">Descrivi le modifiche (Estetiche, Meccaniche, Interni)</Label>
                         <Textarea 
                           required
@@ -279,7 +350,7 @@ const Events = () => {
                     <div className="pt-6 border-t border-white/5">
                       <Button 
                         type="submit"
-                        disabled={!formData.vehicleId || applyToEvent.isPending}
+                        disabled={!isFormValid || applyToEvent.isPending}
                         className="w-full bg-red-600 hover:bg-white hover:text-black text-white py-8 text-sm font-black uppercase italic tracking-widest rounded-none italic"
                       >
                         {applyToEvent.isPending ? <Loader2 className="animate-spin" /> : 'Invia Candidatura Ufficiale'}

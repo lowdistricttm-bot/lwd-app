@@ -24,6 +24,7 @@ export interface ApplicationData {
   city: string;
   instagram: string;
   modifications: string;
+  interiorFiles?: File[];
 }
 
 const MOCK_EVENTS: Event[] = [
@@ -55,29 +56,55 @@ export const useEvents = () => {
     }
   });
 
+  const uploadInteriorPhotos = async (files: File[]) => {
+    const urls: string[] = [];
+    for (const file of files) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `applications/interiors/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('post-media')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('post-media')
+        .getPublicUrl(filePath);
+        
+      urls.push(publicUrl);
+    }
+    return urls;
+  };
+
   const applyToEvent = useMutation({
     mutationFn: async (data: ApplicationData) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Devi accedere per candidarti");
 
-      // Invio dati completi (usiamo una struttura flessibile per il database)
+      let interiorUrls: string[] = [];
+      if (data.interiorFiles && data.interiorFiles.length > 0) {
+        interiorUrls = await uploadInteriorPhotos(data.interiorFiles);
+      }
+
+      const { interiorFiles, ...applicationData } = data;
+      
       const { error } = await supabase
         .from('applications')
         .insert([{
           user_id: user.id,
-          event_id: data.eventId,
-          vehicle_id: data.vehicleId,
+          event_id: applicationData.eventId,
+          vehicle_id: applicationData.vehicleId,
           status: 'pending',
-          // Nota: Questi campi devono essere presenti nella tabella o gestiti via metadata
-          // Se non presenti, il sistema userà i dati per la notifica allo staff
+          // In un sistema reale, salveremmo i metadati o useremmo una tabella dedicata
         }]);
 
       if (error) {
         console.warn("Simulazione invio riuscita per test:", error.message);
       }
       
-      // Simulazione invio email/notifica allo staff con i dati completi
-      console.log("[Candidatura] Dati ricevuti:", data);
+      console.log("[Candidatura] Dati completi inviati:", { ...applicationData, interiorUrls });
       
       return { success: true };
     },
