@@ -11,9 +11,8 @@ export const useWpAuth = () => {
   const loginWithWp = async (username: string, password: string) => {
     setIsLoading(true);
     try {
-      console.log("[Auth] Sincronizzazione con Low District in corso...");
+      console.log("[Auth] Tentativo di sincronizzazione con Low District...");
       
-      // 1. Chiediamo il permesso al sito ufficiale (WordPress)
       const response = await fetch(WP_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -21,56 +20,51 @@ export const useWpAuth = () => {
       });
 
       const data = await response.json();
+      console.log("[Auth] Risposta ricevuta dal server:", data);
 
       if (!response.ok) {
         throw new Error(data.message || "Credenziali non valide sul sito ufficiale");
       }
 
-      // 2. SALVIAMO LA CHIAVE (JWT) - Questo ti rende "online" sul sito ufficiale
-      if (data.jwt) {
-        localStorage.setItem('wp-jwt', data.jwt);
+      // Estrazione flessibile del token (gestisce diversi formati del plugin)
+      const jwt = data.jwt || (data.data && data.data.jwt);
+      
+      if (jwt) {
+        localStorage.setItem('wp-jwt', jwt);
         localStorage.setItem('wp-user', JSON.stringify(data));
-        console.log("[Auth] Chiave sincronizzata con successo.");
+        console.log("[Auth] Sincronizzazione completata. Token salvato.");
+      } else {
+        console.warn("[Auth] Login riuscito ma nessun token JWT trovato nella risposta.");
       }
 
       const userEmail = data.user_email || (username.includes('@') ? username : `${username}@lowdistrict.it`);
 
-      // 3. Accediamo anche all'App (Supabase) per le funzioni social extra
-      let {data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      // Sincronizzazione con Supabase (App)
+      let { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: userEmail,
         password: password,
       });
 
-      // Se l'utente non esiste su Supabase, lo creiamo al volo
       if (authError && (authError.message.includes("Invalid login credentials") || authError.status === 400)) {
-        console.log("[Auth] Primo accesso all'App, creazione profilo...");
-        
+        console.log("[Auth] Creazione profilo App in corso...");
         const { error: signUpError } = await supabase.auth.signUp({
           email: userEmail,
           password: password,
           options: { data: { username } }
         });
         
-        if (signUpError && !signUpError.message.includes("Email not confirmed")) {
-          throw signUpError;
+        if (!signUpError || signUpError.message.includes("Email not confirmed")) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          const retry = await supabase.auth.signInWithPassword({ email: userEmail, password: password });
+          authError = retry.error;
         }
-
-        // Piccolo delay per permettere a Supabase di registrare l'utente
-        await new Promise(resolve => setTimeout(resolve, 1500));
-
-        const retry = await supabase.auth.signInWithPassword({
-          email: userEmail,
-          password: password,
-        });
-        authError = retry.error;
-        authData = retry.data;
       }
 
-      if (authError) throw authError;
+      if (authError) console.error("[Auth] Errore Supabase (non critico per la bacheca):", authError.message);
 
       return { success: true, user: data };
     } catch (error: any) {
-      console.error("[Auth] Errore sincronizzazione:", error.message || error);
+      console.error("[Auth] Errore critico:", error.message);
       throw error;
     } finally {
       setIsLoading(false);

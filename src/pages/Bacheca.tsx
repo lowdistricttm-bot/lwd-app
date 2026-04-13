@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
@@ -13,21 +13,17 @@ import { Button } from '@/components/ui/button';
 
 const Bacheca = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { data: activities, isLoading, error, refetch } = useBPActivity();
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [hasWpToken, setHasWpToken] = useState(!!localStorage.getItem('wp-jwt'));
 
-  // Verifichiamo la sessione ogni volta che la pagina viene visualizzata
+  // Aggiorna lo stato del token ogni volta che l'utente torna su questa pagina
   useEffect(() => {
-    const checkSession = () => {
-      const token = localStorage.getItem('wp-jwt');
-      setHasWpToken(!!token);
-    };
-    
-    checkSession();
-    window.addEventListener('focus', checkSession);
-    return () => window.removeEventListener('focus', checkSession);
-  }, []);
+    const token = localStorage.getItem('wp-jwt');
+    setHasWpToken(!!token);
+    if (token) refetch(); // Ricarica i dati se l'utente ha appena fatto il login
+  }, [location.pathname, refetch]);
 
   const handleCreatePost = () => {
     if (hasWpToken) {
