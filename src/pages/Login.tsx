@@ -10,7 +10,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Info } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 
 const Login = () => {
@@ -18,39 +18,25 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Nota: Supabase richiede un'email per il login standard. 
-      // Se l'utente inserisce uno username, in questa fase di sviluppo 
-      // lo trattiamo come l'identificativo principale.
-      if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
-          email: username.includes('@') ? username : `${username}@lowdistrict.it`,
-          password,
-          options: {
-            data: {
-              username: username,
-            }
-          }
-        });
-        if (error) throw error;
-        showSuccess("Richiesta di registrazione inviata!");
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: username.includes('@') ? username : `${username}@lowdistrict.it`,
-          password,
-        });
-        if (error) throw error;
-        showSuccess("Accesso effettuato!");
-        navigate('/profile');
-      }
+      // Per ora continuiamo a usare Supabase come fallback
+      // In futuro qui chiameremo loginWithWp(username, password)
+      const { error } = await supabase.auth.signInWithPassword({
+        email: username.includes('@') ? username : `${username}@lowdistrict.it`,
+        password,
+      });
+
+      if (error) throw error;
+      
+      showSuccess("Accesso effettuato!");
+      navigate('/profile');
     } catch (error: any) {
-      showError(error.message || "Credenziali non valide");
+      showError("Credenziali non riconosciute nel District");
     } finally {
       setLoading(false);
     }
@@ -69,10 +55,10 @@ const Login = () => {
           <div className="text-center mb-12">
             <Logo className="h-12 mx-auto mb-8" variant="white" />
             <h1 className="text-3xl font-black italic uppercase tracking-tighter mb-2">
-              {isSignUp ? 'Crea Account' : 'Area Riservata'}
+              Area Riservata
             </h1>
             <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.3em]">
-              {isSignUp ? 'Entra nel District' : 'Accedi con il tuo Username'}
+              Accedi con il tuo account Low District
             </p>
           </div>
 
@@ -91,14 +77,7 @@ const Login = () => {
               </div>
 
               <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label className="font-black uppercase text-[10px] tracking-[0.2em] text-zinc-500">Password</Label>
-                  {!isSignUp && (
-                    <button type="button" className="text-[9px] font-black uppercase text-zinc-600 hover:text-white transition-colors">
-                      Smarrita?
-                    </button>
-                  )}
-                </div>
+                <Label className="font-black uppercase text-[10px] tracking-[0.2em] text-zinc-500">Password</Label>
                 <Input 
                   type="password" 
                   placeholder="••••••••"
@@ -114,23 +93,17 @@ const Login = () => {
                 disabled={loading}
                 className="w-full bg-red-600 hover:bg-red-700 text-white rounded-none h-14 font-black uppercase italic tracking-widest transition-all"
               >
-                {loading ? <Loader2 className="animate-spin" /> : (isSignUp ? 'Registrati' : 'Accedi')}
+                {loading ? <Loader2 className="animate-spin" /> : 'Accedi Ora'}
               </Button>
             </form>
-
-            <div className="mt-8 text-center">
-              <button 
-                onClick={() => setIsSignUp(!isSignUp)}
-                className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-colors"
-              >
-                {isSignUp ? 'Hai già un account? Accedi' : 'Non hai un account? Registrati'}
-              </button>
-            </div>
           </div>
 
-          <p className="text-center mt-8 text-[9px] text-zinc-600 font-bold uppercase tracking-widest leading-relaxed">
-            Utilizza le stesse credenziali che usi su <br /> lowdistrict.it per accedere al tuo profilo.
-          </p>
+          <div className="mt-8 p-4 bg-zinc-900/30 border border-white/5 flex gap-4 items-start">
+            <Info className="text-red-600 shrink-0" size={18} />
+            <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest leading-relaxed">
+              Nota: L'integrazione diretta con il database di lowdistrict.it è in fase di attivazione. Per ora, crea un nuovo account se è la tua prima volta nell'app.
+            </p>
+          </div>
         </motion.div>
       </main>
 
