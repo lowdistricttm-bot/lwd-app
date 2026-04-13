@@ -27,33 +27,35 @@ export const useSocialFeed = () => {
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
       
-      // Recupero post. Se la join fallisce, recuperiamo solo i post
+      // 1. Recuperiamo i post (senza join per evitare errori SQL)
       const { data: postsData, error: postsError } = await supabase
         .from('posts')
-        .select(`
-          *,
-          profiles:user_id (id, first_name, last_name, avatar_url)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (postsError) {
-        console.error("[Social] Errore query post:", postsError);
-        throw postsError;
-      }
+      if (postsError) throw postsError;
+      if (!postsData) return [];
 
-      // Arricchiamo i dati con i like
-      const enrichedPosts = await Promise.all((postsData || []).map(async (post: any) => {
-        let is_liked = false;
-        let likes_count = 0;
+      // 2. Recuperiamo tutti i profili necessari in una volta sola
+      const userIds = [...new Set(postsData.map(p => p.user_id))];
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, avatar_url')
+        .in('id', userIds);
 
+      // 3. Arricchiamo i dati
+      const enrichedPosts = await Promise.all(postsData.map(async (post: any) => {
+        // Trova il profilo corrispondente
+        const profile = profilesData?.find(p => p.id === post.user_id);
+        
         // Conteggio like
-        const { count } = await supabase
+        const { count: likes_count } = await supabase
           .from('likes')
           .select('*', { count: 'exact', head: true })
           .eq('post_id', post.id);
         
-        likes_count = count || 0;
-
+        // Verifica se l'utente attuale ha messo like
+        let is_liked = false;
         if (user) {
           const { data: userLike } = await supabase
             .from('likes')
@@ -64,19 +66,17 @@ export const useSocialFeed = () => {
           is_liked = !!userLike;
         }
 
-        // Formattazione profilo
-        const profileInfo = post.profiles;
-        const username = profileInfo 
-          ? `${profileInfo.first_name || ''} ${profileInfo.last_name || ''}`.trim() || 'Membro'
+        const username = profile 
+          ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Membro District'
           : 'Membro District';
 
         return {
           ...post,
           profiles: {
             username,
-            avatar_url: profileInfo?.avatar_url
+            avatar_url: profile?.avatar_url
           },
-          likes_count,
+          likes_count: likes_count || 0,
           is_liked
         };
       }));
@@ -125,11 +125,9 @@ export const useSocialFeed = () => {
         .maybeSingle();
 
       if (existingLike) {
-        const { error } = await supabase.from('likes').delete().eq('id', existingLike.id);
-        if (error) throw error;
+        await supabase.from('likes').delete().eq('id', existingLike.id);
       } else {
-        const { error } = await supabase.from('likes').insert([{ post_id: postId, user_id: user.id }]);
-        if (error) throw error;
+        await supabase.from('likes').insert([{ post_id: postId, user_id: user.id }]);
       }
     },
     onSuccess: () => {
