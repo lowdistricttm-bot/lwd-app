@@ -6,11 +6,13 @@ import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
 import ActivityItem from '@/components/ActivityItem';
 import { useBPActivity } from '@/hooks/use-buddypress';
-import { Loader2, Plus, Users } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Loader2, Plus, Lock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const Bacheca = () => {
-  const { data: activities, isLoading, error } = useBPActivity();
+  const { data: activities, isLoading, error, refetch } = useBPActivity();
+
+  const isAuthError = error?.message.includes('401');
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -34,12 +36,29 @@ const Bacheca = () => {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Loader2 className="animate-spin text-red-600" size={40} />
-            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Caricamento attività...</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Sincronizzazione con il District...</p>
+          </div>
+        ) : isAuthError ? (
+          <div className="text-center py-20 border border-white/5 bg-zinc-900/30 p-10">
+            <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Lock className="text-red-600" size={24} />
+            </div>
+            <h3 className="text-xl font-black uppercase italic mb-4">Accesso Riservato</h3>
+            <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest leading-relaxed mb-8">
+              La bacheca è attualmente privata. <br /> 
+              Assicurati che l'API di BuddyPress sia pubblica o configura una Application Password.
+            </p>
+            <Button 
+              onClick={() => refetch()}
+              className="bg-white text-black hover:bg-red-600 hover:text-white rounded-none px-8 py-6 text-[10px] font-black uppercase tracking-widest italic"
+            >
+              Riprova Connessione
+            </Button>
           </div>
         ) : error ? (
           <div className="text-center py-20 border border-red-600/20 bg-red-600/5 p-8">
-            <p className="text-sm font-black uppercase tracking-widest text-red-600">Errore di connessione</p>
-            <p className="text-xs text-zinc-500 mt-2">Impossibile recuperare i dati dal sito ufficiale.</p>
+            <p className="text-sm font-black uppercase tracking-widest text-red-600">Errore di rete</p>
+            <p className="text-xs text-zinc-500 mt-2">{error.message}</p>
           </div>
         ) : (
           <div className="space-y-2">
