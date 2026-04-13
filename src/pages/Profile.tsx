@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from '@/components/Navbar';
@@ -13,22 +13,34 @@ import {
   Car, 
   MessageSquare, 
   ShoppingBag, 
-  Loader2 
+  Loader2,
+  Camera
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWcUserOrders } from '@/hooks/use-woocommerce';
-import { useProfileSync } from '@/hooks/use-profile-sync';
+import { showSuccess, showError } from '@/utils/toast';
 
 const Profile = () => {
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [activeTab, setActiveTab] = useState('activity');
 
   const { data: orders, isLoading: loadingOrders } = useWcUserOrders(user?.email);
+
+  const fetchProfile = async (userId: string) => {
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
+    setProfile(profileData);
+  };
 
   useEffect(() => {
     const checkUser = async () => {
@@ -39,22 +51,54 @@ const Profile = () => {
       }
       
       setUser(session.user);
-      
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .maybeSingle();
-      
-      setProfile(profileData);
+      await fetchProfile(session.user.id);
       setLoading(false);
     };
 
     checkUser();
   }, [navigate]);
 
-  // Sincronizza automaticamente l'avatar dal sito se abbiamo l'username
-  useProfileSync(profile?.username || user?.user_metadata?.username);
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      // 1. Carica su Storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // 2. Ottieni URL pubblico
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      // 3. Aggiorna tabella profili
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          avatar_url: publicUrl,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (updateError) throw updateError;
+
+      showSuccess("Foto profilo aggiornata!");
+      await fetchProfile(user.id);
+    } catch (error: any) {
+      showError("Errore durante il caricamento: " + error.message);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -94,13 +138,29 @@ const Profile = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40" />
           
           <div className="absolute -bottom-12 left-6 flex items-end gap-4">
-            <div className="relative">
-              <div className="w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-black rounded-none overflow-hidden shadow-2xl flex items-center justify-center">
-                {profile?.avatar_url ? (
-                  <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+            <div className="relative group">
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept="image/*" 
+                onChange={handleAvatarUpload}
+              />
+              <div 
+                onClick={() => fileInputRef.current?.click()}
+                className="w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-black rounded-none overflow-hidden shadow-2xl flex items-center justify-center cursor-pointer relative"
+              >
+                {uploading ? (
+                  <Loader2 className="animate-spin text-red-600" />
+                ) : profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover group-hover:opacity-50 transition-opacity" />
                 ) : (
                   <User size={40} className="text-zinc-800" />
                 )}
+                
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
+                  <Camera size={24} className="text-white" />
+                </div>
               </div>
             </div>
             <div className="mb-2">
