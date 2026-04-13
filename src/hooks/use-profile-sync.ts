@@ -14,8 +14,10 @@ export const useProfileSync = (username?: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Recuperiamo l'URL dell'avatar (preferiamo la versione 'full')
       const avatarUrl = bpMember.avatar_urls?.full || bpMember.avatar_urls?.thumb;
       
+      // Aggiorniamo il profilo su Supabase
       const { error } = await supabase
         .from('profiles')
         .upsert({

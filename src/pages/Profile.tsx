@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWcUserOrders } from '@/hooks/use-woocommerce';
+import { useProfileSync } from '@/hooks/use-profile-sync';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -52,6 +53,9 @@ const Profile = () => {
     checkUser();
   }, [navigate]);
 
+  // Sincronizza automaticamente l'avatar dal sito se abbiamo l'username
+  useProfileSync(profile?.username || user?.user_metadata?.username);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate('/login');
@@ -63,7 +67,6 @@ const Profile = () => {
     </div>
   );
 
-  // Logica per il nome visualizzato: Nome Completo > Username > Email Prefix
   const displayName = profile?.username || 
                      (profile?.first_name || profile?.last_name ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : null) || 
                      user?.email?.split('@')[0] || 
