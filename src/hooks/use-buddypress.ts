@@ -57,21 +57,16 @@ export const useBPActions = () => {
   const favoriteMutation = useMutation({
     mutationFn: async (activityId: number) => {
       const headers = getAuthHeader();
-      if (!headers.Authorization) {
-        throw new Error('Devi effettuare l\'accesso per interagire.');
-      }
+      if (!headers.Authorization) throw new Error('Sessione scaduta. Effettua di nuovo il login.');
 
       const response = await fetch(`${BP_API_URL}/activity/${activityId}/favorite`, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          ...headers 
-        }
+        headers: { 'Content-Type': 'application/json', ...headers }
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Errore durante l\'aggiunta ai preferiti.');
+        throw new Error(errorData.message || 'Errore Like.');
       }
       return response.json();
     },
@@ -85,22 +80,17 @@ export const useBPActions = () => {
   const commentMutation = useMutation({
     mutationFn: async ({ activityId, content }: { activityId: number, content: string }) => {
       const headers = getAuthHeader();
-      if (!headers.Authorization) {
-        throw new Error('Devi effettuare l\'accesso per commentare.');
-      }
+      if (!headers.Authorization) throw new Error('Sessione scaduta. Effettua di nuovo il login.');
 
       const response = await fetch(`${BP_API_URL}/activity/${activityId}/comment`, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          ...headers 
-        },
+        headers: { 'Content-Type': 'application/json', ...headers },
         body: JSON.stringify({ content })
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Errore durante l\'invio del commento.');
+        throw new Error(errorData.message || 'Errore commento.');
       }
       return response.json();
     },
@@ -111,7 +101,35 @@ export const useBPActions = () => {
     onError: (error: any) => showError(error.message)
   });
 
-  return { favoriteMutation, commentMutation };
+  const createPostMutation = useMutation({
+    mutationFn: async (content: string) => {
+      const headers = getAuthHeader();
+      if (!headers.Authorization) throw new Error('Sessione scaduta. Effettua di nuovo il login.');
+
+      const response = await fetch(`${BP_API_URL}/activity`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...headers },
+        body: JSON.stringify({
+          content: content,
+          component: 'activity',
+          type: 'activity_update'
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Errore durante la pubblicazione.');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bp-activity'] });
+      showSuccess("Post pubblicato nel District!");
+    },
+    onError: (error: any) => showError(error.message)
+  });
+
+  return { favoriteMutation, commentMutation, createPostMutation };
 };
 
 export const useBPMember = (username?: string) => {
@@ -120,10 +138,7 @@ export const useBPMember = (username?: string) => {
     queryFn: async () => {
       if (!username) return null;
       const response = await fetch(`${BP_API_URL}/members?slug=${username}`, {
-        headers: { 
-          'Content-Type': 'application/json',
-          ...getAuthHeader() 
-        }
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() }
       });
       if (!response.ok) throw new Error('Membro non trovato');
       const data = await response.json();
