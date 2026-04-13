@@ -1,33 +1,56 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
 import { useWcProducts, useWcCategories } from '@/hooks/use-woocommerce';
-import { Loader2, Filter, X } from 'lucide-react';
+import { Loader2, Filter, X, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const Shop = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const currentCategory = searchParams.get('category') || 'all';
+  const currentCategoryId = searchParams.get('category') || 'all';
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  const { data: categories, isLoading: loadingCats } = useWcCategories();
+  const { data: allCategories, isLoading: loadingCats } = useWcCategories();
   
-  const productParams = currentCategory === 'all' 
+  // Categorie principali (parent === 0)
+  const mainCategories = useMemo(() => 
+    allCategories?.filter((cat: any) => cat.parent === 0) || [], 
+  [allCategories]);
+
+  // Trova la categoria "Abbigliamento" (solitamente slug 'abbigliamento')
+  const abbigliamentoCat = useMemo(() => 
+    allCategories?.find((cat: any) => cat.slug === 'abbigliamento'),
+  [allCategories]);
+
+  // Verifica se la categoria corrente è Abbigliamento o una sua sottocategoria
+  const isAbbigliamentoActive = useMemo(() => {
+    if (currentCategoryId === 'all' || !abbigliamentoCat) return false;
+    if (currentCategoryId === abbigliamentoCat.id.toString()) return true;
+    const currentCat = allCategories?.find((cat: any) => cat.id.toString() === currentCategoryId);
+    return currentCat?.parent === abbigliamentoCat.id;
+  }, [currentCategoryId, abbigliamentoCat, allCategories]);
+
+  // Sottocategorie di Abbigliamento
+  const subCategories = useMemo(() => 
+    allCategories?.filter((cat: any) => cat.parent === abbigliamentoCat?.id) || [],
+  [allCategories, abbigliamentoCat]);
+
+  const productParams = currentCategoryId === 'all' 
     ? "per_page=100" 
-    : `category=${currentCategory}&per_page=100`;
+    : `category=${currentCategoryId}&per_page=100`;
     
   const { data: products, isLoading: loadingProducts } = useWcProducts(productParams);
 
-  const handleCategorySelect = (slug: string) => {
-    if (slug === 'all') {
+  const handleCategorySelect = (id: string) => {
+    if (id === 'all') {
       searchParams.delete('category');
     } else {
-      searchParams.set('category', slug);
+      searchParams.set('category', id);
     }
     setSearchParams(searchParams);
     setIsFilterOpen(false);
@@ -38,47 +61,90 @@ const Shop = () => {
       <Navbar />
       
       <main className="flex-1 pt-24 pb-24 px-6 max-w-7xl mx-auto w-full">
-        <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div>
-            <h2 className="text-red-600 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">
-              Official Merch
-            </h2>
-            <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">
-              Shop Online
-            </h1>
-          </div>
+        <header className="mb-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+            <div>
+              <h2 className="text-red-600 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">
+                Official Merch
+              </h2>
+              <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">
+                Shop Online
+              </h1>
+            </div>
 
-          {/* Desktop Categories */}
-          <div className="hidden md:flex items-center gap-6 overflow-x-auto no-scrollbar pb-2">
-            <button 
-              onClick={() => handleCategorySelect('all')}
-              className={cn(
-                "text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border-b-2 pb-1",
-                currentCategory === 'all' ? "text-red-600 border-red-600" : "text-zinc-500 border-transparent hover:text-white"
-              )}
-            >
-              Tutti
-            </button>
-            {categories?.map((cat: any) => (
+            {/* Desktop Main Categories */}
+            <div className="hidden md:flex items-center gap-6 overflow-x-auto no-scrollbar pb-2">
               <button 
-                key={cat.id}
-                onClick={() => handleCategorySelect(cat.id.toString())}
+                onClick={() => handleCategorySelect('all')}
                 className={cn(
                   "text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border-b-2 pb-1",
-                  currentCategory === cat.id.toString() ? "text-red-600 border-red-600" : "text-zinc-500 border-transparent hover:text-white"
+                  currentCategoryId === 'all' ? "text-red-600 border-red-600" : "text-zinc-500 border-transparent hover:text-white"
                 )}
-                dangerouslySetInnerHTML={{ __html: cat.name }}
-              />
-            ))}
+              >
+                Tutti
+              </button>
+              {mainCategories.map((cat: any) => (
+                <button 
+                  key={cat.id}
+                  onClick={() => handleCategorySelect(cat.id.toString())}
+                  className={cn(
+                    "text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border-b-2 pb-1",
+                    (currentCategoryId === cat.id.toString() || (cat.slug === 'abbigliamento' && isAbbigliamentoActive)) 
+                      ? "text-red-600 border-red-600" 
+                      : "text-zinc-500 border-transparent hover:text-white"
+                  )}
+                  dangerouslySetInnerHTML={{ __html: cat.name }}
+                />
+              ))}
+            </div>
+
+            {/* Mobile Filter Toggle */}
+            <button 
+              onClick={() => setIsFilterOpen(true)}
+              className="md:hidden flex items-center gap-2 bg-zinc-900 border border-white/10 px-4 py-3 text-[10px] font-black uppercase tracking-widest italic"
+            >
+              <Filter size={14} /> Filtra Categorie
+            </button>
           </div>
 
-          {/* Mobile Filter Toggle */}
-          <button 
-            onClick={() => setIsFilterOpen(true)}
-            className="md:hidden flex items-center gap-2 bg-zinc-900 border border-white/10 px-4 py-3 text-[10px] font-black uppercase tracking-widest italic"
-          >
-            <Filter size={14} /> Filtra Categorie
-          </button>
+          {/* Subcategories Bar (Visible if Abbigliamento is active) */}
+          <AnimatePresence>
+            {isAbbigliamentoActive && subCategories.length > 0 && (
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-4 overflow-x-auto no-scrollbar py-4 border-t border-white/5"
+              >
+                <span className="text-[8px] font-black uppercase tracking-widest text-zinc-600 shrink-0">Sottocategorie:</span>
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => handleCategorySelect(abbigliamentoCat!.id.toString())}
+                    className={cn(
+                      "px-4 py-1.5 text-[9px] font-black uppercase tracking-widest border transition-all",
+                      currentCategoryId === abbigliamentoCat!.id.toString() 
+                        ? "bg-white text-black border-white" 
+                        : "bg-transparent text-zinc-400 border-white/10 hover:border-white/30"
+                    )}
+                  >
+                    Tutto Abbigliamento
+                  </button>
+                  {subCategories.map((sub: any) => (
+                    <button 
+                      key={sub.id}
+                      onClick={() => handleCategorySelect(sub.id.toString())}
+                      className={cn(
+                        "px-4 py-1.5 text-[9px] font-black uppercase tracking-widest border transition-all",
+                        currentCategoryId === sub.id.toString() 
+                          ? "bg-white text-black border-white" 
+                          : "bg-transparent text-zinc-400 border-white/10 hover:border-white/30"
+                      )}
+                      dangerouslySetInnerHTML={{ __html: sub.name }}
+                    />
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </header>
 
         {/* Mobile Filter Drawer */}
@@ -96,33 +162,56 @@ const Shop = () => {
                 initial={{ x: '100%' }}
                 animate={{ x: 0 }}
                 exit={{ x: '100%' }}
-                className="fixed right-0 top-0 bottom-0 w-4/5 bg-zinc-950 z-[101] p-8 border-l border-white/10"
+                className="fixed right-0 top-0 bottom-0 w-4/5 bg-zinc-950 z-[101] p-8 border-l border-white/10 overflow-y-auto"
               >
                 <div className="flex justify-between items-center mb-12">
                   <h3 className="text-xl font-black italic uppercase">Categorie</h3>
                   <button onClick={() => setIsFilterOpen(false)}><X size={24} /></button>
                 </div>
-                <div className="space-y-6">
+                <div className="space-y-8">
                   <button 
                     onClick={() => handleCategorySelect('all')}
                     className={cn(
                       "block w-full text-left text-sm font-black uppercase tracking-widest italic",
-                      currentCategory === 'all' ? "text-red-600" : "text-zinc-500"
+                      currentCategoryId === 'all' ? "text-red-600" : "text-zinc-500"
                     )}
                   >
                     Tutti i Prodotti
                   </button>
-                  {categories?.map((cat: any) => (
-                    <button 
-                      key={cat.id}
-                      onClick={() => handleCategorySelect(cat.id.toString())}
-                      className={cn(
-                        "block w-full text-left text-sm font-black uppercase tracking-widest italic",
-                        currentCategory === cat.id.toString() ? "text-red-600" : "text-zinc-500"
-                      )}
-                      dangerouslySetInnerHTML={{ __html: cat.name }}
-                    />
-                  ))}
+                  
+                  {mainCategories.map((cat: any) => {
+                    const isMainActive = currentCategoryId === cat.id.toString();
+                    const hasSubs = cat.slug === 'abbigliamento' && subCategories.length > 0;
+                    
+                    return (
+                      <div key={cat.id} className="space-y-4">
+                        <button 
+                          onClick={() => handleCategorySelect(cat.id.toString())}
+                          className={cn(
+                            "block w-full text-left text-sm font-black uppercase tracking-widest italic",
+                            (isMainActive || (cat.slug === 'abbigliamento' && isAbbigliamentoActive)) ? "text-red-600" : "text-zinc-500"
+                          )}
+                          dangerouslySetInnerHTML={{ __html: cat.name }}
+                        />
+                        
+                        {hasSubs && (
+                          <div className="pl-4 space-y-3 border-l border-white/5">
+                            {subCategories.map((sub: any) => (
+                              <button 
+                                key={sub.id}
+                                onClick={() => handleCategorySelect(sub.id.toString())}
+                                className={cn(
+                                  "block w-full text-left text-[10px] font-black uppercase tracking-widest italic",
+                                  currentCategoryId === sub.id.toString() ? "text-white" : "text-zinc-600"
+                                )}
+                                dangerouslySetInnerHTML={{ __html: sub.name }}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </motion.div>
             </>
