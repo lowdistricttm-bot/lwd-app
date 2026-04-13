@@ -1,40 +1,22 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
-import { usePosts } from '@/hooks/use-posts';
+import { useBpMembers } from '@/hooks/use-buddypress';
 import { ChevronLeft, Loader2, Search, UserPlus, RefreshCw, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Members = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const { data, isLoading, isFetching, refetch } = usePosts();
+  const { data: members, isLoading, isFetching, refetch } = useBpMembers(50);
 
-  // Estraiamo i membri unici che hanno postato nell'app
-  const members = useMemo(() => {
-    const allPosts = data?.pages.flat() || [];
-    const uniqueMembers = new Map();
-    
-    allPosts.forEach((post: any) => {
-      if (!uniqueMembers.has(post.user_id)) {
-        uniqueMembers.set(post.user_id, {
-          id: post.user_id,
-          name: post.user_name,
-          avatar: post.user_avatar,
-          last_post: post.created_at
-        });
-      }
-    });
-    
-    return Array.from(uniqueMembers.values());
-  }, [data]);
-
-  const filteredMembers = members.filter((m: any) => 
-    m.name?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredMembers = members?.filter((m: any) => 
+    m.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    m.user_login?.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
 
   return (
     <div className="min-h-screen bg-black text-white pb-24">
@@ -47,8 +29,8 @@ const Members = () => {
               <ChevronLeft size={24} />
             </button>
             <div>
-              <h1 className="text-3xl font-black tracking-tighter uppercase italic">Membri App</h1>
-              <p className="text-[8px] text-gray-500 font-black uppercase tracking-widest">Utenti attivi nella community</p>
+              <h1 className="text-3xl font-black tracking-tighter uppercase italic">Membri Ufficiali</h1>
+              <p className="text-[8px] text-gray-500 font-black uppercase tracking-widest">Directory sincronizzata dal sito</p>
             </div>
           </div>
           <button 
@@ -89,14 +71,14 @@ const Members = () => {
                   <div className="flex items-center gap-4">
                     <div className="w-14 h-14 rounded-2xl overflow-hidden bg-zinc-800 border border-white/5 p-0.5">
                       <img 
-                        src={member.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.id}`} 
+                        src={member.avatar_urls?.full || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.user_login}`} 
                         alt="" 
                         className="w-full h-full object-cover rounded-xl grayscale group-hover:grayscale-0 transition-all"
                       />
                     </div>
                     <div>
                       <h3 className="font-black text-sm uppercase italic leading-none mb-1">{member.name}</h3>
-                      <p className="text-[9px] text-red-600 font-black uppercase tracking-widest">Membro Attivo</p>
+                      <p className="text-[9px] text-red-600 font-black uppercase tracking-widest">@{member.user_login}</p>
                     </div>
                   </div>
                   <button className="p-3 bg-white/5 rounded-xl text-gray-500 hover:text-red-600 hover:bg-white/10 transition-all">
