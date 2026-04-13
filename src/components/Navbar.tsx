@@ -1,115 +1,15 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { Menu, X, ShoppingBag, User, Settings } from 'lucide-react';
-import { cn } from "@/lib/utils";
-import { Link, useLocation } from 'react-router-dom';
-import { useTranslation } from '@/hooks/use-translation';
-import { useCart } from '@/hooks/use-cart';
+import React from 'react';
+import { Link } from 'react-router-dom';
 import Logo from './Logo';
 
 const Navbar = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const location = useLocation();
-  const { t } = useTranslation();
-  const { itemCount } = useCart();
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const navLinks = [
-    { name: t.nav.home, href: '/' },
-    { name: t.nav.shop, href: '/shop' },
-    { name: t.nav.events, href: '/events' },
-    { name: t.nav.garage, href: '/garage' },
-  ];
-
   return (
-    <nav className={cn(
-      "fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-6 flex flex-col justify-center",
-      "pt-[env(safe-area-inset-top)]",
-      isScrolled 
-        ? "bg-black/90 backdrop-blur-xl border-b border-white/5 h-[calc(3.5rem+env(safe-area-inset-top))]" 
-        : "bg-black border-b border-transparent h-[calc(4.2rem+env(safe-area-inset-top))]"
-    )}>
-      <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
-        <div className="flex items-center gap-12">
-          <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
-            <Logo className="h-5 md:h-7" />
-          </Link>
-          
-          <div className="hidden md:flex items-center gap-10">
-            {navLinks.map((link) => (
-              <Link 
-                key={link.name} 
-                to={link.href}
-                className={cn(
-                  "text-[10px] font-black transition-all uppercase tracking-[0.25em] italic relative group",
-                  location.pathname === link.href ? "text-white" : "text-gray-500 hover:text-white"
-                )}
-              >
-                {link.name}
-                <span className={cn(
-                  "absolute -bottom-1 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full",
-                  location.pathname === link.href && "w-full"
-                )} />
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4 md:gap-8">
-          <div className="hidden md:flex items-center gap-6 border-r border-white/10 pr-6 mr-2">
-            <Link to="/profile" className="text-gray-500 hover:text-white transition-colors flex items-center gap-2">
-              <User size={16} />
-              <span className="text-[9px] font-black uppercase tracking-widest">Account</span>
-            </Link>
-            <Link to="/settings" className="text-gray-500 hover:text-white transition-colors">
-              <Settings size={16} />
-            </Link>
-          </div>
-
-          <Link to="/cart" className="text-gray-500 hover:text-white transition-colors relative group p-2">
-            <ShoppingBag size={18} />
-            {itemCount > 0 && (
-              <span className="absolute top-0 right-0 bg-white text-black text-[8px] font-black w-3.5 h-3.5 flex items-center justify-center rounded-full animate-in zoom-in">
-                {itemCount}
-              </span>
-            )}
-          </Link>
-          
-          <button 
-            className="md:hidden text-white p-2"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Menu Overlay */}
-      <div className={cn(
-        "fixed inset-0 bg-black z-[-1] transition-all duration-500 md:hidden flex flex-col items-center justify-center gap-8 px-8",
-        isMobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
-      )}>
-        {navLinks.map((link, i) => (
-          <Link 
-            key={link.name} 
-            to={link.href}
-            className="text-4xl font-black text-white uppercase tracking-tighter italic hover:text-zinc-400 transition-colors"
-            style={{ transitionDelay: `${i * 50}ms` }}
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            {link.name}
-          </Link>
-        ))}
-      </div>
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/5 h-[calc(4rem+env(safe-area-inset-top))] px-6 flex items-center justify-center">
+      <Link to="/" className="hover:opacity-80 transition-opacity">
+        <Logo className="h-6 md:h-8" />
+      </Link>
     </nav>
   );
 };
