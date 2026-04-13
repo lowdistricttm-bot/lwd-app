@@ -19,22 +19,37 @@ const CreatePostDialog = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim() || !user || !user.id) return;
+    
+    if (!content.trim()) {
+      showError("Il contenuto del post non può essere vuoto.");
+      return;
+    }
+
+    if (!user || !user.id) {
+      showError("Devi essere loggato per pubblicare.");
+      return;
+    }
 
     try {
-      await createPost.mutateAsync({ 
+      console.log("[CreatePost] Tentativo di pubblicazione...", {
         content,
+        user_id: String(user.id),
+        user_name: user.display_name
+      });
+
+      await createPost.mutateAsync({ 
+        content: content.trim(),
         user_id: String(user.id),
         user_name: user.display_name,
         user_avatar: user.avatar || defaultAvatar
       });
+
       showSuccess("Post pubblicato nella community!");
       setOpen(false);
       setContent("");
     } catch (err: any) {
-      console.error("Post creation failed details:", JSON.stringify(err, null, 2));
-      const errorMsg = err.message || "Errore di connessione al database social.";
-      showError(errorMsg);
+      console.error("[CreatePost] Errore durante la creazione:", err);
+      showError(err.message || "Errore durante la pubblicazione. Riprova tra poco.");
     }
   };
 
@@ -54,31 +69,40 @@ const CreatePostDialog = () => {
       <DialogContent className="bg-zinc-950 border-white/10 text-white sm:max-w-[500px] p-0 overflow-hidden">
         <DialogHeader className="p-6 border-b border-white/5">
           <DialogTitle className="text-xl font-black uppercase tracking-tighter italic">Crea Post</DialogTitle>
-          <DialogDescription className="sr-only">
-            Crea un nuovo post per la community di Low District
+          <DialogDescription className="text-xs text-gray-500 uppercase font-bold tracking-widest">
+            Condividi i tuoi progressi con la community di Low District
           </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="flex gap-4">
-            <div className="w-12 h-12 rounded-full overflow-hidden shrink-0">
+            <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border border-white/10">
               <img src={user.avatar || defaultAvatar} alt="" className="w-full h-full object-cover" />
             </div>
             <Textarea 
               placeholder="Racconta i progressi del tuo progetto..." 
-              className="bg-transparent border-none focus-visible:ring-0 text-lg resize-none p-0 min-h-[120px]"
+              className="bg-transparent border-none focus-visible:ring-0 text-lg resize-none p-0 min-h-[120px] placeholder:text-gray-700"
               value={content}
               onChange={(e) => setContent(e.target.value)}
+              disabled={createPost.isPending}
             />
           </div>
 
           <div className="flex items-center justify-between pt-4 border-t border-white/5">
-            <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">
+            <p className="text-[9px] text-gray-500 font-black uppercase tracking-widest max-w-[200px]">
               Il post sarà visibile a tutti i membri dell'app
             </p>
             
-            <Button type="submit" disabled={!content.trim() || createPost.isPending} className="bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest px-8 rounded-none italic">
-              {createPost.isPending ? <Loader2 className="animate-spin" /> : "Pubblica"}
+            <Button 
+              type="submit" 
+              disabled={!content.trim() || createPost.isPending} 
+              className="bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest px-8 py-6 rounded-none italic shadow-lg shadow-red-600/20"
+            >
+              {createPost.isPending ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="animate-spin" size={16} /> Invio...
+                </span>
+              ) : "Pubblica"}
             </Button>
           </div>
         </form>
