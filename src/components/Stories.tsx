@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { cn } from "@/lib/utils";
 import StoryViewer from './StoryViewer';
 import { AnimatePresence } from 'framer-motion';
@@ -20,7 +20,11 @@ const Stories = () => {
   const [isUploading, setIsUploading] = React.useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Raggruppiamo le storie per utente per i cerchi
+  // Forza il refetch al montaggio per evitare cache stale
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
   const { userCircles, flatStories } = useMemo(() => {
     if (!stories || stories.length === 0) return { userCircles: [], flatStories: [] };
     
@@ -28,7 +32,6 @@ const Stories = () => {
     const seenUsers = new Set();
     const currentUserId = user ? Number(user.id) : null;
 
-    // Ordiniamo: prima l'utente corrente, poi gli altri
     const sortedStories = [...stories].sort((a, b) => {
       if (Number(a.user_id) === currentUserId) return -1;
       if (Number(b.user_id) === currentUserId) return 1;
@@ -77,6 +80,7 @@ const Stories = () => {
       });
       
       showSuccess("Storia pubblicata!");
+      refetch();
     } catch (err: any) {
       showError("Errore durante il caricamento.");
     } finally {
@@ -100,7 +104,6 @@ const Stories = () => {
       <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
       
       <div className="flex gap-4 overflow-x-auto pt-4 pb-6 px-6 no-scrollbar bg-black">
-        {/* SLOT UTENTE (Sempre presente) */}
         <div className="flex flex-col items-center gap-2 shrink-0">
           <div className="relative">
             <button 
@@ -136,7 +139,6 @@ const Stories = () => {
           <span className="text-[10px] font-black uppercase text-white/40">La tua storia</span>
         </div>
 
-        {/* ALTRE STORIE (Solo altri utenti) */}
         {userCircles.filter(c => !c.isMe).map((circle: any) => (
           <button 
             key={circle.id} 
