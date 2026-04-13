@@ -132,6 +132,42 @@ export const useSocialFeed = () => {
     onError: (error: any) => showError(error.message)
   });
 
+  const updatePost = useMutation({
+    mutationFn: async ({ postId, content, file, removeImage }: { postId: string, content: string, file?: File, removeImage?: boolean }) => {
+      let image_url = undefined;
+      if (file) {
+        image_url = await uploadMedia(file);
+      }
+
+      const updateData: any = { content };
+      if (image_url) updateData.image_url = image_url;
+      else if (removeImage) updateData.image_url = null;
+
+      const { error } = await supabase
+        .from('posts')
+        .update(updateData)
+        .eq('id', postId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['social-posts'] });
+      showSuccess("Post aggiornato!");
+    },
+    onError: (error: any) => showError(error.message)
+  });
+
+  const deletePost = useMutation({
+    mutationFn: async (postId: string) => {
+      const { error } = await supabase.from('posts').delete().eq('id', postId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['social-posts'] });
+      showSuccess("Post eliminato");
+    }
+  });
+
   const addComment = useMutation({
     mutationFn: async ({ postId, content, parentId }: { postId: string, content: string, parentId?: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -148,6 +184,16 @@ export const useSocialFeed = () => {
       showSuccess("Commento aggiunto!");
     },
     onError: (error: any) => showError(error.message)
+  });
+
+  const deleteComment = useMutation({
+    mutationFn: async (commentId: string) => {
+      const { error } = await supabase.from('comments').delete().eq('id', commentId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['social-posts'] });
+    }
   });
 
   const toggleLike = useMutation({
@@ -173,5 +219,5 @@ export const useSocialFeed = () => {
     }
   });
 
-  return { posts, isLoading, error, createPost, toggleLike, addComment };
+  return { posts, isLoading, error, createPost, updatePost, deletePost, toggleLike, addComment, deleteComment };
 };
