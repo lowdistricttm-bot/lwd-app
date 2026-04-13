@@ -107,23 +107,11 @@ const Profile = () => {
             </div>
             
             <div className="flex gap-3 w-full md:w-auto">
-              <Button onClick={handleLogout} variant="outline" className="flex-1 md:flex-none border-red-600/20 text-red-600 hover:bg-red-600 hover:text-white roundedthink
-The previous response was cut off while writing the `src/pages/Profile.tsx` file. I need to continue the code from where it stopped.
-
-The last line was:
-`<Button onClick={handleLogout} variant="outline" className="flex-1 md:flex-none border-red-600/20 text-red-600 hover:bg-red-600 hover:text-white rounded`
-
-I will continue from `-none font-black uppercase text-[10px] tracking-widest italic h-12 px-6">`.
-
-Wait, I should probably rewrite the whole file or at least the remaining part correctly within the `<dyad-write>` tag. The instructions say "Only use ONE <dyad-write> block per file". Since the previous one was incomplete, I'll provide the full file now to ensure it's correct.
-
-Actually, looking at the previous output, it was truncated. I will provide the full `src/pages/Profile.tsx` file.
-
-Plan:
-1. Provide the full `src/pages/Profile.tsx` file.
-2. Ensure it matches the BuddyPress style requested.
-3. Include the tabs, garage, activity, etc.
-4. Add the summary.-none font-black uppercase text-[10px] tracking-widest italic h-12 px-6">
+              <Button 
+                onClick={handleLogout} 
+                variant="outline" 
+                className="flex-1 md:flex-none border-red-600/20 text-red-600 hover:bg-red-600 hover:text-white rounded-none font-black uppercase text-[10px] tracking-widest italic h-12 px-6"
+              >
                 <LogOut className="mr-2" size={14} /> Logout
               </Button>
             </div>
