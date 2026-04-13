@@ -6,29 +6,61 @@ import { showError, showSuccess } from '@/utils/toast';
 const BP_API_URL = "https://www.lowdistrict.it/wp-json/buddypress/v1";
 const WP_API_URL = "https://www.lowdistrict.it/wp-json/wp/v2";
 
-const getAuthHeader = () => {
+// Funzione per ottenere il token JWT direttamente da WordPress
+const getWpJwt = async () => {
+  const username = localStorage.getItem('wp-username');
+  const password = localStorage.getItem('wp-password');
+  
+  if (!username || !password) {
+    console.warn("[BP] Credenziali WordPress non trovate");
+    return null;
+  }
+
+  try {
+    const response = await fetch("https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+
+    if (!response.ok) {
+      console.error("[BP] Errore login WordPress:", await response.json());
+      return null;
+    }
+
+    const data = await response.json();
+    const jwt = data.jwt || (data.data && data.data.jwt);
+    
+    if (jwt) {
+      console.log("[BP] Token JWT ottenuto con successo");
+      return jwt;
+    }
+
+    console.warn("[BP] Nessun token JWT trovato nella risposta");
+    return null;
+  } catch (error) {
+    console.error("[BP] Errore durante il login:", error);
+    return null;
+  }
+};
+
+const getAuthHeader = async () => {
   const token = localStorage.getItem('wp-jwt');
-    // Verifica che il token sia una stringa valida e non vuota
-  if (!token || token === 'null' || token === 'undefined' || token.trim() === '') {
-    console.warn("[BP] Token JWT non valido o mancante");
+  
+  // Se non abbiamo un token salvato, proviamo a ottenerlo
+  if (!token) {
+    const newToken = await getWpJwt();
+    if (newToken) {
+      localStorage.setItem('wp-jwt', newToken);
+      return { 'Authorization': `Bearer ${newToken}` };
+    }
     return {};
   }
 
   try {
-    // Verifichiamo che il token sia un JWT valido
     const decoded = JSON.parse(atob(token.split('.')[1]));
     console.log("[BP] Token JWT valido per utente:", decoded.sub || decoded.user_id || decoded.email);
-    
-    // Formato corretto per simple-jwt-login middleware: Authorization: JWT <token>
-    // Alcuni plugin richiedono 'Bearer', altri 'JWT' - proviamo entrambi
-    const headers = {
-      ...(decoded && decoded.auth && decoded.auth === 'jwt' 
-        ? { 'Authorization': `JWT ${token}` } 
-        : { 'Authorization': `Bearer ${token}` })
-    };
-    
-    console.log("[BP] Header di autorizzazione generato:", headers);
-    return headers;
+    return { 'Authorization': `Bearer ${token}` };
   } catch (error) {
     console.error("[BP] Token JWT non valido:", error);
     return {};
@@ -58,9 +90,8 @@ export const useBPActivity = () => {
   return useQuery({
     queryKey: ['bp-activity'],
     queryFn: async () => {
-      const headers = getAuthHeader();
+      const headers = await getAuthHeader();
       
-      // Se non abbiamo un token valido, restituiamo un array vuoto
       if (!headers.Authorization) {
         console.warn("[BP] Nessun token JWT valido, impossibile caricare attività");
         return [];
@@ -89,7 +120,7 @@ export const useBPActions = () => {
 
   const favoriteMutation = useMutation({
     mutationFn: async (activityId: number) => {
-      const headers = getAuthHeader();
+      const headers = await getAuthHeader();
       if (!headers.Authorization) throw new Error('Accedi per mettere Like');
 
       const response = await fetch(`${BP_API_URL}/activity/${activityId}/favorite`, {
@@ -113,7 +144,7 @@ export const useBPActions = () => {
 
   const commentMutation = useMutation({
     mutationFn: async ({ activityId, content }: { activityId: number, content: string }) => {
-      const headers = getAuthHeader();
+      const headers = await getAuthHeader();
       if (!headers.Authorization) throw new Error('Accedi per commentare');
 
       const response = await fetch(`${BP_API_URL}/activity/${activityId}/comment`, {
@@ -138,10 +169,9 @@ export const useBPActions = () => {
 
   const createPostMutation = useMutation({
     mutationFn: async ({ content }: { content: string }) => {
-      const headers = getAuthHeader();
+      const headers = await getAuthHeader();
       if (!headers.Authorization) throw new Error('Accedi per pubblicare');
 
-      // Formato corretto per BuddyPress activity
       const payload = {
         content: content,
         component: 'activity',
@@ -150,7 +180,7 @@ export const useBPActions = () => {
       };
 
       console.log("[BP] Invio payload:", payload);
-      console.log("[BP] Header di autorizzazione generato:", headers.Authorization);
+      console.log("[BP] Header di autorizzazione:", headers.Authorization);
 
       const response = await fetch(`${BP_API_URL}/activity`, {
         method: 'POST',
@@ -176,20 +206,21 @@ export const useBPActions = () => {
     },
     onError: (error: any) => {
       console.error("[BP] Errore pubblicazione:", error);
-      showError(error.message);
+      showError(error.message)
     }
   });
 
   const uploadMediaMutation = useMutation({
     mutationFn: async (file: File) => {
-      const headers = getAuthHeader();
+      const headers = await getAuthHeader();
       const formData = new FormData();
       formData.append('file', file);
 
       const response = await fetch(`${WP_API_URL}/media`, {
         method: 'POST',
         headers: { ...headers },
-        body: formData      });
+        body: formData
+      });
 
       if (!response.ok) throw new Error('Errore caricamento media');
       return response.json();
@@ -204,7 +235,7 @@ export const useBPMember = (username?: string) => {
     queryKey: ['bp-member', username],
     queryFn: async () => {
       if (!username) return null;
-      const headers = getAuthHeader();
+      const headers = await getAuthHeader();
       
       if (!headers.Authorization) {
         console.warn("[BP] Nessun token JWT valido, impossibile cercare membro");
