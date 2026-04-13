@@ -7,21 +7,41 @@ import BottomNav from '@/components/BottomNav';
 import GaragePreview from '@/components/GaragePreview';
 import MembersList from '@/components/MembersList';
 import { useAuth } from '@/hooks/use-auth';
-import { Lock } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Lock, ExternalLink } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
 const Community = () => {
   const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const openWebBacheca = () => {
+    navigate('/wp-portal', { 
+      state: { 
+        title: "Bacheca Social", 
+        url: "https://www.lowdistrict.it/bacheca" 
+      } 
+    });
+  };
 
   return (
     <div className="min-h-screen bg-black text-white pb-24">
       <Navbar />
       <div className="pt-24">
-        <div className="px-6 mb-8 max-w-xl mx-auto">
-          <h1 className="text-4xl font-black tracking-tighter uppercase italic">Bacheca</h1>
-          <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mt-1">Activity Stream & Updates</p>
+        <div className="px-6 mb-8 max-w-xl mx-auto flex items-end justify-between">
+          <div>
+            <h1 className="text-4xl font-black tracking-tighter uppercase italic">Bacheca</h1>
+            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mt-1">Activity Stream & Updates</p>
+          </div>
+          {user && (
+            <button 
+              onClick={openWebBacheca}
+              className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-red-600 border border-red-600/20 px-3 py-2 hover:bg-red-600 hover:text-white transition-all italic"
+            >
+              <ExternalLink size={12} /> Versione Web
+            </button>
+          )}
         </div>
 
         {user ? (
