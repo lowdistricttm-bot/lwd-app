@@ -13,50 +13,45 @@ const WordPressPortal = ({ url, topOffset = 0, bottomOffset = 0 }: WordPressPort
   const [isLoading, setIsLoading] = useState(true);
   const [key, setKey] = useState(0);
 
-  // Parametri per il sito WP per ottimizzare la vista app
-  const appUrl = `${url}${url.includes('?') ? '&' : '?'}display=app&app_view=true`;
+  // Proviamo a caricare l'URL pulito senza parametri se topOffset è 0 (come nel profilo)
+  const appUrl = topOffset === 0 ? url : `${url}${url.includes('?') ? '&' : '?'}display=app&app_view=true`;
 
   useEffect(() => {
-    // Reset loading quando cambia l'URL o la chiave
     setIsLoading(true);
-    
-    // Timeout di sicurezza: se dopo 10 secondi non ha caricato, togliamo il loader
-    const timer = setTimeout(() => setIsLoading(false), 10000);
+    const timer = setTimeout(() => setIsLoading(false), 8000);
     return () => clearTimeout(timer);
   }, [key, url]);
 
   return (
-    <div className="relative w-full h-full bg-zinc-950 overflow-hidden">
+    <div className="relative w-full h-full bg-black overflow-hidden">
       {isLoading && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black">
           <Loader2 className="animate-spin text-red-600 mb-4" size={32} />
-          <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 italic">Sincronizzazione...</p>
+          <p className="text-[9px] font-black uppercase tracking-widest text-gray-500 italic">Caricamento...</p>
         </div>
       )}
       
-      <div className="absolute top-2 right-4 z-20 flex gap-2">
+      <div className="absolute top-2 right-4 z-20">
         <button 
-          onClick={() => { setKey(prev => prev + 1); }}
-          className="p-2 bg-black/50 backdrop-blur-md rounded-full text-white/50 hover:text-white transition-colors border border-white/5"
+          onClick={() => setKey(prev => prev + 1)}
+          className="p-2 bg-white/5 backdrop-blur-md rounded-full text-white/30 hover:text-white border border-white/5"
         >
           <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
         </button>
       </div>
 
-      <div className="w-full h-full overflow-hidden relative">
-        <iframe 
-          key={key}
-          src={appUrl} 
-          className="absolute w-full border-none"
-          style={{ 
-            backgroundColor: 'transparent',
-            top: `-${topOffset}px`,
-            height: `calc(100% + ${topOffset + bottomOffset}px)`,
-            left: 0
-          }}
-          onLoad={() => setIsLoading(false)}
-        />
-      </div>
+      <iframe 
+        key={key}
+        src={appUrl} 
+        className="w-full h-full border-none"
+        style={{ 
+          marginTop: `-${topOffset}px`,
+          height: `calc(100% + ${topOffset + bottomOffset}px)`,
+          backgroundColor: 'black'
+        }}
+        onLoad={() => setIsLoading(false)}
+        allow="camera; microphone; geolocation"
+      />
     </div>
   );
 };
