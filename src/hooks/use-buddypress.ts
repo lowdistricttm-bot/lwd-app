@@ -3,31 +3,40 @@ import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tansta
 const BASE_URL = "https://www.lowdistrict.it/wp-json";
 
 /**
- * Funzione di fetch ottimizzata per la massima compatibilità con il server lowdistrict.it
+ * Funzione di fetch ottimizzata con Authorization Header standard
  */
 const bpFetch = async (endpoint: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('ld_auth_token');
   
-  const url = new URL(`${BASE_URL}${endpoint}`);
+  // Costruiamo l'URL assicurandoci che non ci siano doppi slash
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = new URL(`${BASE_URL}${cleanEndpoint}`);
+
+  const headers: Record<string, string> = {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+    ...((options.headers as Record<string, string>) || {}),
+  };
+
+  // Usiamo l'Header Authorization invece del parametro URL (più sicuro e compatibile)
   if (token) {
-    url.searchParams.set('JWT', token);
+    headers['Authorization'] = `Bearer ${token}`;
   }
 
   try {
     const response = await fetch(url.toString(), {
       ...options,
-      headers: {
-        'Accept': 'application/json',
-        ...options.headers,
-      },
+      headers,
       mode: 'cors'
     });
 
     if (!response.ok) {
-      // Se fallisce con token, riproviamo senza (alcuni endpoint sono pubblici ma si rompono con token errati)
-      if (token && (response.status === 401 || response.status === 400)) {
-        const publicUrl = new URL(`${BASE_URL}${endpoint}`);
-        const publicRes = await fetch(publicUrl.toString(), { mode: 'cors' });
+      // Se fallisce con 400/401, proviamo una richiesta pubblica pulita senza token
+      if (response.status === 400 || response.status === 401) {
+        const publicRes = await fetch(url.toString(), { 
+          headers: { 'Accept': 'application/json' },
+          mode: 'cors' 
+        });
         if (publicRes.ok) return await publicRes.json();
       }
       
@@ -46,7 +55,8 @@ export const useBpActivity = (userId?: number) => {
   return useInfiniteQuery({
     queryKey: ['bp-activity', userId],
     queryFn: async ({ pageParam = 1 }) => {
-      let endpoint = `/buddypress/v1/activity?page=${pageParam}&per_page=10`;
+      // Aggiungiamo context=view per compatibilità
+      let endpoint = `/buddypress/v1/activity?page=${pageParam}&per_page=10&context=view`;
       if (userId) endpoint += `&user_id=${userId}`;
       
       const data = await bpFetch(endpoint);
@@ -60,40 +70,15 @@ export const useBpActivity = (userId?: number) => {
   });
 };
 
-export const useFavoriteActivity = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async ({ activityId, isFavorite }: { activityId: number, isFavorite: boolean }) => {
-      const method = isFavorite ? 'POST' : 'DELETE';
-      return bpFetch(`/buddypress/v1/activity/${activityId}/favorite`, {
-        method: method
-      });
+export const useBpMembers = (perPage = 20) => {
+  return useQuery({
+    queryKey: ['bp-members', perPage],
+    queryFn: async () => {
+      // context=view è spesso richiesto per le liste pubbliche
+      return bpFetch(`/buddypress/v1/members?per_page=${perPage}&context=view`);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bp-activity'] });
-    }
-  });
-};
-
-export const useCreateActivity = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async ({ content }: { content: string }) => {
-      return bpFetch('/buddypress/v1/activity', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          content: content,
-          component: 'activity',
-          type: 'activity_update'
-        })
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bp-activity'] });
-    }
+    staleTime: 1000 * 60 * 10,
+    retry: 1,
   });
 };
 
@@ -109,27 +94,44 @@ export const useBpMemberData = (userId: number | undefined) => {
   });
 };
 
-export const useBpMembers = (perPage = 15) => {
-  return useQuery({
-    queryKey: ['bp-members', perPage],
-    queryFn: async () => {
-      return bpFetch(`/buddypress/v1/members?per_page=${perPage}`);
+export const useFavoriteActivity = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ activityId, isFavorite }: { activityId: number, isFavorite: boolean }) => {
+      const method = isFavorite ? 'POST' : 'DELETE';
+      return bpFetch(`/buddypress/v1/activity/${activityId}/favorite`, { method });
     },
-    staleTime: 1000 * 60 * 10,
-    retry: 1,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['bp-activity'] })
+  });
+};
+
+export const useCreateActivity = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ content }: { content: string }) => {
+      return bpFetch('/buddypress/v1/activity', {
+        method: 'POST',
+        body: JSON.stringify({
+          content: content,
+          component: 'activity',
+          type: 'activity_update'
+        })
+      });
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['bp-activity'] })
   });
 };
 
 export const useUpdateAvatar = () => {
   const queryClient = useQueryClient();
-  
   return useMutation({
     mutationFn: async ({ userId, file }: { userId: number, file: File }) => {
       const formData = new FormData();
       formData.append('file', file);
       return bpFetch(`/buddypress/v1/members/${userId}/avatar`, {
         method: 'POST',
-        body: formData
+        body: formData,
+        headers: {} // Rimuoviamo Content-Type per permettere al browser di impostare il boundary del FormData
       });
     },
     onSuccess: (_, variables) => {
