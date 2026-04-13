@@ -21,6 +21,7 @@ import Checkout from "./pages/Checkout";
 import Community from "./pages/Community";
 import Members from "./pages/Members";
 import WPPage from "./pages/WPPage";
+import Landing from "./pages/Landing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
             <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/landing" element={<Landing />} />
                 <Route path="/shop" element={<Shop />} />
                 <Route path="/community" element={<Community />} />
                 <Route path="/members" element={<Members />} />
