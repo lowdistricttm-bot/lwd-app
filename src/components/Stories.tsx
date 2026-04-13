@@ -76,7 +76,7 @@ const Stories = () => {
         imageUrl: publicUrl 
       });
       
-      showSuccess"Storia pubblicata!");
+      showSuccess("Storia pubblicata!");
     } catch (err: any) {
       showError("Errore durante il caricamento.");
     } finally {
