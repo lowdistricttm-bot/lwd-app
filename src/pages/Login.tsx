@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from "@/integrations/supabase/client";
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import Logo from '@/components/Logo';
@@ -10,35 +9,27 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Info } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
+import { useWpAuth } from '@/hooks/use-wp-auth';
 
 const Login = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const { loginWithWp, isLoading } = useWpAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
 
     try {
-      // Per ora continuiamo a usare Supabase come fallback
-      // In futuro qui chiameremo loginWithWp(username, password)
-      const { error } = await supabase.auth.signInWithPassword({
-        email: username.includes('@') ? username : `${username}@lowdistrict.it`,
-        password,
-      });
-
-      if (error) throw error;
+      // Tenta il login tramite l'API di WordPress
+      await loginWithWp(username, password);
       
-      showSuccess("Accesso effettuato!");
+      showSuccess("Bentornato nel District!");
       navigate('/profile');
     } catch (error: any) {
-      showError("Credenziali non riconosciute nel District");
-    } finally {
-      setLoading(false);
+      showError(error.message || "Credenziali non valide o errore di connessione");
     }
   };
 
@@ -58,7 +49,7 @@ const Login = () => {
               Area Riservata
             </h1>
             <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.3em]">
-              Accedi con il tuo account Low District
+              Accedi con le tue credenziali Low District
             </p>
           </div>
 
@@ -77,7 +68,17 @@ const Login = () => {
               </div>
 
               <div className="space-y-2">
-                <Label className="font-black uppercase text-[10px] tracking-[0.2em] text-zinc-500">Password</Label>
+                <div className="flex justify-between items-center">
+                  <Label className="font-black uppercase text-[10px] tracking-[0.2em] text-zinc-500">Password</Label>
+                  <a 
+                    href="https://www.lowdistrict.it/my-account/lost-password/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-[9px] font-black uppercase text-zinc-600 hover:text-white transition-colors"
+                  >
+                    Smarrita?
+                  </a>
+                </div>
                 <Input 
                   type="password" 
                   placeholder="••••••••"
@@ -90,19 +91,26 @@ const Login = () => {
 
               <Button 
                 type="submit" 
-                disabled={loading}
+                disabled={isLoading}
                 className="w-full bg-red-600 hover:bg-red-700 text-white rounded-none h-14 font-black uppercase italic tracking-widest transition-all"
               >
-                {loading ? <Loader2 className="animate-spin" /> : 'Accedi Ora'}
+                {isLoading ? <Loader2 className="animate-spin" /> : 'Accedi Ora'}
               </Button>
             </form>
           </div>
 
-          <div className="mt-8 p-4 bg-zinc-900/30 border border-white/5 flex gap-4 items-start">
-            <Info className="text-red-600 shrink-0" size={18} />
-            <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest leading-relaxed">
-              Nota: L'integrazione diretta con il database di lowdistrict.it è in fase di attivazione. Per ora, crea un nuovo account se è la tua prima volta nell'app.
+          <div className="mt-12 text-center">
+            <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest mb-4">
+              Non sei ancora un membro?
             </p>
+            <a 
+              href="https://www.lowdistrict.it/my-account/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-[10px] font-black uppercase tracking-widest text-white border-b border-white/20 pb-1 hover:text-red-600 hover:border-red-600 transition-all"
+            >
+              Registrati sul sito ufficiale
+            </a>
           </div>
         </motion.div>
       </main>
