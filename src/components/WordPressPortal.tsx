@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Loader2, RefreshCw } from 'lucide-react';
 
 interface WordPressPortalProps {
@@ -13,38 +13,44 @@ const WordPressPortal = ({ url, topOffset = 0, bottomOffset = 0 }: WordPressPort
   const [isLoading, setIsLoading] = useState(true);
   const [key, setKey] = useState(0);
 
-  // Parametri per il sito WP
+  // Parametri per il sito WP per ottimizzare la vista app
   const appUrl = `${url}${url.includes('?') ? '&' : '?'}display=app&app_view=true`;
 
+  useEffect(() => {
+    // Reset loading quando cambia l'URL o la chiave
+    setIsLoading(true);
+    
+    // Timeout di sicurezza: se dopo 10 secondi non ha caricato, togliamo il loader
+    const timer = setTimeout(() => setIsLoading(false), 10000);
+    return () => clearTimeout(timer);
+  }, [key, url]);
+
   return (
-    <div className="relative w-full h-full bg-black overflow-hidden">
+    <div className="relative w-full h-full bg-zinc-950 overflow-hidden">
       {isLoading && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black">
-          <Loader2 className="animate-spin text-red-600 mb-4" size={40} />
-          <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 italic">Caricamento contenuto...</p>
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
+          <Loader2 className="animate-spin text-red-600 mb-4" size={32} />
+          <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 italic">Sincronizzazione...</p>
         </div>
       )}
       
       <div className="absolute top-2 right-4 z-20 flex gap-2">
         <button 
-          onClick={() => { setIsLoading(true); setKey(prev => prev + 1); }}
-          className="p-2 bg-black/50 backdrop-blur-md rounded-full text-white/50 hover:text-white transition-colors"
+          onClick={() => { setKey(prev => prev + 1); }}
+          className="p-2 bg-black/50 backdrop-blur-md rounded-full text-white/50 hover:text-white transition-colors border border-white/5"
         >
           <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
         </button>
       </div>
 
-      {/* Il container esterno definisce la finestra visibile */}
       <div className="w-full h-full overflow-hidden relative">
         <iframe 
           key={key}
           src={appUrl} 
           className="absolute w-full border-none"
           style={{ 
-            backgroundColor: 'black',
-            // Spingiamo l'iframe in su per nascondere l'header
+            backgroundColor: 'transparent',
             top: `-${topOffset}px`,
-            // Rendiamo l'iframe più alto della finestra per nascondere il footer in fondo
             height: `calc(100% + ${topOffset + bottomOffset}px)`,
             left: 0
           }}
