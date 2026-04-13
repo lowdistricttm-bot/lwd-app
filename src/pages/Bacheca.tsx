@@ -1,20 +1,29 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
 import ActivityItem from '@/components/ActivityItem';
 import CreatePostModal from '@/components/CreatePostModal';
 import { useBPActivity } from '@/hooks/use-buddypress';
-import { Loader2, Plus, Lock, AlertCircle } from 'lucide-react';
+import { Loader2, Plus, Lock, AlertCircle, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Bacheca = () => {
+  const navigate = useNavigate();
   const { data: activities, isLoading, error, refetch } = useBPActivity();
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
-  
-  const hasWpToken = !!localStorage.getItem('wp-jwt');
+  const [hasWpToken, setHasWpToken] = useState(!!localStorage.getItem('wp-jwt'));
+
+  // Controlla il token all'avvio e quando la finestra torna in focus
+  useEffect(() => {
+    const checkToken = () => setHasWpToken(!!localStorage.getItem('wp-jwt'));
+    window.addEventListener('focus', checkToken);
+    return () => window.removeEventListener('focus', checkToken);
+  }, []);
+
   const isAuthError = error?.message.includes('401') || !hasWpToken;
 
   return (
@@ -32,7 +41,7 @@ const Bacheca = () => {
             </h1>
           </div>
           <button 
-            onClick={() => setIsPostModalOpen(true)}
+            onClick={() => hasWpToken ? setIsPostModalOpen(true) : navigate('/login')}
             className="w-12 h-12 bg-red-600 flex items-center justify-center hover:bg-white hover:text-black transition-all shadow-lg shadow-red-600/20"
           >
             <Plus size={24} />
@@ -40,11 +49,24 @@ const Bacheca = () => {
         </header>
 
         {!hasWpToken && (
-          <div className="mb-8 p-4 bg-red-600/10 border border-red-600/20 flex items-center gap-4">
-            <AlertCircle className="text-red-600 shrink-0" size={20} />
-            <p className="text-[10px] font-black uppercase tracking-widest text-red-600">
-              Sessione WordPress non rilevata. Per interagire, effettua nuovamente il login.
-            </p>
+          <div className="mb-8 p-6 bg-red-600/10 border border-red-600/20 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <AlertCircle className="text-red-600 shrink-0" size={24} />
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-red-600">
+                  Sessione WordPress non rilevata
+                </p>
+                <p className="text-[9px] text-zinc-500 font-bold uppercase mt-1">
+                  Effettua il login per pubblicare post, foto e interagire con la community.
+                </p>
+              </div>
+            </div>
+            <Button 
+              onClick={() => navigate('/login')}
+              className="bg-red-600 hover:bg-white hover:text-black text-white rounded-none text-[9px] font-black uppercase tracking-widest h-10 px-6 italic"
+            >
+              <LogIn size={14} className="mr-2" /> Accedi Ora
+            </Button>
           </div>
         )}
 
@@ -64,7 +86,7 @@ const Bacheca = () => {
               Effettua il login per vedere i post e interagire.
             </p>
             <Button 
-              onClick={() => window.location.href = '/login'}
+              onClick={() => navigate('/login')}
               className="bg-white text-black hover:bg-red-600 hover:text-white rounded-none px-8 py-6 text-[10px] font-black uppercase tracking-widest italic"
             >
               Vai al Login
