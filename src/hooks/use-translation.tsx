@@ -85,27 +85,7 @@ const translations: Record<string, any> = {
     nav: { home: 'HOME', shop: 'SHOP', events: 'EVENTS', garage: 'GARAGE', profile: 'PROFILE', settings: 'SETTINGS' },
     hero: { subtitle: 'THE STANCE CULTURE', title: 'LOW DISTRICT', desc: "IT'S NOT JUST A CAR, IT'S A LIFESTYLE. DISCOVER OUR EXCLUSIVE COLLECTION AND UPCOMING COMMUNITY EVENTS.", shopBtn: 'SHOP NOW', eventsBtn: 'EVENTS' },
     shop: { title: 'MERCHANDISING', subtitle: 'OFFICIAL GEAR', search: 'SEARCH PRODUCTS...', sort: 'SORT BY', all: 'ALL' },
-    profile: { posts: 'POSTS', followers: 'FOLLOWERS', following: 'FOLLOWING', activeCar: 'ACTIVE CAR', myPosts: 'MY POSTS', saved: 'think
-The user is pointing out that my previous response was cut off. I need to continue the code block for `src/hooks/use-translation.tsx` exactly where it stopped and then provide the rest of the requested changes (fixing the connection error and system messages).
-
-Looking at the previous output:
-`profile: { posts: 'POSTS', followers: 'FOLLOWERS', following: 'FOLLOWING', activeCar: 'ACTIVE CAR', myPosts: 'MY POSTS', saved: '`
-
-I need to complete the `en` object and the rest of the file.
-Then I need to update `src/hooks/use-buddypress.ts` to be more resilient.
-Then I need to update `src/components/GaragePreview.tsx` and `src/pages/Members.tsx` to use the new translation keys and handle errors better.
-
-Wait, the user also asked to "correggi anche tutti i messaggi nel system messagges". This likely refers to the error messages shown in the UI (toasts, error states in components).
-
-Let's finish `src/hooks/use-translation.tsx` first.
-
-Then I will update `src/hooks/use-buddypress.ts` to handle potential CORS or endpoint issues better.
-
-Then I will update the components to use the new translation keys.
-
-Actually, I should probably check if I can simplify the BuddyPress fetch to avoid the "black screen" (which usually happens when a component crashes or an error isn't caught properly).
-
-Let's proceed.SAVED' },
+    profile: { posts: 'POSTS', followers: 'FOLLOWERS', following: 'FOLLOWING', activeCar: 'ACTIVE CAR', myPosts: 'MY POSTS', saved: 'SAVED' },
     settings: { title: 'SETTINGS', language: 'LANGUAGE', notifications: 'NOTIFICATIONS', account: 'ACCOUNT & APP', logout: 'LOGOUT', selections: 'MY SELECTIONS', payments: 'PAYMENTS' },
     garage: { title: 'MY GARAGE', subtitle: 'MANAGE YOUR PROJECTS', empty: 'YOUR GARAGE IS EMPTY', addBtn: 'ADD VEHICLE', active: 'ACTIVE', setMain: 'SET AS MAIN' },
     errors: {
