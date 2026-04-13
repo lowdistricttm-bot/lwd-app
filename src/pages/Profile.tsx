@@ -7,10 +7,13 @@ import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
 import { 
-  User, Settings, LogOut, Car, MessageSquare, 
-  Camera, Bell, Shield, CreditCard,
-  ChevronRight, Plus, ShoppingBag, Package, Clock,
-  Loader2
+  User, 
+  Settings, 
+  LogOut, 
+  Car, 
+  MessageSquare, 
+  ShoppingBag, 
+  Loader2 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -36,7 +39,6 @@ const Profile = () => {
       
       setUser(session.user);
       
-      // Carico profilo locale
       const { data: profileData } = await supabase
         .from('profiles')
         .select('*')
