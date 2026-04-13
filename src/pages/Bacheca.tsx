@@ -8,7 +8,7 @@ import Footer from '@/components/Footer';
 import FeedPost from '@/components/FeedPost';
 import CreatePostModal from '@/components/CreatePostModal';
 import { useSocialFeed } from '@/hooks/use-social-feed';
-import { Loader2, Plus, AlertCircle, LogIn, RefreshCcw } from 'lucide-react';
+import { Loader2, Plus, AlertCircle, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -61,7 +61,7 @@ const Bacheca = () => {
           </div>
         )}
 
-        {!user && !isLoading && (
+        {!user ? (
           <div className="mb-8 p-6 bg-zinc-900/50 border border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-4">
               <AlertCircle className="text-zinc-500 shrink-0" size={24} />
@@ -81,24 +81,26 @@ const Bacheca = () => {
               <LogIn size={14} className="mr-2" /> Accedi
             </Button>
           </div>
-        )}
-
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <Loader2 className="animate-spin text-red-600" size={40} />
-            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Sincronizzazione District...</p>
-          </div>
-        ) : posts?.length === 0 ? (
-          <div className="text-center py-20 border border-white/5 bg-zinc-900/30 p-8">
-            <p className="text-sm font-black uppercase tracking-widest text-zinc-500">Nessun post presente</p>
-            <p className="text-[10px] text-zinc-600 mt-2 uppercase font-bold">Inaugura la bacheca con il tuo primo post!</p>
-          </div>
         ) : (
-          <div className="space-y-2">
-            {posts?.map((post) => (
-              <FeedPost key={post.id} post={post} />
-            ))}
-          </div>
+          <>
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-4">
+                <Loader2 className="animate-spin text-red-600" size={40} />
+                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Sincronizzazione District...</p>
+              </div>
+            ) : posts?.length === 0 ? (
+              <div className="text-center py-20 border border-white/5 bg-zinc-900/30 p-8">
+                <p className="text-sm font-black uppercase tracking-widest text-zinc-500">Nessun post presente</p>
+                <p className="text-[10px] text-zinc-600 mt-2 uppercase font-bold">Inaugura la bacheca con il tuo primo post!</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {posts?.map((post) => (
+                  <FeedPost key={post.id} post={post} />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </main>
 
