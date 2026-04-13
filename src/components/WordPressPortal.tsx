@@ -1,18 +1,18 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { Loader2, RefreshCw, ExternalLink } from 'lucide-react';
+import React, { useState } from 'react';
+import { Loader2, RefreshCw } from 'lucide-react';
 
 interface WordPressPortalProps {
   url: string;
-  title?: string;
+  headerHeight?: number; // Altezza stimata dell'header da nascondere (es. 80)
 }
 
-const WordPressPortal = ({ url }: WordPressPortalProps) => {
+const WordPressPortal = ({ url, headerHeight = 0 }: WordPressPortalProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [key, setKey] = useState(0);
 
-  // Aggiungiamo un parametro per dire al sito che siamo nell'app
+  // Parametri per il sito WP
   const appUrl = `${url}${url.includes('?') ? '&' : '?'}display=app&app_view=true`;
 
   return (
@@ -20,7 +20,7 @@ const WordPressPortal = ({ url }: WordPressPortalProps) => {
       {isLoading && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black">
           <Loader2 className="animate-spin text-red-600 mb-4" size={40} />
-          <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 italic">Caricamento bacheca...</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 italic">Sincronizzazione...</p>
         </div>
       )}
       
@@ -33,18 +33,21 @@ const WordPressPortal = ({ url }: WordPressPortalProps) => {
         </button>
       </div>
 
-      <iframe 
-        key={key}
-        src={appUrl} 
-        className="w-full h-full border-none"
+      <div 
+        className="w-full h-full overflow-hidden"
         style={{ 
-          backgroundColor: 'black',
-          // Tentativo di "ritagliare" l'header se non puoi modificarlo lato WP
-          // marginTop: '-60px', 
-          // height: 'calc(100% + 60px)' 
+          marginTop: `-${headerHeight}px`, 
+          height: `calc(100% + ${headerHeight}px)` 
         }}
-        onLoad={() => setIsLoading(false)}
-      />
+      >
+        <iframe 
+          key={key}
+          src={appUrl} 
+          className="w-full h-full border-none"
+          style={{ backgroundColor: 'black' }}
+          onLoad={() => setIsLoading(false)}
+        />
+      </div>
     </div>
   );
 };
