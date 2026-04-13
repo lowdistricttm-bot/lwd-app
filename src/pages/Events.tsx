@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
@@ -35,6 +35,14 @@ const Events = () => {
   const { events, isLoading: eventsLoading, applyToEvent } = useEvents();
   const { vehicles, isLoading: vehiclesLoading } = useGarage();
 
+  // Trova il veicolo selezionato per controllare la descrizione
+  const selectedVehicle = useMemo(() => 
+    vehicles?.find(v => v.id === formData.vehicleId),
+  [vehicles, formData.vehicleId]);
+
+  // Verifica se il veicolo ha già una descrizione nel garage
+  const hasGarageDescription = !!selectedVehicle?.description?.trim();
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
@@ -52,12 +60,19 @@ const Events = () => {
     e.preventDefault();
     if (!selectedEvent || !formData.vehicleId) return;
     
+    // Se il veicolo ha una descrizione nel garage, usiamo quella
+    const finalModifications = hasGarageDescription 
+      ? selectedVehicle.description 
+      : formData.modifications;
+
     try {
       await applyToEvent.mutateAsync({
         eventId: selectedEvent.id,
-        ...formData
+        ...formData,
+        modifications: finalModifications
       });
       setSelectedEvent(null);
+      setFormData(prev => ({ ...prev, vehicleId: '', modifications: '' }));
     } catch (error) {}
   };
 
@@ -190,7 +205,7 @@ const Events = () => {
                           <Input required value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-zinc-500 flex items-center gap-2"><Instagram size={12}/> Instagram Handle</Label>
+                          <Label className="text-[10px] font-black uppercase text-zinc-500 flex items-center gap-2"><Instagram size={12}/> Instagram</Label>
                           <Input required placeholder="@username" value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
                         </div>
                       </div>
@@ -230,18 +245,32 @@ const Events = () => {
                       )}
                     </div>
 
-                    {/* Modifiche */}
-                    <div className="space-y-4">
-                      <h4 className="text-xs font-black uppercase tracking-widest italic text-red-600 border-b border-white/5 pb-2">3. Lista Modifiche</h4>
-                      <Label className="text-[10px] font-black uppercase text-zinc-500">Descrivi le modifiche (Estetiche, Meccaniche, Interni)</Label>
-                      <Textarea 
-                        required
-                        placeholder="Esempio: Cerchi BBS RS, Assetto a ghiera KW V3, Interni Recaro..."
-                        value={formData.modifications}
-                        onChange={e => setFormData({...formData, modifications: e.target.value})}
-                        className="bg-transparent border-zinc-800 rounded-none min-h-[150px] text-sm" 
-                      />
-                    </div>
+                    {/* Modifiche - Mostrato solo se il veicolo NON ha una descrizione nel garage */}
+                    {!hasGarageDescription && formData.vehicleId && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        className="space-y-4"
+                      >
+                        <h4 className="text-xs font-black uppercase tracking-widest italic text-red-600 border-b border-white/5 pb-2">3. Lista Modifiche</h4>
+                        <Label className="text-[10px] font-black uppercase text-zinc-500">Descrivi le modifiche (Estetiche, Meccaniche, Interni)</Label>
+                        <Textarea 
+                          required
+                          placeholder="Esempio: Cerchi BBS RS, Assetto a ghiera KW V3, Interni Recaro..."
+                          value={formData.modifications}
+                          onChange={e => setFormData({...formData, modifications: e.target.value})}
+                          className="bg-transparent border-zinc-800 rounded-none min-h-[150px] text-sm" 
+                        />
+                      </motion.div>
+                    )}
+
+                    {hasGarageDescription && (
+                      <div className="p-4 bg-zinc-900/30 border border-white/5">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500 italic">
+                          Verrà utilizzata la descrizione del progetto già presente nel tuo Garage.
+                        </p>
+                      </div>
+                    )}
 
                     <div className="pt-6 border-t border-white/5">
                       <Button 
