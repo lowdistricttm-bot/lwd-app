@@ -34,8 +34,8 @@ export const useWcCategories = () => {
       });
       if (!response.ok) throw new Error('Errore caricamento categorie');
       const data = await response.json();
-      // Filtriamo le categorie "Uncategorized" o simili se necessario
-      return data.filter((cat: any) => cat.slug !== 'uncategorized');
+      // Filtriamo per mostrare solo le categorie principali (parent === 0)
+      return data.filter((cat: any) => cat.slug !== 'uncategorized' && cat.parent === 0);
     }
   });
 };
