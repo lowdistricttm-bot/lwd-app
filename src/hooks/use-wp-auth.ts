@@ -26,14 +26,18 @@ export const useWpAuth = () => {
         throw new Error(data.message || "Credenziali non valide sul sito ufficiale");
       }
 
-      // Salviamo il token JWT di WordPress per le chiamate BuddyPress/WooCommerce future
-      if (data.jwt) {
-        localStorage.setItem('wp-jwt', data.jwt);
+      // Recupero flessibile del token (può essere in data.jwt o direttamente in jwt)
+      const token = data.jwt || (data.data && data.data.jwt);
+      
+      if (token) {
+        console.log("[Auth] Token WordPress ricevuto e salvato.");
+        localStorage.setItem('wp-jwt', token);
+      } else {
+        console.warn("[Auth] Nessun token JWT ricevuto da WordPress.");
       }
 
-      const userEmail = data.user_email || (username.includes('@') ? username : `${username}@lowdistrict.it`);
-      console.log("[Auth] WordPress OK. Email:", userEmail);
-
+      const userEmail = data.user_email || (data.data && data.data.user_email) || (username.includes('@') ? username : `${username}@lowdistrict.it`);
+      
       // Tentativo di Login su Supabase
       let { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: userEmail,
