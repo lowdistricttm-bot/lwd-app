@@ -61,7 +61,7 @@ export const useCreateStory = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async ({ userId, imageUrl }: { userId: string, imageUrl: string }) => {
+    mutationFn: async ({ userId, imageUrl }: { userId: number, imageUrl: string }) => {
       const { data, error } = await supabase
         .from('stories')
         .insert([{ user_id: userId, image_url: imageUrl }])

@@ -40,7 +40,7 @@ const Stories = () => {
         .getPublicUrl(fileName);
 
       await createStory.mutateAsync({ 
-        userId: String(user.id), 
+        userId: Number(user.id), 
         imageUrl: publicUrl 
       });
       
@@ -104,7 +104,7 @@ const Stories = () => {
               </div>
             </div>
             <span className="text-[10px] text-white font-black uppercase truncate w-16 text-center">
-              User_{story.user_id.slice(0, 5)}
+              User_{String(story.user_id).slice(0, 5)}
             </span>
           </button>
         ))}
@@ -115,7 +115,7 @@ const Stories = () => {
           <StoryViewer 
             stories={stories.map((s: any) => ({ 
               id: s.id, 
-              name: `User_${s.user_id.slice(0, 5)}`, 
+              name: `User_${String(s.user_id).slice(0, 5)}`, 
               img: s.image_url,
               views: s.views?.[0]?.count || 0
             }))} 
