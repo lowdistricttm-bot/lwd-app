@@ -8,18 +8,20 @@ export interface Event {
   id: string;
   title: string;
   description: string;
+  image_url?: string;
   date: string;
   location: string;
   status: string;
   created_at: string;
 }
 
-// Dati ufficiali Low District Season 4 presi dall'evento ufficiale
+// Dati ufficiali Low District Season 4 con locandina
 const MOCK_EVENTS: Event[] = [
   {
     id: "season-4-2026",
     title: "LOW DISTRICT - SEASON 4",
-    description: "Il capitolo più grande della nostra storia. Il 27 e 28 Giugno 2026, la cultura stance approda ad Atripalda (AV) per un weekend senza precedenti. Due giorni dedicati ai migliori progetti automobilistici, musica, lifestyle e community. Le selezioni ufficiali sono aperte: carica il tuo progetto nel garage dell'app e invia la tua candidatura per provare ad aggiudicarti un posto nell'area espositiva principale.",
+    description: "Il capitolo più grande della nostra storia. Il 27 e 28 Giugno 2026, la cultura stance approda ad Atripalda (AV) per un weekend senza precedenti.",
+    image_url: "https://www.lowdistrict.it/wp-content/uploads/DSC01359-1-scaled-e1751832356345.jpg",
     date: "2026-06-27T09:00:00Z",
     location: "Atripalda (AV), Italia",
     status: "open",
@@ -43,7 +45,6 @@ export const useEvents = () => {
         return MOCK_EVENTS;
       }
       
-      // Se il database è vuoto, mostriamo l'evento ufficiale
       return data && data.length > 0 ? data : MOCK_EVENTS;
     }
   });

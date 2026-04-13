@@ -8,7 +8,7 @@ import Footer from '@/components/Footer';
 import { useEvents, Event } from '@/hooks/use-events';
 import { useGarage } from '@/hooks/use-garage';
 import { Button } from '@/components/ui/button';
-import { Car, Loader2, Calendar, MapPin, ChevronRight, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Car, Loader2, Calendar, MapPin, ChevronRight, CheckCircle2, AlertCircle, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
@@ -148,14 +148,24 @@ const Events = () => {
                       <h3 className="text-3xl font-black italic uppercase tracking-tighter">{selectedEvent.title}</h3>
                     </div>
                     <button onClick={() => setSelectedEvent(null)} className="p-2 text-zinc-500 hover:text-white">
-                      <AlertCircle size={24} />
+                      <X size={24} />
                     </button>
                   </div>
 
                   <div className="space-y-8">
+                    {/* Locandina Evento */}
+                    {selectedEvent.image_url && (
+                      <div className="aspect-[4/5] md:aspect-video bg-zinc-900 border border-white/5 overflow-hidden">
+                        <img 
+                          src={selectedEvent.image_url} 
+                          alt="Locandina Evento" 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+
                     <div className="bg-zinc-900/50 p-6 border border-white/5">
-                      <p className="text-zinc-400 text-sm leading-relaxed italic mb-4">{selectedEvent.description}</p>
-                      <div className="flex gap-6">
+                      <div className="flex flex-wrap gap-6">
                         <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
                           Data: <span className="text-white">{new Date(selectedEvent.date).toLocaleDateString()}</span>
                         </div>
@@ -206,7 +216,7 @@ const Events = () => {
                       <Button 
                         onClick={handleApply}
                         disabled={!selectedVehicleId || applyToEvent.isPending}
-                        className="w-full bg-red-600 hover:bg-white hover:text-black text-white py-8 text-sm font-black uppercase tracking-widest rounded-none italic"
+                        className="w-full bg-red-600 hover:bg-white hover:text-black text-white py-8 text-sm font-black uppercase italic tracking-widest rounded-none italic"
                       >
                         {applyToEvent.isPending ? <Loader2 className="animate-spin" /> : 'Invia Candidatura Ufficiale'}
                       </Button>
