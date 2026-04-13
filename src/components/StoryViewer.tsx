@@ -30,7 +30,8 @@ interface StoryViewerProps {
 
 const STORY_DURATION = 5000;
 
-const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
+const StoryViewer = ({ stories: initialStories, initialIndex, onClose }: StoryViewerProps) => {
+  const [stories, setStories] = useState(initialStories);
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [progress, setProgress] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -55,15 +56,26 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
   }, [currentIndex]);
 
   const handleDelete = async () => {
+    if (isDeleting) return;
     setIsDeleting(true);
+    const storyIdToDelete = stories[currentIndex].id;
+
     try {
-      await deleteStory.mutateAsync(stories[currentIndex].id);
+      await deleteStory.mutateAsync(storyIdToDelete);
       showSuccess("Storia eliminata");
       
-      if (stories.length === 1) {
+      // Rimuoviamo localmente per feedback immediato
+      const newStories = stories.filter(s => s.id !== storyIdToDelete);
+      
+      if (newStories.length === 0) {
         onClose();
       } else {
-        handleNext();
+        setStories(newStories);
+        // Se eravamo all'ultima storia, torniamo indietro di uno, altrimenti restiamo allo stesso indice (che ora punta alla successiva)
+        if (currentIndex >= newStories.length) {
+          setCurrentIndex(newStories.length - 1);
+        }
+        setProgress(0);
       }
     } catch (err) {
       showError("Errore durante l'eliminazione");
@@ -98,7 +110,8 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
     if (progress >= 100) handleNext();
   }, [progress, handleNext]);
 
-  // Verifica se l'utente loggato è il proprietario della storia corrente
+  if (!stories[currentIndex]) return null;
+
   const isOwner = user && String(user.id) === String(stories[currentIndex].userId);
 
   return createPortal(
@@ -136,7 +149,6 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
           </div>
           
           <div className="flex items-center gap-1">
-            {/* Menu Opzioni (Tre puntini) - Visibile solo al proprietario */}
             {isOwner && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

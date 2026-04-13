@@ -20,15 +20,35 @@ const Stories = () => {
   const [isUploading, setIsUploading] = React.useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Separiamo la mia storia da quelle degli altri
-  const { myStory, otherStories } = useMemo(() => {
-    if (!stories || !user) return { myStory: null, otherStories: stories || [] };
+  // Raggruppiamo le storie per utente per i cerchi, ma teniamo la lista piatta per il viewer
+  const { userCircles, flatStories } = useMemo(() => {
+    if (!stories) return { userCircles: [], flatStories: [] };
     
-    const currentUserId = Number(user.id);
-    const mine = stories.find((s: any) => Number(s.user_id) === currentUserId);
-    const others = stories.filter((s: any) => Number(s.user_id) !== currentUserId);
-    
-    return { myStory: mine, otherStories: others };
+    const circles: any[] = [];
+    const seenUsers = new Set();
+    const currentUserId = user ? Number(user.id) : null;
+
+    // Ordiniamo: prima l'utente corrente, poi gli altri
+    const sortedStories = [...stories].sort((a, b) => {
+      if (Number(a.user_id) === currentUserId) return -1;
+      if (Number(b.user_id) === currentUserId) return 1;
+      return 0;
+    });
+
+    sortedStories.forEach(story => {
+      if (!seenUsers.has(story.user_id)) {
+        seenUsers.add(story.user_id);
+        circles.push({
+          id: story.id,
+          userId: story.user_id,
+          userName: story.user_name,
+          imageUrl: story.image_url,
+          isMe: Number(story.user_id) === currentUserId
+        });
+      }
+    });
+
+    return { userCircles: circles, flatStories: sortedStories };
   }, [stories, user]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,27 +86,28 @@ const Stories = () => {
   };
 
   const openViewer = (storyId: string) => {
-    if (!stories) return;
-    const index = stories.findIndex((s: any) => s.id === storyId);
+    const index = flatStories.findIndex((s: any) => s.id === storyId);
     setSelectedStoryIndex(index);
     setShowViewer(true);
   };
 
   if (isLoading) return <div className="h-24 flex items-center px-6"><Loader2 className="animate-spin text-red-600" /></div>;
 
+  const hasMyStories = userCircles.some(c => c.isMe);
+
   return (
     <div className="relative z-10">
       <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
       
       <div className="flex gap-4 overflow-x-auto pt-4 pb-6 px-6 no-scrollbar bg-black">
-        {/* SLOT UTENTE (Sempre il primo) */}
+        {/* SLOT UTENTE (Sempre presente) */}
         <div className="flex flex-col items-center gap-2 shrink-0">
           <div className="relative">
             <button 
-              onClick={() => myStory ? openViewer(myStory.id) : fileInputRef.current?.click()}
+              onClick={() => hasMyStories ? openViewer(userCircles.find(c => c.isMe).id) : fileInputRef.current?.click()}
               className={cn(
                 "w-[72px] h-[72px] rounded-full p-[3px] transition-all",
-                myStory 
+                hasMyStories 
                   ? "bg-gradient-to-tr from-yellow-400 via-red-600 to-purple-600" 
                   : "bg-zinc-900 border border-white/10"
               )}
@@ -100,47 +121,45 @@ const Stories = () => {
               </div>
             </button>
             
-            {/* Il tasto + è un overlay sul cerchio dell'utente */}
-            {!myStory && (
-              <button 
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-                className="absolute bottom-0 right-0 bg-blue-500 rounded-full p-1 border-2 border-black hover:scale-110 transition-transform z-20"
-              >
-                {isUploading ? (
-                  <Loader2 className="animate-spin text-white" size={12} />
-                ) : (
-                  <Plus size={12} className="text-white" />
-                )}
-              </button>
-            )}
+            {/* Tasto + sempre visibile per aggiungere altre storie */}
+            <button 
+              onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+              disabled={isUploading}
+              className="absolute bottom-0 right-0 bg-blue-500 rounded-full p-1 border-2 border-black hover:scale-110 transition-transform z-20"
+            >
+              {isUploading ? (
+                <Loader2 className="animate-spin text-white" size={12} />
+              ) : (
+                <Plus size={12} className="text-white" />
+              )}
+            </button>
           </div>
           <span className="text-[10px] font-black uppercase text-white/40">La tua storia</span>
         </div>
 
         {/* ALTRE STORIE (Solo altri utenti) */}
-        {otherStories.map((story: any) => (
+        {userCircles.filter(c => !c.isMe).map((circle: any) => (
           <button 
-            key={story.id} 
-            onClick={() => openViewer(story.id)}
+            key={circle.id} 
+            onClick={() => openViewer(circle.id)}
             className="flex flex-col items-center gap-2 shrink-0"
           >
             <div className="w-[72px] h-[72px] rounded-full p-[3px] bg-gradient-to-tr from-yellow-400 via-red-600 to-purple-600">
               <div className="w-full h-full rounded-full border-2 border-black overflow-hidden bg-zinc-900">
-                <img src={story.image_url} className="w-full h-full object-cover" alt="" />
+                <img src={circle.imageUrl} className="w-full h-full object-cover" alt="" />
               </div>
             </div>
             <span className="text-[10px] text-white font-black uppercase truncate w-16 text-center">
-              {story.user_name || 'Membro'}
+              {circle.userName || 'Membro'}
             </span>
           </button>
         ))}
       </div>
 
       <AnimatePresence>
-        {showViewer && stories && (
+        {showViewer && flatStories.length > 0 && (
           <StoryViewer 
-            stories={stories.map((s: any) => ({ 
+            stories={flatStories.map((s: any) => ({ 
               id: s.id, 
               userId: String(s.user_id),
               name: s.user_name || 'Membro', 
