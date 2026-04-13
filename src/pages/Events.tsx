@@ -125,7 +125,6 @@ const Events = () => {
           </div>
         )}
 
-        {/* Modal Candidatura */}
         <AnimatePresence>
           {selectedEvent && (
             <>
