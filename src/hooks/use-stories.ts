@@ -79,3 +79,22 @@ export const useCreateStory = () => {
     }
   });
 };
+
+export const useDeleteStory = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (storyId: string) => {
+      const { error } = await supabase
+        .from('stories')
+        .delete()
+        .eq('id', storyId);
+      
+      if (error) throw error;
+      return true;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['supabase-stories'] });
+    }
+  });
+};

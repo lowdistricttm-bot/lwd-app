@@ -143,6 +143,7 @@ const Stories = () => {
           <StoryViewer 
             stories={stories.map((s: any) => ({ 
               id: s.id, 
+              userId: String(s.user_id),
               name: s.user_name || 'Membro', 
               img: s.image_url,
               views: s.views?.[0]?.count || 0

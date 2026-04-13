@@ -3,12 +3,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Eye, Send } from 'lucide-react';
+import { X, Eye, Send, Trash2, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
-import { useViewStory } from '@/hooks/use-stories';
+import { useViewStory, useDeleteStory } from '@/hooks/use-stories';
+import { showSuccess, showError } from '@/utils/toast';
 
 interface Story {
   id: string;
+  userId: string;
   name: string;
   img: string;
   views: number;
@@ -25,8 +27,10 @@ const STORY_DURATION = 5000;
 const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [progress, setProgress] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { user } = useAuth();
   const viewStory = useViewStory();
+  const deleteStory = useDeleteStory();
 
   const handleNext = useCallback(() => {
     if (currentIndex < stories.length - 1) {
@@ -44,6 +48,27 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
     }
   }, [currentIndex]);
 
+  const handleDelete = async () => {
+    if (!window.confirm("Vuoi davvero eliminare questa storia?")) return;
+    
+    setIsDeleting(true);
+    try {
+      await deleteStory.mutateAsync(stories[currentIndex].id);
+      showSuccess("Storia eliminata");
+      
+      // Se è l'ultima storia, chiudi, altrimenti vai alla prossima
+      if (stories.length === 1) {
+        onClose();
+      } else {
+        handleNext();
+      }
+    } catch (err) {
+      showError("Errore durante l'eliminazione");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   // Traccia visualizzazione
   useEffect(() => {
     if (user && stories[currentIndex]) {
@@ -55,6 +80,7 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
   }, [currentIndex, user, stories]);
 
   useEffect(() => {
+    if (isDeleting) return;
     const interval = 50;
     const increment = (interval / STORY_DURATION) * 100;
     const timer = setInterval(() => {
@@ -64,11 +90,13 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
       });
     }, interval);
     return () => clearInterval(timer);
-  }, [currentIndex]);
+  }, [currentIndex, isDeleting]);
 
   useEffect(() => {
     if (progress >= 100) handleNext();
   }, [progress, handleNext]);
+
+  const isOwner = user && String(user.id) === String(stories[currentIndex].userId);
 
   return createPortal(
     <motion.div 
@@ -103,7 +131,18 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
               </div>
             </div>
           </div>
-          <button onClick={onClose} className="text-white/80 hover:text-white"><X size={28} /></button>
+          <div className="flex items-center gap-4">
+            {isOwner && (
+              <button 
+                onClick={handleDelete} 
+                disabled={isDeleting}
+                className="text-white/60 hover:text-red-600 transition-colors"
+              >
+                {isDeleting ? <Loader2 className="animate-spin" size={20} /> : <Trash2 size={20} />}
+              </button>
+            )}
+            <button onClick={onClose} className="text-white/80 hover:text-white"><X size={28} /></button>
+          </div>
         </div>
 
         {/* Story Image */}
