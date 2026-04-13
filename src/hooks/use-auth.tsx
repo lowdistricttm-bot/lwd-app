@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { showSuccess, showError } from '@/utils/toast';
 
 interface User {
@@ -59,32 +59,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       const resData = await response.json();
       if (!response.ok || !resData.success) {
-        throw new Error(resData.message || 'Credenziali non valide');
+        throw new Error(resData.message || 'CREDENZIALI NON VALIDE');
       }
 
-      // Estrazione Token
       const jwtToken = resData.data?.jwt || resData.jwt;
       
       if (!jwtToken) {
-        throw new Error("Token non ricevuto dal server.");
+        throw new Error("TOKEN NON RICEVUTO DAL SERVER");
       }
 
-      // Decodifica manuale del JWT per estrarre i dati utente
-      // Il JWT è composto da header.payload.signature
       const payloadBase64 = jwtToken.split('.')[1];
       const decodedPayload = JSON.parse(atob(payloadBase64));
       
-      console.log("[Auth] Decoded JWT Payload:", decodedPayload);
-
-      // Estrazione dati dal payload del token
       const userId = parseInt(decodedPayload.id);
       const userEmail = decodedPayload.email || '';
       const userLogin = decodedPayload.username || username;
-
-      if (isNaN(userId)) {
-        console.error("[Auth] Struttura risposta non riconosciuta:", resData);
-        throw new Error("ID utente non trovato nel token.");
-      }
 
       const userData: User = {
         id: userId,
@@ -92,7 +81,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         email: userEmail,
         nicename: userLogin,
         display_name: userLogin,
-        avatar: defaultAvatar // L'avatar verrà caricato al primo refresh o dal profilo
+        avatar: defaultAvatar
       };
 
       setToken(jwtToken);
@@ -100,10 +89,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.setItem('ld_auth_token', jwtToken);
       localStorage.setItem('ld_user_data', JSON.stringify(userData));
       
-      showSuccess(`Bentornato ${userData.display_name}`);
+      showSuccess(`BENTORNATO ${userData.display_name.toUpperCase()}`);
       
     } catch (error: any) {
-      showError(error.message);
+      showError(error.message.toUpperCase());
       throw error;
     } finally {
       setIsLoading(false);
@@ -115,13 +104,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(null);
     localStorage.removeItem('ld_auth_token');
     localStorage.removeItem('ld_user_data');
-    showSuccess("Sessione chiusa");
+    showSuccess("SESSIONE CHIUSA CON SUCCESSO");
   };
 
   const refreshUser = async () => {
     setIsRefreshing(true);
-    // Simulazione refresh
-    setTimeout(() => setIsRefreshing(false), 500);
+    setTimeout(() => {
+      setIsRefreshing(false);
+      showSuccess("PROFILO AGGIORNATO");
+    }, 800);
   };
 
   return (

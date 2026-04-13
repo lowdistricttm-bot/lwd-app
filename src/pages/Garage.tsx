@@ -11,7 +11,7 @@ import { showSuccess } from '@/utils/toast';
 
 const Garage = () => {
   const [myVehicles, setMyVehicles] = useState([
-    { id: 1, brand: "BMW", model: "M3 E46", year: "2003", suspension: "static", active: true, image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&q=80&w=800" }
+    { id: 1, brand: "BMW", model: "M3 E46", year: "2003", suspension: "STATIC", active: true, image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&q=80&w=800" }
   ]);
 
   const addVehicle = (vehicle: any) => {
@@ -20,11 +20,12 @@ const Garage = () => {
 
   const setActive = (id: number) => {
     setMyVehicles(myVehicles.map(v => ({ ...v, active: v.id === id })));
-    showSuccess("Veicolo principale aggiornato!");
+    showSuccess("VEICOLO PRINCIPALE AGGIORNATO!");
   };
 
   const deleteVehicle = (id: number) => {
     setMyVehicles(myVehicles.filter(v => v.id !== id));
+    showSuccess("VEICOLO RIMOSSO DAL GARAGE");
   };
 
   return (
@@ -33,8 +34,8 @@ const Garage = () => {
       <div className="pt-24 px-6 max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-12">
           <div>
-            <h1 className="text-4xl font-black tracking-tighter uppercase">Il Mio Garage</h1>
-            <p className="text-gray-500 text-sm uppercase tracking-widest font-bold mt-1">Gestisci i tuoi progetti</p>
+            <h1 className="text-4xl font-black tracking-tighter uppercase italic">IL MIO GARAGE</h1>
+            <p className="text-gray-500 text-[10px] uppercase tracking-widest font-black mt-1">GESTISCI I TUOI PROGETTI</p>
           </div>
           <AddVehicleDialog onAdd={addVehicle} />
         </div>
@@ -43,7 +44,7 @@ const Garage = () => {
           {myVehicles.length === 0 ? (
             <div className="py-20 text-center border-2 border-dashed border-white/5 rounded-3xl">
               <Car className="mx-auto text-gray-700 mb-4" size={48} />
-              <p className="text-gray-500 font-bold uppercase tracking-widest">Il tuo garage è vuoto</p>
+              <p className="text-gray-500 font-black uppercase tracking-widest">IL TUO GARAGE È VUOTO</p>
             </div>
           ) : (
             myVehicles.map((v) => (
@@ -65,12 +66,12 @@ const Garage = () => {
                           <span className="text-xs font-black uppercase tracking-widest text-red-600">{v.suspension}</span>
                           <span className="text-xs font-bold text-gray-500">{v.year}</span>
                         </div>
-                        <h3 className="text-2xl font-black tracking-tighter uppercase">{v.brand} {v.model}</h3>
+                        <h3 className="text-2xl font-black tracking-tighter uppercase italic">{v.brand} {v.model}</h3>
                       </div>
                       {v.active && (
                         <div className="flex items-center gap-1 bg-red-600/10 text-red-600 px-3 py-1 rounded-full">
                           <CheckCircle2 size={14} />
-                          <span className="text-[10px] font-black uppercase tracking-widest">Attivo</span>
+                          <span className="text-[10px] font-black uppercase tracking-widest">ATTIVO</span>
                         </div>
                       )}
                     </div>
@@ -79,9 +80,9 @@ const Garage = () => {
                       {!v.active && (
                         <button 
                           onClick={() => setActive(v.id)}
-                          className="text-xs font-black uppercase tracking-widest border border-white/10 px-4 py-2 hover:bg-white hover:text-black transition-colors"
+                          className="text-[10px] font-black uppercase tracking-widest border border-white/10 px-4 py-2 hover:bg-white hover:text-black transition-colors italic"
                         >
-                          Imposta come principale
+                          IMPOSTA COME PRINCIPALE
                         </button>
                       )}
                       <button 
@@ -96,25 +97,6 @@ const Garage = () => {
               </div>
             ))
           )}
-        </div>
-
-        {/* Community Section Link */}
-        <div className="mt-20 pt-10 border-t border-white/5">
-          <h2 className="text-xl font-black tracking-tighter uppercase mb-6">Esplora la Community</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="aspect-video bg-zinc-900 overflow-hidden relative group cursor-pointer">
-              <img src="https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&q=80&w=600" className="w-full h-full object-cover opacity-50 group-hover:scale-110 transition-transform duration-700" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-xs font-black uppercase tracking-widest">Top Rated</span>
-              </div>
-            </div>
-            <div className="aspect-video bg-zinc-900 overflow-hidden relative group cursor-pointer">
-              <img src="https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&q=80&w=600" className="w-full h-full object-cover opacity-50 group-hover:scale-110 transition-transform duration-700" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-xs font-black uppercase tracking-widest">New Entries</span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
       <Footer />
