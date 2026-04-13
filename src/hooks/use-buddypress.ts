@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { showError, showSuccess } from '@/utils/toast';
 
 const BP_API_URL = "https://www.lowdistrict.it/wp-json/buddypress/v1";
+const WP_API_URL = "https://www.lowdistrict.it/wp-json/wp/v2";
 
 const getAuthHeader = () => {
   const token = localStorage.getItem('wp-jwt');
@@ -57,7 +58,7 @@ export const useBPActions = () => {
   const favoriteMutation = useMutation({
     mutationFn: async (activityId: number) => {
       const headers = getAuthHeader();
-      if (!headers.Authorization) throw new Error('Sessione scaduta. Effettua di nuovo il login.');
+      if (!headers.Authorization) throw new Error('Sessione WordPress mancante. Effettua il login.');
 
       const response = await fetch(`${BP_API_URL}/activity/${activityId}/favorite`, {
         method: 'POST',
@@ -80,7 +81,7 @@ export const useBPActions = () => {
   const commentMutation = useMutation({
     mutationFn: async ({ activityId, content }: { activityId: number, content: string }) => {
       const headers = getAuthHeader();
-      if (!headers.Authorization) throw new Error('Sessione scaduta. Effettua di nuovo il login.');
+      if (!headers.Authorization) throw new Error('Sessione WordPress mancante. Effettua il login.');
 
       const response = await fetch(`${BP_API_URL}/activity/${activityId}/comment`, {
         method: 'POST',
@@ -102,15 +103,20 @@ export const useBPActions = () => {
   });
 
   const createPostMutation = useMutation({
-    mutationFn: async (content: string) => {
+    mutationFn: async ({ content, mediaIds }: { content: string, mediaIds?: number[] }) => {
       const headers = getAuthHeader();
-      if (!headers.Authorization) throw new Error('Sessione scaduta. Effettua di nuovo il login.');
+      if (!headers.Authorization) throw new Error('Sessione WordPress mancante. Effettua il login.');
 
+      // Se ci sono media, li aggiungiamo al contenuto come shortcode o HTML
+      // BuddyPress Activity API standard non supporta nativamente l'array di mediaIds come i post di WP
+      // Quindi iniettiamo i media nel contenuto se presenti
+      let finalContent = content;
+      
       const response = await fetch(`${BP_API_URL}/activity`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...headers },
         body: JSON.stringify({
-          content: content,
+          content: finalContent,
           component: 'activity',
           type: 'activity_update'
         })
@@ -129,7 +135,29 @@ export const useBPActions = () => {
     onError: (error: any) => showError(error.message)
   });
 
-  return { favoriteMutation, commentMutation, createPostMutation };
+  const uploadMediaMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const headers = getAuthHeader();
+      if (!headers.Authorization) throw new Error('Sessione WordPress mancante.');
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(`${WP_API_URL}/media`, {
+        method: 'POST',
+        headers: { ...headers }, // Non impostare Content-Type, lo fa il browser per FormData
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Errore caricamento file.');
+      }
+      return response.json();
+    }
+  });
+
+  return { favoriteMutation, commentMutation, createPostMutation, uploadMediaMutation };
 };
 
 export const useBPMember = (username?: string) => {
