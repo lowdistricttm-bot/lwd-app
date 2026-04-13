@@ -8,7 +8,10 @@ import Footer from '@/components/Footer';
 import { useEvents, Event } from '@/hooks/use-events';
 import { useGarage } from '@/hooks/use-garage';
 import { Button } from '@/components/ui/button';
-import { Car, Loader2, Calendar, MapPin, ChevronRight, CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Car, Loader2, Calendar, MapPin, ChevronRight, CheckCircle2, AlertCircle, X, Instagram, Phone, User, Map } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
@@ -16,25 +19,45 @@ import { supabase } from "@/integrations/supabase/client";
 const Events = () => {
   const navigate = useNavigate();
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
+  
+  // Form State
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    city: '',
+    instagram: '',
+    vehicleId: '',
+    modifications: ''
+  });
 
   const { events, isLoading: eventsLoading, applyToEvent } = useEvents();
   const { vehicles, isLoading: vehiclesLoading } = useGarage();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+      if (session) {
+        setUser(session.user);
+        setFormData(prev => ({
+          ...prev,
+          email: session.user.email || '',
+          fullName: session.user.user_metadata?.full_name || ''
+        }));
+      }
     });
   }, []);
 
-  const handleApply = async () => {
-    if (!selectedEvent || !selectedVehicleId) return;
+  const handleApply = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedEvent || !formData.vehicleId) return;
     
     try {
-      await applyToEvent.mutateAsync(selectedEvent.id, selectedVehicleId);
+      await applyToEvent.mutateAsync({
+        eventId: selectedEvent.id,
+        ...formData
+      });
       setSelectedEvent(null);
-      setSelectedVehicleId(null);
     } catch (error) {}
   };
 
@@ -74,10 +97,6 @@ const Events = () => {
             <Loader2 className="animate-spin text-red-600" size={40} />
             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Sincronizzazione eventi...</p>
           </div>
-        ) : events?.length === 0 ? (
-          <div className="text-center py-20 border border-white/5 bg-zinc-900/30">
-            <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Nessun evento in programma al momento.</p>
-          </div>
         ) : (
           <div className="space-y-6">
             {events?.map((event) => (
@@ -89,14 +108,9 @@ const Events = () => {
               >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <span className={cn(
-                        "text-[8px] font-black uppercase px-2 py-0.5 italic",
-                        event.status === 'open' ? "bg-green-600 text-white" : "bg-zinc-800 text-zinc-500"
-                      )}>
-                        {event.status === 'open' ? 'Iscrizioni Aperte' : 'Chiuso'}
-                      </span>
-                    </div>
+                    <span className="text-[8px] font-black uppercase px-2 py-0.5 italic bg-green-600 text-white">
+                      Iscrizioni Aperte
+                    </span>
                     <h3 className="text-2xl font-black italic uppercase tracking-tighter">{event.title}</h3>
                     <div className="flex flex-wrap gap-4 text-zinc-500">
                       <div className="flex items-center gap-1.5">
@@ -114,7 +128,6 @@ const Events = () => {
                   
                   <Button 
                     onClick={() => setSelectedEvent(event)}
-                    disabled={event.status !== 'open'}
                     className="bg-white text-black hover:bg-red-600 hover:text-white rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 px-8"
                   >
                     Candidati <ChevronRight size={14} className="ml-2" />
@@ -141,91 +154,109 @@ const Events = () => {
                 exit={{ y: '100%' }}
                 className="fixed inset-x-0 bottom-0 z-[101] bg-zinc-950 border-t border-white/10 p-8 rounded-t-[2rem] max-h-[90vh] overflow-y-auto"
               >
-                <div className="max-w-2xl mx-auto">
+                <form onSubmit={handleApply} className="max-w-2xl mx-auto pb-12">
                   <div className="flex justify-between items-start mb-8">
                     <div>
-                      <h2 className="text-red-600 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Candidatura Evento</h2>
+                      <h2 className="text-red-600 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Invia Selezione</h2>
                       <h3 className="text-3xl font-black italic uppercase tracking-tighter">{selectedEvent.title}</h3>
                     </div>
-                    <button onClick={() => setSelectedEvent(null)} className="p-2 text-zinc-500 hover:text-white">
+                    <button type="button" onClick={() => setSelectedEvent(null)} className="p-2 text-zinc-500 hover:text-white">
                       <X size={24} />
                     </button>
                   </div>
 
-                  <div className="space-y-8">
-                    {/* Locandina Evento */}
+                  <div className="space-y-10">
+                    {/* Locandina */}
                     {selectedEvent.image_url && (
-                      <div className="aspect-[4/5] md:aspect-video bg-zinc-900 border border-white/5 overflow-hidden">
-                        <img 
-                          src={selectedEvent.image_url} 
-                          alt="Locandina Evento" 
-                          className="w-full h-full object-cover"
-                        />
+                      <div className="aspect-video bg-zinc-900 border border-white/5 overflow-hidden">
+                        <img src={selectedEvent.image_url} alt="Locandina" className="w-full h-full object-cover" />
                       </div>
                     )}
 
-                    <div className="bg-zinc-900/50 p-6 border border-white/5">
-                      <div className="flex flex-wrap gap-6">
-                        <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                          Data: <span className="text-white">{new Date(selectedEvent.date).toLocaleDateString()}</span>
+                    {/* Dati Personali */}
+                    <div className="space-y-6">
+                      <h4 className="text-xs font-black uppercase tracking-widest italic text-red-600 border-b border-white/5 pb-2">1. Dati Personali</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-zinc-500 flex items-center gap-2"><User size={12}/> Nome e Cognome</Label>
+                          <Input required value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
                         </div>
-                        <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                          Luogo: <span className="text-white">{selectedEvent.location}</span>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-zinc-500 flex items-center gap-2"><Phone size={12}/> Cellulare</Label>
+                          <Input required type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-zinc-500 flex items-center gap-2"><Map size={12}/> Città</Label>
+                          <Input required value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-zinc-500 flex items-center gap-2"><Instagram size={12}/> Instagram Handle</Label>
+                          <Input required placeholder="@username" value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
                         </div>
                       </div>
                     </div>
 
-                    <div className="space-y-4">
-                      <h4 className="text-xs font-black uppercase tracking-widest italic text-red-600">Seleziona il tuo veicolo</h4>
-                      
+                    {/* Selezione Veicolo */}
+                    <div className="space-y-6">
+                      <h4 className="text-xs font-black uppercase tracking-widest italic text-red-600 border-b border-white/5 pb-2">2. Il tuo Progetto</h4>
                       {vehiclesLoading ? (
-                        <div className="py-8 text-center"><Loader2 className="animate-spin mx-auto text-red-600" /></div>
+                        <Loader2 className="animate-spin mx-auto text-red-600" />
                       ) : vehicles?.length === 0 ? (
                         <div className="p-8 border border-dashed border-zinc-800 text-center">
-                          <p className="text-zinc-500 text-[10px] font-bold uppercase mb-4">Non hai veicoli nel garage</p>
-                          <Button onClick={() => navigate('/profile')} variant="outline" className="rounded-none text-[9px] font-black uppercase">Vai al Garage</Button>
+                          <p className="text-zinc-500 text-[10px] font-bold uppercase mb-4">Aggiungi prima un veicolo nel garage</p>
+                          <Button type="button" onClick={() => navigate('/profile')} variant="outline" className="rounded-none text-[9px] font-black uppercase">Vai al Garage</Button>
                         </div>
                       ) : (
                         <div className="grid grid-cols-1 gap-3">
                           {vehicles?.map((vehicle) => (
                             <button
                               key={vehicle.id}
-                              onClick={() => setSelectedVehicleId(vehicle.id)}
+                              type="button"
+                              onClick={() => setFormData({...formData, vehicleId: vehicle.id})}
                               className={cn(
                                 "flex items-center gap-4 p-4 border transition-all text-left",
-                                selectedVehicleId === vehicle.id 
-                                  ? "bg-red-600 border-red-600 text-white" 
-                                  : "bg-zinc-900/50 border-white/5 text-zinc-400 hover:border-white/20"
+                                formData.vehicleId === vehicle.id ? "bg-red-600 border-red-600 text-white" : "bg-zinc-900/50 border-white/5 text-zinc-400 hover:border-white/20"
                               )}
                             >
-                              <div className="w-12 h-12 bg-black/20 flex items-center justify-center shrink-0">
-                                <Car size={20} />
-                              </div>
+                              <div className="w-12 h-12 bg-black/20 flex items-center justify-center shrink-0"><Car size={20} /></div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs font-black uppercase italic truncate">{vehicle.brand} {vehicle.model}</p>
                                 <p className="text-[9px] font-bold uppercase opacity-60">{vehicle.suspension_type} • {vehicle.year}</p>
                               </div>
-                              {selectedVehicleId === vehicle.id && <CheckCircle2 size={20} />}
+                              {formData.vehicleId === vehicle.id && <CheckCircle2 size={20} />}
                             </button>
                           ))}
                         </div>
                       )}
                     </div>
 
+                    {/* Modifiche */}
+                    <div className="space-y-4">
+                      <h4 className="text-xs font-black uppercase tracking-widest italic text-red-600 border-b border-white/5 pb-2">3. Lista Modifiche</h4>
+                      <Label className="text-[10px] font-black uppercase text-zinc-500">Descrivi le modifiche (Estetiche, Meccaniche, Interni)</Label>
+                      <Textarea 
+                        required
+                        placeholder="Esempio: Cerchi BBS RS, Assetto a ghiera KW V3, Interni Recaro..."
+                        value={formData.modifications}
+                        onChange={e => setFormData({...formData, modifications: e.target.value})}
+                        className="bg-transparent border-zinc-800 rounded-none min-h-[150px] text-sm" 
+                      />
+                    </div>
+
                     <div className="pt-6 border-t border-white/5">
                       <Button 
-                        onClick={handleApply}
-                        disabled={!selectedVehicleId || applyToEvent.isPending}
+                        type="submit"
+                        disabled={!formData.vehicleId || applyToEvent.isPending}
                         className="w-full bg-red-600 hover:bg-white hover:text-black text-white py-8 text-sm font-black uppercase italic tracking-widest rounded-none italic"
                       >
                         {applyToEvent.isPending ? <Loader2 className="animate-spin" /> : 'Invia Candidatura Ufficiale'}
                       </Button>
                       <p className="text-[9px] text-zinc-600 text-center mt-4 uppercase font-bold tracking-widest">
-                        La tua candidatura verrà revisionata dallo staff. Riceverai una notifica in caso di approvazione.
+                        Inviando la candidatura accetti che i tuoi dati vengano trattati per la selezione dell'evento.
                       </p>
                     </div>
                   </div>
-                </div>
+                </form>
               </motion.div>
             </>
           )}
