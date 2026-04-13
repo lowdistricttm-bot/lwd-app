@@ -38,21 +38,31 @@ h1, h2, h3, h4, h5, h6 {
   background-color: #ef4444;
 }
 
-/* Custom scrollbar */
+/* --- CUSTOM SCROLLBAR LOW DISTRICT --- */
+/* Per Chrome, Safari e Edge */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 4px; /* Molto sottile */
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #000;
+  background: rgba(0, 0, 0, 0.3); /* Quasi invisibile */
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #333;
+  background: #27272a; /* Grigio scuro (zinc-800) */
+  border-radius: 10px;
+  transition: background 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #ef4444;
+  background: #ef4444; /* Diventa rossa al passaggio */
+}
+
+/* Per Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #27272a transparent;
 }
 
 /* Animazioni */
