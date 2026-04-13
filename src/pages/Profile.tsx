@@ -68,19 +68,16 @@ const Profile = () => {
       const fileName = `${user.id}-${Math.random()}.${fileExt}`;
       const filePath = `${fileName}`;
 
-      // 1. Carica su Storage
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
-      // 2. Ottieni URL pubblico
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
 
-      // 3. Aggiorna tabella profili
       const { error: updateError } = await supabase
         .from('profiles')
         .upsert({
@@ -148,7 +145,7 @@ const Profile = () => {
               />
               <div 
                 onClick={() => fileInputRef.current?.click()}
-                className="w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-black rounded-none overflow-hidden shadow-2xl flex items-center justify-center cursor-pointer relative"
+                className="w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-white rounded-full overflow-hidden shadow-2xl flex items-center justify-center cursor-pointer relative"
               >
                 {uploading ? (
                   <Loader2 className="animate-spin text-red-600" />
@@ -158,7 +155,7 @@ const Profile = () => {
                   <User size={40} className="text-zinc-800" />
                 )}
                 
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 rounded-full">
                   <Camera size={24} className="text-white" />
                 </div>
               </div>
