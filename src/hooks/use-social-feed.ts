@@ -28,7 +28,6 @@ export const useSocialFeed = () => {
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
       
-      // 1. Carica i post
       const { data: postsData, error: postsError } = await supabase
         .from('posts')
         .select('*')
@@ -37,14 +36,12 @@ export const useSocialFeed = () => {
       if (postsError) throw postsError;
       if (!postsData) return [];
 
-      // 2. Carica i profili degli autori dei post
       const userIds = [...new Set(postsData.map(p => p.user_id))];
       const { data: profilesData } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, avatar_url')
         .in('id', userIds);
 
-      // 3. Carica i commenti per questi post
       const postIds = postsData.map(p => p.id);
       const { data: commentsData } = await supabase
         .from('comments')
@@ -52,17 +49,14 @@ export const useSocialFeed = () => {
         .in('post_id', postIds)
         .order('created_at', { ascending: true });
 
-      // 4. Arricchisci ogni post con i suoi dati
       const enrichedPosts = await Promise.all(postsData.map(async (post: any) => {
         const profile = profilesData?.find(p => p.id === post.user_id);
         
-        // Conta i like
         const { count: likes_count } = await supabase
           .from('likes')
           .select('*', { count: 'exact', head: true })
           .eq('post_id', post.id);
         
-        // Verifica se l'utente attuale ha messo like
         let is_liked = false;
         if (user) {
           const { data: userLike } = await supabase
@@ -139,13 +133,13 @@ export const useSocialFeed = () => {
   });
 
   const addComment = useMutation({
-    mutationFn: async ({ postId, content }: { postId: string, content: string }) => {
+    mutationFn: async ({ postId, content, parentId }: { postId: string, content: string, parentId?: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Accedi per commentare");
 
       const { error } = await supabase
         .from('comments')
-        .insert([{ post_id: postId, user_id: user.id, content }]);
+        .insert([{ post_id: postId, user_id: user.id, content, parent_id: parentId }]);
 
       if (error) throw error;
     },
