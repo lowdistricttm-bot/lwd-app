@@ -1,19 +1,33 @@
 "use client";
 
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Heart, MessageSquare, Share2, User, MoreHorizontal } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Heart, MessageSquare, User, MoreHorizontal, Send, Loader2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Post, useSocialFeed } from '@/hooks/use-social-feed';
 import { cn } from '@/lib/utils';
+import { Input } from './ui/input';
 
 interface FeedPostProps {
   post: Post;
 }
 
 const FeedPost = ({ post }: FeedPostProps) => {
-  const { toggleLike } = useSocialFeed();
+  const { toggleLike, addComment } = useSocialFeed();
+  const [showComments, setShowComments] = useState(false);
+  const [commentText, setCommentText] = useState('');
+
+  const handleAddComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!commentText.trim()) return;
+    try {
+      await addComment.mutateAsync({ postId: post.id, content: commentText });
+      setCommentText('');
+    } catch (err) {}
+  };
+
+  const isVideo = post.image_url?.match(/\.(mp4|webm|ogg|mov)$/i);
 
   return (
     <motion.div 
@@ -54,14 +68,18 @@ const FeedPost = ({ post }: FeedPostProps) => {
         </p>
       </div>
 
-      {/* Image if exists */}
+      {/* Media */}
       {post.image_url && (
         <div className="aspect-square bg-zinc-950 overflow-hidden">
-          <img 
-            src={post.image_url} 
-            alt="Post content" 
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
-          />
+          {isVideo ? (
+            <video src={post.image_url} className="w-full h-full object-cover" controls />
+          ) : (
+            <img 
+              src={post.image_url} 
+              alt="Post content" 
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+            />
+          )}
         </div>
       )}
 
@@ -78,15 +96,61 @@ const FeedPost = ({ post }: FeedPostProps) => {
           <span className="text-[10px] font-black uppercase">{post.likes_count || 0}</span>
         </button>
         
-        <button className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors">
+        <button 
+          onClick={() => setShowComments(!showComments)}
+          className={cn(
+            "flex items-center gap-2 transition-colors",
+            showComments ? "text-white" : "text-zinc-500 hover:text-white"
+          )}
+        >
           <MessageSquare size={18} />
-          <span className="text-[10px] font-black uppercase">{post.comments_count || 0}</span>
-        </button>
-        
-        <button className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors ml-auto">
-          <Share2 size={18} />
+          <span className="text-[10px] font-black uppercase">{post.comments?.length || 0}</span>
         </button>
       </div>
+
+      {/* Comments Section */}
+      <AnimatePresence>
+        {showComments && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="border-t border-white/5 bg-black/20 overflow-hidden"
+          >
+            <div className="p-4 space-y-4">
+              {post.comments?.map((comment: any) => (
+                <div key={comment.id} className="flex gap-3">
+                  <div className="w-6 h-6 bg-zinc-800 shrink-0 overflow-hidden">
+                    {comment.profiles?.avatar_url && <img src={comment.profiles.avatar_url} className="w-full h-full object-cover" />}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[10px] font-black uppercase italic text-zinc-400">
+                      {comment.profiles ? `${comment.profiles.first_name || ''} ${comment.profiles.last_name || ''}`.trim() : 'Membro'}
+                    </p>
+                    <p className="text-xs text-zinc-300">{comment.content}</p>
+                  </div>
+                </div>
+              ))}
+
+              <form onSubmit={handleAddComment} className="flex gap-2 pt-2">
+                <Input 
+                  placeholder="Scrivi un commento..."
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  className="bg-zinc-900 border-zinc-800 rounded-none h-10 text-xs font-bold uppercase tracking-widest"
+                />
+                <button 
+                  type="submit"
+                  disabled={addComment.isPending}
+                  className="w-10 h-10 bg-red-600 flex items-center justify-center hover:bg-white hover:text-black transition-all shrink-0"
+                >
+                  {addComment.isPending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                </button>
+              </form>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

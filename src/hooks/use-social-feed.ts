@@ -16,6 +16,7 @@ export interface Post {
   };
   likes_count?: number;
   is_liked?: boolean;
+  comments?: any[];
 }
 
 export const useSocialFeed = () => {
@@ -29,11 +30,10 @@ export const useSocialFeed = () => {
       
       const { data: postsData, error: postsError } = await supabase
         .from('posts')
-        .select('*')
+        .select('*, comments(*, profiles(first_name, last_name, avatar_url))')
         .order('created_at', { ascending: false });
 
       if (postsError) throw postsError;
-      if (!postsData) return [];
 
       const userIds = [...new Set(postsData.map(p => p.user_id))];
       const { data: profilesData } = await supabase
@@ -71,55 +71,75 @@ export const useSocialFeed = () => {
             avatar_url: profile?.avatar_url
           },
           likes_count: likes_count || 0,
-          is_liked
+          is_liked,
+          comments: post.comments || []
         };
       }));
 
       return enrichedPosts as Post[];
-    },
-    retry: 1
+    }
   });
 
+  const uploadMedia = async (file: File) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    const { data, error } = await supabase.storage
+      .from('post-media')
+      .upload(filePath, file);
+
+    if (error) throw error;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('post-media')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  };
+
   const createPost = useMutation({
-    mutationFn: async ({ content, image_url }: { content: string, image_url?: string }) => {
+    mutationFn: async ({ content, file }: { content: string, file?: File }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Devi accedere per pubblicare");
 
-      // Creiamo l'oggetto di inserimento base
-      const insertData: any = {
-        user_id: user.id,
-        content,
-        created_at: new Date().toISOString()
-      };
-
-      // Aggiungiamo image_url solo se presente (evita errori se la colonna non esiste e non stiamo caricando foto)
-      if (image_url) {
-        insertData.image_url = image_url;
+      let image_url = undefined;
+      if (file) {
+        image_url = await uploadMedia(file);
       }
 
       const { data, error } = await supabase
         .from('posts')
-        .insert([insertData])
+        .insert([{ user_id: user.id, content, image_url }])
         .select()
         .single();
 
-      if (error) {
-        console.error("[Social] Errore creazione post:", error);
-        throw error;
-      }
+      if (error) throw error;
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['social-posts'] });
-      showSuccess("Post pubblicato nel District!");
+      showSuccess("Post pubblicato!");
     },
-    onError: (error: any) => {
-      if (error.message?.includes("image_url")) {
-        showError("Errore database: colonna immagini mancante. Esegui il comando SQL fornito.");
-      } else {
-        showError(error.message);
-      }
-    }
+    onError: (error: any) => showError(error.message)
+  });
+
+  const addComment = useMutation({
+    mutationFn: async ({ postId, content }: { postId: string, content: string }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Accedi per commentare");
+
+      const { error } = await supabase
+        .from('comments')
+        .insert([{ post_id: postId, user_id: user.id, content }]);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['social-posts'] });
+      showSuccess("Commento aggiunto!");
+    },
+    onError: (error: any) => showError(error.message)
   });
 
   const toggleLike = useMutation({
@@ -142,9 +162,8 @@ export const useSocialFeed = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['social-posts'] });
-    },
-    onError: (error: any) => showError(error.message)
+    }
   });
 
-  return { posts, isLoading, error, createPost, toggleLike };
+  return { posts, isLoading, error, createPost, toggleLike, addComment };
 };

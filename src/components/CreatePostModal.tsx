@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, Loader2, Camera, Film } from 'lucide-react';
+import { X, Send, Loader2, Camera, Film, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { useSocialFeed } from '@/hooks/use-social-feed';
@@ -15,18 +15,34 @@ interface CreatePostModalProps {
 
 const CreatePostModal = ({ isOpen, onClose }: CreatePostModalProps) => {
   const [content, setContent] = useState('');
-  const [isUploading, setIsUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { createPost } = useSocialFeed();
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
+  const removeFile = () => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim()) return;
+    if (!content.trim() && !selectedFile) return;
     
     try {
-      await createPost.mutateAsync({ content });
+      await createPost.mutateAsync({ content, file: selectedFile || undefined });
       setContent('');
+      removeFile();
       onClose();
     } catch (error: any) {
       showError("Errore durante la pubblicazione");
@@ -63,9 +79,26 @@ const CreatePostModal = ({ isOpen, onClose }: CreatePostModalProps) => {
                 placeholder="Cosa succede nel District?"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                className="min-h-[120px] bg-transparent border-none text-lg font-bold uppercase italic tracking-tight p-0 focus-visible:ring-0 placeholder:text-zinc-800 resize-none"
+                className="min-h-[100px] bg-transparent border-none text-lg font-bold uppercase italic tracking-tight p-0 focus-visible:ring-0 placeholder:text-zinc-800 resize-none"
                 autoFocus
               />
+
+              {previewUrl && (
+                <div className="relative aspect-video bg-zinc-900 overflow-hidden border border-white/5">
+                  {selectedFile?.type.startsWith('video') ? (
+                    <video src={previewUrl} className="w-full h-full object-cover" controls />
+                  ) : (
+                    <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                  )}
+                  <button 
+                    type="button"
+                    onClick={removeFile}
+                    className="absolute top-4 right-4 p-2 bg-black/60 text-white hover:bg-red-600 transition-colors"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              )}
 
               <div className="flex items-center justify-between pt-6 border-t border-white/5">
                 <div className="flex gap-4">
@@ -73,7 +106,8 @@ const CreatePostModal = ({ isOpen, onClose }: CreatePostModalProps) => {
                     type="file" 
                     ref={fileInputRef} 
                     className="hidden" 
-                    accept="image/*" 
+                    accept="image/*,video/*" 
+                    onChange={handleFileChange}
                   />
                   <button 
                     type="button" 
@@ -82,17 +116,11 @@ const CreatePostModal = ({ isOpen, onClose }: CreatePostModalProps) => {
                   >
                     <Camera size={20} />
                   </button>
-                  <button 
-                    type="button" 
-                    className="p-3 bg-zinc-900 text-zinc-400 hover:text-red-600 transition-colors"
-                  >
-                    <Film size={20} />
-                  </button>
                 </div>
 
                 <Button 
                   type="submit"
-                  disabled={!content.trim() || createPost.isPending}
+                  disabled={(!content.trim() && !selectedFile) || createPost.isPending}
                   className="bg-red-600 hover:bg-white hover:text-black text-white px-8 py-6 rounded-none font-black uppercase italic tracking-widest transition-all"
                 >
                   {createPost.isPending ? <Loader2 className="animate-spin" /> : (
