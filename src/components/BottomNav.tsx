@@ -12,14 +12,14 @@ const BottomNav = () => {
     { icon: Home, label: 'Home', href: '/' },
     { icon: MessageSquare, label: 'Bacheca', href: '/bacheca' },
     { icon: ShoppingBag, label: 'Shop', href: '#' },
-    { icon: User, label: 'Profilo', href: '#' },
+    { icon: User, label: 'Profilo', href: '/profile' },
   ];
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-t border-white/10 px-6 py-3 md:hidden">
       <div className="flex items-center justify-around max-w-md mx-auto">
         {items.map((item, i) => {
-          const isActive = location.pathname === item.href;
+          const isActive = location.pathname === item.href || (item.href === '/profile' && location.pathname === '/login');
           return (
             <Link 
               key={i} 
