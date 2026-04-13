@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
+import GarageTab from '@/components/GarageTab';
 import { 
   User, 
   Settings, 
@@ -77,6 +78,7 @@ const Profile = () => {
       const fileName = `${user.id}-${Math.random()}.${fileExt}`;
       const filePath = `${fileName}`;
 
+      // Nota: Assicurati che i bucket 'avatars' e 'covers' esistano su Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from(bucket)
         .upload(filePath, file);
@@ -138,7 +140,6 @@ const Profile = () => {
       <main className="flex-1 pb-32">
         {/* Cover Section */}
         <div className="relative h-56 md:h-80 bg-zinc-900">
-          {/* Clickable Cover Area */}
           <div 
             className="absolute inset-0 group/cover cursor-pointer overflow-hidden"
             onClick={() => coverInputRef.current?.click()}
@@ -150,7 +151,6 @@ const Profile = () => {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40" />
             
-            {/* Cover Hover Overlay */}
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/cover:opacity-100 transition-all duration-300 bg-black/20 backdrop-blur-[2px]">
               <div className="flex flex-col items-center gap-2">
                 {uploadingCover ? (
@@ -173,7 +173,6 @@ const Profile = () => {
             />
           </div>
 
-          {/* Avatar Section */}
           <div className="absolute -bottom-12 left-6 flex items-end gap-4 z-20">
             <div className="relative group/avatar">
               <input 
@@ -185,7 +184,7 @@ const Profile = () => {
               />
               <div 
                 onClick={(e) => {
-                  e.stopPropagation(); // Evita di triggerare il click della cover
+                  e.stopPropagation();
                   avatarInputRef.current?.click();
                 }}
                 className="w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-white rounded-full overflow-hidden shadow-2xl flex items-center justify-center cursor-pointer relative"
@@ -279,6 +278,12 @@ const Profile = () => {
                       <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Nessun ordine trovato.</p>
                     </div>
                   )}
+                </motion.div>
+              )}
+
+              {activeTab === 'garage' && (
+                <motion.div key="garage" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                  <GarageTab />
                 </motion.div>
               )}
 
