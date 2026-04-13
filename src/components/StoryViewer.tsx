@@ -3,10 +3,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Eye, Send, Trash2, Loader2 } from 'lucide-react';
+import { X, Eye, Send, Trash2, Loader2, MoreHorizontal } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useViewStory, useDeleteStory } from '@/hooks/use-stories';
 import { showSuccess, showError } from '@/utils/toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Story {
   id: string;
@@ -49,14 +55,11 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
   }, [currentIndex]);
 
   const handleDelete = async () => {
-    if (!window.confirm("Vuoi davvero eliminare questa storia?")) return;
-    
     setIsDeleting(true);
     try {
       await deleteStory.mutateAsync(stories[currentIndex].id);
       showSuccess("Storia eliminata");
       
-      // Se è l'ultima storia, chiudi, altrimenti vai alla prossima
       if (stories.length === 1) {
         onClose();
       } else {
@@ -69,7 +72,6 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
     }
   };
 
-  // Traccia visualizzazione
   useEffect(() => {
     if (user && stories[currentIndex]) {
       viewStory.mutate({ 
@@ -131,17 +133,25 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             {isOwner && (
-              <button 
-                onClick={handleDelete} 
-                disabled={isDeleting}
-                className="text-white/60 hover:text-red-600 transition-colors"
-              >
-                {isDeleting ? <Loader2 className="animate-spin" size={20} /> : <Trash2 size={20} />}
-              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="text-white/80 hover:text-white p-2 transition-colors">
+                    {isDeleting ? <Loader2 className="animate-spin" size={20} /> : <MoreHorizontal size={24} />}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-zinc-900 border-white/10 text-white min-w-[160px]">
+                  <DropdownMenuItem 
+                    onClick={handleDelete}
+                    className="text-red-600 focus:text-red-600 focus:bg-red-600/10 cursor-pointer font-black uppercase text-[10px] tracking-widest py-3"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" /> Elimina Storia
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
-            <button onClick={onClose} className="text-white/80 hover:text-white"><X size={28} /></button>
+            <button onClick={onClose} className="text-white/80 hover:text-white p-2"><X size={28} /></button>
           </div>
         </div>
 
