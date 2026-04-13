@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWcUserOrders } from '@/hooks/use-woocommerce';
 import { useBPMember } from '@/hooks/use-buddypress';
+import { useProfileSync } from '@/hooks/use-profile-sync';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -25,6 +26,9 @@ const Profile = () => {
 
   const username = user?.user_metadata?.username || user?.email?.split('@')[0];
   
+  // Sync profile with BuddyPress
+  useProfileSync(username);
+
   const { data: orders, isLoading: loadingOrders } = useWcUserOrders(user?.email);
   const { data: bpMember, isLoading: loadingBP } = useBPMember(username);
 
@@ -51,6 +55,7 @@ const Profile = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    localStorage.removeItem('wp-jwt');
     navigate('/login');
   };
 
@@ -142,7 +147,10 @@ const Profile = () => {
                   <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-8">
                     Non hai ancora pubblicato nulla nella bacheca.
                   </p>
-                  <Button className="bg-white text-black hover:bg-red-600 hover:text-white rounded-none px-10 py-6 text-[10px] font-black uppercase italic tracking-widest">
+                  <Button 
+                    onClick={() => navigate('/bacheca')}
+                    className="bg-white text-black hover:bg-red-600 hover:text-white rounded-none px-10 py-6 text-[10px] font-black uppercase italic tracking-widest"
+                  >
                     Inizia a condividere
                   </Button>
                 </motion.div>
