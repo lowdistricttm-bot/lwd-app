@@ -2,7 +2,6 @@
 
 import React from 'react';
 import Navbar from '@/components/Navbar';
-import Stories from '@/components/Stories';
 import Hero from '@/components/Hero';
 import FeaturedProducts from '@/components/FeaturedProducts';
 import FeaturedProjects from '@/components/FeaturedProjects';
@@ -18,9 +17,7 @@ const Index = () => {
       <Navbar />
       
       <div className="pt-[calc(4.2rem+env(safe-area-inset-top))] md:pt-20">
-        <div className="max-w-7xl mx-auto">
-          <Stories />
-        </div>
+        {/* Sezione Stories rimossa per reset */}
       </div>
       
       <Hero />
