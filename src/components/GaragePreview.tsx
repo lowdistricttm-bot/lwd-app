@@ -1,11 +1,10 @@
 "use client";
 
 import React, { useEffect, useRef, useMemo } from 'react';
-import { Heart, MessageCircle, Share2, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Loader2, AlertCircle, RefreshCw, Settings } from 'lucide-react';
 import { useBpActivity, useActivityActions } from '@/hooks/use-buddypress';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/use-translation';
 
@@ -95,21 +94,31 @@ const GaragePreview = () => {
     </div>
   );
 
-  if (error) return (
-    <div className="text-center py-20 px-6 bg-zinc-900/30 border border-white/5 rounded-3xl mx-4">
-      <AlertCircle className="mx-auto text-red-600 mb-4" size={32} />
-      <h3 className="text-sm font-black uppercase tracking-tighter mb-2">{t.errors.connection}</h3>
-      <p className="text-[10px] text-gray-500 uppercase font-bold mb-6">
-        {(error as any).message === "401" ? t.settings.logout : "CONTROLLA LA CONNESSIONE O IL SERVER"}
-      </p>
-      <Button 
-        onClick={() => refetch()}
-        className="bg-white text-black hover:bg-red-600 hover:text-white font-black uppercase tracking-widest text-[10px] px-8 py-4 rounded-none italic"
-      >
-        {t.errors.retry}
-      </Button>
-    </div>
-  );
+  if (error) {
+    const errorMessage = (error as any).message;
+    return (
+      <div className="text-center py-20 px-6 bg-zinc-900/30 border border-white/5 rounded-3xl mx-4">
+        <AlertCircle className="mx-auto text-red-600 mb-4" size={32} />
+        <h3 className="text-sm font-black uppercase tracking-tighter mb-2">ERRORE DI SINCRONIZZAZIONE</h3>
+        
+        <div className="bg-black/40 p-4 rounded-xl mb-6 border border-white/5">
+          <p className="text-[10px] text-gray-400 uppercase font-bold mb-1">Dettaglio Tecnico:</p>
+          <code className="text-[10px] text-red-500 font-mono break-all">
+            {errorMessage === "API_NOT_FOUND" ? "PLUGIN BUDDYPRESS REST API NON TROVATO" : 
+             errorMessage === "NETWORK_OR_CORS_ERROR" ? "BLOCCO CORS O SERVER NON RAGGIUNGIBILE" : 
+             errorMessage}
+          </code>
+        </div>
+
+        <Button 
+          onClick={() => refetch()}
+          className="bg-white text-black hover:bg-red-600 hover:text-white font-black uppercase tracking-widest text-[10px] px-8 py-4 rounded-none italic"
+        >
+          {t.errors.retry}
+        </Button>
+      </div>
+    );
+  }
 
   if (allActivities.length === 0) return (
     <div className="text-center py-20 border border-dashed border-white/5 rounded-3xl mx-4">

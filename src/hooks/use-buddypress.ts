@@ -2,7 +2,7 @@ import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tansta
 
 const BASE_URL = "https://www.lowdistrict.it/wp-json";
 
-const bpFetch = async (endpoint: string, options: RequestInit = {}) => {
+const bpFetch = async (endpoint: string, options: RequestInit = {}, skipAuth = false) => {
   const token = localStorage.getItem('ld_auth_token');
   const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   const url = `${BASE_URL}${path}`;
@@ -12,7 +12,8 @@ const bpFetch = async (endpoint: string, options: RequestInit = {}) => {
     ...((options.headers as Record<string, string>) || {}),
   };
 
-  if (token) {
+  // Invia il token solo se presente e se non abbiamo chiesto di saltarlo
+  if (token && !skipAuth) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
@@ -21,33 +22,21 @@ const bpFetch = async (endpoint: string, options: RequestInit = {}) => {
       ...options,
       headers,
       mode: 'cors',
-      credentials: 'omit' // Evita problemi di cookie cross-domain se non necessari
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      let errorData;
-      try {
-        errorData = JSON.parse(errorText);
-      } catch (e) {
-        errorData = { message: errorText || `HTTP Error ${response.status}` };
-      }
-      
-      console.error(`[BuddyPress API Error] ${response.status}:`, errorData);
-      
       if (response.status === 401) throw new Error("401");
-      if (response.status === 403) throw new Error("403");
-      throw new Error(errorData.message || `ERRORE SERVER ${response.status}`);
+      if (response.status === 404) throw new Error("API_NOT_FOUND");
+      
+      const errorData = await response.json().catch(() => ({ message: `Errore ${response.status}` }));
+      throw new Error(errorData.message || `Errore Server ${response.status}`);
     }
 
     return await response.json();
   } catch (err: any) {
-    console.error(`[BuddyPress Fetch Failed] URL: ${url}`, err);
-    // Se è un errore di rete (CORS o DNS), lanciamo un errore specifico
-    if (err instanceof TypeError && err.message === 'Failed to fetch') {
-      throw new Error("NETWORK_ERROR");
-    }
-    throw err;
+    console.error(`[BuddyPress Error]`, err);
+    if (err.message === "401" || err.message === "API_NOT_FOUND") throw err;
+    throw new Error("NETWORK_OR_CORS_ERROR");
   }
 };
 
@@ -55,7 +44,7 @@ const bpFetch = async (endpoint: string, options: RequestInit = {}) => {
 export const useBpMembers = (perPage = 20) => {
   return useQuery({
     queryKey: ['bp-members', perPage],
-    queryFn: () => bpFetch(`/buddypress/v1/members?per_page=${perPage}&type=active`),
+    queryFn: () => bpFetch(`/buddypress/v1/members?per_page=${perPage}&type=active`, {}, true),
     staleTime: 1000 * 60 * 5,
     retry: 1
   });
@@ -69,7 +58,8 @@ export const useBpActivity = (userId?: number) => {
       let endpoint = `/buddypress/v1/activity?page=${pageParam}&per_page=10&display_name=1`;
       if (userId) endpoint += `&user_id=${userId}`;
       
-      const data = await bpFetch(endpoint);
+      // Proviamo a caricare la bacheca senza auth per evitare blocchi CORS inutili sui dati pubblici
+      const data = await bpFetch(endpoint, {}, true);
       return Array.isArray(data) ? data : [];
     },
     initialPageParam: 1,
