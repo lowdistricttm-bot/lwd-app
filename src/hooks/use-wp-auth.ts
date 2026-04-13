@@ -35,26 +35,37 @@ export const useWpAuth = () => {
         password: password,
       });
 
-      // 2. Se l'utente non esiste su Supabase, crealo
-      if (authError && authError.message.includes("Invalid login credentials")) {
-        const { error: signUpError } = await supabase.auth.signUp({
-          email: userEmail,
-          password: password,
-          options: {
-            data: {
-              username: username,
-              wp_token: token
-            }
-          }
-        });
-        
-        if (signUpError) {
-          if (signUpError.status === 429) {
-            throw new Error("Supabase sta limitando l'invio di email. Disabilita 'Confirm Email' nel pannello Supabase o attendi qualche minuto.");
-          }
-          throw signUpError;
+      // 2. Gestione errori specifici di Supabase
+      if (authError) {
+        // Errore: Email non confermata
+        if (authError.message.includes("Email not confirmed")) {
+          throw new Error("Email non confermata. Controlla la tua posta o disabilita 'Confirm Email' in Supabase -> Auth -> Providers.");
         }
-      } else if (authError) {
+
+        // Errore: Utente non esiste (proviamo a crearlo)
+        if (authError.message.includes("Invalid login credentials")) {
+          const { error: signUpError } = await supabase.auth.signUp({
+            email: userEmail,
+            password: password,
+            options: {
+              data: {
+                username: username,
+                wp_token: token
+              }
+            }
+          });
+          
+          if (signUpError) {
+            if (signUpError.status === 429) {
+              throw new Error("Limite invio email raggiunto. Disabilita 'Confirm Email' nel pannello Supabase.");
+            }
+            throw signUpError;
+          }
+
+          // Se il signUp ha successo ma richiede conferma, avvisiamo l'utente
+          throw new Error("Account creato! Controlla la tua email per confermare l'accesso.");
+        }
+
         throw authError;
       }
 
