@@ -9,7 +9,8 @@ import Footer from '@/components/Footer';
 import { 
   User, Settings, LogOut, Car, MessageSquare, 
   Camera, Bell, Shield, CreditCard,
-  ChevronRight, Plus, ShoppingBag, Package, Clock
+  ChevronRight, Plus, ShoppingBag, Package, Clock,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
