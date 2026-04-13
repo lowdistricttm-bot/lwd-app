@@ -25,6 +25,21 @@ export const useWcProducts = (params = "per_page=100") => {
   });
 };
 
+export const useWcCategories = () => {
+  return useQuery({
+    queryKey: ['wc-categories'],
+    queryFn: async () => {
+      const response = await fetch(`${WC_URL}/products/categories?hide_empty=true&per_page=100`, {
+        headers: getAuthHeader()
+      });
+      if (!response.ok) throw new Error('Errore caricamento categorie');
+      const data = await response.json();
+      // Filtriamo le categorie "Uncategorized" o simili se necessario
+      return data.filter((cat: any) => cat.slug !== 'uncategorized');
+    }
+  });
+};
+
 export const useWcProduct = (id?: string) => {
   return useQuery({
     queryKey: ['wc-product', id],
