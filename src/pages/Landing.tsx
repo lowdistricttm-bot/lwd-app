@@ -3,20 +3,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import WordPressPortal from '@/components/WordPressPortal';
-import { useAuth } from '@/hooks/use-auth';
-import { Navigate } from 'react-router-dom';
 import Logo from '@/components/Logo';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 
 const Landing = () => {
-  const { user } = useAuth();
-
-  // Se l'utente è già loggato nell'app, vai direttamente alla Home
-  if (user) {
-    return <Navigate to="/" replace />;
-  }
-
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       {/* Header di Presentazione */}
@@ -39,7 +30,7 @@ const Landing = () => {
         </motion.div>
       </div>
 
-      {/* Area Login / Account integrata dal sito */}
+      {/* Area Login integrata dal sito */}
       <div className="flex-1 bg-black relative">
         <div className="absolute inset-0 pt-8">
           <div className="text-center mb-8 px-6">
@@ -58,9 +49,9 @@ const Landing = () => {
           </div>
 
           <div className="p-8 text-center">
-            <Link to="/auth">
-              <Button variant="outline" className="w-full border-white/10 text-zinc-500 font-black uppercase italic py-6">
-                Hai problemi? Usa il Login App
+            <Link to="/">
+              <Button className="w-full bg-white text-black font-black uppercase italic py-8 rounded-none">
+                Entra nell'App
               </Button>
             </Link>
           </div>
