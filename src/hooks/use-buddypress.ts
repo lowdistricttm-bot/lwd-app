@@ -1,11 +1,14 @@
 "use client";
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { showError, showSuccess } from '@/utils/toast';
 
 const BP_API_URL = "https://www.lowdistrict.it/wp-json/buddypress/v1";
 
-// NOTA: Se il tuo sito richiede autenticazione, genera una "Application Password" su WP
-const AUTH_HEADER = ""; 
+const getAuthHeader = () => {
+  const token = localStorage.getItem('wp-jwt');
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
+};
 
 export interface BPActivity {
   id: number;
@@ -22,48 +25,62 @@ export interface BPActivity {
     thumb: string;
   };
   user_name?: string;
-}
-
-export interface BPMember {
-  id: number;
-  name: string;
-  user_login: string;
-  registered_since: string;
-  avatar_urls: {
-    full: string;
-    thumb: string;
-  };
+  favorite_count?: number;
+  comment_count?: number;
 }
 
 export const useBPActivity = () => {
   return useQuery({
     queryKey: ['bp-activity'],
     queryFn: async () => {
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
-
-      if (AUTH_HEADER) {
-        headers['Authorization'] = `Basic ${AUTH_HEADER}`;
-      }
-
       const response = await fetch(`${BP_API_URL}/activity?per_page=20&_embed`, {
-        headers
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() }
       });
 
-      if (response.status === 401) {
-        throw new Error('401: Accesso negato. L\'API di BuddyPress richiede autenticazione.');
-      }
-
-      if (!response.ok) {
-        throw new Error(`Errore ${response.status}: Impossibile caricare la bacheca.`);
-      }
-
+      if (!response.ok) throw new Error('Impossibile caricare la bacheca.');
       return response.json() as Promise<BPActivity[]>;
     },
     refetchInterval: 60000,
-    retry: 1,
   });
+};
+
+export const useBPActions = () => {
+  const queryClient = useQueryClient();
+
+  const favoriteMutation = useMutation({
+    mutationFn: async (activityId: number) => {
+      const response = await fetch(`${BP_API_URL}/activity/${activityId}/favorite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() }
+      });
+      if (!response.ok) throw new Error('Devi essere loggato per mettere Like');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bp-activity'] });
+      showSuccess("Aggiunto ai preferiti!");
+    },
+    onError: (error: any) => showError(error.message)
+  });
+
+  const commentMutation = useMutation({
+    mutationFn: async ({ activityId, content }: { activityId: number, content: string }) => {
+      const response = await fetch(`${BP_API_URL}/activity/${activityId}/comment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body: JSON.stringify({ content })
+      });
+      if (!response.ok) throw new Error('Errore durante l\'invio del commento');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bp-activity'] });
+      showSuccess("Commento inviato!");
+    },
+    onError: (error: any) => showError(error.message)
+  });
+
+  return { favoriteMutation, commentMutation };
 };
 
 export const useBPMember = (username?: string) => {
@@ -71,16 +88,12 @@ export const useBPMember = (username?: string) => {
     queryKey: ['bp-member', username],
     queryFn: async () => {
       if (!username) return null;
-      
-      const headers: HeadersInit = { 'Content-Type': 'application/json' };
-      if (AUTH_HEADER) headers['Authorization'] = `Basic ${AUTH_HEADER}`;
-
-      // Cerchiamo il membro tramite lo slug (username)
-      const response = await fetch(`${BP_API_URL}/members?slug=${username}`, { headers });
+      const response = await fetch(`${BP_API_URL}/members?slug=${username}`, {
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() }
+      });
       if (!response.ok) throw new Error('Membro non trovato');
-      
       const data = await response.json();
-      return data[0] as BPMember;
+      return data[0];
     },
     enabled: !!username
   });
