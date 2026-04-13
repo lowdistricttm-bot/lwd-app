@@ -32,11 +32,8 @@ export interface BPActivity {
 }
 
 export const useBPActivity = () => {
-  const token = localStorage.getItem('wp-jwt');
-  
   return useQuery({
-    // Includiamo il token nella queryKey così se cambia (login/logout) la query si resetta
-    queryKey: ['bp-activity', token],
+    queryKey: ['bp-activity'],
     queryFn: async () => {
       const response = await fetch(`${BP_API_URL}/activity?per_page=20&_embed`, {
         headers: { 
@@ -127,6 +124,7 @@ export const useBPActions = () => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        // Se il server restituisce un errore specifico (es. spam o permessi), lo mostriamo
         throw new Error(errorData.message || `Errore server (${response.status}). Riprova tra poco.`);
       }
       
