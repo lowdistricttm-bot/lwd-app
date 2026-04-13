@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useWpAuth } from '@/hooks/use-wp-auth';
+import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -23,13 +24,21 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      // Tenta il login tramite l'API di WordPress
       await loginWithWp(username, password);
       
+      // Verifichiamo che la sessione sia effettivamente attiva prima di navigare
+      const { data: { session } } = await supabase.auth.getSession();
+      
       showSuccess("Bentornato nel District!");
-      navigate('/profile');
+      
+      if (session) {
+        navigate('/profile');
+      } else {
+        // Se non c'è sessione immediata, aspettiamo un attimo o riproviamo
+        setTimeout(() => navigate('/profile'), 500);
+      }
     } catch (error: any) {
-      showError(error.message || "Credenziali non valide o errore di connessione");
+      showError(error.message || "Credenziali non valide");
     }
   };
 
