@@ -1,56 +1,50 @@
 "use client";
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Loader2, ExternalLink, RefreshCw } from 'lucide-react';
-import Navbar from './Navbar';
-import BottomNav from './BottomNav';
+import React, { useState, useEffect } from 'react';
+import { Loader2, RefreshCw, ExternalLink } from 'lucide-react';
 
 interface WordPressPortalProps {
-  title: string;
   url: string;
+  title?: string;
 }
 
-const WordPressPortal = ({ title, url }: WordPressPortalProps) => {
+const WordPressPortal = ({ url }: WordPressPortalProps) => {
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
   const [key, setKey] = useState(0);
 
+  // Aggiungiamo un parametro per dire al sito che siamo nell'app
+  const appUrl = `${url}${url.includes('?') ? '&' : '?'}display=app&app_view=true`;
+
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
-      <div className="fixed top-0 left-0 right-0 z-[60] bg-black/90 backdrop-blur-xl border-b border-white/5 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-white/5 rounded-full transition-colors">
-            <ChevronLeft size={24} />
-          </button>
-          <h1 className="text-lg font-black uppercase italic tracking-tighter">{title}</h1>
+    <div className="relative w-full h-full bg-black overflow-hidden">
+      {isLoading && (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black">
+          <Loader2 className="animate-spin text-red-600 mb-4" size={40} />
+          <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 italic">Caricamento bacheca...</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => setKey(prev => prev + 1)} className="p-2 text-gray-500 hover:text-white">
-            <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
-          </button>
-          <a href={url} target="_blank" rel="noopener noreferrer" className="p-2 text-gray-500 hover:text-red-600">
-            <ExternalLink size={18} />
-          </a>
-        </div>
+      )}
+      
+      <div className="absolute top-2 right-4 z-20 flex gap-2">
+        <button 
+          onClick={() => { setIsLoading(true); setKey(prev => prev + 1); }}
+          className="p-2 bg-black/50 backdrop-blur-md rounded-full text-white/50 hover:text-white transition-colors"
+        >
+          <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
+        </button>
       </div>
 
-      <div className="flex-1 pt-20 pb-20 relative">
-        {isLoading && (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black">
-            <Loader2 className="animate-spin text-red-600 mb-4" size={40} />
-            <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Sincronizzazione con il server...</p>
-          </div>
-        )}
-        <iframe 
-          key={key}
-          src={url} 
-          className="w-full h-full border-none"
-          onLoad={() => setIsLoading(false)}
-          title={title}
-        />
-      </div>
-      <BottomNav />
+      <iframe 
+        key={key}
+        src={appUrl} 
+        className="w-full h-full border-none"
+        style={{ 
+          backgroundColor: 'black',
+          // Tentativo di "ritagliare" l'header se non puoi modificarlo lato WP
+          // marginTop: '-60px', 
+          // height: 'calc(100% + 60px)' 
+        }}
+        onLoad={() => setIsLoading(false)}
+      />
     </div>
   );
 };

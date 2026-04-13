@@ -2,74 +2,42 @@
 
 import React from 'react';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import BottomNav from '@/components/BottomNav';
-import GaragePreview from '@/components/GaragePreview';
-import MembersList from '@/components/MembersList';
+import WordPressPortal from '@/components/WordPressPortal';
 import { useAuth } from '@/hooks/use-auth';
-import { Lock, ExternalLink } from 'lucide-react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Lock } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
 const Community = () => {
   const { user } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
-
-  const openWebBacheca = () => {
-    navigate('/wp-portal', { 
-      state: { 
-        title: "Bacheca Social", 
-        url: "https://www.lowdistrict.it/bacheca" 
-      } 
-    });
-  };
 
   return (
-    <div className="min-h-screen bg-black text-white pb-24">
+    <div className="h-screen bg-black text-white flex flex-col overflow-hidden">
       <Navbar />
-      <div className="pt-24">
-        <div className="px-6 mb-8 max-w-xl mx-auto flex items-end justify-between">
-          <div>
-            <h1 className="text-4xl font-black tracking-tighter uppercase italic">Bacheca</h1>
-            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mt-1">Activity Stream & Updates</p>
-          </div>
-          {user && (
-            <button 
-              onClick={openWebBacheca}
-              className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-red-600 border border-red-600/20 px-3 py-2 hover:bg-red-600 hover:text-white transition-all italic"
-            >
-              <ExternalLink size={12} /> Versione Web
-            </button>
-          )}
-        </div>
-
+      
+      <div className="flex-1 mt-[calc(4.2rem+env(safe-area-inset-top))] mb-[calc(4rem+env(safe-area-inset-bottom))] relative">
         {user ? (
-          <div className="max-w-xl mx-auto">
-            <MembersList />
-            <GaragePreview />
-          </div>
+          <WordPressPortal url="https://www.lowdistrict.it/bacheca" />
         ) : (
-          <div className="max-w-xl mx-auto px-6 py-20 text-center">
-            <div className="w-20 h-20 bg-zinc-900 rounded-[2rem] flex items-center justify-center mx-auto mb-8 border border-white/5">
+          <div className="h-full flex flex-col items-center justify-center px-8 text-center">
+            <div className="w-20 h-20 bg-zinc-900 rounded-[2rem] flex items-center justify-center mb-8 border border-white/5">
               <Lock size={32} className="text-red-600" />
             </div>
-            <h2 className="text-2xl font-black uppercase italic mb-4 tracking-tighter">Contenuto Riservato</h2>
-            <p className="text-gray-500 text-xs font-bold uppercase tracking-widest leading-relaxed mb-10">
-              La bacheca di Low District è accessibile solo ai membri della community. Accedi al tuo account per vedere i post e interagire.
+            <h2 className="text-2xl font-black uppercase italic mb-4 tracking-tighter">Area Riservata</h2>
+            <p className="text-gray-500 text-xs font-bold uppercase tracking-widest leading-relaxed mb-10 max-w-xs">
+              La bacheca di Low District è accessibile solo ai membri. Accedi per interagire con la community.
             </p>
-            
-            <div className="space-y-4">
-              <Link to="/auth" state={{ from: location.pathname }}>
-                <Button className="w-full bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest py-8 rounded-none italic shadow-xl shadow-red-600/10">
-                  Accedi / Registrati
-                </Button>
-              </Link>
-            </div>
+            <Link to="/auth" state={{ from: location.pathname }} className="w-full max-w-xs">
+              <Button className="w-full bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest py-8 rounded-none italic shadow-xl shadow-red-600/10">
+                Accedi / Registrati
+              </Button>
+            </Link>
           </div>
         )}
       </div>
-      <Footer />
+
       <BottomNav />
     </div>
   );
