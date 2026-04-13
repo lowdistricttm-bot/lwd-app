@@ -29,41 +29,40 @@ export const useWpAuth = () => {
       const token = data.jwt || data.token || data.data?.jwt;
       const userEmail = data.user_email || (username.includes('@') ? username : `${username}@lowdistrict.it`);
 
-      // 1. Prova il login
+      // 1. Tentativo di Login
       const { error: authError } = await supabase.auth.signInWithPassword({
         email: userEmail,
         password: password,
       });
 
-      // 2. Se l'utente non esiste, crealo (verrà auto-confermato dal trigger SQL)
-      if (authError && authError.message.includes("Invalid login credentials")) {
-        const { error: signUpError } = await supabase.auth.signUp({
-          email: userEmail,
-          password: password,
-          options: {
-            data: {
-              username: username,
-              wp_token: token
+      if (authError) {
+        // Se l'utente non esiste, lo creiamo
+        if (authError.message.includes("Invalid login credentials")) {
+          const { error: signUpError } = await supabase.auth.signUp({
+            email: userEmail,
+            password: password,
+            options: {
+              data: { username, wp_token: token }
             }
-          }
-        });
-        
-        if (signUpError) {
-          if (signUpError.message.includes("Email provider is disabled")) {
-            throw new Error("DEVI ABILITARE IL PROVIDER EMAIL: Vai in Supabase -> Authentication -> Providers -> Email e attiva l'interruttore.");
-          }
-          throw signUpError;
-        }
+          });
+          
+          if (signUpError) throw signUpError;
 
-        // Dopo il signup, riprova il login immediatamente
-        const { error: retryError } = await supabase.auth.signInWithPassword({
-          email: userEmail,
-          password: password,
-        });
-        
-        if (retryError) throw retryError;
-      } else if (authError) {
-        throw authError;
+          // Dopo il signup, riproviamo il login (il trigger SQL dovrebbe averlo già confermato)
+          const { error: retryError } = await supabase.auth.signInWithPassword({
+            email: userEmail,
+            password: password,
+          });
+          
+          if (retryError) throw retryError;
+        } 
+        // Se l'email non è confermata nonostante il trigger, diamo un errore chiaro
+        else if (authError.message.includes("Email not confirmed")) {
+          throw new Error("L'account è in fase di attivazione. Riprova tra 5 secondi.");
+        }
+        else {
+          throw authError;
+        }
       }
 
       return { success: true, user: data };
