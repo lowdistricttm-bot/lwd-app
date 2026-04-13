@@ -29,47 +29,40 @@ export const useWpAuth = () => {
       const token = data.jwt || data.token || data.data?.jwt;
       const userEmail = data.user_email || (username.includes('@') ? username : `${username}@lowdistrict.it`);
 
-      // 1. Prova il login su Supabase
+      // 1. Prova il login
       const { error: authError } = await supabase.auth.signInWithPassword({
         email: userEmail,
         password: password,
       });
 
-      // 2. Gestione errori specifici di Supabase
-      if (authError) {
-        // Errore: Provider disabilitato
-        if (authError.message.includes("Email provider is disabled")) {
-          throw new Error("Il provider Email è disabilitato su Supabase. Vai in Auth -> Providers e abilita 'Email'.");
-        }
-
-        // Errore: Email non confermata
-        if (authError.message.includes("Email not confirmed")) {
-          throw new Error("Email non confermata. Controlla la tua posta o disabilita 'Confirm Email' in Supabase.");
-        }
-
-        // Errore: Utente non esiste (proviamo a crearlo)
-        if (authError.message.includes("Invalid login credentials")) {
-          const { error: signUpError } = await supabase.auth.signUp({
-            email: userEmail,
-            password: password,
-            options: {
-              data: {
-                username: username,
-                wp_token: token
-              }
+      // 2. Se l'utente non esiste, crealo (verrà auto-confermato dal trigger SQL)
+      if (authError && authError.message.includes("Invalid login credentials")) {
+        const { error: signUpError } = await supabase.auth.signUp({
+          email: userEmail,
+          password: password,
+          options: {
+            data: {
+              username: username,
+              wp_token: token
             }
-          });
-          
-          if (signUpError) {
-            if (signUpError.message.includes("Email provider is disabled")) {
-              throw new Error("Impossibile creare l'account: abilita il provider 'Email' nella dashboard di Supabase.");
-            }
-            throw signUpError;
           }
-
-          throw new Error("Account creato! Se non riesci ad accedere, controlla l'email o disabilita la conferma obbligatoria.");
+        });
+        
+        if (signUpError) {
+          if (signUpError.message.includes("Email provider is disabled")) {
+            throw new Error("DEVI ABILITARE IL PROVIDER EMAIL: Vai in Supabase -> Authentication -> Providers -> Email e attiva l'interruttore.");
+          }
+          throw signUpError;
         }
 
+        // Dopo il signup, riprova il login immediatamente
+        const { error: retryError } = await supabase.auth.signInWithPassword({
+          email: userEmail,
+          password: password,
+        });
+        
+        if (retryError) throw retryError;
+      } else if (authError) {
         throw authError;
       }
 
