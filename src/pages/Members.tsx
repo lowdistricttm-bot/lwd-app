@@ -19,8 +19,11 @@ const Members = () => {
       
       <div className="flex-1 mt-[calc(4.2rem+env(safe-area-inset-top))] mb-[calc(4rem+env(safe-area-inset-bottom))] relative">
         {user ? (
-          /* Offset di 90px per nascondere l'header anche qui */
-          <WordPressPortal url="https://www.lowdistrict.it/membri" headerHeight={90} />
+          <WordPressPortal 
+            url="https://www.lowdistrict.it/membri" 
+            topOffset={160} 
+            bottomOffset={150} 
+          />
         ) : (
           <div className="h-full flex flex-col items-center justify-center px-8 text-center">
             <div className="w-20 h-20 bg-zinc-900 rounded-[2rem] flex items-center justify-center mb-8 border border-white/5">
