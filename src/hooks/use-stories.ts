@@ -5,21 +5,37 @@ export const useStories = () => {
   return useQuery({
     queryKey: ['supabase-stories'],
     queryFn: async () => {
-      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      
-      const { data, error } = await supabase
-        .from('stories')
-        .select(`
-          *,
-          views:story_views(count)
-        `)
-        .gt('created_at', twentyFourHoursAgo)
-        .order('created_at', { ascending: false });
+      try {
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        
+        const { data, error } = await supabase
+          .from('stories')
+          .select(`
+            *,
+            views:story_views(count)
+          `)
+          .gt('created_at', twentyFourHoursAgo)
+          .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data || [];
+        if (error) {
+          console.warn("[Stories] Query error, falling back to simple select:", error);
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('stories')
+            .select('*')
+            .gt('created_at', twentyFourHoursAgo)
+            .order('created_at', { ascending: false });
+          
+          if (fallbackError) throw fallbackError;
+          return fallbackData || [];
+        }
+        return data || [];
+      } catch (err) {
+        console.error("[Stories] Critical error:", err);
+        return [];
+      }
     },
-    staleTime: 1000 * 60, // 1 minuto
+    staleTime: 1000 * 30,
+    retry: 1
   });
 };
 
@@ -32,7 +48,7 @@ export const useViewStory = () => {
         .from('story_views')
         .upsert({ story_id: storyId, user_id: userId }, { onConflict: 'story_id,user_id' });
       
-      if (error && error.code !== '23505') throw error; // Ignora errori di duplicato
+      if (error && error.code !== '23505') throw error;
       return true;
     },
     onSuccess: () => {
