@@ -8,7 +8,6 @@ const WP_API_URL = "https://www.lowdistrict.it/wp-json/wp/v2";
 
 const getAuthHeader = () => {
   const token = localStorage.getItem('wp-jwt');
-  // Verifichiamo che il token sia una stringa valida e non "null" o "undefined"
   if (!token || token === 'null' || token === 'undefined') return {};
   return { 'Authorization': `Bearer ${token}` };
 };
@@ -36,7 +35,6 @@ export const useBPActivity = () => {
   return useQuery({
     queryKey: ['bp-activity'],
     queryFn: async () => {
-      // Rimuoviamo _embed se causa problemi e aggiungiamo context=view
       const response = await fetch(`${BP_API_URL}/activity?per_page=20&context=view`, {
         headers: { 
           'Accept': 'application/json',
@@ -111,6 +109,17 @@ export const useBPActions = () => {
       const headers = getAuthHeader();
       if (!headers.Authorization) throw new Error('Accedi per pubblicare');
 
+      // Formato corretto per BuddyPress activity
+      const payload = {
+        content: content,
+        component: 'activity',
+        type: 'activity_update',
+        // Aggiungiamo un campo action per essere sicuri
+        action: 'ha pubblicato un post'
+      };
+
+      console.log("[BP] Invio payload:", payload);
+
       const response = await fetch(`${BP_API_URL}/activity`, {
         method: 'POST',
         headers: { 
@@ -118,21 +127,25 @@ export const useBPActions = () => {
           'Accept': 'application/json',
           ...headers 
         },
-        body: JSON.stringify({
-          content: content,
-          component: 'activity',
-          type: 'activity_update'
-        })
+        body: JSON.stringify(payload)
       });
 
-      if (!response.ok) throw new Error('Errore pubblicazione');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("[BP] Errore risposta:", errorData);
+        throw new Error(errorData.message || 'Errore pubblicazione');
+      }
+
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bp-activity'] });
       showSuccess("Post pubblicato nel District!");
     },
-    onError: (error: any) => showError(error.message)
+    onError: (error: any) => {
+      console.error("[BP] Errore pubblicazione:", error);
+      showError(error.message);
+    }
   });
 
   const uploadMediaMutation = useMutation({
@@ -160,7 +173,6 @@ export const useBPMember = (username?: string) => {
     queryKey: ['bp-member', username],
     queryFn: async () => {
       if (!username) return null;
-      // Usiamo search invece di slug se slug dà errore 400
       const response = await fetch(`${BP_API_URL}/members?search=${username}`, {
         headers: { 'Accept': 'application/json', ...getAuthHeader() }
       });
