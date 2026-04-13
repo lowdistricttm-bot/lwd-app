@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 const Stories = () => {
   const { user } = useAuth();
-  const { data: stories, isLoading } = useStories();
+  const { data: stories, isLoading, refetch } = useStories();
   const createStory = useCreateStory();
   
   const [showViewer, setShowViewer] = React.useState(false);
@@ -20,9 +20,9 @@ const Stories = () => {
   const [isUploading, setIsUploading] = React.useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Raggruppiamo le storie per utente per i cerchi, ma teniamo la lista piatta per il viewer
+  // Raggruppiamo le storie per utente per i cerchi
   const { userCircles, flatStories } = useMemo(() => {
-    if (!stories) return { userCircles: [], flatStories: [] };
+    if (!stories || stories.length === 0) return { userCircles: [], flatStories: [] };
     
     const circles: any[] = [];
     const seenUsers = new Set();
@@ -76,7 +76,7 @@ const Stories = () => {
         imageUrl: publicUrl 
       });
       
-      showSuccess("Storia pubblicata!");
+      showSuccess"Storia pubblicata!");
     } catch (err: any) {
       showError("Errore durante il caricamento.");
     } finally {
@@ -121,7 +121,6 @@ const Stories = () => {
               </div>
             </button>
             
-            {/* Tasto + sempre visibile per aggiungere altre storie */}
             <button 
               onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
               disabled={isUploading}
