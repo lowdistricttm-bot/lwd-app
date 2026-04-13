@@ -10,17 +10,8 @@ import Footer from '@/components/Footer';
 import BottomNav from '@/components/BottomNav';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import { MadeWithDyad } from "@/components/made-with-dyad";
-import { useAuth } from '@/hooks/use-auth';
-import { Navigate } from 'react-router-dom';
 
 const Index = () => {
-  const { user } = useAuth();
-
-  // Se l'utente non è loggato, mostra la pagina di presentazione/login
-  if (!user) {
-    return <Navigate to="/landing" replace />;
-  }
-
   return (
     <main className="min-h-screen bg-black text-white selection:bg-white selection:text-black pb-20 md:pb-0">
       <Navbar />
