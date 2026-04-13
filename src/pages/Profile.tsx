@@ -14,7 +14,8 @@ import {
   MessageSquare, 
   ShoppingBag, 
   Loader2,
-  Camera
+  Camera,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -22,13 +23,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useWcUserOrders } from '@/hooks/use-woocommerce';
 import { showSuccess, showError } from '@/utils/toast';
 
+const DEFAULT_COVER = "https://www.lowdistrict.it/wp-content/uploads/DSC01359-1-scaled-e1751832356345.jpg";
+
 const Profile = () => {
   const navigate = useNavigate();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
   const [activeTab, setActiveTab] = useState('activity');
 
   const { data: orders, isLoading: loadingOrders } = useWcUserOrders(user?.email);
@@ -58,42 +64,47 @@ const Profile = () => {
     checkUser();
   }, [navigate]);
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'cover') => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
-    setUploading(true);
+    const isAvatar = type === 'avatar';
+    if (isAvatar) setUploadingAvatar(true);
+    else setUploadingCover(true);
+
     try {
       const fileExt = file.name.split('.').pop();
+      const bucket = isAvatar ? 'avatars' : 'covers';
       const fileName = `${user.id}-${Math.random()}.${fileExt}`;
       const filePath = `${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('avatars')
+        .from(bucket)
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
+        .from(bucket)
         .getPublicUrl(filePath);
+
+      const updateData: any = { id: user.id, updated_at: new Date().toISOString() };
+      if (isAvatar) updateData.avatar_url = publicUrl;
+      else updateData.cover_url = publicUrl;
 
       const { error: updateError } = await supabase
         .from('profiles')
-        .upsert({
-          id: user.id,
-          avatar_url: publicUrl,
-          updated_at: new Date().toISOString(),
-        });
+        .upsert(updateData);
 
       if (updateError) throw updateError;
 
-      showSuccess("Foto profilo aggiornata!");
+      showSuccess(isAvatar ? "Foto profilo aggiornata!" : "Copertina aggiornata!");
       await fetchProfile(user.id);
     } catch (error: any) {
       showError("Errore durante il caricamento: " + error.message);
     } finally {
-      setUploading(false);
+      if (isAvatar) setUploadingAvatar(false);
+      else setUploadingCover(false);
     }
   };
 
@@ -126,36 +137,56 @@ const Profile = () => {
       <Navbar />
       
       <main className="flex-1 pb-32">
-        <div className="relative h-48 md:h-64 bg-zinc-900">
+        {/* Cover Section */}
+        <div className="relative h-56 md:h-80 bg-zinc-900 group/cover">
           <img 
-            src="https://www.lowdistrict.it/wp-content/uploads/DSC01359-1-scaled-e1751832356345.jpg" 
-            className="w-full h-full object-cover opacity-40 grayscale"
+            src={profile?.cover_url || DEFAULT_COVER} 
+            className="w-full h-full object-cover opacity-60 grayscale hover:grayscale-0 transition-all duration-700"
             alt="Cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40" />
           
+          {/* Cover Upload Button */}
+          <div className="absolute top-4 right-4 z-10">
+            <input 
+              type="file" 
+              ref={coverInputRef} 
+              className="hidden" 
+              accept="image/*" 
+              onChange={(e) => handleFileUpload(e, 'cover')}
+            />
+            <button 
+              onClick={() => coverInputRef.current?.click()}
+              className="bg-black/60 backdrop-blur-md border border-white/10 p-3 hover:bg-white hover:text-black transition-all flex items-center gap-2"
+            >
+              {uploadingCover ? <Loader2 size={16} className="animate-spin" /> : <ImageIcon size={16} />}
+              <span className="text-[9px] font-black uppercase tracking-widest hidden md:block">Cambia Copertina</span>
+            </button>
+          </div>
+
+          {/* Avatar Section */}
           <div className="absolute -bottom-12 left-6 flex items-end gap-4">
-            <div className="relative group">
+            <div className="relative group/avatar">
               <input 
                 type="file" 
-                ref={fileInputRef} 
+                ref={avatarInputRef} 
                 className="hidden" 
                 accept="image/*" 
-                onChange={handleAvatarUpload}
+                onChange={(e) => handleFileUpload(e, 'avatar')}
               />
               <div 
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => avatarInputRef.current?.click()}
                 className="w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-white rounded-full overflow-hidden shadow-2xl flex items-center justify-center cursor-pointer relative"
               >
-                {uploading ? (
+                {uploadingAvatar ? (
                   <Loader2 className="animate-spin text-red-600" />
                 ) : profile?.avatar_url ? (
-                  <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover group-hover:opacity-50 transition-opacity" />
+                  <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover group-hover/avatar:opacity-50 transition-opacity" />
                 ) : (
                   <User size={40} className="text-zinc-800" />
                 )}
                 
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 rounded-full">
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity bg-black/40 rounded-full">
                   <Camera size={24} className="text-white" />
                 </div>
               </div>
