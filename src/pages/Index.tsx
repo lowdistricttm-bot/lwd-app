@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import Hero from '@/components/Hero';
 import Footer from '@/components/Footer';
+import Stories from '@/components/Stories';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { ShoppingBag, Users, Calendar, ArrowRight } from 'lucide-react';
@@ -17,6 +18,7 @@ const Index = () => {
       <Navbar />
       
       <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top))]">
+        <Stories />
         <Hero />
         
         {/* Sezione Community / Bacheca Preview */}
@@ -79,9 +81,9 @@ const Index = () => {
             <p className="text-zinc-400 text-sm md:text-base font-bold uppercase tracking-widest mb-12">
               Candidati per i prossimi eventi ufficiali direttamente dall'app.
             </p>
-            <button className="bg-red-600 text-white px-12 py-6 text-xs font-black uppercase tracking-[0.2em] italic hover:bg-white hover:text-black transition-all">
+            <Link to="/shop" className="inline-block bg-red-600 text-white px-12 py-6 text-xs font-black uppercase tracking-[0.2em] italic hover:bg-white hover:text-black transition-all">
               Scopri gli Eventi
-            </button>
+            </Link>
           </div>
         </section>
       </main>
