@@ -63,7 +63,11 @@ const Profile = () => {
     </div>
   );
 
-  const displayName = profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : user?.email?.split('@')[0];
+  // Logica per il nome visualizzato: Nome Completo > Username > Email Prefix
+  const displayName = profile?.username || 
+                     (profile?.first_name || profile?.last_name ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : null) || 
+                     user?.email?.split('@')[0] || 
+                     'User';
 
   const tabs = [
     { id: 'activity', label: 'Feed', icon: MessageSquare },
@@ -98,10 +102,10 @@ const Profile = () => {
             </div>
             <div className="mb-2">
               <h1 className="text-2xl md:text-4xl font-black italic uppercase tracking-tighter leading-none">
-                {displayName || 'Membro'}
+                {displayName}
               </h1>
               <p className="text-red-600 text-[8px] font-black uppercase tracking-[0.3em] italic mt-1">
-                District Member
+                OFFICIAL MEMBER
               </p>
             </div>
           </div>
