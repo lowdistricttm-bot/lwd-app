@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Car, Loader2, Calendar, MapPin, ChevronRight, CheckCircle2, AlertCircle, X, Instagram, Phone, User, Map } from 'lucide-react';
+import { Car, Loader2, Calendar, MapPin, ChevronRight, CheckCircle2, AlertCircle, X, Instagram, Phone, User, Map, Mail } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
@@ -35,13 +35,18 @@ const Events = () => {
   const { events, isLoading: eventsLoading, applyToEvent } = useEvents();
   const { vehicles, isLoading: vehiclesLoading } = useGarage();
 
-  // Trova il veicolo selezionato per controllare la descrizione
-  const selectedVehicle = useMemo(() => 
-    vehicles?.find(v => v.id === formData.vehicleId),
-  [vehicles, formData.vehicleId]);
-
-  // Verifica se il veicolo ha già una descrizione nel garage
-  const hasGarageDescription = !!selectedVehicle?.description?.trim();
+  // Sincronizza la descrizione quando cambia il veicolo selezionato
+  useEffect(() => {
+    if (formData.vehicleId && vehicles) {
+      const vehicle = vehicles.find(v => v.id === formData.vehicleId);
+      if (vehicle) {
+        setFormData(prev => ({
+          ...prev,
+          modifications: vehicle.description || ''
+        }));
+      }
+    }
+  }, [formData.vehicleId, vehicles]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -60,16 +65,10 @@ const Events = () => {
     e.preventDefault();
     if (!selectedEvent || !formData.vehicleId) return;
     
-    // Se il veicolo ha una descrizione nel garage, usiamo quella
-    const finalModifications = hasGarageDescription 
-      ? selectedVehicle.description 
-      : formData.modifications;
-
     try {
       await applyToEvent.mutateAsync({
         eventId: selectedEvent.id,
-        ...formData,
-        modifications: finalModifications
+        ...formData
       });
       setSelectedEvent(null);
       setFormData(prev => ({ ...prev, vehicleId: '', modifications: '' }));
@@ -197,6 +196,10 @@ const Events = () => {
                           <Input required value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
                         </div>
                         <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase text-zinc-500 flex items-center gap-2"><Mail size={12}/> Email</Label>
+                          <Input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
+                        </div>
+                        <div className="space-y-2">
                           <Label className="text-[10px] font-black uppercase text-zinc-500 flex items-center gap-2"><Phone size={12}/> Cellulare</Label>
                           <Input required type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
                         </div>
@@ -204,7 +207,7 @@ const Events = () => {
                           <Label className="text-[10px] font-black uppercase text-zinc-500 flex items-center gap-2"><Map size={12}/> Città</Label>
                           <Input required value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-2 md:col-span-2">
                           <Label className="text-[10px] font-black uppercase text-zinc-500 flex items-center gap-2"><Instagram size={12}/> Instagram</Label>
                           <Input required placeholder="@username" value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
                         </div>
@@ -233,7 +236,13 @@ const Events = () => {
                                 formData.vehicleId === vehicle.id ? "bg-red-600 border-red-600 text-white" : "bg-zinc-900/50 border-white/5 text-zinc-400 hover:border-white/20"
                               )}
                             >
-                              <div className="w-12 h-12 bg-black/20 flex items-center justify-center shrink-0"><Car size={20} /></div>
+                              <div className="w-16 h-16 bg-zinc-800 border border-white/10 overflow-hidden shrink-0">
+                                {vehicle.image_url ? (
+                                  <img src={vehicle.image_url} alt={vehicle.model} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center"><Car size={20} /></div>
+                                )}
+                              </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs font-black uppercase italic truncate">{vehicle.brand} {vehicle.model}</p>
                                 <p className="text-[9px] font-bold uppercase opacity-60">{vehicle.suspension_type} • {vehicle.year}</p>
@@ -245,8 +254,8 @@ const Events = () => {
                       )}
                     </div>
 
-                    {/* Modifiche - Mostrato solo se il veicolo NON ha una descrizione nel garage */}
-                    {!hasGarageDescription && formData.vehicleId && (
+                    {/* Modifiche */}
+                    {formData.vehicleId && (
                       <motion.div 
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
@@ -261,15 +270,10 @@ const Events = () => {
                           onChange={e => setFormData({...formData, modifications: e.target.value})}
                           className="bg-transparent border-zinc-800 rounded-none min-h-[150px] text-sm" 
                         />
-                      </motion.div>
-                    )}
-
-                    {hasGarageDescription && (
-                      <div className="p-4 bg-zinc-900/30 border border-white/5">
-                        <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500 italic">
-                          Verrà utilizzata la descrizione del progetto già presente nel tuo Garage.
+                        <p className="text-[8px] text-zinc-600 uppercase font-bold tracking-widest italic">
+                          * Pre-compilato dal tuo garage. Puoi modificarlo per questa candidatura.
                         </p>
-                      </div>
+                      </motion.div>
                     )}
 
                     <div className="pt-6 border-t border-white/5">
