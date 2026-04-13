@@ -18,7 +18,8 @@ import {
   Loader2,
   Camera,
   ShieldCheck,
-  ClipboardCheck
+  ClipboardCheck,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -217,15 +218,29 @@ const Profile = () => {
         </div>
 
         <div className="mt-20 px-4 md:px-12 max-w-6xl mx-auto">
+          {/* Admin Dashboard Box */}
           {profile?.is_admin && (
-            <div className="mb-8">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-10 bg-zinc-900 border-l-4 border-red-600 p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-red-600 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="text-white" size={24} />
+                </div>
+                <div>
+                  <h2 className="text-lg font-black italic uppercase tracking-tighter">Dashboard Amministrazione</h2>
+                  <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Gestisci selezioni, eventi e community</p>
+                </div>
+              </div>
               <Button 
                 onClick={() => navigate('/admin/applications')}
-                className="w-full bg-red-600 hover:bg-white hover:text-black text-white rounded-none h-14 font-black uppercase italic tracking-widest transition-all"
+                className="bg-white text-black hover:bg-red-600 hover:text-white rounded-none px-8 h-12 font-black uppercase italic tracking-widest transition-all group"
               >
-                <ShieldCheck className="mr-2" /> Dashboard Amministratore
+                Entra Ora <ChevronRight className="ml-2 group-hover:translate-x-1 transition-transform" size={16} />
               </Button>
-            </div>
+            </motion.div>
           )}
 
           <div className="grid grid-cols-6 border border-white/5 bg-zinc-900/30 mb-10">
