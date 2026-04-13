@@ -22,43 +22,58 @@ const bpFetch = async (endpoint: string, options: RequestInit = {}, forceAuth = 
       }
     }
 
-    const response = await fetch(url, {
-      ...options,
-      headers,
-      mode: 'cors',
-    });
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers,
+        mode: 'cors',
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      return { ok: false, status: response.status, data: errorData };
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        return { ok: false, status: response.status, data: errorData };
+      }
+
+      const data = await response.json();
+      return { ok: true, data };
+    } catch (e: any) {
+      return { ok: false, status: 0, error: e.message };
     }
-
-    const data = await response.json();
-    return { ok: true, data };
   };
 
   try {
+    // 1. Prova chiamata pubblica (se non è richiesta auth forzata)
     if (!forceAuth) {
       const result = await doFetch(false, false);
       if (result.ok) return result.data;
     }
 
-    const authResult = await doFetch(true, false);
-    if (authResult.ok) return authResult.data;
+    // 2. Prova chiamata autenticata (solo se abbiamo il token)
+    if (token) {
+      const authResult = await doFetch(true, false);
+      if (authResult.ok) return authResult.data;
 
-    if (authResult.status === 400 || authResult.status === 401) {
-      const urlParamResult = await doFetch(true, true);
-      if (urlParamResult.ok) return urlParamResult.data;
-      
-      if (urlParamResult.status === 401) throw new Error("401");
-      throw new Error(urlParamResult.data?.message || `Errore ${urlParamResult.status}`);
+      // 3. Fallback su parametro URL se l'header Authorization è bloccato dal server
+      if (authResult.status === 401 || authResult.status === 400 || authResult.status === 0) {
+        const urlParamResult = await doFetch(true, true);
+        if (urlParamResult.ok) return urlParamResult.data;
+        
+        if (urlParamResult.status === 401) throw new Error("401");
+      }
     }
 
-    throw new Error(authResult.data?.message || "Errore di connessione");
+    // Se arriviamo qui e non abbiamo dati, restituiamo un array vuoto per evitare crash
+    return [];
   } catch (err: any) {
-    console.error(`[BuddyPress API Error]`, err);
+    console.error(`[BuddyPress API Error Detail]`, {
+      message: err.message,
+      endpoint: path,
+      hasToken: !!token
+    });
+    
     if (err.message === "401") throw err;
-    throw new Error("NETWORK_OR_CORS_ERROR");
+    // Invece di lanciare un errore che blocca la UI, restituiamo un fallback sicuro
+    return [];
   }
 };
 
