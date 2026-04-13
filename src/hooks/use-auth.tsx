@@ -65,31 +65,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Estrazione Token
       const jwtToken = resData.data?.jwt || resData.jwt;
       
-      // Estrazione Dati Utente (WordPress può restituirli in diversi formati)
-      const wpUser = resData.data?.user || resData.user;
-      
-      // Estrazione ID ultra-robusta: controlliamo ogni possibile campo
-      const rawId = wpUser?.ID || 
-                    wpUser?.id || 
-                    resData.data?.user_id || 
-                    resData.user_id || 
-                    resData.id || 
-                    resData.data?.id;
+      if (!jwtToken) {
+        throw new Error("Token non ricevuto dal server.");
+      }
 
-      const userId = parseInt(rawId);
+      // Decodifica manuale del JWT per estrarre i dati utente
+      // Il JWT è composto da header.payload.signature
+      const payloadBase64 = jwtToken.split('.')[1];
+      const decodedPayload = JSON.parse(atob(payloadBase64));
+      
+      console.log("[Auth] Decoded JWT Payload:", decodedPayload);
+
+      // Estrazione dati dal payload del token
+      const userId = parseInt(decodedPayload.id);
+      const userEmail = decodedPayload.email || '';
+      const userLogin = decodedPayload.username || username;
 
       if (isNaN(userId)) {
         console.error("[Auth] Struttura risposta non riconosciuta:", resData);
-        throw new Error("ID utente non trovato nella risposta del server.");
+        throw new Error("ID utente non trovato nel token.");
       }
 
       const userData: User = {
         id: userId,
-        username: wpUser?.user_login || wpUser?.username || username,
-        email: wpUser?.user_email || wpUser?.email || '',
-        nicename: wpUser?.display_name || wpUser?.nicename || username,
-        display_name: wpUser?.display_name || wpUser?.name || username,
-        avatar: wpUser?.avatar_urls?.['96'] || defaultAvatar
+        username: userLogin,
+        email: userEmail,
+        nicename: userLogin,
+        display_name: userLogin,
+        avatar: defaultAvatar // L'avatar verrà caricato al primo refresh o dal profilo
       };
 
       setToken(jwtToken);
@@ -117,7 +120,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const refreshUser = async () => {
     setIsRefreshing(true);
-    // Simulazione refresh (in futuro si può chiamare l'API /me)
+    // Simulazione refresh
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
