@@ -5,7 +5,7 @@ import { Loader2, RefreshCw } from 'lucide-react';
 
 interface WordPressPortalProps {
   url: string;
-  headerHeight?: number; // Altezza stimata dell'header da nascondere (es. 80)
+  headerHeight?: number; 
 }
 
 const WordPressPortal = ({ url, headerHeight = 0 }: WordPressPortalProps) => {
@@ -33,18 +33,18 @@ const WordPressPortal = ({ url, headerHeight = 0 }: WordPressPortalProps) => {
         </button>
       </div>
 
-      <div 
-        className="w-full h-full overflow-hidden"
-        style={{ 
-          marginTop: `-${headerHeight}px`, 
-          height: `calc(100% + ${headerHeight}px)` 
-        }}
-      >
+      {/* Container con overflow hidden che 'taglia' l'header spingendo l'iframe in su */}
+      <div className="w-full h-full overflow-hidden relative">
         <iframe 
           key={key}
           src={appUrl} 
-          className="w-full h-full border-none"
-          style={{ backgroundColor: 'black' }}
+          className="absolute w-full border-none"
+          style={{ 
+            backgroundColor: 'black',
+            top: `-${headerHeight}px`,
+            height: `calc(100% + ${headerHeight}px)`,
+            left: 0
+          }}
           onLoad={() => setIsLoading(false)}
         />
       </div>
