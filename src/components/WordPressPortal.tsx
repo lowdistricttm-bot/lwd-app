@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { ExternalLink, AlertCircle, RefreshCw, ShieldAlert } from 'lucide-center';
+import { ExternalLink, RefreshCw, ShieldAlert } from 'lucide-react';
 
 interface WordPressPortalProps {
   url: string;
