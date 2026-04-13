@@ -14,12 +14,12 @@ export interface Event {
   created_at: string;
 }
 
-// Dati ufficiali Low District Season 4
+// Dati ufficiali Low District Season 4 presi dal sito
 const MOCK_EVENTS: Event[] = [
   {
     id: "season-4-2026",
     title: "LOW DISTRICT - SEASON 4",
-    description: "Il capitolo più grande della nostra storia. Season 4 torna all'Autodromo di Modena per celebrare la cultura stance. Selezioni ufficiali aperte per l'area espositiva. Carica le foto del tuo progetto nel garage e invia la tua candidatura per accedere all'area selezione.",
+    description: "L'evento che definisce lo standard della cultura stance in Italia. Season 4 torna all'Autodromo di Modena per una giornata epica tra auto, musica e lifestyle. Le selezioni ufficiali sono aperte: carica il tuo progetto nel garage dell'app e invia la tua candidatura per provare ad aggiudicarti un posto nell'area espositiva principale.",
     date: "2026-05-24T09:00:00Z",
     location: "Autodromo di Modena, Italia",
     status: "open",
@@ -41,7 +41,7 @@ export const useEvents = () => {
         return MOCK_EVENTS;
       }
       
-      // Se il database è vuoto, mostriamo l'evento ufficiale di test
+      // Se il database è vuoto, mostriamo l'evento ufficiale
       return data && data.length > 0 ? data : MOCK_EVENTS;
     }
   });
