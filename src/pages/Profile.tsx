@@ -14,8 +14,7 @@ import {
   MessageSquare, 
   ShoppingBag, 
   Loader2,
-  Camera,
-  Image as ImageIcon
+  Camera
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -138,16 +137,33 @@ const Profile = () => {
       
       <main className="flex-1 pb-32">
         {/* Cover Section */}
-        <div className="relative h-56 md:h-80 bg-zinc-900 group/cover">
-          <img 
-            src={profile?.cover_url || DEFAULT_COVER} 
-            className="w-full h-full object-cover opacity-60 grayscale hover:grayscale-0 transition-all duration-700"
-            alt="Cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40" />
-          
-          {/* Cover Upload Button */}
-          <div className="absolute top-4 right-4 z-10">
+        <div className="relative h-56 md:h-80 bg-zinc-900">
+          {/* Clickable Cover Area */}
+          <div 
+            className="absolute inset-0 group/cover cursor-pointer overflow-hidden"
+            onClick={() => coverInputRef.current?.click()}
+          >
+            <img 
+              src={profile?.cover_url || DEFAULT_COVER} 
+              className="w-full h-full object-cover opacity-60 grayscale group-hover/cover:grayscale-0 group-hover/cover:scale-105 transition-all duration-700"
+              alt="Cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40" />
+            
+            {/* Cover Hover Overlay */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/cover:opacity-100 transition-all duration-300 bg-black/20 backdrop-blur-[2px]">
+              <div className="flex flex-col items-center gap-2">
+                {uploadingCover ? (
+                  <Loader2 size={32} className="animate-spin text-white" />
+                ) : (
+                  <>
+                    <Camera size={32} className="text-white" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white italic">Cambia Copertina</span>
+                  </>
+                )}
+              </div>
+            </div>
+
             <input 
               type="file" 
               ref={coverInputRef} 
@@ -155,17 +171,10 @@ const Profile = () => {
               accept="image/*" 
               onChange={(e) => handleFileUpload(e, 'cover')}
             />
-            <button 
-              onClick={() => coverInputRef.current?.click()}
-              className="bg-black/60 backdrop-blur-md border border-white/10 p-3 hover:bg-white hover:text-black transition-all flex items-center gap-2"
-            >
-              {uploadingCover ? <Loader2 size={16} className="animate-spin" /> : <ImageIcon size={16} />}
-              <span className="text-[9px] font-black uppercase tracking-widest hidden md:block">Cambia Copertina</span>
-            </button>
           </div>
 
           {/* Avatar Section */}
-          <div className="absolute -bottom-12 left-6 flex items-end gap-4">
+          <div className="absolute -bottom-12 left-6 flex items-end gap-4 z-20">
             <div className="relative group/avatar">
               <input 
                 type="file" 
@@ -175,7 +184,10 @@ const Profile = () => {
                 onChange={(e) => handleFileUpload(e, 'avatar')}
               />
               <div 
-                onClick={() => avatarInputRef.current?.click()}
+                onClick={(e) => {
+                  e.stopPropagation(); // Evita di triggerare il click della cover
+                  avatarInputRef.current?.click();
+                }}
                 className="w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-white rounded-full overflow-hidden shadow-2xl flex items-center justify-center cursor-pointer relative"
               >
                 {uploadingAvatar ? (
