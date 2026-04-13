@@ -6,7 +6,7 @@ const WC_URL = "https://www.lowdistrict.it/wp-json/wc/v3";
 const CK = "ck_3d72f4e97f4b104d76bcf2f156d7f47b0e92af9b"; 
 const CS = "cs_dfc8bfa35e29acf49067f1af13a98734142d2533";
 
-const getAuthHeader = () => {
+const getWcAuthHeader = () => {
   return {
     'Authorization': 'Basic ' + btoa(`${CK}:${CS}`)
   };
@@ -17,7 +17,7 @@ export const useWcProducts = (params = "per_page=100") => {
     queryKey: ['wc-products', params],
     queryFn: async () => {
       const response = await fetch(`${WC_URL}/products?${params}`, {
-        headers: getAuthHeader()
+        headers: getWcAuthHeader()
       });
       if (!response.ok) throw new Error('Errore caricamento prodotti');
       return response.json();
@@ -30,7 +30,7 @@ export const useWcCategories = () => {
     queryKey: ['wc-categories'],
     queryFn: async () => {
       const response = await fetch(`${WC_URL}/products/categories?hide_empty=true&per_page=100`, {
-        headers: getAuthHeader()
+        headers: getWcAuthHeader()
       });
       if (!response.ok) throw new Error('Errore caricamento categorie');
       const data = await response.json();
@@ -45,7 +45,7 @@ export const useWcProduct = (id?: string) => {
     queryFn: async () => {
       if (!id) return null;
       const response = await fetch(`${WC_URL}/products/${id}`, {
-        headers: getAuthHeader()
+        headers: getWcAuthHeader()
       });
       if (!response.ok) throw new Error('Prodotto non trovato');
       return response.json();
@@ -60,7 +60,7 @@ export const useWcVariations = (productId?: number) => {
     queryFn: async () => {
       if (!productId) return [];
       const response = await fetch(`${WC_URL}/products/${productId}/variations`, {
-        headers: getAuthHeader()
+        headers: getWcAuthHeader()
       });
       if (!response.ok) return [];
       return response.json();
@@ -74,11 +74,25 @@ export const useWcUserOrders = (email?: string) => {
     queryKey: ['wc-orders', email],
     queryFn: async () => {
       if (!email) return [];
-      const response = await fetch(`${WC_URL}/orders?customer=${email}`, {
-        headers: getAuthHeader()
+      
+      // Prima cerca l'ID del cliente da email
+      const customerResponse = await fetch(`${WC_URL}/customers?email=${encodeURIComponent(email)}`, {
+        headers: getWcAuthHeader()
       });
-      if (!response.ok) return [];
-      return response.json();
+      
+      if (!customerResponse.ok) return [];
+      const customerData = await customerResponse.json();
+      const customerId = customerData[0]?.id;
+      
+      if (!customerId) return [];
+      
+      // Poi cerca gli ordini con l'ID del cliente
+      const ordersResponse = await fetch(`${WC_URL}/orders?customer=${customerId}`, {
+        headers: getWcAuthHeader()
+      });
+      
+      if (!ordersResponse.ok) return [];
+      return ordersResponse.json();
     },
     enabled: !!email
   });
