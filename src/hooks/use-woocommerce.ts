@@ -54,3 +54,18 @@ export const useWcVariations = (productId?: number) => {
     enabled: !!productId
   });
 };
+
+export const useWcUserOrders = (email?: string) => {
+  return useQuery({
+    queryKey: ['wc-orders', email],
+    queryFn: async () => {
+      if (!email) return [];
+      const response = await fetch(`${WC_URL}/orders?customer=${email}`, {
+        headers: getAuthHeader()
+      });
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: !!email
+  });
+};
