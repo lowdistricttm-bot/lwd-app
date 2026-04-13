@@ -29,7 +29,7 @@ export const useWpAuth = () => {
       const token = data.jwt || data.token || data.data?.jwt;
       const userEmail = data.user_email || (username.includes('@') ? username : `${username}@lowdistrict.it`);
 
-      // 1. Prova il login
+      // 1. Prova il login su Supabase
       const { error: authError } = await supabase.auth.signInWithPassword({
         email: userEmail,
         password: password,
@@ -37,9 +37,14 @@ export const useWpAuth = () => {
 
       // 2. Gestione errori specifici di Supabase
       if (authError) {
+        // Errore: Provider disabilitato
+        if (authError.message.includes("Email provider is disabled")) {
+          throw new Error("Il provider Email è disabilitato su Supabase. Vai in Auth -> Providers e abilita 'Email'.");
+        }
+
         // Errore: Email non confermata
         if (authError.message.includes("Email not confirmed")) {
-          throw new Error("Email non confermata. Controlla la tua posta o disabilita 'Confirm Email' in Supabase -> Auth -> Providers.");
+          throw new Error("Email non confermata. Controlla la tua posta o disabilita 'Confirm Email' in Supabase.");
         }
 
         // Errore: Utente non esiste (proviamo a crearlo)
@@ -56,14 +61,13 @@ export const useWpAuth = () => {
           });
           
           if (signUpError) {
-            if (signUpError.status === 429) {
-              throw new Error("Limite invio email raggiunto. Disabilita 'Confirm Email' nel pannello Supabase.");
+            if (signUpError.message.includes("Email provider is disabled")) {
+              throw new Error("Impossibile creare l'account: abilita il provider 'Email' nella dashboard di Supabase.");
             }
             throw signUpError;
           }
 
-          // Se il signUp ha successo ma richiede conferma, avvisiamo l'utente
-          throw new Error("Account creato! Controlla la tua email per confermare l'accesso.");
+          throw new Error("Account creato! Se non riesci ad accedere, controlla l'email o disabilita la conferma obbligatoria.");
         }
 
         throw authError;
