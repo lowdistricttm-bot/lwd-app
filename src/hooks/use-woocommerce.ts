@@ -12,7 +12,7 @@ const getAuthHeader = () => {
   };
 };
 
-export const useWcProducts = (params = "") => {
+export const useWcProducts = (params = "per_page=100") => {
   return useQuery({
     queryKey: ['wc-products', params],
     queryFn: async () => {

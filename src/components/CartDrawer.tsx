@@ -5,6 +5,7 @@ import { X, ShoppingBag, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/hooks/use-cart';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -13,6 +14,12 @@ interface CartDrawerProps {
 
 const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
   const { items, removeFromCart, total } = useCart();
+  const navigate = useNavigate();
+
+  const handleCheckout = () => {
+    onClose();
+    navigate('/checkout');
+  };
 
   return (
     <AnimatePresence>
@@ -78,7 +85,10 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                   <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Totale Parziale</span>
                   <span className="text-2xl font-black tracking-tighter italic">€{total.toFixed(2)}</span>
                 </div>
-                <Button className="w-full bg-red-600 hover:bg-red-700 text-white py-8 text-sm font-black uppercase tracking-widest rounded-none italic">
+                <Button 
+                  onClick={handleCheckout}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white py-8 text-sm font-black uppercase tracking-widest rounded-none italic"
+                >
                   Vai al Checkout
                 </Button>
               </div>

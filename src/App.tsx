@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Bacheca from "./pages/Bacheca";
 import Shop from "./pages/Shop";
 import ProductDetail from "./pages/ProductDetail";
+import Checkout from "./pages/Checkout";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/bacheca" element={<Bacheca />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/checkout" element={<Checkout />} />
           <Route path="/login" element={<Login />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<NotFound />} />

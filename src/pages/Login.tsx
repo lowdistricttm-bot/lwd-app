@@ -25,18 +25,10 @@ const Login = () => {
 
     try {
       await loginWithWp(username, password);
-      
-      // Verifichiamo che la sessione sia effettivamente attiva prima di navigare
       const { data: { session } } = await supabase.auth.getSession();
-      
       showSuccess("Bentornato nel District!");
-      
-      if (session) {
-        navigate('/profile');
-      } else {
-        // Se non c'è sessione immediata, aspettiamo un attimo o riproviamo
-        setTimeout(() => navigate('/profile'), 500);
-      }
+      if (session) navigate('/profile');
+      else setTimeout(() => navigate('/profile'), 500);
     } catch (error: any) {
       showError(error.message || "Credenziali non valide");
     }
@@ -68,11 +60,11 @@ const Login = () => {
                 <Label className="font-black uppercase text-[10px] tracking-[0.2em] text-zinc-500">Username</Label>
                 <Input 
                   type="text" 
-                  placeholder="IL TUO USERNAME"
+                  placeholder="Il tuo username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
-                  className="bg-transparent border-zinc-800 rounded-none h-12 font-bold text-xs uppercase tracking-widest focus:border-red-600 transition-colors"
+                  className="bg-transparent border-zinc-800 rounded-none h-12 font-bold text-xs tracking-widest focus:border-red-600 transition-colors"
                 />
               </div>
 
@@ -80,7 +72,7 @@ const Login = () => {
                 <div className="flex justify-between items-center">
                   <Label className="font-black uppercase text-[10px] tracking-[0.2em] text-zinc-500">Password</Label>
                   <a 
-                    href="https://www.lowdistrict.it/my-account/lost-password/" 
+                    href="https://www.lowdistrict.it/account/lost-password/" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-[9px] font-black uppercase text-zinc-600 hover:text-white transition-colors"
@@ -94,7 +86,7 @@ const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="bg-transparent border-zinc-800 rounded-none h-12 font-bold text-xs uppercase tracking-widest focus:border-red-600 transition-colors"
+                  className="bg-transparent border-zinc-800 rounded-none h-12 font-bold text-xs tracking-widest focus:border-red-600 transition-colors"
                 />
               </div>
 
