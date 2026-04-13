@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWcUserOrders } from '@/hooks/use-woocommerce';
+import { useBPMember } from '@/hooks/use-buddypress';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -22,7 +23,10 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('activity');
 
+  const username = user?.user_metadata?.username || user?.email?.split('@')[0];
+  
   const { data: orders, isLoading: loadingOrders } = useWcUserOrders(user?.email);
+  const { data: bpMember, isLoading: loadingBP } = useBPMember(username);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -56,7 +60,7 @@ const Profile = () => {
     </div>
   );
 
-  const username = user?.user_metadata?.username || user?.email?.split('@')[0] || 'Membro';
+  const displayUsername = username || 'Membro';
 
   const tabs = [
     { id: 'activity', label: 'Feed', icon: MessageSquare },
@@ -83,7 +87,11 @@ const Profile = () => {
           <div className="absolute -bottom-12 left-6 flex items-end gap-4">
             <div className="relative">
               <div className="w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-black rounded-none overflow-hidden shadow-2xl flex items-center justify-center">
-                <User size={40} className="text-zinc-800" />
+                {bpMember?.avatar_urls?.full ? (
+                  <img src={bpMember.avatar_urls.full} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <User size={40} className="text-zinc-800" />
+                )}
               </div>
               <button className="absolute bottom-1 right-1 p-1.5 bg-red-600 text-white rounded-none hover:bg-white hover:text-black transition-all">
                 <Camera size={12} />
@@ -91,7 +99,7 @@ const Profile = () => {
             </div>
             <div className="mb-2">
               <h1 className="text-2xl md:text-4xl font-black italic uppercase tracking-tighter leading-none">
-                {username}
+                {displayUsername}
               </h1>
               <p className="text-red-600 text-[8px] font-black uppercase tracking-[0.3em] italic mt-1">
                 Official Member
@@ -101,7 +109,6 @@ const Profile = () => {
         </div>
 
         <div className="mt-20 px-4 md:px-12 max-w-6xl mx-auto">
-          {/* Fixed Icon Navigation - No Swipe */}
           <div className="grid grid-cols-5 border border-white/5 bg-zinc-900/30 mb-10">
             {tabs.map((tab) => (
               <button
@@ -120,7 +127,6 @@ const Profile = () => {
             ))}
           </div>
 
-          {/* Tab Content Area */}
           <div className="min-h-[400px]">
             <AnimatePresence mode="wait">
               {activeTab === 'activity' && (
@@ -222,7 +228,9 @@ const Profile = () => {
                       </div>
                       <div>
                         <p className="text-[8px] text-zinc-600 font-black uppercase tracking-widest mb-1">Membro dal</p>
-                        <p className="text-xs font-bold uppercase">{new Date(user?.created_at).toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}</p>
+                        <p className="text-xs font-bold uppercase">
+                          {loadingBP ? "Caricamento..." : bpMember?.registered_since || "N/D"}
+                        </p>
                       </div>
                     </div>
                   </div>
