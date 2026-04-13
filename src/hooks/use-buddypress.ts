@@ -7,7 +7,8 @@ const BP_API_URL = "https://www.lowdistrict.it/wp-json/buddypress/v1";
 
 const getAuthHeader = () => {
   const token = localStorage.getItem('wp-jwt');
-  return token ? { 'Authorization': `Bearer ${token}` } : {};
+  if (!token) return {};
+  return { 'Authorization': `Bearer ${token}` };
 };
 
 export interface BPActivity {
@@ -34,10 +35,16 @@ export const useBPActivity = () => {
     queryKey: ['bp-activity'],
     queryFn: async () => {
       const response = await fetch(`${BP_API_URL}/activity?per_page=20&_embed`, {
-        headers: { 'Content-Type': 'application/json', ...getAuthHeader() }
+        headers: { 
+          'Content-Type': 'application/json',
+          ...getAuthHeader() 
+        }
       });
 
-      if (!response.ok) throw new Error('Impossibile caricare la bacheca.');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Impossibile caricare la bacheca.');
+      }
       return response.json() as Promise<BPActivity[]>;
     },
     refetchInterval: 60000,
@@ -49,11 +56,23 @@ export const useBPActions = () => {
 
   const favoriteMutation = useMutation({
     mutationFn: async (activityId: number) => {
+      const headers = getAuthHeader();
+      if (!headers.Authorization) {
+        throw new Error('Devi effettuare l\'accesso per interagire.');
+      }
+
       const response = await fetch(`${BP_API_URL}/activity/${activityId}/favorite`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeader() }
+        headers: { 
+          'Content-Type': 'application/json',
+          ...headers 
+        }
       });
-      if (!response.ok) throw new Error('Devi essere loggato per mettere Like');
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Errore durante l\'aggiunta ai preferiti.');
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -65,12 +84,24 @@ export const useBPActions = () => {
 
   const commentMutation = useMutation({
     mutationFn: async ({ activityId, content }: { activityId: number, content: string }) => {
+      const headers = getAuthHeader();
+      if (!headers.Authorization) {
+        throw new Error('Devi effettuare l\'accesso per commentare.');
+      }
+
       const response = await fetch(`${BP_API_URL}/activity/${activityId}/comment`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...headers 
+        },
         body: JSON.stringify({ content })
       });
-      if (!response.ok) throw new Error('Errore durante l\'invio del commento');
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Errore durante l\'invio del commento.');
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -89,7 +120,10 @@ export const useBPMember = (username?: string) => {
     queryFn: async () => {
       if (!username) return null;
       const response = await fetch(`${BP_API_URL}/members?slug=${username}`, {
-        headers: { 'Content-Type': 'application/json', ...getAuthHeader() }
+        headers: { 
+          'Content-Type': 'application/json',
+          ...getAuthHeader() 
+        }
       });
       if (!response.ok) throw new Error('Membro non trovato');
       const data = await response.json();
