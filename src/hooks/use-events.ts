@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { showError, showSuccess } from '@/utils/toast';
 
@@ -14,12 +14,12 @@ export interface Event {
   created_at: string;
 }
 
-// Dati ufficiali Low District Season 4 aggiornati
+// Dati ufficiali Low District Season 4 presi dall'evento ufficiale
 const MOCK_EVENTS: Event[] = [
   {
     id: "season-4-2026",
     title: "LOW DISTRICT - SEASON 4",
-    description: "L'evento che definisce lo standard della cultura stance in Italia. Season 4 approda ad Atripalda (AV) per un weekend epico il 27 e 28 Giugno 2026. Le selezioni ufficiali sono aperte: carica il tuo progetto nel garage dell'app e invia la tua candidatura per provare ad aggiudicarti un posto nell'area espositiva principale.",
+    description: "Il capitolo più grande della nostra storia. Il 27 e 28 Giugno 2026, la cultura stance approda ad Atripalda (AV) per un weekend senza precedenti. Due giorni dedicati ai migliori progetti automobilistici, musica, lifestyle e community. Le selezioni ufficiali sono aperte: carica il tuo progetto nel garage dell'app e invia la tua candidatura per provare ad aggiudicarti un posto nell'area espositiva principale.",
     date: "2026-06-27T09:00:00Z",
     location: "Atripalda (AV), Italia",
     status: "open",
@@ -28,6 +28,8 @@ const MOCK_EVENTS: Event[] = [
 ];
 
 export const useEvents = () => {
+  const queryClient = useQueryClient();
+
   const { data: events, isLoading } = useQuery({
     queryKey: ['events'],
     queryFn: async () => {
