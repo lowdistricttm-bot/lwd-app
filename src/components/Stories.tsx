@@ -20,7 +20,7 @@ const Stories = () => {
   const [isUploading, setIsUploading] = React.useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Logica di filtraggio robusta per separare la propria storia dalle altre
+  // Separiamo la mia storia da quelle degli altri
   const { myStory, otherStories } = useMemo(() => {
     if (!stories || !user) return { myStory: null, otherStories: stories || [] };
     
@@ -58,8 +58,7 @@ const Stories = () => {
       
       showSuccess("Storia pubblicata!");
     } catch (err: any) {
-      console.error("Storage error:", err);
-      showError("Errore durante il caricamento della storia.");
+      showError("Errore durante il caricamento.");
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -80,7 +79,7 @@ const Stories = () => {
       <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
       
       <div className="flex gap-4 overflow-x-auto pt-4 pb-6 px-6 no-scrollbar bg-black">
-        {/* Slot Personale */}
+        {/* SLOT UTENTE (Sempre il primo) */}
         <div className="flex flex-col items-center gap-2 shrink-0">
           <div className="relative">
             <button 
@@ -94,32 +93,32 @@ const Stories = () => {
             >
               <div className="w-full h-full rounded-full border-2 border-black overflow-hidden bg-zinc-900">
                 <img 
-                  src={myStory ? myStory.image_url : (user?.avatar || "https://www.lowdistrict.it/wp-content/uploads/placeholder.png")} 
-                  className={cn("w-full h-full object-cover", !myStory && "opacity-50")} 
+                  src={user?.avatar || "https://www.lowdistrict.it/wp-content/uploads/placeholder.png"} 
+                  className="w-full h-full object-cover" 
                   alt="La tua storia"
                 />
               </div>
             </button>
             
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                fileInputRef.current?.click();
-              }}
-              disabled={isUploading}
-              className="absolute bottom-0 right-0 bg-red-600 rounded-full p-1 border-2 border-black hover:scale-110 transition-transform z-20"
-            >
-              {isUploading ? (
-                <Loader2 className="animate-spin text-white" size={12} />
-              ) : (
-                <Plus size={12} className="text-white" />
-              )}
-            </button>
+            {/* Il tasto + è un overlay sul cerchio dell'utente */}
+            {!myStory && (
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className="absolute bottom-0 right-0 bg-blue-500 rounded-full p-1 border-2 border-black hover:scale-110 transition-transform z-20"
+              >
+                {isUploading ? (
+                  <Loader2 className="animate-spin text-white" size={12} />
+                ) : (
+                  <Plus size={12} className="text-white" />
+                )}
+              </button>
+            )}
           </div>
           <span className="text-[10px] font-black uppercase text-white/40">La tua storia</span>
         </div>
 
-        {/* Altre storie */}
+        {/* ALTRE STORIE (Solo altri utenti) */}
         {otherStories.map((story: any) => (
           <button 
             key={story.id} 

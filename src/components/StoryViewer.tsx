@@ -98,18 +98,19 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
     if (progress >= 100) handleNext();
   }, [progress, handleNext]);
 
+  // Verifica se l'utente loggato è il proprietario della storia corrente
   const isOwner = user && String(user.id) === String(stories[currentIndex].userId);
 
   return createPortal(
     <motion.div 
-      initial={{ opacity: 0, scale: 0.9 }} 
-      animate={{ opacity: 1, scale: 1 }} 
-      exit={{ opacity: 0, scale: 0.9 }} 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }} 
+      exit={{ opacity: 0 }} 
       className="fixed inset-0 z-[9999] bg-black flex items-center justify-center"
     >
       <div className="relative w-full h-full md:max-w-[450px] md:h-[90vh] bg-zinc-950 md:rounded-3xl overflow-hidden">
         {/* Progress Bars */}
-        <div className="absolute top-4 left-4 right-4 z-50 flex gap-1">
+        <div className="absolute top-4 left-4 right-4 z-[100] flex gap-1">
           {stories.map((_, i) => (
             <div key={i} className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden">
               <div 
@@ -121,7 +122,7 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
         </div>
 
         {/* Header */}
-        <div className="absolute top-10 left-4 right-4 z-50 flex items-center justify-between">
+        <div className="absolute top-10 left-4 right-4 z-[100] flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full border-2 border-red-600 p-0.5">
               <img src={stories[currentIndex].img} className="w-full h-full object-cover rounded-full" alt="" />
@@ -133,15 +134,17 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          
+          <div className="flex items-center gap-1">
+            {/* Menu Opzioni (Tre puntini) - Visibile solo al proprietario */}
             {isOwner && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="text-white/80 hover:text-white p-2 transition-colors">
+                  <button className="text-white p-2 hover:bg-white/10 rounded-full transition-all">
                     {isDeleting ? <Loader2 className="animate-spin" size={20} /> : <MoreHorizontal size={24} />}
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-zinc-900 border-white/10 text-white min-w-[160px]">
+                <DropdownMenuContent align="end" className="bg-zinc-900 border-white/10 text-white min-w-[160px] z-[10000]">
                   <DropdownMenuItem 
                     onClick={handleDelete}
                     className="text-red-600 focus:text-red-600 focus:bg-red-600/10 cursor-pointer font-black uppercase text-[10px] tracking-widest py-3"
@@ -151,7 +154,10 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
-            <button onClick={onClose} className="text-white/80 hover:text-white p-2"><X size={28} /></button>
+            
+            <button onClick={onClose} className="text-white p-2 hover:bg-white/10 rounded-full transition-all">
+              <X size={28} />
+            </button>
           </div>
         </div>
 
@@ -161,7 +167,7 @@ const StoryViewer = ({ stories, initialIndex, onClose }: StoryViewerProps) => {
         </div>
 
         {/* Navigation Taps */}
-        <div className="absolute inset-0 flex">
+        <div className="absolute inset-0 flex z-10">
           <div className="w-1/3 h-full cursor-pointer" onClick={handlePrev} />
           <div className="w-2/3 h-full cursor-pointer" onClick={handleNext} />
         </div>
