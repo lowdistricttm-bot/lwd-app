@@ -1,32 +1,32 @@
 <?php
 /**
- * Sblocco App Low District - Versione URL-Auth
+ * LOW DISTRICT APP - CORS ENABLER
+ * Incolla questo codice in un nuovo "PHP Snippet" su WPCode.
+ * Assicurati di impostare "Run Everywhere" e attivare lo snippet.
  */
 
-add_action( 'rest_api_init', function() {
-    remove_filter( 'rest_pre_serve_request', 'rest_send_cors_headers' );
-    add_filter( 'rest_pre_serve_request', function( $value ) {
-        header( 'Access-Control-Allow-Origin: *' );
-        header( 'Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE' );
-        header( 'Access-Control-Allow-Credentials: true' );
-        header( 'Access-Control-Allow-Headers: Authorization, Content-Type, X-WP-Nonce, X-Requested-With' );
-        
-        if ( 'OPTIONS' == $_SERVER['REQUEST_METHOD'] ) {
-            status_header( 200 );
-            exit();
-        }
+add_action('init', function() {
+    // Rimuove i filtri predefiniti che potrebbero interferire
+    remove_filter('rest_pre_serve_request', 'rest_send_cors_headers');
+    
+    // Aggiunge gli header CORS personalizzati
+    add_filter('rest_pre_serve_request', function($value) {
+        header('Access-Control-Allow-Origin: *');
+        header('Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE');
+        header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Authorization, x-client-info, apikey');
+        header('Access-Control-Allow-Credentials: true');
         return $value;
     });
-}, 15 );
+}, 15);
 
-// Forza il login se il token è presente nell'URL (?JWT=...)
-add_filter( 'determine_current_user', function( $user_id ) {
-    if ( $user_id ) return $user_id;
-
-    if ( isset( $_GET['JWT'] ) ) {
-        // Il plugin Simple JWT Login processerà il parametro JWT nell'URL
+// Gestione specifica per le richieste OPTIONS (Preflight)
+add_filter('determine_current_user', function($user) {
+    if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+        header('Access-Control-Allow-Origin: *');
+        header('Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE');
+        header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Authorization');
+        status_header(200);
+        exit;
     }
-    return $user_id;
-}, 30 );
-
-add_filter( 'bp_rest_activity_create_item_permissions_check', '__return_true', 100 );
+    return $user;
+}, 10);
