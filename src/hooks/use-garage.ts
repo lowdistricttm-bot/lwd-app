@@ -13,7 +13,8 @@ export interface Vehicle {
   license_plate: string;
   suspension_type: string;
   description: string;
-  image_url?: string;
+  image_url?: string; // Immagine principale (legacy)
+  images?: string[]; // Array di immagini (nuovo)
   is_main: boolean;
   created_at: string;
 }
@@ -34,42 +35,58 @@ export const useGarage = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as Vehicle[];
+      
+      // Normalizzazione dati per gestire sia image_url che images array
+      return data.map((v: any) => ({
+        ...v,
+        images: Array.isArray(v.images) ? v.images : (v.image_url ? [v.image_url] : [])
+      })) as Vehicle[];
     }
   });
 
-  const uploadVehicleImage = async (file: File) => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `vehicles/${fileName}`;
+  const uploadImages = async (files: File[]) => {
+    const urls: string[] = [];
+    
+    for (const file of files) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `vehicles/${fileName}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from('post-media') // Riutilizziamo il bucket esistente o ne usiamo uno nuovo se configurato
-      .upload(filePath, file);
+      const { error: uploadError } = await supabase.storage
+        .from('post-media')
+        .upload(filePath, file);
 
-    if (uploadError) throw uploadError;
+      if (uploadError) throw uploadError;
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('post-media')
-      .getPublicUrl(filePath);
+      const { data: { publicUrl } } = supabase.storage
+        .from('post-media')
+        .getPublicUrl(filePath);
+        
+      urls.push(publicUrl);
+    }
 
-    return publicUrl;
+    return urls;
   };
 
   const addVehicle = useMutation({
-    mutationFn: async (newVehicle: Partial<Vehicle> & { file?: File }) => {
+    mutationFn: async (newVehicle: Partial<Vehicle> & { files?: File[] }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Devi accedere per aggiungere un veicolo");
 
-      let image_url = newVehicle.image_url;
-      if (newVehicle.file) {
-        image_url = await uploadVehicleImage(newVehicle.file);
+      let imageUrls: string[] = [];
+      if (newVehicle.files && newVehicle.files.length > 0) {
+        imageUrls = await uploadImages(newVehicle.files);
       }
 
-      const { file, ...vehicleData } = newVehicle;
+      const { files, ...vehicleData } = newVehicle;
       const { data, error } = await supabase
         .from('vehicles')
-        .insert([{ ...vehicleData, user_id: user.id, image_url }])
+        .insert([{ 
+          ...vehicleData, 
+          user_id: user.id, 
+          images: imageUrls,
+          image_url: imageUrls[0] || null // Imposta la prima come principale per compatibilità
+        }])
         .select()
         .single();
 

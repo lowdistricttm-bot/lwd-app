@@ -6,7 +6,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import { Plus, Car, Trash2, Camera, Loader2, X } from 'lucide-react';
+import { Plus, Car, Trash2, Camera, Loader2, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const GarageTab = () => {
@@ -20,28 +20,38 @@ const GarageTab = () => {
     suspension_type: '',
     description: ''
   });
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      const newFiles = [...selectedFiles, ...files].slice(0, 6);
+      setSelectedFiles(newFiles);
+      
+      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+      setPreviews(newPreviews);
     }
+  };
+
+  const removePreview = (index: number) => {
+    const newFiles = selectedFiles.filter((_, i) => i !== index);
+    const newPreviews = previews.filter((_, i) => i !== index);
+    setSelectedFiles(newFiles);
+    setPreviews(newPreviews);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await addVehicle.mutateAsync({
       ...formData,
-      file: selectedFile || undefined
+      files: selectedFiles
     });
     setIsAdding(false);
     setFormData({ brand: '', model: '', year: '', license_plate: '', suspension_type: '', description: '' });
-    setSelectedFile(null);
-    setPreviewUrl(null);
+    setSelectedFiles([]);
+    setPreviews([]);
   };
 
   if (isLoading) return <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-red-600" /></div>;
@@ -114,20 +124,43 @@ const GarageTab = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-zinc-500">Foto Veicolo</Label>
+                  <Label className="text-[10px] font-black uppercase text-zinc-500">Foto Veicolo (Max 6)</Label>
                   <div 
                     onClick={() => fileInputRef.current?.click()}
                     className="h-12 border border-dashed border-zinc-800 flex items-center justify-center cursor-pointer hover:border-red-600 transition-colors"
                   >
-                    {previewUrl ? (
-                      <span className="text-[10px] font-black uppercase text-red-600">Foto Selezionata</span>
-                    ) : (
-                      <Camera size={18} className="text-zinc-600" />
-                    )}
+                    <Camera size={18} className="text-zinc-600 mr-2" />
+                    <span className="text-[10px] font-black uppercase text-zinc-500">
+                      {previews.length > 0 ? `${previews.length}/6 Foto` : 'Seleziona Foto'}
+                    </span>
                   </div>
-                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    className="hidden" 
+                    accept="image/*" 
+                    multiple 
+                    onChange={handleFileChange} 
+                  />
                 </div>
               </div>
+
+              {previews.length > 0 && (
+                <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                  {previews.map((url, i) => (
+                    <div key={i} className="aspect-square relative bg-zinc-800 border border-white/5">
+                      <img src={url} className="w-full h-full object-cover" alt="Preview" />
+                      <button 
+                        type="button"
+                        onClick={() => removePreview(i)}
+                        className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white flex items-center justify-center rounded-full"
+                      >
+                        <X size={10} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-zinc-500">Descrizione Progetto</Label>
@@ -174,16 +207,34 @@ const GarageTab = () => {
               className="bg-zinc-900/50 border border-white/5 overflow-hidden group"
             >
               <div className="aspect-video bg-zinc-950 relative overflow-hidden">
-                {vehicle.image_url ? (
-                  <img src={vehicle.image_url} alt={vehicle.model} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                {vehicle.images && vehicle.images.length > 0 ? (
+                  <div className="flex h-full overflow-x-auto no-scrollbar snap-x snap-mandatory">
+                    {vehicle.images.map((img, idx) => (
+                      <img 
+                        key={idx} 
+                        src={img} 
+                        className="w-full h-full object-cover shrink-0 snap-center" 
+                        alt={`${vehicle.model} ${idx + 1}`} 
+                      />
+                    ))}
+                  </div>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-zinc-800">
                     <Car size={48} />
                   </div>
                 )}
+                
+                {vehicle.images && vehicle.images.length > 1 && (
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                    {vehicle.images.map((_, i) => (
+                      <div key={i} className="w-1 h-1 rounded-full bg-white/30" />
+                    ))}
+                  </div>
+                )}
+
                 <button 
                   onClick={() => deleteVehicle.mutate(vehicle.id)}
-                  className="absolute top-4 right-4 p-2 bg-black/60 text-white hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                  className="absolute top-4 right-4 p-2 bg-black/60 text-white hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100 z-10"
                 >
                   <Trash2 size={16} />
                 </button>
