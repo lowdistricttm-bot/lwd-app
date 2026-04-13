@@ -7,6 +7,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/hooks/use-translation';
 
 const ActivityItem = ({ activity }: { activity: any }) => {
   const { favoriteActivity } = useActivityActions();
@@ -23,9 +24,9 @@ const ActivityItem = ({ activity }: { activity: any }) => {
           />
         </div>
         <div>
-          <p className="text-sm font-black uppercase italic" dangerouslySetInnerHTML={{ __html: activity.display_name || activity.name || "Membro" }} />
+          <p className="text-sm font-black uppercase italic" dangerouslySetInnerHTML={{ __html: activity.display_name || activity.name || "MEMBRO" }} />
           <p className="text-[9px] text-white/40 font-bold uppercase tracking-widest">
-            {activity.date ? formatDistanceToNow(new Date(activity.date), { addSuffix: true, locale: it }) : "Recentemente"}
+            {activity.date ? formatDistanceToNow(new Date(activity.date), { addSuffix: true, locale: it }) : "RECENTEMENTE"}
           </p>
         </div>
       </div>
@@ -60,6 +61,7 @@ const ActivityItem = ({ activity }: { activity: any }) => {
 };
 
 const GaragePreview = () => {
+  const { t } = useTranslation();
   const { 
     data, 
     isLoading, 
@@ -89,29 +91,29 @@ const GaragePreview = () => {
   if (isLoading) return (
     <div className="flex flex-col items-center justify-center py-20">
       <Loader2 className="animate-spin text-red-600 mb-4" size={32} />
-      <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Caricamento bacheca...</p>
+      <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">SINCRONIZZAZIONE BACHECA...</p>
     </div>
   );
 
   if (error) return (
     <div className="text-center py-20 px-6 bg-zinc-900/30 border border-white/5 rounded-3xl mx-4">
       <AlertCircle className="mx-auto text-red-600 mb-4" size={32} />
-      <h3 className="text-sm font-black uppercase tracking-tighter mb-2">Errore di Caricamento</h3>
+      <h3 className="text-sm font-black uppercase tracking-tighter mb-2">{t.errors.connection}</h3>
       <p className="text-[10px] text-gray-500 uppercase font-bold mb-6">
-        {(error as any).message === "401" ? "Sessione scaduta. Effettua di nuovo il login." : "Impossibile connettersi alla bacheca."}
+        {(error as any).message === "401" ? t.settings.logout : "CONTROLLA LA CONNESSIONE O IL SERVER"}
       </p>
       <Button 
         onClick={() => refetch()}
         className="bg-white text-black hover:bg-red-600 hover:text-white font-black uppercase tracking-widest text-[10px] px-8 py-4 rounded-none italic"
       >
-        Riprova
+        {t.errors.retry}
       </Button>
     </div>
   );
 
   if (allActivities.length === 0) return (
     <div className="text-center py-20 border border-dashed border-white/5 rounded-3xl mx-4">
-      <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">Nessuna attività trovata</p>
+      <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">{t.errors.noData}</p>
     </div>
   );
 

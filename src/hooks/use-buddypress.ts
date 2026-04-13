@@ -20,21 +20,33 @@ const bpFetch = async (endpoint: string, options: RequestInit = {}) => {
     const response = await fetch(url, {
       ...options,
       headers,
-      mode: 'cors'
+      mode: 'cors',
+      credentials: 'omit' // Evita problemi di cookie cross-domain se non necessari
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+      const errorText = await response.text();
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch (e) {
+        errorData = { message: errorText || `HTTP Error ${response.status}` };
+      }
+      
       console.error(`[BuddyPress API Error] ${response.status}:`, errorData);
       
       if (response.status === 401) throw new Error("401");
       if (response.status === 403) throw new Error("403");
-      throw new Error(errorData.message || `Errore server ${response.status}`);
+      throw new Error(errorData.message || `ERRORE SERVER ${response.status}`);
     }
 
     return await response.json();
   } catch (err: any) {
     console.error(`[BuddyPress Fetch Failed] URL: ${url}`, err);
+    // Se è un errore di rete (CORS o DNS), lanciamo un errore specifico
+    if (err instanceof TypeError && err.message === 'Failed to fetch') {
+      throw new Error("NETWORK_ERROR");
+    }
     throw err;
   }
 };
@@ -54,7 +66,6 @@ export const useBpActivity = (userId?: number) => {
   return useInfiniteQuery({
     queryKey: ['bp-activity', userId],
     queryFn: async ({ pageParam = 1 }) => {
-      // Usiamo parametri standard per massimizzare la compatibilità
       let endpoint = `/buddypress/v1/activity?page=${pageParam}&per_page=10&display_name=1`;
       if (userId) endpoint += `&user_id=${userId}`;
       
