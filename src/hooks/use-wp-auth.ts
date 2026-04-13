@@ -11,7 +11,8 @@ export const useWpAuth = () => {
   const loginWithWp = async (username: string, password: string) => {
     setIsLoading(true);
     try {
-      // 1. Verifica credenziali su WordPress
+      console.log("[Auth] Avvio verifica su WordPress per:", username);
+      
       const response = await fetch(WP_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -21,53 +22,65 @@ export const useWpAuth = () => {
       const data = await response.json();
 
       if (!response.ok) {
+        console.error("[Auth] Errore WordPress:", data);
         throw new Error(data.message || "Credenziali non valide sul sito ufficiale");
       }
 
       const userEmail = data.user_email || (username.includes('@') ? username : `${username}@lowdistrict.it`);
+      console.log("[Auth] WordPress OK. Email:", userEmail);
 
-      // 2. Tentativo di Login su Supabase
-      let { error: authError } = await supabase.auth.signInWithPassword({
+      // Tentativo di Login
+      let { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: userEmail,
         password: password,
       });
 
-      // 3. Se l'utente non esiste, lo creiamo
-      if (authError && authError.message.includes("Invalid login credentials")) {
+      // Se l'utente non esiste, lo creiamo
+      if (authError && (authError.message.includes("Invalid login credentials") || authError.status === 400)) {
+        console.log("[Auth] Utente non trovato su App, creazione in corso...");
+        
         const { error: signUpError } = await supabase.auth.signUp({
           email: userEmail,
           password: password,
           options: { data: { username } }
         });
         
-        if (signUpError) {
-          // Se l'errore è 'email_not_confirmed' qui, significa che l'utente è stato creato ma è bloccato
-          if (signUpError.message.includes("Email not confirmed")) {
-             // Procediamo comunque, il trigger nel DB lo sbloccherà al prossimo tentativo
-          } else {
-            throw signUpError;
-          }
+        if (signUpError && !signUpError.message.includes("Email not confirmed")) {
+          console.error("[Auth] Errore SignUp:", signUpError);
+          throw signUpError;
         }
 
-        // Riprova il login
+        console.log("[Auth] SignUp completato, attesa sincronizzazione...");
+        
+        // Aspettiamo 1.5 secondi per permettere al trigger SQL di confermare l'utente
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
         const retry = await supabase.auth.signInWithPassword({
           email: userEmail,
           password: password,
         });
         authError = retry.error;
+        authData = retry.data;
       }
 
-      // 4. Gestione finale errore conferma (Bypass visivo)
-      if (authError && authError.message.includes("Email not confirmed")) {
-        // Se arriviamo qui, il DB è pigro. Diamo un messaggio positivo perché l'utente è comunque creato.
-        throw new Error("Sincronizzazione completata! Clicca di nuovo su Accedi per entrare.");
-      } else if (authError) {
+      if (authError) {
+        console.error("[Auth] Errore finale Supabase:", {
+          message: authError.message,
+          status: authError.status,
+          code: (authError as any).code
+        });
+        
+        if (authError.message.includes("Email not confirmed")) {
+          throw new Error("Sincronizzazione in corso. Clicca di nuovo su Accedi tra un istante.");
+        }
         throw authError;
       }
 
+      console.log("[Auth] Login App completato con successo");
       return { success: true, user: data };
     } catch (error: any) {
-      console.error("Auth Sync Error:", error);
+      // Logghiamo l'errore in modo che sia leggibile anche se è un oggetto complesso
+      console.error("[Auth] Errore catturato:", error.message || error);
       throw error;
     } finally {
       setIsLoading(false);
