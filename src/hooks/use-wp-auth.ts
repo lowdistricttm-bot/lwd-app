@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
-// Endpoint specifico per il plugin "Simple JWT Login"
 const WP_URL = "https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth";
 
 export const useWpAuth = () => {
@@ -12,8 +11,6 @@ export const useWpAuth = () => {
   const loginWithWp = async (username: string, password: string) => {
     setIsLoading(true);
     try {
-      // Il plugin Simple JWT Login solitamente accetta username o email nel campo 'email' o 'username'
-      // Proviamo a inviare entrambi per massima compatibilità
       const response = await fetch(WP_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -26,25 +23,20 @@ export const useWpAuth = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error("L'endpoint di Simple JWT Login non è attivo. Verifica nelle impostazioni del plugin su WordPress che la REST API sia abilitata.");
-        }
-        throw new Error(data.message || data.error?.message || "Credenziali non valide");
+        throw new Error(data.message || "Credenziali WordPress non valide");
       }
 
-      // Se il login ha successo, il plugin restituisce un token
       const token = data.jwt || data.token || data.data?.jwt;
-      if (!token) throw new Error("Token non ricevuto dal server");
-
-      // Sincronizzazione con Supabase
       const userEmail = data.user_email || (username.includes('@') ? username : `${username}@lowdistrict.it`);
 
+      // 1. Prova il login
       const { error: authError } = await supabase.auth.signInWithPassword({
         email: userEmail,
         password: password,
       });
 
-      if (authError) {
+      // 2. Se l'utente non esiste su Supabase, crealo
+      if (authError && authError.message.includes("Invalid login credentials")) {
         const { error: signUpError } = await supabase.auth.signUp({
           email: userEmail,
           password: password,
@@ -56,7 +48,14 @@ export const useWpAuth = () => {
           }
         });
         
-        if (signUpError) throw signUpError;
+        if (signUpError) {
+          if (signUpError.status === 429) {
+            throw new Error("Supabase sta limitando l'invio di email. Disabilita 'Confirm Email' nel pannello Supabase o attendi qualche minuto.");
+          }
+          throw signUpError;
+        }
+      } else if (authError) {
+        throw authError;
       }
 
       return { success: true, user: data };
