@@ -34,7 +34,8 @@ export const useStories = () => {
         return [];
       }
     },
-    staleTime: 1000 * 30,
+    staleTime: 0, // Impostato a 0 per vedere i cambiamenti immediatamente
+    gcTime: 0,
     retry: 1
   });
 };
