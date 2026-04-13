@@ -41,40 +41,32 @@ const bpFetch = async (endpoint: string, options: RequestInit = {}, forceAuth = 
     }
   };
 
-  try {
-    // 1. Prova chiamata pubblica (se non è richiesta auth forzata)
-    if (!forceAuth) {
-      const result = await doFetch(false, false);
-      if (result.ok) return result.data;
-    }
-
-    // 2. Prova chiamata autenticata (solo se abbiamo il token)
-    if (token) {
-      const authResult = await doFetch(true, false);
-      if (authResult.ok) return authResult.data;
-
-      // 3. Fallback su parametro URL se l'header Authorization è bloccato dal server
-      if (authResult.status === 401 || authResult.status === 400 || authResult.status === 0) {
-        const urlParamResult = await doFetch(true, true);
-        if (urlParamResult.ok) return urlParamResult.data;
-        
-        if (urlParamResult.status === 401) throw new Error("401");
-      }
-    }
-
-    // Se arriviamo qui e non abbiamo dati, restituiamo un array vuoto per evitare crash
-    return [];
-  } catch (err: any) {
-    console.error(`[BuddyPress API Error Detail]`, {
-      message: err.message,
-      endpoint: path,
-      hasToken: !!token
-    });
+  // 1. Prova chiamata pubblica (se non è richiesta auth forzata)
+  if (!forceAuth) {
+    const result = await doFetch(false, false);
+    if (result.ok) return result.data;
     
-    if (err.message === "401") throw err;
-    // Invece di lanciare un errore che blocca la UI, restituiamo un fallback sicuro
-    return [];
+    // Se è un 404, forse l'endpoint è diverso o il plugin non è attivo
+    if (result.status === 404) throw new Error("API_NOT_FOUND");
   }
+
+  // 2. Prova chiamata autenticata (solo se abbiamo il token)
+  if (token) {
+    const authResult = await doFetch(true, false);
+    if (authResult.ok) return authResult.data;
+
+    // 3. Fallback su parametro URL
+    const urlParamResult = await doFetch(true, true);
+    if (urlParamResult.ok) return urlParamResult.data;
+    
+    if (urlParamResult.status === 401) throw new Error("401");
+    throw new Error(urlParamResult.data?.message || `Errore ${urlParamResult.status}`);
+  }
+
+  // Se arriviamo qui senza dati e senza token, e la chiamata pubblica è fallita
+  if (forceAuth && !token) throw new Error("401");
+  
+  throw new Error("NETWORK_OR_CORS_ERROR");
 };
 
 export const useBpMembers = (perPage = 20) => {
