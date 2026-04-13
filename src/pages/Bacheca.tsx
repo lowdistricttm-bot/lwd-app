@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
@@ -8,23 +8,15 @@ import Footer from '@/components/Footer';
 import ActivityItem from '@/components/ActivityItem';
 import CreatePostModal from '@/components/CreatePostModal';
 import { useBPActivity } from '@/hooks/use-buddypress';
-import { Loader2, Plus, Lock, AlertCircle, LogIn } from 'lucide-react';
+import { Loader2, Plus, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Bacheca = () => {
   const navigate = useNavigate();
   const { data: activities, isLoading, error, refetch } = useBPActivity();
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
-  const [hasWpToken, setHasWpToken] = useState(!!localStorage.getItem('wp-jwt'));
-
-  // Controlla il token all'avvio e quando la finestra torna in focus
-  useEffect(() => {
-    const checkToken = () => setHasWpToken(!!localStorage.getItem('wp-jwt'));
-    window.addEventListener('focus', checkToken);
-    return () => window.removeEventListener('focus', checkToken);
-  }, []);
-
-  const isAuthError = error?.message.includes('401') || !hasWpToken;
+  
+  const hasWpToken = !!localStorage.getItem('wp-jwt');
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -48,55 +40,20 @@ const Bacheca = () => {
           </button>
         </header>
 
-        {!hasWpToken && (
-          <div className="mb-8 p-6 bg-red-600/10 border border-red-600/20 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <AlertCircle className="text-red-600 shrink-0" size={24} />
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-red-600">
-                  Sessione WordPress non rilevata
-                </p>
-                <p className="text-[9px] text-zinc-500 font-bold uppercase mt-1">
-                  Effettua il login per pubblicare post, foto e interagire con la community.
-                </p>
-              </div>
-            </div>
-            <Button 
-              onClick={() => navigate('/login')}
-              className="bg-red-600 hover:bg-white hover:text-black text-white rounded-none text-[9px] font-black uppercase tracking-widest h-10 px-6 italic"
-            >
-              <LogIn size={14} className="mr-2" /> Accedi Ora
-            </Button>
-          </div>
-        )}
-
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Loader2 className="animate-spin text-red-600" size={40} />
             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Sincronizzazione con il District...</p>
           </div>
-        ) : isAuthError && !activities ? (
-          <div className="text-center py-20 border border-white/5 bg-zinc-900/30 p-10">
-            <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Lock className="text-red-600" size={24} />
-            </div>
-            <h3 className="text-xl font-black uppercase italic mb-4">Accesso Riservato</h3>
-            <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest leading-relaxed mb-8">
-              La bacheca richiede una sessione attiva sul sito ufficiale. <br /> 
-              Effettua il login per vedere i post e interagire.
-            </p>
-            <Button 
-              onClick={() => navigate('/login')}
-              className="bg-white text-black hover:bg-red-600 hover:text-white rounded-none px-8 py-6 text-[10px] font-black uppercase tracking-widest italic"
-            >
-              Vai al Login
-            </Button>
-          </div>
         ) : error ? (
           <div className="text-center py-20 border border-red-600/20 bg-red-600/5 p-8">
-            <p className="text-sm font-black uppercase tracking-widest text-red-600">Errore di rete</p>
-            <p className="text-xs text-zinc-500 mt-2">{error.message}</p>
-            <Button onClick={() => refetch()} className="mt-4 bg-zinc-900 text-white rounded-none text-[10px] font-black uppercase">Riprova</Button>
+            <AlertCircle className="mx-auto text-red-600 mb-4" size={32} />
+            <p className="text-sm font-black uppercase tracking-widest text-red-600">Accesso limitato o errore di rete</p>
+            <p className="text-[10px] text-zinc-500 mt-2 uppercase font-bold">Effettua il login per vedere tutti i contenuti e interagire.</p>
+            <div className="flex gap-4 justify-center mt-6">
+              <Button onClick={() => refetch()} variant="outline" className="border-white/10 text-[10px] font-black uppercase">Riprova</Button>
+              <Button onClick={() => navigate('/login')} className="bg-red-600 text-[10px] font-black uppercase">Login</Button>
+            </div>
           </div>
         ) : (
           <div className="space-y-2">

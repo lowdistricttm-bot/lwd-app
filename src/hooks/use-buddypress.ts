@@ -58,17 +58,14 @@ export const useBPActions = () => {
   const favoriteMutation = useMutation({
     mutationFn: async (activityId: number) => {
       const headers = getAuthHeader();
-      if (!headers.Authorization) throw new Error('Sessione WordPress mancante. Effettua il login.');
+      if (!headers.Authorization) throw new Error('Effettua il login per interagire.');
 
       const response = await fetch(`${BP_API_URL}/activity/${activityId}/favorite`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...headers }
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Errore Like.');
-      }
+      if (!response.ok) throw new Error('Errore Like.');
       return response.json();
     },
     onSuccess: () => {
@@ -81,7 +78,7 @@ export const useBPActions = () => {
   const commentMutation = useMutation({
     mutationFn: async ({ activityId, content }: { activityId: number, content: string }) => {
       const headers = getAuthHeader();
-      if (!headers.Authorization) throw new Error('Sessione WordPress mancante. Effettua il login.');
+      if (!headers.Authorization) throw new Error('Effettua il login per commentare.');
 
       const response = await fetch(`${BP_API_URL}/activity/${activityId}/comment`, {
         method: 'POST',
@@ -89,10 +86,7 @@ export const useBPActions = () => {
         body: JSON.stringify({ content })
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Errore commento.');
-      }
+      if (!response.ok) throw new Error('Errore commento.');
       return response.json();
     },
     onSuccess: () => {
@@ -103,34 +97,26 @@ export const useBPActions = () => {
   });
 
   const createPostMutation = useMutation({
-    mutationFn: async ({ content, mediaIds }: { content: string, mediaIds?: number[] }) => {
+    mutationFn: async ({ content }: { content: string }) => {
       const headers = getAuthHeader();
-      if (!headers.Authorization) throw new Error('Sessione WordPress mancante. Effettua il login.');
+      if (!headers.Authorization) throw new Error('Effettua il login per pubblicare.');
 
-      // Se ci sono media, li aggiungiamo al contenuto come shortcode o HTML
-      // BuddyPress Activity API standard non supporta nativamente l'array di mediaIds come i post di WP
-      // Quindi iniettiamo i media nel contenuto se presenti
-      let finalContent = content;
-      
       const response = await fetch(`${BP_API_URL}/activity`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...headers },
         body: JSON.stringify({
-          content: finalContent,
+          content: content,
           component: 'activity',
           type: 'activity_update'
         })
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Errore durante la pubblicazione.');
-      }
+      if (!response.ok) throw new Error('Errore pubblicazione.');
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bp-activity'] });
-      showSuccess("Post pubblicato nel District!");
+      showSuccess("Post pubblicato!");
     },
     onError: (error: any) => showError(error.message)
   });
@@ -138,21 +124,16 @@ export const useBPActions = () => {
   const uploadMediaMutation = useMutation({
     mutationFn: async (file: File) => {
       const headers = getAuthHeader();
-      if (!headers.Authorization) throw new Error('Sessione WordPress mancante.');
-
       const formData = new FormData();
       formData.append('file', file);
 
       const response = await fetch(`${WP_API_URL}/media`, {
         method: 'POST',
-        headers: { ...headers }, // Non impostare Content-Type, lo fa il browser per FormData
+        headers: { ...headers },
         body: formData
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Errore caricamento file.');
-      }
+      if (!response.ok) throw new Error('Errore caricamento file.');
       return response.json();
     }
   });
@@ -168,7 +149,7 @@ export const useBPMember = (username?: string) => {
       const response = await fetch(`${BP_API_URL}/members?slug=${username}`, {
         headers: { 'Content-Type': 'application/json', ...getAuthHeader() }
       });
-      if (!response.ok) throw new Error('Membro non trovato');
+      if (!response.ok) return null;
       const data = await response.json();
       return data[0];
     },
