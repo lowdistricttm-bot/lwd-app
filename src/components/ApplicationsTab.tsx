@@ -7,7 +7,12 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const ApplicationsTab = () => {
-  const { data: applications, isLoading } = useUserApplications();
+  const { data: applications, isLoading, refetch } = useUserApplications();
+
+  // Forza il refresh quando il componente viene montato
+  React.useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   if (isLoading) return <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-red-600" /></div>;
 
@@ -30,7 +35,6 @@ const ApplicationsTab = () => {
               className="bg-zinc-900/50 border border-white/5 overflow-hidden"
             >
               <div className="p-6 flex flex-col md:flex-row gap-6">
-                {/* Event Info */}
                 <div className="flex-1 space-y-4">
                   <div className="flex items-center justify-between">
                     <span className={cn(
@@ -69,7 +73,6 @@ const ApplicationsTab = () => {
                   </div>
                 </div>
 
-                {/* Vehicle Info */}
                 <div className="md:w-48 shrink-0">
                   <div className="bg-black/40 border border-white/5 p-3 flex items-center gap-3">
                     <div className="w-12 h-12 bg-zinc-800 border border-white/10 overflow-hidden shrink-0">
@@ -86,14 +89,6 @@ const ApplicationsTab = () => {
                   </div>
                 </div>
               </div>
-              
-              {app.status === 'approved' && (
-                <div className="bg-green-600/10 border-t border-green-600/20 p-4">
-                  <p className="text-[9px] text-green-500 font-black uppercase italic text-center">
-                    Complimenti! Il tuo progetto è stato selezionato. Riceverai presto istruzioni via email.
-                  </p>
-                </div>
-              )}
             </motion.div>
           ))}
         </div>

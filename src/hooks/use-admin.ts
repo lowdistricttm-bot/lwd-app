@@ -12,9 +12,16 @@ export const useAdmin = () => {
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return false;
-      const { data } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single();
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
+        .maybeSingle();
+      
+      if (error) console.error("[Admin] Errore verifica:", error);
       return data?.is_admin || false;
-    }
+    },
+    retry: 1
   });
 
   const { data: allApplications, isLoading: loadingApps } = useQuery({
@@ -32,7 +39,8 @@ export const useAdmin = () => {
       if (error) throw error;
       return data;
     },
-    enabled: !!isAdmin
+    enabled: !!isAdmin,
+    refetchOnWindowFocus: true
   });
 
   const updateStatus = useMutation({
@@ -45,6 +53,7 @@ export const useAdmin = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-applications'] });
+      queryClient.invalidateQueries({ queryKey: ['user-applications'] });
       showSuccess("Stato aggiornato con successo");
     },
     onError: (error: any) => showError(error.message)
