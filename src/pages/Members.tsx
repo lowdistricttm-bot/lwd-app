@@ -5,13 +5,14 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import { useBpMembers } from '@/hooks/use-buddypress';
-import { ChevronLeft, Loader2, Search, UserPlus, RefreshCw, Users } from 'lucide-react';
+import { ChevronLeft, Loader2, Search, UserPlus, RefreshCw, Users, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 
 const Members = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const { data: members, isLoading, isFetching, refetch } = useBpMembers(50);
+  const { data: members, isLoading, isFetching, error, refetch } = useBpMembers(50);
 
   const filteredMembers = members?.filter((m: any) => 
     m.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -56,6 +57,20 @@ const Members = () => {
           <div className="flex flex-col items-center justify-center py-20">
             <Loader2 className="animate-spin text-red-600 mb-4" size={32} />
             <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Caricamento directory...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-20 px-6 bg-zinc-900/30 border border-white/5 rounded-3xl">
+            <AlertCircle className="mx-auto text-red-600 mb-4" size={32} />
+            <h3 className="text-sm font-black uppercase tracking-tighter mb-2">Errore di Connessione</h3>
+            <p className="text-[10px] text-gray-500 uppercase font-bold mb-6">
+              Non è stato possibile recuperare i membri. Assicurati che il sito sia raggiungibile.
+            </p>
+            <Button 
+              onClick={() => refetch()}
+              className="bg-white text-black hover:bg-red-600 hover:text-white font-black uppercase tracking-widest text-[10px] px-8 py-4 rounded-none italic"
+            >
+              Riprova
+            </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4">

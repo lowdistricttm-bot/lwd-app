@@ -24,6 +24,7 @@ const bpFetch = async (endpoint: string, options: RequestInit = {}) => {
     });
 
     if (!response.ok) {
+      // Se fallisce con token, riproviamo senza (alcuni endpoint sono pubblici ma si rompono con token errati)
       if (token && (response.status === 401 || response.status === 400)) {
         const publicUrl = new URL(`${BASE_URL}${endpoint}`);
         const publicRes = await fetch(publicUrl.toString(), { mode: 'cors' });
@@ -115,6 +116,7 @@ export const useBpMembers = (perPage = 15) => {
       return bpFetch(`/buddypress/v1/members?per_page=${perPage}`);
     },
     staleTime: 1000 * 60 * 10,
+    retry: 1,
   });
 };
 
