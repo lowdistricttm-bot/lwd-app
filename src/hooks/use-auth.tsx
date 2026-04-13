@@ -62,25 +62,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw new Error(resData.message || 'Credenziali non valide');
       }
 
+      // Estrazione Token
       const jwtToken = resData.data?.jwt || resData.jwt;
+      
+      // Estrazione Dati Utente (WordPress può restituirli in diversi formati)
       const wpUser = resData.data?.user || resData.user;
       
-      // Estrazione ID più robusta
-      const rawId = wpUser?.ID || wpUser?.id || resData.data?.user_id;
+      // Estrazione ID ultra-robusta: controlliamo ogni possibile campo
+      const rawId = wpUser?.ID || 
+                    wpUser?.id || 
+                    resData.data?.user_id || 
+                    resData.user_id || 
+                    resData.id || 
+                    resData.data?.id;
+
       const userId = parseInt(rawId);
 
       if (isNaN(userId)) {
-        console.error("[Auth] ID Utente non valido ricevuto:", rawId);
-        throw new Error("Errore nel recupero del profilo utente.");
+        console.error("[Auth] Struttura risposta non riconosciuta:", resData);
+        throw new Error("ID utente non trovato nella risposta del server.");
       }
 
       const userData: User = {
         id: userId,
-        username: wpUser?.user_login || username,
-        email: wpUser?.user_email || '',
-        nicename: wpUser?.display_name || username,
-        display_name: wpUser?.display_name || username,
-        avatar: defaultAvatar
+        username: wpUser?.user_login || wpUser?.username || username,
+        email: wpUser?.user_email || wpUser?.email || '',
+        nicename: wpUser?.display_name || wpUser?.nicename || username,
+        display_name: wpUser?.display_name || wpUser?.name || username,
+        avatar: wpUser?.avatar_urls?.['96'] || defaultAvatar
       };
 
       setToken(jwtToken);
@@ -108,6 +117,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const refreshUser = async () => {
     setIsRefreshing(true);
+    // Simulazione refresh (in futuro si può chiamare l'API /me)
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
