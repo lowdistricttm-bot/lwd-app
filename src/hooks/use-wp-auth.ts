@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
-// Proviamo l'endpoint più comune per i plugin JWT su WordPress
-const WP_URL = "https://www.lowdistrict.it/wp-json/jwt-auth/v1/token";
+// Endpoint specifico per il plugin "Simple JWT Login"
+const WP_URL = "https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth";
 
 export const useWpAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -12,25 +12,32 @@ export const useWpAuth = () => {
   const loginWithWp = async (username: string, password: string) => {
     setIsLoading(true);
     try {
+      // Il plugin Simple JWT Login solitamente accetta username o email nel campo 'email' o 'username'
+      // Proviamo a inviare entrambi per massima compatibilità
       const response = await fetch(WP_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ 
+          username: username,
+          password: password 
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        // Se l'errore è 404, probabilmente l'endpoint è ancora sbagliato
         if (response.status === 404) {
-          throw new Error("Endpoint di login non trovato sul server. Verifica la configurazione del plugin JWT.");
+          throw new Error("L'endpoint di Simple JWT Login non è attivo. Verifica nelle impostazioni del plugin su WordPress che la REST API sia abilitata.");
         }
-        throw new Error(data.message || "Credenziali non valide");
+        throw new Error(data.message || data.error?.message || "Credenziali non valide");
       }
 
+      // Se il login ha successo, il plugin restituisce un token
+      const token = data.jwt || data.token || data.data?.jwt;
+      if (!token) throw new Error("Token non ricevuto dal server");
+
       // Sincronizzazione con Supabase
-      // Usiamo l'email restituita da WP per creare/accedere alla sessione locale
-      const userEmail = data.user_email || `${username}@lowdistrict.it`;
+      const userEmail = data.user_email || (username.includes('@') ? username : `${username}@lowdistrict.it`);
 
       const { error: authError } = await supabase.auth.signInWithPassword({
         email: userEmail,
@@ -38,14 +45,13 @@ export const useWpAuth = () => {
       });
 
       if (authError) {
-        // Se l'utente non esiste su Supabase, lo creiamo al volo
         const { error: signUpError } = await supabase.auth.signUp({
           email: userEmail,
           password: password,
           options: {
             data: {
-              username: data.user_display_name || username,
-              wp_id: data.user_id
+              username: username,
+              wp_token: token
             }
           }
         });
