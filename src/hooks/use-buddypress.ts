@@ -8,8 +8,7 @@ const WP_API_URL = "https://www.lowdistrict.it/wp-json/wp/v2";
 
 const getAuthHeader = () => {
   const token = localStorage.getItem('wp-jwt');
-  
-  // Verifica che il token sia una stringa valida e non vuota
+    // Verifica che il token sia una stringa valida e non vuota
   if (!token || token === 'null' || token === 'undefined' || token.trim() === '') {
     console.warn("[BP] Token JWT non valido o mancante");
     return {};
@@ -20,7 +19,16 @@ const getAuthHeader = () => {
     const decoded = JSON.parse(atob(token.split('.')[1]));
     console.log("[BP] Token JWT valido per utente:", decoded.sub || decoded.user_id || decoded.email);
     
-    return { 'Authorization': `Bearer ${token}` };
+    // Formato corretto per simple-jwt-login middleware: Authorization: JWT <token>
+    // Alcuni plugin richiedono 'Bearer', altri 'JWT' - proviamo entrambi
+    const headers = {
+      ...(decoded && decoded.auth && decoded.auth === 'jwt' 
+        ? { 'Authorization': `JWT ${token}` } 
+        : { 'Authorization': `Bearer ${token}` })
+    };
+    
+    console.log("[BP] Header di autorizzazione generato:", headers);
+    return headers;
   } catch (error) {
     console.error("[BP] Token JWT non valido:", error);
     return {};
@@ -142,7 +150,7 @@ export const useBPActions = () => {
       };
 
       console.log("[BP] Invio payload:", payload);
-      console.log("[BP] Header di autorizzazione:", headers.Authorization);
+      console.log("[BP] Header di autorizzazione generato:", headers.Authorization);
 
       const response = await fetch(`${BP_API_URL}/activity`, {
         method: 'POST',
@@ -181,8 +189,7 @@ export const useBPActions = () => {
       const response = await fetch(`${WP_API_URL}/media`, {
         method: 'POST',
         headers: { ...headers },
-        body: formData
-      });
+        body: formData      });
 
       if (!response.ok) throw new Error('Errore caricamento media');
       return response.json();
