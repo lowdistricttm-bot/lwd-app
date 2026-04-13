@@ -25,8 +25,6 @@ const CreatePostDialog = () => {
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // Preview locale
     const objectUrl = URL.createObjectURL(file);
     setPreviewUrl(objectUrl);
   };
@@ -36,7 +34,7 @@ const CreatePostDialog = () => {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user?.id}/${Date.now()}.${fileExt}`;
       
-      const { error: uploadError, data } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('post_media')
         .upload(fileName, file);
 
@@ -102,6 +100,9 @@ const CreatePostDialog = () => {
       <DialogContent className="bg-zinc-950 border-white/10 text-white sm:max-w-[500px] p-0 overflow-hidden">
         <DialogHeader className="p-6 border-b border-white/5">
           <DialogTitle className="text-xl font-black uppercase tracking-tighter italic">Crea Post</DialogTitle>
+          <DialogDescription className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">
+            Condividi foto o video del tuo progetto con la community.
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
