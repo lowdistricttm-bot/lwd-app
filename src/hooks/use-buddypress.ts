@@ -3,22 +3,18 @@ import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tansta
 const BASE_URL = "https://www.lowdistrict.it/wp-json";
 
 /**
- * Funzione di fetch ottimizzata con Authorization Header standard
+ * Funzione di fetch ultra-compatibile
  */
 const bpFetch = async (endpoint: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('ld_auth_token');
-  
-  // Costruiamo l'URL assicurandoci che non ci siano doppi slash
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   const url = new URL(`${BASE_URL}${cleanEndpoint}`);
 
   const headers: Record<string, string> = {
     'Accept': 'application/json',
-    'Content-Type': 'application/json',
     ...((options.headers as Record<string, string>) || {}),
   };
 
-  // Usiamo l'Header Authorization invece del parametro URL (più sicuro e compatibile)
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
@@ -31,13 +27,11 @@ const bpFetch = async (endpoint: string, options: RequestInit = {}) => {
     });
 
     if (!response.ok) {
-      // Se fallisce con 400/401, proviamo una richiesta pubblica pulita senza token
-      if (response.status === 400 || response.status === 401) {
-        const publicRes = await fetch(url.toString(), { 
-          headers: { 'Accept': 'application/json' },
-          mode: 'cors' 
-        });
-        if (publicRes.ok) return await publicRes.json();
+      // Fallback estremo: riprova senza alcun parametro o header se fallisce
+      if (response.status === 400) {
+        const simpleUrl = new URL(`${BASE_URL}${cleanEndpoint.split('?')[0]}`);
+        const simpleRes = await fetch(simpleUrl.toString(), { mode: 'cors' });
+        if (simpleRes.ok) return await simpleRes.json();
       }
       
       const errorData = await response.json().catch(() => ({}));
@@ -55,8 +49,8 @@ export const useBpActivity = (userId?: number) => {
   return useInfiniteQuery({
     queryKey: ['bp-activity', userId],
     queryFn: async ({ pageParam = 1 }) => {
-      // Aggiungiamo context=view per compatibilità
-      let endpoint = `/buddypress/v1/activity?page=${pageParam}&per_page=10&context=view`;
+      // Usiamo context=embed che è più leggero e spesso più accessibile
+      let endpoint = `/buddypress/v1/activity?page=${pageParam}&per_page=10&context=embed`;
       if (userId) endpoint += `&user_id=${userId}`;
       
       const data = await bpFetch(endpoint);
@@ -74,8 +68,8 @@ export const useBpMembers = (perPage = 20) => {
   return useQuery({
     queryKey: ['bp-members', perPage],
     queryFn: async () => {
-      // context=view è spesso richiesto per le liste pubbliche
-      return bpFetch(`/buddypress/v1/members?per_page=${perPage}&context=view`);
+      // Riduciamo per_page e usiamo context=embed
+      return bpFetch(`/buddypress/v1/members?per_page=${perPage}&context=embed`);
     },
     staleTime: 1000 * 60 * 10,
     retry: 1,
@@ -87,7 +81,7 @@ export const useBpMemberData = (userId: number | undefined) => {
     queryKey: ['bp-member-data', userId],
     queryFn: async () => {
       if (!userId) return null;
-      return bpFetch(`/buddypress/v1/members/${userId}?context=view`);
+      return bpFetch(`/buddypress/v1/members/${userId}?context=embed`);
     },
     enabled: !!userId,
     staleTime: 1000 * 60 * 5,
@@ -111,6 +105,7 @@ export const useCreateActivity = () => {
     mutationFn: async ({ content }: { content: string }) => {
       return bpFetch('/buddypress/v1/activity', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           content: content,
           component: 'activity',
@@ -130,8 +125,7 @@ export const useUpdateAvatar = () => {
       formData.append('file', file);
       return bpFetch(`/buddypress/v1/members/${userId}/avatar`, {
         method: 'POST',
-        body: formData,
-        headers: {} // Rimuoviamo Content-Type per permettere al browser di impostare il boundary del FormData
+        body: formData
       });
     },
     onSuccess: (_, variables) => {

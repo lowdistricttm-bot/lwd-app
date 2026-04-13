@@ -12,7 +12,8 @@ import { Button } from '@/components/ui/button';
 const Members = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const { data: members, isLoading, isFetching, error, refetch } = useBpMembers(50);
+  // Riduciamo a 20 per evitare blocchi del server
+  const { data: members, isLoading, isFetching, error, refetch } = useBpMembers(20);
 
   const filteredMembers = members?.filter((m: any) => 
     m.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
