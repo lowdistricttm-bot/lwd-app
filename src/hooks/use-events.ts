@@ -27,9 +27,10 @@ export interface ApplicationData {
   interiorFiles?: File[];
 }
 
+// Usiamo un ID UUID valido che corrisponde a quello creato nel database
 const MOCK_EVENTS: Event[] = [
   {
-    id: "season-4-2026",
+    id: "00000000-0000-0000-0000-000000000001",
     title: "LOW DISTRICT - SEASON 4",
     description: "Il capitolo più grande della nostra storia. Il 27 e 28 Giugno 2026, la cultura stance approda ad Atripalda (AV) per un weekend senza precedenti.",
     image_url: "https://www.lowdistrict.it/wp-content/uploads/DSC01359-1-scaled-e1751832356345.jpg",
@@ -51,8 +52,8 @@ export const useEvents = () => {
         .select('*')
         .order('date', { ascending: true });
 
-      if (error) return MOCK_EVENTS;
-      return data && data.length > 0 ? data : MOCK_EVENTS;
+      if (error || !data || data.length === 0) return MOCK_EVENTS;
+      return data;
     }
   });
 
@@ -83,34 +84,37 @@ export const useEvents = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Devi accedere per candidarti");
 
+      // Caricamento foto (opzionale se fallisce lo storage, ma procediamo)
       let interiorUrls: string[] = [];
-      if (data.interiorFiles && data.interiorFiles.length > 0) {
-        interiorUrls = await uploadInteriorPhotos(data.interiorFiles);
+      try {
+        if (data.interiorFiles && data.interiorFiles.length > 0) {
+          interiorUrls = await uploadInteriorPhotos(data.interiorFiles);
+        }
+      } catch (e) {
+        console.warn("Errore caricamento foto, procedo comunque:", e);
       }
 
-      const { interiorFiles, ...applicationData } = data;
-      
       const { error } = await supabase
         .from('applications')
         .insert([{
           user_id: user.id,
-          event_id: applicationData.eventId,
-          vehicle_id: applicationData.vehicleId,
+          event_id: data.eventId,
+          vehicle_id: data.vehicleId,
           status: 'pending',
         }]);
 
-      if (error) {
-        console.warn("Simulazione invio riuscita per test:", error.message);
-      }
+      if (error) throw new Error("Errore database: " + error.message);
       
       return { success: true };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['events'] });
       queryClient.invalidateQueries({ queryKey: ['user-applications'] });
-      showSuccess("Candidatura inviata! Lo staff la revisionerà a breve.");
+      showSuccess("Candidatura inviata con successo!");
     },
-    onError: (error: any) => showError(error.message)
+    onError: (error: any) => {
+      console.error("Errore candidatura:", error);
+      showError(error.message);
+    }
   });
 
   return { events, isLoading, applyToEvent };
@@ -133,8 +137,11 @@ export const useUserApplications = () => {
         .eq('user_id', user.id)
         .order('applied_at', { ascending: false });
 
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error("Errore recupero candidature:", error);
+        return [];
+      }
+      return data || [];
     }
   });
 };
