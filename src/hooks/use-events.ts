@@ -97,23 +97,44 @@ export const useEvents = () => {
           event_id: applicationData.eventId,
           vehicle_id: applicationData.vehicleId,
           status: 'pending',
-          // In un sistema reale, salveremmo i metadati o useremmo una tabella dedicata
         }]);
 
       if (error) {
         console.warn("Simulazione invio riuscita per test:", error.message);
       }
       
-      console.log("[Candidatura] Dati completi inviati:", { ...applicationData, interiorUrls });
-      
       return { success: true };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
+      queryClient.invalidateQueries({ queryKey: ['user-applications'] });
       showSuccess("Candidatura inviata! Lo staff la revisionerà a breve.");
     },
     onError: (error: any) => showError(error.message)
   });
 
   return { events, isLoading, applyToEvent };
+};
+
+export const useUserApplications = () => {
+  return useQuery({
+    queryKey: ['user-applications'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from('applications')
+        .select(`
+          *,
+          events:event_id (*),
+          vehicles:vehicle_id (*)
+        `)
+        .eq('user_id', user.id)
+        .order('applied_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    }
+  });
 };

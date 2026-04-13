@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
 import GarageTab from '@/components/GarageTab';
+import ApplicationsTab from '@/components/ApplicationsTab';
 import { 
   User, 
   Settings, 
@@ -16,7 +17,8 @@ import {
   ShoppingBag, 
   Loader2,
   Camera,
-  ShieldCheck
+  ShieldCheck,
+  ClipboardCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -129,6 +131,7 @@ const Profile = () => {
     { id: 'activity', label: 'Feed', icon: MessageSquare },
     { id: 'orders', label: 'Ordini', icon: ShoppingBag },
     { id: 'garage', label: 'Garage', icon: Car },
+    { id: 'selections', label: 'Selezioni', icon: ClipboardCheck },
     { id: 'profile', label: 'Info', icon: User },
     { id: 'settings', label: 'Set', icon: Settings },
   ];
@@ -225,7 +228,7 @@ const Profile = () => {
             </div>
           )}
 
-          <div className="grid grid-cols-5 border border-white/5 bg-zinc-900/30 mb-10">
+          <div className="grid grid-cols-6 border border-white/5 bg-zinc-900/30 mb-10">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -295,6 +298,12 @@ const Profile = () => {
               {activeTab === 'garage' && (
                 <motion.div key="garage" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                   <GarageTab />
+                </motion.div>
+              )}
+
+              {activeTab === 'selections' && (
+                <motion.div key="selections" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                  <ApplicationsTab />
                 </motion.div>
               )}
 
