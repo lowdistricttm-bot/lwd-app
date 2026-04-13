@@ -15,7 +15,8 @@ import {
   MessageSquare, 
   ShoppingBag, 
   Loader2,
-  Camera
+  Camera,
+  ShieldCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -78,7 +79,6 @@ const Profile = () => {
       const fileName = `${user.id}-${Math.random()}.${fileExt}`;
       const filePath = `${fileName}`;
 
-      // Nota: Assicurati che i bucket 'avatars' e 'covers' esistano su Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from(bucket)
         .upload(filePath, file);
@@ -207,13 +207,24 @@ const Profile = () => {
                 {displayName}
               </h1>
               <p className="text-red-600 text-[8px] font-black uppercase tracking-[0.3em] italic mt-1">
-                OFFICIAL MEMBER
+                {profile?.is_admin ? 'DISTRICT ADMIN' : 'OFFICIAL MEMBER'}
               </p>
             </div>
           </div>
         </div>
 
         <div className="mt-20 px-4 md:px-12 max-w-6xl mx-auto">
+          {profile?.is_admin && (
+            <div className="mb-8">
+              <Button 
+                onClick={() => navigate('/admin/applications')}
+                className="w-full bg-red-600 hover:bg-white hover:text-black text-white rounded-none h-14 font-black uppercase italic tracking-widest transition-all"
+              >
+                <ShieldCheck className="mr-2" /> Dashboard Amministratore
+              </Button>
+            </div>
+          )}
+
           <div className="grid grid-cols-5 border border-white/5 bg-zinc-900/30 mb-10">
             {tabs.map((tab) => (
               <button
