@@ -24,25 +24,29 @@ export const useSocialFeed = () => {
   const { data: posts, isLoading, error } = useQuery({
     queryKey: ['social-posts'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
       
-      // Recupero post e info profilo associate
-      const { data, error } = await supabase
+      // Recupero post. Se la join fallisce, recuperiamo solo i post
+      const { data: postsData, error: postsError } = await supabase
         .from('posts')
         .select(`
           *,
-          profiles:user_id (first_name, last_name, avatar_url)
+          profiles:user_id (id, first_name, last_name, avatar_url)
         `)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (postsError) {
+        console.error("[Social] Errore query post:", postsError);
+        throw postsError;
+      }
 
-      // Verifico i like per l'utente corrente
-      const postsWithLikes = await Promise.all((data || []).map(async (post: any) => {
+      // Arricchiamo i dati con i like
+      const enrichedPosts = await Promise.all((postsData || []).map(async (post: any) => {
         let is_liked = false;
         let likes_count = 0;
 
-        // Conteggio like (approssimativo per semplicità)
+        // Conteggio like
         const { count } = await supabase
           .from('likes')
           .select('*', { count: 'exact', head: true })
@@ -60,19 +64,26 @@ export const useSocialFeed = () => {
           is_liked = !!userLike;
         }
 
+        // Formattazione profilo
+        const profileInfo = post.profiles;
+        const username = profileInfo 
+          ? `${profileInfo.first_name || ''} ${profileInfo.last_name || ''}`.trim() || 'Membro'
+          : 'Membro District';
+
         return {
           ...post,
           profiles: {
-            username: post.profiles ? `${post.profiles.first_name || ''} ${post.profiles.last_name || ''}`.trim() || 'Membro' : 'Membro',
-            avatar_url: post.profiles?.avatar_url
+            username,
+            avatar_url: profileInfo?.avatar_url
           },
           likes_count,
           is_liked
         };
       }));
 
-      return postsWithLikes as Post[];
-    }
+      return enrichedPosts as Post[];
+    },
+    retry: 1
   });
 
   const createPost = useMutation({
@@ -82,7 +93,12 @@ export const useSocialFeed = () => {
 
       const { data, error } = await supabase
         .from('posts')
-        .insert([{ user_id: user.id, content, image_url }])
+        .insert([{ 
+          user_id: user.id, 
+          content, 
+          image_url,
+          created_at: new Date().toISOString()
+        }])
         .select()
         .single();
 
@@ -109,9 +125,11 @@ export const useSocialFeed = () => {
         .maybeSingle();
 
       if (existingLike) {
-        await supabase.from('likes').delete().eq('id', existingLike.id);
+        const { error } = await supabase.from('likes').delete().eq('id', existingLike.id);
+        if (error) throw error;
       } else {
-        await supabase.from('likes').insert([{ post_id: postId, user_id: user.id }]);
+        const { error } = await supabase.from('likes').insert([{ post_id: postId, user_id: user.id }]);
+        if (error) throw error;
       }
     },
     onSuccess: () => {
