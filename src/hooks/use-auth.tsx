@@ -36,7 +36,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('ld_user_data');
-      return saved ? JSON.parse(saved) : null;
+      try {
+        return saved ? JSON.parse(saved) : null;
+      } catch (e) {
+        return null;
+      }
     }
     return null;
   });
@@ -60,10 +64,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       const jwtToken = resData.data?.jwt || resData.jwt;
       const wpUser = resData.data?.user || resData.user;
-      const userId = wpUser?.ID || wpUser?.id;
+      
+      // Estrazione ID più robusta
+      const rawId = wpUser?.ID || wpUser?.id || resData.data?.user_id;
+      const userId = parseInt(rawId);
+
+      if (isNaN(userId)) {
+        console.error("[Auth] ID Utente non valido ricevuto:", rawId);
+        throw new Error("Errore nel recupero del profilo utente.");
+      }
 
       const userData: User = {
-        id: parseInt(userId),
+        id: userId,
         username: wpUser?.user_login || username,
         email: wpUser?.user_email || '',
         nicename: wpUser?.display_name || username,
@@ -95,7 +107,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const refreshUser = async () => {
-    // In futuro qui potremo sincronizzare i dati con una tabella 'profiles' su Supabase
     setIsRefreshing(true);
     setTimeout(() => setIsRefreshing(false), 500);
   };

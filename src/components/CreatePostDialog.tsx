@@ -25,17 +25,11 @@ const CreatePostDialog = () => {
       return;
     }
 
-    if (!user || !user.id) {
-      showError("Devi essere loggato per pubblicare.");
-      return;
-    }
+    // Se il componente è renderizzato, l'utente esiste già grazie al controllo a fine file
+    if (!user) return;
 
     try {
-      console.log("[CreatePost] Tentativo di pubblicazione...", {
-        content,
-        user_id: String(user.id),
-        user_name: user.display_name
-      });
+      console.log("[CreatePost] Pubblicazione in corso per:", user.display_name);
 
       await createPost.mutateAsync({ 
         content: content.trim(),
@@ -48,11 +42,12 @@ const CreatePostDialog = () => {
       setOpen(false);
       setContent("");
     } catch (err: any) {
-      console.error("[CreatePost] Errore durante la creazione:", err);
-      showError(err.message || "Errore durante la pubblicazione. Riprova tra poco.");
+      console.error("[CreatePost] Errore:", err);
+      showError("Errore durante la pubblicazione. Riprova.");
     }
   };
 
+  // Se non c'è l'utente, non mostriamo proprio il tasto per creare il post
   if (!user) return null;
 
   return (
