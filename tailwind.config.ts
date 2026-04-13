@@ -14,8 +14,8 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#ef4444",
-          foreground: "#ffffff",
+          DEFAULT: "#ffffff",
+          foreground: "#000000",
         },
         secondary: {
           DEFAULT: "#18181b",
@@ -25,6 +25,10 @@ export default {
           950: "#09090b",
           900: "#18181b",
           800: "#27272a",
+          700: "#3f3f46",
+          600: "#52525b",
+          500: "#71717a",
+          400: "#a1a1aa",
         }
       },
       borderRadius: {

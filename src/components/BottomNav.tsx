@@ -25,7 +25,7 @@ const BottomNav = () => {
             to={item.href}
             className={cn(
               "flex flex-col items-center gap-1 transition-all",
-              location.pathname === item.href ? "text-red-600 scale-110" : "text-gray-500 hover:text-white"
+              location.pathname === item.href ? "text-white scale-110" : "text-gray-500 hover:text-white"
             )}
           >
             <item.icon size={22} strokeWidth={location.pathname === item.href ? 2.5 : 2} />

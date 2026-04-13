@@ -51,12 +51,12 @@ const Navbar = () => {
                 to={link.href}
                 className={cn(
                   "text-[10px] font-black transition-all uppercase tracking-[0.25em] italic relative group",
-                  location.pathname === link.href ? "text-red-600" : "text-gray-400 hover:text-white"
+                  location.pathname === link.href ? "text-white" : "text-gray-500 hover:text-white"
                 )}
               >
                 {link.name}
                 <span className={cn(
-                  "absolute -bottom-1 left-0 w-0 h-0.5 bg-red-600 transition-all duration-300 group-hover:w-full",
+                  "absolute -bottom-1 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full",
                   location.pathname === link.href && "w-full"
                 )} />
               </Link>
@@ -66,19 +66,19 @@ const Navbar = () => {
 
         <div className="flex items-center gap-4 md:gap-8">
           <div className="hidden md:flex items-center gap-6 border-r border-white/10 pr-6 mr-2">
-            <Link to="/profile" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2">
+            <Link to="/profile" className="text-gray-500 hover:text-white transition-colors flex items-center gap-2">
               <User size={16} />
               <span className="text-[9px] font-black uppercase tracking-widest">Account</span>
             </Link>
-            <Link to="/settings" className="text-gray-400 hover:text-white transition-colors">
+            <Link to="/settings" className="text-gray-500 hover:text-white transition-colors">
               <Settings size={16} />
             </Link>
           </div>
 
-          <Link to="/cart" className="text-gray-400 hover:text-white transition-colors relative group p-2">
+          <Link to="/cart" className="text-gray-500 hover:text-white transition-colors relative group p-2">
             <ShoppingBag size={18} />
             {itemCount > 0 && (
-              <span className="absolute top-0 right-0 bg-red-600 text-white text-[8px] font-black w-3.5 h-3.5 flex items-center justify-center rounded-full animate-in zoom-in">
+              <span className="absolute top-0 right-0 bg-white text-black text-[8px] font-black w-3.5 h-3.5 flex items-center justify-center rounded-full animate-in zoom-in">
                 {itemCount}
               </span>
             )}
@@ -102,7 +102,7 @@ const Navbar = () => {
           <Link 
             key={link.name} 
             to={link.href}
-            className="text-4xl font-black text-white uppercase tracking-tighter italic hover:text-red-600 transition-colors"
+            className="text-4xl font-black text-white uppercase tracking-tighter italic hover:text-zinc-400 transition-colors"
             style={{ transitionDelay: `${i * 50}ms` }}
             onClick={() => setIsMobileMenuOpen(false)}
           >

@@ -6,15 +6,15 @@
   :root {
     --background: 0 0% 0%;
     --foreground: 0 0% 100%;
-    --primary: 0 84% 60%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
     --card: 0 0% 3%;
     --card-foreground: 0 0% 100%;
     --popover: 0 0% 3%;
     --popover-foreground: 0 0% 100%;
     --border: 0 0% 12%;
     --input: 0 0% 12%;
-    --ring: 0 84% 60%;
+    --ring: 0 0% 100%;
     --radius: 0rem;
   }
 }
@@ -30,42 +30,40 @@ h1, h2, h3, h4, h5, h6 {
   @apply font-black uppercase italic tracking-tighter;
 }
 
-.text-brand-red {
-  color: #ef4444;
+.text-brand-accent {
+  @apply text-white;
 }
 
-.bg-brand-red {
-  background-color: #ef4444;
+.bg-brand-accent {
+  @apply bg-white text-black;
 }
 
 /* --- CUSTOM SCROLLBAR LOW DISTRICT --- */
-/* Per Chrome, Safari e Edge */
 ::-webkit-scrollbar {
-  width: 4px; /* Molto sottile */
+  width: 4px;
   height: 4px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.3); /* Quasi invisibile */
+  background: rgba(0, 0, 0, 0.3);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #27272a; /* Grigio scuro (zinc-800) */
+  background: #3f3f46;
   border-radius: 10px;
   transition: background 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #ef4444; /* Diventa rossa al passaggio */
+  background: #ffffff;
 }
 
 /* Per Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #27272a transparent;
+  scrollbar-color: #3f3f46 transparent;
 }
 
-/* Animazioni */
 @keyframes marquee {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }

@@ -13,16 +13,15 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 
 const Index = () => {
   return (
-    <main className="min-h-screen bg-black text-white selection:bg-red-600 selection:text-white pb-20 md:pb-0">
+    <main className="min-h-screen bg-black text-white selection:bg-white selection:text-black pb-20 md:pb-0">
       <Navbar />
       
       <div className="pt-[calc(4.2rem+env(safe-area-inset-top))] md:pt-20">
-        {/* Sezione Stories rimossa per reset */}
       </div>
       
       <Hero />
       
-      <div className="bg-red-600 py-4 md:py-6 overflow-hidden whitespace-nowrap border-y border-white/10">
+      <div className="bg-zinc-900 py-4 md:py-6 overflow-hidden whitespace-nowrap border-y border-white/5">
         <div className="flex animate-marquee gap-12 items-center">
           {[1,2,3,4,5,6,7,8].map((i) => (
             <span key={i} className="text-white font-black text-2xl md:text-4xl tracking-tighter italic uppercase opacity-90">

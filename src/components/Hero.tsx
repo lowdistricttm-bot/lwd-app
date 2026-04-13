@@ -28,7 +28,7 @@ const Hero = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
         >
-          <h2 className="text-red-600 font-black tracking-[0.5em] uppercase mb-6 text-[10px] md:text-xs italic">
+          <h2 className="text-zinc-400 font-black tracking-[0.5em] uppercase mb-6 text-[10px] md:text-xs italic">
             {t.hero.subtitle}
           </h2>
           
@@ -42,7 +42,7 @@ const Hero = () => {
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link to="/shop" className="w-full sm:w-auto">
-              <Button className="bg-red-600 text-white hover:bg-white hover:text-black rounded-none px-12 py-8 text-sm font-black uppercase tracking-widest w-full italic transition-all duration-300 shadow-2xl shadow-red-600/20">
+              <Button className="bg-white text-black hover:bg-zinc-200 rounded-none px-12 py-8 text-sm font-black uppercase tracking-widest w-full italic transition-all duration-300 shadow-2xl shadow-white/5">
                 {t.hero.shopBtn}
               </Button>
             </Link>
