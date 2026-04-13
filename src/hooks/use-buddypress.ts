@@ -8,7 +8,8 @@ const WP_API_URL = "https://www.lowdistrict.it/wp-json/wp/v2";
 
 const getAuthHeader = () => {
   const token = localStorage.getItem('wp-jwt');
-  if (!token) return {};
+  // Verifichiamo che il token sia una stringa valida e non "null" o "undefined"
+  if (!token || token === 'null' || token === 'undefined') return {};
   return { 'Authorization': `Bearer ${token}` };
 };
 
@@ -35,16 +36,17 @@ export const useBPActivity = () => {
   return useQuery({
     queryKey: ['bp-activity'],
     queryFn: async () => {
-      const response = await fetch(`${BP_API_URL}/activity?per_page=20&_embed`, {
+      // Rimuoviamo _embed se causa problemi e aggiungiamo context=view
+      const response = await fetch(`${BP_API_URL}/activity?per_page=20&context=view`, {
         headers: { 
-          'Content-Type': 'application/json',
+          'Accept': 'application/json',
           ...getAuthHeader() 
         }
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Impossibile caricare la bacheca.');
+        throw new Error(errorData.message || 'Errore caricamento bacheca');
       }
       return response.json() as Promise<BPActivity[]>;
     },
@@ -58,19 +60,23 @@ export const useBPActions = () => {
   const favoriteMutation = useMutation({
     mutationFn: async (activityId: number) => {
       const headers = getAuthHeader();
-      if (!headers.Authorization) throw new Error('Effettua il login per interagire.');
+      if (!headers.Authorization) throw new Error('Accedi per mettere Like');
 
       const response = await fetch(`${BP_API_URL}/activity/${activityId}/favorite`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...headers }
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          ...headers 
+        }
       });
 
-      if (!response.ok) throw new Error('Errore Like.');
+      if (!response.ok) throw new Error('Errore Like');
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bp-activity'] });
-      showSuccess("Aggiunto ai preferiti!");
+      showSuccess("District Like!");
     },
     onError: (error: any) => showError(error.message)
   });
@@ -78,15 +84,19 @@ export const useBPActions = () => {
   const commentMutation = useMutation({
     mutationFn: async ({ activityId, content }: { activityId: number, content: string }) => {
       const headers = getAuthHeader();
-      if (!headers.Authorization) throw new Error('Effettua il login per commentare.');
+      if (!headers.Authorization) throw new Error('Accedi per commentare');
 
       const response = await fetch(`${BP_API_URL}/activity/${activityId}/comment`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...headers },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          ...headers 
+        },
         body: JSON.stringify({ content })
       });
 
-      if (!response.ok) throw new Error('Errore commento.');
+      if (!response.ok) throw new Error('Errore invio commento');
       return response.json();
     },
     onSuccess: () => {
@@ -99,11 +109,15 @@ export const useBPActions = () => {
   const createPostMutation = useMutation({
     mutationFn: async ({ content }: { content: string }) => {
       const headers = getAuthHeader();
-      if (!headers.Authorization) throw new Error('Effettua il login per pubblicare.');
+      if (!headers.Authorization) throw new Error('Accedi per pubblicare');
 
       const response = await fetch(`${BP_API_URL}/activity`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...headers },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          ...headers 
+        },
         body: JSON.stringify({
           content: content,
           component: 'activity',
@@ -111,12 +125,12 @@ export const useBPActions = () => {
         })
       });
 
-      if (!response.ok) throw new Error('Errore pubblicazione.');
+      if (!response.ok) throw new Error('Errore pubblicazione');
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bp-activity'] });
-      showSuccess("Post pubblicato!");
+      showSuccess("Post pubblicato nel District!");
     },
     onError: (error: any) => showError(error.message)
   });
@@ -133,7 +147,7 @@ export const useBPActions = () => {
         body: formData
       });
 
-      if (!response.ok) throw new Error('Errore caricamento file.');
+      if (!response.ok) throw new Error('Errore caricamento media');
       return response.json();
     }
   });
@@ -146,8 +160,9 @@ export const useBPMember = (username?: string) => {
     queryKey: ['bp-member', username],
     queryFn: async () => {
       if (!username) return null;
-      const response = await fetch(`${BP_API_URL}/members?slug=${username}`, {
-        headers: { 'Content-Type': 'application/json', ...getAuthHeader() }
+      // Usiamo search invece di slug se slug dà errore 400
+      const response = await fetch(`${BP_API_URL}/members?search=${username}`, {
+        headers: { 'Accept': 'application/json', ...getAuthHeader() }
       });
       if (!response.ok) return null;
       const data = await response.json();
