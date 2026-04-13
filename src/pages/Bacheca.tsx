@@ -1,41 +1,30 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
 import ActivityItem from '@/components/ActivityItem';
 import CreatePostModal from '@/components/CreatePostModal';
 import { useBPActivity } from '@/hooks/use-buddypress';
-import { Loader2, Plus, Lock, AlertCircle, LogIn, RefreshCw } from 'lucide-react';
+import { Loader2, Plus, Lock, AlertCircle, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Bacheca = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const [hasWpToken, setHasWpToken] = useState(!!localStorage.getItem('wp-jwt'));
-  
   const { data: activities, isLoading, error, refetch } = useBPActivity();
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+  const [hasWpToken, setHasWpToken] = useState(!!localStorage.getItem('wp-jwt'));
 
-  // Verifica il token ogni volta che la pagina viene montata o torna in focus
+  // Controlla il token all'avvio e quando la finestra torna in focus
   useEffect(() => {
-    const checkToken = () => {
-      const token = localStorage.getItem('wp-jwt');
-      setHasWpToken(!!token);
-    };
-    
-    checkToken();
+    const checkToken = () => setHasWpToken(!!localStorage.getItem('wp-jwt'));
     window.addEventListener('focus', checkToken);
     return () => window.removeEventListener('focus', checkToken);
-  }, [location.pathname]);
+  }, []);
 
   const isAuthError = error?.message.includes('401') || !hasWpToken;
-
-  const handleRefresh = () => {
-    refetch();
-  };
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -51,20 +40,12 @@ const Bacheca = () => {
               Bacheca
             </h1>
           </div>
-          <div className="flex gap-2">
-            <button 
-              onClick={handleRefresh}
-              className="w-12 h-12 bg-zinc-900 flex items-center justify-center hover:bg-zinc-800 transition-all border border-white/5"
-            >
-              <RefreshCw size={20} className={isLoading ? "animate-spin" : ""} />
-            </button>
-            <button 
-              onClick={() => hasWpToken ? setIsPostModalOpen(true) : navigate('/login')}
-              className="w-12 h-12 bg-red-600 flex items-center justify-center hover:bg-white hover:text-black transition-all shadow-lg shadow-red-600/20"
-            >
-              <Plus size={24} />
-            </button>
-          </div>
+          <button 
+            onClick={() => hasWpToken ? setIsPostModalOpen(true) : navigate('/login')}
+            className="w-12 h-12 bg-red-600 flex items-center justify-center hover:bg-white hover:text-black transition-all shadow-lg shadow-red-600/20"
+          >
+            <Plus size={24} />
+          </button>
         </header>
 
         {!hasWpToken && (
