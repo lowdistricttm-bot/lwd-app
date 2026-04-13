@@ -15,46 +15,58 @@ export interface Post {
     avatar_url: string;
   };
   likes_count?: number;
-  comments_count?: number;
   is_liked?: boolean;
 }
 
 export const useSocialFeed = () => {
   const queryClient = useQueryClient();
 
-  const { data: posts, isLoading } = useQuery({
+  const { data: posts, isLoading, error } = useQuery({
     queryKey: ['social-posts'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       
+      // Recupero post e info profilo associate
       const { data, error } = await supabase
         .from('posts')
         .select(`
           *,
-          profiles:user_id (username, avatar_url),
-          likes:likes(count),
-          comments:comments(count)
+          profiles:user_id (first_name, last_name, avatar_url)
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      // Check if current user liked each post
+      // Verifico i like per l'utente corrente
       const postsWithLikes = await Promise.all((data || []).map(async (post: any) => {
         let is_liked = false;
+        let likes_count = 0;
+
+        // Conteggio like (approssimativo per semplicità)
+        const { count } = await supabase
+          .from('likes')
+          .select('*', { count: 'exact', head: true })
+          .eq('post_id', post.id);
+        
+        likes_count = count || 0;
+
         if (user) {
-          const { count } = await supabase
+          const { data: userLike } = await supabase
             .from('likes')
-            .select('*', { count: 'exact', head: true })
+            .select('id')
             .eq('post_id', post.id)
-            .eq('user_id', user.id);
-          is_liked = (count || 0) > 0;
+            .eq('user_id', user.id)
+            .maybeSingle();
+          is_liked = !!userLike;
         }
 
         return {
           ...post,
-          likes_count: post.likes?.[0]?.count || 0,
-          comments_count: post.comments?.[0]?.count || 0,
+          profiles: {
+            username: post.profiles ? `${post.profiles.first_name || ''} ${post.profiles.last_name || ''}`.trim() || 'Membro' : 'Membro',
+            avatar_url: post.profiles?.avatar_url
+          },
+          likes_count,
           is_liked
         };
       }));
@@ -66,7 +78,7 @@ export const useSocialFeed = () => {
   const createPost = useMutation({
     mutationFn: async ({ content, image_url }: { content: string, image_url?: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Devi aver effettuato l'accesso");
+      if (!user) throw new Error("Devi accedere per pubblicare");
 
       const { data, error } = await supabase
         .from('posts')
@@ -79,7 +91,7 @@ export const useSocialFeed = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['social-posts'] });
-      showSuccess("Post pubblicato!");
+      showSuccess("Post pubblicato nel District!");
     },
     onError: (error: any) => showError(error.message)
   });
@@ -87,14 +99,14 @@ export const useSocialFeed = () => {
   const toggleLike = useMutation({
     mutationFn: async (postId: string) => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Devi aver effettuato l'accesso");
+      if (!user) throw new Error("Accedi per mettere like");
 
       const { data: existingLike } = await supabase
         .from('likes')
-        .select()
+        .select('id')
         .eq('post_id', postId)
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (existingLike) {
         await supabase.from('likes').delete().eq('id', existingLike.id);
@@ -108,5 +120,5 @@ export const useSocialFeed = () => {
     onError: (error: any) => showError(error.message)
   });
 
-  return { posts, isLoading, createPost, toggleLike };
+  return { posts, isLoading, error, createPost, toggleLike };
 };
