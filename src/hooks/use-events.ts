@@ -14,14 +14,14 @@ export interface Event {
   created_at: string;
 }
 
-// Dati ufficiali Low District Season 4 presi dal sito
+// Dati ufficiali Low District Season 4 aggiornati
 const MOCK_EVENTS: Event[] = [
   {
     id: "season-4-2026",
     title: "LOW DISTRICT - SEASON 4",
-    description: "L'evento che definisce lo standard della cultura stance in Italia. Season 4 torna all'Autodromo di Modena per una giornata epica tra auto, musica e lifestyle. Le selezioni ufficiali sono aperte: carica il tuo progetto nel garage dell'app e invia la tua candidatura per provare ad aggiudicarti un posto nell'area espositiva principale.",
-    date: "2026-05-24T09:00:00Z",
-    location: "Autodromo di Modena, Italia",
+    description: "L'evento che definisce lo standard della cultura stance in Italia. Season 4 approda ad Atripalda (AV) per un weekend epico il 27 e 28 Giugno 2026. Le selezioni ufficiali sono aperte: carica il tuo progetto nel garage dell'app e invia la tua candidatura per provare ad aggiudicarti un posto nell'area espositiva principale.",
+    date: "2026-06-27T09:00:00Z",
+    location: "Atripalda (AV), Italia",
     status: "open",
     created_at: new Date().toISOString()
   }
@@ -69,6 +69,7 @@ export const useEvents = () => {
       return data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['events'] });
       showSuccess("Candidatura inviata con successo!");
     },
     onError: (error: any) => showError(error.message)
