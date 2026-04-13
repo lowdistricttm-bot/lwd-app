@@ -17,17 +17,18 @@ const Stories = () => {
   
   const [showViewer, setShowViewer] = React.useState(false);
   const [selectedStoryIndex, setSelectedStoryIndex] = React.useState(0);
+  const [isUploading, setIsUploading] = React.useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!user || !file) return;
 
+    setIsUploading(true);
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
       
-      // Caricamento su Supabase Storage (assumendo esista il bucket 'stories')
       const { error: uploadError } = await supabase.storage
         .from('stories')
         .upload(fileName, file);
@@ -45,14 +46,11 @@ const Stories = () => {
       
       showSuccess("Storia pubblicata!");
     } catch (err: any) {
-      // Se il bucket non esiste, usiamo un placeholder per il test
-      console.error("Storage error, using placeholder:", err);
-      const placeholderUrl = "https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&q=80&w=800";
-      await createStory.mutateAsync({ 
-        userId: String(user.id), 
-        imageUrl: placeholderUrl 
-      });
-      showSuccess("Storia pubblicata (Demo Mode)!");
+      console.error("Storage error:", err);
+      showError("Errore durante il caricamento della storia.");
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -68,10 +66,11 @@ const Stories = () => {
       <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
       
       <div className="flex gap-4 overflow-x-auto pt-4 pb-6 px-6 no-scrollbar bg-black">
-        {/* Il tuo slot per aggiungere */}
+        {/* Slot per aggiungere */}
         <div className="flex flex-col items-center gap-2 shrink-0">
           <button 
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => !isUploading && fileInputRef.current?.click()}
+            disabled={isUploading}
             className="relative w-[72px] h-[72px] rounded-full bg-zinc-900 border border-white/10 p-1 flex items-center justify-center overflow-hidden"
           >
             <img 
@@ -80,9 +79,13 @@ const Stories = () => {
               alt=""
             />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="bg-red-600 rounded-full p-1 border-2 border-black">
-                <Plus size={16} className="text-white" />
-              </div>
+              {isUploading ? (
+                <Loader2 className="animate-spin text-white" size={20} />
+              ) : (
+                <div className="bg-red-600 rounded-full p-1 border-2 border-black">
+                  <Plus size={16} className="text-white" />
+                </div>
+              )}
             </div>
           </button>
           <span className="text-[10px] font-black uppercase text-white/40">Aggiungi</span>
