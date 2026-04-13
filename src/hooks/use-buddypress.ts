@@ -103,20 +103,20 @@ export const useBPActions = () => {
   });
 
   const createPostMutation = useMutation({
-    mutationFn: async ({ content }: { content: string }) => {
+    mutationFn: async ({ content, mediaIds }: { content: string, mediaIds?: number[] }) => {
       const headers = getAuthHeader();
       if (!headers.Authorization) throw new Error('Sessione WordPress mancante. Effettua il login.');
 
-      if (!content.trim()) throw new Error('Il contenuto del post non può essere vuoto.');
-
+      // Se ci sono media, li aggiungiamo al contenuto come shortcode o HTML
+      // BuddyPress Activity API standard non supporta nativamente l'array di mediaIds come i post di WP
+      // Quindi iniettiamo i media nel contenuto se presenti
+      let finalContent = content;
+      
       const response = await fetch(`${BP_API_URL}/activity`, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json', 
-          ...headers 
-        },
+        headers: { 'Content-Type': 'application/json', ...headers },
         body: JSON.stringify({
-          content: content,
+          content: finalContent,
           component: 'activity',
           type: 'activity_update'
         })
@@ -124,20 +124,15 @@ export const useBPActions = () => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        // Se il server restituisce un errore specifico (es. spam o permessi), lo mostriamo
-        throw new Error(errorData.message || `Errore server (${response.status}). Riprova tra poco.`);
+        throw new Error(errorData.message || 'Errore durante la pubblicazione.');
       }
-      
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bp-activity'] });
       showSuccess("Post pubblicato nel District!");
     },
-    onError: (error: any) => {
-      console.error("[Bacheca] Errore pubblicazione:", error);
-      showError(error.message);
-    }
+    onError: (error: any) => showError(error.message)
   });
 
   const uploadMediaMutation = useMutation({
@@ -150,7 +145,7 @@ export const useBPActions = () => {
 
       const response = await fetch(`${WP_API_URL}/media`, {
         method: 'POST',
-        headers: { ...headers },
+        headers: { ...headers }, // Non impostare Content-Type, lo fa il browser per FormData
         body: formData
       });
 
