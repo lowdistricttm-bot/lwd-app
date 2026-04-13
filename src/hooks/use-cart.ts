@@ -1,7 +1,6 @@
 "use client";
 
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { useState, useEffect } from 'react';
 import { showSuccess } from '@/utils/toast';
 
 interface CartItem {
@@ -14,45 +13,53 @@ interface CartItem {
   size?: string;
 }
 
-interface CartStore {
-  items: CartItem[];
-  addToCart: (item: CartItem) => void;
-  removeFromCart: (id: number, variationId?: number) => void;
-  clearCart: () => void;
-  total: number;
-}
+// Sistema di gestione stato semplice (Vanilla JS)
+let cartItems: CartItem[] = JSON.parse(localStorage.getItem('low-district-cart') || '[]');
+const listeners = new Set<Function>();
 
-export const useCart = create<CartStore>()(
-  persist(
-    (set, get) => ({
-      items: [],
-      total: 0,
-      addToCart: (newItem) => {
-        const items = get().items;
-        const existingItem = items.find(i => i.id === newItem.id && i.variationId === newItem.variationId);
-        
-        let newItems;
-        if (existingItem) {
-          newItems = items.map(i => 
-            (i.id === newItem.id && i.variationId === newItem.variationId) 
-              ? { ...i, quantity: i.quantity + 1 } 
-              : i
-          );
-        } else {
-          newItems = [...items, newItem];
-        }
-        
-        const total = newItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-        set({ items: newItems, total });
-        showSuccess("Aggiunto al carrello!");
-      },
-      removeFromCart: (id, variationId) => {
-        const newItems = get().items.filter(i => !(i.id === id && i.variationId === variationId));
-        const total = newItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-        set({ items: newItems, total });
-      },
-      clearCart: () => set({ items: [], total: 0 }),
-    }),
-    { name: 'low-district-cart' }
-  )
-);
+const notify = () => listeners.forEach(l => l([...cartItems]));
+
+export const useCart = () => {
+  const [items, setItems] = useState<CartItem[]>(cartItems);
+
+  useEffect(() => {
+    listeners.add(setItems);
+    return () => { listeners.delete(setItems); };
+  }, []);
+
+  const addToCart = (newItem: CartItem) => {
+    const existingItem = cartItems.find(i => i.id === newItem.id && i.variationId === newItem.variationId);
+    
+    if (existingItem) {
+      cartItems = cartItems.map(i => 
+        (i.id === newItem.id && i.variationId === newItem.variationId) 
+          ? { ...i, quantity: i.quantity + 1 } 
+          : i
+      );
+    } else {
+      cartItems = [...cartItems, newItem];
+    }
+    
+    saveAndNotify();
+    showSuccess("Aggiunto al carrello!");
+  };
+
+  const removeFromCart = (id: number, variationId?: number) => {
+    cartItems = cartItems.filter(i => !(i.id === id && i.variationId === variationId));
+    saveAndNotify();
+  };
+
+  const clearCart = () => {
+    cartItems = [];
+    saveAndNotify();
+  };
+
+  const saveAndNotify = () => {
+    localStorage.setItem('low-district-cart', JSON.stringify(cartItems));
+    notify();
+  };
+
+  const total = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+
+  return { items, addToCart, removeFromCart, clearCart, total };
+};
