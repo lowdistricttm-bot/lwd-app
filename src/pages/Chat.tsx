@@ -4,10 +4,21 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { useMessages } from '@/hooks/use-messages';
-import { ChevronLeft, Send, User, Loader2, Mail } from 'lucide-react';
+import { ChevronLeft, Send, User, Loader2, Mail, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Chat = () => {
   const { userId } = useParams();
@@ -15,9 +26,10 @@ const Chat = () => {
   const [message, setMessage] = useState('');
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [otherUserProfile, setOtherUserProfile] = useState<any>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   
-  const { chatMessages, loadingChat, sendMessage } = useMessages(userId);
+  const { chatMessages, loadingChat, sendMessage, deleteMessage } = useMessages(userId);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => setCurrentUserId(user?.id || null));
@@ -43,6 +55,13 @@ const Chat = () => {
       setMessage('');
     } catch (err) {
       console.error("Errore invio messaggio:", err);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (deleteTarget) {
+      await deleteMessage.mutateAsync(deleteTarget);
+      setDeleteTarget(null);
     }
   };
 
@@ -85,13 +104,29 @@ const Chat = () => {
           chatMessages?.map((msg) => {
             const isMe = msg.sender_id === currentUserId;
             return (
-              <div key={msg.id} className={cn("flex", isMe ? "justify-end" : "justify-start")}>
-                <div className={cn(
-                  "max-w-[80%] p-4 text-sm font-medium shadow-lg",
-                  isMe 
-                    ? "bg-red-600 text-white rounded-2xl rounded-tr-none" 
-                    : "bg-zinc-900 text-zinc-200 rounded-2xl rounded-tl-none border border-white/5"
-                )}>
+              <div key={msg.id} className={cn("flex relative", isMe ? "justify-end" : "justify-start")}>
+                {isMe && (
+                  <div className="absolute inset-y-0 right-0 w-20 bg-red-600 flex items-center justify-center rounded-2xl rounded-tr-none">
+                    <Trash2 size={16} className="text-white" />
+                  </div>
+                )}
+                
+                <motion.div 
+                  drag={isMe ? "x" : false}
+                  dragConstraints={{ left: -80, right: 0 }}
+                  dragElastic={0.1}
+                  onDragEnd={(_, info) => {
+                    if (info.offset.x < -50) {
+                      setDeleteTarget(msg.id);
+                    }
+                  }}
+                  className={cn(
+                    "relative max-w-[80%] p-4 text-sm font-medium shadow-lg z-10",
+                    isMe 
+                      ? "bg-red-600 text-white rounded-2xl rounded-tr-none" 
+                      : "bg-zinc-900 text-zinc-200 rounded-2xl rounded-tl-none border border-white/5"
+                  )}
+                >
                   {msg.content}
                   <p className={cn(
                     "text-[7px] mt-1 uppercase font-black opacity-50",
@@ -99,7 +134,7 @@ const Chat = () => {
                   )}>
                     {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
-                </div>
+                </motion.div>
               </div>
             );
           })
@@ -123,6 +158,21 @@ const Chat = () => {
           </button>
         </form>
       </div>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
+        <AlertDialogContent className="bg-zinc-950 border-white/10 rounded-none">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white font-black uppercase italic">Elimina Messaggio?</AlertDialogTitle>
+            <AlertDialogDescription className="text-zinc-500 text-xs font-bold uppercase">
+              Questa azione eliminerà il messaggio permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-none border-white/10 text-white font-black uppercase italic text-[10px]">Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="rounded-none bg-red-600 text-white font-black uppercase italic text-[10px]">Elimina</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

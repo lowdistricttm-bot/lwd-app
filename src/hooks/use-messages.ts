@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from 'react';
+import { showSuccess, showError } from '@/utils/toast';
 
 export interface Message {
   id: string;
@@ -82,6 +83,10 @@ export const useMessages = (otherUserId?: string) => {
         queryClient.invalidateQueries({ queryKey: ['conversations'] });
         if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
       })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['conversations'] });
+        if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
+      })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
@@ -100,5 +105,35 @@ export const useMessages = (otherUserId?: string) => {
     }
   });
 
-  return { conversations, loadingConvs, chatMessages, loadingChat, sendMessage };
+  const deleteMessage = useMutation({
+    mutationFn: async (messageId: string) => {
+      const { error } = await supabase.from('messages').delete().eq('id', messageId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      showSuccess("Messaggio eliminato");
+    },
+    onError: (err: any) => showError(err.message)
+  });
+
+  const deleteConversation = useMutation({
+    mutationFn: async (otherId: string) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('messages')
+        .delete()
+        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${otherId}),and(sender_id.eq.${otherId},receiver_id.eq.${user.id})`);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      showSuccess("Conversazione eliminata");
+    },
+    onError: (err: any) => showError(err.message)
+  });
+
+  return { conversations, loadingConvs, chatMessages, loadingChat, sendMessage, deleteMessage, deleteConversation };
 };
