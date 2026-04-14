@@ -11,6 +11,8 @@ import ApplicationsTab from '@/components/ApplicationsTab';
 import FeedPost from '@/components/FeedPost';
 import CreatePostModal from '@/components/CreatePostModal';
 import ImageLightbox from '@/components/ImageLightbox';
+import ProfileInfoTab from '@/components/ProfileInfoTab';
+import SettingsTab from '@/components/SettingsTab';
 import { useSocialFeed } from '@/hooks/use-social-feed';
 import { useWpAuth } from '@/hooks/use-wp-auth';
 import { 
@@ -238,7 +240,7 @@ const Profile = () => {
         </div>
 
         <div className="mt-20 px-4 md:px-12 max-w-6xl mx-auto">
-          {/* Share Card Integrata - Versione Semplificata */}
+          {/* Share Card Integrata */}
           <button 
             onClick={handleShareProfile}
             className="w-full mb-6 bg-zinc-900/40 border border-white/5 p-4 flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500"
@@ -334,7 +336,22 @@ const Profile = () => {
 
               {activeTab === 'garage' && <motion.div key="garage" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><GarageTab userId={targetUserId} isOwnProfile={isOwnProfile} /></motion.div>}
               {activeTab === 'selections' && isOwnProfile && <motion.div key="selections" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><ApplicationsTab /></motion.div>}
-              {activeTab === 'settings' && isOwnProfile && <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-2"><Button onClick={handleLogout} variant="outline" className="w-full border-white/10 text-zinc-400 hover:bg-white hover:text-black rounded-none font-black uppercase text-[10px] tracking-widest italic h-14"><LogOut className="mr-2" size={14} /> Logout Sessione</Button></motion.div>}
+              
+              {activeTab === 'profile' && (
+                <motion.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                  <ProfileInfoTab 
+                    profile={profile} 
+                    isOwnProfile={isOwnProfile} 
+                    onUpdate={() => fetchProfile(targetUserId)} 
+                  />
+                </motion.div>
+              )}
+
+              {activeTab === 'settings' && isOwnProfile && (
+                <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                  <SettingsTab />
+                </motion.div>
+              )}
             </AnimatePresence>
           </div>
         </div>
