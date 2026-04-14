@@ -26,41 +26,65 @@ export const useWpAuth = () => {
         throw new Error(data.message || "Credenziali non valide sul sito ufficiale");
       }
 
-      // Estrazione flessibile del token (gestisce diversi formati del plugin)
+      // Estrazione dati utente dal sito WP
       const jwt = data.jwt || (data.data && data.data.jwt);
+      const userEmail = data.user_email || (username.includes('@') ? username : `${username}@lowdistrict.it`);
       
+      // Tentiamo di estrarre nome e cognome (spesso presenti in user_display_name o meta)
+      const displayName = data.user_display_name || username;
+      const nameParts = displayName.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
       if (jwt) {
         localStorage.setItem('wp-jwt', jwt);
         localStorage.setItem('wp-user', JSON.stringify(data));
-        console.log("[Auth] Sincronizzazione completata. Token salvato.");
-      } else {
-        console.warn("[Auth] Login riuscito ma nessun token JWT trovato nella risposta.");
       }
 
-      const userEmail = data.user_email || (username.includes('@') ? username : `${username}@lowdistrict.it`);
-
-      // Sincronizzazione con Supabase (App)
+      // 1. Tentativo di Login su Supabase
       let { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: userEmail,
         password: password,
       });
 
+      // 2. Se l'utente non esiste nell'app, lo creiamo con i dati del sito
       if (authError && (authError.message.includes("Invalid login credentials") || authError.status === 400)) {
-        console.log("[Auth] Creazione profilo App in corso...");
-        const { error: signUpError } = await supabase.auth.signUp({
+        console.log("[Auth] Creazione profilo App con dati sincronizzati...");
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: userEmail,
           password: password,
-          options: { data: { username } }
+          options: { 
+            data: { 
+              username: username,
+              first_name: firstName,
+              last_name: lastName,
+              full_name: displayName
+            } 
+          }
         });
         
-        if (!signUpError || signUpError.message.includes("Email not confirmed")) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+        if (!signUpError) {
+          // Login automatico dopo registrazione
           const retry = await supabase.auth.signInWithPassword({ email: userEmail, password: password });
+          authData = retry.data;
           authError = retry.error;
+        } else {
+          authError = signUpError;
         }
       }
 
-      if (authError) console.error("[Auth] Errore Supabase (non critico per la bacheca):", authError.message);
+      // 3. Sincronizzazione forzata del profilo (per utenti già esistenti)
+      if (authData?.user) {
+        await supabase.from('profiles').upsert({
+          id: authData.user.id,
+          username: username,
+          first_name: firstName,
+          last_name: lastName,
+          updated_at: new Date().toISOString()
+        });
+      }
+
+      if (authError) throw authError;
 
       return { success: true, user: data };
     } catch (error: any) {
