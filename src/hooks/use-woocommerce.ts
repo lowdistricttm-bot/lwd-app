@@ -77,7 +77,6 @@ export const useWcUserOrders = (email?: string) => {
       if (!email) return [];
       
       try {
-        // 1. Cerchiamo il cliente per email
         const customerResponse = await fetch(`${WC_URL}/customers?email=${encodeURIComponent(email)}`, {
           headers: getWcAuthHeader()
         });
@@ -85,11 +84,6 @@ export const useWcUserOrders = (email?: string) => {
         const customers = await customerResponse.json();
         const customerId = customers[0]?.id;
 
-        // 2. Recuperiamo gli ordini. Se abbiamo un ID cliente lo usiamo, 
-        // altrimenti cerchiamo gli ordini generici filtrando per email (se l'API lo permette)
-        // Nota: WC API v3 non filtra direttamente per billing_email nel list, 
-        // ma l'associazione tramite customer ID è il metodo standard.
-        
         let url = `${WC_URL}/orders?per_page=50`;
         if (customerId) {
           url += `&customer=${customerId}`;
@@ -104,7 +98,6 @@ export const useWcUserOrders = (email?: string) => {
         if (!ordersResponse.ok) return [];
         const orders = await ordersResponse.json();
         
-        // Filtro di sicurezza lato client per essere sicuri di mostrare solo gli ordini dell'utente
         return orders.filter((order: any) => 
           order.billing.email.toLowerCase() === email.toLowerCase()
         );
@@ -114,7 +107,7 @@ export const useWcUserOrders = (email?: string) => {
       }
     },
     enabled: !!email,
-    staleTime: 0 // Forza il refresh per vedere subito i nuovi ordini
+    staleTime: 0
   });
 };
 
@@ -131,6 +124,29 @@ export const useWcCreateOrder = () => {
         throw new Error(error.message || 'Errore durante la creazione dell\'ordine');
       }
       return response.json();
+    }
+  });
+};
+
+export const useWcShippingMethods = () => {
+  return useQuery({
+    queryKey: ['wc-shipping-methods'],
+    queryFn: async () => {
+      // Recuperiamo le zone di spedizione
+      const zonesResponse = await fetch(`${WC_URL}/shipping/zones`, {
+        headers: getWcAuthHeader()
+      });
+      if (!zonesResponse.ok) throw new Error('Errore caricamento zone di spedizione');
+      const zones = await zonesResponse.json();
+
+      // Per semplicità, prendiamo i metodi della prima zona (solitamente Italia o Resto del mondo)
+      // In un'app reale si filtrerebbe per la zona corrispondente all'indirizzo dell'utente
+      const zoneId = zones[0]?.id || 0;
+      const methodsResponse = await fetch(`${WC_URL}/shipping/zones/${zoneId}/methods`, {
+        headers: getWcAuthHeader()
+      });
+      if (!methodsResponse.ok) throw new Error('Errore caricamento metodi di spedizione');
+      return methodsResponse.json();
     }
   });
 };
