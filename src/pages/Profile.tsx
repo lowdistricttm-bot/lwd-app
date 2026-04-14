@@ -24,6 +24,7 @@ import { useWcUserOrders } from '@/hooks/use-woocommerce';
 import { showSuccess, showError } from '@/utils/toast';
 
 const DEFAULT_COVER = "https://www.lowdistrict.it/wp-content/uploads/DSC01359-1-scaled-e1751832356345.jpg";
+const PRODUCTION_URL = "https://low-district-app.vercel.app"; // URL ufficiale dell'app
 
 const roleLabels: Record<string, string> = {
   'admin': 'ADMIN',
@@ -47,7 +48,6 @@ const Profile = () => {
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
   
-  // Stato per la modifica dell'username
   const [isEditingUsername, setIsEditingUsername] = useState(false);
   const [newUsername, setNewUsername] = useState('');
   const { updateUsername, isLoading: isUpdatingUsername } = useWpAuth();
@@ -125,10 +125,11 @@ const Profile = () => {
   const handleShareProfile = async () => {
     if (!profile) return;
     
+    // Usiamo l'URL di produzione invece di localhost
     const shareData = {
       title: `Profilo di ${displayName} | Low District`,
       text: `Guarda il progetto stance di ${displayName} su Low District!`,
-      url: `${window.location.origin}/profile/${profile.id}`
+      url: `${PRODUCTION_URL}/profile/${profile.id}`
     };
 
     try {
