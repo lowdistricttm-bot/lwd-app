@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Save, Loader2, Info } from 'lucide-react';
+import { X, Save, Loader2, Info, ShieldAlert } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from '@/utils/toast';
+import { useAdmin } from '@/hooks/use-admin';
 import { cn } from '@/lib/utils';
 
 interface EmailSettingsModalProps {
@@ -17,15 +18,16 @@ interface EmailSettingsModalProps {
 }
 
 const EmailSettingsModal = ({ isOpen, onClose }: EmailSettingsModalProps) => {
+  const { isAdmin } = useAdmin();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [templates, setTemplates] = useState<any[]>([]);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && isAdmin) {
       fetchTemplates();
     }
-  }, [isOpen]);
+  }, [isOpen, isAdmin]);
 
   const fetchTemplates = async () => {
     setLoading(true);
@@ -36,6 +38,8 @@ const EmailSettingsModal = ({ isOpen, onClose }: EmailSettingsModalProps) => {
   };
 
   const handleSave = async (type: string) => {
+    if (!isAdmin) return;
+    
     const template = templates.find(t => t.type === type);
     if (!template) return;
 
@@ -57,6 +61,19 @@ const EmailSettingsModal = ({ isOpen, onClose }: EmailSettingsModalProps) => {
   const updateLocalTemplate = (type: string, field: string, value: string) => {
     setTemplates(prev => prev.map(t => t.type === type ? { ...t, [field]: value } : t));
   };
+
+  if (!isAdmin && isOpen) {
+    return (
+      <AnimatePresence>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/90 backdrop-blur-md z-[250]" />
+        <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed inset-x-0 bottom-0 z-[251] bg-zinc-950 border-t border-white/10 p-8 rounded-t-[2rem] flex flex-col items-center justify-center py-20">
+          <ShieldAlert size={48} className="text-zinc-800 mb-4" />
+          <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Accesso riservato agli amministratori</p>
+          <Button onClick={onClose} className="mt-6 bg-white text-black rounded-none font-black uppercase italic px-8 h-12">Chiudi</Button>
+        </motion.div>
+      </AnimatePresence>
+    );
+  }
 
   return (
     <AnimatePresence>

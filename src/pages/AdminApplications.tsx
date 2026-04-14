@@ -22,7 +22,7 @@ import { cn } from '@/lib/utils';
 
 const AdminApplications = () => {
   const navigate = useNavigate();
-  const { isAdmin, checkingAdmin, allApplications, loadingApps, loadError, updateStatus } = useAdmin();
+  const { isAdmin, canVote, checkingAdmin, allApplications, loadingApps, loadError, updateStatus } = useAdmin();
   const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending');
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
@@ -30,12 +30,13 @@ const AdminApplications = () => {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-4">
         <Loader2 className="animate-spin text-zinc-500" size={40} />
-        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Verifica permessi admin...</p>
+        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Verifica permessi...</p>
       </div>
     );
   }
 
-  if (!isAdmin) {
+  // Permettiamo l'accesso a chiunque possa votare (Admin, Staff, Support)
+  if (!canVote) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center">
         <XCircle size={64} className="text-zinc-800 mb-6" />
@@ -68,13 +69,16 @@ const AdminApplications = () => {
             <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">Gestione Selezioni</h1>
           </div>
           
-          <Button 
-            onClick={() => setIsEmailModalOpen(true)}
-            variant="outline"
-            className="border-white/10 text-zinc-400 hover:text-white hover:bg-white/5 rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 px-6"
-          >
-            <Mail size={16} className="mr-2" /> Configura Email
-          </Button>
+          {/* Il pulsante email è visibile SOLO agli Admin */}
+          {isAdmin && (
+            <Button 
+              onClick={() => setIsEmailModalOpen(true)}
+              variant="outline"
+              className="border-white/10 text-zinc-400 hover:text-white hover:bg-white/5 rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 px-6"
+            >
+              <Mail size={16} className="mr-2" /> Configura Email
+            </Button>
+          )}
         </div>
 
         {/* Tab System */}
@@ -97,7 +101,7 @@ const AdminApplications = () => {
             )}
           >
             <CheckCircle2 size={16} />
-            <span className="text-[10px] font-black uppercase tracking-widest italic">Approvate ({completedApps.length})</span>
+            <span className="text-[10px] font-black uppercase tracking-widest italic">Completate ({completedApps.length})</span>
           </button>
         </div>
 
@@ -126,14 +130,14 @@ const AdminApplications = () => {
             {displayedApps.length === 0 && (
               <div className="text-center py-20 border border-white/5 bg-zinc-900/30">
                 <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">
-                  {activeTab === 'pending' ? 'Nessuna candidatura in attesa.' : 'Nessuna candidatura approvata.'}
+                  {activeTab === 'pending' ? 'Nessuna candidatura in attesa.' : 'Nessuna candidatura gestita.'}
                 </p>
               </div>
             )}
           </div>
         )}
 
-        <EmailSettingsModal isOpen={isEmailModalOpen} onClose={() => setIsEmailModalOpen(false)} />
+        {isAdmin && <EmailSettingsModal isOpen={isEmailModalOpen} onClose={() => setIsEmailModalOpen(false)} />}
       </main>
 
       <Footer />
