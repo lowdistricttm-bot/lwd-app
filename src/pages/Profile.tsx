@@ -238,6 +238,27 @@ const Profile = () => {
         </div>
 
         <div className="mt-20 px-4 md:px-12 max-w-6xl mx-auto">
+          {/* Share Card Integrata */}
+          <button 
+            onClick={handleShareProfile}
+            className="w-full mb-6 bg-zinc-900/40 border border-white/5 p-4 flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-white/5 flex items-center justify-center group-hover:bg-black/10 transition-colors">
+                <Share2 size={18} className="group-hover:scale-110 transition-transform" />
+              </div>
+              <div className="text-left">
+                <p className="text-[10px] font-black uppercase italic tracking-widest">
+                  {isOwnProfile ? 'Condividi il tuo profilo' : 'Condividi questo profilo'}
+                </p>
+                <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-[0.2em] group-hover:text-black/60 transition-colors">
+                  {isOwnProfile ? 'Fatti conoscere nel District' : 'Mostra questo progetto alla community'}
+                </p>
+              </div>
+            </div>
+            <ChevronRight size={16} className="text-zinc-800 opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0" />
+          </button>
+
           <div className={cn("grid border border-white/5 bg-zinc-900/30 mb-6", isOwnProfile ? "grid-cols-6" : "grid-cols-3")}>
             {tabs.map((tab) => (
               <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={cn("flex flex-col items-center justify-center gap-2 py-4 transition-all border-b-2", activeTab === tab.id ? "border-white text-white bg-white/5" : "border-transparent text-zinc-600 hover:text-zinc-400")}>
@@ -319,17 +340,6 @@ const Profile = () => {
               {activeTab === 'settings' && isOwnProfile && <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-2"><Button onClick={handleLogout} variant="outline" className="w-full border-white/10 text-zinc-400 hover:bg-white hover:text-black rounded-none font-black uppercase text-[10px] tracking-widest italic h-14"><LogOut className="mr-2" size={14} /> Logout Sessione</Button></motion.div>}
             </AnimatePresence>
           </div>
-        </div>
-
-        {/* Pulsante Condividi Profilo - Versione Minimale */}
-        <div className="fixed bottom-24 right-6 z-40 md:bottom-32">
-          <button 
-            onClick={handleShareProfile}
-            className="w-10 h-10 bg-white text-black flex items-center justify-center shadow-2xl hover:bg-zinc-200 transition-all border border-black/10"
-            title="Condividi Profilo"
-          >
-            <Share2 size={16} />
-          </button>
         </div>
       </main>
       <CreatePostModal isOpen={isPostModalOpen} onClose={() => setIsPostModalOpen(false)} />
