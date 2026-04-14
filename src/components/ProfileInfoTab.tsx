@@ -42,6 +42,7 @@ const ProfileInfoTab = ({ profile, isOwnProfile, onUpdate }: ProfileInfoTabProps
   const handleSave = async () => {
     setLoading(true);
     try {
+      // Verifichiamo prima se le colonne esistono o se l'update fallisce per colonne mancanti
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -54,12 +55,19 @@ const ProfileInfoTab = ({ profile, isOwnProfile, onUpdate }: ProfileInfoTabProps
         })
         .eq('id', profile.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Errore salvataggio profilo:", error);
+        if (error.message?.includes("column") && error.message?.includes("does not exist")) {
+          throw new Error("Il database non è ancora aggiornato. Riprova tra qualche istante o contatta l'assistenza.");
+        }
+        throw error;
+      }
+      
       showSuccess("Informazioni aggiornate!");
       setIsEditing(false);
       onUpdate();
     } catch (err: any) {
-      showError(err.message);
+      showError(err.message || "Errore durante il salvataggio");
     } finally {
       setLoading(false);
     }
