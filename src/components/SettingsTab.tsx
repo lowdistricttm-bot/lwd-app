@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from './ui/button';
@@ -14,14 +14,60 @@ import {
   HelpCircle, 
   ChevronRight, 
   Trash2,
-  Info
+  Info,
+  Loader2
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 
 const SettingsTab = () => {
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState(true);
-  const [marketing, setMarketing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [pushEnabled, setPushEnabled] = useState(true);
+  const [emailEnabled, setEmailEnabled] = useState(false);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('push_notifications, email_notifications')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (data) {
+        setPushEnabled(data.push_notifications ?? true);
+        setEmailEnabled(data.email_notifications ?? false);
+      }
+      setLoading(false);
+    };
+
+    fetchSettings();
+  }, []);
+
+  const updateSetting = async (field: string, value: boolean) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Aggiorna stato locale immediatamente per reattività
+    if (field === 'push_notifications') setPushEnabled(value);
+    if (field === 'email_notifications') setEmailEnabled(value);
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ [field]: value })
+      .eq('id', user.id);
+
+    if (error) {
+      showError("Errore durante il salvataggio");
+      // Revert in caso di errore
+      if (field === 'push_notifications') setPushEnabled(!value);
+      if (field === 'email_notifications') setEmailEnabled(!value);
+    } else {
+      showSuccess("Impostazione salvata");
+    }
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -32,6 +78,14 @@ const SettingsTab = () => {
     alert("CANCELLAZIONE ACCOUNT\n\nPuoi eliminare il tuo account direttamente dal sito ufficiale lowdistrict.it nella sezione 'Il mio Account', oppure inviando una richiesta formale a info@lowdistrict.it.\n\nL'operazione è irreversibile.");
   };
 
+  if (loading) {
+    return (
+      <div className="py-20 flex justify-center">
+        <Loader2 className="animate-spin text-zinc-500" />
+      </div>
+    );
+  }
+
   const settingsGroups = [
     {
       title: "Notifiche",
@@ -40,13 +94,23 @@ const SettingsTab = () => {
           icon: Bell, 
           label: "Notifiche Push", 
           desc: "Ricevi avvisi per messaggi e like",
-          action: <Switch checked={notifications} onCheckedChange={setNotifications} />
+          action: (
+            <Switch 
+              checked={pushEnabled} 
+              onCheckedChange={(val) => updateSetting('push_notifications', val)} 
+            />
+          )
         },
         { 
           icon: Smartphone, 
           label: "Notifiche Email", 
           desc: "Ricevi aggiornamenti sulle selezioni",
-          action: <Switch checked={marketing} onCheckedChange={setMarketing} />
+          action: (
+            <Switch 
+              checked={emailEnabled} 
+              onCheckedChange={(val) => updateSetting('email_notifications', val)} 
+            />
+          )
         }
       ]
     },
