@@ -1,17 +1,19 @@
 "use client";
 
 import React from 'react';
-import { Home, ShoppingBag, MessageSquare, User, Calendar, Mail } from 'lucide-react';
+import { Home, MessageSquare, User, Calendar, Mail } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useUnreadCount } from '@/hooks/use-messages';
 
 const BottomNav = () => {
   const location = useLocation();
+  const { data: unreadCount } = useUnreadCount();
   
   const items = [
     { icon: Home, label: 'Home', href: '/' },
     { icon: MessageSquare, label: 'Bacheca', href: '/bacheca' },
-    { icon: Mail, label: 'Direct', href: '/messages' },
+    { icon: Mail, label: 'Direct', href: '/messages', badge: unreadCount },
     { icon: Calendar, label: 'Eventi', href: '/events' },
     { icon: User, label: 'Profilo', href: '/profile' },
   ];
@@ -26,11 +28,18 @@ const BottomNav = () => {
               key={i} 
               to={item.href}
               className={cn(
-                "flex flex-col items-center gap-1 transition-all",
+                "flex flex-col items-center gap-1 transition-all relative",
                 isActive ? "text-red-600" : "text-zinc-500 hover:text-white"
               )}
             >
-              <item.icon size={20} strokeWidth={isActive ? 3 : 2} />
+              <div className="relative">
+                <item.icon size={20} strokeWidth={isActive ? 3 : 2} />
+                {item.badge && item.badge > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-white text-[8px] font-black flex items-center justify-center rounded-full border border-black">
+                    {item.badge > 9 ? '9+' : item.badge}
+                  </span>
+                )}
+              </div>
               <span className="text-[8px] font-black uppercase tracking-tighter">{item.label}</span>
             </Link>
           );

@@ -17,6 +17,24 @@ export interface Message {
   receiver?: { username: string, avatar_url: string };
 }
 
+export const useUnreadCount = () => {
+  return useQuery({
+    queryKey: ['unread-messages-count'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return 0;
+      const { count, error } = await supabase
+        .from('messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('receiver_id', user.id)
+        .eq('is_read', false);
+      if (error) return 0;
+      return count || 0;
+    },
+    refetchOnWindowFocus: true
+  });
+};
+
 export const useMessages = (otherUserId?: string) => {
   const queryClient = useQueryClient();
 
@@ -77,15 +95,17 @@ export const useMessages = (otherUserId?: string) => {
     enabled: !!otherUserId
   });
 
+  // Realtime listener locale per aggiornamenti immediati della UI
   useEffect(() => {
     const channel = supabase
-      .channel('messages-realtime')
+      .channel(`chat-${otherUserId || 'global'}`)
       .on('postgres_changes', { 
         event: '*', 
         schema: 'public', 
         table: 'messages' 
       }, () => {
         queryClient.invalidateQueries({ queryKey: ['conversations'] });
+        queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
         if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
       })
       .subscribe();

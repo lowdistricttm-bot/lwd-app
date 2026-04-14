@@ -9,10 +9,12 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQueryClient } from '@tanstack/react-query';
 
 const Chat = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [message, setMessage] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -32,6 +34,25 @@ const Chat = () => {
       });
     }
   }, [userId]);
+
+  // Segna i messaggi come letti quando si entra in chat o arrivano nuovi messaggi
+  useEffect(() => {
+    if (userId && currentUserId && chatMessages) {
+      const markAsRead = async () => {
+        const { error } = await supabase
+          .from('messages')
+          .update({ is_read: true })
+          .eq('sender_id', userId)
+          .eq('receiver_id', currentUserId)
+          .eq('is_read', false);
+        
+        if (!error) {
+          queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
+        }
+      };
+      markAsRead();
+    }
+  }, [userId, currentUserId, chatMessages, queryClient]);
 
   useEffect(() => {
     if (scrollRef.current) {

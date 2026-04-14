@@ -15,6 +15,7 @@ import AdminApplications from "./pages/AdminApplications";
 import Messages from "./pages/Messages";
 import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
+import RealtimeNotifications from "./components/RealtimeNotifications";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <RealtimeNotifications />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/bacheca" element={<Bacheca />} />
