@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Home, MessageSquare, User, Calendar, ShoppingBag } from 'lucide-react';
+import { Home, ShoppingBag, MessageSquare, User, Calendar, Mail } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -11,28 +11,26 @@ const BottomNav = () => {
   const items = [
     { icon: Home, label: 'Home', href: '/' },
     { icon: MessageSquare, label: 'Bacheca', href: '/bacheca' },
-    { icon: ShoppingBag, label: 'Shop', href: '/shop' },
+    { icon: Mail, label: 'Direct', href: '/messages' },
     { icon: Calendar, label: 'Eventi', href: '/events' },
     { icon: User, label: 'Profilo', href: '/profile' },
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-t border-white/10 px-2 py-3 md:hidden pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-t border-white/10 px-4 py-3 md:hidden">
       <div className="flex items-center justify-around max-w-md mx-auto">
         {items.map((item, i) => {
-          const isActive = location.pathname === item.href;
+          const isActive = location.pathname === item.href || (item.href === '/messages' && location.pathname.startsWith('/chat'));
           return (
             <Link 
               key={i} 
               to={item.href}
               className={cn(
-                "flex flex-col items-center gap-1 transition-all relative flex-1",
+                "flex flex-col items-center gap-1 transition-all",
                 isActive ? "text-red-600" : "text-zinc-500 hover:text-white"
               )}
             >
-              <div className="relative p-1">
-                <item.icon size={20} strokeWidth={isActive ? 3 : 2} />
-              </div>
+              <item.icon size={20} strokeWidth={isActive ? 3 : 2} />
               <span className="text-[8px] font-black uppercase tracking-tighter">{item.label}</span>
             </Link>
           );

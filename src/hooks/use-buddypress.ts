@@ -39,41 +39,20 @@ export const useBPActivity = () => {
   });
 };
 
-// Ricerca membri semplificata per evitare errori 400
+// Nuova funzione per cercare membri su tutto il sito WordPress
 export const useBPSearchMembers = (search: string) => {
   return useQuery({
     queryKey: ['bp-members-search', search],
     queryFn: async () => {
       if (search.length < 2) return [];
-      
       const headers = await getAuthHeader();
-      console.log(`[BuddyPress] Tentativo ricerca minimal per: ${search}...`);
-      
-      try {
-        // Usiamo solo search e per_page, che sono i parametri standard più sicuri
-        const response = await fetch(
-          `${BP_API_URL}/members?search=${encodeURIComponent(search)}&per_page=20`, 
-          { headers: { 'Accept': 'application/json', ...headers } }
-        );
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          console.error(`[BuddyPress] Errore API ${response.status}:`, errorData);
-          return [];
-        }
-
-        const data = await response.json();
-        console.log(`[BuddyPress] Risultati ricevuti:`, Array.isArray(data) ? data.length : 'formato non valido');
-        
-        if (!Array.isArray(data)) return [];
-        return data;
-      } catch (error) {
-        console.error("[BuddyPress] Errore di rete:", error);
-        return [];
-      }
+      const response = await fetch(`${BP_API_URL}/members?search=${encodeURIComponent(search)}&per_page=20`, {
+        headers: { 'Accept': 'application/json', ...headers }
+      });
+      if (!response.ok) return [];
+      return response.json();
     },
-    enabled: search.length >= 2,
-    staleTime: 30000
+    enabled: search.length >= 2
   });
 };
 

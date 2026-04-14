@@ -2,10 +2,9 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, ShoppingBag, X, Send } from 'lucide-react';
+import { Search, ShoppingBag, X } from 'lucide-react';
 import Logo from './Logo';
 import { useCart } from '@/hooks/use-cart';
-import { useUnreadCount } from '@/hooks/use-messages';
 import CartDrawer from './CartDrawer';
 import { Input } from './ui/input';
 
@@ -14,7 +13,6 @@ const Navbar = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { items } = useCart();
-  const { data: unreadCount } = useUnreadCount();
   const navigate = useNavigate();
 
   const handleSearch = (e: React.FormEvent) => {
@@ -42,21 +40,7 @@ const Navbar = () => {
           <Logo className="h-6 md:h-8" />
         </Link>
 
-        <div className="flex-1 flex items-center justify-end gap-2">
-          {/* Direct Icon (Instagram Style) */}
-          <Link 
-            to="/messages" 
-            className="p-2 text-zinc-400 hover:text-white transition-colors relative"
-          >
-            <Send size={20} className="-rotate-12" />
-            {unreadCount !== undefined && unreadCount > 0 && (
-              <span className="absolute top-1 right-1 w-4 h-4 bg-red-600 text-white text-[8px] font-black flex items-center justify-center rounded-full">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
-          </Link>
-
-          {/* Cart Icon */}
+        <div className="flex-1 flex items-center justify-end">
           <button 
             onClick={() => setIsCartOpen(true)}
             className="p-2 text-zinc-400 hover:text-white transition-colors relative"

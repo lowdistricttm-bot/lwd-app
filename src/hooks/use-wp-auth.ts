@@ -8,79 +8,59 @@ const WP_URL = "https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth";
 export const useWpAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
 
-  const loginWithWp = async (usernameInput: string, password: string) => {
+  const loginWithWp = async (username: string, password: string) => {
     setIsLoading(true);
     try {
-      console.log("[Auth] Sincronizzazione con Low District in corso...");
+      console.log("[Auth] Tentativo di sincronizzazione con Low District...");
       
       const response = await fetch(WP_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: usernameInput, password }),
+        body: JSON.stringify({ username, password }),
       });
 
       const data = await response.json();
-      
+      console.log("[Auth] Risposta ricevuta dal server:", data);
+
       if (!response.ok) {
         throw new Error(data.message || "Credenziali non valide sul sito ufficiale");
       }
 
-      // Estrazione dati reali dal sito (Simple JWT Login structure)
+      // Estrazione flessibile del token (gestisce diversi formati del plugin)
       const jwt = data.jwt || (data.data && data.data.jwt);
-      const userEmail = data.user_email || (usernameInput.includes('@') ? usernameInput : `${usernameInput}@lowdistrict.it`);
-      
-      // Recuperiamo l'username ufficiale dal sito (user_login o user_nicename)
-      const officialUsername = data.user_login || data.user_nicename || usernameInput;
-      const displayName = data.user_display_name || officialUsername;
       
       if (jwt) {
         localStorage.setItem('wp-jwt', jwt);
         localStorage.setItem('wp-user', JSON.stringify(data));
+        console.log("[Auth] Sincronizzazione completata. Token salvato.");
+      } else {
+        console.warn("[Auth] Login riuscito ma nessun token JWT trovato nella risposta.");
       }
 
-      // 1. Accesso/Registrazione su Supabase
+      const userEmail = data.user_email || (username.includes('@') ? username : `${username}@lowdistrict.it`);
+
+      // Sincronizzazione con Supabase (App)
       let { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: userEmail,
         password: password,
       });
 
-      // Se l'utente non esiste ancora nell'app, lo creiamo
       if (authError && (authError.message.includes("Invalid login credentials") || authError.status === 400)) {
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        console.log("[Auth] Creazione profilo App in corso...");
+        const { error: signUpError } = await supabase.auth.signUp({
           email: userEmail,
           password: password,
-          options: { 
-            data: { 
-              username: officialUsername,
-              full_name: displayName
-            } 
-          }
+          options: { data: { username } }
         });
         
-        if (!signUpError) {
+        if (!signUpError || signUpError.message.includes("Email not confirmed")) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
           const retry = await supabase.auth.signInWithPassword({ email: userEmail, password: password });
-          authData = retry.data;
           authError = retry.error;
         }
       }
 
-      // 2. Sincronizzazione forzata del Profilo con l'username del sito
-      if (authData?.user) {
-        const nameParts = displayName.split(' ');
-        const firstName = nameParts[0] || '';
-        const lastName = nameParts.slice(1).join(' ') || '';
-
-        const { error: upsertError } = await supabase.from('profiles').upsert({
-          id: authData.user.id,
-          username: officialUsername, // Usiamo l'username ufficiale del sito
-          first_name: firstName,
-          last_name: lastName,
-          updated_at: new Date().toISOString()
-        });
-        
-        if (upsertError) console.error("[Auth] Errore upsert profilo:", upsertError.message);
-        else console.log("[Auth] Profilo sincronizzato con username:", officialUsername);
-      }
+      if (authError) console.error("[Auth] Errore Supabase (non critico per la bacheca):", authError.message);
 
       return { success: true, user: data };
     } catch (error: any) {
