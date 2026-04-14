@@ -19,7 +19,11 @@ const ManageApplicationModal = ({ isOpen, onClose, application }: ManageApplicat
   if (!application) return null;
 
   const handleCancel = async () => {
-    if (confirm("Sei sicuro di voler annullare questa candidatura?")) {
+    const confirmMsg = application.status === 'rejected' 
+      ? "Vuoi rimuovere questa candidatura rifiutata per poterti candidare di nuovo?" 
+      : "Sei sicuro di voler annullare questa candidatura?";
+      
+    if (confirm(confirmMsg)) {
       await cancelApplication.mutateAsync(application.id);
       onClose();
     }
@@ -98,14 +102,15 @@ const ManageApplicationModal = ({ isOpen, onClose, application }: ManageApplicat
                     </p>
                   </div>
 
-                  {application.status === 'pending' && (
+                  {/* Permettiamo l'annullamento se in attesa o rifiutata */}
+                  {(application.status === 'pending' || application.status === 'rejected') && (
                     <Button 
                       onClick={handleCancel}
                       disabled={cancelApplication.isPending}
                       variant="outline"
                       className="w-full border-zinc-800 text-zinc-500 hover:bg-red-600 hover:text-white hover:border-red-600 rounded-none font-black uppercase italic text-[10px] tracking-widest h-14 transition-all"
                     >
-                      {cancelApplication.isPending ? <Loader2 className="animate-spin" /> : <><Trash2 size={14} className="mr-2" /> Annulla Candidatura</>}
+                      {cancelApplication.isPending ? <Loader2 className="animate-spin" /> : <><Trash2 size={14} className="mr-2" /> {application.status === 'rejected' ? 'Rimuovi e Riprova' : 'Annulla Candidatura'}</>}
                     </Button>
                   )}
                 </div>
