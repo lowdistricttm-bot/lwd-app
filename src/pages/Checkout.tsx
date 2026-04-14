@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ChevronLeft, ShoppingBag, Loader2, CheckCircle2, ArrowRight } from 'lucide-react';
-import { useWcCreateOrder } from '@/hooks/use-woocommerce';
+import { useWcCreateOrder, useWcShippingMethods } from '@/hooks/use-woocommerce';
 import { supabase } from "@/integrations/supabase/client";
 import { showError, showSuccess } from '@/utils/toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -26,18 +26,39 @@ const Checkout = () => {
   const queryClient = useQueryClient();
   const { items, total, clearCart } = useCart();
   const createOrder = useWcCreateOrder();
+  const { data: shippingMethods, isLoading: loadingShipping } = useWcShippingMethods();
   
   const [isFinished, setIsFinished] = useState(false);
   const [orderId, setOrderId] = useState<number | null>(null);
   const [user, setUser] = useState<any>(null);
 
-  // Logica Spedizione: €10.00 fissa (o gratuita sopra i €100.00)
-  const SHIPPING_FEE = total >= 100 ? 0 : 10.00;
-  const finalTotal = total + SHIPPING_FEE;
-
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '', phone: '', address: '', city: '', postcode: '',
   });
+
+  // Calcolo dinamico della spedizione basato sui metodi di WooCommerce
+  const shippingInfo = useMemo(() => {
+    if (!shippingMethods) return { fee: 10, title: 'Spedizione Standard' };
+
+    const freeShipping = shippingMethods.find((m: any) => m.method_id === 'free_shipping' && m.enabled);
+    const flatRate = shippingMethods.find((m: any) => m.method_id === 'flat_rate' && m.enabled);
+
+    if (freeShipping) {
+      const minAmount = parseFloat(freeShipping.settings?.min_amount?.value || '0');
+      if (total >= minAmount) {
+        return { fee: 0, title: freeShipping.title || 'Spedizione Gratuita' };
+      }
+    }
+
+    if (flatRate) {
+      const cost = parseFloat(flatRate.settings?.cost?.value || '10');
+      return { fee: cost, title: flatRate.title || 'Tariffa Fissa' };
+    }
+
+    return { fee: 10, title: 'Spedizione Standard' };
+  }, [shippingMethods, total]);
+
+  const finalTotal = total + shippingInfo.fee;
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -97,9 +118,9 @@ const Checkout = () => {
         line_items: lineItems,
         shipping_lines: [
           {
-            method_id: "flat_rate",
-            method_title: SHIPPING_FEE === 0 ? "Spedizione Gratuita" : "Spedizione Standard",
-            total: SHIPPING_FEE.toString()
+            method_id: shippingInfo.fee === 0 ? "free_shipping" : "flat_rate",
+            method_title: shippingInfo.title,
+            total: shippingInfo.fee.toString()
           }
         ],
         customer_id: customerId
@@ -155,69 +176,77 @@ const Checkout = () => {
           <ChevronLeft size={16} /> Torna al Carrello
         </button>
         <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase mb-12">Checkout</h1>
-        <form onSubmit={handleCheckout} className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          <div className="space-y-8">
-            <div className="bg-zinc-900/50 border border-white/5 p-8 space-y-6">
-              <h3 className="text-xs font-black uppercase tracking-widest text-zinc-400 italic">Dati di Spedizione</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-zinc-500">Nome *</Label>
-                  <Input required value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-zinc-500">Cognome *</Label>
-                  <Input required value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-zinc-500">Email *</Label>
-                <Input required type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-zinc-500">Telefono *</Label>
-                <Input required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-zinc-500">Indirizzo *</Label>
-                <Input required value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-zinc-500">Città *</Label>
-                  <Input required value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-zinc-500">CAP *</Label>
-                  <Input required value={formData.postcode} onChange={(e) => setFormData({...formData, postcode: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
-                </div>
-              </div>
-            </div>
+        
+        {loadingShipping ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <Loader2 className="animate-spin text-zinc-500" size={40} />
+            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Sincronizzazione tariffe...</p>
           </div>
-          <div className="space-y-6">
-            <div className="bg-zinc-900/50 border border-white/5 p-8">
-              <h3 className="text-xs font-black uppercase tracking-widest text-zinc-400 italic mb-6">Riepilogo Ordine</h3>
-              <div className="space-y-4 mb-8">
-                {items.map((item) => (
-                  <div key={`${item.id}-${item.variationId}`} className="flex justify-between text-sm">
-                    <span className="text-zinc-400">{item.name} x{item.quantity}</span>
-                    <span className="font-black">€{(item.price * item.quantity).toFixed(2)}</span>
+        ) : (
+          <form onSubmit={handleCheckout} className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <div className="space-y-8">
+              <div className="bg-zinc-900/50 border border-white/5 p-8 space-y-6">
+                <h3 className="text-xs font-black uppercase tracking-widest text-zinc-400 italic">Dati di Spedizione</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-zinc-500">Nome *</Label>
+                    <Input required value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
                   </div>
-                ))}
-                <div className="flex justify-between text-sm border-t border-white/5 pt-4">
-                  <span className="text-zinc-400">Spedizione</span>
-                  <span className="font-black">{SHIPPING_FEE === 0 ? "GRATIS" : `€${SHIPPING_FEE.toFixed(2)}`}</span>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-zinc-500">Cognome *</Label>
+                    <Input required value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-zinc-500">Email *</Label>
+                  <Input required type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-zinc-500">Telefono *</Label>
+                  <Input required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-zinc-500">Indirizzo *</Label>
+                  <Input required value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-zinc-500">Città *</Label>
+                    <Input required value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-zinc-500">CAP *</Label>
+                    <Input required value={formData.postcode} onChange={(e) => setFormData({...formData, postcode: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
+                  </div>
                 </div>
               </div>
-              <div className="border-t border-white/5 pt-6 flex justify-between items-end">
-                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Totale</span>
-                <span className="text-3xl font-black italic tracking-tighter">€{finalTotal.toFixed(2)}</span>
-              </div>
             </div>
-            <Button type="submit" disabled={createOrder.isPending} className="w-full bg-white text-black hover:bg-zinc-200 py-8 text-lg font-black uppercase italic tracking-widest rounded-none">
-              {createOrder.isPending ? <Loader2 className="animate-spin" /> : "Conferma Ordine"}
-            </Button>
-          </div>
-        </form>
+            <div className="space-y-6">
+              <div className="bg-zinc-900/50 border border-white/5 p-8">
+                <h3 className="text-xs font-black uppercase tracking-widest text-zinc-400 italic mb-6">Riepilogo Ordine</h3>
+                <div className="space-y-4 mb-8">
+                  {items.map((item) => (
+                    <div key={`${item.id}-${item.variationId}`} className="flex justify-between text-sm">
+                      <span className="text-zinc-400">{item.name} x{item.quantity}</span>
+                      <span className="font-black">€{(item.price * item.quantity).toFixed(2)}</span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between text-sm border-t border-white/5 pt-4">
+                    <span className="text-zinc-400">{shippingInfo.title}</span>
+                    <span className="font-black">{shippingInfo.fee === 0 ? "GRATIS" : `€${shippingInfo.fee.toFixed(2)}`}</span>
+                  </div>
+                </div>
+                <div className="border-t border-white/5 pt-6 flex justify-between items-end">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Totale</span>
+                  <span className="text-3xl font-black italic tracking-tighter">€{finalTotal.toFixed(2)}</span>
+                </div>
+              </div>
+              <Button type="submit" disabled={createOrder.isPending} className="w-full bg-white text-black hover:bg-zinc-200 py-8 text-lg font-black uppercase italic tracking-widest rounded-none">
+                {createOrder.isPending ? <Loader2 className="animate-spin" /> : "Conferma Ordine"}
+              </Button>
+            </div>
+          </form>
+        )}
       </main>
       <Footer /><BottomNav />
     </div>
