@@ -222,17 +222,16 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
                       <Button 
                         onClick={(e) => { e.stopPropagation(); onUpdateStatus(app.id, 'approved'); }}
                         disabled={app.status === 'approved' || isUpdating}
-                        className="flex-1 bg-white text-black hover:bg-zinc-200 rounded-none font-black uppercase italic text-[9px] tracking-widest h-12"
+                        className="flex-1 bg-green-600 text-white hover:bg-green-700 rounded-none font-black uppercase italic text-[10px] tracking-widest h-12"
                       >
-                        Approva Candidatura
+                        APPROVA
                       </Button>
                       <Button 
                         onClick={(e) => { e.stopPropagation(); onUpdateStatus(app.id, 'rejected'); }}
                         disabled={app.status === 'rejected' || isUpdating}
-                        variant="outline"
-                        className="flex-1 border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white rounded-none font-black uppercase italic text-[9px] tracking-widest h-12"
+                        className="flex-1 bg-red-600 text-white hover:bg-red-700 rounded-none font-black uppercase italic text-[10px] tracking-widest h-12"
                       >
-                        Nega Candidatura
+                        NEGA
                       </Button>
                     </div>
                   </div>
