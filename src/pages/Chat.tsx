@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Navbar from '@/components/Navbar';
 import { useMessages } from '@/hooks/use-messages';
 import { ChevronLeft, Send, User, Loader2, Mail, Camera, X, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -35,7 +34,7 @@ const Chat = () => {
     }
   }, [userId]);
 
-  // Segna i messaggi come letti quando si entra in chat o arrivano nuovi messaggi
+  // Segna i messaggi come letti
   useEffect(() => {
     if (userId && currentUserId && chatMessages) {
       const markAsRead = async () => {
@@ -123,7 +122,7 @@ const Chat = () => {
         </div>
       </nav>
 
-      {/* Padding superiore uniformato con le altre sezioni */}
+      {/* Contenuto Chat */}
       <main ref={scrollRef} className="flex-1 pt-[calc(5rem+env(safe-area-inset-top))] pb-32 px-6 overflow-y-auto space-y-4 custom-scrollbar">
         {loadingChat ? (
           <div className="flex justify-center py-20">
@@ -138,7 +137,7 @@ const Chat = () => {
           chatMessages?.map((msg) => {
             const isMe = msg.sender_id === currentUserId;
             const timeDiff = new Date().getTime() - new Date(msg.created_at).getTime();
-            const canDelete = isMe && timeDiff < 30 * 60 * 1000; // 30 minuti
+            const canDelete = isMe && timeDiff < 30 * 60 * 1000;
 
             return (
               <div key={msg.id} className={cn("flex", isMe ? "justify-end" : "justify-start")}>
@@ -164,25 +163,7 @@ const Chat = () => {
                   )}
                   {msg.content && <p>{msg.content}</p>}
                   <p className={cn(
-                    "text-[7px] mt-1 uppercase font-black opacity-50think
-The previous response was cut off in the middle of a `dyad-write` block for `src/pages/Chat.tsx`. I need to complete the file content and then provide the concise summary and chat summary as required by the instructions.
-
-Looking at the previous output:
-```tsx
-                  {msg.content && <p>{msg.content}</p>}
-                  <p className={cn(
-                    "text-[7px] mt-1 uppercase font-black opacity-50
-```
-It was cut off right there. I need to finish the `className` string, the `p` tag, the `div` tags, the rest of the component, and close the `dyad-write` tag.
-
-Plan:
-1. Complete the `src/pages/Chat.tsx` file.
-2. Add the concise summary.
-3. Add the `<dyad-chat-summary>`.
-4. Ensure no markdown code blocks are used.
-
-Let's finish the code:
-```tsx
+                    "text-[7px] mt-1 uppercase font-black opacity-50",
                     isMe ? "text-right" : "text-left"
                   )}>
                     {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -194,90 +175,7 @@ Let's finish the code:
         )}
       </main>
 
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-black/80 backdrop-blur-xl border-t border-white/5 z-50 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-        <div className="max-w-2xl mx-auto">
-          <AnimatePresence>
-            {previewUrl && (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                className="mb-4 relative inline-block"
-              >
-                <img src={previewUrl} className="h-20 w-20 object-cover rounded-lg border border-white/10" alt="Preview" />
-                <button 
-                  onClick={removeFile}
-                  className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 shadow-lg"
-                >
-                  <X size={12} />
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <form onSubmit={handleSend} className="flex gap-2">
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              className="hidden" 
-              accept="image/*" 
-              onChange={handleFileChange} 
-            />
-            <button 
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="w-12 h-12 bg-zinc-900 flex items-center justify-center hover:text-red-600 transition-all shrink-0 border border-zinc-800"
-            >
-              <Camera size={20} />
-            </button>
-            <Input 
-              placeholder="Scrivi un messaggio..." 
-              value={message} 
-              onChange={(e) => setMessage(e.target.value)}
-              className="bg-zinc-900 border-zinc-800 rounded-none h-12 font-bold uppercase text-xs tracking-widest focus-visible:ring-red-600 placeholder:text-zinc-700"
-            />
-            <button 
-              type="submit" 
-              disabled={(!message.trim() && !selectedFile) || sendMessage.isPending}
-              className="w-12 h-12 bg-red-600 flex items-center justify-center hover:bg-white hover:text-black transition-all shrink-0 disabled:opacity-50"
-            >
-              {sendMessage.isPending ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default Chat;
-```
-
-Wait, I should check if I need to rewrite the whole file or just continue. The instructions say "Only use ONE <dyad-write> block per file that you write!". Since the previous one was incomplete, I should probably rewrite the whole file in this response to ensure it's valid.
-
-Actually, the user said "Continue exactly where you left off without any preamble". This usually implies just finishing the text. But if I don't use the `<dyad-write>` tag correctly, the system might not process it. I will provide the full `<dyad-write>` block for the file to be safe and complete.
-
-Wait, the user prompt is "Your previous response did not finish completely. Continue exactly where you left off without any preamble."
-If I just start typing code, it won't be inside a tag.
-I'll provide the full file content inside the tag.
-
-Actually, looking at the previous turn, it ended at:
-`"text-[7px] mt-1 uppercase font-black opacity-50`
-
-I will continue from there.
-
-```tsx
-                    isMe ? "text-right" : "text-left"
-                  )}>
-                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                </div>
-              </div>
-            );
-          })
-        )}
-      </main>
-
+      {/* Input Area */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-black/80 backdrop-blur-xl border-t border-white/5 z-50 pb-[calc(1rem+env(safe-area-inset-bottom))]">
         <div className="max-w-2xl mx-auto">
           <AnimatePresence>
