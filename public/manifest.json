@@ -10,13 +10,13 @@
   "scope": "/",
   "icons": [
     {
-      "src": "https://www.lowdistrict.it/wp-content/uploads/cropped-favicon-low-192x192.png",
+      "src": "https://www.lowdistrict.it/wp-content/uploads/cropped-ico-new-culture-2026-1.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://www.lowdistrict.it/wp-content/uploads/cropped-favicon-low-192x192.png",
+      "src": "https://www.lowdistrict.it/wp-content/uploads/cropped-ico-new-culture-2026-1.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
