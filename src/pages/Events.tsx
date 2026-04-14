@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Car, Loader2, Calendar, MapPin, ChevronRight, CheckCircle2, AlertCircle, X, Instagram, Phone, User, Map, Mail, Camera, Trash2, Settings2 } from 'lucide-react';
+import { Car, Loader2, ChevronRight, AlertCircle, X, Instagram, Phone, MapPin, Camera, Trash2, Settings2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
@@ -43,12 +43,27 @@ const Events = () => {
     });
   }, []);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setInteriorFiles(prev => [...prev, ...files].slice(0, 4));
+    
+    const newPreviews = files.map(file => URL.createObjectURL(file));
+    setInteriorPreviews(prev => [...prev, ...newPreviews].slice(0, 4));
+  };
+
+  const removePreview = (index: number) => {
+    setInteriorFiles(prev => prev.filter((_, i) => i !== index));
+    setInteriorPreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleApply = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedEvent || !formData.vehicleId) return;
     try {
       await applyToEvent.mutateAsync({ eventId: selectedEvent.id, ...formData, interiorFiles });
       setSelectedEvent(null);
+      setInteriorFiles([]);
+      setInteriorPreviews([]);
     } catch (error) {}
   };
 
@@ -57,10 +72,13 @@ const Events = () => {
   if (!user && !eventsLoading) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col">
-        <Navbar /><main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <AlertCircle size={48} className="text-zinc-800 mb-6" /><h1 className="text-2xl font-black uppercase italic mb-4">Accesso Riservato</h1>
+        <Navbar />
+        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+          <AlertCircle size={48} className="text-zinc-800 mb-6" />
+          <h1 className="text-2xl font-black uppercase italic mb-4">Accesso Riservato</h1>
           <Button onClick={() => navigate('/login')} className="bg-red-600 rounded-none font-black uppercase italic px-12 py-6">Accedi Ora</Button>
-        </main><BottomNav />
+        </main>
+        <BottomNav />
       </div>
     );
   }
@@ -177,10 +195,14 @@ const Events = () => {
                         <Input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-zinc-500">Telefono</Label>
                         <Input required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-zinc-500">Città</Label>
+                        <Input required value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-zinc-500">Instagram</Label>
@@ -188,7 +210,7 @@ const Events = () => {
                       </div>
                     </div>
                     <div className="space-y-4">
-                      <Label className="text-[10px] font-black uppercase text-zinc-500">Seleziona Veicolo</Label>
+                      <Label className="text-[10px] font-black uppercase text-zinc-500">Seleziona Veicolo dal Garage</Label>
                       <div className="grid grid-cols-1 gap-2">
                         {vehicles?.map(v => (
                           <button key={v.id} type="button" onClick={() => setFormData({...formData, vehicleId: v.id})} className={cn("p-4 border text-left transition-all", formData.vehicleId === v.id ? "bg-red-600 border-red-600" : "bg-zinc-900 border-white/5")}>
@@ -197,12 +219,36 @@ const Events = () => {
                         ))}
                       </div>
                     </div>
+
+                    <div className="space-y-4">
+                      <Label className="text-[10px] font-black uppercase text-zinc-500">Foto Interni (Max 4)</Label>
+                      <div 
+                        onClick={() => interiorInputRef.current?.click()}
+                        className="h-24 border border-dashed border-zinc-800 flex flex-col items-center justify-center cursor-pointer hover:border-red-600 transition-colors bg-zinc-900/30"
+                      >
+                        <Camera size={24} className="text-zinc-600 mb-2" />
+                        <span className="text-[9px] font-black uppercase text-zinc-500">Carica Foto Interni</span>
+                      </div>
+                      <input type="file" ref={interiorInputRef} className="hidden" accept="image/*" multiple onChange={handleFileChange} />
+                      
+                      {interiorPreviews.length > 0 && (
+                        <div className="grid grid-cols-4 gap-2">
+                          {interiorPreviews.map((url, i) => (
+                            <div key={i} className="aspect-square relative bg-zinc-800 border border-white/5">
+                              <img src={url} className="w-full h-full object-cover" alt="Preview" />
+                              <button type="button" onClick={() => removePreview(i)} className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white flex items-center justify-center rounded-full"><X size={10} /></button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase text-zinc-500">Modifiche Principali</Label>
                       <Textarea value={formData.modifications} onChange={e => setFormData({...formData, modifications: e.target.value})} className="bg-transparent border-zinc-800 rounded-none min-h-[100px]" />
                     </div>
                     <Button type="submit" disabled={applyToEvent.isPending} className="w-full bg-red-600 py-8 font-black uppercase italic tracking-widest rounded-none">
-                      Invia Candidatura
+                      {applyToEvent.isPending ? <Loader2 className="animate-spin" /> : "Invia Candidatura"}
                     </Button>
                   </div>
                 </form>

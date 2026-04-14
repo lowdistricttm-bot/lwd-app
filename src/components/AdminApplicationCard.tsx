@@ -8,7 +8,6 @@ import {
   User, 
   Instagram, 
   MapPin, 
-  Calendar,
   Clock,
   Phone,
   Image as LucideImage,
@@ -29,13 +28,13 @@ interface AdminApplicationCardProps {
 const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicationCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // Recupero immagini dal veicolo (Garage) e dalla candidatura (Interni)
   const vehicleImages = app.vehicles?.images || (app.vehicles?.image_url ? [app.vehicles.image_url] : []);
   const interiorImages = app.interior_urls || [];
-  const allMedia = [...vehicleImages, ...interiorImages];
 
   return (
     <div className="bg-zinc-900/40 border border-white/5 overflow-hidden flex flex-col transition-all hover:border-white/10">
-      {/* Header Ridotto (Sempre Visibile) */}
+      {/* Header Ridotto */}
       <div 
         onClick={() => setIsExpanded(!isExpanded)}
         className="p-4 md:p-6 flex items-center justify-between cursor-pointer group"
@@ -124,26 +123,38 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
                   </div>
                 </div>
 
-                {/* Media Gallery */}
+                {/* Media Gallery Unificata */}
                 <div className="lg:w-1/2 p-6">
                   <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-widest mb-4 flex items-center gap-2">
-                    <Camera size={12} className="text-red-600" /> Media ({allMedia.length})
+                    <Camera size={12} className="text-red-600" /> Media Progetto
                   </h4>
-                  <div className="grid grid-cols-3 gap-2">
-                    {allMedia.slice(0, 6).map((url, idx) => (
-                      <div key={idx} className="aspect-square bg-zinc-900 border border-white/5 overflow-hidden relative">
-                        <img src={url} className="w-full h-full object-cover" alt="Media" />
-                        <div className="absolute top-1 left-1 bg-black/60 px-1 py-0.5 text-[6px] font-black uppercase italic text-white">
-                          {idx < vehicleImages.length ? 'G' : 'I'}
-                        </div>
+                  
+                  <div className="space-y-6">
+                    {/* Foto Garage */}
+                    <div>
+                      <p className="text-[7px] font-black uppercase text-zinc-600 mb-2 tracking-widest">Foto Garage</p>
+                      <div className="grid grid-cols-4 gap-2">
+                        {vehicleImages.map((url: string, idx: number) => (
+                          <div key={idx} className="aspect-square bg-zinc-900 border border-white/5 overflow-hidden">
+                            <img src={url} className="w-full h-full object-cover" alt="Garage" />
+                          </div>
+                        ))}
+                        {vehicleImages.length === 0 && <p className="text-[8px] text-zinc-800 uppercase font-black">Nessuna foto garage</p>}
                       </div>
-                    ))}
-                    {allMedia.length === 0 && (
-                      <div className="col-span-3 py-8 flex flex-col items-center justify-center border border-dashed border-white/10 text-zinc-700">
-                        <LucideImage size={24} className="mb-2" />
-                        <p className="text-[7px] font-black uppercase">Nessuna foto</p>
+                    </div>
+
+                    {/* Foto Interni */}
+                    <div>
+                      <p className="text-[7px] font-black uppercase text-red-600 mb-2 tracking-widest">Foto Interni (Candidatura)</p>
+                      <div className="grid grid-cols-4 gap-2">
+                        {interiorImages.map((url: string, idx: number) => (
+                          <div key={idx} className="aspect-square bg-zinc-900 border border-red-600/10 overflow-hidden">
+                            <img src={url} className="w-full h-full object-cover" alt="Interni" />
+                          </div>
+                        ))}
+                        {interiorImages.length === 0 && <p className="text-[8px] text-zinc-800 uppercase font-black">Nessuna foto interni</p>}
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
               </div>
