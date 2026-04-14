@@ -41,7 +41,7 @@ const Checkout = () => {
         setUser(user);
         setFormData(prev => ({
           ...prev,
-          email: user.email || '',
+          // L'email viene lasciata vuota come richiesto
           firstName: user.user_metadata?.first_name || '',
           lastName: user.user_metadata?.last_name || '',
         }));
