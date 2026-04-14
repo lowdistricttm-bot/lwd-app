@@ -36,7 +36,6 @@ export const useAdmin = () => {
   const { data: allApplications, isLoading: loadingApps, error: loadError } = useQuery({
     queryKey: ['admin-applications'],
     queryFn: async () => {
-      // Recuperiamo le candidature con i dati base
       const { data, error } = await supabase
         .from('applications')
         .select(`
@@ -50,7 +49,6 @@ export const useAdmin = () => {
       if (error) throw error;
       if (!data) return [];
 
-      // Recuperiamo i voti separatamente per evitare join complessi che possono fallire
       const { data: votesData } = await supabase
         .from('application_votes')
         .select(`
@@ -58,7 +56,6 @@ export const useAdmin = () => {
           profiles:user_id (username)
         `);
 
-      // Arricchiamo le candidature con i voti corrispondenti
       return data.map(app => ({
         ...app,
         application_votes: votesData?.filter(v => v.application_id === app.id) || []
@@ -97,12 +94,58 @@ export const useAdmin = () => {
         }, { onConflict: 'application_id, user_id' });
 
       if (error) throw error;
+      return { applicationId, vote, userId: user.id };
     },
-    onSuccess: () => {
+    onMutate: async ({ applicationId, vote }) => {
+      // Cancella eventuali refetch in corso per non sovrascrivere l'update ottimistico
+      await queryClient.cancelQueries({ queryKey: ['admin-applications'] });
+
+      // Salva lo stato precedente
+      const previousApps = queryClient.getQueryData(['admin-applications']);
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) return { previousApps };
+
+      // Recuperiamo l'username corrente per l'update visivo
+      const { data: myProfile } = await supabase.from('profiles').select('username').eq('id', user.id).single();
+      const myUsername = myProfile?.username || 'Tu';
+
+      // Aggiorna ottimisticamente la cache
+      queryClient.setQueryData(['admin-applications'], (old: any) => {
+        if (!old) return old;
+        return old.map((app: any) => {
+          if (app.id !== applicationId) return app;
+
+          const existingVotes = app.application_votes || [];
+          const otherVotes = existingVotes.filter((v: any) => v.user_id !== user.id);
+          
+          const newVote = {
+            application_id: applicationId,
+            user_id: user.id,
+            vote: vote,
+            profiles: { username: myUsername }
+          };
+
+          return {
+            ...app,
+            application_votes: [...otherVotes, newVote]
+          };
+        });
+      });
+
+      return { previousApps };
+    },
+    onError: (err, variables, context: any) => {
+      // In caso di errore, ripristina lo stato precedente
+      if (context?.previousApps) {
+        queryClient.setQueryData(['admin-applications'], context.previousApps);
+      }
+      showError("Errore durante la votazione");
+    },
+    onSettled: () => {
+      // Invalida sempre per sincronizzare con il server alla fine
       queryClient.invalidateQueries({ queryKey: ['admin-applications'] });
-      showSuccess("Voto registrato");
-    },
-    onError: (error: any) => showError(error.message)
+    }
   });
 
   return { 
