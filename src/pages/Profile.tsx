@@ -10,6 +10,7 @@ import GarageTab from '@/components/GarageTab';
 import ApplicationsTab from '@/components/ApplicationsTab';
 import FeedPost from '@/components/FeedPost';
 import CreatePostModal from '@/components/CreatePostModal';
+import ImageLightbox from '@/components/ImageLightbox';
 import { useSocialFeed } from '@/hooks/use-social-feed';
 import { 
   User, Settings, LogOut, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Calendar, Package, Users
@@ -42,6 +43,7 @@ const Profile = () => {
   const [uploadingCover, setUploadingCover] = useState(false);
   const [activeTab, setActiveTab] = useState('activity');
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
   const { posts, isLoading: loadingPosts } = useSocialFeed();
   const targetUserId = userId || currentUser?.id;
@@ -106,7 +108,6 @@ const Profile = () => {
 
   if (loading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
-  // Logica migliorata per il nome visualizzato
   const displayName = profile?.username || 
                      (isOwnProfile ? currentUser?.user_metadata?.username : null) ||
                      (profile?.first_name || profile?.last_name ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : null) || 
@@ -133,24 +134,32 @@ const Profile = () => {
       <Navbar />
       <main className="flex-1 pb-32">
         <div className="relative h-56 md:h-80 bg-zinc-900">
-          <div className={cn("absolute inset-0 overflow-hidden", isOwnProfile ? "group/cover cursor-pointer" : "")} onClick={() => isOwnProfile && coverInputRef.current?.click()}>
-            <img src={profile?.cover_url || DEFAULT_COVER} className={cn("w-full h-full object-cover opacity-60 grayscale transition-all duration-700", isOwnProfile ? "group-hover/cover:grayscale-0 group-hover/cover:scale-105" : "")} alt="Cover" />
+          <div className={cn("absolute inset-0 overflow-hidden cursor-pointer")} onClick={() => setLightboxImage(profile?.cover_url || DEFAULT_COVER)}>
+            <img src={profile?.cover_url || DEFAULT_COVER} className={cn("w-full h-full object-cover opacity-60 grayscale transition-all duration-700 hover:grayscale-0 hover:scale-105")} alt="Cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40" />
             {isOwnProfile && (
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/cover:opacity-100 transition-all duration-300 bg-black/20 backdrop-blur-[2px]">
-                <div className="flex flex-col items-center gap-2">
-                  {uploadingCover ? <Loader2 size={32} className="animate-spin text-white" /> : <><Camera size={32} className="text-white" /><span className="text-[10px] font-black uppercase tracking-[0.3em] text-white italic">Cambia Copertina</span></>}
-                </div>
-              </div>
+              <button 
+                onClick={(e) => { e.stopPropagation(); coverInputRef.current?.click(); }}
+                className="absolute top-4 right-4 p-3 bg-black/40 backdrop-blur-md border border-white/10 text-white hover:bg-white hover:text-black transition-all z-30"
+              >
+                <Camera size={20} />
+              </button>
             )}
             <input type="file" ref={coverInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'cover')} />
           </div>
           <div className="absolute -bottom-12 left-6 flex items-end gap-4 z-20">
-            <div className={cn("relative", isOwnProfile ? "group/avatar" : "")}>
+            <div className="relative group/avatar">
               <input type="file" ref={avatarInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'avatar')} />
-              <div onClick={(e) => { if (!isOwnProfile) return; e.stopPropagation(); avatarInputRef.current?.click(); }} className={cn("w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-white rounded-full overflow-hidden shadow-2xl flex items-center justify-center relative", isOwnProfile ? "cursor-pointer" : "")}>
-                {uploadingAvatar ? <Loader2 className="animate-spin text-zinc-500" /> : profile?.avatar_url ? <img src={profile.avatar_url} alt="Avatar" className={cn("w-full h-full object-cover transition-opacity", isOwnProfile ? "group-hover/avatar:opacity-50" : "")} /> : <User size={40} className="text-zinc-800" />}
-                {isOwnProfile && <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity bg-black/40 rounded-full"><Camera size={24} className="text-white" /></div>}
+              <div onClick={() => setLightboxImage(profile?.avatar_url || null)} className="w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-white rounded-full overflow-hidden shadow-2xl flex items-center justify-center relative cursor-pointer">
+                {uploadingAvatar ? <Loader2 className="animate-spin text-zinc-500" /> : profile?.avatar_url ? <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" /> : <User size={40} className="text-zinc-800" />}
+                {isOwnProfile && (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); avatarInputRef.current?.click(); }}
+                    className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity bg-black/40 rounded-full"
+                  >
+                    <Camera size={24} className="text-white" />
+                  </button>
+                )}
               </div>
             </div>
             <div className="mb-2">
@@ -248,6 +257,7 @@ const Profile = () => {
         </div>
       </main>
       <CreatePostModal isOpen={isPostModalOpen} onClose={() => setIsPostModalOpen(false)} />
+      <ImageLightbox src={lightboxImage} isOpen={!!lightboxImage} onClose={() => setLightboxImage(null)} />
       <Footer /><BottomNav />
     </div>
   );

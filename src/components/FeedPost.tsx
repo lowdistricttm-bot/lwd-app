@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { Input } from './ui/input';
 import { supabase } from "@/integrations/supabase/client";
 import EditPostModal from './EditPostModal';
+import ImageLightbox from './ImageLightbox';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   DropdownMenu,
@@ -107,6 +108,7 @@ const FeedPost = ({ post }: FeedPostProps) => {
   const [replyingTo, setReplyingTo] = useState<{ id: string, name: string } | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -198,7 +200,7 @@ const FeedPost = ({ post }: FeedPostProps) => {
 
         {/* Media */}
         {post.image_url && (
-          <div className="aspect-square bg-zinc-950 overflow-hidden">
+          <div className="aspect-square bg-zinc-950 overflow-hidden cursor-pointer" onClick={() => !isVideo && setLightboxImage(post.image_url || null)}>
             {isVideo ? (
               <video src={post.image_url} className="w-full h-full object-cover" controls />
             ) : (
@@ -292,6 +294,12 @@ const FeedPost = ({ post }: FeedPostProps) => {
         isOpen={isEditModalOpen} 
         onClose={() => setIsPostModalOpen(false)} 
         post={post} 
+      />
+
+      <ImageLightbox 
+        src={lightboxImage} 
+        isOpen={!!lightboxImage} 
+        onClose={() => setLightboxImage(null)} 
       />
     </>
   );
