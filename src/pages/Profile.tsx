@@ -143,7 +143,6 @@ const Profile = () => {
     </div>
   );
 
-  // Priorità assoluta all'username del sito per coerenza
   const displayName = profile?.username || (profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : 'User');
 
   const tabs = isOwnProfile ? [
@@ -163,7 +162,8 @@ const Profile = () => {
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Navbar />
       
-      <main className="flex-1 pb-32">
+      {/* Aggiunto padding superiore per compensare la Navbar fissa */}
+      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top))] pb-32">
         {/* Cover Section */}
         <div className="relative h-56 md:h-80 bg-zinc-900">
           <div 
@@ -403,6 +403,7 @@ const Profile = () => {
             </AnimatePresence>
           </div>
         </div>
+        <Footer />
       </main>
 
       <CreatePostModal 
@@ -410,7 +411,6 @@ const Profile = () => {
         onClose={() => setIsPostModalOpen(false)} 
       />
 
-      <Footer />
       <BottomNav />
     </div>
   );

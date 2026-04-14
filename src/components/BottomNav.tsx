@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Home, MessageSquare, User, Calendar } from 'lucide-react';
+import { Home, MessageSquare, User, Calendar, ShoppingBag } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -11,12 +11,13 @@ const BottomNav = () => {
   const items = [
     { icon: Home, label: 'Home', href: '/' },
     { icon: MessageSquare, label: 'Bacheca', href: '/bacheca' },
+    { icon: ShoppingBag, label: 'Shop', href: '/shop' },
     { icon: Calendar, label: 'Eventi', href: '/events' },
     { icon: User, label: 'Profilo', href: '/profile' },
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-t border-white/10 px-4 py-3 md:hidden">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-t border-white/10 px-2 py-3 md:hidden pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
       <div className="flex items-center justify-around max-w-md mx-auto">
         {items.map((item, i) => {
           const isActive = location.pathname === item.href;
@@ -25,7 +26,7 @@ const BottomNav = () => {
               key={i} 
               to={item.href}
               className={cn(
-                "flex flex-col items-center gap-1 transition-all relative",
+                "flex flex-col items-center gap-1 transition-all relative flex-1",
                 isActive ? "text-red-600" : "text-zinc-500 hover:text-white"
               )}
             >
