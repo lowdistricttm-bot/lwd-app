@@ -7,7 +7,7 @@ import { ChevronLeft, Send, User, Loader2, Mail, Camera, X, Trash2 } from 'lucid
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   AlertDialog,
@@ -32,7 +32,6 @@ const Chat = () => {
   const [msgToDelete, setMsgToDelete] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const longPressTimer = useRef<any>(null);
   
   const { chatMessages, loadingChat, sendMessage, deleteMessage } = useMessages(userId);
 
@@ -101,18 +100,6 @@ const Chat = () => {
     }
   };
 
-  const startLongPress = (msgId: string, isMe: boolean) => {
-    if (!isMe) return;
-    longPressTimer.current = setTimeout(() => {
-      setMsgToDelete(msgId);
-      if (window.navigator.vibrate) window.navigator.vibrate(50);
-    }, 600);
-  };
-
-  const endLongPress = () => {
-    if (longPressTimer.current) clearTimeout(longPressTimer.current);
-  };
-
   const confirmDelete = () => {
     if (msgToDelete) {
       deleteMessage.mutate(msgToDelete);
@@ -159,35 +146,12 @@ const Chat = () => {
           chatMessages?.map((msg) => {
             const isMe = msg.sender_id === currentUserId;
             return (
-              <div key={msg.id} className={cn("flex", isMe ? "justify-end" : "justify-start")}>
-                <motion.div 
-                  onMouseDown={() => startLongPress(msg.id, isMe)}
-                  onMouseUp={endLongPress}
-                  onMouseLeave={endLongPress}
-                  onTouchStart={() => startLongPress(msg.id, isMe)}
-                  onTouchEnd={endLongPress}
-                  whileTap={isMe ? { scale: 0.95 } : {}}
-                  className={cn(
-                    "max-w-[80%] p-4 text-sm font-medium shadow-lg relative select-none cursor-pointer",
-                    isMe 
-                      ? "bg-red-600 text-white rounded-2xl rounded-tr-none" 
-                      : "bg-zinc-900 text-zinc-200 rounded-2xl rounded-tl-none border border-white/5"
-                  )}
-                >
-                  {msg.image_url && (
-                    <div className="mb-2 rounded-lg overflow-hidden bg-black/20">
-                      <img src={msg.image_url} alt="Sent" className="w-full h-auto max-h-60 object-cover" />
-                    </div>
-                  )}
-                  {msg.content && <p>{msg.content}</p>}
-                  <p className={cn(
-                    "text-[7px] mt-1 uppercase font-black opacity-50",
-                    isMe ? "text-right" : "text-left"
-                  )}>
-                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                </motion.div>
-              </div>
+              <MessageItem 
+                key={msg.id} 
+                msg={msg} 
+                isMe={isMe} 
+                onDeleteRequest={(id) => setMsgToDelete(id)} 
+              />
             );
           })
         )}
@@ -260,6 +224,60 @@ const Chat = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
+  );
+};
+
+// Componente interno per gestire lo swipe del singolo messaggio
+const MessageItem = ({ msg, isMe, onDeleteRequest }: { msg: any, isMe: boolean, onDeleteRequest: (id: string) => void }) => {
+  const x = useMotionValue(0);
+  const opacity = useTransform(x, [-100, -50, 0], [1, 0.5, 0]);
+  const scale = useTransform(x, [-100, -50, 0], [1, 0.8, 0.5]);
+
+  const handleDragEnd = (_: any, info: any) => {
+    if (isMe && info.offset.x < -80) {
+      onDeleteRequest(msg.id);
+    }
+  };
+
+  return (
+    <div className={cn("flex relative overflow-hidden", isMe ? "justify-end" : "justify-start")}>
+      {/* Background Action (Trash Icon) */}
+      {isMe && (
+        <motion.div 
+          style={{ opacity, scale }}
+          className="absolute inset-y-0 right-0 w-20 bg-red-600 flex items-center justify-center z-0"
+        >
+          <Trash2 size={20} className="text-white" />
+        </motion.div>
+      )}
+
+      <motion.div 
+        drag={isMe ? "x" : false}
+        dragConstraints={{ left: -100, right: 0 }}
+        dragElastic={0.1}
+        onDragEnd={handleDragEnd}
+        style={{ x }}
+        className={cn(
+          "max-w-[80%] p-4 text-sm font-medium shadow-lg relative z-10 touch-pan-y",
+          isMe 
+            ? "bg-red-600 text-white rounded-2xl rounded-tr-none cursor-grab active:cursor-grabbing" 
+            : "bg-zinc-900 text-zinc-200 rounded-2xl rounded-tl-none border border-white/5"
+        )}
+      >
+        {msg.image_url && (
+          <div className="mb-2 rounded-lg overflow-hidden bg-black/20">
+            <img src={msg.image_url} alt="Sent" className="w-full h-auto max-h-60 object-cover" />
+          </div>
+        )}
+        {msg.content && <p>{msg.content}</p>}
+        <p className={cn(
+          "text-[7px] mt-1 uppercase font-black opacity-50",
+          isMe ? "text-right" : "text-left"
+        )}>
+          {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        </p>
+      </motion.div>
     </div>
   );
 };
