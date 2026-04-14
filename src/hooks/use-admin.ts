@@ -26,11 +26,18 @@ export const useAdmin = () => {
     }
   });
 
+  // Logica di determinazione del ruolo: la colonna 'role' ha la precedenza
   const role = profile?.role || (profile?.is_admin ? 'admin' : 'member');
+  
+  // Definizioni strette dei permessi
   const isAdmin = role === 'admin';
   const isStaff = role === 'staff';
   const isSupport = role === 'support';
+  
+  // Chi può gestire (approvare/negare)
   const canManage = isAdmin || isStaff;
+  
+  // Chi può votare
   const canVote = isAdmin || isStaff || isSupport;
 
   const { data: allApplications, isLoading: loadingApps, error: loadError } = useQuery({
@@ -74,7 +81,6 @@ export const useAdmin = () => {
     mutationFn: async ({ id, status }: { id: string, status: 'approved' | 'rejected' }) => {
       if (!canManage) throw new Error("Non hai i permessi per approvare o rifiutare.");
       
-      // 1. Aggiorna lo stato nel database
       const { error } = await supabase
         .from('applications')
         .update({ status })
@@ -82,7 +88,6 @@ export const useAdmin = () => {
       
       if (error) throw error;
 
-      // 2. Chiama la Edge Function per inviare l'email
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
 

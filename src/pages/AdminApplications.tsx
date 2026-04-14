@@ -35,7 +35,7 @@ const AdminApplications = () => {
     );
   }
 
-  // Permettiamo l'accesso a chiunque possa votare (Admin, Staff, Support)
+  // Accesso consentito solo a chi ha permessi di voto (Admin, Staff, Support)
   if (!canVote) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center">
@@ -69,8 +69,8 @@ const AdminApplications = () => {
             <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">Gestione Selezioni</h1>
           </div>
           
-          {/* Il pulsante email è visibile SOLO agli Admin */}
-          {isAdmin && (
+          {/* Il pulsante email è visibile ESCLUSIVAMENTE se isAdmin è true */}
+          {isAdmin === true && (
             <Button 
               onClick={() => setIsEmailModalOpen(true)}
               variant="outline"
@@ -137,7 +137,8 @@ const AdminApplications = () => {
           </div>
         )}
 
-        {isAdmin && <EmailSettingsModal isOpen={isEmailModalOpen} onClose={() => setIsEmailModalOpen(false)} />}
+        {/* Modal caricato solo se l'utente è admin */}
+        {isAdmin === true && <EmailSettingsModal isOpen={isEmailModalOpen} onClose={() => setIsEmailModalOpen(false)} />}
       </main>
 
       <Footer />
