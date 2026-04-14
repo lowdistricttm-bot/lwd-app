@@ -51,6 +51,12 @@ const FeedPost = ({ post }: FeedPostProps) => {
     } catch (err) {}
   };
 
+  const handleDeletePost = () => {
+    if (window.confirm("Sei sicuro di voler eliminare questo post? L'azione è definitiva e rimuoverà anche tutti i like e i commenti.")) {
+      deletePost.mutate(post.id);
+    }
+  };
+
   const isVideo = post.image_url?.match(/\.(mp4|webm|ogg|mov)$/i);
   const isAuthor = currentUserId === post.user_id;
 
@@ -102,7 +108,7 @@ const FeedPost = ({ post }: FeedPostProps) => {
                     <Edit3 size={14} className="mr-2" /> Modifica
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    onClick={() => deletePost.mutate(post.id)}
+                    onClick={handleDeletePost}
                     className="text-[10px] font-black uppercase tracking-widest italic text-red-600 focus:bg-red-600 focus:text-white cursor-pointer"
                   >
                     <Trash2 size={14} className="mr-2" /> Elimina
