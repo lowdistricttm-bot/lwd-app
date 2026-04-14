@@ -13,6 +13,7 @@ import { ChevronLeft, ShoppingBag, Loader2, CheckCircle2, ArrowRight } from 'luc
 import { useWcCreateOrder } from '@/hooks/use-woocommerce';
 import { supabase } from "@/integrations/supabase/client";
 import { showError, showSuccess } from '@/utils/toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Icona WhatsApp SVG personalizzata per fedeltà al brand
 const WhatsAppIcon = ({ className }: { className?: string }) => (
@@ -28,6 +29,7 @@ const WhatsAppIcon = ({ className }: { className?: string }) => (
 
 const Checkout = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { items, total, clearCart } = useCart();
   const createOrder = useWcCreateOrder();
   
@@ -109,6 +111,10 @@ const Checkout = () => {
       setOrderId(order.id);
       setIsFinished(true);
       clearCart();
+      
+      // Invalidiamo la cache degli ordini per farli apparire nel profilo
+      queryClient.invalidateQueries({ queryKey: ['wc-orders'] });
+      
       showSuccess("Ordine creato con successo!");
     } catch (err: any) {
       showError(err.message);
