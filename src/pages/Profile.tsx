@@ -44,7 +44,7 @@ const Profile = () => {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [activeTab, setActiveTab] = useState('activity');
-  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+  const [isPostModalOpen = useState(false);
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
   
   const [isEditingUsername, setIsEditingUsername] = useState(false);
@@ -124,7 +124,6 @@ const Profile = () => {
   const handleShareProfile = async () => {
     if (!profile) return;
     
-    // window.location.origin rileva automaticamente se sei su localhost o su Vercel
     const shareData = {
       title: `Profilo di ${displayName} | Low District`,
       text: `Guarda il progetto stance di ${displayName} su Low District!`,
@@ -322,14 +321,14 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Pulsante Condividi Profilo */}
+        {/* Pulsante Condividi Profilo - Versione Minimale */}
         <div className="fixed bottom-24 right-6 z-40 md:bottom-32">
           <button 
             onClick={handleShareProfile}
-            className="flex items-center gap-2 bg-white text-black px-4 py-3 shadow-2xl hover:bg-zinc-200 transition-all group border border-black/10"
+            className="w-10 h-10 bg-white text-black flex items-center justify-center shadow-2xl hover:bg-zinc-200 transition-all border border-black/10"
+            title="Condividi Profilo"
           >
-            <Share2 size={16} className="group-hover:scale-110 transition-transform" />
-            <span className="text-[10px] font-black uppercase italic tracking-widest">Condividi Profilo</span>
+            <Share2 size={16} />
           </button>
         </div>
       </main>
