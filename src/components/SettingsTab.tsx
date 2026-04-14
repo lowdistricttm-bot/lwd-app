@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from './ui/button';
 import { Switch } from './ui/switch';
-import { Label } from './ui/label';
 import { 
   LogOut, 
   Bell, 
@@ -15,7 +14,7 @@ import {
   HelpCircle, 
   ChevronRight, 
   Trash2,
-  AlertTriangle
+  Info
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 
@@ -29,10 +28,8 @@ const SettingsTab = () => {
     navigate('/login');
   };
 
-  const handleDeleteAccount = () => {
-    if (confirm("ATTENZIONE: Questa azione è irreversibile. Tutti i tuoi dati, veicoli e post verranno eliminati permanentemente. Procedere?")) {
-      showError("Contatta il supporto per l'eliminazione definitiva dell'account.");
-    }
+  const showDeleteInfo = () => {
+    alert("CANCELLAZIONE ACCOUNT\n\nPuoi eliminare il tuo account direttamente dal sito ufficiale lowdistrict.it nella sezione 'Il mio Account', oppure inviando una richiesta formale a info@lowdistrict.it.\n\nL'operazione è irreversibile.");
   };
 
   const settingsGroups = [
@@ -67,6 +64,13 @@ const SettingsTab = () => {
           label: "Lingua App", 
           desc: "Italiano (Predefinito)",
           action: <ChevronRight size={16} className="text-zinc-700" />
+        },
+        { 
+          icon: Trash2, 
+          label: "Elimina Account", 
+          desc: "Info sulla cancellazione dati",
+          onClick: showDeleteInfo,
+          action: <Info size={16} className="text-zinc-700" />
         }
       ]
     },
@@ -95,7 +99,11 @@ const SettingsTab = () => {
             </h4>
             <div className="space-y-2">
               {group.items.map((item, j) => (
-                <div key={j} className="flex items-center justify-between p-4 bg-zinc-900/30 border border-white/5 hover:border-white/10 transition-all">
+                <div 
+                  key={j} 
+                  onClick={item.onClick}
+                  className={`flex items-center justify-between p-4 bg-zinc-900/30 border border-white/5 transition-all ${item.onClick ? 'cursor-pointer hover:bg-zinc-900/50' : ''}`}
+                >
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-zinc-900 flex items-center justify-center text-zinc-400">
                       <item.icon size={18} />
@@ -112,26 +120,14 @@ const SettingsTab = () => {
           </div>
         ))}
 
-        <div className="space-y-4 pt-6">
-          <h4 className="text-[10px] font-black uppercase text-red-900 tracking-[0.3em] italic border-b border-red-900/20 pb-2">
-            Zona Pericolo
-          </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Button 
-              onClick={handleLogout}
-              variant="outline" 
-              className="w-full border-white/10 text-zinc-400 hover:bg-white hover:text-black rounded-none font-black uppercase text-[10px] tracking-widest italic h-14"
-            >
-              <LogOut className="mr-2" size={14} /> Logout Sessione
-            </Button>
-            <Button 
-              onClick={handleDeleteAccount}
-              variant="outline" 
-              className="w-full border-red-900/20 text-red-900 hover:bg-red-900 hover:text-white rounded-none font-black uppercase text-[10px] tracking-widest italic h-14"
-            >
-              <Trash2 className="mr-2" size={14} /> Elimina Account
-            </Button>
-          </div>
+        <div className="pt-6">
+          <Button 
+            onClick={handleLogout}
+            variant="outline" 
+            className="w-full border-white/10 text-zinc-400 hover:bg-white hover:text-black rounded-none font-black uppercase text-[10px] tracking-widest italic h-14"
+          >
+            <LogOut className="mr-2" size={14} /> ESCI
+          </Button>
         </div>
       </div>
     </div>
