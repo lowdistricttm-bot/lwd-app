@@ -36,7 +36,7 @@ export const useAdmin = () => {
   const { data: allApplications, isLoading: loadingApps, error: loadError } = useQuery({
     queryKey: ['admin-applications'],
     queryFn: async () => {
-      // 1. Recuperiamo le candidature
+      // Recuperiamo le candidature
       const { data: apps, error: appsError } = await supabase
         .from('applications')
         .select(`
@@ -50,7 +50,7 @@ export const useAdmin = () => {
       if (appsError) throw appsError;
       if (!apps) return [];
 
-      // 2. Recuperiamo TUTTI i voti con i relativi profili
+      // Recuperiamo i voti con i nomi (richiede i Foreign Keys impostati via SQL)
       const { data: votes, error: votesError } = await supabase
         .from('application_votes')
         .select(`
@@ -60,10 +60,10 @@ export const useAdmin = () => {
 
       if (votesError) {
         console.error("[Admin] Errore recupero voti:", votesError);
+        // Fallback: restituiamo le app senza voti se la query fallisce ancora
         return apps.map(app => ({ ...app, application_votes: [] }));
       }
 
-      // 3. Uniamo i dati
       return apps.map(app => ({
         ...app,
         application_votes: votes.filter(v => v.application_id === app.id) || []
@@ -94,7 +94,6 @@ export const useAdmin = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Devi accedere per votare.");
 
-      // Usiamo upsert con la constraint unique_vote_per_user
       const { error } = await supabase
         .from('application_votes')
         .upsert({ 
@@ -140,10 +139,9 @@ export const useAdmin = () => {
       if (context?.previousApps) {
         queryClient.setQueryData(['admin-applications'], context.previousApps);
       }
-      showError("Errore durante la votazione. Verifica i permessi.");
+      showError("Errore durante la votazione");
     },
     onSettled: () => {
-      // Forza il ricaricamento completo per essere sicuri dei dati sul server
       queryClient.invalidateQueries({ queryKey: ['admin-applications'] });
     }
   });
