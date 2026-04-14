@@ -13,7 +13,8 @@ import {
   Image as LucideImage,
   Camera,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  UserCheck
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
@@ -34,7 +35,7 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
 
   return (
     <div className="bg-zinc-900/40 border border-white/5 overflow-hidden flex flex-col transition-all hover:border-white/10">
-      {/* Header Ridotto */}
+      {/* Header */}
       <div 
         onClick={() => setIsExpanded(!isExpanded)}
         className="p-4 md:p-6 flex items-center justify-between cursor-pointer group"
@@ -52,8 +53,8 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
               {app.profiles?.username || 'Membro District'}
             </h3>
             <div className="flex items-center gap-2">
-              <span className="text-[8px] text-red-600 font-black uppercase tracking-widest italic truncate">
-                {app.full_name}
+              <span className="text-[9px] text-red-600 font-black uppercase tracking-widest italic truncate">
+                {app.full_name || 'Nome non fornito'}
               </span>
               <span className="text-[8px] text-zinc-600 font-bold uppercase">• {app.events?.title}</span>
             </div>
@@ -85,8 +86,12 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
             transition={{ duration: 0.3, ease: "easeInOut" }}
           >
             <div className="border-t border-white/5 bg-black/20">
-              {/* Contatti Rapidi */}
-              <div className="p-6 grid grid-cols-1 sm:grid-cols-3 gap-4 border-b border-white/5">
+              {/* Info Candidato */}
+              <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 border-b border-white/5">
+                <div className="bg-black/40 px-4 py-3 border border-white/5 flex items-center gap-3">
+                  <UserCheck size={14} className="text-red-600" />
+                  <span className="text-[9px] font-black uppercase tracking-widest truncate">{app.full_name}</span>
+                </div>
                 <div className="bg-black/40 px-4 py-3 border border-white/5 flex items-center gap-3">
                   <Instagram size={14} className="text-red-600" />
                   <span className="text-[9px] font-black uppercase tracking-widest truncate">{app.instagram || 'N/A'}</span>
@@ -119,11 +124,11 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
                   </div>
                   <div className="bg-red-600/5 p-4 border border-red-600/10">
                     <p className="text-[7px] text-red-600 font-bold uppercase mb-1">Modifiche</p>
-                    <p className="text-[11px] text-zinc-200 leading-relaxed italic">{app.modifications || 'Nessuna modifica indicata.'}</p>
+                    <p className="text-[11px] text-zinc-200 leading-relaxed italic whitespace-pre-wrap">{app.modifications || 'Nessuna modifica indicata.'}</p>
                   </div>
                 </div>
 
-                {/* Media Gallery Unificata */}
+                {/* Media Gallery */}
                 <div className="lg:w-1/2 p-6">
                   <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-widest mb-4 flex items-center gap-2">
                     <Camera size={12} className="text-red-600" /> Media Progetto
@@ -139,7 +144,6 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
                             <img src={url} className="w-full h-full object-cover" alt="Garage" />
                           </div>
                         ))}
-                        {vehicleImages.length === 0 && <p className="text-[8px] text-zinc-800 uppercase font-black">Nessuna foto garage</p>}
                       </div>
                     </div>
 
@@ -152,7 +156,6 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
                             <img src={url} className="w-full h-full object-cover" alt="Interni" />
                           </div>
                         ))}
-                        {interiorImages.length === 0 && <p className="text-[8px] text-zinc-800 uppercase font-black">Nessuna foto interni</p>}
                       </div>
                     </div>
                   </div>
