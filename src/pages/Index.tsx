@@ -81,7 +81,7 @@ const Index = () => {
             <p className="text-zinc-400 text-sm md:text-base font-bold uppercase tracking-widest mb-12">
               Candidati per i prossimi eventi ufficiali direttamente dall'app.
             </p>
-            <Link to="/shop" className="inline-block bg-red-600 text-white px-12 py-6 text-xs font-black uppercase tracking-[0.2em] italic hover:bg-white hover:text-black transition-all">
+            <Link to="/events" className="inline-block bg-red-600 text-white px-12 py-6 text-xs font-black uppercase tracking-[0.2em] italic hover:bg-white hover:text-black transition-all">
               Scopri gli Eventi
             </Link>
           </div>

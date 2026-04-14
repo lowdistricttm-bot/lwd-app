@@ -4,6 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from "@/components/ui/button";
 import { ChevronRight, Play } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import Logo from './Logo';
 
 const Hero = () => {
@@ -40,12 +41,16 @@ const Hero = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button className="bg-white text-black hover:bg-red-600 hover:text-white rounded-none px-12 py-8 text-sm font-black uppercase tracking-widest w-full sm:w-auto italic transition-all duration-500 group">
-              Shop Online <ChevronRight className="ml-2 group-hover:translate-x-1 transition-transform" size={18} />
-            </Button>
-            <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 rounded-none px-12 py-8 text-sm font-black uppercase tracking-widest w-full sm:w-auto italic backdrop-blur-sm">
-              <Play className="mr-2 fill-current" size={16} /> Eventi 2025
-            </Button>
+            <Link to="/shop" className="w-full sm:w-auto">
+              <Button className="bg-white text-black hover:bg-red-600 hover:text-white rounded-none px-12 py-8 text-sm font-black uppercase tracking-widest w-full italic transition-all duration-500 group">
+                Shop Online <ChevronRight className="ml-2 group-hover:translate-x-1 transition-transform" size={18} />
+              </Button>
+            </Link>
+            <Link to="/events" className="w-full sm:w-auto">
+              <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 rounded-none px-12 py-8 text-sm font-black uppercase tracking-widest w-full italic backdrop-blur-sm">
+                <Play className="mr-2 fill-current" size={16} /> Eventi 2025
+              </Button>
+            </Link>
           </div>
         </motion.div>
       </div>
