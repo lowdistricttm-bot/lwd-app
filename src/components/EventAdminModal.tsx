@@ -22,6 +22,7 @@ const EventAdminModal = ({ isOpen, onClose, event }: EventAdminModalProps) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    program: '',
     date: '',
     location: '',
     status: 'open'
@@ -34,7 +35,8 @@ const EventAdminModal = ({ isOpen, onClose, event }: EventAdminModalProps) => {
     if (event) {
       setFormData({
         title: event.title,
-        description: event.description,
+        description: event.description || '',
+        program: event.program || '',
         date: new Date(event.date).toISOString().slice(0, 16),
         location: event.location,
         status: event.status
@@ -44,6 +46,7 @@ const EventAdminModal = ({ isOpen, onClose, event }: EventAdminModalProps) => {
       setFormData({
         title: '',
         description: '',
+        program: '',
         date: '',
         location: '',
         status: 'open'
@@ -123,8 +126,13 @@ const EventAdminModal = ({ isOpen, onClose, event }: EventAdminModalProps) => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-zinc-500">Programma e Descrizione</Label>
-                  <Textarea required value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="bg-transparent border-zinc-800 rounded-none min-h-[150px]" />
+                  <Label className="text-[10px] font-black uppercase text-zinc-500">Descrizione Evento</Label>
+                  <Textarea required value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="bg-transparent border-zinc-800 rounded-none min-h-[100px]" />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-zinc-500">Programma</Label>
+                  <Textarea value={formData.program} onChange={e => setFormData({...formData, program: e.target.value})} className="bg-transparent border-zinc-800 rounded-none min-h-[150px]" />
                 </div>
 
                 <div className="space-y-2">

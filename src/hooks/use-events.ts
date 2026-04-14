@@ -8,6 +8,7 @@ export interface Event {
   id: string;
   title: string;
   description: string;
+  program?: string;
   image_url?: string;
   date: string;
   location: string;
@@ -76,6 +77,7 @@ export const useEvents = () => {
         .insert([{ 
           title: eventData.title,
           description: eventData.description,
+          program: eventData.program,
           date: eventData.date,
           location: eventData.location,
           status: eventData.status,
@@ -102,6 +104,7 @@ export const useEvents = () => {
       const updatePayload: any = { 
         title: eventData.title,
         description: eventData.description,
+        program: eventData.program,
         date: eventData.date,
         location: eventData.location,
         status: eventData.status

@@ -228,7 +228,7 @@ const Events = () => {
             <>
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setViewingEvent(null)} className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100]" />
               <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed inset-x-0 bottom-0 z-[101] bg-zinc-950 border-t border-white/10 p-8 rounded-t-[2rem] max-h-[90vh] overflow-y-auto">
-                <div className="max-w-3xl mx-auto space-y-8 pb-12">
+                <div className="max-w-3xl mx-auto space-y-12 pb-12">
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="text-3xl font-black italic uppercase tracking-tighter mb-2">{viewingEvent.title}</h3>
@@ -246,12 +246,23 @@ const Events = () => {
                     </div>
                   )}
 
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-black uppercase tracking-widest text-zinc-500 italic">Programma & Info</h4>
-                    <div className="prose prose-invert max-w-none">
-                      <p className="text-zinc-300 leading-relaxed whitespace-pre-wrap italic font-medium">
-                        {viewingEvent.description}
-                      </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div className="space-y-4">
+                      <h4 className="text-xs font-black uppercase tracking-widest text-zinc-500 italic border-b border-white/5 pb-2">Descrizione</h4>
+                      <div className="prose prose-invert max-w-none">
+                        <p className="text-zinc-300 leading-relaxed whitespace-pre-wrap italic font-medium text-sm">
+                          {viewingEvent.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h4 className="text-xs font-black uppercase tracking-widest text-zinc-500 italic border-b border-white/5 pb-2">Programma</h4>
+                      <div className="prose prose-invert max-w-none">
+                        <p className="text-zinc-300 leading-relaxed whitespace-pre-wrap italic font-medium text-sm">
+                          {viewingEvent.program || "Programma non ancora disponibile."}
+                        </p>
+                      </div>
                     </div>
                   </div>
 
