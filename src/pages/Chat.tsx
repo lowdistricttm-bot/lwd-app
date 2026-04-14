@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { useMessages } from '@/hooks/use-messages';
-import { ChevronLeft, Send, User, Loader2, Mail, Camera, X } from 'lucide-react';
+import { ChevronLeft, Send, User, Loader2, Mail, Camera, X, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
@@ -21,7 +21,7 @@ const Chat = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const { chatMessages, loadingChat, sendMessage } = useMessages(userId);
+  const { chatMessages, loadingChat, sendMessage, deleteMessage } = useMessages(userId);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => setCurrentUserId(user?.id || null));
@@ -70,10 +70,16 @@ const Chat = () => {
     }
   };
 
+  const handleDelete = (msgId: string) => {
+    if (window.confirm("Vuoi eliminare questo messaggio per tutti?")) {
+      deleteMessage.mutate(msgId);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/5 h-20 px-6 flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="p-2 text-zinc-400 hover:text-white">
+        <button onClick={() => navigate('/messages')} className="p-2 text-zinc-400 hover:text-white transition-colors">
           <ChevronLeft size={24} />
         </button>
         <div className="flex items-center gap-3">
@@ -108,14 +114,26 @@ const Chat = () => {
         ) : (
           chatMessages?.map((msg) => {
             const isMe = msg.sender_id === currentUserId;
+            const timeDiff = new Date().getTime() - new Date(msg.created_at).getTime();
+            const canDelete = isMe && timeDiff < 30 * 60 * 1000; // 30 minuti
+
             return (
               <div key={msg.id} className={cn("flex", isMe ? "justify-end" : "justify-start")}>
                 <div className={cn(
-                  "max-w-[80%] p-4 text-sm font-medium shadow-lg",
+                  "max-w-[80%] p-4 text-sm font-medium shadow-lg relative group",
                   isMe 
                     ? "bg-red-600 text-white rounded-2xl rounded-tr-none" 
                     : "bg-zinc-900 text-zinc-200 rounded-2xl rounded-tl-none border border-white/5"
                 )}>
+                  {canDelete && (
+                    <button 
+                      onClick={() => handleDelete(msg.id)}
+                      className="absolute -top-2 -left-2 w-6 h-6 bg-black border border-white/10 rounded-full flex items-center justify-center text-zinc-500 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-all shadow-xl z-10"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  )}
+                  
                   {msg.image_url && (
                     <div className="mb-2 rounded-lg overflow-hidden bg-black/20">
                       <img src={msg.image_url} alt="Sent" className="w-full h-auto max-h-60 object-cover" />

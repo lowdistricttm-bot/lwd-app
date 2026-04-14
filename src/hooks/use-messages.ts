@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from 'react';
+import { showSuccess, showError } from '@/utils/toast';
 
 export interface Message {
   id: string;
@@ -80,7 +81,7 @@ export const useMessages = (otherUserId?: string) => {
     const channel = supabase
       .channel('messages-realtime')
       .on('postgres_changes', { 
-        event: 'INSERT', 
+        event: '*', 
         schema: 'public', 
         table: 'messages' 
       }, () => {
@@ -137,5 +138,21 @@ export const useMessages = (otherUserId?: string) => {
     }
   });
 
-  return { conversations, loadingConvs, chatMessages, loadingChat, sendMessage };
+  const deleteMessage = useMutation({
+    mutationFn: async (messageId: string) => {
+      const { error } = await supabase
+        .from('messages')
+        .delete()
+        .eq('id', messageId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      showSuccess("Messaggio eliminato");
+    },
+    onError: (err: any) => showError("Errore durante l'eliminazione")
+  });
+
+  return { conversations, loadingConvs, chatMessages, loadingChat, sendMessage, deleteMessage };
 };
