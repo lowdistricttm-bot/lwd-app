@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { X, ShoppingBag, Trash2 } from 'lucide-react';
+import { X, ShoppingBag, Trash2, Plus, Minus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/hooks/use-cart';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,7 @@ interface CartDrawerProps {
 }
 
 const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
-  const { items, removeFromCart, total } = useCart();
+  const { items, removeFromCart, updateQuantity, total } = useCart();
   const navigate = useNavigate();
 
   const handleCheckout = () => {
@@ -64,14 +64,33 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                     <div className="flex-1 min-w-0">
                       <h3 className="text-xs font-black uppercase italic truncate mb-1" dangerouslySetInnerHTML={{ __html: item.name }} />
                       {item.size && <p className="text-[10px] text-zinc-500 font-bold uppercase mb-2">Taglia: {item.size}</p>}
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-black tracking-tighter">€{item.price}</p>
-                        <button 
-                          onClick={() => removeFromCart(item.id, item.variationId)}
-                          className="text-zinc-600 hover:text-white transition-colors"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                      
+                      <div className="flex items-center justify-between mt-4">
+                        <div className="flex items-center border border-white/10 bg-zinc-900">
+                          <button 
+                            onClick={() => updateQuantity(item.id, item.variationId, item.quantity - 1)}
+                            className="w-8 h-8 flex items-center justify-center text-zinc-500 hover:text-white transition-colors"
+                          >
+                            <Minus size={12} />
+                          </button>
+                          <span className="w-8 text-center text-[10px] font-black">{item.quantity}</span>
+                          <button 
+                            onClick={() => updateQuantity(item.id, item.variationId, item.quantity + 1)}
+                            className="w-8 h-8 flex items-center justify-center text-zinc-500 hover:text-white transition-colors"
+                          >
+                            <Plus size={12} />
+                          </button>
+                        </div>
+                        
+                        <div className="flex items-center gap-4">
+                          <p className="text-sm font-black tracking-tighter">€{(item.price * item.quantity).toFixed(2)}</p>
+                          <button 
+                            onClick={() => removeFromCart(item.id, item.variationId)}
+                            className="text-zinc-600 hover:text-white transition-colors"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
