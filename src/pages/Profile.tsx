@@ -46,7 +46,7 @@ const Profile = () => {
   const { posts, isLoading: loadingPosts } = useSocialFeed();
   const { data: orders, isLoading: loadingOrders } = useWcUserOrders(user?.email);
 
-  // Filtriamo i post per mostrare solo quelli dell'utente corrente nella sua scheda attività
+  // Sincronizzazione: Filtriamo i post per mostrare solo quelli dell'utente corrente
   const userPosts = posts?.filter(p => p.user_id === user?.id) || [];
 
   const fetchProfile = async (userId: string) => {
