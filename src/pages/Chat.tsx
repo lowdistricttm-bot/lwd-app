@@ -9,6 +9,16 @@ import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQueryClient } from '@tanstack/react-query';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Chat = () => {
   const { userId } = useParams();
@@ -19,8 +29,10 @@ const Chat = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [otherUserProfile, setOtherUserProfile] = useState<any>(null);
+  const [msgToDelete, setMsgToDelete] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const longPressTimer = useRef<any>(null);
   
   const { chatMessages, loadingChat, sendMessage, deleteMessage } = useMessages(userId);
 
@@ -34,7 +46,6 @@ const Chat = () => {
     }
   }, [userId]);
 
-  // Segna i messaggi come letti
   useEffect(() => {
     if (userId && currentUserId && chatMessages) {
       const markAsRead = async () => {
@@ -90,15 +101,27 @@ const Chat = () => {
     }
   };
 
-  const handleDelete = (msgId: string) => {
-    if (window.confirm("Vuoi eliminare questo messaggio per tutti?")) {
-      deleteMessage.mutate(msgId);
+  const startLongPress = (msgId: string, isMe: boolean) => {
+    if (!isMe) return;
+    longPressTimer.current = setTimeout(() => {
+      setMsgToDelete(msgId);
+      if (window.navigator.vibrate) window.navigator.vibrate(50);
+    }, 600);
+  };
+
+  const endLongPress = () => {
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+  };
+
+  const confirmDelete = () => {
+    if (msgToDelete) {
+      deleteMessage.mutate(msgToDelete);
+      setMsgToDelete(null);
     }
   };
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-      {/* Header uniformato con Navbar.tsx */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/5 h-[calc(4rem+env(safe-area-inset-top))] px-6 flex items-center gap-4">
         <button onClick={() => navigate('/messages')} className="p-2 text-zinc-400 hover:text-white transition-colors">
           <ChevronLeft size={24} />
@@ -122,7 +145,6 @@ const Chat = () => {
         </div>
       </nav>
 
-      {/* Contenuto Chat */}
       <main ref={scrollRef} className="flex-1 pt-[calc(5rem+env(safe-area-inset-top))] pb-32 px-6 overflow-y-auto space-y-4 custom-scrollbar">
         {loadingChat ? (
           <div className="flex justify-center py-20">
@@ -136,26 +158,22 @@ const Chat = () => {
         ) : (
           chatMessages?.map((msg) => {
             const isMe = msg.sender_id === currentUserId;
-            const timeDiff = new Date().getTime() - new Date(msg.created_at).getTime();
-            const canDelete = isMe && timeDiff < 30 * 60 * 1000;
-
             return (
               <div key={msg.id} className={cn("flex", isMe ? "justify-end" : "justify-start")}>
-                <div className={cn(
-                  "max-w-[80%] p-4 text-sm font-medium shadow-lg relative group",
-                  isMe 
-                    ? "bg-red-600 text-white rounded-2xl rounded-tr-none" 
-                    : "bg-zinc-900 text-zinc-200 rounded-2xl rounded-tl-none border border-white/5"
-                )}>
-                  {canDelete && (
-                    <button 
-                      onClick={() => handleDelete(msg.id)}
-                      className="absolute -top-2 -left-2 w-6 h-6 bg-black border border-white/10 rounded-full flex items-center justify-center text-zinc-500 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-all shadow-xl z-10"
-                    >
-                      <Trash2 size={12} />
-                    </button>
+                <motion.div 
+                  onMouseDown={() => startLongPress(msg.id, isMe)}
+                  onMouseUp={endLongPress}
+                  onMouseLeave={endLongPress}
+                  onTouchStart={() => startLongPress(msg.id, isMe)}
+                  onTouchEnd={endLongPress}
+                  whileTap={isMe ? { scale: 0.95 } : {}}
+                  className={cn(
+                    "max-w-[80%] p-4 text-sm font-medium shadow-lg relative select-none cursor-pointer",
+                    isMe 
+                      ? "bg-red-600 text-white rounded-2xl rounded-tr-none" 
+                      : "bg-zinc-900 text-zinc-200 rounded-2xl rounded-tl-none border border-white/5"
                   )}
-                  
+                >
                   {msg.image_url && (
                     <div className="mb-2 rounded-lg overflow-hidden bg-black/20">
                       <img src={msg.image_url} alt="Sent" className="w-full h-auto max-h-60 object-cover" />
@@ -168,14 +186,13 @@ const Chat = () => {
                   )}>
                     {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
-                </div>
+                </motion.div>
               </div>
             );
           })
         )}
       </main>
 
-      {/* Input Area */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-black/80 backdrop-blur-xl border-t border-white/5 z-50 pb-[calc(1rem+env(safe-area-inset-bottom))]">
         <div className="max-w-2xl mx-auto">
           <AnimatePresence>
@@ -223,11 +240,26 @@ const Chat = () => {
               disabled={(!message.trim() && !selectedFile) || sendMessage.isPending}
               className="w-12 h-12 bg-red-600 flex items-center justify-center hover:bg-white hover:text-black transition-all shrink-0 disabled:opacity-50"
             >
-              {sendMessage.isPending ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
+              {sendMessage.isPending ? <Loader2 className="animate-spin" /> : <Send size={20} />}
             </button>
           </form>
         </div>
       </div>
+
+      <AlertDialog open={!!msgToDelete} onOpenChange={() => setMsgToDelete(null)}>
+        <AlertDialogContent className="bg-zinc-950 border-white/10 rounded-none">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-black italic uppercase tracking-tighter">Elimina Messaggio?</AlertDialogTitle>
+            <AlertDialogDescription className="text-zinc-500 text-xs font-bold uppercase tracking-widest">
+              Questa azione rimuoverà il messaggio per tutti i partecipanti alla chat.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="rounded-none border-zinc-800 font-black uppercase italic text-[10px] tracking-widest">Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="rounded-none bg-red-600 hover:bg-white hover:text-black font-black uppercase italic text-[10px] tracking-widest">Elimina</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
