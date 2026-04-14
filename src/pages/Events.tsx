@@ -86,9 +86,12 @@ const Events = () => {
                     <div className="space-y-4">
                       <span className={cn(
                         "text-[8px] font-black uppercase px-2 py-0.5 italic",
-                        existingApp ? "bg-zinc-800 text-zinc-400" : "bg-green-600 text-white"
+                        existingApp?.status === 'pending' && "bg-zinc-800 text-zinc-400",
+                        existingApp?.status === 'approved' && "bg-green-600 text-white",
+                        existingApp?.status === 'rejected' && "bg-red-600 text-white",
+                        !existingApp && "bg-green-600 text-white"
                       )}>
-                        {existingApp ? `STATO: ${existingApp.status.toUpperCase()}` : "Iscrizioni Aperte"}
+                        {existingApp ? `STATO: ${existingApp.status === 'pending' ? 'IN ATTESA' : existingApp.status.toUpperCase()}` : "Iscrizioni Aperte"}
                       </span>
                       <h3 className="text-2xl font-black italic uppercase tracking-tighter">{event.title}</h3>
                     </div>
@@ -129,7 +132,9 @@ const Events = () => {
                   
                   <div className="bg-zinc-900 p-6 border border-white/5">
                     <p className="text-[10px] font-black uppercase text-zinc-500 mb-2">Stato Attuale</p>
-                    <p className="text-2xl font-black italic uppercase text-red-600">{manageApp.status}</p>
+                    <p className="text-2xl font-black italic uppercase text-red-600">
+                      {manageApp.status === 'pending' ? 'IN ATTESA' : manageApp.status.toUpperCase()}
+                    </p>
                   </div>
 
                   <div className="space-y-4">
@@ -172,6 +177,16 @@ const Events = () => {
                         <Input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
                       </div>
                     </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-zinc-500">Telefono</Label>
+                        <Input required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-zinc-500">Instagram</Label>
+                        <Input required value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
+                      </div>
+                    </div>
                     <div className="space-y-4">
                       <Label className="text-[10px] font-black uppercase text-zinc-500">Seleziona Veicolo</Label>
                       <div className="grid grid-cols-1 gap-2">
@@ -181,6 +196,10 @@ const Events = () => {
                           </button>
                         ))}
                       </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-zinc-500">Modifiche Principali</Label>
+                      <Textarea value={formData.modifications} onChange={e => setFormData({...formData, modifications: e.target.value})} className="bg-transparent border-zinc-800 rounded-none min-h-[100px]" />
                     </div>
                     <Button type="submit" disabled={applyToEvent.isPending} className="w-full bg-red-600 py-8 font-black uppercase italic tracking-widest rounded-none">
                       Invia Candidatura

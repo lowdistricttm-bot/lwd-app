@@ -18,7 +18,8 @@ import {
   Calendar,
   AlertTriangle,
   ChevronLeft,
-  Clock
+  Clock,
+  Phone
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -130,7 +131,7 @@ const AdminApplications = () => {
                         </div>
                         <div>
                           <p className="text-xs font-black uppercase italic">{app.profiles?.username || 'Membro'}</p>
-                          <p className="text-[9px] text-zinc-500 font-bold uppercase">{app.profiles?.first_name} {app.profiles?.last_name}</p>
+                          <p className="text-[9px] text-zinc-500 font-bold uppercase">{app.full_name || `${app.profiles?.first_name} ${app.profiles?.last_name}`}</p>
                         </div>
                       </div>
                     </div>
@@ -150,21 +151,42 @@ const AdminApplications = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="bg-black/40 p-4 border border-white/5 flex items-center gap-3">
                       <Instagram size={16} className="text-red-600" />
-                      <span className="text-[10px] font-black uppercase tracking-widest truncate">Instagram</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest truncate">{app.instagram || 'N/A'}</span>
                     </div>
                     <div className="bg-black/40 p-4 border border-white/5 flex items-center gap-3">
-                      <Mail size={16} className="text-red-600" />
-                      <span className="text-[10px] font-black uppercase tracking-widest truncate">Email</span>
+                      <Phone size={16} className="text-red-600" />
+                      <span className="text-[10px] font-black uppercase tracking-widest truncate">{app.phone || 'N/A'}</span>
                     </div>
                     <div className="bg-black/40 p-4 border border-white/5 flex items-center gap-3">
                       <MapPin size={16} className="text-red-600" />
-                      <span className="text-[10px] font-black uppercase tracking-widest truncate">Città</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest truncate">{app.city || 'N/A'}</span>
                     </div>
                   </div>
 
                   <div className="bg-black/40 p-6 border border-white/5">
-                    <p className="text-[9px] font-black uppercase text-zinc-500 mb-3 italic">Modifiche Dichiarate:</p>
-                    <p className="text-xs text-zinc-300 leading-relaxed font-medium">{app.vehicles?.description || 'Nessuna descrizione fornita.'}</p>
+                    <p className="text-[9px] font-black uppercase text-zinc-500 mb-3 italic">Scheda Tecnica Veicolo:</p>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-[8px] text-zinc-600 font-bold uppercase">Marca/Modello</p>
+                          <p className="text-xs font-black uppercase italic">{app.vehicles?.brand} {app.vehicles?.model}</p>
+                        </div>
+                        <div>
+                          <p className="text-[8px] text-zinc-600 font-bold uppercase">Assetto</p>
+                          <p className="text-xs font-black uppercase italic">{app.vehicles?.suspension_type}</p>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-[8px] text-zinc-600 font-bold uppercase">Descrizione Garage</p>
+                        <p className="text-xs text-zinc-300 leading-relaxed font-medium">{app.vehicles?.description || 'Nessuna descrizione nel garage.'}</p>
+                      </div>
+                      {app.modifications && (
+                        <div className="pt-4 border-t border-white/5">
+                          <p className="text-[8px] text-red-600 font-bold uppercase">Modifiche per questo evento</p>
+                          <p className="text-xs text-zinc-300 leading-relaxed font-medium italic">{app.modifications}</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
@@ -177,7 +199,7 @@ const AdminApplications = () => {
                       {app.status === 'pending' && <Clock size={14} />}
                       {app.status === 'approved' && <CheckCircle size={14} />}
                       {app.status === 'rejected' && <XCircle size={14} />}
-                      Stato: {app.status}
+                      Stato: {app.status === 'pending' ? 'IN ATTESA' : app.status.toUpperCase()}
                     </div>
 
                     <div className="flex-1" />

@@ -68,6 +68,12 @@ export const useEvents = () => {
           event_id: data.eventId,
           vehicle_id: data.vehicleId,
           status: 'pending',
+          full_name: data.fullName,
+          email: data.email,
+          phone: data.phone,
+          city: data.city,
+          instagram: data.instagram,
+          modifications: data.modifications
         }]);
 
       if (error) throw error;
