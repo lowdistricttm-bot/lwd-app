@@ -12,10 +12,12 @@ import FeedPost from '@/components/FeedPost';
 import CreatePostModal from '@/components/CreatePostModal';
 import ImageLightbox from '@/components/ImageLightbox';
 import { useSocialFeed } from '@/hooks/use-social-feed';
+import { useWpAuth } from '@/hooks/use-wp-auth';
 import { 
-  User, Settings, LogOut, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Calendar, Package, Users
+  User, Settings, LogOut, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Calendar, Package, Users, Edit2, Check, X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWcUserOrders } from '@/hooks/use-woocommerce';
@@ -44,6 +46,11 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState('activity');
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
+  
+  // Stato per la modifica dell'username
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
+  const [newUsername, setNewUsername] = useState('');
+  const { updateUsername, isLoading: isUpdatingUsername } = useWpAuth();
 
   const { posts, isLoading: loadingPosts } = useSocialFeed();
   const targetUserId = userId || currentUser?.id;
@@ -59,6 +66,7 @@ const Profile = () => {
     const { data: profileData, error } = await supabase.from('profiles').select('*').eq('id', id).maybeSingle();
     if (error) console.error("[Profile] Errore caricamento:", error);
     setProfile(profileData);
+    if (profileData?.username) setNewUsername(profileData.username);
   };
 
   useEffect(() => {
@@ -98,6 +106,19 @@ const Profile = () => {
       showError("Errore durante il caricamento: " + error.message);
     } finally {
       if (isAvatar) setUploadingAvatar(false); else setUploadingCover(false);
+    }
+  };
+
+  const handleUsernameUpdate = async () => {
+    if (!newUsername.trim() || newUsername === profile?.username) {
+      setIsEditingUsername(false);
+      return;
+    }
+
+    const success = await updateUsername(newUsername);
+    if (success) {
+      await fetchProfile(currentUser.id);
+      setIsEditingUsername(false);
     }
   };
 
@@ -164,7 +185,31 @@ const Profile = () => {
             </div>
             <div className="mb-2">
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl md:text-4xl font-black italic uppercase tracking-tighter leading-none">{displayName}</h1>
+                {isEditingUsername ? (
+                  <div className="flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md p-1 border border-white/10">
+                    <Input 
+                      value={newUsername}
+                      onChange={(e) => setNewUsername(e.target.value)}
+                      className="bg-transparent border-none h-8 text-lg font-black uppercase italic tracking-tighter focus-visible:ring-0 w-40"
+                      autoFocus
+                    />
+                    <button onClick={handleUsernameUpdate} disabled={isUpdatingUsername} className="p-1 text-green-500 hover:text-green-400">
+                      {isUpdatingUsername ? <Loader2 size={16} className="animate-spin" /> : <Check size={18} />}
+                    </button>
+                    <button onClick={() => { setIsEditingUsername(false); setNewUsername(profile?.username || ''); }} className="p-1 text-red-500 hover:text-red-400">
+                      <X size={18} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <h1 className="text-2xl md:text-4xl font-black italic uppercase tracking-tighter leading-none">{displayName}</h1>
+                    {isOwnProfile && (
+                      <button onClick={() => setIsEditingUsername(true)} className="p-1.5 text-zinc-500 hover:text-white transition-colors">
+                        <Edit2 size={14} />
+                      </button>
+                    )}
+                  </div>
+                )}
                 {!isOwnProfile && currentUser && <button onClick={() => navigate(`/chat/${profile.id}`)} className="p-2 bg-zinc-800 text-white hover:bg-white hover:text-black transition-all shadow-lg"><Mail size={18} /></button>}
               </div>
               <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.3em] italic mt-1">{roleLabel}</p>
