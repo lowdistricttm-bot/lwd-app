@@ -91,24 +91,16 @@ export const useMessages = (otherUserId?: string) => {
     enabled: !!otherUserId
   });
 
-  // Sottoscrizione Realtime ultra-veloce
   useEffect(() => {
-    if (!otherUserId) return;
-
     const channel = supabase
-      .channel(`chat-${otherUserId}`)
+      .channel('messages-realtime')
       .on(
         'postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'messages'
-        }, 
+        { event: '*', schema: 'public', table: 'messages' }, 
         () => {
-          // Invalida immediatamente le query per forzare il refresh dei dati
-          queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
           queryClient.invalidateQueries({ queryKey: ['conversations'] });
           queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
+          if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
         }
       )
       .subscribe();
@@ -129,38 +121,9 @@ export const useMessages = (otherUserId?: string) => {
 
       if (error) throw error;
     },
-    // Aggiornamento ottimistico per feedback istantaneo
-    onMutate: async (newMessage) => {
-      await queryClient.cancelQueries({ queryKey: ['chat', otherUserId] });
-      const previousMessages = queryClient.getQueryData(['chat', otherUserId]);
-      
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user && otherUserId) {
-        queryClient.setQueryData(['chat', otherUserId], (old: any) => [
-          ...(old || []),
-          {
-            id: 'temp-' + Date.now(),
-            sender_id: user.id,
-            receiver_id: newMessage.receiverId,
-            content: newMessage.content,
-            created_at: new Date().toISOString(),
-            is_read: false
-          }
-        ]);
-      }
-      
-      return { previousMessages };
-    },
-    onError: (err, newMessage, context: any) => {
-      if (context?.previousMessages) {
-        queryClient.setQueryData(['chat', otherUserId], context.previousMessages);
-      }
-      showError("Errore nell'invio del messaggio");
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
     }
   });
 
@@ -197,6 +160,7 @@ export const useMessages = (otherUserId?: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Cancelliamo tutti i messaggi tra i due utenti
       const { error } = await supabase
         .from('messages')
         .delete()
@@ -208,6 +172,10 @@ export const useMessages = (otherUserId?: string) => {
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
       queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
       showSuccess("Conversazione eliminata");
+    },
+    onError: (err: any) => {
+      console.error("Errore cancellazione conversazione:", err);
+      showError("Impossibile eliminare la conversazione");
     }
   });
 

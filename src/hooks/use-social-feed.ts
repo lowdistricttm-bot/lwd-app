@@ -159,12 +159,20 @@ export const useSocialFeed = () => {
 
   const deletePost = useMutation({
     mutationFn: async (postId: string) => {
+      // Prima cancelliamo like e commenti associati (se non c'è il cascade nel DB)
+      await supabase.from('likes').delete().eq('post_id', postId);
+      await supabase.from('comments').delete().eq('post_id', postId);
+      
       const { error } = await supabase.from('posts').delete().eq('id', postId);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['social-posts'] });
       showSuccess("Post eliminato");
+    },
+    onError: (err: any) => {
+      console.error("Errore cancellazione post:", err);
+      showError("Impossibile eliminare il post");
     }
   });
 
@@ -201,7 +209,6 @@ export const useSocialFeed = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Accedi per mettere like");
 
-      // Controllo atomico: cerchiamo se esiste già un like
       const { data: existingLike } = await supabase
         .from('likes')
         .select('id')
@@ -210,11 +217,9 @@ export const useSocialFeed = () => {
         .maybeSingle();
 
       if (existingLike) {
-        // Se esiste, lo togliamo (Un-like)
         const { error } = await supabase.from('likes').delete().eq('id', existingLike.id);
         if (error) throw error;
       } else {
-        // Se non esiste, lo aggiungiamo (Like)
         const { error } = await supabase.from('likes').insert([{ post_id: postId, user_id: user.id }]);
         if (error) throw error;
       }
