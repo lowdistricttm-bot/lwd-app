@@ -39,7 +39,11 @@ const Events = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setUser(session.user);
-        setFormData(prev => ({ ...prev, fullName: session.user.user_metadata?.full_name || '' }));
+        setFormData(prev => ({ 
+          ...prev, 
+          fullName: session.user.user_metadata?.full_name || '',
+          email: session.user.email || ''
+        }));
       }
     });
   }, []);
@@ -116,7 +120,7 @@ const Events = () => {
       setInteriorPreviews([]);
       setFormData({
         fullName: user?.user_metadata?.full_name || '',
-        email: '',
+        email: user?.email || '',
         phone: '',
         city: '',
         instagram: '',
@@ -287,11 +291,11 @@ const Events = () => {
                             key={v.id} 
                             type="button" 
                             onClick={() => {
-                              setFormData({
-                                ...formData, 
+                              setFormData(prev => ({
+                                ...prev, 
                                 vehicleId: v.id,
-                                modifications: v.description || formData.modifications
-                              });
+                                modifications: v.description || ''
+                              }));
                             }} 
                             className={cn(
                               "flex items-center gap-4 p-3 border transition-all text-left group", 
@@ -343,7 +347,7 @@ const Events = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-zinc-500">Modifiche Principali *</Label>
+                      <Label className="text-[10px] font-black uppercase text-zinc-500">Modifiche Principali (Sincronizzate dal Garage) *</Label>
                       <Textarea 
                         required
                         value={formData.modifications} 
