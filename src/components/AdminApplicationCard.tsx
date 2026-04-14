@@ -14,7 +14,8 @@ import {
   Camera,
   ChevronDown,
   ChevronUp,
-  UserCheck
+  UserCheck,
+  CreditCard
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
@@ -120,6 +121,14 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
                     <div className="space-y-1">
                       <p className="text-[7px] text-zinc-600 font-bold uppercase">Assetto</p>
                       <p className="text-sm font-black uppercase italic text-red-600">{app.vehicles?.suspension_type}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[7px] text-zinc-600 font-bold uppercase">Targa</p>
+                      <p className="text-sm font-black uppercase italic">{app.vehicles?.license_plate || 'N/A'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[7px] text-zinc-600 font-bold uppercase">Anno</p>
+                      <p className="text-sm font-black uppercase italic">{app.vehicles?.year || 'N/A'}</p>
                     </div>
                   </div>
                   <div className="bg-red-600/5 p-4 border border-red-600/10">
