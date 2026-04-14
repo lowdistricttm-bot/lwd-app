@@ -41,7 +41,7 @@ const Events = () => {
         setFormData(prev => ({ 
           ...prev, 
           fullName: session.user.user_metadata?.full_name || '',
-          email: session.user.email || ''
+          email: '' // Email vuota di default
         }));
       }
     });
@@ -119,7 +119,7 @@ const Events = () => {
       setInteriorPreviews([]);
       setFormData({
         fullName: user?.user_metadata?.full_name || '',
-        email: user?.email || '',
+        email: '', // Reset a vuoto dopo l'invio
         phone: '',
         city: '',
         instagram: '',
