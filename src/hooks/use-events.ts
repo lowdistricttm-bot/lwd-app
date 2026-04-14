@@ -38,7 +38,7 @@ export const useEvents = () => {
         .select('*')
         .order('date', { ascending: true });
 
-      if (error) throw error;
+      if (error) throw new Error(error.message);
       return data as Event[];
     }
   });
@@ -52,7 +52,7 @@ export const useEvents = () => {
       .from('post-media')
       .upload(filePath, file);
 
-    if (uploadError) throw uploadError;
+    if (uploadError) throw new Error(uploadError.message);
 
     const { data: { publicUrl } } = supabase.storage
       .from('post-media')
@@ -75,13 +75,13 @@ export const useEvents = () => {
         .from('events')
         .insert([{ ...eventData, image_url }]);
 
-      if (error) throw error;
+      if (error) throw new Error(error.message);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
       showSuccess("Evento creato con successo!");
     },
-    onError: (error: any) => showError(error.message)
+    onError: (error: any) => showError(error.message || "Errore durante la creazione dell'evento")
   });
 
   const updateEvent = useMutation({
@@ -97,25 +97,25 @@ export const useEvents = () => {
         .update({ ...eventData, image_url })
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) throw new Error(error.message);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
       showSuccess("Evento aggiornato!");
     },
-    onError: (error: any) => showError(error.message)
+    onError: (error: any) => showError(error.message || "Errore durante l'aggiornamento dell'evento")
   });
 
   const deleteEvent = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from('events').delete().eq('id', id);
-      if (error) throw error;
+      if (error) throw new Error(error.message);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
       showSuccess("Evento eliminato.");
     },
-    onError: (error: any) => showError(error.message)
+    onError: (error: any) => showError(error.message || "Errore durante l'eliminazione")
   });
 
   // --- USER ACTIONS ---
@@ -149,13 +149,13 @@ export const useEvents = () => {
           interior_urls: interiorUrls
         }]);
 
-      if (error) throw error;
+      if (error) throw new Error(error.message);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-applications'] });
       showSuccess("Candidatura inviata!");
     },
-    onError: (error: any) => showError(error.message)
+    onError: (error: any) => showError(error.message || "Errore durante l'invio della candidatura")
   });
 
   const cancelApplication = useMutation({
@@ -164,12 +164,13 @@ export const useEvents = () => {
         .from('applications')
         .delete()
         .eq('id', applicationId);
-      if (error) throw error;
+      if (error) throw new Error(error.message);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-applications'] });
       showSuccess("Candidatura annullata.");
-    }
+    },
+    onError: (error: any) => showError(error.message || "Errore durante l'annullamento")
   });
 
   return { events, isLoading, createEvent, updateEvent, deleteEvent, applyToEvent, cancelApplication };

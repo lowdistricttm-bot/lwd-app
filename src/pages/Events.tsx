@@ -11,12 +11,13 @@ import { useAdmin } from '@/hooks/use-admin';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Car, Loader2, ChevronRight, AlertCircle, X, Instagram, Phone, MapPin, Camera, Trash2, Settings2, Info, Calendar, Plus, Edit3, Eye } from 'lucide-react';
+import { Car, Loader2, ChevronRight, X, MapPin, Camera, Trash2, Settings2, Calendar, Plus, Edit3, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
 import { showError } from '@/utils/toast';
 import EventAdminModal from '@/components/EventAdminModal';
+import ManageApplicationModal from '@/components/ManageApplicationModal';
 
 const Events = () => {
   const navigate = useNavigate();
@@ -26,10 +27,9 @@ const Events = () => {
   const [viewingEvent, setViewingEvent] = useState<Event | null>(null);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
-  
   const [manageApp, setManageApp] = useState<any>(null);
-  const [user, setUser] = useState<any>(null);
   
+  const [user, setUser] = useState<any>(null);
   const [formData, setFormData] = useState({
     fullName: '', email: '', phone: '', city: '', instagram: '', vehicleId: '', modifications: ''
   });
@@ -37,7 +37,7 @@ const Events = () => {
   const [interiorFiles, setInteriorFiles] = useState<File[]>([]);
   const [interiorPreviews, setInteriorPreviews] = useState<string[]>([]);
 
-  const { events, isLoading: eventsLoading, applyToEvent, cancelApplication, deleteEvent } = useEvents();
+  const { events, isLoading: eventsLoading, applyToEvent, deleteEvent } = useEvents();
   const { vehicles, isLoading: vehiclesLoading } = useGarage();
   const { data: userApps, isLoading: appsLoading, refetch: refetchApps } = useUserApplications();
   const { isAdmin } = useAdmin();
@@ -245,7 +245,7 @@ const Events = () => {
           )}
         </AnimatePresence>
 
-        {/* Modal Candidatura (Esistente) */}
+        {/* Modal Candidatura */}
         <AnimatePresence>
           {selectedEvent && (
             <>
@@ -356,6 +356,12 @@ const Events = () => {
           isOpen={isAdminModalOpen} 
           onClose={() => { setIsAdminModalOpen(false); setEditingEvent(null); }} 
           event={editingEvent}
+        />
+
+        <ManageApplicationModal 
+          isOpen={!!manageApp} 
+          onClose={() => setManageApp(null)} 
+          application={manageApp} 
         />
       </main>
       <Footer /><BottomNav />
