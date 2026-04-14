@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
 import AdminApplicationCard from '@/components/AdminApplicationCard';
+import EmailSettingsModal from '@/components/EmailSettingsModal';
 import { useAdmin } from '@/hooks/use-admin';
 import { 
   Loader2, 
@@ -13,7 +14,8 @@ import {
   AlertTriangle,
   ChevronLeft,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  Mail
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -22,6 +24,7 @@ const AdminApplications = () => {
   const navigate = useNavigate();
   const { isAdmin, checkingAdmin, allApplications, loadingApps, loadError, updateStatus } = useAdmin();
   const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending');
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
   if (checkingAdmin) {
     return (
@@ -53,15 +56,25 @@ const AdminApplications = () => {
       <Navbar />
       
       <main className="flex-1 pt-24 pb-32 px-4 md:px-6 max-w-4xl mx-auto w-full">
-        <div className="mb-12">
-          <button 
-            onClick={() => navigate('/profile')}
-            className="flex items-center gap-2 text-zinc-500 hover:text-white mb-4 uppercase text-[10px] font-black tracking-widest transition-colors"
+        <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <button 
+              onClick={() => navigate('/profile')}
+              className="flex items-center gap-2 text-zinc-500 hover:text-white mb-4 uppercase text-[10px] font-black tracking-widest transition-colors"
+            >
+              <ChevronLeft size={14} /> Torna al Profilo
+            </button>
+            <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Admin Control Panel</h2>
+            <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">Gestione Selezioni</h1>
+          </div>
+          
+          <Button 
+            onClick={() => setIsEmailModalOpen(true)}
+            variant="outline"
+            className="border-white/10 text-zinc-400 hover:text-white hover:bg-white/5 rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 px-6"
           >
-            <ChevronLeft size={14} /> Torna al Profilo
-          </button>
-          <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Admin Control Panel</h2>
-          <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">Gestione Selezioni</h1>
+            <Mail size={16} className="mr-2" /> Configura Email
+          </Button>
         </div>
 
         {/* Tab System */}
@@ -119,6 +132,8 @@ const AdminApplications = () => {
             )}
           </div>
         )}
+
+        <EmailSettingsModal isOpen={isEmailModalOpen} onClose={() => setIsEmailModalOpen(false)} />
       </main>
 
       <Footer />
