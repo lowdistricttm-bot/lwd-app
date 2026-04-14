@@ -105,7 +105,7 @@ const Login = () => {
               Non sei ancora un membro?
             </p>
             <a 
-              href="https://www.lowdistrict.it/my-account/" 
+              href="https://www.lowdistrict.it/account/" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-[10px] font-black uppercase tracking-widest text-white border-b border-white/20 pb-1 hover:text-red-600 hover:border-red-600 transition-all"
