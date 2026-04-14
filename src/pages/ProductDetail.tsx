@@ -5,7 +5,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import BottomNav from '@/components/BottomNav';
-import { ChevronLeft, ShoppingBag, Loader2 } from 'lucide-react';
+import { ChevronLeft, ShoppingBag, Loader2, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useWcProduct, useWcVariations } from '@/hooks/use-woocommerce';
@@ -19,6 +19,7 @@ const ProductDetail = () => {
   const { data: variations } = useWcVariations(product?.id);
   
   const [selectedVariation, setSelectedVariation] = useState<any>(null);
+  const [quantity, setQuantity] = useState(1);
 
   if (isLoading) {
     return (
@@ -40,9 +41,12 @@ const ProductDetail = () => {
       name: product.name,
       price: numericPrice,
       image: product.images[0]?.src || "",
-      quantity: 1,
+      quantity: quantity,
       size: selectedVariation?.attributes?.[0]?.option
     });
+    
+    // Reset quantity after adding to cart
+    setQuantity(1);
   };
 
   const hasVariations = product.type === 'variable' && variations && variations.length > 0;
@@ -89,6 +93,25 @@ const ProductDetail = () => {
                   </div>
                 </div>
               )}
+
+              <div className="space-y-4">
+                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Quantità</p>
+                <div className="flex items-center border border-white/10 bg-zinc-900 w-fit">
+                  <button 
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="w-12 h-12 flex items-center justify-center text-zinc-500 hover:text-white transition-colors"
+                  >
+                    <Minus size={16} />
+                  </button>
+                  <span className="w-12 text-center text-sm font-black">{quantity}</span>
+                  <button 
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="w-12 h-12 flex items-center justify-center text-zinc-500 hover:text-white transition-colors"
+                  >
+                    <Plus size={16} />
+                  </button>
+                </div>
+              </div>
             </div>
 
             <Button 
