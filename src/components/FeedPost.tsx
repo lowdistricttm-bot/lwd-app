@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, MessageSquare, User, MoreHorizontal, Send, Loader2, CornerDownRight, Trash2, Edit3 } from 'lucide-react';
+import { Heart, MessageSquare, User, MoreHorizontal, Send, Loader2, CornerDownRight, Trash2, Edit3, Mail } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Post, useSocialFeed } from '@/hooks/use-social-feed';
@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { Input } from './ui/input';
 import { supabase } from "@/integrations/supabase/client";
 import EditPostModal from './EditPostModal';
+import { useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +23,7 @@ interface FeedPostProps {
 }
 
 const FeedPost = ({ post }: FeedPostProps) => {
+  const navigate = useNavigate();
   const { toggleLike, addComment, deletePost, deleteComment } = useSocialFeed();
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
@@ -84,29 +86,41 @@ const FeedPost = ({ post }: FeedPostProps) => {
             </div>
           </div>
           
-          {isAuthor && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="text-zinc-600 hover:text-white transition-colors p-2">
-                  <MoreHorizontal size={18} />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-zinc-900 border-white/10 rounded-none">
-                <DropdownMenuItem 
-                  onClick={() => setIsEditModalOpen(true)}
-                  className="text-[10px] font-black uppercase tracking-widest italic focus:bg-white focus:text-black cursor-pointer"
-                >
-                  <Edit3 size={14} className="mr-2" /> Modifica
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => deletePost.mutate(post.id)}
-                  className="text-[10px] font-black uppercase tracking-widest italic text-red-600 focus:bg-red-600 focus:text-white cursor-pointer"
-                >
-                  <Trash2 size={14} className="mr-2" /> Elimina
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+          <div className="flex items-center gap-2">
+            {!isAuthor && currentUserId && (
+              <button 
+                onClick={() => navigate(`/chat/${post.user_id}`)}
+                className="p-2 text-zinc-500 hover:text-red-600 transition-colors"
+                title="Invia Messaggio"
+              >
+                <Mail size={18} />
+              </button>
+            )}
+            
+            {isAuthor && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="text-zinc-600 hover:text-white transition-colors p-2">
+                    <MoreHorizontal size={18} />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-zinc-900 border-white/10 rounded-none">
+                  <DropdownMenuItem 
+                    onClick={() => setIsEditModalOpen(true)}
+                    className="text-[10px] font-black uppercase tracking-widest italic focus:bg-white focus:text-black cursor-pointer"
+                  >
+                    <Edit3 size={14} className="mr-2" /> Modifica
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => deletePost.mutate(post.id)}
+                    className="text-[10px] font-black uppercase tracking-widest italic text-red-600 focus:bg-red-600 focus:text-white cursor-pointer"
+                  >
+                    <Trash2 size={14} className="mr-2" /> Elimina
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
         </div>
 
         {/* Content */}
@@ -254,7 +268,7 @@ const FeedPost = ({ post }: FeedPostProps) => {
                       disabled={addComment.isPending}
                       className="w-10 h-10 bg-red-600 flex items-center justify-center hover:bg-white hover:text-black transition-all shrink-0"
                     >
-                      {addComment.isPending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                      {addComment.isPending ? <Loader2 className="animate-spin" /> : <Send size={16} />}
                     </button>
                   </form>
                 </div>
