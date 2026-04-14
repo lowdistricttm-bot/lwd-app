@@ -35,12 +35,10 @@ const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
       setIsLoading(true);
       try {
         // Cerchiamo nel database interno (Supabase)
-        // Cerchiamo per username o per nome/cognome
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
           .or(`username.ilike.%${search}%,first_name.ilike.%${search}%,last_name.ilike.%${search}%`)
-          .neq('id', currentUserId) // Escludiamo noi stessi
           .limit(10);
 
         if (error) throw error;
@@ -54,7 +52,7 @@ const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
 
     const timer = setTimeout(performSearch, 300);
     return () => clearTimeout(timer);
-  }, [search, currentUserId]);
+  }, [search]);
 
   const handleStartChat = (userId: string) => {
     onClose();
@@ -130,6 +128,7 @@ const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
                         </h4>
                         <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-widest truncate">
                           {user.is_admin ? 'Official Admin' : 'District Member'}
+                          {user.id === currentUserId && " (Tu)"}
                         </p>
                       </div>
                       <div className="flex items-center gap-2 text-zinc-800 group-hover:text-red-600 transition-colors">
