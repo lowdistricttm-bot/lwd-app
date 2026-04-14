@@ -11,6 +11,7 @@ export interface Event {
   program?: string;
   image_url?: string;
   date: string;
+  end_date?: string;
   location: string;
   status: string;
   created_at: string;
@@ -79,6 +80,7 @@ export const useEvents = () => {
           description: eventData.description,
           program: eventData.program,
           date: eventData.date,
+          end_date: eventData.end_date || null,
           location: eventData.location,
           status: eventData.status,
           image_url: image_url 
@@ -106,6 +108,7 @@ export const useEvents = () => {
         description: eventData.description,
         program: eventData.program,
         date: eventData.date,
+        end_date: eventData.end_date || null,
         location: eventData.location,
         status: eventData.status
       };

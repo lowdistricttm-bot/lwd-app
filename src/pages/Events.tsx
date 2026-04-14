@@ -103,6 +103,18 @@ const Events = () => {
     }
   };
 
+  const formatEventDate = (start: string, end?: string) => {
+    const startDate = new Date(start);
+    if (!end) return startDate.toLocaleDateString('it-IT');
+    
+    const endDate = new Date(end);
+    if (startDate.toDateString() === endDate.toDateString()) {
+      return startDate.toLocaleDateString('it-IT');
+    }
+    
+    return `${startDate.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })} - ${endDate.toLocaleDateString('it-IT')}`;
+  };
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Navbar />
@@ -161,7 +173,7 @@ const Events = () => {
                               <MapPin size={10} /> {event.location}
                             </div>
                             <div className="flex items-center gap-1 text-[8px] font-black uppercase text-zinc-500">
-                              <Calendar size={10} /> {new Date(event.date).toLocaleDateString('it-IT')}
+                              <Calendar size={10} /> {formatEventDate(event.date, event.end_date)}
                             </div>
                           </div>
                         </div>
@@ -174,7 +186,7 @@ const Events = () => {
                           variant="outline"
                           className="border-white/10 text-white hover:bg-white/10 rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 px-6"
                         >
-                          <Eye size={14} className="mr-2" /> Programma
+                          <Eye size={14} className="mr-2" /> VISUALIZZA EVENTO
                         </Button>
 
                         {existingApp ? (
@@ -234,7 +246,7 @@ const Events = () => {
                       <h3 className="text-3xl font-black italic uppercase tracking-tighter mb-2">{viewingEvent.title}</h3>
                       <div className="flex gap-4 text-zinc-500 text-[10px] font-black uppercase tracking-widest">
                         <span className="flex items-center gap-1"><MapPin size={12} /> {viewingEvent.location}</span>
-                        <span className="flex items-center gap-1"><Calendar size={12} /> {new Date(viewingEvent.date).toLocaleDateString('it-IT')}</span>
+                        <span className="flex items-center gap-1"><Calendar size={12} /> {formatEventDate(viewingEvent.date, viewingEvent.end_date)}</span>
                       </div>
                     </div>
                     <button onClick={() => setViewingEvent(null)}><X size={24} /></button>

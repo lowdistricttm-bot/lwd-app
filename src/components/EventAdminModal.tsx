@@ -24,6 +24,7 @@ const EventAdminModal = ({ isOpen, onClose, event }: EventAdminModalProps) => {
     description: '',
     program: '',
     date: '',
+    end_date: '',
     location: '',
     status: 'open'
   });
@@ -38,6 +39,7 @@ const EventAdminModal = ({ isOpen, onClose, event }: EventAdminModalProps) => {
         description: event.description || '',
         program: event.program || '',
         date: new Date(event.date).toISOString().slice(0, 16),
+        end_date: event.end_date ? new Date(event.end_date).toISOString().slice(0, 16) : '',
         location: event.location,
         status: event.status
       });
@@ -48,6 +50,7 @@ const EventAdminModal = ({ isOpen, onClose, event }: EventAdminModalProps) => {
         description: '',
         program: '',
         date: '',
+        end_date: '',
         location: '',
         status: 'open'
       });
@@ -66,7 +69,12 @@ const EventAdminModal = ({ isOpen, onClose, event }: EventAdminModalProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = { ...formData, id: event?.id, file: selectedFile || undefined };
+    const payload = { 
+      ...formData, 
+      id: event?.id, 
+      file: selectedFile || undefined,
+      end_date: formData.end_date || undefined
+    };
     
     if (event) {
       await updateEvent.mutateAsync(payload);
@@ -98,13 +106,18 @@ const EventAdminModal = ({ isOpen, onClose, event }: EventAdminModalProps) => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-zinc-500">Data e Ora</Label>
+                    <Label className="text-[10px] font-black uppercase text-zinc-500">Data Inizio</Label>
                     <Input required type="datetime-local" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-zinc-500">Luogo</Label>
-                    <Input required value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
+                    <Label className="text-[10px] font-black uppercase text-zinc-500">Data Fine (Opzionale)</Label>
+                    <Input type="datetime-local" value={formData.end_date} onChange={e => setFormData({...formData, end_date: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase text-zinc-500">Luogo</Label>
+                  <Input required value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
                 </div>
 
                 <div className="space-y-2">
