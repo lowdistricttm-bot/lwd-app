@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import { useMessages } from '@/hooks/use-messages';
-import { User, MessageSquare, ChevronRight, Loader2, Plus } from 'lucide-react';
+import { User, MessageSquare, ChevronRight, Loader2, Plus, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import NewChatModal from '@/components/NewChatModal';
@@ -13,8 +13,15 @@ import { cn } from '@/lib/utils';
 
 const Messages = () => {
   const navigate = useNavigate();
-  const { conversations, loadingConvs } = useMessages();
+  const { conversations, loadingConvs, deleteConversation } = useMessages();
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
+
+  const handleDeleteConv = (e: React.MouseEvent, otherId: string) => {
+    e.stopPropagation();
+    if (window.confirm("Vuoi eliminare l'intera conversazione? Questa azione non può essere annullata.")) {
+      deleteConversation.mutate(otherId);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -43,11 +50,11 @@ const Messages = () => {
         ) : (
           <div className="space-y-2">
             {conversations?.map((conv: any) => (
-              <button 
+              <div 
                 key={conv.otherId}
                 onClick={() => navigate(`/chat/${conv.otherId}`)}
                 className={cn(
-                  "w-full border p-4 flex items-center gap-4 transition-all group relative",
+                  "w-full border p-4 flex items-center gap-4 transition-all group relative cursor-pointer",
                   conv.isUnread 
                     ? "bg-zinc-900 border-red-600/50" 
                     : "bg-zinc-900/40 border-white/5 hover:border-red-600/30"
@@ -83,8 +90,17 @@ const Messages = () => {
                     {conv.lastMessage.content || (conv.lastMessage.image_url ? "📷 Foto" : "")}
                   </p>
                 </div>
-                <ChevronRight size={16} className="text-zinc-800 group-hover:text-red-600 transition-colors" />
-              </button>
+                
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={(e) => handleDeleteConv(e, conv.otherId)}
+                    className="p-2 text-zinc-800 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                  <ChevronRight size={16} className="text-zinc-800 group-hover:text-red-600 transition-colors" />
+                </div>
+              </div>
             ))}
           </div>
         )}

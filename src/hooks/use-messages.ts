@@ -58,7 +58,6 @@ export const useMessages = (otherUserId?: string) => {
       data.forEach(msg => {
         const otherId = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id;
         if (!groups.has(otherId)) {
-          // Una conversazione è non letta se l'ultimo messaggio è per me ed è is_read: false
           const isUnread = msg.receiver_id === user.id && !msg.is_read;
           
           groups.set(otherId, {
@@ -158,5 +157,25 @@ export const useMessages = (otherUserId?: string) => {
     onError: () => showError("Errore durante l'eliminazione")
   });
 
-  return { conversations, loadingConvs, chatMessages, loadingChat, sendMessage, deleteMessage };
+  const deleteConversation = useMutation({
+    mutationFn: async (otherId: string) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('messages')
+        .delete()
+        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${otherId}),and(sender_id.eq.${otherId},receiver_id.eq.${user.id})`);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
+      showSuccess("Conversazione eliminata");
+    },
+    onError: () => showError("Errore durante l'eliminazione")
+  });
+
+  return { conversations, loadingConvs, chatMessages, loadingChat, sendMessage, deleteMessage, deleteConversation };
 };
