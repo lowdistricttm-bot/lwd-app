@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { useMessages } from '@/hooks/use-messages';
-import { ChevronLeft, Send, User, Loader2 } from 'lucide-react';
+import { ChevronLeft, Send, User, Loader2, Mail } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
@@ -112,7 +112,7 @@ const Chat = () => {
             placeholder="Scrivi un messaggio..." 
             value={message} 
             onChange={(e) => setMessage(e.target.value)}
-            className="bg-zinc-900 border-zinc-800 rounded-none h-12 font-bold uppercase text-xs tracking-widest focus-visible:ring-red-600"
+            className="bg-zinc-900 border-zinc-800 rounded-none h-12 font-bold uppercase text-xs tracking-widest focus-visible:ring-red-600 placeholder:text-zinc-700"
           />
           <button 
             type="submit" 
