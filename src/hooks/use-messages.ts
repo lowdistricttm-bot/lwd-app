@@ -92,21 +92,25 @@ export const useMessages = (otherUserId?: string) => {
   });
 
   useEffect(() => {
+    const queryKeyInvalidator = () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
+      if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
+    };
+
+    // Creiamo un nome canale unico per evitare conflitti durante i re-render
+    const channelName = `messages-realtime-${Math.random().toString(36).substring(7)}`;
     const channel = supabase
-      .channel('messages-realtime-global')
+      .channel(channelName)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
         queryKeyInvalidator();
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [otherUserId, queryClient]);
-
-  const queryKeyInvalidator = () => {
-    queryClient.invalidateQueries({ queryKey: ['conversations'] });
-    queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
-    if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
-  };
 
   const sendMessage = useMutation({
     mutationFn: async ({ receiverId, content }: { receiverId: string, content: string }) => {
@@ -144,7 +148,9 @@ export const useMessages = (otherUserId?: string) => {
     },
     onSuccess: () => {
       showSuccess("Messaggio eliminato");
-      queryKeyInvalidator();
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
+      if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
     },
     onError: (err: any) => showError(err.message)
   });
@@ -163,8 +169,9 @@ export const useMessages = (otherUserId?: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
+      if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
       showSuccess("Conversazione eliminata");
-      queryKeyInvalidator();
     },
     onError: (err: any) => showError(err.message)
   });
