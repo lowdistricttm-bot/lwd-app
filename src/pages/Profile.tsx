@@ -14,7 +14,7 @@ import ImageLightbox from '@/components/ImageLightbox';
 import { useSocialFeed } from '@/hooks/use-social-feed';
 import { useWpAuth } from '@/hooks/use-wp-auth';
 import { 
-  User, Settings, LogOut, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Calendar, Package, Users, Edit2, Check, X
+  User, Settings, LogOut, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Calendar, Package, Users, Edit2, Check, X, Share2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -119,6 +119,27 @@ const Profile = () => {
     if (success) {
       await fetchProfile(currentUser.id);
       setIsEditingUsername(false);
+    }
+  };
+
+  const handleShareProfile = async () => {
+    if (!profile) return;
+    
+    const shareData = {
+      title: `Profilo di ${displayName} | Low District`,
+      text: `Guarda il progetto stance di ${displayName} su Low District!`,
+      url: `${window.location.origin}/profile/${profile.id}`
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareData.url);
+        showSuccess("Link profilo copiato negli appunti!");
+      }
+    } catch (err) {
+      console.error('Errore condivisione:', err);
     }
   };
 
@@ -299,6 +320,17 @@ const Profile = () => {
               {activeTab === 'settings' && isOwnProfile && <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-2"><Button onClick={handleLogout} variant="outline" className="w-full border-white/10 text-zinc-400 hover:bg-white hover:text-black rounded-none font-black uppercase text-[10px] tracking-widest italic h-14"><LogOut className="mr-2" size={14} /> Logout Sessione</Button></motion.div>}
             </AnimatePresence>
           </div>
+        </div>
+
+        {/* Pulsante Condividi Profilo */}
+        <div className="fixed bottom-24 right-6 z-40 md:bottom-32">
+          <button 
+            onClick={handleShareProfile}
+            className="flex items-center gap-2 bg-white text-black px-4 py-3 shadow-2xl hover:bg-zinc-200 transition-all group border border-black/10"
+          >
+            <Share2 size={16} className="group-hover:scale-110 transition-transform" />
+            <span className="text-[10px] font-black uppercase italic tracking-widest">Condividi Profilo</span>
+          </button>
         </div>
       </main>
       <CreatePostModal isOpen={isPostModalOpen} onClose={() => setIsPostModalOpen(false)} />
