@@ -4,10 +4,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { useMessages } from '@/hooks/use-messages';
-import { ChevronLeft, Send, User, Loader2, Mail, Camera, X, Trash2 } from 'lucide-react';
+import { ChevronLeft, Send, User, Loader2, Mail, Camera, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Chat = () => {
   const { userId } = useParams();
@@ -138,7 +139,12 @@ const Chat = () => {
         <div className="max-w-2xl mx-auto">
           <AnimatePresence>
             {previewUrl && (
-              <div className="mb-4 relative inline-block">
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="mb-4 relative inline-block"
+              >
                 <img src={previewUrl} className="h-20 w-20 object-cover rounded-lg border border-white/10" alt="Preview" />
                 <button 
                   onClick={removeFile}
@@ -146,7 +152,7 @@ const Chat = () => {
                 >
                   <X size={12} />
                 </button>
-              </div>
+              </motion.div>
             )}
           </AnimatePresence>
 
