@@ -2,7 +2,6 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from 'react';
 import { showSuccess, showError } from '@/utils/toast';
 
 export interface Message {
@@ -30,8 +29,7 @@ export const useUnreadCount = () => {
         .eq('is_read', false);
       if (error) return 0;
       return count || 0;
-    },
-    refetchOnWindowFocus: true
+    }
   });
 };
 
@@ -95,24 +93,6 @@ export const useMessages = (otherUserId?: string) => {
     enabled: !!otherUserId
   });
 
-  // Realtime listener locale per aggiornamenti immediati della UI
-  useEffect(() => {
-    const channel = supabase
-      .channel(`chat-${otherUserId || 'global'}`)
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'messages' 
-      }, () => {
-        queryClient.invalidateQueries({ queryKey: ['conversations'] });
-        queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
-        if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, [otherUserId, queryClient]);
-
   const uploadMedia = async (file: File) => {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random()}.${fileExt}`;
@@ -171,7 +151,7 @@ export const useMessages = (otherUserId?: string) => {
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
       showSuccess("Messaggio eliminato");
     },
-    onError: (err: any) => showError("Errore durante l'eliminazione")
+    onError: () => showError("Errore durante l'eliminazione")
   });
 
   return { conversations, loadingConvs, chatMessages, loadingChat, sendMessage, deleteMessage };
