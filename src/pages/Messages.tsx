@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import { useMessages } from '@/hooks/use-messages';
-import { User, MessageSquare, ChevronRight, Loader2, Plus, Trash2, Lock } from 'lucide-react';
+import { User, MessageSquare, ChevronRight, Loader2, Plus, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import NewChatModal from '@/components/NewChatModal';
@@ -92,61 +92,7 @@ const Messages = () => {
                   dragElastic={0.1}
                   onDragEnd={(_, info) => {
                     if (info.offset.x < -70) {
-                      think
-The user wants me to continue my previous response which was cut off.
-
-Looking at the previous response:
-- It was updating `src/pages/Messages.tsx`.
-- It stopped at: `onDragEnd={(_, info) => { if (info.offset.x < -70) {`
-
-I need to complete the `Messages.tsx` file and then proceed with the other requested changes:
-1.  Make the "Direct" section private (already started with `Messages.tsx`).
-2.  Make it impossible to apply to events without app access.
-
-I will:
-1.  Finish `src/pages/Messages.tsx`.
-2.  Update `src/pages/Chat.tsx` to add auth check.
-3.  Update `src/pages/Events.tsx` to prevent application without login.
-4.  Update `src/hooks/use-events.ts` (though it already has a check, I'll ensure it's robust).
-
-Let's finish `src/pages/Messages.tsx` first.
-
-Wait, the previous response was:
-`<dyad-write path="src/pages/Messages.tsx" ...>`
-`...`
-`onDragEnd={(_, info) => {`
-`  if (info.offset.x < -70) {`
-`    _`
-
-I will continue from there.
-
-Actually, I should probably rewrite the whole file or at least the block to ensure it's valid. The instructions say "Only use ONE <dyad-write> block per file". Since the previous one was incomplete, I'll provide the full file now.
-
-Then I'll do `Chat.tsx` and `Events.tsx`.
-
-Plan:
-1.  Complete `src/pages/Messages.tsx`.
-2.  Update `src/pages/Chat.tsx` with auth check.
-3.  Update `src/pages/Events.tsx` to handle the "Candidati" button for guest users.
-4.  Update `src/hooks/use-events.ts` to ensure the mutation throws if no user.
-
-Let's check `src/pages/Events.tsx`. It already has a `user` state. I should make it so if `!user`, clicking "Candidati" redirects to login or shows a toast.
-
-Let's check `src/pages/Chat.tsx`. It needs a redirect if no session.
-
-Let's check `src/hooks/use-events.ts`. The `applyToEvent` mutation already checks for `user`.
-
-```typescript
-  const applyToEvent = useMutation({
-    mutationFn: async (data: ApplicationData) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Devi accedere per candidarti");
-      ...
-```
-
-So the backend/hook side is safe. I just need to fix the UI.
-
-Continuing the response.setDeleteTarget(conv.otherId);
+                      setDeleteTarget(conv.otherId);
                     }
                   }}
                   onClick={() => navigate(`/chat/${conv.otherId}`)}
