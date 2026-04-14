@@ -16,8 +16,7 @@ import {
   ThumbsUp,
   ThumbsDown,
   Loader2,
-  CreditCard,
-  Users
+  CreditCard
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
@@ -42,10 +41,12 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
     });
   }, []);
 
+  if (!app) return null;
+
   const vehicleImages = app.vehicles?.images || (app.vehicles?.image_url ? [app.vehicles.image_url] : []);
   const interiorImages = app.interior_urls || [];
   
-  const votes = app.application_votes || [];
+  const votes = Array.isArray(app.application_votes) ? app.application_votes : [];
   const approveVotes = votes.filter((v: any) => v.vote === 'approve');
   const rejectVotes = votes.filter((v: any) => v.vote === 'reject');
   
@@ -83,10 +84,10 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
 
         <div className="flex items-center gap-4">
           <div className="hidden sm:flex items-center gap-3 mr-4">
-            <div className="flex items-center gap-1 text-green-500 text-[10px] font-black" title={approveVoters}>
+            <div className="flex items-center gap-1 text-green-500 text-[10px] font-black" title={approveVoters || 'Nessun voto'}>
               <ThumbsUp size={12} /> {approveVotes.length}
             </div>
-            <div className="flex items-center gap-1 text-red-500 text-[10px] font-black" title={rejectVoters}>
+            <div className="flex items-center gap-1 text-red-500 text-[10px] font-black" title={rejectVoters || 'Nessun voto'}>
               <ThumbsDown size={12} /> {rejectVotes.length}
             </div>
           </div>

@@ -33,22 +33,36 @@ export const useAdmin = () => {
   const canManage = isAdmin || isStaff;
   const canVote = isAdmin || isStaff || isSupport;
 
-  const { data: allApplications, isLoading: loadingApps } = useQuery({
+  const { data: allApplications, isLoading: loadingApps, error: loadError } = useQuery({
     queryKey: ['admin-applications'],
     queryFn: async () => {
+      // Recuperiamo le candidature con i dati base
       const { data, error } = await supabase
         .from('applications')
         .select(`
           *,
           profiles:user_id (first_name, last_name, avatar_url, username, role),
           vehicles:vehicle_id (*),
-          events:event_id (title, location, date),
-          application_votes (*, profiles:user_id (username))
+          events:event_id (title, location, date)
         `)
         .order('applied_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      if (!data) return [];
+
+      // Recuperiamo i voti separatamente per evitare join complessi che possono fallire
+      const { data: votesData } = await supabase
+        .from('application_votes')
+        .select(`
+          *,
+          profiles:user_id (username)
+        `);
+
+      // Arricchiamo le candidature con i voti corrispondenti
+      return data.map(app => ({
+        ...app,
+        application_votes: votesData?.filter(v => v.application_id === app.id) || []
+      }));
     },
     enabled: canVote
   });
@@ -98,9 +112,10 @@ export const useAdmin = () => {
     isSupport, 
     canManage, 
     canVote, 
-    checkingRole, 
+    checkingAdmin: checkingRole, 
     allApplications, 
     loadingApps, 
+    loadError,
     updateStatus,
     castVote
   };
