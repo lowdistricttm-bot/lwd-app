@@ -44,7 +44,7 @@ const Profile = () => {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [activeTab, setActiveTab] = useState('activity');
-  const [isPostModalOpen = useState(false);
+  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
   
   const [isEditingUsername, setIsEditingUsername] = useState(false);
