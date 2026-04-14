@@ -380,7 +380,7 @@ const Profile = () => {
 
               {activeTab === 'garage' && (
                 <motion.div key="garage" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                  <GarageTab />
+                  <GarageTab userId={targetUserId} isOwnProfile={isOwnProfile} />
                 </motion.div>
               )}
 

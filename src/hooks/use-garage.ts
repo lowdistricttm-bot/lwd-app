@@ -19,19 +19,24 @@ export interface Vehicle {
   created_at: string;
 }
 
-export const useGarage = () => {
+export const useGarage = (targetUserId?: string) => {
   const queryClient = useQueryClient();
 
   const { data: vehicles, isLoading } = useQuery({
-    queryKey: ['garage-vehicles'],
+    queryKey: ['garage-vehicles', targetUserId],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
+      let uid = targetUserId;
+      
+      if (!uid) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return [];
+        uid = user.id;
+      }
 
       const { data, error } = await supabase
         .from('vehicles')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', uid)
         .order('created_at', { ascending: false });
 
       if (error) throw error;

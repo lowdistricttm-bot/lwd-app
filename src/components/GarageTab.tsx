@@ -10,8 +10,13 @@ import { Plus, Car, Trash2, Camera, Loader2, X, Edit3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
-const GarageTab = () => {
-  const { vehicles, isLoading, addVehicle, updateVehicle, deleteVehicle } = useGarage();
+interface GarageTabProps {
+  userId?: string;
+  isOwnProfile?: boolean;
+}
+
+const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
+  const { vehicles, isLoading, addVehicle, updateVehicle, deleteVehicle } = useGarage(userId);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   
@@ -30,6 +35,7 @@ const GarageTab = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleEdit = (vehicle: Vehicle) => {
+    if (!isOwnProfile) return;
     setEditingId(vehicle.id);
     setFormData({
       brand: vehicle.brand,
@@ -81,6 +87,8 @@ const GarageTab = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isOwnProfile) return;
+    
     if (editingId) {
       await updateVehicle.mutateAsync({
         id: editingId,
@@ -102,8 +110,8 @@ const GarageTab = () => {
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <h3 className="text-xl font-black italic uppercase">Il Mio Garage</h3>
-        {!isFormOpen && (
+        <h3 className="text-xl font-black italic uppercase">Garage</h3>
+        {isOwnProfile && !isFormOpen && (
           <Button 
             onClick={() => setIsFormOpen(true)}
             className="bg-white text-black hover:bg-zinc-200 rounded-none font-black uppercase italic text-[10px] tracking-widest"
@@ -114,7 +122,7 @@ const GarageTab = () => {
       </div>
 
       <AnimatePresence>
-        {isFormOpen && (
+        {isOwnProfile && isFormOpen && (
           <motion.div 
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
@@ -265,7 +273,7 @@ const GarageTab = () => {
         {vehicles?.length === 0 && !isFormOpen ? (
           <div className="col-span-full bg-zinc-900/30 border border-white/5 p-12 text-center">
             <Car className="mx-auto text-zinc-800 mb-6" size={48} />
-            <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Il tuo garage è vuoto.</p>
+            <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Nessun veicolo nel garage.</p>
           </div>
         ) : (
           vehicles?.map((vehicle) => (
@@ -290,10 +298,12 @@ const GarageTab = () => {
                   <div className="w-full h-full flex items-center justify-center text-zinc-800"><Car size={48} /></div>
                 )}
                 
-                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all z-10">
-                  <button onClick={() => handleEdit(vehicle)} className="p-2 bg-black/60 text-white hover:bg-white hover:text-black transition-colors"><Edit3 size={16} /></button>
-                  <button onClick={() => deleteVehicle.mutate(vehicle.id)} className="p-2 bg-black/60 text-white hover:bg-zinc-800 transition-colors"><Trash2 size={16} /></button>
-                </div>
+                {isOwnProfile && (
+                  <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all z-10">
+                    <button onClick={() => handleEdit(vehicle)} className="p-2 bg-black/60 text-white hover:bg-white hover:text-black transition-colors"><Edit3 size={16} /></button>
+                    <button onClick={() => deleteVehicle.mutate(vehicle.id)} className="p-2 bg-black/60 text-white hover:bg-zinc-800 transition-colors"><Trash2 size={16} /></button>
+                  </div>
+                )}
               </div>
               <div className="p-6">
                 <div className="flex justify-between items-start mb-4">
