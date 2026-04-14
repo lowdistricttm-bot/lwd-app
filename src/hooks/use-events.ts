@@ -73,7 +73,14 @@ export const useEvents = () => {
       const { file, ...eventData } = data;
       const { error } = await supabase
         .from('events')
-        .insert([{ ...eventData, image_url }]);
+        .insert([{ 
+          title: eventData.title,
+          description: eventData.description,
+          date: eventData.date,
+          location: eventData.location,
+          status: eventData.status,
+          image_url: image_url 
+        }]);
 
       if (error) throw new Error(error.message);
     },
@@ -92,9 +99,21 @@ export const useEvents = () => {
       }
 
       const { file, id, ...eventData } = data;
+      const updatePayload: any = { 
+        title: eventData.title,
+        description: eventData.description,
+        date: eventData.date,
+        location: eventData.location,
+        status: eventData.status
+      };
+      
+      if (image_url !== undefined) {
+        updatePayload.image_url = image_url;
+      }
+
       const { error } = await supabase
         .from('events')
-        .update({ ...eventData, image_url })
+        .update(updatePayload)
         .eq('id', id);
 
       if (error) throw new Error(error.message);
