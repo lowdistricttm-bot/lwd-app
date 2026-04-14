@@ -18,7 +18,6 @@ export interface Message {
 export const useMessages = (otherUserId?: string) => {
   const queryClient = useQueryClient();
 
-  // Lista conversazioni (ultimi messaggi per ogni utente)
   const { data: conversations, isLoading: loadingConvs } = useQuery({
     queryKey: ['conversations'],
     queryFn: async () => {
@@ -37,7 +36,6 @@ export const useMessages = (otherUserId?: string) => {
 
       if (error) throw error;
 
-      // Raggruppa per utente "altro"
       const groups = new Map();
       data.forEach(msg => {
         const otherId = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id;
@@ -54,7 +52,6 @@ export const useMessages = (otherUserId?: string) => {
     }
   });
 
-  // Messaggi di una specifica chat
   const { data: chatMessages, isLoading: loadingChat } = useQuery({
     queryKey: ['chat', otherUserId],
     queryFn: async () => {
@@ -78,7 +75,6 @@ export const useMessages = (otherUserId?: string) => {
     enabled: !!otherUserId
   });
 
-  // Real-time subscription
   useEffect(() => {
     const channel = supabase
       .channel('messages-realtime')

@@ -150,7 +150,7 @@ const Events = () => {
           )}
         </AnimatePresence>
 
-        {/* Modal Candidatura (Esistente) */}
+        {/* Modal Candidatura */}
         <AnimatePresence>
           {selectedEvent && (
             <>
