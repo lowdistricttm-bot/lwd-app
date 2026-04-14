@@ -16,11 +16,22 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion;
 import { useWcUserOrders } from '@/hooks/use-woocommerce';
 import { showSuccess, showError } from '@/utils/toast';
 
 const DEFAULT_COVER = "https://www.lowdistrict.it/wp-content/uploads/DSC01359-1-scaled-e1751832356345.jpg";
+
+const statusMap: Record<string, string> = {
+  'pending': 'IN ATTESA',
+  'processing': 'IN LAVORAZIONE',
+  'on-hold': 'IN ATTESA DI PAGAMENTO',
+  'completed': 'COMPLETATO',
+  'cancelled': 'ANNULLATO',
+  'refunded': 'RIMBORSATO',
+  'failed': 'FALLITO',
+  'checkout-draft': 'BOZZA'
+};
 
 const Profile = () => {
   const { userId } = useParams();
@@ -197,7 +208,7 @@ const Profile = () => {
                                   "text-[8px] font-black uppercase px-2 py-0.5 italic",
                                   order.status === 'completed' ? "bg-zinc-800 text-white" : "bg-zinc-700 text-zinc-400"
                                 )}>
-                                  {order.status.toUpperCase()}
+                                  {statusMap[order.status] || order.status.toUpperCase()}
                                 </span>
                               </div>
                               <h4 className="text-sm font-black italic uppercase tracking-tight">
