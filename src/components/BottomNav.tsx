@@ -21,19 +21,22 @@ const BottomNav = () => {
       <div className="flex items-center justify-around max-w-md mx-auto">
         {items.map((item, i) => {
           const isActive = location.pathname === item.href;
-          const isCenter = i === 2;
           return (
             <Link 
               key={i} 
               to={item.href}
               className={cn(
-                "flex flex-col items-center gap-1 transition-all",
-                isActive ? "text-red-600" : "text-zinc-500 hover:text-white",
-                isCenter && "scale-110 -translate-y-1"
+                "flex flex-col items-center gap-1 transition-all duration-300",
+                isActive ? "text-white scale-110" : "text-zinc-500 hover:text-white"
               )}
             >
-              <item.icon size={isCenter ? 24 : 20} strokeWidth={isActive ? 3 : 2} />
-              <span className="text-[8px] font-black uppercase tracking-tighter">{item.label}</span>
+              <item.icon size={20} strokeWidth={isActive ? 3 : 2} />
+              <span className={cn(
+                "text-[8px] font-black uppercase tracking-tighter transition-opacity",
+                isActive ? "opacity-100" : "opacity-60"
+              )}>
+                {item.label}
+              </span>
             </Link>
           );
         })}
