@@ -73,32 +73,10 @@ export const useWpAuth = () => {
   const updateUsername = async (newUsername: string) => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('wp-jwt');
-      if (!token) throw new Error("Sessione WordPress non trovata. Effettua nuovamente il login.");
-
-      // 1. Aggiorna su WordPress (Nickname e Display Name)
-      const wpResponse = await fetch(WP_USER_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          nickname: newUsername,
-          name: newUsername,
-          display_name: newUsername
-        })
-      });
-
-      if (!wpResponse.ok) {
-        const errorData = await wpResponse.json();
-        throw new Error(errorData.message || "Errore durante l'aggiornamento sul sito");
-      }
-
-      // 2. Aggiorna su Supabase
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Utente non autenticato su Supabase");
+      if (!user) throw new Error("Utente non autenticato");
 
+      // 1. Aggiorniamo PRIMA Supabase (il nostro District Username)
       const { error: sbError } = await supabase
         .from('profiles')
         .update({ 
@@ -109,10 +87,31 @@ export const useWpAuth = () => {
 
       if (sbError) throw sbError;
 
-      showSuccess("Username sincronizzato con successo!");
+      // 2. Proviamo a sincronizzare con WordPress (Nickname)
+      const token = localStorage.getItem('wp-jwt');
+      if (token) {
+        try {
+          await fetch(WP_USER_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              nickname: newUsername,
+              display_name: newUsername
+            })
+          });
+          console.log("[WP Sync] Nickname aggiornato sul sito");
+        } catch (wpErr) {
+          console.warn("[WP Sync] Impossibile aggiornare il sito, ma il profilo app è salvo.");
+        }
+      }
+
+      showSuccess("District Username aggiornato!");
       return true;
     } catch (error: any) {
-      showError(error.message);
+      showError(error.message || "Errore durante l'aggiornamento");
       return false;
     } finally {
       setIsLoading(false);
