@@ -24,7 +24,6 @@ import { useWcUserOrders } from '@/hooks/use-woocommerce';
 import { showSuccess, showError } from '@/utils/toast';
 
 const DEFAULT_COVER = "https://www.lowdistrict.it/wp-content/uploads/DSC01359-1-scaled-e1751832356345.jpg";
-const PRODUCTION_URL = "https://low-district-app.vercel.app"; // URL ufficiale dell'app
 
 const roleLabels: Record<string, string> = {
   'admin': 'ADMIN',
@@ -125,11 +124,11 @@ const Profile = () => {
   const handleShareProfile = async () => {
     if (!profile) return;
     
-    // Usiamo l'URL di produzione invece di localhost
+    // window.location.origin rileva automaticamente se sei su localhost o su Vercel
     const shareData = {
       title: `Profilo di ${displayName} | Low District`,
       text: `Guarda il progetto stance di ${displayName} su Low District!`,
-      url: `${PRODUCTION_URL}/profile/${profile.id}`
+      url: `${window.location.origin}/profile/${profile.id}`
     };
 
     try {
