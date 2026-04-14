@@ -15,7 +15,8 @@ import {
   UserCheck,
   ThumbsUp,
   ThumbsDown,
-  Loader2
+  Loader2,
+  CreditCard
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
@@ -138,6 +139,14 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
                     <div className="space-y-1">
                       <p className="text-[7px] text-zinc-600 font-bold uppercase">Assetto</p>
                       <p className="text-sm font-black uppercase italic text-zinc-400">{app.vehicles?.suspension_type}</p>
+                    </div>
+                    {/* Targa visibile agli amministratori */}
+                    <div className="space-y-1 col-span-2">
+                      <p className="text-[7px] text-zinc-600 font-bold uppercase">Targa Veicolo</p>
+                      <div className="flex items-center gap-2">
+                        <CreditCard size={14} className="text-white" />
+                        <p className="text-sm font-black uppercase italic text-white">{app.vehicles?.license_plate || 'NON INDICATA'}</p>
+                      </div>
                     </div>
                   </div>
                   <div className="bg-white/5 p-4 border border-white/10">

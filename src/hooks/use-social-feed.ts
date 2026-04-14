@@ -39,13 +39,13 @@ export const useSocialFeed = () => {
       const userIds = [...new Set(postsData.map(p => p.user_id))];
       const { data: profilesData } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, avatar_url')
+        .select('id, username, first_name, last_name, avatar_url')
         .in('id', userIds);
 
       const postIds = postsData.map(p => p.id);
       const { data: commentsData } = await supabase
         .from('comments')
-        .select('*, profiles(first_name, last_name, avatar_url)')
+        .select('*, profiles(id, username, first_name, last_name, avatar_url)')
         .in('post_id', postIds)
         .order('created_at', { ascending: true });
 
@@ -68,9 +68,10 @@ export const useSocialFeed = () => {
           is_liked = !!userLike;
         }
 
-        const username = profile 
-          ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Membro District'
-          : 'Membro District';
+        // Fonte di verità per l'username: campo username del profilo
+        const username = profile?.username || 
+                        (profile?.first_name || profile?.last_name ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : null) || 
+                        'Membro District';
 
         return {
           ...post,
@@ -80,7 +81,13 @@ export const useSocialFeed = () => {
           },
           likes_count: likes_count || 0,
           is_liked,
-          comments: commentsData?.filter(c => c.post_id === post.id) || []
+          comments: commentsData?.filter(c => c.post_id === post.id).map(c => ({
+            ...c,
+            profiles: {
+              ...c.profiles,
+              username: c.profiles?.username || (c.profiles?.first_name || c.profiles?.last_name ? `${c.profiles.first_name || ''} ${c.profiles.last_name || ''}`.trim() : 'Membro')
+            }
+          })) || []
         };
       }));
 
@@ -159,7 +166,6 @@ export const useSocialFeed = () => {
 
   const deletePost = useMutation({
     mutationFn: async (postId: string) => {
-      // Prima cancelliamo like e commenti associati (se non c'è il cascade nel DB)
       await supabase.from('likes').delete().eq('post_id', postId);
       await supabase.from('comments').delete().eq('post_id', postId);
       

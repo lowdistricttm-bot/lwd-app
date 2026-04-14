@@ -26,28 +26,23 @@ export const useWpAuth = () => {
         throw new Error(data.message || "Credenziali non valide sul sito ufficiale");
       }
 
-      // Estrazione flessibile del token (gestisce diversi formati del plugin)
       const jwt = data.jwt || (data.data && data.data.jwt);
       
       if (jwt) {
         localStorage.setItem('wp-jwt', jwt);
         localStorage.setItem('wp-user', JSON.stringify(data));
-        console.log("[Auth] Sincronizzazione completata. Token salvato.");
-      } else {
-        console.warn("[Auth] Login riuscito ma nessun token JWT trovato nella risposta.");
       }
 
       const userEmail = data.user_email || (username.includes('@') ? username : `${username}@lowdistrict.it`);
 
-      // Sincronizzazione con Supabase (App)
+      // Sincronizzazione con Supabase
       let { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: userEmail,
         password: password,
       });
 
       if (authError && (authError.message.includes("Invalid login credentials") || authError.status === 400)) {
-        console.log("[Auth] Creazione profilo App in corso...");
-        const { error: signUpError } = await supabase.auth.signUp({
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: userEmail,
           password: password,
           options: { data: { username } }
@@ -57,10 +52,20 @@ export const useWpAuth = () => {
           await new Promise(resolve => setTimeout(resolve, 1000));
           const retry = await supabase.auth.signInWithPassword({ email: userEmail, password: password });
           authError = retry.error;
+          authData = retry.data;
         }
       }
 
-      if (authError) console.error("[Auth] Errore Supabase (non critico per la bacheca):", authError.message);
+      // Sincronizzazione forzata del profilo per garantire l'username aggiornato ovunque
+      if (authData?.user) {
+        await supabase.from('profiles').upsert({
+          id: authData.user.id,
+          username: username,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'id' });
+      }
+
+      if (authError) console.error("[Auth] Errore Supabase:", authError.message);
 
       return { success: true, user: data };
     } catch (error: any) {

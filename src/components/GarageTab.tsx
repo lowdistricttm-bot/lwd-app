@@ -311,7 +311,8 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
                     <h4 className="text-xl font-black italic uppercase tracking-tighter">{vehicle.brand} {vehicle.model}</h4>
                     <p className="text-zinc-500 text-[9px] font-black uppercase tracking-widest italic">{vehicle.year}</p>
                   </div>
-                  {vehicle.license_plate && (
+                  {/* Targa visibile solo al proprietario */}
+                  {isOwnProfile && vehicle.license_plate && (
                     <div className="bg-white text-black px-2 py-1 text-[9px] font-black tracking-widest border border-black">{vehicle.license_plate}</div>
                   )}
                 </div>
