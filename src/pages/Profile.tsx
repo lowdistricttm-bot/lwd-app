@@ -139,7 +139,7 @@ const Profile = () => {
 
   if (loading) return (
     <div className="min-h-screen bg-black flex items-center justify-center">
-      <Loader2 className="animate-spin text-red-600" size={40} />
+      <Loader2 className="animate-spin text-zinc-500" size={40} />
     </div>
   );
 
@@ -229,7 +229,7 @@ const Profile = () => {
                 )}
               >
                 {uploadingAvatar ? (
-                  <Loader2 className="animate-spin text-red-600" />
+                  <Loader2 className="animate-spin text-zinc-500" />
                 ) : profile?.avatar_url ? (
                   <img src={profile.avatar_url} alt="Avatar" className={cn("w-full h-full object-cover transition-opacity", isOwnProfile ? "group-hover/avatar:opacity-50" : "")} />
                 ) : (
@@ -251,13 +251,13 @@ const Profile = () => {
                 {!isOwnProfile && currentUser && (
                   <button 
                     onClick={() => navigate(`/chat/${profile.id}`)}
-                    className="p-2 bg-red-600 text-white hover:bg-white hover:text-black transition-all shadow-lg"
+                    className="p-2 bg-zinc-800 text-white hover:bg-white hover:text-black transition-all shadow-lg"
                   >
                     <Mail size={18} />
                   </button>
                 )}
               </div>
-              <p className="text-red-600 text-[8px] font-black uppercase tracking-[0.3em] italic mt-1">
+              <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.3em] italic mt-1">
                 {profile?.is_admin ? 'DISTRICT ADMIN' : 'OFFICIAL MEMBER'}
               </p>
             </div>
@@ -277,11 +277,11 @@ const Profile = () => {
                 className={cn(
                   "flex flex-col items-center justify-center gap-2 py-4 transition-all border-b-2",
                   activeTab === tab.id 
-                    ? "border-red-600 text-white bg-white/5" 
+                    ? "border-white text-white bg-white/5" 
                     : "border-transparent text-zinc-600 hover:text-zinc-400"
                 )}
               >
-                <tab.icon size={18} className={activeTab === tab.id ? "text-red-600" : ""} />
+                <tab.icon size={18} className={activeTab === tab.id ? "text-white" : ""} />
                 <span className="text-[8px] font-black uppercase tracking-widest hidden sm:block">{tab.label}</span>
               </button>
             ))}
@@ -292,10 +292,10 @@ const Profile = () => {
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-10 bg-zinc-900 border-l-4 border-red-600 p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl"
+              className="mb-10 bg-zinc-900 border-l-4 border-white p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl"
             >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-red-600 flex items-center justify-center shrink-0">
+                <div className="w-12 h-12 bg-zinc-800 flex items-center justify-center shrink-0">
                   <ShieldCheck className="text-white" size={24} />
                 </div>
                 <div>
@@ -305,7 +305,7 @@ const Profile = () => {
               </div>
               <Button 
                 onClick={() => navigate('/admin/applications')}
-                className="bg-white text-black hover:bg-red-600 hover:text-white rounded-none px-8 h-12 font-black uppercase italic tracking-widest transition-all group"
+                className="bg-white text-black hover:bg-zinc-200 rounded-none px-8 h-12 font-black uppercase italic tracking-widest transition-all group"
               >
                 Entra Ora <ChevronRight className="ml-2 group-hover:translate-x-1 transition-transform" size={16} />
               </Button>
@@ -326,7 +326,7 @@ const Profile = () => {
                     {isOwnProfile && (
                       <Button 
                         onClick={() => setIsPostModalOpen(true)}
-                        className="bg-red-600 hover:bg-white hover:text-black text-white rounded-none text-[10px] font-black uppercase italic tracking-widest h-10 px-6 transition-all"
+                        className="bg-white text-black hover:bg-zinc-200 rounded-none text-[10px] font-black uppercase italic tracking-widest h-10 px-6 transition-all"
                       >
                         <Plus size={14} className="mr-2" /> Nuovo Post
                       </Button>
@@ -334,7 +334,7 @@ const Profile = () => {
                   </div>
 
                   {loadingPosts ? (
-                    <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-red-600" /></div>
+                    <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div>
                   ) : userPosts.length > 0 ? (
                     <div className="grid grid-cols-1 gap-4">
                       {userPosts.map((post) => (
@@ -356,7 +356,7 @@ const Profile = () => {
                 <motion.div key="orders" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                   <h3 className="text-xl font-black italic uppercase mb-6">Ordini Shop</h3>
                   {loadingOrders ? (
-                    <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-red-600" /></div>
+                    <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div>
                   ) : orders?.length > 0 ? (
                     <div className="space-y-3">
                       {orders.map((order: any) => (
@@ -380,7 +380,7 @@ const Profile = () => {
 
               {activeTab === 'garage' && (
                 <motion.div key="garage" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                  <GarageTab userId={targetUserId} isOwnProfile={isOwnProfile} />
+                  <GarageTab />
                 </motion.div>
               )}
 
@@ -395,7 +395,7 @@ const Profile = () => {
                   <Button 
                     onClick={handleLogout} 
                     variant="outline" 
-                    className="w-full border-red-600/20 text-red-600 hover:bg-red-600 hover:text-white rounded-none font-black uppercase text-[10px] tracking-widest italic h-14"
+                    className="w-full border-white/10 text-zinc-400 hover:bg-white hover:text-black rounded-none font-black uppercase text-[10px] tracking-widest italic h-14"
                   >
                     <LogOut className="mr-2" size={14} /> Logout Sessione
                   </Button>

@@ -97,7 +97,7 @@ const GarageTab = () => {
     handleCloseForm();
   };
 
-  if (isLoading) return <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-red-600" /></div>;
+  if (isLoading) return <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div>;
 
   return (
     <div className="space-y-8">
@@ -106,7 +106,7 @@ const GarageTab = () => {
         {!isFormOpen && (
           <Button 
             onClick={() => setIsFormOpen(true)}
-            className="bg-red-600 hover:bg-white hover:text-black text-white rounded-none font-black uppercase italic text-[10px] tracking-widest"
+            className="bg-white text-black hover:bg-zinc-200 rounded-none font-black uppercase italic text-[10px] tracking-widest"
           >
             <Plus size={14} className="mr-2" /> Aggiungi Veicolo
           </Button>
@@ -169,7 +169,7 @@ const GarageTab = () => {
                         className={cn(
                           "h-12 border font-black uppercase italic text-xs tracking-widest transition-all",
                           formData.suspension_type === type 
-                            ? "bg-red-600 border-red-600 text-white" 
+                            ? "bg-white border-white text-black" 
                             : "bg-transparent border-zinc-800 text-zinc-500 hover:border-zinc-600"
                         )}
                       >
@@ -183,7 +183,7 @@ const GarageTab = () => {
                   <Label className="text-[10px] font-black uppercase text-zinc-500">Foto Veicolo (Max 6)</Label>
                   <div 
                     onClick={() => fileInputRef.current?.click()}
-                    className="h-12 border border-dashed border-zinc-800 flex items-center justify-center cursor-pointer hover:border-red-600 transition-colors"
+                    className="h-12 border border-dashed border-zinc-800 flex items-center justify-center cursor-pointer hover:border-white transition-colors"
                   >
                     <Camera size={18} className="text-zinc-600 mr-2" />
                     <span className="text-[10px] font-black uppercase text-zinc-500">
@@ -209,7 +209,7 @@ const GarageTab = () => {
                       <button 
                         type="button"
                         onClick={() => removeExistingImage(i)}
-                        className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white flex items-center justify-center rounded-full"
+                        className="absolute -top-1 -right-1 w-5 h-5 bg-zinc-700 text-white flex items-center justify-center rounded-full"
                       >
                         <X size={10} />
                       </button>
@@ -243,7 +243,7 @@ const GarageTab = () => {
                 <Button 
                   type="submit" 
                   disabled={addVehicle.isPending || updateVehicle.isPending}
-                  className="flex-1 bg-red-600 hover:bg-white hover:text-black text-white rounded-none h-12 font-black uppercase italic tracking-widest"
+                  className="flex-1 bg-white text-black hover:bg-zinc-200 rounded-none h-12 font-black uppercase italic tracking-widest"
                 >
                   {(addVehicle.isPending || updateVehicle.isPending) ? <Loader2 className="animate-spin" /> : editingId ? 'Aggiorna Veicolo' : 'Salva Veicolo'}
                 </Button>
@@ -292,14 +292,14 @@ const GarageTab = () => {
                 
                 <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all z-10">
                   <button onClick={() => handleEdit(vehicle)} className="p-2 bg-black/60 text-white hover:bg-white hover:text-black transition-colors"><Edit3 size={16} /></button>
-                  <button onClick={() => deleteVehicle.mutate(vehicle.id)} className="p-2 bg-black/60 text-white hover:bg-red-600 transition-colors"><Trash2 size={16} /></button>
+                  <button onClick={() => deleteVehicle.mutate(vehicle.id)} className="p-2 bg-black/60 text-white hover:bg-zinc-800 transition-colors"><Trash2 size={16} /></button>
                 </div>
               </div>
               <div className="p-6">
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h4 className="text-xl font-black italic uppercase tracking-tighter">{vehicle.brand} {vehicle.model}</h4>
-                    <p className="text-red-600 text-[9px] font-black uppercase tracking-widest italic">{vehicle.year}</p>
+                    <p className="text-zinc-500 text-[9px] font-black uppercase tracking-widest italic">{vehicle.year}</p>
                   </div>
                   {vehicle.license_plate && (
                     <div className="bg-white text-black px-2 py-1 text-[9px] font-black tracking-widest border border-black">{vehicle.license_plate}</div>
