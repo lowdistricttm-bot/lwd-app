@@ -1,34 +1,55 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Camera, Loader2, User } from 'lucide-react';
+import { Plus, Loader2, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStories } from '@/hooks/use-stories';
 import { supabase } from "@/integrations/supabase/client";
 import StoryViewer from './StoryViewer';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
+import { showError } from '@/utils/toast';
 
 const Stories = () => {
+  const navigate = useNavigate();
   const { stories, isLoading, uploadStory } = useStories();
   const [selectedUserStories, setSelectedUserStories] = useState<any>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
       setCurrentUser(user);
       if (user) {
-        supabase.from('profiles').select('*').eq('id', user.id).maybeSingle().then(({ data }) => {
-          setUserProfile(data);
-        });
+        const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
+        setUserProfile(data);
       }
-    });
+    };
+    checkUser();
   }, []);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (!currentUser) {
+      showError("Devi accedere per caricare una storia");
+      navigate('/login');
+      return;
+    }
+
     await uploadStory.mutateAsync(file);
+    // Reset input
+    e.target.value = '';
+  };
+
+  const handleStoryClick = (e: React.MouseEvent) => {
+    if (!currentUser && !myStories) {
+      e.preventDefault();
+      showError("Accedi per partecipare al District");
+      navigate('/login');
+    }
   };
 
   // Trova se l'utente corrente ha storie attive
@@ -39,10 +60,13 @@ const Stories = () => {
       {/* Upload / My Story Button */}
       <div className="flex flex-col items-center gap-2 shrink-0">
         <div className="relative">
-          <label className={cn(
-            "relative block cursor-pointer group rounded-full p-[3px]",
-            myStories ? "bg-gradient-to-tr from-red-600 to-white animate-spin-slow" : ""
-          )}>
+          <label 
+            onClick={handleStoryClick}
+            className={cn(
+              "relative block cursor-pointer group rounded-full p-[3px]",
+              myStories ? "bg-gradient-to-tr from-red-600 to-white animate-spin-slow" : ""
+            )}
+          >
             <input 
               type="file" 
               className="hidden" 
@@ -54,6 +78,7 @@ const Stories = () => {
               onClick={(e) => {
                 if (myStories) {
                   e.preventDefault();
+                  e.stopPropagation();
                   setSelectedUserStories(myStories);
                 }
               }}
