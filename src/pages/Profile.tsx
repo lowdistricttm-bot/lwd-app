@@ -9,6 +9,7 @@ import Footer from '@/components/Footer';
 import GarageTab from '@/components/GarageTab';
 import ApplicationsTab from '@/components/ApplicationsTab';
 import FeedPost from '@/components/FeedPost';
+import CreatePostModal from '@/components/CreatePostModal';
 import { useSocialFeed } from '@/hooks/use-social-feed';
 import { 
   User, 
@@ -21,7 +22,8 @@ import {
   Camera,
   ShieldCheck,
   ClipboardCheck,
-  ChevronRight
+  ChevronRight,
+  Plus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -42,11 +44,11 @@ const Profile = () => {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [activeTab, setActiveTab] = useState('activity');
+  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
 
   const { posts, isLoading: loadingPosts } = useSocialFeed();
   const { data: orders, isLoading: loadingOrders } = useWcUserOrders(user?.email);
 
-  // Sincronizzazione: Filtriamo i post per mostrare solo quelli dell'utente corrente
   const userPosts = posts?.filter(p => p.user_id === user?.id) || [];
 
   const fetchProfile = async (userId: string) => {
@@ -148,7 +150,6 @@ const Profile = () => {
       <Navbar />
       
       <main className="flex-1 pb-32">
-        {/* Cover Section */}
         <div className="relative h-56 md:h-80 bg-zinc-900">
           <div 
             className="absolute inset-0 group/cover cursor-pointer overflow-hidden"
@@ -224,7 +225,6 @@ const Profile = () => {
         </div>
 
         <div className="mt-20 px-4 md:px-12 max-w-6xl mx-auto">
-          {/* Admin Dashboard Box */}
           {profile?.is_admin && (
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
@@ -279,11 +279,10 @@ const Profile = () => {
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-xl font-black italic uppercase">I Miei Post</h3>
                     <Button 
-                      onClick={() => navigate('/bacheca')}
-                      variant="outline"
-                      className="border-white/10 text-[10px] font-black uppercase italic tracking-widest h-10"
+                      onClick={() => setIsPostModalOpen(true)}
+                      className="bg-red-600 hover:bg-white hover:text-black text-white rounded-none text-[10px] font-black uppercase italic tracking-widest h-10 px-6 transition-all"
                     >
-                      Nuovo Post
+                      <Plus size={14} className="mr-2" /> Nuovo Post
                     </Button>
                   </div>
 
@@ -359,6 +358,11 @@ const Profile = () => {
           </div>
         </div>
       </main>
+
+      <CreatePostModal 
+        isOpen={isPostModalOpen} 
+        onClose={() => setIsPostModalOpen(false)} 
+      />
 
       <Footer />
       <BottomNav />
