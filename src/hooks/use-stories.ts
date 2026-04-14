@@ -22,16 +22,20 @@ export const useStories = () => {
   const { data: stories, isLoading } = useQuery({
     queryKey: ['active-stories'],
     queryFn: async () => {
+      // Utilizziamo una sintassi più semplice per il join
       const { data, error } = await supabase
         .from('stories')
         .select(`
           *,
-          profiles:user_id (username, avatar_url)
+          profiles(username, avatar_url)
         `)
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("[Stories] Errore caricamento:", error.message);
+        throw error;
+      }
 
       // Raggruppiamo le storie per utente
       const grouped = data.reduce((acc: any, story: any) => {
