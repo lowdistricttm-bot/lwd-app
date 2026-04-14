@@ -15,6 +15,7 @@ import { Car, Loader2, ChevronRight, AlertCircle, X, Instagram, Phone, MapPin, C
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
+import { showError } from '@/utils/toast';
 
 const Events = () => {
   const navigate = useNavigate();
@@ -38,7 +39,6 @@ const Events = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setUser(session.user);
-        // Email lasciata vuota di default come richiesto
         setFormData(prev => ({ ...prev, fullName: session.user.user_metadata?.full_name || '' }));
       }
     });
@@ -46,10 +46,11 @@ const Events = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    setInteriorFiles(prev => [...prev, ...files].slice(0, 4));
+    const totalFiles = [...interiorFiles, ...files].slice(0, 6);
+    setInteriorFiles(totalFiles);
     
-    const newPreviews = files.map(file => URL.createObjectURL(file));
-    setInteriorPreviews(prev => [...prev, ...newPreviews].slice(0, 4));
+    const newPreviews = totalFiles.map(file => URL.createObjectURL(file));
+    setInteriorPreviews(newPreviews);
   };
 
   const removePreview = (index: number) => {
@@ -57,14 +58,71 @@ const Events = () => {
     setInteriorPreviews(prev => prev.filter((_, i) => i !== index));
   };
 
+  const validateForm = () => {
+    if (!formData.fullName.trim()) {
+      showError("Inserisci il tuo nome e cognome completo.");
+      return false;
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email.trim() || !emailRegex.test(formData.email)) {
+      showError("Inserisci un indirizzo email valido.");
+      return false;
+    }
+
+    if (!formData.phone.trim() || formData.phone.length < 8) {
+      showError("Inserisci un numero di telefono valido.");
+      return false;
+    }
+
+    if (!formData.city.trim()) {
+      showError("Inserisci la tua città di provenienza.");
+      return false;
+    }
+
+    if (!formData.instagram.trim()) {
+      showError("Inserisci il tuo profilo Instagram (es. @username).");
+      return false;
+    }
+
+    if (!formData.vehicleId) {
+      showError("Devi selezionare un veicolo dal tuo garage.");
+      return false;
+    }
+
+    if (interiorFiles.length < 3) {
+      showError(`Carica almeno 3 foto degli interni. (Attualmente: ${interiorFiles.length})`);
+      return false;
+    }
+
+    if (!formData.modifications.trim() || formData.modifications.length < 10) {
+      showError("Descrivi in modo più dettagliato le modifiche del tuo progetto.");
+      return false;
+    }
+
+    return true;
+  };
+
   const handleApply = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedEvent || !formData.vehicleId) return;
+    if (!selectedEvent) return;
+    
+    if (!validateForm()) return;
+
     try {
       await applyToEvent.mutateAsync({ eventId: selectedEvent.id, ...formData, interiorFiles });
       setSelectedEvent(null);
       setInteriorFiles([]);
       setInteriorPreviews([]);
+      setFormData({
+        fullName: user?.user_metadata?.full_name || '',
+        email: '',
+        phone: '',
+        city: '',
+        instagram: '',
+        vehicleId: '',
+        modifications: ''
+      });
       await refetchApps();
     } catch (error) {}
   };
@@ -198,31 +256,31 @@ const Events = () => {
                   <div className="space-y-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-zinc-500">Nome e Cognome</Label>
+                        <Label className="text-[10px] font-black uppercase text-zinc-500">Nome e Cognome *</Label>
                         <Input required value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12 text-sm" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-zinc-500">Email</Label>
+                        <Label className="text-[10px] font-black uppercase text-zinc-500">Email *</Label>
                         <Input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12 text-sm" />
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-zinc-500">Telefono</Label>
+                        <Label className="text-[10px] font-black uppercase text-zinc-500">Telefono *</Label>
                         <Input required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12 text-sm" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-zinc-500">Città</Label>
+                        <Label className="text-[10px] font-black uppercase text-zinc-500">Città *</Label>
                         <Input required value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12 text-sm" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-zinc-500">Instagram</Label>
+                        <Label className="text-[10px] font-black uppercase text-zinc-500">Instagram *</Label>
                         <Input required value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12 text-sm" />
                       </div>
                     </div>
                     
                     <div className="space-y-4">
-                      <Label className="text-[10px] font-black uppercase text-zinc-500">Seleziona Veicolo dal Garage</Label>
+                      <Label className="text-[10px] font-black uppercase text-zinc-500">Seleziona Veicolo dal Garage *</Label>
                       <div className="grid grid-cols-1 gap-3">
                         {vehicles?.map(v => (
                           <button 
@@ -262,7 +320,7 @@ const Events = () => {
                     </div>
 
                     <div className="space-y-4">
-                      <Label className="text-[10px] font-black uppercase text-zinc-500">Foto Interni (Max 4)</Label>
+                      <Label className="text-[10px] font-black uppercase text-zinc-500">Foto Interni (Minimo 3) *</Label>
                       <div 
                         onClick={() => interiorInputRef.current?.click()}
                         className="h-24 border border-dashed border-zinc-800 flex flex-col items-center justify-center cursor-pointer hover:border-red-600 transition-colors bg-zinc-900/30"
@@ -285,8 +343,9 @@ const Events = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-zinc-500">Modifiche Principali</Label>
+                      <Label className="text-[10px] font-black uppercase text-zinc-500">Modifiche Principali *</Label>
                       <Textarea 
+                        required
                         value={formData.modifications} 
                         onChange={e => setFormData({...formData, modifications: e.target.value})} 
                         placeholder="Descrivi le modifiche del tuo progetto..."
