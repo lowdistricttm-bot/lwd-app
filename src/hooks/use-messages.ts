@@ -92,8 +92,11 @@ export const useMessages = (otherUserId?: string) => {
   });
 
   useEffect(() => {
+    // Usiamo un ID univoco per il canale per evitare collisioni
+    const channelId = `chat-updates-${otherUserId || 'global'}-${Math.random().toString(36).substr(2, 9)}`;
+    
     const channel = supabase
-      .channel('messages-realtime')
+      .channel(channelId)
       .on(
         'postgres_changes', 
         { event: '*', schema: 'public', table: 'messages' }, 
@@ -160,7 +163,6 @@ export const useMessages = (otherUserId?: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Cancelliamo tutti i messaggi tra i due utenti
       const { error } = await supabase
         .from('messages')
         .delete()
