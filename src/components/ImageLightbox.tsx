@@ -18,17 +18,22 @@ const ImageLightbox = ({ images, initialIndex, isOpen, onClose }: ImageLightboxP
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setCurrentIndex(initialIndex);
+    if (isOpen) {
+      setCurrentIndex(initialIndex);
+      setLoading(true);
+    }
   }, [initialIndex, isOpen]);
 
   const handleNext = useCallback((e?: React.MouseEvent) => {
     e?.stopPropagation();
+    if (images.length <= 1) return;
     setLoading(true);
     setCurrentIndex((prev) => (prev + 1) % images.length);
   }, [images.length]);
 
   const handlePrev = useCallback((e?: React.MouseEvent) => {
     e?.stopPropagation();
+    if (images.length <= 1) return;
     setLoading(true);
     setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
   }, [images.length]);
@@ -127,45 +132,8 @@ const ImageLightbox = ({ images, initialIndex, isOpen, onClose }: ImageLightboxP
             onDragEnd={(_, info) => {
               if (info.offset.x < -50) handleNext();
               else if (info.offset.x > 50) handlePrev();
-            }}think
-The user wants me to continue the previous response which was cut off.
-The previous response was updating `src/components/ImageLightbox.tsx`.
-It stopped at:
-```tsx
-            onDragEnd={(_, info) => {
-              if (info.offset.x < -50) handleNext();
-              else if (info.offset.x > 50) handlePrev();
             }}
-```
-I need to finish the `ImageLightbox.tsx` file and then update the other components (`FeedPost.tsx`, `Profile.tsx`, `GarageTab.tsx`, `AdminApplicationCard.tsx`) to use the new array-based props.
-
-Wait, the previous response was a `<dyad-write>` block. If it was cut off, I should probably rewrite the whole file or at least the remaining part. But the instructions say "Continue exactly where you left off without any preamble".
-
-However, I cannot just output text. I must use `<dyad-write>` tags.
-The previous response had:
-1. `<dyad-write path="src/components/ImageLightbox.tsx" ...>` (Cut off)
-2. It was supposed to have updates for other files too.
-
-Let's finish `ImageLightbox.tsx` first.
-
-Actually, looking at the previous turn, the `<dyad-write>` tag for `ImageLightbox.tsx` was not closed.
-I will provide the full content of `ImageLightbox.tsx` and then the other files.
-
-Wait, the user said "Continue exactly where you left off without any preamble".
-If I just start with the code, it might break the XML structure if I don't include the opening tag.
-But the system instructions say "Only use ONE <dyad-write> block per file that you write!".
-
-If the previous turn was cut off, the UI might be in a broken state.
-I'll provide the full files that were intended to be sent.
-
-Files to update:
-1. `src/components/ImageLightbox.tsx` (Gallery support)
-2. `src/components/FeedPost.tsx` (Pass array to Lightbox)
-3. `src/pages/Profile.tsx` (Pass array to Lightbox)
-4. `src/components/GarageTab.tsx` (Pass array to Lightbox)
-5. `src/components/AdminApplicationCard.tsx` (Pass array to Lightbox)
-
-Let's start.className="relative max-w-full max-h-full flex items-center justify-center cursor-grab active:cursor-grabbing"
+            className="relative max-w-full max-h-full flex items-center justify-center cursor-grab active:cursor-grabbing"
           >
             {loading && (
               <div className="absolute inset-0 flex items-center justify-center">

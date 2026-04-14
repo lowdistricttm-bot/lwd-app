@@ -108,7 +108,7 @@ const FeedPost = ({ post }: FeedPostProps) => {
   const [replyingTo, setReplyingTo] = useState<{ id: string, name: string } | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -200,7 +200,7 @@ const FeedPost = ({ post }: FeedPostProps) => {
 
         {/* Media */}
         {post.image_url && (
-          <div className="aspect-square bg-zinc-950 overflow-hidden cursor-pointer" onClick={() => !isVideo && setLightboxImage(post.image_url || null)}>
+          <div className="aspect-square bg-zinc-950 overflow-hidden cursor-pointer" onClick={() => !isVideo && setLightboxOpen(true)}>
             {isVideo ? (
               <video src={post.image_url} className="w-full h-full object-cover" controls />
             ) : (
@@ -296,11 +296,14 @@ const FeedPost = ({ post }: FeedPostProps) => {
         post={post} 
       />
 
-      <ImageLightbox 
-        src={lightboxImage} 
-        isOpen={!!lightboxImage} 
-        onClose={() => setLightboxImage(null)} 
-      />
+      {post.image_url && (
+        <ImageLightbox 
+          images={[post.image_url]} 
+          initialIndex={0}
+          isOpen={lightboxOpen} 
+          onClose={() => setLightboxOpen(false)} 
+        />
+      )}
     </>
   );
 };
