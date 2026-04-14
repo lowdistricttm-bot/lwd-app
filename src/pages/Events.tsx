@@ -38,7 +38,8 @@ const Events = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setUser(session.user);
-        setFormData(prev => ({ ...prev, email: session.user.email || '', fullName: session.user.user_metadata?.full_name || '' }));
+        // Email lasciata vuota di default come richiesto
+        setFormData(prev => ({ ...prev, fullName: session.user.user_metadata?.full_name || '' }));
       }
     });
   }, []);
@@ -198,25 +199,25 @@ const Events = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-zinc-500">Nome e Cognome</Label>
-                        <Input required value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
+                        <Input required value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12 text-sm" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-zinc-500">Email</Label>
-                        <Input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
+                        <Input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12 text-sm" />
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-zinc-500">Telefono</Label>
-                        <Input required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
+                        <Input required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12 text-sm" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-zinc-500">Città</Label>
-                        <Input required value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
+                        <Input required value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12 text-sm" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase text-zinc-500">Instagram</Label>
-                        <Input required value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
+                        <Input required value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12 text-sm" />
                       </div>
                     </div>
                     
@@ -289,7 +290,7 @@ const Events = () => {
                         value={formData.modifications} 
                         onChange={e => setFormData({...formData, modifications: e.target.value})} 
                         placeholder="Descrivi le modifiche del tuo progetto..."
-                        className="bg-transparent border-zinc-800 rounded-none min-h-[120px] text-xs font-bold uppercase tracking-widest" 
+                        className="bg-transparent border-zinc-800 rounded-none min-h-[120px] text-sm" 
                       />
                     </div>
                     <Button type="submit" disabled={applyToEvent.isPending} className="w-full bg-red-600 py-8 font-black uppercase italic tracking-widest rounded-none">

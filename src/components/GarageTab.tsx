@@ -129,7 +129,7 @@ const GarageTab = () => {
                     required
                     value={formData.brand}
                     onChange={e => setFormData({...formData, brand: e.target.value})}
-                    className="bg-transparent border-zinc-800 rounded-none h-12" 
+                    className="bg-transparent border-zinc-800 rounded-none h-12 text-sm" 
                   />
                 </div>
                 <div className="space-y-2">
@@ -138,7 +138,7 @@ const GarageTab = () => {
                     required
                     value={formData.model}
                     onChange={e => setFormData({...formData, model: e.target.value})}
-                    className="bg-transparent border-zinc-800 rounded-none h-12" 
+                    className="bg-transparent border-zinc-800 rounded-none h-12 text-sm" 
                   />
                 </div>
                 <div className="space-y-2">
@@ -146,7 +146,7 @@ const GarageTab = () => {
                   <Input 
                     value={formData.year}
                     onChange={e => setFormData({...formData, year: e.target.value})}
-                    className="bg-transparent border-zinc-800 rounded-none h-12" 
+                    className="bg-transparent border-zinc-800 rounded-none h-12 text-sm" 
                   />
                 </div>
                 <div className="space-y-2">
@@ -154,7 +154,7 @@ const GarageTab = () => {
                   <Input 
                     value={formData.license_plate}
                     onChange={e => setFormData({...formData, license_plate: e.target.value})}
-                    className="bg-transparent border-zinc-800 rounded-none h-12" 
+                    className="bg-transparent border-zinc-800 rounded-none h-12 text-sm" 
                   />
                 </div>
                 
@@ -235,7 +235,7 @@ const GarageTab = () => {
                 <Textarea 
                   value={formData.description}
                   onChange={e => setFormData({...formData, description: e.target.value})}
-                  className="bg-transparent border-zinc-800 rounded-none min-h-[100px]" 
+                  className="bg-transparent border-zinc-800 rounded-none min-h-[100px] text-sm" 
                 />
               </div>
 
@@ -287,33 +287,13 @@ const GarageTab = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-zinc-800">
-                    <Car size={48} />
-                  </div>
+                  <div className="w-full h-full flex items-center justify-center text-zinc-800"><Car size={48} /></div>
                 )}
                 
                 <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all z-10">
-                  <button 
-                    onClick={() => handleEdit(vehicle)}
-                    className="p-2 bg-black/60 text-white hover:bg-white hover:text-black transition-colors"
-                  >
-                    <Edit3 size={16} />
-                  </button>
-                  <button 
-                    onClick={() => deleteVehicle.mutate(vehicle.id)}
-                    className="p-2 bg-black/60 text-white hover:bg-red-600 transition-colors"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  <button onClick={() => handleEdit(vehicle)} className="p-2 bg-black/60 text-white hover:bg-white hover:text-black transition-colors"><Edit3 size={16} /></button>
+                  <button onClick={() => deleteVehicle.mutate(vehicle.id)} className="p-2 bg-black/60 text-white hover:bg-red-600 transition-colors"><Trash2 size={16} /></button>
                 </div>
-
-                {vehicle.images && vehicle.images.length > 1 && (
-                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-                    {vehicle.images.map((_, i) => (
-                      <div key={i} className="w-1 h-1 rounded-full bg-white/30" />
-                    ))}
-                  </div>
-                )}
               </div>
               <div className="p-6">
                 <div className="flex justify-between items-start mb-4">
@@ -322,18 +302,12 @@ const GarageTab = () => {
                     <p className="text-red-600 text-[9px] font-black uppercase tracking-widest italic">{vehicle.year}</p>
                   </div>
                   {vehicle.license_plate && (
-                    <div className="bg-white text-black px-2 py-1 text-[9px] font-black tracking-widest border border-black">
-                      {vehicle.license_plate}
-                    </div>
+                    <div className="bg-white text-black px-2 py-1 text-[9px] font-black tracking-widest border border-black">{vehicle.license_plate}</div>
                   )}
                 </div>
                 <div className="space-y-2">
-                  <p className="text-[10px] font-bold uppercase text-zinc-400">
-                    <span className="text-zinc-600">Assetto:</span> {vehicle.suspension_type}
-                  </p>
-                  {vehicle.description && (
-                    <p className="text-xs text-zinc-500 line-clamp-2 italic">{vehicle.description}</p>
-                  )}
+                  <p className="text-[10px] font-bold uppercase text-zinc-400"><span className="text-zinc-600">Assetto:</span> {vehicle.suspension_type}</p>
+                  {vehicle.description && <p className="text-xs text-zinc-500 line-clamp-2 italic">{vehicle.description}</p>}
                 </div>
               </div>
             </motion.div>
