@@ -84,7 +84,7 @@ const AdminApplications = () => {
             )}
           >
             <CheckCircle2 size={16} />
-            <span className="text-[10px] font-black uppercase tracking-widest italic">Concluse ({completedApps.length})</span>
+            <span className="text-[10px] font-black uppercase tracking-widest italic">Approvate ({completedApps.length})</span>
           </button>
         </div>
 
@@ -113,7 +113,7 @@ const AdminApplications = () => {
             {displayedApps.length === 0 && (
               <div className="text-center py-20 border border-white/5 bg-zinc-900/30">
                 <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">
-                  {activeTab === 'pending' ? 'Nessuna candidatura in attesa.' : 'Nessuna candidatura conclusa.'}
+                  {activeTab === 'pending' ? 'Nessuna candidatura in attesa.' : 'Nessuna candidatura approvata.'}
                 </p>
               </div>
             )}
