@@ -91,20 +91,26 @@ export const useMessages = (otherUserId?: string) => {
     enabled: !!otherUserId
   });
 
+  // Sottoscrizione Realtime ultra-veloce
   useEffect(() => {
-    const queryKeyInvalidator = () => {
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
-      if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
-    };
+    if (!otherUserId) return;
 
-    // Creiamo un nome canale unico per evitare conflitti durante i re-render
-    const channelName = `messages-realtime-${Math.random().toString(36).substring(7)}`;
     const channel = supabase
-      .channel(channelName)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
-        queryKeyInvalidator();
-      })
+      .channel(`chat-${otherUserId}`)
+      .on(
+        'postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'messages'
+        }, 
+        () => {
+          // Invalida immediatamente le query per forzare il refresh dei dati
+          queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
+          queryClient.invalidateQueries({ queryKey: ['conversations'] });
+          queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
+        }
+      )
       .subscribe();
 
     return () => {
@@ -122,6 +128,39 @@ export const useMessages = (otherUserId?: string) => {
         .insert([{ sender_id: user.id, receiver_id: receiverId, content }]);
 
       if (error) throw error;
+    },
+    // Aggiornamento ottimistico per feedback istantaneo
+    onMutate: async (newMessage) => {
+      await queryClient.cancelQueries({ queryKey: ['chat', otherUserId] });
+      const previousMessages = queryClient.getQueryData(['chat', otherUserId]);
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user && otherUserId) {
+        queryClient.setQueryData(['chat', otherUserId], (old: any) => [
+          ...(old || []),
+          {
+            id: 'temp-' + Date.now(),
+            sender_id: user.id,
+            receiver_id: newMessage.receiverId,
+            content: newMessage.content,
+            created_at: new Date().toISOString(),
+            is_read: false
+          }
+        ]);
+      }
+      
+      return { previousMessages };
+    },
+    onError: (err, newMessage, context: any) => {
+      if (context?.previousMessages) {
+        queryClient.setQueryData(['chat', otherUserId], context.previousMessages);
+      }
+      showError("Errore nell'invio del messaggio");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
     }
   });
 
@@ -147,12 +186,10 @@ export const useMessages = (otherUserId?: string) => {
       if (error) throw error;
     },
     onSuccess: () => {
-      showSuccess("Messaggio eliminato");
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
       queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
       if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
-    },
-    onError: (err: any) => showError(err.message)
+    }
   });
 
   const deleteConversation = useMutation({
@@ -170,10 +207,8 @@ export const useMessages = (otherUserId?: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
       queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
-      if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
       showSuccess("Conversazione eliminata");
-    },
-    onError: (err: any) => showError(err.message)
+    }
   });
 
   return { conversations, unreadCount, loadingConvs, chatMessages, loadingChat, sendMessage, markAsRead, deleteMessage, deleteConversation };
