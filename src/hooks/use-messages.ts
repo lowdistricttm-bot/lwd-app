@@ -9,6 +9,7 @@ export interface Message {
   sender_id: string;
   receiver_id: string;
   content: string;
+  image_url?: string;
   is_read: boolean;
   created_at: string;
   sender?: { username: string, avatar_url: string };
@@ -78,7 +79,11 @@ export const useMessages = (otherUserId?: string) => {
   useEffect(() => {
     const channel = supabase
       .channel('messages-realtime')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => {
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'messages' 
+      }, () => {
         queryClient.invalidateQueries({ queryKey: ['conversations'] });
         if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
       })
@@ -87,16 +92,48 @@ export const useMessages = (otherUserId?: string) => {
     return () => { supabase.removeChannel(channel); };
   }, [otherUserId, queryClient]);
 
+  const uploadMedia = async (file: File) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `chat/${fileName}`;
+
+    const { error } = await supabase.storage
+      .from('post-media')
+      .upload(filePath, file);
+
+    if (error) throw error;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('post-media')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  };
+
   const sendMessage = useMutation({
-    mutationFn: async ({ receiverId, content }: { receiverId: string, content: string }) => {
+    mutationFn: async ({ receiverId, content, file }: { receiverId: string, content: string, file?: File }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Accedi per inviare messaggi");
 
+      let image_url = undefined;
+      if (file) {
+        image_url = await uploadMedia(file);
+      }
+
       const { error } = await supabase
         .from('messages')
-        .insert([{ sender_id: user.id, receiver_id: receiverId, content }]);
+        .insert([{ 
+          sender_id: user.id, 
+          receiver_id: receiverId, 
+          content,
+          image_url 
+        }]);
 
       if (error) throw error;
+    },
+    onSuccess: () => {
+      if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
     }
   });
 
