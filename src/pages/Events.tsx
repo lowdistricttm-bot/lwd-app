@@ -32,7 +32,7 @@ const Events = () => {
 
   const { events, isLoading: eventsLoading, applyToEvent, cancelApplication } = useEvents();
   const { vehicles, isLoading: vehiclesLoading } = useGarage();
-  const { data: userApps, isLoading: appsLoading } = useUserApplications();
+  const { data: userApps, isLoading: appsLoading, refetch: refetchApps } = useUserApplications();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -64,6 +64,16 @@ const Events = () => {
       setSelectedEvent(null);
       setInteriorFiles([]);
       setInteriorPreviews([]);
+      refetchApps(); // Forza aggiornamento
+    } catch (error) {}
+  };
+
+  const handleCancel = async () => {
+    if (!manageApp) return;
+    try {
+      await cancelApplication.mutateAsync(manageApp.id);
+      setManageApp(null);
+      refetchApps(); // Forza aggiornamento immediato della lista
     } catch (error) {}
   };
 
@@ -158,13 +168,11 @@ const Events = () => {
                   <div className="space-y-4">
                     <p className="text-xs text-zinc-500 font-bold uppercase">Vuoi modificare la tua candidatura? <br/> Devi prima annullare quella attuale.</p>
                     <Button 
-                      onClick={async () => {
-                        await cancelApplication.mutateAsync(manageApp.id);
-                        setManageApp(null);
-                      }}
+                      onClick={handleCancel}
+                      disabled={cancelApplication.isPending}
                       className="w-full bg-red-600 hover:bg-white hover:text-black text-white py-6 rounded-none font-black uppercase italic tracking-widest"
                     >
-                      <Trash2 size={16} className="mr-2" /> Annulla Candidatura
+                      {cancelApplication.isPending ? <Loader2 className="animate-spin" /> : <><Trash2 size={16} className="mr-2" /> Annulla Candidatura</>}
                     </Button>
                   </div>
                 </div>
