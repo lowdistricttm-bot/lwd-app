@@ -5,7 +5,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface StoryViewerProps {
-  userStories: any;
+  userStories: {
+    username: string;
+    avatar_url?: string;
+    items: Array<{
+      id: string;
+      image_url: string;
+    }>;
+  };
   onClose: () => void;
 }
 
@@ -15,25 +22,29 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
   const currentStory = userStories.items[currentIndex];
 
   useEffect(() => {
+    const duration = 5000; // 5 secondi
+    const interval = 50; // Aggiornamento ogni 50ms
+    const increment = (interval / duration) * 100;
+
     const timer = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
           if (currentIndex < userStories.items.length - 1) {
-            setCurrentIndex(currentIndex + 1);
+            setCurrentIndex(prevIndex => prevIndex + 1);
             return 0;
           } else {
             onClose();
             return 100;
           }
         }
-        return prev + 1;
+        return prev + increment;
       });
-    }, 50); // 5 secondi per storia (100 * 50ms)
+    }, interval);
 
     return () => clearInterval(timer);
   }, [currentIndex, userStories.items.length, onClose]);
 
-  const next = () => {
+  const handleNext = () => {
     if (currentIndex < userStories.items.length - 1) {
       setCurrentIndex(currentIndex + 1);
       setProgress(0);
@@ -42,7 +53,7 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
     }
   };
 
-  const prev = () => {
+  const handlePrev = () => {
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
       setProgress(0);
@@ -51,15 +62,15 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
       className="fixed inset-0 z-[200] bg-black flex items-center justify-center"
     >
-      <div className="relative w-full max-w-lg h-full md:h-[90vh] bg-zinc-900 overflow-hidden md:rounded-3xl">
+      <div className="relative w-full max-w-lg h-full md:h-[90vh] bg-zinc-900 overflow-hidden md:rounded-3xl flex flex-col">
         {/* Progress Bars */}
-        <div className="absolute top-4 left-4 right-4 z-20 flex gap-1">
-          {userStories.items.map((_: any, i: number) => (
+        <div className="absolute top-4 left-4 right-4 z-30 flex gap-1">
+          {userStories.items.map((_, i) => (
             <div key={i} className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-white transition-all duration-100 ease-linear"
@@ -72,64 +83,50 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
         </div>
 
         {/* Header */}
-        <div className="absolute top-8 left-4 right-4 z-20 flex items-center justify-between">
+        <div className="absolute top-8 left-4 right-4 z-30 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full border border-white/20 overflow-hidden">
-              <img src={userStories.avatar_url} className="w-full h-full object-cover" alt="" />
+            <div className="w-8 h-8 rounded-full border border-white/20 overflow-hidden bg-zinc-800">
+              {userStories.avatar_url && (
+                <img src={userStories.avatar_url} className="w-full h-full object-cover" alt="" />
+              )}
             </div>
-            <span className="text-xs font-black uppercase italic tracking-widest">{userStories.username}</span>
+            <span className="text-xs font-black uppercase italic tracking-widest text-white drop-shadow-md">
+              {userStories.username}
+            </span>
           </div>
-          <button onClick={onClose} className="p-2 textthink
-The user wants me to continue the previous response exactly where it left off.
-
-Looking at the previous response:
-The last part was:
-```tsx
-          <button onClick={onClose} className="p-2 text
-```
-
-I need to complete the `StoryViewer.tsx` file and then update `Stories.tsx`.
-
-Plan:
-1. Complete `src/components/StoryViewer.tsx`.
-2. Update `src/components/Stories.tsx` to use the new hook and viewer, including the animated ring for the user's story.
-
-Let's finish `StoryViewer.tsx` first.
-The line was: `<button onClick={onClose} className="p-2 text`
-It should probably be: `-white/50 hover:text-white transition-colors"><X size={24} /></button>`
-
-Then I need to write `src/components/Stories.tsx`.
-
-Wait, I should check if I need to add any dependencies. I'm using `framer-motion` which is already in `package.json`.
-
-Let's write the files.-white/50 hover:text-white transition-colors">
+          <button 
+            onClick={onClose} 
+            className="p-2 text-white/70 hover:text-white transition-colors drop-shadow-md"
+          >
             <X size={24} />
           </button>
         </div>
 
         {/* Navigation Areas */}
-        <div className="absolute inset-0 z-10 flex">
-          <div className="w-1/3 h-full cursor-pointer" onClick={prev} />
-          <div className="w-2/3 h-full cursor-pointer" onClick={next} />
+        <div className="absolute inset-0 z-20 flex">
+          <div className="w-1/3 h-full cursor-pointer" onClick={handlePrev} />
+          <div className="w-2/3 h-full cursor-pointer" onClick={handleNext} />
         </div>
 
         {/* Image */}
-        <img 
-          src={currentStory.image_url} 
-          className="w-full h-full object-cover" 
-          alt="Story" 
-        />
+        <div className="flex-1 relative">
+          <img 
+            src={currentStory.image_url} 
+            className="w-full h-full object-cover" 
+            alt="Story" 
+          />
+        </div>
 
         {/* Desktop Controls */}
         <button 
-          onClick={prev}
-          className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center bg-black/20 hover:bg-black/40 rounded-full z-20"
+          onClick={handlePrev}
+          className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center bg-black/20 hover:bg-black/40 rounded-full z-30 text-white transition-colors"
         >
           <ChevronLeft size={24} />
         </button>
         <button 
-          onClick={next}
-          className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center bg-black/20 hover:bg-black/40 rounded-full z-20"
+          onClick={handleNext}
+          className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center bg-black/20 hover:bg-black/40 rounded-full z-30 text-white transition-colors"
         >
           <ChevronRight size={24} />
         </button>
