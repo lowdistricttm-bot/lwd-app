@@ -72,9 +72,7 @@ const Events = () => {
     if (!manageApp) return;
     try {
       await cancelApplication.mutateAsync(manageApp.id);
-      // Reset immediato dello stato locale
       setManageApp(null);
-      // Forza il ricaricamento dei dati dal server
       await refetchApps();
     } catch (error) {
       console.error("Errore durante l'annullamento:", error);
@@ -221,14 +219,44 @@ const Events = () => {
                         <Input required value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
                       </div>
                     </div>
+                    
                     <div className="space-y-4">
                       <Label className="text-[10px] font-black uppercase text-zinc-500">Seleziona Veicolo dal Garage</Label>
-                      <div className="grid grid-cols-1 gap-2">
+                      <div className="grid grid-cols-1 gap-3">
                         {vehicles?.map(v => (
-                          <button key={v.id} type="button" onClick={() => setFormData({...formData, vehicleId: v.id})} className={cn("p-4 border text-left transition-all", formData.vehicleId === v.id ? "bg-red-600 border-red-600" : "bg-zinc-900 border-white/5")}>
-                            <p className="text-xs font-black uppercase italic">{v.brand} {v.model}</p>
+                          <button 
+                            key={v.id} 
+                            type="button" 
+                            onClick={() => {
+                              setFormData({
+                                ...formData, 
+                                vehicleId: v.id,
+                                modifications: v.description || formData.modifications
+                              });
+                            }} 
+                            className={cn(
+                              "flex items-center gap-4 p-3 border transition-all text-left group", 
+                              formData.vehicleId === v.id ? "bg-red-600 border-red-600" : "bg-zinc-900 border-white/5"
+                            )}
+                          >
+                            <div className="w-16 h-16 bg-black shrink-0 overflow-hidden border border-white/10">
+                              {v.images?.[0] ? (
+                                <img src={v.images[0]} className="w-full h-full object-cover" alt={v.model} />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-zinc-800"><Car size={20} /></div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-black uppercase italic truncate">{v.brand} {v.model}</p>
+                              <p className="text-[9px] font-bold uppercase text-zinc-500 group-hover:text-white/70">
+                                {v.suspension_type} • {v.year}
+                              </p>
+                            </div>
                           </button>
                         ))}
+                        {vehicles?.length === 0 && (
+                          <p className="text-[10px] text-zinc-600 uppercase font-bold italic">Aggiungi prima un veicolo nel tuo Garage per candidarti.</p>
+                        )}
                       </div>
                     </div>
 
@@ -257,7 +285,12 @@ const Events = () => {
 
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase text-zinc-500">Modifiche Principali</Label>
-                      <Textarea value={formData.modifications} onChange={e => setFormData({...formData, modifications: e.target.value})} className="bg-transparent border-zinc-800 rounded-none min-h-[100px]" />
+                      <Textarea 
+                        value={formData.modifications} 
+                        onChange={e => setFormData({...formData, modifications: e.target.value})} 
+                        placeholder="Descrivi le modifiche del tuo progetto..."
+                        className="bg-transparent border-zinc-800 rounded-none min-h-[120px] text-xs font-bold uppercase tracking-widest" 
+                      />
                     </div>
                     <Button type="submit" disabled={applyToEvent.isPending} className="w-full bg-red-600 py-8 font-black uppercase italic tracking-widest rounded-none">
                       {applyToEvent.isPending ? <Loader2 className="animate-spin" /> : "Invia Candidatura"}
