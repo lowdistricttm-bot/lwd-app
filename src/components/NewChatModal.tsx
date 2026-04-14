@@ -6,7 +6,6 @@ import { X, Search, User, Loader2, ChevronRight, Users } from 'lucide-react';
 import { Input } from './ui/input';
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from 'react-router-dom';
-import { useBPSearchMembers } from '@/hooks/use-buddypress';
 
 interface NewChatModalProps {
   isOpen: boolean;
@@ -16,10 +15,9 @@ interface NewChatModalProps {
 const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [results, setResults] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  
-  // Usiamo il hook BuddyPress per cercare in tempo reale sul sito ufficiale
-  const { data: bpResults, isLoading: isLoadingBP } = useBPSearchMembers(search);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -27,26 +25,34 @@ const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
     });
   }, []);
 
-  const handleStartChat = async (bpUser: any) => {
-    // 1. Verifichiamo se l'utente esiste già su Supabase tramite lo username
-    const { data: existingProfile } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('username', bpUser.user_login || bpUser.name)
-      .maybeSingle();
+  useEffect(() => {
+    const searchUsers = async () => {
+      if (search.length < 2) {
+        setResults([]);
+        return;
+      }
 
-    if (existingProfile) {
-      onClose();
-      navigate(`/chat/${existingProfile.id}`);
-      return;
-    }
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .or(`username.ilike.%${search}%,first_name.ilike.%${search}%,last_name.ilike.%${search}%`)
+        .neq('id', currentUserId)
+        .limit(10);
 
-    // 2. Se non esiste, creiamo un profilo "placeholder" per permettere la chat
-    // Nota: In un sistema reale, qui chiameresti una Edge Function per creare l'utente auth
-    // Per ora, se l'utente non è mai entrato nell'app, lo cerchiamo tra i profili esistenti
-    // Se non lo trovi, avvisiamo che l'utente deve aver fatto almeno un accesso
+      if (!error && data) {
+        setResults(data);
+      }
+      setLoading(false);
+    };
+
+    const timer = setTimeout(searchUsers, 300);
+    return () => clearTimeout(timer);
+  }, [search, currentUserId]);
+
+  const handleStartChat = (userId: string) => {
     onClose();
-    navigate(`/chat/${bpUser.id}`); // Il sistema di messaggi gestirà il mapping
+    navigate(`/chat/${userId}`);
   };
 
   return (
@@ -68,10 +74,7 @@ const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
             className="fixed inset-x-0 bottom-0 z-[151] bg-zinc-950 border-t border-white/10 p-6 pb-12 rounded-t-[2rem] max-h-[85vh] flex flex-col"
           >
             <div className="flex justify-between items-center mb-8">
-              <div>
-                <h2 className="text-xl font-black italic uppercase tracking-tighter">Nuovo Messaggio</h2>
-                <p className="text-[8px] text-zinc-500 font-black uppercase tracking-widest mt-1">Cerca tra tutti gli iscritti di Low District</p>
-              </div>
+              <h2 className="text-xl font-black italic uppercase tracking-tighter">Nuovo Messaggio</h2>
               <button onClick={onClose} className="p-2 text-zinc-500 hover:text-white transition-colors">
                 <X size={24} />
               </button>
@@ -81,7 +84,7 @@ const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
               <Input 
                 autoFocus
-                placeholder="CERCA USERNAME O NOME SUL SITO..."
+                placeholder="CERCA USERNAME O NOME..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="bg-zinc-900 border-zinc-800 rounded-none h-14 pl-12 font-black uppercase text-xs tracking-widest focus-visible:ring-red-600 placeholder:text-zinc-700"
@@ -89,44 +92,35 @@ const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
-              {isLoadingBP ? (
-                <div className="flex flex-col items-center justify-center py-20 gap-4">
+              {loading ? (
+                <div className="flex justify-center py-20">
                   <Loader2 className="animate-spin text-red-600" size={32} />
-                  <p className="text-[8px] font-black uppercase tracking-widest text-zinc-600">Ricerca sul sito ufficiale...</p>
                 </div>
-              ) : bpResults && bpResults.length > 0 ? (
-                <>
-                  <p className="text-[8px] font-black uppercase tracking-[0.3em] text-zinc-600 mb-4 px-2">
-                    Risultati dal Sito Web
-                  </p>
-                  {bpResults.map((user: any) => (
-                    <button 
-                      key={user.id}
-                      onClick={() => handleStartChat(user)}
-                      className="w-full bg-zinc-900/40 border border-white/5 p-4 flex items-center gap-4 hover:border-red-600/30 hover:bg-zinc-900 transition-all group"
-                    >
-                      <div className="w-12 h-12 bg-zinc-800 rounded-full overflow-hidden border border-white/10 shrink-0">
-                        {user.avatar_urls?.thumb ? (
-                          <img src={user.avatar_urls.thumb} className="w-full h-full object-cover" alt={user.name} />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-zinc-600"><User size={20} /></div>
-                        )}
-                      </div>
-                      <div className="flex-1 text-left min-w-0">
-                        <h4 className="text-sm font-black italic uppercase tracking-tight truncate">
-                          {user.name || 'Membro District'}
-                        </h4>
-                        <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-widest truncate">
-                          @{user.user_login || 'user'} • Membro Low District
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 text-zinc-800 group-hover:text-red-600 transition-colors">
-                        <span className="text-[8px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Scrivi</span>
-                        <ChevronRight size={16} />
-                      </div>
-                    </button>
-                  ))}
-                </>
+              ) : results.length > 0 ? (
+                results.map((user) => (
+                  <button 
+                    key={user.id}
+                    onClick={() => handleStartChat(user.id)}
+                    className="w-full bg-zinc-900/40 border border-white/5 p-4 flex items-center gap-4 hover:border-red-600/30 hover:bg-zinc-900 transition-all group"
+                  >
+                    <div className="w-12 h-12 bg-zinc-800 rounded-full overflow-hidden border border-white/10 shrink-0">
+                      {user.avatar_url ? (
+                        <img src={user.avatar_url} className="w-full h-full object-cover" alt={user.username} />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-zinc-600"><User size={20} /></div>
+                      )}
+                    </div>
+                    <div className="flex-1 text-left min-w-0">
+                      <h4 className="text-sm font-black italic uppercase tracking-tight truncate">
+                        {user.username || 'Membro District'}
+                      </h4>
+                      <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-widest truncate">
+                        {user.first_name} {user.last_name}
+                      </p>
+                    </div>
+                    <ChevronRight size={16} className="text-zinc-800 group-hover:text-red-600 transition-colors" />
+                  </button>
+                ))
               ) : search.length >= 2 ? (
                 <div className="text-center py-20 flex flex-col items-center gap-4">
                   <Users size={40} className="text-zinc-800" />
@@ -135,7 +129,7 @@ const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
               ) : (
                 <div className="text-center py-20 opacity-20">
                   <Search size={48} className="mx-auto mb-4" />
-                  <p className="text-[10px] font-black uppercase tracking-widest">Inizia a scrivere per cercare tra tutti gli utenti</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest">Inizia a scrivere per cercare tra i membri</p>
                 </div>
               )}
             </div>
