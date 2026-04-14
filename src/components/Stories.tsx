@@ -64,7 +64,7 @@ const Stories = () => {
             onClick={handleStoryClick}
             className={cn(
               "relative block cursor-pointer group rounded-full p-[3px]",
-              myStories ? "bg-gradient-to-tr from-red-600 to-white animate-spin-slow" : ""
+              myStories ? "bg-gradient-to-tr from-zinc-600 to-white animate-spin-slow" : ""
             )}
           >
             <input 
@@ -82,10 +82,10 @@ const Stories = () => {
                   setSelectedUserStories(myStories);
                 }
               }}
-              className="w-16 h-16 rounded-full border-2 border-black flex items-center justify-center bg-zinc-900 group-hover:border-red-600 transition-all overflow-hidden"
+              className="w-16 h-16 rounded-full border-2 border-black flex items-center justify-center bg-zinc-900 group-hover:border-zinc-400 transition-all overflow-hidden"
             >
               {uploadStory.isPending ? (
-                <Loader2 className="animate-spin text-red-600" size={20} />
+                <Loader2 className="animate-spin text-zinc-400" size={20} />
               ) : myStories ? (
                 <img src={myStories.items[0].image_url} className="w-full h-full object-cover" alt="My Story" />
               ) : userProfile?.avatar_url ? (
@@ -96,7 +96,7 @@ const Stories = () => {
             </div>
             
             {!myStories && (
-              <div className="absolute bottom-0 right-0 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center border-2 border-black">
+              <div className="absolute bottom-0 right-0 w-5 h-5 bg-zinc-700 rounded-full flex items-center justify-center border-2 border-black">
                 <Plus size={10} className="text-white" />
               </div>
             )}
@@ -112,7 +112,7 @@ const Stories = () => {
           onClick={() => setSelectedUserStories(userGroup)}
           className="flex flex-col items-center gap-2 shrink-0 group"
         >
-          <div className="w-16 h-16 rounded-full p-[3px] bg-gradient-to-tr from-red-600 to-white">
+          <div className="w-16 h-16 rounded-full p-[3px] bg-gradient-to-tr from-zinc-600 to-white">
             <div className="w-full h-full rounded-full border-2 border-black overflow-hidden bg-zinc-900">
               {userGroup.avatar_url ? (
                 <img src={userGroup.avatar_url} alt={userGroup.username} className="w-full h-full object-cover" />

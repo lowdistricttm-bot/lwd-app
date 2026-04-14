@@ -26,7 +26,7 @@ const Index = () => {
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
               <div>
-                <h2 className="text-red-600 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">
+                <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">
                   Join the District
                 </h2>
                 <h3 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">
@@ -50,9 +50,9 @@ const Index = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
-                  className="bg-zinc-900/50 border border-white/5 p-8 hover:border-red-600/30 transition-all group"
+                  className="bg-zinc-900/50 border border-white/5 p-8 hover:border-zinc-600 transition-all group"
                 >
-                  <item.icon className="text-red-600 mb-6 group-hover:scale-110 transition-transform" size={32} />
+                  <item.icon className="text-zinc-400 mb-6 group-hover:scale-110 transition-transform" size={32} />
                   <h4 className="text-xl font-black italic uppercase mb-4">{item.title}</h4>
                   <p className="text-zinc-500 text-sm font-bold leading-relaxed uppercase tracking-tight">
                     {item.desc}
@@ -81,7 +81,7 @@ const Index = () => {
             <p className="text-zinc-400 text-sm md:text-base font-bold uppercase tracking-widest mb-12">
               Candidati per i prossimi eventi ufficiali direttamente dall'app.
             </p>
-            <Link to="/events" className="inline-block bg-red-600 text-white px-12 py-6 text-xs font-black uppercase tracking-[0.2em] italic hover:bg-white hover:text-black transition-all">
+            <Link to="/events" className="inline-block bg-zinc-800 text-white px-12 py-6 text-xs font-black uppercase tracking-[0.2em] italic hover:bg-white hover:text-black transition-all">
               Scopri gli Eventi
             </Link>
           </div>

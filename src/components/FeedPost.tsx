@@ -103,7 +103,7 @@ const FeedPost = ({ post }: FeedPostProps) => {
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => deletePost.mutate(post.id)}
-                    className="text-[10px] font-black uppercase tracking-widest italic text-red-600 focus:bg-red-600 focus:text-white cursor-pointer"
+                    className="text-[10px] font-black uppercase tracking-widest italic text-zinc-400 focus:bg-zinc-800 focus:text-white cursor-pointer"
                   >
                     <Trash2 size={14} className="mr-2" /> Elimina
                   </DropdownMenuItem>
@@ -141,7 +141,7 @@ const FeedPost = ({ post }: FeedPostProps) => {
             onClick={() => toggleLike.mutate(post.id)}
             className={cn(
               "flex items-center gap-2 transition-all",
-              post.is_liked ? "text-red-600" : "text-zinc-500 hover:text-white"
+              post.is_liked ? "text-white" : "text-zinc-500 hover:text-white"
             )}
           >
             <Heart size={18} fill={post.is_liked ? "currentColor" : "none"} />
@@ -178,7 +178,7 @@ const FeedPost = ({ post }: FeedPostProps) => {
                       </div>
                       <div className="flex-1">
                         <div className="bg-zinc-900/80 p-3 rounded-2xl rounded-tl-none relative group/comment">
-                          <p className="text-[10px] font-black uppercase italic text-red-600 mb-1">
+                          <p className="text-[10px] font-black uppercase italic text-zinc-400 mb-1">
                             {comment.profiles ? `${comment.profiles.first_name || ''} ${comment.profiles.last_name || ''}`.trim() : 'Membro'}
                           </p>
                           <p className="text-xs text-zinc-200">{comment.content}</p>
@@ -186,7 +186,7 @@ const FeedPost = ({ post }: FeedPostProps) => {
                           {currentUserId === comment.user_id && (
                             <button 
                               onClick={() => deleteComment.mutate(comment.id)}
-                              className="absolute top-2 right-2 opacity-0 group-hover/comment:opacity-100 text-zinc-600 hover:text-red-600 transition-all"
+                              className="absolute top-2 right-2 opacity-0 group-hover/comment:opacity-100 text-zinc-600 hover:text-white transition-all"
                             >
                               <Trash2 size={12} />
                             </button>
@@ -217,7 +217,7 @@ const FeedPost = ({ post }: FeedPostProps) => {
                         </div>
                         <div className="flex-1">
                           <div className="bg-zinc-900/40 p-2 rounded-xl rounded-tl-none border border-white/5 relative group/reply">
-                            <p className="text-[9px] font-black uppercase italic text-zinc-400 mb-0.5">
+                            <p className="text-[9px] font-black uppercase italic text-zinc-500 mb-0.5">
                               {reply.profiles ? `${reply.profiles.first_name || ''} ${reply.profiles.last_name || ''}`.trim() : 'Membro'}
                             </p>
                             <p className="text-[11px] text-zinc-400">{reply.content}</p>
@@ -225,7 +225,7 @@ const FeedPost = ({ post }: FeedPostProps) => {
                             {currentUserId === reply.user_id && (
                               <button 
                                 onClick={() => deleteComment.mutate(reply.id)}
-                                className="absolute top-2 right-2 opacity-0 group-hover/reply:opacity-100 text-zinc-600 hover:text-red-600 transition-all"
+                                className="absolute top-2 right-2 opacity-0 group-hover/reply:opacity-100 text-zinc-600 hover:text-white transition-all"
                               >
                                 <Trash2 size={10} />
                               </button>
@@ -240,7 +240,7 @@ const FeedPost = ({ post }: FeedPostProps) => {
                 <div className="pt-4 border-t border-white/5">
                   {replyingTo && (
                     <div className="flex items-center justify-between mb-2 px-2">
-                      <p className="text-[9px] font-black uppercase text-red-600 italic">
+                      <p className="text-[9px] font-black uppercase text-zinc-400 italic">
                         Risposta a {replyingTo.name}
                       </p>
                       <button onClick={() => setReplyingTo(null)} className="text-[9px] text-zinc-600 hover:text-white uppercase font-bold">Annulla</button>
@@ -256,7 +256,7 @@ const FeedPost = ({ post }: FeedPostProps) => {
                     <button 
                       type="submit"
                       disabled={addComment.isPending}
-                      className="w-10 h-10 bg-red-600 flex items-center justify-center hover:bg-white hover:text-black transition-all shrink-0"
+                      className="w-10 h-10 bg-zinc-700 flex items-center justify-center hover:bg-white hover:text-black transition-all shrink-0"
                     >
                       {addComment.isPending ? <Loader2 className="animate-spin" /> : <Send size={16} />}
                     </button>

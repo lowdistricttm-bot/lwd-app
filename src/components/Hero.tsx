@@ -27,7 +27,7 @@ const Hero = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
         >
-          <h2 className="text-red-600 font-black tracking-[0.6em] uppercase mb-6 text-[10px] md:text-xs italic">
+          <h2 className="text-zinc-500 font-black tracking-[0.6em] uppercase mb-6 text-[10px] md:text-xs italic">
             The Stance Culture Official App
           </h2>
           
@@ -42,7 +42,7 @@ const Hero = () => {
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link to="/shop" className="w-full sm:w-auto">
-              <Button className="bg-white text-black hover:bg-red-600 hover:text-white rounded-none px-12 py-8 text-sm font-black uppercase tracking-widest w-full italic transition-all duration-500 group">
+              <Button className="bg-white text-black hover:bg-zinc-200 rounded-none px-12 py-8 text-sm font-black uppercase tracking-widest w-full italic transition-all duration-500 group">
                 Shop Online <ChevronRight className="ml-2 group-hover:translate-x-1 transition-transform" size={18} />
               </Button>
             </Link>
@@ -63,7 +63,7 @@ const Hero = () => {
         className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
       >
         <span className="text-[8px] font-black uppercase tracking-[0.4em] text-zinc-500">Scroll</span>
-        <div className="w-[1px] h-12 bg-gradient-to-b from-red-600 to-transparent"></div>
+        <div className="w-[1px] h-12 bg-gradient-to-b from-zinc-600 to-transparent"></div>
       </motion.div>
     </section>
   );
