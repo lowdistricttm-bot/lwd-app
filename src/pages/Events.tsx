@@ -143,7 +143,9 @@ const Events = () => {
                             "text-[8px] font-black uppercase px-2 py-0.5 italic flex items-center gap-1.5",
                             existingApp?.status === 'pending' && "bg-zinc-800 text-zinc-400",
                             existingApp?.status === 'approved' && "bg-white text-black",
-                            !existingApp && (event.status === 'soon' ? "bg-zinc-700 text-zinc-300" : "bg-white text-black")
+                            !existingApp && event.status === 'open' && "bg-green-600 text-white",
+                            !existingApp && event.status === 'closed' && "bg-red-600 text-white",
+                            !existingApp && event.status === 'soon' && "bg-zinc-700 text-zinc-300"
                           )}>
                             {existingApp ? (
                               <>
