@@ -9,6 +9,7 @@ import { User, MessageSquare, ChevronRight, Loader2, Plus } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import NewChatModal from '@/components/NewChatModal';
+import { cn } from '@/lib/utils';
 
 const Messages = () => {
   const navigate = useNavigate();
@@ -45,8 +46,17 @@ const Messages = () => {
               <button 
                 key={conv.otherId}
                 onClick={() => navigate(`/chat/${conv.otherId}`)}
-                className="w-full bg-zinc-900/40 border border-white/5 p-4 flex items-center gap-4 hover:border-red-600/30 transition-all group"
+                className={cn(
+                  "w-full border p-4 flex items-center gap-4 transition-all group relative",
+                  conv.isUnread 
+                    ? "bg-zinc-900 border-red-600/50" 
+                    : "bg-zinc-900/40 border-white/5 hover:border-red-600/30"
+                )}
               >
+                {conv.isUnread && (
+                  <div className="absolute top-4 right-4 w-2 h-2 bg-red-600 rounded-full animate-pulse" />
+                )}
+                
                 <div className="w-14 h-14 bg-zinc-800 rounded-full overflow-hidden border border-white/10 shrink-0">
                   {conv.otherUser?.avatar_url ? (
                     <img src={conv.otherUser.avatar_url} className="w-full h-full object-cover" />
@@ -56,15 +66,21 @@ const Messages = () => {
                 </div>
                 <div className="flex-1 text-left min-w-0">
                   <div className="flex justify-between items-center mb-1">
-                    <h4 className="text-sm font-black italic uppercase tracking-tight truncate">
+                    <h4 className={cn(
+                      "text-sm font-black italic uppercase tracking-tight truncate",
+                      conv.isUnread ? "text-white" : "text-zinc-300"
+                    )}>
                       {conv.otherUser?.username || 'Membro District'}
                     </h4>
                     <span className="text-[8px] text-zinc-600 font-bold uppercase">
                       {formatDistanceToNow(new Date(conv.lastMessage.created_at), { addSuffix: true, locale: it })}
                     </span>
                   </div>
-                  <p className="text-xs text-zinc-500 truncate font-medium">
-                    {conv.lastMessage.content}
+                  <p className={cn(
+                    "text-xs truncate font-medium",
+                    conv.isUnread ? "text-zinc-200 font-bold" : "text-zinc-500"
+                  )}>
+                    {conv.lastMessage.content || (conv.lastMessage.image_url ? "📷 Foto" : "")}
                   </p>
                 </div>
                 <ChevronRight size={16} className="text-zinc-800 group-hover:text-red-600 transition-colors" />

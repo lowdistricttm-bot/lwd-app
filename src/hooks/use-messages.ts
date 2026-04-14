@@ -58,10 +58,14 @@ export const useMessages = (otherUserId?: string) => {
       data.forEach(msg => {
         const otherId = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id;
         if (!groups.has(otherId)) {
+          // Una conversazione è non letta se l'ultimo messaggio è per me ed è is_read: false
+          const isUnread = msg.receiver_id === user.id && !msg.is_read;
+          
           groups.set(otherId, {
             lastMessage: msg,
             otherUser: msg.sender_id === user.id ? msg.receiver : msg.sender,
-            otherId
+            otherId,
+            isUnread
           });
         }
       });

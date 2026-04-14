@@ -56,7 +56,11 @@ const RealtimeNotifications = () => {
               .eq('id', payload.new.sender_id)
               .single();
               
-            showSuccess(`Nuovo messaggio da ${senderProfile?.username || 'un membro'}`);
+            const preview = payload.new.content 
+              ? (payload.new.content.length > 30 ? payload.new.content.substring(0, 30) + '...' : payload.new.content)
+              : "📷 Foto";
+
+            showSuccess(`${senderProfile?.username || 'Membro'}: ${preview}`);
           }
         })
         .subscribe((status) => {
