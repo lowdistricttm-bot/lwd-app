@@ -64,7 +64,7 @@ const Events = () => {
       setSelectedEvent(null);
       setInteriorFiles([]);
       setInteriorPreviews([]);
-      refetchApps(); // Forza aggiornamento
+      await refetchApps();
     } catch (error) {}
   };
 
@@ -72,9 +72,12 @@ const Events = () => {
     if (!manageApp) return;
     try {
       await cancelApplication.mutateAsync(manageApp.id);
+      // Attendiamo esplicitamente il refetch prima di chiudere il modal
+      await refetchApps();
       setManageApp(null);
-      refetchApps(); // Forza aggiornamento immediato della lista
-    } catch (error) {}
+    } catch (error) {
+      console.error("Errore durante l'annullamento:", error);
+    }
   };
 
   const getAppForEvent = (eventId: string) => userApps?.find(app => app.event_id === eventId);

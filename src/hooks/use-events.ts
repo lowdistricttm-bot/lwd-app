@@ -122,8 +122,9 @@ export const useEvents = () => {
         .eq('id', applicationId);
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user-applications'] });
+    onSuccess: async () => {
+      // Forza l'invalidazione e attendi che i dati siano ricaricati
+      await queryClient.invalidateQueries({ queryKey: ['user-applications'] });
       showSuccess("Candidatura annullata.");
     },
     onError: (error: any) => showError(error.message)
@@ -150,6 +151,7 @@ export const useUserApplications = () => {
 
       if (error) return [];
       return data || [];
-    }
+    },
+    staleTime: 0, // Assicura che i dati siano considerati vecchi immediatamente
   });
 };
