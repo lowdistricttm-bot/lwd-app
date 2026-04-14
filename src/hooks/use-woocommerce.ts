@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 
 const WC_URL = "https://www.lowdistrict.it/wp-json/wc/v3";
 const CK = "ck_3d72f4e97f4b104d76bcf2f156d7f47b0e92af9b"; 
@@ -8,7 +8,8 @@ const CS = "cs_dfc8bfa35e29acf49067f1af13a98734142d2533";
 
 const getWcAuthHeader = () => {
   return {
-    'Authorization': 'Basic ' + btoa(`${CK}:${CS}`)
+    'Authorization': 'Basic ' + btoa(`${CK}:${CS}`),
+    'Content-Type': 'application/json'
   };
 };
 
@@ -74,26 +75,36 @@ export const useWcUserOrders = (email?: string) => {
     queryKey: ['wc-orders', email],
     queryFn: async () => {
       if (!email) return [];
-      
-      // Prima cerca l'ID del cliente da email
       const customerResponse = await fetch(`${WC_URL}/customers?email=${encodeURIComponent(email)}`, {
         headers: getWcAuthHeader()
       });
-      
       if (!customerResponse.ok) return [];
       const customerData = await customerResponse.json();
       const customerId = customerData[0]?.id;
-      
       if (!customerId) return [];
-      
-      // Poi cerca gli ordini con l'ID del cliente
       const ordersResponse = await fetch(`${WC_URL}/orders?customer=${customerId}`, {
         headers: getWcAuthHeader()
       });
-      
       if (!ordersResponse.ok) return [];
       return ordersResponse.json();
     },
     enabled: !!email
+  });
+};
+
+export const useWcCreateOrder = () => {
+  return useMutation({
+    mutationFn: async (orderData: any) => {
+      const response = await fetch(`${WC_URL}/orders`, {
+        method: 'POST',
+        headers: getWcAuthHeader(),
+        body: JSON.stringify(orderData)
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Errore durante la creazione dell\'ordine');
+      }
+      return response.json();
+    }
   });
 };
