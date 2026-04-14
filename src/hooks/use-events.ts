@@ -107,9 +107,12 @@ export const useEvents = () => {
       if (error) throw error;
       return { success: true };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user-applications'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-applications'] });
+    onSuccess: async () => {
+      // Invalidazione totale per aggiornare UI utente e admin
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['user-applications'] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-applications'] })
+      ]);
       showSuccess("Candidatura inviata!");
     },
     onError: (error: any) => showError(error.message)
@@ -124,14 +127,16 @@ export const useEvents = () => {
       if (error) throw error;
     },
     onSuccess: async () => {
-      // Invalidazione forzata di tutte le query che contengono candidature
+      // Pulizia profonda della cache per far sparire la candidatura ovunque
+      queryClient.removeQueries({ queryKey: ['user-applications'] });
+      queryClient.removeQueries({ queryKey: ['admin-applications'] });
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['user-applications'] }),
         queryClient.invalidateQueries({ queryKey: ['admin-applications'] })
       ]);
       showSuccess("Candidatura annullata.");
     },
-    onError: (error: any) => showError(error.message)
+    onError: (error: any) => showError("Errore: Assicurati di aver eseguito il comando SQL per i permessi di eliminazione.")
   });
 
   return { events, isLoading, applyToEvent, cancelApplication };
@@ -156,7 +161,7 @@ export const useUserApplications = () => {
       if (error) return [];
       return data || [];
     },
-    staleTime: 0, // Forza il ricaricamento ad ogni accesso
-    refetchOnMount: true
+    staleTime: 0,
+    refetchOnMount: 'always'
   });
 };

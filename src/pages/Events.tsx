@@ -72,8 +72,9 @@ const Events = () => {
     if (!manageApp) return;
     try {
       await cancelApplication.mutateAsync(manageApp.id);
-      // Reset immediato dello stato locale per far sparire il modal e aggiornare i pulsanti
+      // Reset immediato dello stato locale
       setManageApp(null);
+      // Forza il ricaricamento dei dati dal server
       await refetchApps();
     } catch (error) {
       console.error("Errore durante l'annullamento:", error);
