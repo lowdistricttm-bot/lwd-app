@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWcUserOrders } from '@/hooks/use-woocommerce';
@@ -174,8 +175,11 @@ const Profile = () => {
         <div className="relative h-56 md:h-80 bg-zinc-900 group/cover">
           {/* Container principale per la copertina */}
           <div 
-            className="absolute inset-0 overflow-hidden cursor-pointer" 
-            onClick={() => setLightboxData({ images: [profile?.cover_url || DEFAULT_COVER], index: 0 })}
+            className={cn(
+              "absolute inset-0 overflow-hidden",
+              !isOwnProfile && "cursor-pointer"
+            )}
+            onClick={() => !isOwnProfile && setLightboxData({ images: [profile?.cover_url || DEFAULT_COVER], index: 0 })}
           >
             <img 
               src={profile?.cover_url || DEFAULT_COVER} 
@@ -189,7 +193,7 @@ const Profile = () => {
               <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/cover:opacity-100 transition-opacity flex flex-col items-center justify-center z-30 pointer-events-none">
                 <button 
                   onClick={(e) => { 
-                    e.stopPropagation(); // Impedisce l'apertura del lightbox
+                    e.stopPropagation(); 
                     coverInputRef.current?.click(); 
                   }}
                   className="pointer-events-auto w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-all shadow-xl"
@@ -206,7 +210,13 @@ const Profile = () => {
           <div className="absolute -bottom-12 left-6 flex items-end gap-4 z-20">
             <div className="relative group/avatar">
               <input type="file" ref={avatarInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'avatar')} />
-              <div onClick={() => setLightboxData({ images: [profile?.avatar_url || ""], index: 0 })} className="w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-white rounded-full overflow-hidden shadow-2xl flex items-center justify-center relative cursor-pointer">
+              <div 
+                onClick={() => !isOwnProfile && setLightboxData({ images: [profile?.avatar_url || ""], index: 0 })} 
+                className={cn(
+                  "w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-white rounded-full overflow-hidden shadow-2xl flex items-center justify-center relative",
+                  !isOwnProfile && "cursor-pointer"
+                )}
+              >
                 {uploadingAvatar ? <Loader2 className="animate-spin text-zinc-500" /> : profile?.avatar_url ? <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" /> : <User size={40} className="text-zinc-800" />}
                 {isOwnProfile && (
                   <button 
