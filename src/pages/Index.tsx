@@ -8,7 +8,6 @@ import Hero from '@/components/Hero';
 import Footer from '@/components/Footer';
 import Stories from '@/components/Stories';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
-import { MadeWithDyad } from "@/components/made-with-dyad";
 import { ShoppingBag, Users, Calendar, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -91,7 +90,6 @@ const Index = () => {
       <Footer />
       <BottomNav />
       <PWAInstallPrompt />
-      <MadeWithDyad />
     </div>
   );
 };

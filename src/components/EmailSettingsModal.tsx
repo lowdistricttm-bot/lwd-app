@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Save, Loader2, Mail, Info } from 'lucide-react';
+import { X, Save, Loader2, Info } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from '@/utils/toast';
+import { cn } from '@/lib/utils';
 
 interface EmailSettingsModalProps {
   isOpen: boolean;
@@ -72,10 +73,15 @@ const EmailSettingsModal = ({ isOpen, onClose }: EmailSettingsModalProps) => {
                 <button onClick={onClose} className="p-2 text-zinc-500 hover:text-white"><X size={24} /></button>
               </div>
 
-              <div className="bg-zinc-900/50 border border-white/5 p-4 flex items-start gap-3">
-                <Info size={16} className="text-zinc-400 shrink-0 mt-0.5" />
-                <p className="text-[9px] text-zinc-500 font-bold uppercase leading-relaxed">
-                  Puoi usare i segnaposto <span className="text-white">{"{{user_name}}"}</span> e <span className="text-white">{"{{event_title}}"}</span> nel testo. Verranno sostituiti automaticamente con i dati reali al momento dell'invio.
+              <div className="bg-white/5 border border-white/10 p-4 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <Info size={14} className="text-white" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-white">Guida ai Segnaposto</span>
+                </div>
+                <p className="text-[9px] text-zinc-400 font-bold uppercase leading-relaxed">
+                  Usa questi codici nel testo per inserire dati dinamici: <br />
+                  <span className="text-white">{"{{user_name}}"}</span> &rarr; Nome utente <br />
+                  <span className="text-white">{"{{event_title}}"}</span> &rarr; Titolo dell'evento
                 </p>
               </div>
 
