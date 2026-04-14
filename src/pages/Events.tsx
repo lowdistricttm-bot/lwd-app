@@ -11,7 +11,7 @@ import { useAdmin } from '@/hooks/use-admin';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Car, Loader2, ChevronRight, X, MapPin, Camera, Trash2, Settings2, Calendar, Plus, Edit3, Eye } from 'lucide-react';
+import { Car, Loader2, ChevronRight, X, MapPin, Camera, Trash2, Settings2, Calendar, Plus, Edit3, Eye, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
@@ -94,6 +94,15 @@ const Events = () => {
 
   const getAppForEvent = (eventId: string) => userApps?.find(app => app.event_id === eventId);
 
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'open': return 'Iscrizioni Aperte';
+      case 'closed': return 'Iscrizioni Chiuse';
+      case 'soon': return 'In Arrivo';
+      default: return 'Iscrizioni Aperte';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Navbar />
@@ -131,12 +140,19 @@ const Events = () => {
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
                           <span className={cn(
-                            "text-[8px] font-black uppercase px-2 py-0.5 italic",
+                            "text-[8px] font-black uppercase px-2 py-0.5 italic flex items-center gap-1.5",
                             existingApp?.status === 'pending' && "bg-zinc-800 text-zinc-400",
                             existingApp?.status === 'approved' && "bg-white text-black",
-                            !existingApp && "bg-white text-black"
+                            !existingApp && (event.status === 'soon' ? "bg-zinc-700 text-zinc-300" : "bg-white text-black")
                           )}>
-                            {existingApp ? `STATO: ${existingApp.status === 'pending' ? 'IN ATTESA' : existingApp.status.toUpperCase()}` : "Iscrizioni Aperte"}
+                            {existingApp ? (
+                              <>
+                                {existingApp.status === 'pending' ? <Clock size={10} /> : <Settings2 size={10} />}
+                                STATO: {existingApp.status === 'pending' ? 'IN ATTESA' : existingApp.status.toUpperCase()}
+                              </>
+                            ) : (
+                              getStatusLabel(event.status)
+                            )}
                           </span>
                           <div className="flex items-center gap-2">
                             <div className="flex items-center gap-1 text-[8px] font-black uppercase text-zinc-500">
@@ -169,9 +185,13 @@ const Events = () => {
                         ) : (
                           <Button 
                             onClick={() => setSelectedEvent(event)}
-                            className="bg-white text-black hover:bg-zinc-200 rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 px-6"
+                            disabled={event.status !== 'open'}
+                            className={cn(
+                              "rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 px-6",
+                              event.status === 'open' ? "bg-white text-black hover:bg-zinc-200" : "bg-zinc-800 text-zinc-500 cursor-not-allowed"
+                            )}
                           >
-                            Candidati <ChevronRight size={14} className="ml-2" />
+                            {event.status === 'open' ? 'Candidati' : 'Iscrizioni Chiuse'} <ChevronRight size={14} className="ml-2" />
                           </Button>
                         )}
 
@@ -233,12 +253,14 @@ const Events = () => {
                     </div>
                   </div>
 
-                  <Button 
-                    onClick={() => { setViewingEvent(null); setSelectedEvent(viewingEvent); }}
-                    className="w-full bg-white text-black py-6 font-black uppercase italic tracking-widest rounded-none"
-                  >
-                    Candidati Ora
-                  </Button>
+                  {viewingEvent.status === 'open' && !getAppForEvent(viewingEvent.id) && (
+                    <Button 
+                      onClick={() => { setViewingEvent(null); setSelectedEvent(viewingEvent); }}
+                      className="w-full bg-white text-black py-6 font-black uppercase italic tracking-widest rounded-none"
+                    >
+                      Candidati Ora
+                    </Button>
+                  )}
                 </div>
               </motion.div>
             </>
