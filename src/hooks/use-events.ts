@@ -109,6 +109,7 @@ export const useEvents = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-applications'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-applications'] });
       showSuccess("Candidatura inviata!");
     },
     onError: (error: any) => showError(error.message)
@@ -123,8 +124,11 @@ export const useEvents = () => {
       if (error) throw error;
     },
     onSuccess: async () => {
-      // Forza l'invalidazione e attendi che i dati siano ricaricati
-      await queryClient.invalidateQueries({ queryKey: ['user-applications'] });
+      // Invalidazione forzata di tutte le query che contengono candidature
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['user-applications'] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-applications'] })
+      ]);
       showSuccess("Candidatura annullata.");
     },
     onError: (error: any) => showError(error.message)
@@ -152,6 +156,7 @@ export const useUserApplications = () => {
       if (error) return [];
       return data || [];
     },
-    staleTime: 0, // Assicura che i dati siano considerati vecchi immediatamente
+    staleTime: 0, // Forza il ricaricamento ad ogni accesso
+    refetchOnMount: true
   });
 };
