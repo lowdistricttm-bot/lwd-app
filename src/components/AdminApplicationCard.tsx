@@ -16,7 +16,8 @@ import {
   ThumbsUp,
   ThumbsDown,
   Loader2,
-  CreditCard
+  CreditCard,
+  Users
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
@@ -45,8 +46,12 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
   const interiorImages = app.interior_urls || [];
   
   const votes = app.application_votes || [];
-  const approveVotes = votes.filter((v: any) => v.vote === 'approve').length;
-  const rejectVotes = votes.filter((v: any) => v.vote === 'reject').length;
+  const approveVotes = votes.filter((v: any) => v.vote === 'approve');
+  const rejectVotes = votes.filter((v: any) => v.vote === 'reject');
+  
+  const approveVoters = approveVotes.map((v: any) => v.profiles?.username || 'Membro').join(', ');
+  const rejectVoters = rejectVotes.map((v: any) => v.profiles?.username || 'Membro').join(', ');
+  
   const myVote = votes.find((v: any) => v.user_id === currentUserId)?.vote;
 
   return (
@@ -78,20 +83,20 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
 
         <div className="flex items-center gap-4">
           <div className="hidden sm:flex items-center gap-3 mr-4">
-            <div className="flex items-center gap-1 text-green-500 text-[10px] font-black">
-              <ThumbsUp size={12} /> {approveVotes}
+            <div className="flex items-center gap-1 text-green-500 text-[10px] font-black" title={approveVoters}>
+              <ThumbsUp size={12} /> {approveVotes.length}
             </div>
-            <div className="flex items-center gap-1 text-red-500 text-[10px] font-black">
-              <ThumbsDown size={12} /> {rejectVotes}
+            <div className="flex items-center gap-1 text-red-500 text-[10px] font-black" title={rejectVoters}>
+              <ThumbsDown size={12} /> {rejectVotes.length}
             </div>
           </div>
           <div className={cn(
             "px-3 py-1 text-[8px] font-black uppercase italic tracking-widest items-center gap-1.5",
             app.status === 'pending' && "bg-zinc-800 text-zinc-400",
-            app.status === 'approved' && "bg-white text-black",
-            app.status === 'rejected' && "bg-zinc-700 text-white"
+            app.status === 'approved' && "bg-green-600 text-white",
+            app.status === 'rejected' && "bg-red-600 text-white"
           )}>
-            {app.status === 'pending' ? 'IN ATTESA' : app.status.toUpperCase()}
+            {app.status === 'pending' ? 'IN ATTESA' : app.status === 'approved' ? 'APPROVATA' : 'RIFIUTATA'}
           </div>
           <div className="p-2 text-zinc-500 group-hover:text-white transition-colors">
             {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
@@ -140,7 +145,6 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
                       <p className="text-[7px] text-zinc-600 font-bold uppercase">Assetto</p>
                       <p className="text-sm font-black uppercase italic text-zinc-400">{app.vehicles?.suspension_type}</p>
                     </div>
-                    {/* Targa visibile agli amministratori */}
                     <div className="space-y-1 col-span-2">
                       <p className="text-[7px] text-zinc-600 font-bold uppercase">Targa Veicolo</p>
                       <div className="flex items-center gap-2">
@@ -171,8 +175,20 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
 
               <div className="p-6 bg-zinc-900/50 border-t border-white/5 flex flex-col gap-6">
                 {canVote && (
-                  <div className="flex flex-col gap-3">
-                    <p className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">Il tuo voto (Staff/Supporto)</p>
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">Votazione Staff</p>
+                      <div className="flex gap-4">
+                        <div className="flex flex-col items-end">
+                          <span className="text-[7px] text-zinc-600 font-bold uppercase">Approvazioni ({approveVotes.length})</span>
+                          <span className="text-[8px] text-green-500 font-black italic">{approveVoters || 'Nessuno'}</span>
+                        </div>
+                        <div className="flex flex-col items-end">
+                          <span className="text-[7px] text-zinc-600 font-bold uppercase">Rifiuti ({rejectVotes.length})</span>
+                          <span className="text-[8px] text-red-500 font-black italic">{rejectVoters || 'Nessuno'}</span>
+                        </div>
+                      </div>
+                    </div>
                     <div className="flex gap-3">
                       <Button 
                         onClick={(e) => { e.stopPropagation(); castVote.mutate({ applicationId: app.id, vote: 'approve' }); }}
@@ -200,7 +216,7 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
 
                 {canManage && (
                   <div className="flex flex-col gap-3 pt-4 border-t border-white/5">
-                    <p className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">Azione Finale (Solo Admin/Staff)</p>
+                    <p className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">Azione Finale</p>
                     <div className="flex gap-3">
                       <Button 
                         onClick={(e) => { e.stopPropagation(); onUpdateStatus(app.id, 'approved'); }}

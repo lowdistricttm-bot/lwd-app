@@ -43,7 +43,7 @@ export const useAdmin = () => {
           profiles:user_id (first_name, last_name, avatar_url, username, role),
           vehicles:vehicle_id (*),
           events:event_id (title, location, date),
-          application_votes (*)
+          application_votes (*, profiles:user_id (username))
         `)
         .order('applied_at', { ascending: false });
 
