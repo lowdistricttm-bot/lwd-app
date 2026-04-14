@@ -122,9 +122,9 @@ const EmailSettingsModal = ({ isOpen, onClose }: EmailSettingsModalProps) => {
                       <Button 
                         onClick={() => handleSave(template.type)}
                         disabled={saving}
-                        className="w-full bg-white text-black hover:bg-zinc-200 rounded-none h-12 font-black uppercase italic tracking-widest"
+                        className="w-full bg-white text-black hover:bg-zinc-200 rounded-none h-12 font-black uppercase italic tracking-wider text-[10px]"
                       >
-                        {saving ? <Loader2 className="animate-spin" /> : <><Save size={16} className="mr-2" /> Salva Template {template.type === 'approval' ? 'Approvazione' : 'Rifiuto'}</>}
+                        {saving ? <Loader2 className="animate-spin" size={14} /> : <><Save size={14} className="mr-2" /> Salva Template {template.type === 'approval' ? 'Approvazione' : 'Rifiuto'}</>}
                       </Button>
                     </div>
                   ))}
