@@ -36,7 +36,8 @@ export const useAdmin = () => {
   const { data: allApplications, isLoading: loadingApps, error: loadError } = useQuery({
     queryKey: ['admin-applications'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // 1. Recuperiamo le candidature
+      const { data: apps, error: appsError } = await supabase
         .from('applications')
         .select(`
           *,
@@ -46,22 +47,30 @@ export const useAdmin = () => {
         `)
         .order('applied_at', { ascending: false });
 
-      if (error) throw error;
-      if (!data) return [];
+      if (appsError) throw appsError;
+      if (!apps) return [];
 
-      const { data: votesData } = await supabase
+      // 2. Recuperiamo TUTTI i voti con i relativi profili
+      const { data: votes, error: votesError } = await supabase
         .from('application_votes')
         .select(`
           *,
           profiles:user_id (username)
         `);
 
-      return data.map(app => ({
+      if (votesError) {
+        console.error("[Admin] Errore recupero voti:", votesError);
+        return apps.map(app => ({ ...app, application_votes: [] }));
+      }
+
+      // 3. Uniamo i dati
+      return apps.map(app => ({
         ...app,
-        application_votes: votesData?.filter(v => v.application_id === app.id) || []
+        application_votes: votes.filter(v => v.application_id === app.id) || []
       }));
     },
-    enabled: canVote
+    enabled: canVote,
+    refetchOnWindowFocus: true
   });
 
   const updateStatus = useMutation({
@@ -85,6 +94,7 @@ export const useAdmin = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Devi accedere per votare.");
 
+      // Usiamo upsert con la constraint unique_vote_per_user
       const { error } = await supabase
         .from('application_votes')
         .upsert({ 
@@ -97,38 +107,29 @@ export const useAdmin = () => {
       return { applicationId, vote, userId: user.id };
     },
     onMutate: async ({ applicationId, vote }) => {
-      // Cancella eventuali refetch in corso per non sovrascrivere l'update ottimistico
       await queryClient.cancelQueries({ queryKey: ['admin-applications'] });
-
-      // Salva lo stato precedente
       const previousApps = queryClient.getQueryData(['admin-applications']);
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) return { previousApps };
 
-      // Recuperiamo l'username corrente per l'update visivo
       const { data: myProfile } = await supabase.from('profiles').select('username').eq('id', user.id).single();
       const myUsername = myProfile?.username || 'Tu';
 
-      // Aggiorna ottimisticamente la cache
       queryClient.setQueryData(['admin-applications'], (old: any) => {
         if (!old) return old;
         return old.map((app: any) => {
           if (app.id !== applicationId) return app;
-
           const existingVotes = app.application_votes || [];
           const otherVotes = existingVotes.filter((v: any) => v.user_id !== user.id);
-          
-          const newVote = {
-            application_id: applicationId,
-            user_id: user.id,
-            vote: vote,
-            profiles: { username: myUsername }
-          };
-
           return {
             ...app,
-            application_votes: [...otherVotes, newVote]
+            application_votes: [...otherVotes, {
+              application_id: applicationId,
+              user_id: user.id,
+              vote: vote,
+              profiles: { username: myUsername }
+            }]
           };
         });
       });
@@ -136,30 +137,21 @@ export const useAdmin = () => {
       return { previousApps };
     },
     onError: (err, variables, context: any) => {
-      // In caso di errore, ripristina lo stato precedente
       if (context?.previousApps) {
         queryClient.setQueryData(['admin-applications'], context.previousApps);
       }
-      showError("Errore durante la votazione");
+      showError("Errore durante la votazione. Verifica i permessi.");
     },
     onSettled: () => {
-      // Invalida sempre per sincronizzare con il server alla fine
+      // Forza il ricaricamento completo per essere sicuri dei dati sul server
       queryClient.invalidateQueries({ queryKey: ['admin-applications'] });
     }
   });
 
   return { 
-    role, 
-    isAdmin, 
-    isStaff, 
-    isSupport, 
-    canManage, 
-    canVote, 
+    role, isAdmin, isStaff, isSupport, canManage, canVote, 
     checkingAdmin: checkingRole, 
-    allApplications, 
-    loadingApps, 
-    loadError,
-    updateStatus,
-    castVote
+    allApplications, loadingApps, loadError,
+    updateStatus, castVote
   };
 };
