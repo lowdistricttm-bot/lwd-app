@@ -2,10 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Trash2, Loader2 } from 'lucide-react';
+import { useStories } from '@/hooks/use-stories';
+import { supabase } from "@/integrations/supabase/client";
 
 interface StoryViewerProps {
   userStories: {
+    user_id: string;
     username: string;
     avatar_url?: string;
     items: Array<{
@@ -19,11 +22,20 @@ interface StoryViewerProps {
 const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const { deleteStory } = useStories();
+  
   const currentStory = userStories.items[currentIndex];
 
   useEffect(() => {
-    const duration = 5000; // 5 secondi
-    const interval = 50; // Aggiornamento ogni 50ms
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setCurrentUserId(user?.id || null);
+    });
+  }, []);
+
+  useEffect(() => {
+    const duration = 15000; // 15 secondi richiesti
+    const interval = 50; 
     const increment = (interval / duration) * 100;
 
     const timer = setInterval(() => {
@@ -44,7 +56,8 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
     return () => clearInterval(timer);
   }, [currentIndex, userStories.items.length, onClose]);
 
-  const handleNext = () => {
+  const handleNext = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     if (currentIndex < userStories.items.length - 1) {
       setCurrentIndex(currentIndex + 1);
       setProgress(0);
@@ -53,12 +66,29 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
     }
   };
 
-  const handlePrev = () => {
+  const handlePrev = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
       setProgress(0);
     }
   };
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!currentStory) return;
+    
+    try {
+      await deleteStory.mutateAsync(currentStory.id);
+      if (userStories.items.length === 1) {
+        onClose();
+      } else {
+        handleNext();
+      }
+    } catch (err) {}
+  };
+
+  const isOwner = currentUserId === userStories.user_id;
 
   return (
     <motion.div 
@@ -94,15 +124,27 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
               {userStories.username}
             </span>
           </div>
-          <button 
-            onClick={onClose} 
-            className="p-2 text-white/70 hover:text-white transition-colors drop-shadow-md"
-          >
-            <X size={24} />
-          </button>
+          
+          <div className="flex items-center gap-2">
+            {isOwner && (
+              <button 
+                onClick={handleDelete}
+                disabled={deleteStory.isPending}
+                className="p-2 text-white/70 hover:text-red-600 transition-colors drop-shadow-md"
+              >
+                {deleteStory.isPending ? <Loader2 size={20} className="animate-spin" /> : <Trash2 size={20} />}
+              </button>
+            )}
+            <button 
+              onClick={onClose} 
+              className="p-2 text-white/70 hover:text-white transition-colors drop-shadow-md"
+            >
+              <X size={24} />
+            </button>
+          </div>
         </div>
 
-        {/* Navigation Areas */}
+        {/* Navigation Areas (Touch) */}
         <div className="absolute inset-0 z-20 flex">
           <div className="w-1/3 h-full cursor-pointer" onClick={handlePrev} />
           <div className="w-2/3 h-full cursor-pointer" onClick={handleNext} />

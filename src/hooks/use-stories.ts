@@ -84,5 +84,20 @@ export const useStories = () => {
     onError: (error: any) => showError(error.message)
   });
 
-  return { stories, isLoading, uploadStory };
+  const deleteStory = useMutation({
+    mutationFn: async (storyId: string) => {
+      const { error } = await supabase
+        .from('stories')
+        .delete()
+        .eq('id', storyId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['active-stories'] });
+      showSuccess("Storia eliminata.");
+    },
+    onError: (error: any) => showError("Errore durante l'eliminazione")
+  });
+
+  return { stories, isLoading, uploadStory, deleteStory };
 };
