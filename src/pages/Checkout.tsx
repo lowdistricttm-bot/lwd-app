@@ -53,7 +53,6 @@ const Checkout = () => {
     e.preventDefault();
     
     try {
-      // Cerchiamo se l'utente esiste già come cliente su WC
       const CK = "ck_3d72f4e97f4b104d76bcf2f156d7f47b0e92af9b"; 
       const CS = "cs_dfc8bfa35e29acf49067f1af13a98734142d2533";
       const auth = btoa(`${CK}:${CS}`);
@@ -72,7 +71,7 @@ const Checkout = () => {
 
       const orderPayload = {
         payment_method: "cod",
-        payment_method_title: "Pagamento alla Consegna / WhatsApp",
+        payment_method_title: "Pagamento su WhatsApp",
         set_paid: false,
         billing: {
           first_name: formData.firstName,
@@ -100,10 +99,7 @@ const Checkout = () => {
       setOrderId(order.id);
       setIsFinished(true);
       clearCart();
-      
-      // Invalidiamo subito la cache per far apparire l'ordine nel profilo
       queryClient.invalidateQueries({ queryKey: ['wc-orders'] });
-      
       showSuccess("Ordine creato con successo!");
     } catch (err: any) {
       showError(err.message);
