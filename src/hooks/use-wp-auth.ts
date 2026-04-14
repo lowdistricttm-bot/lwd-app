@@ -8,15 +8,15 @@ const WP_URL = "https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth";
 export const useWpAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
 
-  const loginWithWp = async (username: string, password: string) => {
+  const loginWithWp = async (usernameInput: string, password: string) => {
     setIsLoading(true);
     try {
-      console.log("[Auth] Tentativo di sincronizzazione con Low District...");
+      console.log("[Auth] Sincronizzazione con Low District in corso...");
       
       const response = await fetch(WP_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username: usernameInput, password }),
       });
 
       const data = await response.json();
@@ -25,15 +25,14 @@ export const useWpAuth = () => {
         throw new Error(data.message || "Credenziali non valide sul sito ufficiale");
       }
 
-      // Estrazione dati utente dal sito
+      // Estrazione dati reali dal sito (Simple JWT Login structure)
       const jwt = data.jwt || (data.data && data.data.jwt);
-      const userEmail = data.user_email || (username.includes('@') ? username : `${username}@lowdistrict.it`);
+      const userEmail = data.user_email || (usernameInput.includes('@') ? usernameInput : `${usernameInput}@lowdistrict.it`);
       
-      // Tentiamo di estrarre nome e cognome se disponibili nella risposta WP
-      // Spesso WP restituisce display_name o user_nicename
-      const displayName = data.user_display_name || data.user_nicename || username;
+      // Recuperiamo l'username ufficiale dal sito (user_login o user_nicename)
+      const officialUsername = data.user_login || data.user_nicename || usernameInput;
+      const displayName = data.user_display_name || officialUsername;
       
-      // Salvataggio locale per BuddyPress
       if (jwt) {
         localStorage.setItem('wp-jwt', jwt);
         localStorage.setItem('wp-user', JSON.stringify(data));
@@ -52,7 +51,7 @@ export const useWpAuth = () => {
           password: password,
           options: { 
             data: { 
-              username: username,
+              username: officialUsername,
               full_name: displayName
             } 
           }
@@ -65,22 +64,22 @@ export const useWpAuth = () => {
         }
       }
 
-      // 2. Sincronizzazione immediata del Profilo con i dati del sito
+      // 2. Sincronizzazione forzata del Profilo con l'username del sito
       if (authData?.user) {
-        // Dividiamo il display name in nome e cognome se possibile
         const nameParts = displayName.split(' ');
         const firstName = nameParts[0] || '';
         const lastName = nameParts.slice(1).join(' ') || '';
 
-        await supabase.from('profiles').upsert({
+        const { error: upsertError } = await supabase.from('profiles').upsert({
           id: authData.user.id,
-          username: username,
+          username: officialUsername, // Usiamo l'username ufficiale del sito
           first_name: firstName,
           last_name: lastName,
           updated_at: new Date().toISOString()
         });
         
-        console.log("[Auth] Profilo sincronizzato con i dati del sito web.");
+        if (upsertError) console.error("[Auth] Errore upsert profilo:", upsertError.message);
+        else console.log("[Auth] Profilo sincronizzato con username:", officialUsername);
       }
 
       return { success: true, user: data };

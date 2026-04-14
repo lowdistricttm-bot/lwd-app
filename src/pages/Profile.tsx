@@ -143,10 +143,8 @@ const Profile = () => {
     </div>
   );
 
-  // Priorità: Nome + Cognome > Username > User
-  const displayName = (profile?.first_name || profile?.last_name) 
-    ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() 
-    : (profile?.username || 'User');
+  // Priorità assoluta all'username del sito per coerenza
+  const displayName = profile?.username || (profile?.first_name ? `${profile.first_name} ${profile.last_name || ''}`.trim() : 'User');
 
   const tabs = isOwnProfile ? [
     { id: 'activity', label: 'Feed', icon: MessageSquare },
