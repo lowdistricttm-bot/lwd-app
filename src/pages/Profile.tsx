@@ -172,6 +172,7 @@ const Profile = () => {
       <Navbar />
       <main className="flex-1 pb-32">
         <div className="relative h-56 md:h-80 bg-zinc-900 group/cover">
+          {/* Container principale per la copertina */}
           <div 
             className="absolute inset-0 overflow-hidden cursor-pointer" 
             onClick={() => setLightboxData({ images: [profile?.cover_url || DEFAULT_COVER], index: 0 })}
@@ -183,15 +184,19 @@ const Profile = () => {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
             
+            {/* Overlay per il cambio copertina (solo se è il proprio profilo) */}
             {isOwnProfile && (
-              <div 
-                onClick={(e) => { e.stopPropagation(); coverInputRef.current?.click(); }}
-                className="absolute inset-0 bg-black/40 opacity-0 group-hover/cover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 z-30"
-              >
-                <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
-                  <Camera size={24} className="text-white" />
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-white">Cambia Copertina</span>
+              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/cover:opacity-100 transition-opacity flex flex-col items-center justify-center z-30 pointer-events-none">
+                <button 
+                  onClick={(e) => { 
+                    e.stopPropagation(); // Impedisce l'apertura del lightbox
+                    coverInputRef.current?.click(); 
+                  }}
+                  className="pointer-events-auto w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-all shadow-xl"
+                >
+                  <Camera size={24} />
+                </button>
+                <span className="text-[10px] font-black uppercase tracking-widest text-white mt-2 drop-shadow-md">Cambia Copertina</span>
               </div>
             )}
             
