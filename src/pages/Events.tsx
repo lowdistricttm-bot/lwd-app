@@ -41,7 +41,7 @@ const Events = () => {
         setFormData(prev => ({ 
           ...prev, 
           fullName: session.user.user_metadata?.full_name || '',
-          email: '' // Email vuota di default
+          email: ''
         }));
       }
     });
@@ -119,7 +119,7 @@ const Events = () => {
       setInteriorPreviews([]);
       setFormData({
         fullName: user?.user_metadata?.full_name || '',
-        email: '', // Reset a vuoto dopo l'invio
+        email: '',
         phone: '',
         city: '',
         instagram: '',
@@ -150,7 +150,7 @@ const Events = () => {
         <main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
           <AlertCircle size={48} className="text-zinc-800 mb-6" />
           <h1 className="text-2xl font-black uppercase italic mb-4">Accesso Riservato</h1>
-          <Button onClick={() => navigate('/login')} className="bg-red-600 rounded-none font-black uppercase italic px-12 py-6">Accedi Ora</Button>
+          <Button onClick={() => navigate('/login')} className="bg-white text-black rounded-none font-black uppercase italic px-12 py-6">Accedi Ora</Button>
         </main>
         <BottomNav />
       </div>
@@ -162,26 +162,26 @@ const Events = () => {
       <Navbar />
       <main className="flex-1 pt-24 pb-32 px-6 max-w-4xl mx-auto w-full">
         <header className="mb-12">
-          <h2 className="text-red-600 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">District Calendar</h2>
+          <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">District Calendar</h2>
           <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">Eventi & Selezioni</h1>
         </header>
 
         {eventsLoading || appsLoading ? (
-          <div className="flex justify-center py-20"><Loader2 className="animate-spin text-red-600" size={40} /></div>
+          <div className="flex justify-center py-20"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>
         ) : (
           <div className="space-y-6">
             {events?.map((event) => {
               const existingApp = getAppForEvent(event.id);
               return (
-                <motion.div key={event.id} className="bg-zinc-900/40 border border-white/5 p-6 group hover:border-red-600/30 transition-all">
+                <motion.div key={event.id} className="bg-zinc-900/40 border border-white/5 p-6 group hover:border-white/20 transition-all">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div className="space-y-4">
                       <span className={cn(
                         "text-[8px] font-black uppercase px-2 py-0.5 italic",
                         existingApp?.status === 'pending' && "bg-zinc-800 text-zinc-400",
-                        existingApp?.status === 'approved' && "bg-green-600 text-white",
-                        existingApp?.status === 'rejected' && "bg-red-600 text-white",
-                        !existingApp && "bg-green-600 text-white"
+                        existingApp?.status === 'approved' && "bg-white text-black",
+                        existingApp?.status === 'rejected' && "bg-zinc-700 text-white",
+                        !existingApp && "bg-white text-black"
                       )}>
                         {existingApp ? `STATO: ${existingApp.status === 'pending' ? 'IN ATTESA' : existingApp.status.toUpperCase()}` : "Iscrizioni Aperte"}
                       </span>
@@ -198,7 +198,7 @@ const Events = () => {
                     ) : (
                       <Button 
                         onClick={() => setSelectedEvent(event)}
-                        className="bg-white text-black hover:bg-red-600 hover:text-white rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 px-8"
+                        className="bg-white text-black hover:bg-zinc-200 rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 px-8"
                       >
                         Candidati <ChevronRight size={14} className="ml-2" />
                       </Button>
@@ -210,7 +210,6 @@ const Events = () => {
           </div>
         )}
 
-        {/* Modal Gestione Selezione */}
         <AnimatePresence>
           {manageApp && (
             <>
@@ -224,7 +223,7 @@ const Events = () => {
                   
                   <div className="bg-zinc-900 p-6 border border-white/5">
                     <p className="text-[10px] font-black uppercase text-zinc-500 mb-2">Stato Attuale</p>
-                    <p className="text-2xl font-black italic uppercase text-red-600">
+                    <p className="text-2xl font-black italic uppercase text-white">
                       {manageApp.status === 'pending' ? 'IN ATTESA' : manageApp.status.toUpperCase()}
                     </p>
                   </div>
@@ -234,7 +233,7 @@ const Events = () => {
                     <Button 
                       onClick={handleCancel}
                       disabled={cancelApplication.isPending}
-                      className="w-full bg-red-600 hover:bg-white hover:text-black text-white py-6 rounded-none font-black uppercase italic tracking-widest"
+                      className="w-full bg-zinc-800 hover:bg-white hover:text-black text-white py-6 rounded-none font-black uppercase italic tracking-widest"
                     >
                       {cancelApplication.isPending ? <Loader2 className="animate-spin" /> : <><Trash2 size={16} className="mr-2" /> Annulla Candidatura</>}
                     </Button>
@@ -245,7 +244,6 @@ const Events = () => {
           )}
         </AnimatePresence>
 
-        {/* Modal Candidatura */}
         <AnimatePresence>
           {selectedEvent && (
             <>
@@ -298,7 +296,7 @@ const Events = () => {
                             }} 
                             className={cn(
                               "flex items-center gap-4 p-3 border transition-all text-left group", 
-                              formData.vehicleId === v.id ? "bg-red-600 border-red-600" : "bg-zinc-900 border-white/5"
+                              formData.vehicleId === v.id ? "bg-white text-black border-white" : "bg-zinc-900 border-white/5"
                             )}
                           >
                             <div className="w-16 h-16 bg-black shrink-0 overflow-hidden border border-white/10">
@@ -310,29 +308,25 @@ const Events = () => {
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-black uppercase italic truncate">{v.brand} {v.model}</p>
-                              <p className="text-[9px] font-bold uppercase text-zinc-500 group-hover:text-white/70">
+                              <p className="text-[9px] font-bold uppercase text-zinc-500 group-hover:text-zinc-400">
                                 {v.suspension_type} • {v.year}
                               </p>
                             </div>
                           </button>
                         ))}
-                        {vehicles?.length === 0 && (
-                          <p className="text-[10px] text-zinc-600 uppercase font-bold italic">Aggiungi prima un veicolo nel tuo Garage per candidarti.</p>
-                        )}
                       </div>
                     </div>
 
-                    {/* Sezione Modifiche Sincronizzata (Read Only) */}
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <Label className="text-[10px] font-black uppercase text-zinc-500">Modifiche Principali (Dal Garage) *</Label>
-                        <div className="flex items-center gap-1 text-[8px] font-black uppercase text-red-600 italic">
+                        <div className="flex items-center gap-1 text-[8px] font-black uppercase text-zinc-500 italic">
                           <Info size={10} /> Sola Lettura
                         </div>
                       </div>
                       <div className={cn(
                         "p-4 border border-white/5 bg-zinc-900/50 min-h-[80px] transition-all",
-                        !formData.modifications && "border-red-600/20"
+                        !formData.modifications && "border-white/10"
                       )}>
                         {formData.modifications ? (
                           <p className="text-xs text-zinc-300 leading-relaxed italic whitespace-pre-wrap">
@@ -344,16 +338,13 @@ const Events = () => {
                           </p>
                         )}
                       </div>
-                      <p className="text-[8px] text-zinc-600 font-bold uppercase tracking-widest">
-                        Per modificare questi dati, aggiorna la descrizione del veicolo nel tuo Garage.
-                      </p>
                     </div>
 
                     <div className="space-y-4">
                       <Label className="text-[10px] font-black uppercase text-zinc-500">Foto Interni (Minimo 3) *</Label>
                       <div 
                         onClick={() => interiorInputRef.current?.click()}
-                        className="h-24 border border-dashed border-zinc-800 flex flex-col items-center justify-center cursor-pointer hover:border-red-600 transition-colors bg-zinc-900/30"
+                        className="h-24 border border-dashed border-zinc-800 flex flex-col items-center justify-center cursor-pointer hover:border-white transition-colors bg-zinc-900/30"
                       >
                         <Camera size={24} className="text-zinc-600 mb-2" />
                         <span className="text-[9px] font-black uppercase text-zinc-500">Carica Foto Interni</span>
@@ -365,14 +356,14 @@ const Events = () => {
                           {interiorPreviews.map((url, i) => (
                             <div key={i} className="aspect-square relative bg-zinc-800 border border-white/5">
                               <img src={url} className="w-full h-full object-cover" alt="Preview" />
-                              <button type="button" onClick={() => removePreview(i)} className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white flex items-center justify-center rounded-full"><X size={10} /></button>
+                              <button type="button" onClick={() => removePreview(i)} className="absolute -top-1 -right-1 w-5 h-5 bg-zinc-700 text-white flex items-center justify-center rounded-full"><X size={10} /></button>
                             </div>
                           ))}
                         </div>
                       )}
                     </div>
 
-                    <Button type="submit" disabled={applyToEvent.isPending} className="w-full bg-red-600 py-8 font-black uppercase italic tracking-widest rounded-none">
+                    <Button type="submit" disabled={applyToEvent.isPending} className="w-full bg-white text-black py-8 font-black uppercase italic tracking-widest rounded-none">
                       {applyToEvent.isPending ? <Loader2 className="animate-spin" /> : "Invia Candidatura"}
                     </Button>
                   </div>

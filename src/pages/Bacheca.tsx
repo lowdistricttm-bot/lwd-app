@@ -39,7 +39,7 @@ const Bacheca = () => {
       <main className="flex-1 pt-24 pb-24 px-4 md:px-6 max-w-2xl mx-auto w-full">
         <header className="mb-12 flex items-end justify-between">
           <div>
-            <h2 className="text-red-600 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">
+            <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">
               District Feed
             </h2>
             <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">
@@ -48,15 +48,15 @@ const Bacheca = () => {
           </div>
           <button 
             onClick={handleCreatePost}
-            className="w-12 h-12 bg-red-600 flex items-center justify-center hover:bg-white hover:text-black transition-all shadow-lg shadow-red-600/20"
+            className="w-12 h-12 bg-white text-black flex items-center justify-center hover:bg-zinc-200 transition-all shadow-lg shadow-white/5"
           >
             <Plus size={24} />
           </button>
         </header>
 
         {error && (
-          <div className="mb-8 p-6 bg-red-900/20 border border-red-600/50 flex items-center gap-4">
-            <AlertCircle className="text-red-600" />
+          <div className="mb-8 p-6 bg-zinc-900/20 border border-zinc-700 flex items-center gap-4">
+            <AlertCircle className="text-zinc-500" />
             <p className="text-xs font-bold uppercase">Errore nel caricamento del feed. Riprova più tardi.</p>
           </div>
         )}
@@ -76,7 +76,7 @@ const Bacheca = () => {
             </div>
             <Button 
               onClick={() => navigate('/login')}
-              className="bg-white text-black hover:bg-red-600 hover:text-white rounded-none text-[9px] font-black uppercase tracking-widest h-10 px-6 italic"
+              className="bg-white text-black hover:bg-zinc-200 rounded-none text-[9px] font-black uppercase tracking-widest h-10 px-6 italic"
             >
               <LogIn size={14} className="mr-2" /> Accedi
             </Button>
@@ -85,7 +85,7 @@ const Bacheca = () => {
           <>
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-20 gap-4">
-                <Loader2 className="animate-spin text-red-600" size={40} />
+                <Loader2 className="animate-spin text-zinc-500" size={40} />
                 <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Sincronizzazione District...</p>
               </div>
             ) : posts?.length === 0 ? (

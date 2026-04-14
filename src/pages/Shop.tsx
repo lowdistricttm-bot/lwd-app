@@ -17,17 +17,14 @@ const Shop = () => {
 
   const { data: allCategories, isLoading: loadingCats } = useWcCategories();
   
-  // Categorie principali (parent === 0)
   const mainCategories = useMemo(() => 
     allCategories?.filter((cat: any) => cat.parent === 0) || [], 
   [allCategories]);
 
-  // Trova la categoria "Abbigliamento" (solitamente slug 'abbigliamento')
   const abbigliamentoCat = useMemo(() => 
     allCategories?.find((cat: any) => cat.slug === 'abbigliamento'),
   [allCategories]);
 
-  // Verifica se la categoria corrente è Abbigliamento o una sua sottocategoria
   const isAbbigliamentoActive = useMemo(() => {
     if (currentCategoryId === 'all' || !abbigliamentoCat) return false;
     if (currentCategoryId === abbigliamentoCat.id.toString()) return true;
@@ -35,7 +32,6 @@ const Shop = () => {
     return currentCat?.parent === abbigliamentoCat.id;
   }, [currentCategoryId, abbigliamentoCat, allCategories]);
 
-  // Sottocategorie di Abbigliamento
   const subCategories = useMemo(() => 
     allCategories?.filter((cat: any) => cat.parent === abbigliamentoCat?.id) || [],
   [allCategories, abbigliamentoCat]);
@@ -64,7 +60,7 @@ const Shop = () => {
         <header className="mb-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
             <div>
-              <h2 className="text-red-600 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">
+              <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">
                 Official Merch
               </h2>
               <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">
@@ -72,13 +68,12 @@ const Shop = () => {
               </h1>
             </div>
 
-            {/* Desktop Main Categories */}
             <div className="hidden md:flex items-center gap-6 overflow-x-auto no-scrollbar pb-2">
               <button 
                 onClick={() => handleCategorySelect('all')}
                 className={cn(
                   "text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border-b-2 pb-1",
-                  currentCategoryId === 'all' ? "text-red-600 border-red-600" : "text-zinc-500 border-transparent hover:text-white"
+                  currentCategoryId === 'all' ? "text-white border-white" : "text-zinc-500 border-transparent hover:text-white"
                 )}
               >
                 Tutti
@@ -90,7 +85,7 @@ const Shop = () => {
                   className={cn(
                     "text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border-b-2 pb-1",
                     (currentCategoryId === cat.id.toString() || (cat.slug === 'abbigliamento' && isAbbigliamentoActive)) 
-                      ? "text-red-600 border-red-600" 
+                      ? "text-white border-white" 
                       : "text-zinc-500 border-transparent hover:text-white"
                   )}
                   dangerouslySetInnerHTML={{ __html: cat.name }}
@@ -98,7 +93,6 @@ const Shop = () => {
               ))}
             </div>
 
-            {/* Mobile Filter Toggle */}
             <button 
               onClick={() => setIsFilterOpen(true)}
               className="md:hidden flex items-center gap-2 bg-zinc-900 border border-white/10 px-4 py-3 text-[10px] font-black uppercase tracking-widest italic"
@@ -107,7 +101,6 @@ const Shop = () => {
             </button>
           </div>
 
-          {/* Subcategories Bar (Visible if Abbigliamento is active) */}
           <AnimatePresence>
             {isAbbigliamentoActive && subCategories.length > 0 && (
               <motion.div 
@@ -147,7 +140,6 @@ const Shop = () => {
           </AnimatePresence>
         </header>
 
-        {/* Mobile Filter Drawer */}
         <AnimatePresence>
           {isFilterOpen && (
             <>
@@ -173,7 +165,7 @@ const Shop = () => {
                     onClick={() => handleCategorySelect('all')}
                     className={cn(
                       "block w-full text-left text-sm font-black uppercase tracking-widest italic",
-                      currentCategoryId === 'all' ? "text-red-600" : "text-zinc-500"
+                      currentCategoryId === 'all' ? "text-white" : "text-zinc-500"
                     )}
                   >
                     Tutti i Prodotti
@@ -189,7 +181,7 @@ const Shop = () => {
                           onClick={() => handleCategorySelect(cat.id.toString())}
                           className={cn(
                             "block w-full text-left text-sm font-black uppercase tracking-widest italic",
-                            (isMainActive || (cat.slug === 'abbigliamento' && isAbbigliamentoActive)) ? "text-red-600" : "text-zinc-500"
+                            (isMainActive || (cat.slug === 'abbigliamento' && isAbbigliamentoActive)) ? "text-white" : "text-zinc-500"
                           )}
                           dangerouslySetInnerHTML={{ __html: cat.name }}
                         />
@@ -220,7 +212,7 @@ const Shop = () => {
 
         {loadingProducts || loadingCats ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <Loader2 className="animate-spin text-red-600" size={40} />
+            <Loader2 className="animate-spin text-zinc-500" size={40} />
             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Sincronizzazione prodotti...</p>
           </div>
         ) : products?.length === 0 ? (
@@ -245,12 +237,12 @@ const Shop = () => {
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     />
                     {product.on_sale && (
-                      <div className="absolute top-4 left-4 bg-red-600 text-white text-[8px] font-black uppercase px-2 py-1 italic">
+                      <div className="absolute top-4 left-4 bg-white text-black text-[8px] font-black uppercase px-2 py-1 italic">
                         Sale
                       </div>
                     )}
                   </div>
-                  <h3 className="text-xs font-black uppercase italic tracking-tight mb-1 group-hover:text-red-600 transition-colors" dangerouslySetInnerHTML={{ __html: product.name }} />
+                  <h3 className="text-xs font-black uppercase italic tracking-tight mb-1 group-hover:text-zinc-400 transition-colors" dangerouslySetInnerHTML={{ __html: product.name }} />
                   <p className="text-sm font-black tracking-tighter">€{product.price}</p>
                 </Link>
               </motion.div>

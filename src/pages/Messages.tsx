@@ -40,19 +40,19 @@ const Messages = () => {
       <main className="flex-1 pt-24 pb-32 px-6 max-w-2xl mx-auto w-full">
         <header className="mb-12 flex items-end justify-between">
           <div>
-            <h2 className="text-red-600 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Direct</h2>
+            <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Direct</h2>
             <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">Messaggi</h1>
           </div>
           <button 
             onClick={() => setIsNewChatOpen(true)}
-            className="w-12 h-12 bg-red-600 flex items-center justify-center hover:bg-white hover:text-black transition-all shadow-lg shadow-red-600/20"
+            className="w-12 h-12 bg-white text-black flex items-center justify-center hover:bg-zinc-200 transition-all shadow-lg shadow-white/5"
           >
             <Plus size={24} />
           </button>
         </header>
 
         {loadingConvs ? (
-          <div className="flex justify-center py-20"><Loader2 className="animate-spin text-red-600" size={40} /></div>
+          <div className="flex justify-center py-20"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>
         ) : conversations?.length === 0 ? (
           <div className="text-center py-20 border border-white/5 bg-zinc-900/30">
             <MessageSquare className="mx-auto text-zinc-800 mb-6" size={48} />
@@ -62,8 +62,7 @@ const Messages = () => {
           <div className="space-y-2">
             {conversations?.map((conv: any) => (
               <div key={conv.otherId} className="relative overflow-hidden bg-zinc-900/40 border border-white/5 group">
-                {/* Delete Action Background */}
-                <div className="absolute inset-0 bg-red-600 flex items-center justify-end px-6">
+                <div className="absolute inset-0 bg-zinc-800 flex items-center justify-end px-6">
                   <Trash2 size={20} className="text-white" />
                 </div>
 
@@ -99,7 +98,7 @@ const Messages = () => {
                       {conv.lastMessage.content}
                     </p>
                   </div>
-                  <ChevronRight size={16} className="text-zinc-800 group-hover:text-red-600 transition-colors" />
+                  <ChevronRight size={16} className="text-zinc-800 group-hover:text-white transition-colors" />
                 </motion.button>
               </div>
             ))}
@@ -117,7 +116,7 @@ const Messages = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="rounded-none border-white/10 text-white font-black uppercase italic text-[10px]">Annulla</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="rounded-none bg-red-600 text-white font-black uppercase italic text-[10px]">Elimina</AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete} className="rounded-none bg-zinc-800 text-white font-black uppercase italic text-[10px]">Elimina</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

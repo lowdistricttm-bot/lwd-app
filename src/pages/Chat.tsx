@@ -38,7 +38,6 @@ const Chat = () => {
       supabase.from('profiles').select('*').eq('id', userId).maybeSingle().then(({ data }) => {
         setOtherUserProfile(data);
       });
-      // Segna come letti all'apertura
       markAsRead.mutate(userId);
     }
   }, [userId]);
@@ -47,7 +46,6 @@ const Chat = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-    // Segna come letti quando arrivano nuovi messaggi mentre la chat è aperta
     if (userId && chatMessages?.some(m => !m.is_read && m.receiver_id === currentUserId)) {
       markAsRead.mutate(userId);
     }
@@ -91,7 +89,7 @@ const Chat = () => {
             <h4 className="text-sm font-black italic uppercase tracking-tight">
               {otherUserProfile?.username || 'Membro District'}
             </h4>
-            <p className="text-[8px] text-green-500 font-black uppercase tracking-widest">Online</p>
+            <p className="text-[8px] text-zinc-500 font-black uppercase tracking-widest">Online</p>
           </div>
         </div>
       </nav>
@@ -99,7 +97,7 @@ const Chat = () => {
       <main ref={scrollRef} className="flex-1 pt-24 pb-24 px-6 overflow-y-auto space-y-4">
         {loadingChat ? (
           <div className="flex justify-center py-20">
-            <Loader2 className="animate-spin text-red-600" size={32} />
+            <Loader2 className="animate-spin text-zinc-500" size={32} />
           </div>
         ) : chatMessages?.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center opacity-30 py-20">
@@ -112,7 +110,7 @@ const Chat = () => {
             return (
               <div key={msg.id} className={cn("flex relative", isMe ? "justify-end" : "justify-start")}>
                 {isMe && (
-                  <div className="absolute inset-y-0 right-0 w-20 bg-red-600 flex items-center justify-center rounded-2xl rounded-tr-none">
+                  <div className="absolute inset-y-0 right-0 w-20 bg-zinc-800 flex items-center justify-center rounded-2xl rounded-tr-none">
                     <Trash2 size={16} className="text-white" />
                   </div>
                 )}
@@ -129,7 +127,7 @@ const Chat = () => {
                   className={cn(
                     "relative max-w-[80%] p-4 text-sm font-medium shadow-lg z-10",
                     isMe 
-                      ? "bg-red-600 text-white rounded-2xl rounded-tr-none" 
+                      ? "bg-zinc-800 text-white rounded-2xl rounded-tr-none" 
                       : "bg-zinc-900 text-zinc-200 rounded-2xl rounded-tl-none border border-white/5"
                   )}
                 >
@@ -153,12 +151,12 @@ const Chat = () => {
             placeholder="Scrivi un messaggio..." 
             value={message} 
             onChange={(e) => setMessage(e.target.value)}
-            className="bg-zinc-900 border-zinc-800 rounded-none h-12 font-bold uppercase text-xs tracking-widest focus-visible:ring-red-600 placeholder:text-zinc-700"
+            className="bg-zinc-900 border-zinc-800 rounded-none h-12 font-bold uppercase text-xs tracking-widest focus-visible:ring-white placeholder:text-zinc-700"
           />
           <button 
             type="submit" 
             disabled={!message.trim() || sendMessage.isPending}
-            className="w-12 h-12 bg-red-600 flex items-center justify-center hover:bg-white hover:text-black transition-all shrink-0 disabled:opacity-50"
+            className="w-12 h-12 bg-white text-black flex items-center justify-center hover:bg-zinc-200 transition-all shrink-0 disabled:opacity-50"
           >
             {sendMessage.isPending ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
           </button>
@@ -175,7 +173,7 @@ const Chat = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="rounded-none border-white/10 text-white font-black uppercase italic text-[10px]">Annulla</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="rounded-none bg-red-600 text-white font-black uppercase italic text-[10px]">Elimina</AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete} className="rounded-none bg-zinc-800 text-white font-black uppercase italic text-[10px]">Elimina</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
