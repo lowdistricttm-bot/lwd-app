@@ -106,7 +106,12 @@ const Profile = () => {
 
   if (loading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
-  const displayName = profile?.username || (profile?.first_name || profile?.last_name ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : null) || 'User';
+  // Logica migliorata per il nome visualizzato
+  const displayName = profile?.username || 
+                     (isOwnProfile ? currentUser?.user_metadata?.username : null) ||
+                     (profile?.first_name || profile?.last_name ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : null) || 
+                     'Membro District';
+
   const userRole = profile?.role || (profile?.is_admin ? 'admin' : 'member');
   const roleLabel = roleLabels[userRole] || 'MEMBRO UFFICIALE';
 
