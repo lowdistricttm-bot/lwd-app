@@ -201,6 +201,7 @@ export const useSocialFeed = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Accedi per mettere like");
 
+      // Controllo atomico: cerchiamo se esiste già un like
       const { data: existingLike } = await supabase
         .from('likes')
         .select('id')
@@ -209,14 +210,19 @@ export const useSocialFeed = () => {
         .maybeSingle();
 
       if (existingLike) {
-        await supabase.from('likes').delete().eq('id', existingLike.id);
+        // Se esiste, lo togliamo (Un-like)
+        const { error } = await supabase.from('likes').delete().eq('id', existingLike.id);
+        if (error) throw error;
       } else {
-        await supabase.from('likes').insert([{ post_id: postId, user_id: user.id }]);
+        // Se non esiste, lo aggiungiamo (Like)
+        const { error } = await supabase.from('likes').insert([{ post_id: postId, user_id: user.id }]);
+        if (error) throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['social-posts'] });
-    }
+    },
+    onError: (error: any) => showError(error.message)
   });
 
   return { posts, isLoading, error, createPost, updatePost, deletePost, toggleLike, addComment, deleteComment };

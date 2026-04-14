@@ -22,6 +22,83 @@ interface FeedPostProps {
   post: Post;
 }
 
+const CommentItem = ({ 
+  comment, 
+  allComments, 
+  onReply, 
+  onDelete, 
+  currentUserId, 
+  level = 0 
+}: { 
+  comment: any, 
+  allComments: any[], 
+  onReply: (id: string, name: string) => void, 
+  onDelete: (id: string) => void, 
+  currentUserId: string | null,
+  level?: number
+}) => {
+  const replies = allComments.filter(c => c.parent_id === comment.id);
+  const username = comment.profiles ? `${comment.profiles.first_name || ''} ${comment.profiles.last_name || ''}`.trim() : 'Membro';
+
+  return (
+    <div className={cn("space-y-4", level > 0 ? "ml-6 md:ml-10" : "")}>
+      <div className="flex gap-3">
+        {level > 0 && <CornerDownRight size={14} className="text-zinc-800 mt-2 shrink-0" />}
+        <div className={cn("bg-zinc-800 shrink-0 overflow-hidden", level > 0 ? "w-6 h-6" : "w-8 h-8")}>
+          {comment.profiles?.avatar_url && <img src={comment.profiles.avatar_url} className="w-full h-full object-cover" />}
+        </div>
+        <div className="flex-1">
+          <div className={cn(
+            "bg-zinc-900/80 p-3 rounded-2xl rounded-tl-none relative group/comment",
+            level > 0 ? "bg-zinc-900/40 border border-white/5" : ""
+          )}>
+            <p className="text-[9px] font-black uppercase italic text-zinc-400 mb-1">
+              {username}
+            </p>
+            <p className="text-xs text-zinc-200">{comment.content}</p>
+            
+            {currentUserId === comment.user_id && (
+              <button 
+                onClick={() => onDelete(comment.id)}
+                className="absolute top-2 right-2 opacity-0 group-hover/comment:opacity-100 text-zinc-600 hover:text-white transition-all"
+              >
+                <Trash2 size={level > 0 ? 10 : 12} />
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-4 mt-1 ml-1">
+            <span className="text-[8px] text-zinc-600 font-bold uppercase">
+              {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: it })}
+            </span>
+            <button 
+              onClick={() => onReply(comment.id, username)}
+              className="text-[9px] font-black uppercase text-zinc-500 hover:text-white transition-colors"
+            >
+              Rispondi
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {replies.length > 0 && (
+        <div className="space-y-4">
+          {replies.map(reply => (
+            <CommentItem 
+              key={reply.id} 
+              comment={reply} 
+              allComments={allComments} 
+              onReply={onReply} 
+              onDelete={onDelete} 
+              currentUserId={currentUserId}
+              level={level + 1}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const FeedPost = ({ post }: FeedPostProps) => {
   const navigate = useNavigate();
   const { toggleLike, addComment, deletePost, deleteComment } = useSocialFeed();
@@ -55,7 +132,6 @@ const FeedPost = ({ post }: FeedPostProps) => {
   const isAuthor = currentUserId === post.user_id;
 
   const mainComments = post.comments?.filter(c => !c.parent_id) || [];
-  const getReplies = (parentId: string) => post.comments?.filter(c => c.parent_id === parentId) || [];
 
   return (
     <>
@@ -171,70 +247,14 @@ const FeedPost = ({ post }: FeedPostProps) => {
             >
               <div className="p-4 space-y-6">
                 {mainComments.map((comment: any) => (
-                  <div key={comment.id} className="space-y-4">
-                    <div className="flex gap-3">
-                      <div className="w-8 h-8 bg-zinc-800 shrink-0 overflow-hidden">
-                        {comment.profiles?.avatar_url && <img src={comment.profiles.avatar_url} className="w-full h-full object-cover" />}
-                      </div>
-                      <div className="flex-1">
-                        <div className="bg-zinc-900/80 p-3 rounded-2xl rounded-tl-none relative group/comment">
-                          <p className="text-[10px] font-black uppercase italic text-zinc-400 mb-1">
-                            {comment.profiles ? `${comment.profiles.first_name || ''} ${comment.profiles.last_name || ''}`.trim() : 'Membro'}
-                          </p>
-                          <p className="text-xs text-zinc-200">{comment.content}</p>
-                          
-                          {currentUserId === comment.user_id && (
-                            <button 
-                              onClick={() => deleteComment.mutate(comment.id)}
-                              className="absolute top-2 right-2 opacity-0 group-hover/comment:opacity-100 text-zinc-600 hover:text-white transition-all"
-                            >
-                              <Trash2 size={12} />
-                            </button>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-4 mt-1 ml-1">
-                          <span className="text-[8px] text-zinc-600 font-bold uppercase">
-                            {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: it })}
-                          </span>
-                          <button 
-                            onClick={() => {
-                              const name = comment.profiles ? `${comment.profiles.first_name || ''}` : 'Membro';
-                              setReplyingTo({ id: comment.id, name });
-                            }}
-                            className="text-[9px] font-black uppercase text-zinc-500 hover:text-white transition-colors"
-                          >
-                            Rispondi
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {getReplies(comment.id).map((reply: any) => (
-                      <div key={reply.id} className="flex gap-3 ml-10">
-                        <CornerDownRight size={14} className="text-zinc-800 mt-2 shrink-0" />
-                        <div className="w-6 h-6 bg-zinc-800 shrink-0 overflow-hidden">
-                          {reply.profiles?.avatar_url && <img src={reply.profiles.avatar_url} className="w-full h-full object-cover" />}
-                        </div>
-                        <div className="flex-1">
-                          <div className="bg-zinc-900/40 p-2 rounded-xl rounded-tl-none border border-white/5 relative group/reply">
-                            <p className="text-[9px] font-black uppercase italic text-zinc-500 mb-0.5">
-                              {reply.profiles ? `${reply.profiles.first_name || ''} ${reply.profiles.last_name || ''}`.trim() : 'Membro'}
-                            </p>
-                            <p className="text-[11px] text-zinc-400">{reply.content}</p>
-                            
-                            {currentUserId === reply.user_id && (
-                              <button 
-                                onClick={() => deleteComment.mutate(reply.id)}
-                                className="absolute top-2 right-2 opacity-0 group-hover/reply:opacity-100 text-zinc-600 hover:text-white transition-all"
-                              >
-                                <Trash2 size={10} />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <CommentItem 
+                    key={comment.id} 
+                    comment={comment} 
+                    allComments={post.comments || []} 
+                    onReply={(id, name) => setReplyingTo({ id, name })}
+                    onDelete={(id) => deleteComment.mutate(id)}
+                    currentUserId={currentUserId}
+                  />
                 ))}
 
                 <div className="pt-4 border-t border-white/5">
@@ -270,7 +290,7 @@ const FeedPost = ({ post }: FeedPostProps) => {
 
       <EditPostModal 
         isOpen={isEditModalOpen} 
-        onClose={() => setIsEditModalOpen(false)} 
+        onClose={() => setIsPostModalOpen(false)} 
         post={post} 
       />
     </>
