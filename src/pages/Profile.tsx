@@ -8,6 +8,8 @@ import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
 import GarageTab from '@/components/GarageTab';
 import ApplicationsTab from '@/components/ApplicationsTab';
+import FeedPost from '@/components/FeedPost';
+import { useSocialFeed } from '@/hooks/use-social-feed';
 import { 
   User, 
   Settings, 
@@ -41,7 +43,11 @@ const Profile = () => {
   const [uploadingCover, setUploadingCover] = useState(false);
   const [activeTab, setActiveTab] = useState('activity');
 
+  const { posts, isLoading: loadingPosts } = useSocialFeed();
   const { data: orders, isLoading: loadingOrders } = useWcUserOrders(user?.email);
+
+  // Filtriamo i post per mostrare solo quelli dell'utente corrente nella sua scheda attività
+  const userPosts = posts?.filter(p => p.user_id === user?.id) || [];
 
   const fetchProfile = async (userId: string) => {
     const { data: profileData } = await supabase
@@ -268,19 +274,35 @@ const Profile = () => {
                   key="activity"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-zinc-900/30 border border-white/5 p-12 text-center"
+                  className="space-y-6"
                 >
-                  <MessageSquare className="mx-auto text-zinc-800 mb-6" size={48} />
-                  <h3 className="text-xl font-black italic uppercase mb-2">Attività Recenti</h3>
-                  <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-8">
-                    I tuoi post appariranno qui.
-                  </p>
-                  <Button 
-                    onClick={() => navigate('/bacheca')}
-                    className="bg-white text-black hover:bg-red-600 hover:text-white rounded-none px-10 py-6 text-[10px] font-black uppercase italic tracking-widest"
-                  >
-                    Vai alla Bacheca
-                  </Button>
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-black italic uppercase">I Miei Post</h3>
+                    <Button 
+                      onClick={() => navigate('/bacheca')}
+                      variant="outline"
+                      className="border-white/10 text-[10px] font-black uppercase italic tracking-widest h-10"
+                    >
+                      Nuovo Post
+                    </Button>
+                  </div>
+
+                  {loadingPosts ? (
+                    <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-red-600" /></div>
+                  ) : userPosts.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-4">
+                      {userPosts.map((post) => (
+                        <FeedPost key={post.id} post={post} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="bg-zinc-900/30 border border-white/5 p-12 text-center">
+                      <MessageSquare className="mx-auto text-zinc-800 mb-6" size={48} />
+                      <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">
+                        Non hai ancora pubblicato nulla nel District.
+                      </p>
+                    </div>
+                  )}
                 </motion.div>
               )}
 
