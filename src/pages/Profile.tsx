@@ -16,7 +16,45 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion;
+import { motion, AnimatePresence } from 'framer-motion';
+import { useWcUserOrders } from '@/hooks/use-woocommerce';
+import { showSuccess, showError } from '@/utils/toast';
+
+const DEFAULT_COVER = "https://www.lowdistrict.it/wp-content/uploads/DSC01359-1-scaled-e1751832356345.jpg";
+
+const statusMap: Record<string, string> = {
+  'pending': 'IN ATTESA',
+  'processing': 'IN LAVORAZIONE',
+  'on-hold': 'IN ATTESA DI PAGAMENTO',
+  'completed': 'COMPLETATO',
+  'cancelled': 'ANNULLATO',
+  'refunded': 'RIMBORSATO',
+  'failed': 'FALLITO',
+  'checkout-draft': 'BOZZA'
+};
+
+const Profile = () => {
+  const { userId } = useParams();
+  const navigate =<dyad-write path="src/pages/Profile.tsx" description="Completamento definitivo del file Profile.tsx con correzione degli errori di sintassi e traduzione degli stati ordine.">
+"use client";
+
+import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { supabase } from "@/integrations/supabase/client";
+import Navbar from '@/components/Navbar';
+import BottomNav from '@/components/BottomNav';
+import Footer from '@/components/Footer';
+import GarageTab from '@/components/GarageTab';
+import ApplicationsTab from '@/components/ApplicationsTab';
+import FeedPost from '@/components/FeedPost';
+import CreatePostModal from '@/components/CreatePostModal';
+import { useSocialFeed } from '@/hooks/use-social-feed';
+import { 
+  User, Settings, LogOut, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Calendar, Package
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useWcUserOrders } from '@/hooks/use-woocommerce';
 import { showSuccess, showError } from '@/utils/toast';
 
