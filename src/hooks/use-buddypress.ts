@@ -39,7 +39,7 @@ export const useBPActivity = () => {
   });
 };
 
-// Ricerca membri ottimizzata per BuddyPress
+// Ricerca membri semplificata per evitare errori 400
 export const useBPSearchMembers = (search: string) => {
   return useQuery({
     queryKey: ['bp-members-search', search],
@@ -47,34 +47,33 @@ export const useBPSearchMembers = (search: string) => {
       if (search.length < 2) return [];
       
       const headers = await getAuthHeader();
-      console.log(`[BuddyPress] Ricerca in corso per: ${search}...`);
+      console.log(`[BuddyPress] Tentativo ricerca minimal per: ${search}...`);
       
       try {
-        // Aggiungiamo type=active e context=view per massimizzare la compatibilità
+        // Usiamo solo search e per_page, che sono i parametri standard più sicuri
         const response = await fetch(
-          `${BP_API_URL}/members?search=${encodeURIComponent(search)}&per_page=20&type=active&context=view`, 
+          `${BP_API_URL}/members?search=${encodeURIComponent(search)}&per_page=20`, 
           { headers: { 'Accept': 'application/json', ...headers } }
         );
 
         if (!response.ok) {
-          console.error(`[BuddyPress] Errore API: ${response.status}`);
+          const errorData = await response.json().catch(() => ({}));
+          console.error(`[BuddyPress] Errore API ${response.status}:`, errorData);
           return [];
         }
 
         const data = await response.json();
-        console.log(`[BuddyPress] Risultati trovati:`, data.length);
+        console.log(`[BuddyPress] Risultati ricevuti:`, Array.isArray(data) ? data.length : 'formato non valido');
         
-        // BuddyPress a volte restituisce un oggetto errore invece di un array vuoto
         if (!Array.isArray(data)) return [];
-        
         return data;
       } catch (error) {
-        console.error("[BuddyPress] Errore durante la fetch:", error);
+        console.error("[BuddyPress] Errore di rete:", error);
         return [];
       }
     },
     enabled: search.length >= 2,
-    staleTime: 30000 // Cache di 30 secondi per non sovraccaricare il server
+    staleTime: 30000
   });
 };
 
