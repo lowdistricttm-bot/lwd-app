@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, MessageSquare, User, MoreHorizontal, Send, Loader2, CornerDownRight, Trash2, Edit3, Mail } from 'lucide-react';
+import { Heart, MessageSquare, User, MoreHorizontal, Send, Loader2, CornerDownRight, Trash2, Edit3 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Post, useSocialFeed } from '@/hooks/use-social-feed';
@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { Input } from './ui/input';
 import { supabase } from "@/integrations/supabase/client";
 import EditPostModal from './EditPostModal';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -66,7 +66,7 @@ const FeedPost = ({ post }: FeedPostProps) => {
       >
         {/* Header */}
         <div className="p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <Link to={`/profile/${post.user_id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <div className="w-10 h-10 bg-zinc-800 border border-white/10 overflow-hidden">
               {post.profiles?.avatar_url ? (
                 <img src={post.profiles.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
@@ -84,19 +84,9 @@ const FeedPost = ({ post }: FeedPostProps) => {
                 {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: it })}
               </p>
             </div>
-          </div>
+          </Link>
           
           <div className="flex items-center gap-2">
-            {!isAuthor && currentUserId && (
-              <button 
-                onClick={() => navigate(`/chat/${post.user_id}`)}
-                className="p-2 text-zinc-500 hover:text-red-600 transition-colors"
-                title="Invia Messaggio"
-              >
-                <Mail size={18} />
-              </button>
-            )}
-            
             {isAuthor && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

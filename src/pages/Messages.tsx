@@ -1,25 +1,35 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import { useMessages } from '@/hooks/use-messages';
-import { User, MessageSquare, ChevronRight, Loader2 } from 'lucide-react';
+import { User, MessageSquare, ChevronRight, Loader2, Plus } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
+import NewChatModal from '@/components/NewChatModal';
 
 const Messages = () => {
   const navigate = useNavigate();
   const { conversations, loadingConvs } = useMessages();
+  const [isNewChatOpen, setIsNewChatOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Navbar />
       <main className="flex-1 pt-24 pb-32 px-6 max-w-2xl mx-auto w-full">
-        <header className="mb-12">
-          <h2 className="text-red-600 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Direct</h2>
-          <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">Messaggi</h1>
+        <header className="mb-12 flex items-end justify-between">
+          <div>
+            <h2 className="text-red-600 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Direct</h2>
+            <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">Messaggi</h1>
+          </div>
+          <button 
+            onClick={() => setIsNewChatOpen(true)}
+            className="w-12 h-12 bg-red-600 flex items-center justify-center hover:bg-white hover:text-black transition-all shadow-lg shadow-red-600/20"
+          >
+            <Plus size={24} />
+          </button>
         </header>
 
         {loadingConvs ? (
@@ -63,6 +73,8 @@ const Messages = () => {
           </div>
         )}
       </main>
+
+      <NewChatModal isOpen={isNewChatOpen} onClose={() => setIsNewChatOpen(false)} />
       <BottomNav />
     </div>
   );

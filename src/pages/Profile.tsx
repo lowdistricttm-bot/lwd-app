@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
@@ -23,7 +23,8 @@ import {
   ShieldCheck,
   ClipboardCheck,
   ChevronRight,
-  Plus
+  Plus,
+  Mail
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -34,11 +35,12 @@ import { showSuccess, showError } from '@/utils/toast';
 const DEFAULT_COVER = "https://www.lowdistrict.it/wp-content/uploads/DSC01359-1-scaled-e1751832356345.jpg";
 
 const Profile = () => {
+  const { userId } = useParams();
   const navigate = useNavigate();
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   
-  const [user, setUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -47,15 +49,19 @@ const Profile = () => {
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
 
   const { posts, isLoading: loadingPosts } = useSocialFeed();
-  const { data: orders, isLoading: loadingOrders } = useWcUserOrders(user?.email);
+  
+  const targetUserId = userId || currentUser?.id;
+  const isOwnProfile = !userId || userId === currentUser?.id;
 
-  const userPosts = posts?.filter(p => p.user_id === user?.id) || [];
+  const { data: orders, isLoading: loadingOrders } = useWcUserOrders(isOwnProfile ? currentUser?.email : undefined);
 
-  const fetchProfile = async (userId: string) => {
+  const userPosts = posts?.filter(p => p.user_id === targetUserId) || [];
+
+  const fetchProfile = async (id: string) => {
     const { data: profileData, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', userId)
+      .eq('id', id)
       .maybeSingle();
     
     if (error) console.error("[Profile] Errore caricamento:", error);
@@ -65,22 +71,26 @@ const Profile = () => {
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      if (!session && !userId) {
         navigate('/login');
         return;
       }
       
-      setUser(session.user);
-      await fetchProfile(session.user.id);
+      setCurrentUser(session?.user || null);
+      if (userId) {
+        await fetchProfile(userId);
+      } else if (session?.user) {
+        await fetchProfile(session.user.id);
+      }
       setLoading(false);
     };
 
     checkUser();
-  }, [navigate]);
+  }, [navigate, userId]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'cover') => {
     const file = e.target.files?.[0];
-    if (!file || !user) return;
+    if (!file || !currentUser || !isOwnProfile) return;
 
     const isAvatar = type === 'avatar';
     if (isAvatar) setUploadingAvatar(true);
@@ -89,7 +99,7 @@ const Profile = () => {
     try {
       const fileExt = file.name.split('.').pop();
       const bucket = isAvatar ? 'avatars' : 'covers';
-      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+      const fileName = `${currentUser.id}-${Math.random()}.${fileExt}`;
       const filePath = `${fileName}`;
 
       const { error: uploadError } = await supabase.storage
@@ -102,7 +112,7 @@ const Profile = () => {
         .from(bucket)
         .getPublicUrl(filePath);
 
-      const updateData: any = { id: user.id, updated_at: new Date().toISOString() };
+      const updateData: any = { id: currentUser.id, updated_at: new Date().toISOString() };
       if (isAvatar) updateData.avatar_url = publicUrl;
       else updateData.cover_url = publicUrl;
 
@@ -113,7 +123,7 @@ const Profile = () => {
       if (updateError) throw updateError;
 
       showSuccess(isAvatar ? "Foto profilo aggiornata!" : "Copertina aggiornata!");
-      await fetchProfile(user.id);
+      await fetchProfile(currentUser.id);
     } catch (error: any) {
       showError("Errore durante il caricamento: " + error.message);
     } finally {
@@ -135,16 +145,19 @@ const Profile = () => {
 
   const displayName = profile?.username || 
                      (profile?.first_name || profile?.last_name ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : null) || 
-                     user?.email?.split('@')[0] || 
                      'User';
 
-  const tabs = [
+  const tabs = isOwnProfile ? [
     { id: 'activity', label: 'Feed', icon: MessageSquare },
     { id: 'orders', label: 'Ordini', icon: ShoppingBag },
     { id: 'garage', label: 'Garage', icon: Car },
     { id: 'selections', label: 'Selezioni', icon: ClipboardCheck },
     { id: 'profile', label: 'Info', icon: User },
     { id: 'settings', label: 'Set', icon: Settings },
+  ] : [
+    { id: 'activity', label: 'Feed', icon: MessageSquare },
+    { id: 'garage', label: 'Garage', icon: Car },
+    { id: 'profile', label: 'Info', icon: User },
   ];
 
   return (
@@ -155,28 +168,36 @@ const Profile = () => {
         {/* Cover Section */}
         <div className="relative h-56 md:h-80 bg-zinc-900">
           <div 
-            className="absolute inset-0 group/cover cursor-pointer overflow-hidden"
-            onClick={() => coverInputRef.current?.click()}
+            className={cn(
+              "absolute inset-0 overflow-hidden",
+              isOwnProfile ? "group/cover cursor-pointer" : ""
+            )}
+            onClick={() => isOwnProfile && coverInputRef.current?.click()}
           >
             <img 
               src={profile?.cover_url || DEFAULT_COVER} 
-              className="w-full h-full object-cover opacity-60 grayscale group-hover/cover:grayscale-0 group-hover/cover:scale-105 transition-all duration-700"
+              className={cn(
+                "w-full h-full object-cover opacity-60 grayscale transition-all duration-700",
+                isOwnProfile ? "group-hover/cover:grayscale-0 group-hover/cover:scale-105" : ""
+              )}
               alt="Cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40" />
             
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/cover:opacity-100 transition-all duration-300 bg-black/20 backdrop-blur-[2px]">
-              <div className="flex flex-col items-center gap-2">
-                {uploadingCover ? (
-                  <Loader2 size={32} className="animate-spin text-white" />
-                ) : (
-                  <>
-                    <Camera size={32} className="text-white" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white italic">Cambia Copertina</span>
-                  </>
-                )}
+            {isOwnProfile && (
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/cover:opacity-100 transition-all duration-300 bg-black/20 backdrop-blur-[2px]">
+                <div className="flex flex-col items-center gap-2">
+                  {uploadingCover ? (
+                    <Loader2 size={32} className="animate-spin text-white" />
+                  ) : (
+                    <>
+                      <Camera size={32} className="text-white" />
+                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white italic">Cambia Copertina</span>
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             <input 
               type="file" 
@@ -188,7 +209,7 @@ const Profile = () => {
           </div>
 
           <div className="absolute -bottom-12 left-6 flex items-end gap-4 z-20">
-            <div className="relative group/avatar">
+            <div className={cn("relative", isOwnProfile ? "group/avatar" : "")}>
               <input 
                 type="file" 
                 ref={avatarInputRef} 
@@ -198,22 +219,28 @@ const Profile = () => {
               />
               <div 
                 onClick={(e) => {
+                  if (!isOwnProfile) return;
                   e.stopPropagation();
                   avatarInputRef.current?.click();
                 }}
-                className="w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-white rounded-full overflow-hidden shadow-2xl flex items-center justify-center cursor-pointer relative"
+                className={cn(
+                  "w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-white rounded-full overflow-hidden shadow-2xl flex items-center justify-center relative",
+                  isOwnProfile ? "cursor-pointer" : ""
+                )}
               >
                 {uploadingAvatar ? (
                   <Loader2 className="animate-spin text-red-600" />
                 ) : profile?.avatar_url ? (
-                  <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover group-hover/avatar:opacity-50 transition-opacity" />
+                  <img src={profile.avatar_url} alt="Avatar" className={cn("w-full h-full object-cover transition-opacity", isOwnProfile ? "group-hover/avatar:opacity-50" : "")} />
                 ) : (
                   <User size={40} className="text-zinc-800" />
                 )}
                 
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity bg-black/40 rounded-full">
-                  <Camera size={24} className="text-white" />
-                </div>
+                {isOwnProfile && (
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity bg-black/40 rounded-full">
+                    <Camera size={24} className="text-white" />
+                  </div>
+                )}
               </div>
             </div>
             <div className="mb-2">
@@ -225,11 +252,25 @@ const Profile = () => {
               </p>
             </div>
           </div>
+
+          {!isOwnProfile && currentUser && (
+            <div className="absolute -bottom-10 right-6 z-20">
+              <Button 
+                onClick={() => navigate(`/chat/${profile.id}`)}
+                className="bg-red-600 hover:bg-white hover:text-black text-white rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 px-8 shadow-xl"
+              >
+                <Mail size={16} className="mr-2" /> Invia Messaggio
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="mt-20 px-4 md:px-12 max-w-6xl mx-auto">
           {/* Tab Bar */}
-          <div className="grid grid-cols-6 border border-white/5 bg-zinc-900/30 mb-6">
+          <div className={cn(
+            "grid border border-white/5 bg-zinc-900/30 mb-6",
+            isOwnProfile ? "grid-cols-6" : "grid-cols-3"
+          )}>
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -247,8 +288,8 @@ const Profile = () => {
             ))}
           </div>
 
-          {/* Admin Dashboard Box - Posizionato sotto i tab */}
-          {profile?.is_admin && (
+          {/* Admin Dashboard Box */}
+          {isOwnProfile && profile?.is_admin && (
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -282,13 +323,15 @@ const Profile = () => {
                   className="space-y-6"
                 >
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-black italic uppercase">I Miei Post</h3>
-                    <Button 
-                      onClick={() => setIsPostModalOpen(true)}
-                      className="bg-red-600 hover:bg-white hover:text-black text-white rounded-none text-[10px] font-black uppercase italic tracking-widest h-10 px-6 transition-all"
-                    >
-                      <Plus size={14} className="mr-2" /> Nuovo Post
-                    </Button>
+                    <h3 className="text-xl font-black italic uppercase">{isOwnProfile ? 'I Miei Post' : `Post di ${displayName}`}</h3>
+                    {isOwnProfile && (
+                      <Button 
+                        onClick={() => setIsPostModalOpen(true)}
+                        className="bg-red-600 hover:bg-white hover:text-black text-white rounded-none text-[10px] font-black uppercase italic tracking-widest h-10 px-6 transition-all"
+                      >
+                        <Plus size={14} className="mr-2" /> Nuovo Post
+                      </Button>
+                    )}
                   </div>
 
                   {loadingPosts ? (
@@ -303,14 +346,14 @@ const Profile = () => {
                     <div className="bg-zinc-900/30 border border-white/5 p-12 text-center">
                       <MessageSquare className="mx-auto text-zinc-800 mb-6" size={48} />
                       <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">
-                        Non hai ancora pubblicato nulla nel District.
+                        {isOwnProfile ? 'Non hai ancora pubblicato nulla.' : 'Nessun post presente.'}
                       </p>
                     </div>
                   )}
                 </motion.div>
               )}
 
-              {activeTab === 'orders' && (
+              {activeTab === 'orders' && isOwnProfile && (
                 <motion.div key="orders" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                   <h3 className="text-xl font-black italic uppercase mb-6">Ordini Shop</h3>
                   {loadingOrders ? (
@@ -338,17 +381,17 @@ const Profile = () => {
 
               {activeTab === 'garage' && (
                 <motion.div key="garage" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                  <GarageTab />
+                  <GarageTab userId={targetUserId} isOwnProfile={isOwnProfile} />
                 </motion.div>
               )}
 
-              {activeTab === 'selections' && (
+              {activeTab === 'selections' && isOwnProfile && (
                 <motion.div key="selections" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                   <ApplicationsTab />
                 </motion.div>
               )}
 
-              {activeTab === 'settings' && (
+              {activeTab === 'settings' && isOwnProfile && (
                 <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
                   <Button 
                     onClick={handleLogout} 
