@@ -19,7 +19,7 @@
       "src": "https://www.lowdistrict.it/wp-content/uploads/cropped-ico-new-culture-2026-1.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any"
     }
   ]
 }
