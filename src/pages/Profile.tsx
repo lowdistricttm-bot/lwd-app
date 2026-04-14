@@ -244,25 +244,24 @@ const Profile = () => {
               </div>
             </div>
             <div className="mb-2">
-              <h1 className="text-2xl md:text-4xl font-black italic uppercase tracking-tighter leading-none">
-                {displayName}
-              </h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl md:text-4xl font-black italic uppercase tracking-tighter leading-none">
+                  {displayName}
+                </h1>
+                {!isOwnProfile && currentUser && (
+                  <button 
+                    onClick={() => navigate(`/chat/${profile.id}`)}
+                    className="p-2 bg-red-600 text-white hover:bg-white hover:text-black transition-all shadow-lg"
+                  >
+                    <Mail size={18} />
+                  </button>
+                )}
+              </div>
               <p className="text-red-600 text-[8px] font-black uppercase tracking-[0.3em] italic mt-1">
                 {profile?.is_admin ? 'DISTRICT ADMIN' : 'OFFICIAL MEMBER'}
               </p>
             </div>
           </div>
-
-          {!isOwnProfile && currentUser && (
-            <div className="absolute -bottom-10 right-6 z-20">
-              <Button 
-                onClick={() => navigate(`/chat/${profile.id}`)}
-                className="bg-red-600 hover:bg-white hover:text-black text-white rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 px-8 shadow-xl"
-              >
-                <Mail size={16} className="mr-2" /> Invia Messaggio
-              </Button>
-            </div>
-          )}
         </div>
 
         <div className="mt-20 px-4 md:px-12 max-w-6xl mx-auto">
