@@ -12,7 +12,7 @@ import FeedPost from '@/components/FeedPost';
 import CreatePostModal from '@/components/CreatePostModal';
 import { useSocialFeed } from '@/hooks/use-social-feed';
 import { 
-  User, Settings, LogOut, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Calendar, Package
+  User, Settings, LogOut, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Calendar, Package, Users
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -22,15 +22,11 @@ import { showSuccess, showError } from '@/utils/toast';
 
 const DEFAULT_COVER = "https://www.lowdistrict.it/wp-content/uploads/DSC01359-1-scaled-e1751832356345.jpg";
 
-const statusMap: Record<string, string> = {
-  'pending': 'IN ATTESA',
-  'processing': 'IN LAVORAZIONE',
-  'on-hold': 'IN ATTESA DI PAGAMENTO',
-  'completed': 'COMPLETATO',
-  'cancelled': 'ANNULLATO',
-  'refunded': 'RIMBORSATO',
-  'failed': 'FALLITO',
-  'checkout-draft': 'BOZZA'
+const roleLabels: Record<string, string> = {
+  'admin': 'ADMIN',
+  'staff': 'MEMBRO DELLO STAFF',
+  'support': 'SUPPORTO STAFF',
+  'member': 'MEMBRO UFFICIALE'
 };
 
 const Profile = () => {
@@ -111,6 +107,9 @@ const Profile = () => {
   if (loading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
   const displayName = profile?.username || (profile?.first_name || profile?.last_name ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : null) || 'User';
+  const userRole = profile?.role || (profile?.is_admin ? 'admin' : 'member');
+  const roleLabel = roleLabels[userRole] || 'MEMBRO UFFICIALE';
+
   const tabs = isOwnProfile ? [
     { id: 'activity', label: 'Feed', icon: MessageSquare },
     { id: 'orders', label: 'Ordini', icon: ShoppingBag },
@@ -154,7 +153,7 @@ const Profile = () => {
                 <h1 className="text-2xl md:text-4xl font-black italic uppercase tracking-tighter leading-none">{displayName}</h1>
                 {!isOwnProfile && currentUser && <button onClick={() => navigate(`/chat/${profile.id}`)} className="p-2 bg-zinc-800 text-white hover:bg-white hover:text-black transition-all shadow-lg"><Mail size={18} /></button>}
               </div>
-              <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.3em] italic mt-1">{profile?.is_admin ? 'DISTRICT ADMIN' : 'OFFICIAL MEMBER'}</p>
+              <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.3em] italic mt-1">{roleLabel}</p>
             </div>
           </div>
         </div>
@@ -169,11 +168,18 @@ const Profile = () => {
             ))}
           </div>
 
-          {isOwnProfile && profile?.is_admin && (
+          {isOwnProfile && (userRole === 'admin' || userRole === 'staff' || userRole === 'support') && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10 bg-zinc-900 border-l-4 border-white p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-zinc-800 flex items-center justify-center shrink-0"><ShieldCheck className="text-white" size={24} /></div>
-                <div><h2 className="text-lg font-black italic uppercase tracking-tighter">Dashboard Amministrazione</h2><p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Gestisci selezioni, eventi e community</p></div>
+                <div className="w-12 h-12 bg-zinc-800 flex items-center justify-center shrink-0">
+                  {userRole === 'admin' ? <ShieldCheck className="text-white" size={24} /> : <Users className="text-white" size={24} />}
+                </div>
+                <div>
+                  <h2 className="text-lg font-black italic uppercase tracking-tighter">Dashboard {userRole.toUpperCase()}</h2>
+                  <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
+                    {userRole === 'support' ? 'Vota le selezioni della community' : 'Gestisci selezioni, eventi e community'}
+                  </p>
+                </div>
               </div>
               <Button onClick={() => navigate('/admin/applications')} className="bg-white text-black hover:bg-zinc-200 rounded-none px-8 h-12 font-black uppercase italic tracking-widest transition-all group">Entra Ora <ChevronRight className="ml-2 group-hover:translate-x-1 transition-transform" size={16} /></Button>
             </motion.div>
@@ -204,30 +210,13 @@ const Profile = () => {
                             <div className="space-y-2">
                               <div className="flex items-center gap-3">
                                 <span className="bg-white text-black text-[8px] font-black uppercase px-2 py-0.5 italic">#{order.id}</span>
-                                <span className={cn(
-                                  "text-[8px] font-black uppercase px-2 py-0.5 italic",
-                                  order.status === 'completed' ? "bg-zinc-800 text-white" : "bg-zinc-700 text-zinc-400"
-                                )}>
-                                  {statusMap[order.status] || order.status.toUpperCase()}
+                                <span className="bg-zinc-800 text-white text-[8px] font-black uppercase px-2 py-0.5 italic">
+                                  {order.status.toUpperCase()}
                                 </span>
                               </div>
                               <h4 className="text-sm font-black italic uppercase tracking-tight">
                                 {order.line_items.length} {order.line_items.length === 1 ? 'Prodotto' : 'Prodotti'}
                               </h4>
-                              <div className="flex items-center gap-4 text-zinc-500">
-                                <div className="flex items-center gap-1.5">
-                                  <Calendar size={12} />
-                                  <span className="text-[9px] font-black uppercase tracking-widest">
-                                    {new Date(order.date_created).toLocaleDateString('it-IT')}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                  <Package size={12} />
-                                  <span className="text-[9px] font-black uppercase tracking-widest">
-                                    PAGAMENTO SU WHATSAPP
-                                  </span>
-                                </div>
-                              </div>
                             </div>
                             <div className="text-right flex flex-col justify-center">
                               <p className="text-[8px] font-black uppercase text-zinc-600 tracking-widest mb-1">Totale Ordine</p>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   CheckCircle, 
   XCircle, 
@@ -8,18 +8,20 @@ import {
   User, 
   Instagram, 
   MapPin, 
-  Clock,
   Phone,
-  Image as LucideImage,
   Camera,
   ChevronDown,
   ChevronUp,
   UserCheck,
-  CreditCard
+  ThumbsUp,
+  ThumbsDown,
+  Loader2
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAdmin } from '@/hooks/use-admin';
+import { supabase } from "@/integrations/supabase/client";
 
 interface AdminApplicationCardProps {
   app: any;
@@ -29,14 +31,25 @@ interface AdminApplicationCardProps {
 
 const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicationCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const { canManage, canVote, castVote } = useAdmin();
 
-  // Recupero immagini dal veicolo (Garage) e dalla candidatura (Interni)
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setCurrentUserId(user?.id || null);
+    });
+  }, []);
+
   const vehicleImages = app.vehicles?.images || (app.vehicles?.image_url ? [app.vehicles.image_url] : []);
   const interiorImages = app.interior_urls || [];
+  
+  const votes = app.application_votes || [];
+  const approveVotes = votes.filter((v: any) => v.vote === 'approve').length;
+  const rejectVotes = votes.filter((v: any) => v.vote === 'reject').length;
+  const myVote = votes.find((v: any) => v.user_id === currentUserId)?.vote;
 
   return (
     <div className="bg-zinc-900/40 border border-white/5 overflow-hidden flex flex-col transition-all hover:border-white/10">
-      {/* Header */}
       <div 
         onClick={() => setIsExpanded(!isExpanded)}
         className="p-4 md:p-6 flex items-center justify-between cursor-pointer group"
@@ -55,7 +68,7 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
             </h3>
             <div className="flex items-center gap-2">
               <span className="text-[9px] text-zinc-400 font-black uppercase tracking-widest italic truncate">
-                {app.full_name || 'Nome non fornito'}
+                {app.full_name}
               </span>
               <span className="text-[8px] text-zinc-600 font-bold uppercase">• {app.events?.title}</span>
             </div>
@@ -63,8 +76,16 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
         </div>
 
         <div className="flex items-center gap-4">
+          <div className="hidden sm:flex items-center gap-3 mr-4">
+            <div className="flex items-center gap-1 text-green-500 text-[10px] font-black">
+              <ThumbsUp size={12} /> {approveVotes}
+            </div>
+            <div className="flex items-center gap-1 text-red-500 text-[10px] font-black">
+              <ThumbsDown size={12} /> {rejectVotes}
+            </div>
+          </div>
           <div className={cn(
-            "hidden sm:flex px-3 py-1 text-[8px] font-black uppercase italic tracking-widest items-center gap-1.5",
+            "px-3 py-1 text-[8px] font-black uppercase italic tracking-widest items-center gap-1.5",
             app.status === 'pending' && "bg-zinc-800 text-zinc-400",
             app.status === 'approved' && "bg-white text-black",
             app.status === 'rejected' && "bg-zinc-700 text-white"
@@ -77,17 +98,14 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
         </div>
       </div>
 
-      {/* Contenuto Espanso */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
           >
             <div className="border-t border-white/5 bg-black/20">
-              {/* Info Candidato */}
               <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 border-b border-white/5">
                 <div className="bg-black/40 px-4 py-3 border border-white/5 flex items-center gap-3">
                   <UserCheck size={14} className="text-zinc-400" />
@@ -108,7 +126,6 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
               </div>
 
               <div className="flex flex-col lg:flex-row">
-                {/* Scheda Tecnica */}
                 <div className="lg:w-1/2 p-6 space-y-6 border-r border-white/5">
                   <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-widest flex items-center gap-2">
                     <Car size={12} className="text-zinc-400" /> Scheda Tecnica
@@ -122,14 +139,6 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
                       <p className="text-[7px] text-zinc-600 font-bold uppercase">Assetto</p>
                       <p className="text-sm font-black uppercase italic text-zinc-400">{app.vehicles?.suspension_type}</p>
                     </div>
-                    <div className="space-y-1">
-                      <p className="text-[7px] text-zinc-600 font-bold uppercase">Targa</p>
-                      <p className="text-sm font-black uppercase italic">{app.vehicles?.license_plate || 'N/A'}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[7px] text-zinc-600 font-bold uppercase">Anno</p>
-                      <p className="text-sm font-black uppercase italic">{app.vehicles?.year || 'N/A'}</p>
-                    </div>
                   </div>
                   <div className="bg-white/5 p-4 border border-white/10">
                     <p className="text-[7px] text-zinc-400 font-bold uppercase mb-1">Modifiche</p>
@@ -137,63 +146,71 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
                   </div>
                 </div>
 
-                {/* Media Gallery */}
                 <div className="lg:w-1/2 p-6">
                   <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-widest mb-4 flex items-center gap-2">
                     <Camera size={12} className="text-zinc-400" /> Media Progetto
                   </h4>
-                  
-                  <div className="space-y-6">
-                    {/* Foto Garage */}
-                    <div>
-                      <p className="text-[7px] font-black uppercase text-zinc-600 mb-2 tracking-widest">Foto Garage</p>
-                      <div className="grid grid-cols-4 gap-2">
-                        {vehicleImages.map((url: string, idx: number) => (
-                          <div key={idx} className="aspect-square bg-zinc-900 border border-white/5 overflow-hidden">
-                            <img src={url} className="w-full h-full object-cover" alt="Garage" />
-                          </div>
-                        ))}
+                  <div className="grid grid-cols-4 gap-2">
+                    {[...vehicleImages, ...interiorImages].map((url: string, idx: number) => (
+                      <div key={idx} className="aspect-square bg-zinc-900 border border-white/5 overflow-hidden">
+                        <img src={url} className="w-full h-full object-cover" alt="Media" />
                       </div>
-                    </div>
-
-                    {/* Foto Interni */}
-                    <div>
-                      <p className="text-[7px] font-black uppercase text-zinc-400 mb-2 tracking-widest">Foto Interni (Candidatura)</p>
-                      <div className="grid grid-cols-4 gap-2">
-                        {interiorImages.map((url: string, idx: number) => (
-                          <div key={idx} className="aspect-square bg-zinc-900 border border-white/5 overflow-hidden">
-                            <img src={url} className="w-full h-full object-cover" alt="Interni" />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
               </div>
 
-              {/* Azioni */}
-              <div className="p-6 bg-zinc-900/50 border-t border-white/5 flex gap-3">
-                <Button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onUpdateStatus(app.id, 'approved');
-                  }}
-                  disabled={app.status === 'approved' || isUpdating}
-                  className="flex-1 bg-white text-black hover:bg-zinc-200 rounded-none font-black uppercase italic text-[9px] tracking-widest h-10"
-                >
-                  Approva
-                </Button>
-                <Button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onUpdateStatus(app.id, 'rejected');
-                  }}
-                  disabled={app.status === 'rejected' || isUpdating}
-                  variant="outline"
-                  className="flex-1 border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white rounded-none font-black uppercase italic text-[9px] tracking-widest h-10"
-                >
-                  Nega
-                </Button>
+              <div className="p-6 bg-zinc-900/50 border-t border-white/5 flex flex-col gap-6">
+                {canVote && (
+                  <div className="flex flex-col gap-3">
+                    <p className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">Il tuo voto (Staff/Supporto)</p>
+                    <div className="flex gap-3">
+                      <Button 
+                        onClick={(e) => { e.stopPropagation(); castVote.mutate({ applicationId: app.id, vote: 'approve' }); }}
+                        disabled={castVote.isPending}
+                        className={cn(
+                          "flex-1 rounded-none font-black uppercase italic text-[9px] tracking-widest h-10",
+                          myVote === 'approve' ? "bg-green-600 text-white" : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                        )}
+                      >
+                        {castVote.isPending ? <Loader2 className="animate-spin" /> : <><ThumbsUp size={14} className="mr-2" /> Vota SI</>}
+                      </Button>
+                      <Button 
+                        onClick={(e) => { e.stopPropagation(); castVote.mutate({ applicationId: app.id, vote: 'reject' }); }}
+                        disabled={castVote.isPending}
+                        className={cn(
+                          "flex-1 rounded-none font-black uppercase italic text-[9px] tracking-widest h-10",
+                          myVote === 'reject' ? "bg-red-600 text-white" : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                        )}
+                      >
+                        {castVote.isPending ? <Loader2 className="animate-spin" /> : <><ThumbsDown size={14} className="mr-2" /> Vota NO</>}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {canManage && (
+                  <div className="flex flex-col gap-3 pt-4 border-t border-white/5">
+                    <p className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">Azione Finale (Solo Admin/Staff)</p>
+                    <div className="flex gap-3">
+                      <Button 
+                        onClick={(e) => { e.stopPropagation(); onUpdateStatus(app.id, 'approved'); }}
+                        disabled={app.status === 'approved' || isUpdating}
+                        className="flex-1 bg-white text-black hover:bg-zinc-200 rounded-none font-black uppercase italic text-[9px] tracking-widest h-12"
+                      >
+                        Approva Candidatura
+                      </Button>
+                      <Button 
+                        onClick={(e) => { e.stopPropagation(); onUpdateStatus(app.id, 'rejected'); }}
+                        disabled={app.status === 'rejected' || isUpdating}
+                        variant="outline"
+                        className="flex-1 border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white rounded-none font-black uppercase italic text-[9px] tracking-widest h-12"
+                      >
+                        Nega Candidatura
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>
