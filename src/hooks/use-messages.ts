@@ -174,5 +174,25 @@ export const useMessages = (otherUserId?: string) => {
     onError: (err: any) => showError("Errore durante l'eliminazione")
   });
 
-  return { conversations, loadingConvs, chatMessages, loadingChat, sendMessage, deleteMessage };
+  const deleteConversation = useMutation({
+    mutationFn: async (otherId: string) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Accedi per eliminare");
+
+      const { error } = await supabase
+        .from('messages')
+        .delete()
+        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${otherId}),and(sender_id.eq.${otherId},receiver_id.eq.${user.id})`);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
+      showSuccess("Conversazione eliminata");
+    },
+    onError: (err: any) => showError("Errore durante l'eliminazione")
+  });
+
+  return { conversations, loadingConvs, chatMessages, loadingChat, sendMessage, deleteMessage, deleteConversation };
 };

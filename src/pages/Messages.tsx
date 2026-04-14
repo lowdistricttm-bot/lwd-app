@@ -5,15 +5,22 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import { useMessages } from '@/hooks/use-messages';
-import { User, MessageSquare, ChevronRight, Loader2, Plus } from 'lucide-react';
+import { User, MessageSquare, ChevronRight, Loader2, Plus, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import NewChatModal from '@/components/NewChatModal';
 
 const Messages = () => {
   const navigate = useNavigate();
-  const { conversations, loadingConvs } = useMessages();
+  const { conversations, loadingConvs, deleteConversation } = useMessages();
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
+
+  const handleDeleteConversation = (e: React.MouseEvent, otherId: string, username: string) => {
+    e.stopPropagation();
+    if (window.confirm(`Vuoi eliminare definitivamente la conversazione con ${username}?`)) {
+      deleteConversation.mutate(otherId);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -42,10 +49,10 @@ const Messages = () => {
         ) : (
           <div className="space-y-2">
             {conversations?.map((conv: any) => (
-              <button 
+              <div 
                 key={conv.otherId}
                 onClick={() => navigate(`/chat/${conv.otherId}`)}
-                className="w-full bg-zinc-900/40 border border-white/5 p-4 flex items-center gap-4 hover:border-red-600/30 transition-all group"
+                className="w-full bg-zinc-900/40 border border-white/5 p-4 flex items-center gap-4 hover:border-red-600/30 transition-all group cursor-pointer relative"
               >
                 <div className="w-14 h-14 bg-zinc-800 rounded-full overflow-hidden border border-white/10 shrink-0">
                   {conv.otherUser?.avatar_url ? (
@@ -67,8 +74,18 @@ const Messages = () => {
                     {conv.lastMessage.content}
                   </p>
                 </div>
-                <ChevronRight size={16} className="text-zinc-800 group-hover:text-red-600 transition-colors" />
-              </button>
+                
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={(e) => handleDeleteConversation(e, conv.otherId, conv.otherUser?.username || 'Membro')}
+                    className="p-2 text-zinc-800 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-all"
+                    title="Elimina conversazione"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                  <ChevronRight size={16} className="text-zinc-800 group-hover:text-red-600 transition-colors" />
+                </div>
+              </div>
             ))}
           </div>
         )}
