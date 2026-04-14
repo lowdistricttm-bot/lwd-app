@@ -75,20 +75,46 @@ export const useWcUserOrders = (email?: string) => {
     queryKey: ['wc-orders', email],
     queryFn: async () => {
       if (!email) return [];
-      const customerResponse = await fetch(`${WC_URL}/customers?email=${encodeURIComponent(email)}`, {
-        headers: getWcAuthHeader()
-      });
-      if (!customerResponse.ok) return [];
-      const customerData = await customerResponse.json();
-      const customerId = customerData[0]?.id;
-      if (!customerId) return [];
-      const ordersResponse = await fetch(`${WC_URL}/orders?customer=${customerId}`, {
-        headers: getWcAuthHeader()
-      });
-      if (!ordersResponse.ok) return [];
-      return ordersResponse.json();
+      
+      try {
+        // 1. Cerchiamo il cliente per email
+        const customerResponse = await fetch(`${WC_URL}/customers?email=${encodeURIComponent(email)}`, {
+          headers: getWcAuthHeader()
+        });
+        
+        const customers = await customerResponse.json();
+        const customerId = customers[0]?.id;
+
+        // 2. Recuperiamo gli ordini. Se abbiamo un ID cliente lo usiamo, 
+        // altrimenti cerchiamo gli ordini generici filtrando per email (se l'API lo permette)
+        // Nota: WC API v3 non filtra direttamente per billing_email nel list, 
+        // ma l'associazione tramite customer ID è il metodo standard.
+        
+        let url = `${WC_URL}/orders?per_page=50`;
+        if (customerId) {
+          url += `&customer=${customerId}`;
+        } else {
+          url += `&search=${encodeURIComponent(email)}`;
+        }
+
+        const ordersResponse = await fetch(url, {
+          headers: getWcAuthHeader()
+        });
+        
+        if (!ordersResponse.ok) return [];
+        const orders = await ordersResponse.json();
+        
+        // Filtro di sicurezza lato client per essere sicuri di mostrare solo gli ordini dell'utente
+        return orders.filter((order: any) => 
+          order.billing.email.toLowerCase() === email.toLowerCase()
+        );
+      } catch (err) {
+        console.error("Errore recupero ordini:", err);
+        return [];
+      }
     },
-    enabled: !!email
+    enabled: !!email,
+    staleTime: 0 // Forza il refresh per vedere subito i nuovi ordini
   });
 };
 
