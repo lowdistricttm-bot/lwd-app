@@ -31,6 +31,10 @@ const Checkout = () => {
   const [orderId, setOrderId] = useState<number | null>(null);
   const [user, setUser] = useState<any>(null);
 
+  // Logica Spedizione: €10.00 fissa (o gratuita sopra i €100.00)
+  const SHIPPING_FEE = total >= 100 ? 0 : 10.00;
+  const finalTotal = total + SHIPPING_FEE;
+
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '', phone: '', address: '', city: '', postcode: '',
   });
@@ -41,7 +45,6 @@ const Checkout = () => {
         setUser(user);
         setFormData(prev => ({
           ...prev,
-          // L'email viene lasciata vuota come richiesto
           firstName: user.user_metadata?.first_name || '',
           lastName: user.user_metadata?.last_name || '',
         }));
@@ -92,6 +95,13 @@ const Checkout = () => {
           country: "IT"
         },
         line_items: lineItems,
+        shipping_lines: [
+          {
+            method_id: "flat_rate",
+            method_title: SHIPPING_FEE === 0 ? "Spedizione Gratuita" : "Spedizione Standard",
+            total: SHIPPING_FEE.toString()
+          }
+        ],
         customer_id: customerId
       };
 
@@ -193,10 +203,14 @@ const Checkout = () => {
                     <span className="font-black">€{(item.price * item.quantity).toFixed(2)}</span>
                   </div>
                 ))}
+                <div className="flex justify-between text-sm border-t border-white/5 pt-4">
+                  <span className="text-zinc-400">Spedizione</span>
+                  <span className="font-black">{SHIPPING_FEE === 0 ? "GRATIS" : `€${SHIPPING_FEE.toFixed(2)}`}</span>
+                </div>
               </div>
               <div className="border-t border-white/5 pt-6 flex justify-between items-end">
                 <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Totale</span>
-                <span className="text-3xl font-black italic tracking-tighter">€{total.toFixed(2)}</span>
+                <span className="text-3xl font-black italic tracking-tighter">€{finalTotal.toFixed(2)}</span>
               </div>
             </div>
             <Button type="submit" disabled={createOrder.isPending} className="w-full bg-white text-black hover:bg-zinc-200 py-8 text-lg font-black uppercase italic tracking-widest rounded-none">
