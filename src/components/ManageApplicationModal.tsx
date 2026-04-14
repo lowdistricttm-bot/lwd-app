@@ -29,6 +29,8 @@ const ManageApplicationModal = ({ isOpen, onClose, application }: ManageApplicat
     }
   };
 
+  const canUserCancel = application.status === 'pending' || application.status === 'rejected';
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -102,8 +104,8 @@ const ManageApplicationModal = ({ isOpen, onClose, application }: ManageApplicat
                     </p>
                   </div>
 
-                  {/* Permettiamo l'annullamento se in attesa o rifiutata */}
-                  {(application.status === 'pending' || application.status === 'rejected') && (
+                  {/* L'utente può annullare solo se in attesa o rifiutata */}
+                  {canUserCancel && (
                     <Button 
                       onClick={handleCancel}
                       disabled={cancelApplication.isPending}
@@ -112,6 +114,14 @@ const ManageApplicationModal = ({ isOpen, onClose, application }: ManageApplicat
                     >
                       {cancelApplication.isPending ? <Loader2 className="animate-spin" /> : <><Trash2 size={14} className="mr-2" /> {application.status === 'rejected' ? 'Rimuovi e Riprova' : 'Annulla Candidatura'}</>}
                     </Button>
+                  )}
+                  
+                  {application.status === 'approved' && (
+                    <div className="p-4 bg-white/5 border border-white/10 text-center">
+                      <p className="text-[9px] font-black uppercase text-zinc-500 italic">
+                        Candidatura approvata. Contatta lo staff per modifiche.
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>

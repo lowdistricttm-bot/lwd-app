@@ -36,7 +36,6 @@ export const useAdmin = () => {
   const { data: allApplications, isLoading: loadingApps, error: loadError } = useQuery({
     queryKey: ['admin-applications'],
     queryFn: async () => {
-      // Recuperiamo le candidature
       const { data: apps, error: appsError } = await supabase
         .from('applications')
         .select(`
@@ -50,7 +49,6 @@ export const useAdmin = () => {
       if (appsError) throw appsError;
       if (!apps) return [];
 
-      // Recuperiamo i voti con i nomi (richiede i Foreign Keys impostati via SQL)
       const { data: votes, error: votesError } = await supabase
         .from('application_votes')
         .select(`
@@ -60,7 +58,6 @@ export const useAdmin = () => {
 
       if (votesError) {
         console.error("[Admin] Errore recupero voti:", votesError);
-        // Fallback: restituiamo le app senza voti se la query fallisce ancora
         return apps.map(app => ({ ...app, application_votes: [] }));
       }
 
@@ -85,6 +82,22 @@ export const useAdmin = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-applications'] });
       showSuccess("Stato aggiornato con successo");
+    },
+    onError: (error: any) => showError(error.message)
+  });
+
+  const deleteApplication = useMutation({
+    mutationFn: async (id: string) => {
+      if (!canManage) throw new Error("Non hai i permessi per eliminare candidature.");
+      const { error } = await supabase
+        .from('applications')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-applications'] });
+      showSuccess("Candidatura eliminata");
     },
     onError: (error: any) => showError(error.message)
   });
@@ -150,6 +163,6 @@ export const useAdmin = () => {
     role, isAdmin, isStaff, isSupport, canManage, canVote, 
     checkingAdmin: checkingRole, 
     allApplications, loadingApps, loadError,
-    updateStatus, castVote
+    updateStatus, castVote, deleteApplication
   };
 };

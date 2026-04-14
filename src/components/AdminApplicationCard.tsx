@@ -16,7 +16,8 @@ import {
   ThumbsUp,
   ThumbsDown,
   Loader2,
-  CreditCard
+  CreditCard,
+  Trash2
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
@@ -33,7 +34,7 @@ interface AdminApplicationCardProps {
 const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicationCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const { canManage, canVote, castVote } = useAdmin();
+  const { canManage, canVote, castVote, deleteApplication } = useAdmin();
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -55,6 +56,13 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
   
   const myVote = votes.find((v: any) => v.user_id === currentUserId)?.vote;
   const isPending = app.status === 'pending';
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm("Sei sicuro di voler eliminare questa candidatura? L'utente potrà candidarsi di nuovo.")) {
+      deleteApplication.mutate(app.id);
+    }
+  };
 
   return (
     <div className={cn(
@@ -194,7 +202,6 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
                     </div>
                   </div>
                   
-                  {/* Il voto è permesso solo se la candidatura è ancora in attesa */}
                   {canVote && isPending && (
                     <div className="flex gap-3">
                       <Button 
@@ -221,28 +228,39 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
                   )}
                 </div>
 
-                {/* Azione finale visibile solo se in attesa e se l'utente ha i permessi */}
-                {canManage && isPending && (
-                  <div className="flex flex-col gap-3 pt-4 border-t border-white/5">
-                    <p className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">Azione Finale</p>
-                    <div className="flex gap-3">
+                <div className="flex flex-col gap-3 pt-4 border-t border-white/5">
+                  <p className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">Azioni</p>
+                  <div className="flex gap-3">
+                    {canManage && isPending && (
+                      <>
+                        <Button 
+                          onClick={(e) => { e.stopPropagation(); onUpdateStatus(app.id, 'approved'); }}
+                          disabled={isUpdating}
+                          className="flex-1 bg-green-600 text-white hover:bg-green-700 rounded-none font-black uppercase italic text-[10px] tracking-widest h-12"
+                        >
+                          APPROVA
+                        </Button>
+                        <Button 
+                          onClick={(e) => { e.stopPropagation(); onUpdateStatus(app.id, 'rejected'); }}
+                          disabled={isUpdating}
+                          className="flex-1 bg-red-600 text-white hover:bg-red-700 rounded-none font-black uppercase italic text-[10px] tracking-widest h-12"
+                        >
+                          NEGA
+                        </Button>
+                      </>
+                    )}
+                    {canManage && !isPending && (
                       <Button 
-                        onClick={(e) => { e.stopPropagation(); onUpdateStatus(app.id, 'approved'); }}
-                        disabled={isUpdating}
-                        className="flex-1 bg-green-600 text-white hover:bg-green-700 rounded-none font-black uppercase italic text-[10px] tracking-widest h-12"
+                        onClick={handleDelete}
+                        disabled={deleteApplication.isPending}
+                        variant="outline"
+                        className="flex-1 border-zinc-800 text-zinc-500 hover:bg-red-600 hover:text-white hover:border-red-600 rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 transition-all"
                       >
-                        APPROVA
+                        {deleteApplication.isPending ? <Loader2 className="animate-spin" /> : <><Trash2 size={14} className="mr-2" /> Elimina Candidatura</>}
                       </Button>
-                      <Button 
-                        onClick={(e) => { e.stopPropagation(); onUpdateStatus(app.id, 'rejected'); }}
-                        disabled={isUpdating}
-                        className="flex-1 bg-red-600 text-white hover:bg-red-700 rounded-none font-black uppercase italic text-[10px] tracking-widest h-12"
-                      >
-                        NEGA
-                      </Button>
-                    </div>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
             </div>
           </motion.div>
