@@ -107,7 +107,7 @@ const EditPostModal = ({ isOpen, onClose, post }: EditPostModalProps) => {
                   <button 
                     type="button"
                     onClick={handleRemoveImage}
-                    className="absolute top-4 right-4 p-2 bg-black/60 text-white hover:bg-red-600 transition-colors"
+                    className="absolute top-4 right-4 p-2 bg-black/60 text-white hover:bg-zinc-800 transition-colors"
                   >
                     <Trash2 size={18} />
                   </button>
@@ -126,7 +126,7 @@ const EditPostModal = ({ isOpen, onClose, post }: EditPostModalProps) => {
                   <button 
                     type="button" 
                     onClick={() => fileInputRef.current?.click()}
-                    className="p-3 bg-zinc-900 text-zinc-400 hover:text-red-600 transition-colors"
+                    className="p-3 bg-zinc-900 text-zinc-400 hover:text-white transition-colors"
                   >
                     <Camera size={20} />
                   </button>
@@ -135,7 +135,7 @@ const EditPostModal = ({ isOpen, onClose, post }: EditPostModalProps) => {
                 <Button 
                   type="submit"
                   disabled={updatePost.isPending}
-                  className="bg-red-600 hover:bg-white hover:text-black text-white px-8 py-6 rounded-none font-black uppercase italic tracking-widest transition-all"
+                  className="bg-white text-black hover:bg-zinc-200 text-white px-8 py-6 rounded-none font-black uppercase italic tracking-widest transition-all"
                 >
                   {updatePost.isPending ? <Loader2 className="animate-spin" /> : 'Salva Modifiche'}
                 </Button>

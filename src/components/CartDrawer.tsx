@@ -41,7 +41,7 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
           >
             <div className="p-6 border-b border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <ShoppingBag size={20} className="text-red-600" />
+                <ShoppingBag size={20} className="text-zinc-400" />
                 <h2 className="text-xl font-black italic uppercase tracking-tighter">Il tuo Carrello</h2>
               </div>
               <button onClick={onClose} className="p-2 hover:bg-white/5 transition-colors">
@@ -68,7 +68,7 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                         <p className="text-sm font-black tracking-tighter">€{item.price}</p>
                         <button 
                           onClick={() => removeFromCart(item.id, item.variationId)}
-                          className="text-zinc-600 hover:text-red-600 transition-colors"
+                          className="text-zinc-600 hover:text-white transition-colors"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -87,7 +87,7 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                 </div>
                 <Button 
                   onClick={handleCheckout}
-                  className="w-full bg-red-600 hover:bg-red-700 text-white py-8 text-sm font-black uppercase tracking-widest rounded-none italic"
+                  className="w-full bg-white text-black hover:bg-zinc-200 py-8 text-sm font-black uppercase tracking-widest rounded-none italic"
                 >
                   Vai al Checkout
                 </Button>

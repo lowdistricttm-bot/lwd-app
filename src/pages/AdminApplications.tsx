@@ -22,7 +22,7 @@ const AdminApplications = () => {
   if (checkingAdmin) {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-4">
-        <Loader2 className="animate-spin text-red-600" size={40} />
+        <Loader2 className="animate-spin text-zinc-500" size={40} />
         <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Verifica permessi admin...</p>
       </div>
     );
@@ -31,7 +31,7 @@ const AdminApplications = () => {
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center">
-        <XCircle size={64} className="text-red-600 mb-6" />
+        <XCircle size={64} className="text-zinc-800 mb-6" />
         <h1 className="text-2xl font-black uppercase italic mb-4">Accesso Negato</h1>
         <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-8">Non hai i permessi necessari per accedere a questa sezione.</p>
         <Button onClick={() => navigate('/')} className="bg-white text-black rounded-none font-black uppercase italic px-8 h-12">Torna alla Home</Button>
@@ -52,7 +52,7 @@ const AdminApplications = () => {
             >
               <ChevronLeft size={14} /> Torna al Profilo
             </button>
-            <h2 className="text-red-600 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Admin Control Panel</h2>
+            <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Admin Control Panel</h2>
             <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">Gestione Selezioni</h1>
           </div>
           
@@ -64,7 +64,7 @@ const AdminApplications = () => {
             <div className="w-[1px] h-8 bg-white/10" />
             <div className="text-right">
               <p className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">In Attesa</p>
-              <p className="text-2xl font-black italic text-red-600">
+              <p className="text-2xl font-black italic text-white">
                 {allApplications?.filter((a: any) => a.status === 'pending').length || 0}
               </p>
             </div>
@@ -72,15 +72,15 @@ const AdminApplications = () => {
         </div>
 
         {loadError && (
-          <div className="bg-red-900/20 border border-red-600/50 p-6 mb-8 flex items-center gap-4">
-            <AlertTriangle className="text-red-600" />
+          <div className="bg-zinc-900/20 border border-zinc-700 p-6 mb-8 flex items-center gap-4">
+            <AlertTriangle className="text-zinc-500" />
             <p className="text-xs font-bold uppercase">Errore nel caricamento dei dati.</p>
           </div>
         )}
 
         {loadingApps ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <Loader2 className="animate-spin text-red-600" size={40} />
+            <Loader2 className="animate-spin text-zinc-500" size={40} />
             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Recupero candidature...</p>
           </div>
         ) : (

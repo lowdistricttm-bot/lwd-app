@@ -54,7 +54,7 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
               {app.profiles?.username || 'Membro District'}
             </h3>
             <div className="flex items-center gap-2">
-              <span className="text-[9px] text-red-600 font-black uppercase tracking-widest italic truncate">
+              <span className="text-[9px] text-zinc-400 font-black uppercase tracking-widest italic truncate">
                 {app.full_name || 'Nome non fornito'}
               </span>
               <span className="text-[8px] text-zinc-600 font-bold uppercase">• {app.events?.title}</span>
@@ -66,8 +66,8 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
           <div className={cn(
             "hidden sm:flex px-3 py-1 text-[8px] font-black uppercase italic tracking-widest items-center gap-1.5",
             app.status === 'pending' && "bg-zinc-800 text-zinc-400",
-            app.status === 'approved' && "bg-green-600 text-white",
-            app.status === 'rejected' && "bg-red-600 text-white"
+            app.status === 'approved' && "bg-white text-black",
+            app.status === 'rejected' && "bg-zinc-700 text-white"
           )}>
             {app.status === 'pending' ? 'IN ATTESA' : app.status.toUpperCase()}
           </div>
@@ -90,19 +90,19 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
               {/* Info Candidato */}
               <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 border-b border-white/5">
                 <div className="bg-black/40 px-4 py-3 border border-white/5 flex items-center gap-3">
-                  <UserCheck size={14} className="text-red-600" />
+                  <UserCheck size={14} className="text-zinc-400" />
                   <span className="text-[9px] font-black uppercase tracking-widest truncate">{app.full_name}</span>
                 </div>
                 <div className="bg-black/40 px-4 py-3 border border-white/5 flex items-center gap-3">
-                  <Instagram size={14} className="text-red-600" />
+                  <Instagram size={14} className="text-zinc-400" />
                   <span className="text-[9px] font-black uppercase tracking-widest truncate">{app.instagram || 'N/A'}</span>
                 </div>
                 <div className="bg-black/40 px-4 py-3 border border-white/5 flex items-center gap-3">
-                  <Phone size={14} className="text-red-600" />
+                  <Phone size={14} className="text-zinc-400" />
                   <span className="text-[9px] font-black uppercase tracking-widest truncate">{app.phone || 'N/A'}</span>
                 </div>
                 <div className="bg-black/40 px-4 py-3 border border-white/5 flex items-center gap-3">
-                  <MapPin size={14} className="text-red-600" />
+                  <MapPin size={14} className="text-zinc-400" />
                   <span className="text-[9px] font-black uppercase tracking-widest truncate">{app.city || 'N/A'}</span>
                 </div>
               </div>
@@ -111,7 +111,7 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
                 {/* Scheda Tecnica */}
                 <div className="lg:w-1/2 p-6 space-y-6 border-r border-white/5">
                   <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-widest flex items-center gap-2">
-                    <Car size={12} className="text-red-600" /> Scheda Tecnica
+                    <Car size={12} className="text-zinc-400" /> Scheda Tecnica
                   </h4>
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-1">
@@ -120,7 +120,7 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
                     </div>
                     <div className="space-y-1">
                       <p className="text-[7px] text-zinc-600 font-bold uppercase">Assetto</p>
-                      <p className="text-sm font-black uppercase italic text-red-600">{app.vehicles?.suspension_type}</p>
+                      <p className="text-sm font-black uppercase italic text-zinc-400">{app.vehicles?.suspension_type}</p>
                     </div>
                     <div className="space-y-1">
                       <p className="text-[7px] text-zinc-600 font-bold uppercase">Targa</p>
@@ -131,8 +131,8 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
                       <p className="text-sm font-black uppercase italic">{app.vehicles?.year || 'N/A'}</p>
                     </div>
                   </div>
-                  <div className="bg-red-600/5 p-4 border border-red-600/10">
-                    <p className="text-[7px] text-red-600 font-bold uppercase mb-1">Modifiche</p>
+                  <div className="bg-white/5 p-4 border border-white/10">
+                    <p className="text-[7px] text-zinc-400 font-bold uppercase mb-1">Modifiche</p>
                     <p className="text-[11px] text-zinc-200 leading-relaxed italic whitespace-pre-wrap">{app.modifications || 'Nessuna modifica indicata.'}</p>
                   </div>
                 </div>
@@ -140,7 +140,7 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
                 {/* Media Gallery */}
                 <div className="lg:w-1/2 p-6">
                   <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-widest mb-4 flex items-center gap-2">
-                    <Camera size={12} className="text-red-600" /> Media Progetto
+                    <Camera size={12} className="text-zinc-400" /> Media Progetto
                   </h4>
                   
                   <div className="space-y-6">
@@ -158,10 +158,10 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
 
                     {/* Foto Interni */}
                     <div>
-                      <p className="text-[7px] font-black uppercase text-red-600 mb-2 tracking-widest">Foto Interni (Candidatura)</p>
+                      <p className="text-[7px] font-black uppercase text-zinc-400 mb-2 tracking-widest">Foto Interni (Candidatura)</p>
                       <div className="grid grid-cols-4 gap-2">
                         {interiorImages.map((url: string, idx: number) => (
-                          <div key={idx} className="aspect-square bg-zinc-900 border border-red-600/10 overflow-hidden">
+                          <div key={idx} className="aspect-square bg-zinc-900 border border-white/5 overflow-hidden">
                             <img src={url} className="w-full h-full object-cover" alt="Interni" />
                           </div>
                         ))}
@@ -179,7 +179,7 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
                     onUpdateStatus(app.id, 'approved');
                   }}
                   disabled={app.status === 'approved' || isUpdating}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-none font-black uppercase italic text-[9px] tracking-widest h-10"
+                  className="flex-1 bg-white text-black hover:bg-zinc-200 rounded-none font-black uppercase italic text-[9px] tracking-widest h-10"
                 >
                   Approva
                 </Button>
@@ -190,7 +190,7 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
                   }}
                   disabled={app.status === 'rejected' || isUpdating}
                   variant="outline"
-                  className="flex-1 border-red-600 text-red-600 hover:bg-red-600 hover:text-white rounded-none font-black uppercase italic text-[9px] tracking-widest h-10"
+                  className="flex-1 border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white rounded-none font-black uppercase italic text-[9px] tracking-widest h-10"
                 >
                   Nega
                 </Button>

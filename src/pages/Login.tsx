@@ -64,7 +64,7 @@ const Login = () => {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
-                  className="bg-transparent border-zinc-800 rounded-none h-12 font-bold text-xs tracking-widest focus:border-red-600 transition-colors"
+                  className="bg-transparent border-zinc-800 rounded-none h-12 font-bold text-xs tracking-widest focus:border-white transition-colors"
                 />
               </div>
 
@@ -86,14 +86,14 @@ const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="bg-transparent border-zinc-800 rounded-none h-12 font-bold text-xs tracking-widest focus:border-red-600 transition-colors"
+                  className="bg-transparent border-zinc-800 rounded-none h-12 font-bold text-xs tracking-widest focus:border-white transition-colors"
                 />
               </div>
 
               <Button 
                 type="submit" 
                 disabled={isLoading}
-                className="w-full bg-red-600 hover:bg-red-700 text-white rounded-none h-14 font-black uppercase italic tracking-widest transition-all"
+                className="w-full bg-white text-black hover:bg-zinc-200 rounded-none h-14 font-black uppercase italic tracking-widest transition-all"
               >
                 {isLoading ? <Loader2 className="animate-spin" /> : 'Accedi Ora'}
               </Button>
@@ -108,7 +108,7 @@ const Login = () => {
               href="https://www.lowdistrict.it/my-account/" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-[10px] font-black uppercase tracking-widest text-white border-b border-white/20 pb-1 hover:text-red-600 hover:border-red-600 transition-all"
+              className="text-[10px] font-black uppercase tracking-widest text-white border-b border-white/20 pb-1 hover:text-zinc-400 hover:border-zinc-400 transition-all"
             >
               Registrati sul sito ufficiale
             </a>

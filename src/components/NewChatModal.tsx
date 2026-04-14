@@ -67,14 +67,14 @@ const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
                 placeholder="CERCA USERNAME (ES. @NICKNAME)..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="bg-zinc-900 border-zinc-800 rounded-none h-14 pl-12 font-black uppercase text-xs tracking-widest focus-visible:ring-red-600 placeholder:text-zinc-700"
+                className="bg-zinc-900 border-zinc-800 rounded-none h-14 pl-12 font-black uppercase text-xs tracking-widest focus-visible:ring-white placeholder:text-zinc-700"
               />
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
               {loadingWp ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4">
-                  <Loader2 className="animate-spin text-red-600" size={32} />
+                  <Loader2 className="animate-spin text-zinc-500" size={32} />
                   <p className="text-[8px] font-black uppercase tracking-widest text-zinc-600">Sincronizzazione con il sito...</p>
                 </div>
               ) : wpUsers && wpUsers.length > 0 ? (
@@ -86,7 +86,7 @@ const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
                     <button 
                       key={user.id}
                       onClick={() => handleStartChat(user)}
-                      className="w-full bg-zinc-900/40 border border-white/5 p-4 flex items-center gap-4 hover:border-red-600/30 hover:bg-zinc-900 transition-all group"
+                      className="w-full bg-zinc-900/40 border border-white/5 p-4 flex items-center gap-4 hover:border-white/30 hover:bg-zinc-900 transition-all group"
                     >
                       <div className="w-12 h-12 bg-zinc-800 rounded-full overflow-hidden border border-white/10 shrink-0">
                         {user.avatar_urls?.full ? (
@@ -103,7 +103,7 @@ const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
                           @{user.user_login || 'member'}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2 text-zinc-800 group-hover:text-red-600 transition-colors">
+                      <div className="flex items-center gap-2 text-zinc-800 group-hover:text-white transition-colors">
                         <span className="text-[8px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Scrivi</span>
                         <ChevronRight size={16} />
                       </div>

@@ -27,7 +27,7 @@ const Checkout = () => {
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6">
         <ShoppingBag size={64} className="text-zinc-800 mb-6" />
         <h1 className="text-2xl font-black uppercase italic mb-4">Il carrello è vuoto</h1>
-        <Button onClick={() => navigate('/shop')} className="bg-red-600 rounded-none font-black uppercase italic px-8">Torna allo Shop</Button>
+        <Button onClick={() => navigate('/shop')} className="bg-zinc-800 text-white rounded-none font-black uppercase italic px-8">Torna allo Shop</Button>
       </div>
     );
   }
@@ -60,7 +60,7 @@ const Checkout = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           <div className="space-y-8">
             <div className="bg-zinc-900/50 border border-white/5 p-8 space-y-6">
-              <h3 className="text-xs font-black uppercase tracking-widest text-red-600 italic">Dati di Spedizione</h3>
+              <h3 className="text-xs font-black uppercase tracking-widest text-zinc-400 italic">Dati di Spedizione</h3>
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -112,7 +112,7 @@ const Checkout = () => {
 
           <div className="space-y-6">
             <div className="bg-zinc-900/50 border border-white/5 p-8">
-              <h3 className="text-xs font-black uppercase tracking-widest text-red-600 italic mb-6">Riepilogo Ordine</h3>
+              <h3 className="text-xs font-black uppercase tracking-widest text-zinc-400 italic mb-6">Riepilogo Ordine</h3>
               <div className="space-y-4 mb-8">
                 {items.map((item) => (
                   <div key={`${item.id}-${item.variationId}`} className="flex justify-between text-sm">
@@ -130,7 +130,7 @@ const Checkout = () => {
             <Button 
               onClick={handleWhatsAppCheckout}
               disabled={!formData.firstName || !formData.phone}
-              className="w-full bg-green-600 hover:bg-green-700 text-white py-8 text-lg font-black uppercase tracking-widest rounded-none italic"
+              className="w-full bg-zinc-800 hover:bg-white hover:text-black text-white py-8 text-lg font-black uppercase tracking-widest rounded-none italic"
             >
               <MessageSquare className="mr-2" size={20} /> Paga su WhatsApp
             </Button>

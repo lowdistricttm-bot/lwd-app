@@ -67,16 +67,16 @@ const CreatePostModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
               {previewUrl && (
                 <div className="relative aspect-video bg-zinc-900 overflow-hidden border border-white/5">
                   {selectedFile?.type.startsWith('video') ? <video src={previewUrl} className="w-full h-full object-cover" controls /> : <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />}
-                  <button type="button" onClick={removeFile} className="absolute top-4 right-4 p-2 bg-black/60 text-white hover:bg-red-600 transition-colors"><Trash2 size={18} /></button>
+                  <button type="button" onClick={removeFile} className="absolute top-4 right-4 p-2 bg-black/60 text-white hover:bg-zinc-800 transition-colors"><Trash2 size={18} /></button>
                 </div>
               )}
 
               <div className="flex items-center justify-between pt-6 border-t border-white/5">
                 <div className="flex gap-4">
                   <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileChange} />
-                  <button type="button" onClick={() => fileInputRef.current?.click()} className="p-3 bg-zinc-900 text-zinc-400 hover:text-red-600 transition-colors"><Camera size={20} /></button>
+                  <button type="button" onClick={() => fileInputRef.current?.click()} className="p-3 bg-zinc-900 text-zinc-400 hover:text-white transition-colors"><Camera size={20} /></button>
                 </div>
-                <Button type="submit" disabled={(!content.trim() && !selectedFile) || createPost.isPending} className="bg-red-600 hover:bg-white hover:text-black text-white px-8 py-6 rounded-none font-black uppercase italic tracking-widest">
+                <Button type="submit" disabled={(!content.trim() && !selectedFile) || createPost.isPending} className="bg-white text-black hover:bg-zinc-200 px-8 py-6 rounded-none font-black uppercase italic tracking-widest">
                   {createPost.isPending ? <Loader2 className="animate-spin" /> : <>Pubblica <Send size={16} className="ml-2" /></>}
                 </Button>
               </div>

@@ -106,7 +106,7 @@ const PWAInstallPrompt = () => {
               </p>
               <button 
                 onClick={handleInstallAndroid}
-                className="w-full bg-white text-black py-3 rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-red-600 hover:text-white transition-all"
+                className="w-full bg-white text-black py-3 rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-zinc-800 hover:text-white transition-all"
               >
                 <Download size={16} /> Installa Ora
               </button>
