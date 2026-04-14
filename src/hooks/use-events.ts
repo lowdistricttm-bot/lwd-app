@@ -56,10 +56,37 @@ export const useEvents = () => {
     }
   });
 
+  const uploadInteriors = async (files: File[]) => {
+    const urls: string[] = [];
+    for (const file of files) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `interiors/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('post-media')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('post-media')
+        .getPublicUrl(filePath);
+        
+      urls.push(publicUrl);
+    }
+    return urls;
+  };
+
   const applyToEvent = useMutation({
     mutationFn: async (data: ApplicationData) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Devi accedere per candidarti");
+
+      let interiorUrls: string[] = [];
+      if (data.interiorFiles && data.interiorFiles.length > 0) {
+        interiorUrls = await uploadInteriors(data.interiorFiles);
+      }
 
       const { error } = await supabase
         .from('applications')
@@ -73,7 +100,8 @@ export const useEvents = () => {
           phone: data.phone,
           city: data.city,
           instagram: data.instagram,
-          modifications: data.modifications
+          modifications: data.modifications,
+          interior_urls: interiorUrls
         }]);
 
       if (error) throw error;
