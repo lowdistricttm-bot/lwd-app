@@ -13,14 +13,13 @@ import {
   Car, 
   User, 
   Instagram, 
-  Mail, 
   MapPin, 
   Calendar,
   AlertTriangle,
   ChevronLeft,
   Clock,
   Phone,
-  Image as ImageIcon,
+  Image as LucideImage,
   Camera
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -82,6 +81,13 @@ const AdminApplications = () => {
           </div>
         </div>
 
+        {loadError && (
+          <div className="bg-red-900/20 border border-red-600/50 p-6 mb-8 flex items-center gap-4">
+            <AlertTriangle className="text-red-600" />
+            <p className="text-xs font-bold uppercase">Errore nel caricamento dei dati. Riprova tra poco.</p>
+          </div>
+        )}
+
         {loadingApps ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Loader2 className="animate-spin text-red-600" size={40} />
@@ -101,7 +107,7 @@ const AdminApplications = () => {
                     <div className="flex items-center gap-4">
                       <div className="w-16 h-16 bg-zinc-800 rounded-full overflow-hidden border-2 border-red-600/20">
                         {app.profiles?.avatar_url ? (
-                          <img src={app.profiles.avatar_url} className="w-full h-full object-cover" />
+                          <img src={app.profiles.avatar_url} className="w-full h-full object-cover" alt="Avatar" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-zinc-600"><User size={24} /></div>
                         )}
@@ -184,7 +190,7 @@ const AdminApplications = () => {
                         ))}
                         {allMedia.length === 0 && (
                           <div className="col-span-2 aspect-video flex flex-col items-center justify-center border border-dashed border-white/10 text-zinc-700">
-                            <ImageIcon size={32} className="mb-2" />
+                            <LucideImage size={32} className="mb-2" />
                             <p className="text-[8px] font-black uppercase">Nessuna foto disponibile</p>
                           </div>
                         )}
@@ -201,7 +207,10 @@ const AdminApplications = () => {
                         app.status === 'approved' && "bg-green-600 text-white",
                         app.status === 'rejected' && "bg-red-600 text-white"
                       )}>
-                        {app.status === 'pending' ? 'IN ATTESA' : app.status.toUpperCase()}
+                        {app.status === 'pending' && <Clock size={14} />}
+                        {app.status === 'approved' && <CheckCircle size={14} />}
+                        {app.status === 'rejected' && <XCircle size={14} />}
+                        Stato: {app.status === 'pending' ? 'IN ATTESA' : app.status.toUpperCase()}
                       </div>
                       <div className="flex items-center gap-2 text-zinc-500">
                         <Calendar size={14} />
