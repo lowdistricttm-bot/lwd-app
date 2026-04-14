@@ -11,7 +11,7 @@ import { useAdmin } from '@/hooks/use-admin';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Car, Loader2, ChevronRight, X, MapPin, Camera, Trash2, Settings2, Calendar, Plus, Edit3, Eye, Clock } from 'lucide-react';
+import { Car, Loader2, ChevronRight, X, MapPin, Camera, Trash2, Settings2, Calendar, Plus, Edit3, Eye, Clock, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
@@ -67,6 +67,15 @@ const Events = () => {
   const removePreview = (index: number) => {
     setInteriorFiles(prev => prev.filter((_, i) => i !== index));
     setInteriorPreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleApplyClick = (event: Event) => {
+    if (!user) {
+      showError("Devi accedere per candidarti agli eventi");
+      navigate('/login');
+      return;
+    }
+    setSelectedEvent(event);
   };
 
   const handleApply = async (e: React.FormEvent) => {
@@ -198,13 +207,14 @@ const Events = () => {
                           </Button>
                         ) : (
                           <Button 
-                            onClick={() => setSelectedEvent(event)}
+                            onClick={() => handleApplyClick(event)}
                             disabled={event.status !== 'open'}
                             className={cn(
                               "rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 px-6",
                               event.status === 'open' ? "bg-white text-black hover:bg-zinc-200" : "bg-zinc-800 text-zinc-500 cursor-not-allowed"
                             )}
                           >
+                            {!user && event.status === 'open' && <Lock size={12} className="mr-2" />}
                             {event.status === 'open' ? 'Candidati' : 'Iscrizioni Chiuse'} <ChevronRight size={14} className="ml-2" />
                           </Button>
                         )}
@@ -280,9 +290,10 @@ const Events = () => {
 
                   {viewingEvent.status === 'open' && !getAppForEvent(viewingEvent.id) && (
                     <Button 
-                      onClick={() => { setViewingEvent(null); setSelectedEvent(viewingEvent); }}
+                      onClick={() => { setViewingEvent(null); handleApplyClick(viewingEvent); }}
                       className="w-full bg-white text-black py-6 font-black uppercase italic tracking-widest rounded-none"
                     >
+                      {!user && <Lock size={14} className="mr-2" />}
                       Candidati Ora
                     </Button>
                   )}

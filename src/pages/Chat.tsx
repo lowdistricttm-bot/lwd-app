@@ -27,12 +27,20 @@ const Chat = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [otherUserProfile, setOtherUserProfile] = useState<any>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   
   const { chatMessages, loadingChat, sendMessage, deleteMessage, markAsRead } = useMessages(userId);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => setCurrentUserId(user?.id || null));
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        navigate('/login');
+      } else {
+        setCurrentUserId(session.user.id);
+        setCheckingAuth(false);
+      }
+    });
     
     if (userId) {
       supabase.from('profiles').select('*').eq('id', userId).maybeSingle().then(({ data }) => {
@@ -40,7 +48,7 @@ const Chat = () => {
       });
       markAsRead.mutate(userId);
     }
-  }, [userId]);
+  }, [userId, navigate]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -68,6 +76,14 @@ const Chat = () => {
       setDeleteTarget(null);
     }
   };
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <Loader2 className="animate-spin text-zinc-500" size={40} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
