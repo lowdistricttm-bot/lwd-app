@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Home, ShoppingBag, MessageSquare, User, Calendar } from 'lucide-react';
+import { Home, ShoppingBag, MessageSquare, User, Calendar, Mail } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -11,8 +11,8 @@ const BottomNav = () => {
   const items = [
     { icon: Home, label: 'Home', href: '/' },
     { icon: MessageSquare, label: 'Bacheca', href: '/bacheca' },
+    { icon: Mail, label: 'Direct', href: '/messages' },
     { icon: Calendar, label: 'Eventi', href: '/events' },
-    { icon: ShoppingBag, label: 'Shop', href: '/shop' },
     { icon: User, label: 'Profilo', href: '/profile' },
   ];
 
@@ -20,7 +20,7 @@ const BottomNav = () => {
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-t border-white/10 px-4 py-3 md:hidden">
       <div className="flex items-center justify-around max-w-md mx-auto">
         {items.map((item, i) => {
-          const isActive = location.pathname === item.href || (item.href === '/profile' && location.pathname === '/login');
+          const isActive = location.pathname === item.href || (item.href === '/messages' && location.pathname.startsWith('/chat'));
           return (
             <Link 
               key={i} 

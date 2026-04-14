@@ -27,7 +27,6 @@ export interface ApplicationData {
   interiorFiles?: File[];
 }
 
-// Usiamo un ID UUID valido che corrisponde a quello creato nel database
 const MOCK_EVENTS: Event[] = [
   {
     id: "00000000-0000-0000-0000-000000000001",
@@ -57,42 +56,10 @@ export const useEvents = () => {
     }
   });
 
-  const uploadInteriorPhotos = async (files: File[]) => {
-    const urls: string[] = [];
-    for (const file of files) {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `applications/interiors/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('post-media')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('post-media')
-        .getPublicUrl(filePath);
-        
-      urls.push(publicUrl);
-    }
-    return urls;
-  };
-
   const applyToEvent = useMutation({
     mutationFn: async (data: ApplicationData) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Devi accedere per candidarti");
-
-      // Caricamento foto (opzionale se fallisce lo storage, ma procediamo)
-      let interiorUrls: string[] = [];
-      try {
-        if (data.interiorFiles && data.interiorFiles.length > 0) {
-          interiorUrls = await uploadInteriorPhotos(data.interiorFiles);
-        }
-      } catch (e) {
-        console.warn("Errore caricamento foto, procedo comunque:", e);
-      }
 
       const { error } = await supabase
         .from('applications')
@@ -103,21 +70,32 @@ export const useEvents = () => {
           status: 'pending',
         }]);
 
-      if (error) throw new Error("Errore database: " + error.message);
-      
+      if (error) throw error;
       return { success: true };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-applications'] });
-      showSuccess("Candidatura inviata con successo!");
+      showSuccess("Candidatura inviata!");
     },
-    onError: (error: any) => {
-      console.error("Errore candidatura:", error);
-      showError(error.message);
-    }
+    onError: (error: any) => showError(error.message)
   });
 
-  return { events, isLoading, applyToEvent };
+  const cancelApplication = useMutation({
+    mutationFn: async (applicationId: string) => {
+      const { error } = await supabase
+        .from('applications')
+        .delete()
+        .eq('id', applicationId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-applications'] });
+      showSuccess("Candidatura annullata.");
+    },
+    onError: (error: any) => showError(error.message)
+  });
+
+  return { events, isLoading, applyToEvent, cancelApplication };
 };
 
 export const useUserApplications = () => {
@@ -134,13 +112,9 @@ export const useUserApplications = () => {
           events:event_id (*),
           vehicles:vehicle_id (*)
         `)
-        .eq('user_id', user.id)
-        .order('applied_at', { ascending: false });
+        .eq('user_id', user.id);
 
-      if (error) {
-        console.error("Errore recupero candidature:", error);
-        return [];
-      }
+      if (error) return [];
       return data || [];
     }
   });

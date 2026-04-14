@@ -5,13 +5,13 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
-import { useEvents, Event } from '@/hooks/use-events';
+import { useEvents, Event, useUserApplications } from '@/hooks/use-events';
 import { useGarage } from '@/hooks/use-garage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Car, Loader2, Calendar, MapPin, ChevronRight, CheckCircle2, AlertCircle, X, Instagram, Phone, User, Map, Mail, Camera } from 'lucide-react';
+import { Car, Loader2, Calendar, MapPin, ChevronRight, CheckCircle2, AlertCircle, X, Instagram, Phone, User, Map, Mail, Camera, Trash2, Settings2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
@@ -20,100 +20,47 @@ const Events = () => {
   const navigate = useNavigate();
   const interiorInputRef = useRef<HTMLInputElement>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [manageApp, setManageApp] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
   
-  // Form State
   const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    city: '',
-    instagram: '',
-    vehicleId: '',
-    modifications: ''
+    fullName: '', email: '', phone: '', city: '', instagram: '', vehicleId: '', modifications: ''
   });
 
   const [interiorFiles, setInteriorFiles] = useState<File[]>([]);
   const [interiorPreviews, setInteriorPreviews] = useState<string[]>([]);
 
-  const { events, isLoading: eventsLoading, applyToEvent } = useEvents();
+  const { events, isLoading: eventsLoading, applyToEvent, cancelApplication } = useEvents();
   const { vehicles, isLoading: vehiclesLoading } = useGarage();
-
-  useEffect(() => {
-    if (formData.vehicleId && vehicles) {
-      const vehicle = vehicles.find(v => v.id === formData.vehicleId);
-      if (vehicle) {
-        setFormData(prev => ({
-          ...prev,
-          modifications: vehicle.description || ''
-        }));
-      }
-    }
-  }, [formData.vehicleId, vehicles]);
+  const { data: userApps, isLoading: appsLoading } = useUserApplications();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setUser(session.user);
-        setFormData(prev => ({
-          ...prev,
-          email: '', // Email vuota di default come richiesto
-          fullName: session.user.user_metadata?.full_name || ''
-        }));
+        setFormData(prev => ({ ...prev, email: session.user.email || '', fullName: session.user.user_metadata?.full_name || '' }));
       }
     });
   }, []);
 
-  const handleInteriorFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length > 0) {
-      const newFiles = [...interiorFiles, ...files].slice(0, 10); // Max 10 foto
-      setInteriorFiles(newFiles);
-      
-      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
-      setInteriorPreviews(newPreviews);
-    }
-  };
-
-  const removeInteriorPhoto = (index: number) => {
-    const newFiles = interiorFiles.filter((_, i) => i !== index);
-    setInteriorFiles(newFiles);
-    const newPreviews = interiorPreviews.filter((_, i) => i !== index);
-    setInteriorPreviews(newPreviews);
-  };
-
   const handleApply = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedEvent || !formData.vehicleId || interiorFiles.length < 3) return;
-    
+    if (!selectedEvent || !formData.vehicleId) return;
     try {
-      await applyToEvent.mutateAsync({
-        eventId: selectedEvent.id,
-        ...formData,
-        interiorFiles
-      });
+      await applyToEvent.mutateAsync({ eventId: selectedEvent.id, ...formData, interiorFiles });
       setSelectedEvent(null);
-      setFormData(prev => ({ ...prev, vehicleId: '', modifications: '', email: '' }));
-      setInteriorFiles([]);
-      setInteriorPreviews([]);
     } catch (error) {}
   };
 
-  const isFormValid = formData.fullName && formData.email && formData.phone && formData.city && formData.instagram && formData.vehicleId && interiorFiles.length >= 3;
+  const getAppForEvent = (eventId: string) => userApps?.find(app => app.event_id === eventId);
 
   if (!user && !eventsLoading) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col">
-        <Navbar />
-        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <AlertCircle size={48} className="text-zinc-800 mb-6" />
-          <h1 className="text-2xl font-black uppercase italic mb-4">Accesso Riservato</h1>
-          <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-8 max-w-xs">
-            Devi essere loggato per visualizzare e candidarti agli eventi del District.
-          </p>
+        <Navbar /><main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+          <AlertCircle size={48} className="text-zinc-800 mb-6" /><h1 className="text-2xl font-black uppercase italic mb-4">Accesso Riservato</h1>
           <Button onClick={() => navigate('/login')} className="bg-red-600 rounded-none font-black uppercase italic px-12 py-6">Accedi Ora</Button>
-        </main>
-        <BottomNav />
+        </main><BottomNav />
       </div>
     );
   }
@@ -121,244 +68,123 @@ const Events = () => {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Navbar />
-      
       <main className="flex-1 pt-24 pb-32 px-6 max-w-4xl mx-auto w-full">
         <header className="mb-12">
-          <h2 className="text-red-600 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">
-            District Calendar
-          </h2>
-          <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">
-            Eventi & Selezioni
-          </h1>
+          <h2 className="text-red-600 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">District Calendar</h2>
+          <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">Eventi & Selezioni</h1>
         </header>
 
-        {eventsLoading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <Loader2 className="animate-spin text-red-600" size={40} />
-            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Sincronizzazione eventi...</p>
-          </div>
+        {eventsLoading || appsLoading ? (
+          <div className="flex justify-center py-20"><Loader2 className="animate-spin text-red-600" size={40} /></div>
         ) : (
           <div className="space-y-6">
-            {events?.map((event) => (
-              <motion.div 
-                key={event.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-zinc-900/40 border border-white/5 p-6 group hover:border-red-600/30 transition-all"
-              >
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                  <div className="space-y-4">
-                    <span className="text-[8px] font-black uppercase px-2 py-0.5 italic bg-green-600 text-white">
-                      Iscrizioni Aperte
-                    </span>
-                    <h3 className="text-2xl font-black italic uppercase tracking-tighter">{event.title}</h3>
-                    <div className="flex flex-wrap gap-4 text-zinc-500">
-                      <div className="flex items-center gap-1.5">
-                        <Calendar size={14} className="text-red-600" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">
-                          {new Date(event.date).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <MapPin size={14} className="text-red-600" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">{event.location}</span>
-                      </div>
+            {events?.map((event) => {
+              const existingApp = getAppForEvent(event.id);
+              return (
+                <motion.div key={event.id} className="bg-zinc-900/40 border border-white/5 p-6 group hover:border-red-600/30 transition-all">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div className="space-y-4">
+                      <span className={cn(
+                        "text-[8px] font-black uppercase px-2 py-0.5 italic",
+                        existingApp ? "bg-zinc-800 text-zinc-400" : "bg-green-600 text-white"
+                      )}>
+                        {existingApp ? `STATO: ${existingApp.status.toUpperCase()}` : "Iscrizioni Aperte"}
+                      </span>
+                      <h3 className="text-2xl font-black italic uppercase tracking-tighter">{event.title}</h3>
                     </div>
+                    
+                    {existingApp ? (
+                      <Button 
+                        onClick={() => setManageApp(existingApp)}
+                        className="bg-zinc-800 text-white hover:bg-white hover:text-black rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 px-8"
+                      >
+                        <Settings2 size={14} className="mr-2" /> Gestisci Selezione
+                      </Button>
+                    ) : (
+                      <Button 
+                        onClick={() => setSelectedEvent(event)}
+                        className="bg-white text-black hover:bg-red-600 hover:text-white rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 px-8"
+                      >
+                        Candidati <ChevronRight size={14} className="ml-2" />
+                      </Button>
+                    )}
                   </div>
-                  
-                  <Button 
-                    onClick={() => setSelectedEvent(event)}
-                    className="bg-white text-black hover:bg-red-600 hover:text-white rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 px-8"
-                  >
-                    Candidati <ChevronRight size={14} className="ml-2" />
-                  </Button>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         )}
 
+        {/* Modal Gestione Selezione */}
+        <AnimatePresence>
+          {manageApp && (
+            <>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setManageApp(null)} className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100]" />
+              <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed inset-x-0 bottom-0 z-[101] bg-zinc-950 border-t border-white/10 p-8 rounded-t-[2rem] max-h-[80vh] overflow-y-auto">
+                <div className="max-w-md mx-auto text-center space-y-8">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-xl font-black italic uppercase">La tua Selezione</h3>
+                    <button onClick={() => setManageApp(null)}><X size={24} /></button>
+                  </div>
+                  
+                  <div className="bg-zinc-900 p-6 border border-white/5">
+                    <p className="text-[10px] font-black uppercase text-zinc-500 mb-2">Stato Attuale</p>
+                    <p className="text-2xl font-black italic uppercase text-red-600">{manageApp.status}</p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <p className="text-xs text-zinc-500 font-bold uppercase">Vuoi modificare la tua candidatura? <br/> Devi prima annullare quella attuale.</p>
+                    <Button 
+                      onClick={async () => {
+                        await cancelApplication.mutateAsync(manageApp.id);
+                        setManageApp(null);
+                      }}
+                      className="w-full bg-red-600 hover:bg-white hover:text-black text-white py-6 rounded-none font-black uppercase italic tracking-widest"
+                    >
+                      <Trash2 size={16} className="mr-2" /> Annulla Candidatura
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+
+        {/* Modal Candidatura (Esistente) */}
         <AnimatePresence>
           {selectedEvent && (
             <>
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setSelectedEvent(null)}
-                className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100]"
-              />
-              <motion.div 
-                initial={{ y: '100%' }}
-                animate={{ y: 0 }}
-                exit={{ y: '100%' }}
-                className="fixed inset-x-0 bottom-0 z-[101] bg-zinc-950 border-t border-white/10 p-8 rounded-t-[2rem] max-h-[90vh] overflow-y-auto"
-              >
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedEvent(null)} className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100]" />
+              <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed inset-x-0 bottom-0 z-[101] bg-zinc-950 border-t border-white/10 p-8 rounded-t-[2rem] max-h-[90vh] overflow-y-auto">
                 <form onSubmit={handleApply} className="max-w-2xl mx-auto pb-12">
                   <div className="flex justify-between items-start mb-8">
-                    <div>
-                      <h2 className="text-red-600 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Invia Selezione</h2>
-                      <h3 className="text-3xl font-black italic uppercase tracking-tighter">{selectedEvent.title}</h3>
-                    </div>
-                    <button type="button" onClick={() => setSelectedEvent(null)} className="p-2 text-zinc-500 hover:text-white">
-                      <X size={24} />
-                    </button>
+                    <h3 className="text-3xl font-black italic uppercase tracking-tighter">{selectedEvent.title}</h3>
+                    <button type="button" onClick={() => setSelectedEvent(null)}><X size={24} /></button>
                   </div>
-
-                  <div className="space-y-10">
-                    {/* Locandina */}
-                    {selectedEvent.image_url && (
-                      <div className="aspect-video bg-zinc-900 border border-white/5 overflow-hidden">
-                        <img src={selectedEvent.image_url} alt="Locandina" className="w-full h-full object-cover" />
+                  <div className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-zinc-500">Nome e Cognome</Label>
+                        <Input required value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
                       </div>
-                    )}
-
-                    {/* Dati Personali */}
-                    <div className="space-y-6">
-                      <h4 className="text-xs font-black uppercase tracking-widest italic text-red-600 border-b border-white/5 pb-2">1. Dati Personali</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-zinc-500 flex items-center gap-2"><User size={12}/> Nome e Cognome</Label>
-                          <Input required value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-zinc-500 flex items-center gap-2"><Mail size={12}/> Email</Label>
-                          <Input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-zinc-500 flex items-center gap-2"><Phone size={12}/> Cellulare</Label>
-                          <Input required type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase text-zinc-500 flex items-center gap-2"><Map size={12}/> Città</Label>
-                          <Input required value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
-                        </div>
-                        <div className="space-y-2 md:col-span-2">
-                          <Label className="text-[10px] font-black uppercase text-zinc-500 flex items-center gap-2"><Instagram size={12}/> Instagram</Label>
-                          <Input required placeholder="@username" value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
-                        </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-zinc-500">Email</Label>
+                        <Input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
                       </div>
                     </div>
-
-                    {/* Selezione Veicolo */}
-                    <div className="space-y-6">
-                      <h4 className="text-xs font-black uppercase tracking-widest italic text-red-600 border-b border-white/5 pb-2">2. Il tuo Progetto</h4>
-                      {vehiclesLoading ? (
-                        <Loader2 className="animate-spin mx-auto text-red-600" />
-                      ) : vehicles?.length === 0 ? (
-                        <div className="p-8 border border-dashed border-zinc-800 text-center">
-                          <p className="text-zinc-500 text-[10px] font-bold uppercase mb-4">Aggiungi prima un veicolo nel garage</p>
-                          <Button type="button" onClick={() => navigate('/profile')} variant="outline" className="rounded-none text-[9px] font-black uppercase">Vai al Garage</Button>
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-1 gap-3">
-                          {vehicles?.map((vehicle) => (
-                            <button
-                              key={vehicle.id}
-                              type="button"
-                              onClick={() => setFormData({...formData, vehicleId: vehicle.id})}
-                              className={cn(
-                                "flex items-center gap-4 p-4 border transition-all text-left",
-                                formData.vehicleId === vehicle.id ? "bg-red-600 border-red-600 text-white" : "bg-zinc-900/50 border-white/5 text-zinc-400 hover:border-white/20"
-                              )}
-                            >
-                              <div className="w-16 h-16 bg-zinc-800 border border-white/10 overflow-hidden shrink-0">
-                                {vehicle.image_url ? (
-                                  <img src={vehicle.image_url} alt={vehicle.model} className="w-full h-full object-cover" />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center"><Car size={20} /></div>
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs font-black uppercase italic truncate">{vehicle.brand} {vehicle.model}</p>
-                                <p className="text-[9px] font-bold uppercase opacity-60">{vehicle.suspension_type} • {vehicle.year}</p>
-                              </div>
-                              {formData.vehicleId === vehicle.id && <CheckCircle2 size={20} />}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Foto Interni Obbligatorie */}
-                    <div className="space-y-6">
-                      <h4 className="text-xs font-black uppercase tracking-widest italic text-red-600 border-b border-white/5 pb-2">3. Foto Interni (Minimo 3)</h4>
-                      <div 
-                        onClick={() => interiorInputRef.current?.click()}
-                        className={cn(
-                          "h-24 border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all",
-                          interiorFiles.length >= 3 ? "border-green-600/50 bg-green-600/5" : "border-zinc-800 hover:border-red-600"
-                        )}
-                      >
-                        <Camera size={24} className={interiorFiles.length >= 3 ? "text-green-600" : "text-zinc-600"} />
-                        <span className="text-[10px] font-black uppercase mt-2 text-zinc-500">
-                          {interiorFiles.length}/3 Foto Caricate
-                        </span>
+                    <div className="space-y-4">
+                      <Label className="text-[10px] font-black uppercase text-zinc-500">Seleziona Veicolo</Label>
+                      <div className="grid grid-cols-1 gap-2">
+                        {vehicles?.map(v => (
+                          <button key={v.id} type="button" onClick={() => setFormData({...formData, vehicleId: v.id})} className={cn("p-4 border text-left transition-all", formData.vehicleId === v.id ? "bg-red-600 border-red-600" : "bg-zinc-900 border-white/5")}>
+                            <p className="text-xs font-black uppercase italic">{v.brand} {v.model}</p>
+                          </button>
+                        ))}
                       </div>
-                      <input 
-                        type="file" 
-                        ref={interiorInputRef} 
-                        className="hidden" 
-                        accept="image/*" 
-                        multiple 
-                        onChange={handleInteriorFileChange} 
-                      />
-
-                      {interiorPreviews.length > 0 && (
-                        <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
-                          {interiorPreviews.map((url, i) => (
-                            <div key={i} className="aspect-square relative bg-zinc-900 border border-white/5">
-                              <img src={url} className="w-full h-full object-cover" alt={`Interno ${i+1}`} />
-                              <button 
-                                type="button"
-                                onClick={() => removeInteriorPhoto(i)}
-                                className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white flex items-center justify-center rounded-full"
-                              >
-                                <X size={10} />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      {interiorFiles.length < 3 && interiorFiles.length > 0 && (
-                        <p className="text-[9px] text-red-600 font-black uppercase italic">Carica almeno altre {3 - interiorFiles.length} foto per procedere.</p>
-                      )}
                     </div>
-
-                    {/* Modifiche */}
-                    {formData.vehicleId && (
-                      <motion.div 
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        className="space-y-4"
-                      >
-                        <h4 className="text-xs font-black uppercase tracking-widest italic text-red-600 border-b border-white/5 pb-2">4. Lista Modifiche</h4>
-                        <Label className="text-[10px] font-black uppercase text-zinc-500">Descrivi le modifiche (Estetiche, Meccaniche, Interni)</Label>
-                        <Textarea 
-                          required
-                          placeholder="Esempio: Cerchi BBS RS, Assetto a ghiera KW V3, Interni Recaro..."
-                          value={formData.modifications}
-                          onChange={e => setFormData({...formData, modifications: e.target.value})}
-                          className="bg-transparent border-zinc-800 rounded-none min-h-[150px] text-sm" 
-                        />
-                        <p className="text-[8px] text-zinc-600 uppercase font-bold tracking-widest italic">
-                          * Pre-compilato dal tuo garage. Puoi modificarlo per questa candidatura.
-                        </p>
-                      </motion.div>
-                    )}
-
-                    <div className="pt-6 border-t border-white/5">
-                      <Button 
-                        type="submit"
-                        disabled={!isFormValid || applyToEvent.isPending}
-                        className="w-full bg-red-600 hover:bg-white hover:text-black text-white py-8 text-sm font-black uppercase italic tracking-widest rounded-none italic"
-                      >
-                        {applyToEvent.isPending ? <Loader2 className="animate-spin" /> : 'Invia Candidatura Ufficiale'}
-                      </Button>
-                      <p className="text-[9px] text-zinc-600 text-center mt-4 uppercase font-bold tracking-widest">
-                        Inviando la candidatura accetti che i tuoi dati vengano trattati per la selezione dell'evento.
-                      </p>
-                    </div>
+                    <Button type="submit" disabled={applyToEvent.isPending} className="w-full bg-red-600 py-8 font-black uppercase italic tracking-widest rounded-none">
+                      Invia Candidatura
+                    </Button>
                   </div>
                 </form>
               </motion.div>
@@ -366,9 +192,7 @@ const Events = () => {
           )}
         </AnimatePresence>
       </main>
-
-      <Footer />
-      <BottomNav />
+      <Footer /><BottomNav />
     </div>
   );
 };

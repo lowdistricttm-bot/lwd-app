@@ -12,6 +12,8 @@ import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import Events from "./pages/Events";
 import AdminApplications from "./pages/AdminApplications";
+import Messages from "./pages/Messages";
+import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +33,8 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/events" element={<Events />} />
+          <Route path="/messages" element={<Messages />} />
+          <Route path="/chat/:userId" element={<Chat />} />
           <Route path="/admin/applications" element={<AdminApplications />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
