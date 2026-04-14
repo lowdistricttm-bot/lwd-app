@@ -53,6 +53,21 @@ export const useMessages = (otherUserId?: string) => {
     }
   });
 
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ['unread-messages-count'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return 0;
+      const { count, error } = await supabase
+        .from('messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('receiver_id', user.id)
+        .eq('is_read', false);
+      if (error) return 0;
+      return count || 0;
+    }
+  });
+
   const { data: chatMessages, isLoading: loadingChat } = useQuery({
     queryKey: ['chat', otherUserId],
     queryFn: async () => {
@@ -78,19 +93,20 @@ export const useMessages = (otherUserId?: string) => {
 
   useEffect(() => {
     const channel = supabase
-      .channel('messages-realtime')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['conversations'] });
-        if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
-      })
-      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['conversations'] });
-        if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
+      .channel('messages-realtime-global')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
+        queryKeyInvalidator();
       })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
   }, [otherUserId, queryClient]);
+
+  const queryKeyInvalidator = () => {
+    queryClient.invalidateQueries({ queryKey: ['conversations'] });
+    queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
+    if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
+  };
 
   const sendMessage = useMutation({
     mutationFn: async ({ receiverId, content }: { receiverId: string, content: string }) => {
@@ -105,6 +121,22 @@ export const useMessages = (otherUserId?: string) => {
     }
   });
 
+  const markAsRead = useMutation({
+    mutationFn: async (senderId: string) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      await supabase
+        .from('messages')
+        .update({ is_read: true })
+        .eq('receiver_id', user.id)
+        .eq('sender_id', senderId)
+        .eq('is_read', false);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
+    }
+  });
+
   const deleteMessage = useMutation({
     mutationFn: async (messageId: string) => {
       const { error } = await supabase.from('messages').delete().eq('id', messageId);
@@ -112,6 +144,7 @@ export const useMessages = (otherUserId?: string) => {
     },
     onSuccess: () => {
       showSuccess("Messaggio eliminato");
+      queryKeyInvalidator();
     },
     onError: (err: any) => showError(err.message)
   });
@@ -131,9 +164,10 @@ export const useMessages = (otherUserId?: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
       showSuccess("Conversazione eliminata");
+      queryKeyInvalidator();
     },
     onError: (err: any) => showError(err.message)
   });
 
-  return { conversations, loadingConvs, chatMessages, loadingChat, sendMessage, deleteMessage, deleteConversation };
+  return { conversations, unreadCount, loadingConvs, chatMessages, loadingChat, sendMessage, markAsRead, deleteMessage, deleteConversation };
 };

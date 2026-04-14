@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, ShoppingBag, X, Mail } from 'lucide-react';
+import { Search, ShoppingBag, X, Send } from 'lucide-react';
 import Logo from './Logo';
 import { useCart } from '@/hooks/use-cart';
+import { useMessages } from '@/hooks/use-messages';
 import CartDrawer from './CartDrawer';
 import { Input } from './ui/input';
 
@@ -13,6 +14,7 @@ const Navbar = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { items } = useCart();
+  const { unreadCount } = useMessages();
   const navigate = useNavigate();
 
   const handleSearch = (e: React.FormEvent) => {
@@ -27,33 +29,39 @@ const Navbar = () => {
   return (
     <>
       <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/5 h-[calc(4rem+env(safe-area-inset-top))] px-6 flex items-center justify-between">
-        <div className="flex-1 flex items-center gap-2">
+        <div className="flex-1 flex items-center">
           <button 
             onClick={() => setIsSearchOpen(true)}
             className="p-2 text-zinc-400 hover:text-white transition-colors"
           >
             <Search size={20} />
           </button>
-          <Link 
-            to="/messages"
-            className="p-2 text-zinc-400 hover:text-white transition-colors"
-          >
-            <Mail size={20} />
-          </Link>
         </div>
 
         <Link to="/" className="hover:opacity-80 transition-opacity">
           <Logo className="h-6 md:h-8" />
         </Link>
 
-        <div className="flex-1 flex items-center justify-end">
+        <div className="flex-1 flex items-center justify-end gap-2">
+          <Link 
+            to="/messages"
+            className="p-2 text-zinc-400 hover:text-white transition-colors relative"
+          >
+            <Send size={20} className="-rotate-12" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 w-4 h-4 bg-red-600 text-white text-[8px] font-black flex items-center justify-center rounded-full border-2 border-black">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </Link>
+          
           <button 
             onClick={() => setIsCartOpen(true)}
             className="p-2 text-zinc-400 hover:text-white transition-colors relative"
           >
             <ShoppingBag size={20} />
             {items.length > 0 && (
-              <span className="absolute top-1 right-1 w-4 h-4 bg-red-600 text-white text-[8px] font-black flex items-center justify-center rounded-full">
+              <span className="absolute top-1 right-1 w-4 h-4 bg-red-600 text-white text-[8px] font-black flex items-center justify-center rounded-full border-2 border-black">
                 {items.length}
               </span>
             )}

@@ -29,7 +29,7 @@ const Chat = () => {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   
-  const { chatMessages, loadingChat, sendMessage, deleteMessage } = useMessages(userId);
+  const { chatMessages, loadingChat, sendMessage, deleteMessage, markAsRead } = useMessages(userId);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => setCurrentUserId(user?.id || null));
@@ -38,6 +38,8 @@ const Chat = () => {
       supabase.from('profiles').select('*').eq('id', userId).maybeSingle().then(({ data }) => {
         setOtherUserProfile(data);
       });
+      // Segna come letti all'apertura
+      markAsRead.mutate(userId);
     }
   }, [userId]);
 
@@ -45,7 +47,11 @@ const Chat = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [chatMessages]);
+    // Segna come letti quando arrivano nuovi messaggi mentre la chat è aperta
+    if (userId && chatMessages?.some(m => !m.is_read && m.receiver_id === currentUserId)) {
+      markAsRead.mutate(userId);
+    }
+  }, [chatMessages, userId, currentUserId]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
