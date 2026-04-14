@@ -238,7 +238,7 @@ const Profile = () => {
         </div>
 
         <div className="mt-20 px-4 md:px-12 max-w-6xl mx-auto">
-          {/* Share Card Integrata */}
+          {/* Share Card Integrata - Versione Semplificata */}
           <button 
             onClick={handleShareProfile}
             className="w-full mb-6 bg-zinc-900/40 border border-white/5 p-4 flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500"
@@ -249,10 +249,7 @@ const Profile = () => {
               </div>
               <div className="text-left">
                 <p className="text-[10px] font-black uppercase italic tracking-widest">
-                  {isOwnProfile ? 'Condividi il tuo profilo' : 'Condividi questo profilo'}
-                </p>
-                <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-[0.2em] group-hover:text-black/60 transition-colors">
-                  {isOwnProfile ? 'Fatti conoscere nel District' : 'Mostra questo progetto alla community'}
+                  CONDIVIDI QUESTO PROFILO
                 </p>
               </div>
             </div>
