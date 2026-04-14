@@ -20,7 +20,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
   const { vehicles, isLoading, addVehicle, updateVehicle, deleteVehicle } = useGarage(userId);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
   
   const [formData, setFormData] = useState({
     brand: '',
@@ -291,7 +291,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
                       <img 
                         key={idx} 
                         src={img} 
-                        onClick={() => setLightboxImage(img)}
+                        onClick={() => setLightboxData({ images: vehicle.images || [], index: idx })}
                         className="w-full h-full object-cover shrink-0 snap-center cursor-pointer" 
                         alt={`${vehicle.model} ${idx + 1}`} 
                       />
@@ -329,9 +329,10 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
       </div>
 
       <ImageLightbox 
-        src={lightboxImage} 
-        isOpen={!!lightboxImage} 
-        onClose={() => setLightboxImage(null)} 
+        images={lightboxData?.images || []} 
+        initialIndex={lightboxData?.index || 0} 
+        isOpen={!!lightboxData} 
+        onClose={() => setLightboxData(null)} 
       />
     </div>
   );

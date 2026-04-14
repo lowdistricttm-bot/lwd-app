@@ -43,7 +43,7 @@ const Profile = () => {
   const [uploadingCover, setUploadingCover] = useState(false);
   const [activeTab, setActiveTab] = useState('activity');
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
-  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
 
   const { posts, isLoading: loadingPosts } = useSocialFeed();
   const targetUserId = userId || currentUser?.id;
@@ -134,7 +134,7 @@ const Profile = () => {
       <Navbar />
       <main className="flex-1 pb-32">
         <div className="relative h-56 md:h-80 bg-zinc-900">
-          <div className={cn("absolute inset-0 overflow-hidden cursor-pointer")} onClick={() => setLightboxImage(profile?.cover_url || DEFAULT_COVER)}>
+          <div className={cn("absolute inset-0 overflow-hidden cursor-pointer")} onClick={() => setLightboxData({ images: [profile?.cover_url || DEFAULT_COVER], index: 0 })}>
             <img src={profile?.cover_url || DEFAULT_COVER} className={cn("w-full h-full object-cover opacity-60 grayscale transition-all duration-700 hover:grayscale-0 hover:scale-105")} alt="Cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40" />
             {isOwnProfile && (
@@ -150,7 +150,7 @@ const Profile = () => {
           <div className="absolute -bottom-12 left-6 flex items-end gap-4 z-20">
             <div className="relative group/avatar">
               <input type="file" ref={avatarInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'avatar')} />
-              <div onClick={() => setLightboxImage(profile?.avatar_url || null)} className="w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-white rounded-full overflow-hidden shadow-2xl flex items-center justify-center relative cursor-pointer">
+              <div onClick={() => setLightboxData({ images: [profile?.avatar_url || ""], index: 0 })} className="w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-white rounded-full overflow-hidden shadow-2xl flex items-center justify-center relative cursor-pointer">
                 {uploadingAvatar ? <Loader2 className="animate-spin text-zinc-500" /> : profile?.avatar_url ? <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" /> : <User size={40} className="text-zinc-800" />}
                 {isOwnProfile && (
                   <button 
@@ -257,7 +257,12 @@ const Profile = () => {
         </div>
       </main>
       <CreatePostModal isOpen={isPostModalOpen} onClose={() => setIsPostModalOpen(false)} />
-      <ImageLightbox src={lightboxImage} isOpen={!!lightboxImage} onClose={() => setLightboxImage(null)} />
+      <ImageLightbox 
+        images={lightboxData?.images || []} 
+        initialIndex={lightboxData?.index || 0} 
+        isOpen={!!lightboxData} 
+        onClose={() => setLightboxData(null)} 
+      />
       <Footer /><BottomNav />
     </div>
   );

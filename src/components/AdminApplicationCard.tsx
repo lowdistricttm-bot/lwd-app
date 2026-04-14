@@ -35,7 +35,7 @@ interface AdminApplicationCardProps {
 const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicationCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
   const { canManage, canVote, castVote, deleteApplication } = useAdmin();
 
   useEffect(() => {
@@ -48,6 +48,7 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
 
   const vehicleImages = app.vehicles?.images || (app.vehicles?.image_url ? [app.vehicles.image_url] : []);
   const interiorImages = app.interior_urls || [];
+  const allImages = [...vehicleImages, ...interiorImages];
   
   const votes = Array.isArray(app.application_votes) ? app.application_votes : [];
   const approveVotes = votes.filter((v: any) => v.vote === 'approve');
@@ -180,8 +181,8 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
                       <Camera size={12} className="text-zinc-400" /> Media Progetto
                     </h4>
                     <div className="grid grid-cols-4 gap-2">
-                      {[...vehicleImages, ...interiorImages].map((url: string, idx: number) => (
-                        <div key={idx} className="aspect-square bg-zinc-900 border border-white/5 overflow-hidden cursor-pointer" onClick={() => setLightboxImage(url)}>
+                      {allImages.map((url: string, idx: number) => (
+                        <div key={idx} className="aspect-square bg-zinc-900 border border-white/5 overflow-hidden cursor-pointer" onClick={() => setLightboxData({ images: allImages, index: idx })}>
                           <img src={url} className="w-full h-full object-cover" alt="Media" />
                         </div>
                       ))}
@@ -272,9 +273,10 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
       </div>
 
       <ImageLightbox 
-        src={lightboxImage} 
-        isOpen={!!lightboxImage} 
-        onClose={() => setLightboxImage(null)} 
+        images={lightboxData?.images || []} 
+        initialIndex={lightboxData?.index || 0} 
+        isOpen={!!lightboxData} 
+        onClose={() => setLightboxData(null)} 
       />
     </>
   );
