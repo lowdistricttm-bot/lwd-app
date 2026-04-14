@@ -27,19 +27,6 @@ export interface ApplicationData {
   interiorFiles?: File[];
 }
 
-const MOCK_EVENTS: Event[] = [
-  {
-    id: "00000000-0000-0000-0000-000000000001",
-    title: "LOW DISTRICT - SEASON 4",
-    description: "Il capitolo più grande della nostra storia. Il 27 e 28 Giugno 2026, la cultura stance approda ad Atripalda (AV) per un weekend senza precedenti.",
-    image_url: "https://www.lowdistrict.it/wp-content/uploads/DSC01359-1-scaled-e1751832356345.jpg",
-    date: "2026-06-27T09:00:00Z",
-    location: "Atripalda (AV), Italia",
-    status: "open",
-    created_at: new Date().toISOString()
-  }
-];
-
 export const useEvents = () => {
   const queryClient = useQueryClient();
 
@@ -51,32 +38,87 @@ export const useEvents = () => {
         .select('*')
         .order('date', { ascending: true });
 
-      if (error || !data || data.length === 0) return MOCK_EVENTS;
-      return data;
+      if (error) throw error;
+      return data as Event[];
     }
   });
 
-  const uploadInteriors = async (files: File[]) => {
-    const urls: string[] = [];
-    for (const file of files) {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `interiors/${fileName}`;
+  const uploadMedia = async (file: File, path: string) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `${path}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('post-media')
-        .upload(filePath, file);
+    const { error: uploadError } = await supabase.storage
+      .from('post-media')
+      .upload(filePath, file);
 
-      if (uploadError) throw uploadError;
+    if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('post-media')
-        .getPublicUrl(filePath);
-        
-      urls.push(publicUrl);
-    }
-    return urls;
+    const { data: { publicUrl } } = supabase.storage
+      .from('post-media')
+      .getPublicUrl(filePath);
+      
+    return publicUrl;
   };
+
+  // --- ADMIN ACTIONS ---
+
+  const createEvent = useMutation({
+    mutationFn: async (data: Partial<Event> & { file?: File }) => {
+      let image_url = data.image_url;
+      if (data.file) {
+        image_url = await uploadMedia(data.file, 'events');
+      }
+
+      const { file, ...eventData } = data;
+      const { error } = await supabase
+        .from('events')
+        .insert([{ ...eventData, image_url }]);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['events'] });
+      showSuccess("Evento creato con successo!");
+    },
+    onError: (error: any) => showError(error.message)
+  });
+
+  const updateEvent = useMutation({
+    mutationFn: async (data: Partial<Event> & { file?: File }) => {
+      let image_url = data.image_url;
+      if (data.file) {
+        image_url = await uploadMedia(data.file, 'events');
+      }
+
+      const { file, id, ...eventData } = data;
+      const { error } = await supabase
+        .from('events')
+        .update({ ...eventData, image_url })
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['events'] });
+      showSuccess("Evento aggiornato!");
+    },
+    onError: (error: any) => showError(error.message)
+  });
+
+  const deleteEvent = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('events').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['events'] });
+      showSuccess("Evento eliminato.");
+    },
+    onError: (error: any) => showError(error.message)
+  });
+
+  // --- USER ACTIONS ---
 
   const applyToEvent = useMutation({
     mutationFn: async (data: ApplicationData) => {
@@ -85,7 +127,10 @@ export const useEvents = () => {
 
       let interiorUrls: string[] = [];
       if (data.interiorFiles && data.interiorFiles.length > 0) {
-        interiorUrls = await uploadInteriors(data.interiorFiles);
+        for (const file of data.interiorFiles) {
+          const url = await uploadMedia(file, 'interiors');
+          interiorUrls.push(url);
+        }
       }
 
       const { error } = await supabase
@@ -105,14 +150,9 @@ export const useEvents = () => {
         }]);
 
       if (error) throw error;
-      return { success: true };
     },
-    onSuccess: async () => {
-      // Invalidazione totale per aggiornare UI utente e admin
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['user-applications'] }),
-        queryClient.invalidateQueries({ queryKey: ['admin-applications'] })
-      ]);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-applications'] });
       showSuccess("Candidatura inviata!");
     },
     onError: (error: any) => showError(error.message)
@@ -126,20 +166,13 @@ export const useEvents = () => {
         .eq('id', applicationId);
       if (error) throw error;
     },
-    onSuccess: async () => {
-      // Pulizia profonda della cache per far sparire la candidatura ovunque
-      queryClient.removeQueries({ queryKey: ['user-applications'] });
-      queryClient.removeQueries({ queryKey: ['admin-applications'] });
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['user-applications'] }),
-        queryClient.invalidateQueries({ queryKey: ['admin-applications'] })
-      ]);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-applications'] });
       showSuccess("Candidatura annullata.");
-    },
-    onError: (error: any) => showError("Errore: Assicurati di aver eseguito il comando SQL per i permessi di eliminazione.")
+    }
   });
 
-  return { events, isLoading, applyToEvent, cancelApplication };
+  return { events, isLoading, createEvent, updateEvent, deleteEvent, applyToEvent, cancelApplication };
 };
 
 export const useUserApplications = () => {
@@ -160,8 +193,6 @@ export const useUserApplications = () => {
 
       if (error) return [];
       return data || [];
-    },
-    staleTime: 0,
-    refetchOnMount: 'always'
+    }
   });
 };

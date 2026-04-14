@@ -7,19 +7,26 @@ import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
 import { useEvents, Event, useUserApplications } from '@/hooks/use-events';
 import { useGarage } from '@/hooks/use-garage';
+import { useAdmin } from '@/hooks/use-admin';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Car, Loader2, ChevronRight, AlertCircle, X, Instagram, Phone, MapPin, Camera, Trash2, Settings2, Info } from 'lucide-react';
+import { Car, Loader2, ChevronRight, AlertCircle, X, Instagram, Phone, MapPin, Camera, Trash2, Settings2, Info, Calendar, Plus, Edit3, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
 import { showError } from '@/utils/toast';
+import EventAdminModal from '@/components/EventAdminModal';
 
 const Events = () => {
   const navigate = useNavigate();
   const interiorInputRef = useRef<HTMLInputElement>(null);
+  
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [viewingEvent, setViewingEvent] = useState<Event | null>(null);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+  
   const [manageApp, setManageApp] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
   
@@ -30,9 +37,10 @@ const Events = () => {
   const [interiorFiles, setInteriorFiles] = useState<File[]>([]);
   const [interiorPreviews, setInteriorPreviews] = useState<string[]>([]);
 
-  const { events, isLoading: eventsLoading, applyToEvent, cancelApplication } = useEvents();
+  const { events, isLoading: eventsLoading, applyToEvent, cancelApplication, deleteEvent } = useEvents();
   const { vehicles, isLoading: vehiclesLoading } = useGarage();
   const { data: userApps, isLoading: appsLoading, refetch: refetchApps } = useUserApplications();
+  const { isAdmin } = useAdmin();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -41,7 +49,7 @@ const Events = () => {
         setFormData(prev => ({ 
           ...prev, 
           fullName: session.user.user_metadata?.full_name || '',
-          email: ''
+          email: session.user.email || ''
         }));
       }
     });
@@ -61,109 +69,48 @@ const Events = () => {
     setInteriorPreviews(prev => prev.filter((_, i) => i !== index));
   };
 
-  const validateForm = () => {
-    if (!formData.fullName.trim()) {
-      showError("Inserisci il tuo nome e cognome completo.");
-      return false;
-    }
-    
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formData.email.trim() || !emailRegex.test(formData.email)) {
-      showError("Inserisci un indirizzo email valido.");
-      return false;
-    }
-
-    if (!formData.phone.trim() || formData.phone.length < 8) {
-      showError("Inserisci un numero di telefono valido.");
-      return false;
-    }
-
-    if (!formData.city.trim()) {
-      showError("Inserisci la tua città di provenienza.");
-      return false;
-    }
-
-    if (!formData.instagram.trim()) {
-      showError("Inserisci il tuo profilo Instagram (es. @username).");
-      return false;
-    }
-
-    if (!formData.vehicleId) {
-      showError("Devi selezionare un veicolo dal tuo garage.");
-      return false;
-    }
-
-    if (interiorFiles.length < 3) {
-      showError(`Carica almeno 3 foto degli interni. (Attualmente: ${interiorFiles.length})`);
-      return false;
-    }
-
-    if (!formData.modifications.trim()) {
-      showError("Il veicolo selezionato non ha una descrizione nel Garage. Aggiungila per continuare.");
-      return false;
-    }
-
-    return true;
-  };
-
   const handleApply = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedEvent) return;
     
-    if (!validateForm()) return;
+    if (!formData.vehicleId) {
+      showError("Seleziona un veicolo dal garage");
+      return;
+    }
+
+    if (interiorFiles.length < 3) {
+      showError("Carica almeno 3 foto degli interni");
+      return;
+    }
 
     try {
       await applyToEvent.mutateAsync({ eventId: selectedEvent.id, ...formData, interiorFiles });
       setSelectedEvent(null);
       setInteriorFiles([]);
       setInteriorPreviews([]);
-      setFormData({
-        fullName: user?.user_metadata?.full_name || '',
-        email: '',
-        phone: '',
-        city: '',
-        instagram: '',
-        vehicleId: '',
-        modifications: ''
-      });
       await refetchApps();
     } catch (error) {}
   };
 
-  const handleCancel = async () => {
-    if (!manageApp) return;
-    try {
-      await cancelApplication.mutateAsync(manageApp.id);
-      setManageApp(null);
-      await refetchApps();
-    } catch (error) {
-      console.error("Errore durante l'annullamento:", error);
-    }
-  };
-
   const getAppForEvent = (eventId: string) => userApps?.find(app => app.event_id === eventId);
-
-  if (!user && !eventsLoading) {
-    return (
-      <div className="min-h-screen bg-black text-white flex flex-col">
-        <Navbar />
-        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <AlertCircle size={48} className="text-zinc-800 mb-6" />
-          <h1 className="text-2xl font-black uppercase italic mb-4">Accesso Riservato</h1>
-          <Button onClick={() => navigate('/login')} className="bg-white text-black rounded-none font-black uppercase italic px-12 py-6">Accedi Ora</Button>
-        </main>
-        <BottomNav />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Navbar />
       <main className="flex-1 pt-24 pb-32 px-6 max-w-4xl mx-auto w-full">
-        <header className="mb-12">
-          <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">District Calendar</h2>
-          <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">Eventi & Selezioni</h1>
+        <header className="mb-12 flex items-end justify-between">
+          <div>
+            <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">District Calendar</h2>
+            <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">Eventi & Selezioni</h1>
+          </div>
+          {isAdmin && (
+            <Button 
+              onClick={() => { setEditingEvent(null); setIsAdminModalOpen(true); }}
+              className="w-12 h-12 bg-white text-black flex items-center justify-center hover:bg-zinc-200 transition-all shadow-lg"
+            >
+              <Plus size={24} />
+            </Button>
+          )}
         </header>
 
         {eventsLoading || appsLoading ? (
@@ -173,36 +120,79 @@ const Events = () => {
             {events?.map((event) => {
               const existingApp = getAppForEvent(event.id);
               return (
-                <motion.div key={event.id} className="bg-zinc-900/40 border border-white/5 p-6 group hover:border-white/20 transition-all">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div className="space-y-4">
-                      <span className={cn(
-                        "text-[8px] font-black uppercase px-2 py-0.5 italic",
-                        existingApp?.status === 'pending' && "bg-zinc-800 text-zinc-400",
-                        existingApp?.status === 'approved' && "bg-white text-black",
-                        existingApp?.status === 'rejected' && "bg-zinc-700 text-white",
-                        !existingApp && "bg-white text-black"
-                      )}>
-                        {existingApp ? `STATO: ${existingApp.status === 'pending' ? 'IN ATTESA' : existingApp.status.toUpperCase()}` : "Iscrizioni Aperte"}
-                      </span>
-                      <h3 className="text-2xl font-black italic uppercase tracking-tighter">{event.title}</h3>
-                    </div>
-                    
-                    {existingApp ? (
-                      <Button 
-                        onClick={() => setManageApp(existingApp)}
-                        className="bg-zinc-800 text-white hover:bg-white hover:text-black rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 px-8"
-                      >
-                        <Settings2 size={14} className="mr-2" /> Gestisci Selezione
-                      </Button>
-                    ) : (
-                      <Button 
-                        onClick={() => setSelectedEvent(event)}
-                        className="bg-white text-black hover:bg-zinc-200 rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 px-8"
-                      >
-                        Candidati <ChevronRight size={14} className="ml-2" />
-                      </Button>
+                <motion.div key={event.id} className="bg-zinc-900/40 border border-white/5 overflow-hidden group hover:border-white/20 transition-all">
+                  <div className="flex flex-col md:flex-row">
+                    {event.image_url && (
+                      <div className="md:w-48 h-48 md:h-auto shrink-0 overflow-hidden">
+                        <img src={event.image_url} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt={event.title} />
+                      </div>
                     )}
+                    <div className="flex-1 p-6 flex flex-col justify-between gap-6">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span className={cn(
+                            "text-[8px] font-black uppercase px-2 py-0.5 italic",
+                            existingApp?.status === 'pending' && "bg-zinc-800 text-zinc-400",
+                            existingApp?.status === 'approved' && "bg-white text-black",
+                            !existingApp && "bg-white text-black"
+                          )}>
+                            {existingApp ? `STATO: ${existingApp.status === 'pending' ? 'IN ATTESA' : existingApp.status.toUpperCase()}` : "Iscrizioni Aperte"}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1 text-[8px] font-black uppercase text-zinc-500">
+                              <MapPin size={10} /> {event.location}
+                            </div>
+                            <div className="flex items-center gap-1 text-[8px] font-black uppercase text-zinc-500">
+                              <Calendar size={10} /> {new Date(event.date).toLocaleDateString('it-IT')}
+                            </div>
+                          </div>
+                        </div>
+                        <h3 className="text-2xl font-black italic uppercase tracking-tighter">{event.title}</h3>
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-3">
+                        <Button 
+                          onClick={() => setViewingEvent(event)}
+                          variant="outline"
+                          className="border-white/10 text-white hover:bg-white/10 rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 px-6"
+                        >
+                          <Eye size={14} className="mr-2" /> Programma
+                        </Button>
+
+                        {existingApp ? (
+                          <Button 
+                            onClick={() => setManageApp(existingApp)}
+                            className="bg-zinc-800 text-white hover:bg-white hover:text-black rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 px-6"
+                          >
+                            <Settings2 size={14} className="mr-2" /> Gestisci
+                          </Button>
+                        ) : (
+                          <Button 
+                            onClick={() => setSelectedEvent(event)}
+                            className="bg-white text-black hover:bg-zinc-200 rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 px-6"
+                          >
+                            Candidati <ChevronRight size={14} className="ml-2" />
+                          </Button>
+                        )}
+
+                        {isAdmin && (
+                          <div className="flex gap-2 ml-auto">
+                            <button 
+                              onClick={() => { setEditingEvent(event); setIsAdminModalOpen(true); }}
+                              className="p-2 bg-zinc-800 text-white hover:bg-white hover:text-black transition-colors"
+                            >
+                              <Edit3 size={16} />
+                            </button>
+                            <button 
+                              onClick={() => { if(confirm('Eliminare questo evento?')) deleteEvent.mutate(event.id); }}
+                              className="p-2 bg-zinc-800 text-white hover:bg-red-600 transition-colors"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </motion.div>
               );
@@ -210,40 +200,52 @@ const Events = () => {
           </div>
         )}
 
+        {/* Modal Visualizzazione Dettagli Evento */}
         <AnimatePresence>
-          {manageApp && (
+          {viewingEvent && (
             <>
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setManageApp(null)} className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100]" />
-              <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed inset-x-0 bottom-0 z-[101] bg-zinc-950 border-t border-white/10 p-8 rounded-t-[2rem] max-h-[80vh] overflow-y-auto">
-                <div className="max-w-md mx-auto text-center space-y-8">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-xl font-black italic uppercase">La tua Selezione</h3>
-                    <button onClick={() => setManageApp(null)}><X size={24} /></button>
-                  </div>
-                  
-                  <div className="bg-zinc-900 p-6 border border-white/5">
-                    <p className="text-[10px] font-black uppercase text-zinc-500 mb-2">Stato Attuale</p>
-                    <p className="text-2xl font-black italic uppercase text-white">
-                      {manageApp.status === 'pending' ? 'IN ATTESA' : manageApp.status.toUpperCase()}
-                    </p>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setViewingEvent(null)} className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100]" />
+              <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed inset-x-0 bottom-0 z-[101] bg-zinc-950 border-t border-white/10 p-8 rounded-t-[2rem] max-h-[90vh] overflow-y-auto">
+                <div className="max-w-3xl mx-auto space-y-8 pb-12">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-3xl font-black italic uppercase tracking-tighter mb-2">{viewingEvent.title}</h3>
+                      <div className="flex gap-4 text-zinc-500 text-[10px] font-black uppercase tracking-widest">
+                        <span className="flex items-center gap-1"><MapPin size={12} /> {viewingEvent.location}</span>
+                        <span className="flex items-center gap-1"><Calendar size={12} /> {new Date(viewingEvent.date).toLocaleDateString('it-IT')}</span>
+                      </div>
+                    </div>
+                    <button onClick={() => setViewingEvent(null)}><X size={24} /></button>
                   </div>
 
+                  {viewingEvent.image_url && (
+                    <div className="aspect-video bg-zinc-900 border border-white/5 overflow-hidden">
+                      <img src={viewingEvent.image_url} className="w-full h-full object-cover" alt="Locandina" />
+                    </div>
+                  )}
+
                   <div className="space-y-4">
-                    <p className="text-xs text-zinc-500 font-bold uppercase">Vuoi modificare la tua candidatura? <br/> Devi prima annullare quella attuale.</p>
-                    <Button 
-                      onClick={handleCancel}
-                      disabled={cancelApplication.isPending}
-                      className="w-full bg-zinc-800 hover:bg-white hover:text-black text-white py-6 rounded-none font-black uppercase italic tracking-widest"
-                    >
-                      {cancelApplication.isPending ? <Loader2 className="animate-spin" /> : <><Trash2 size={16} className="mr-2" /> Annulla Candidatura</>}
-                    </Button>
+                    <h4 className="text-xs font-black uppercase tracking-widest text-zinc-500 italic">Programma & Info</h4>
+                    <div className="prose prose-invert max-w-none">
+                      <p className="text-zinc-300 leading-relaxed whitespace-pre-wrap italic font-medium">
+                        {viewingEvent.description}
+                      </p>
+                    </div>
                   </div>
+
+                  <Button 
+                    onClick={() => { setViewingEvent(null); setSelectedEvent(viewingEvent); }}
+                    className="w-full bg-white text-black py-6 font-black uppercase italic tracking-widest rounded-none"
+                  >
+                    Candidati Ora
+                  </Button>
                 </div>
               </motion.div>
             </>
           )}
         </AnimatePresence>
 
+        {/* Modal Candidatura (Esistente) */}
         <AnimatePresence>
           {selectedEvent && (
             <>
@@ -318,29 +320,6 @@ const Events = () => {
                     </div>
 
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-[10px] font-black uppercase text-zinc-500">Modifiche Principali (Dal Garage) *</Label>
-                        <div className="flex items-center gap-1 text-[8px] font-black uppercase text-zinc-500 italic">
-                          <Info size={10} /> Sola Lettura
-                        </div>
-                      </div>
-                      <div className={cn(
-                        "p-4 border border-white/5 bg-zinc-900/50 min-h-[80px] transition-all",
-                        !formData.modifications && "border-white/10"
-                      )}>
-                        {formData.modifications ? (
-                          <p className="text-xs text-zinc-300 leading-relaxed italic whitespace-pre-wrap">
-                            {formData.modifications}
-                          </p>
-                        ) : (
-                          <p className="text-[10px] text-zinc-600 font-bold uppercase italic">
-                            Seleziona un veicolo per visualizzare le modifiche salvate nel Garage.
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
                       <Label className="text-[10px] font-black uppercase text-zinc-500">Foto Interni (Minimo 3) *</Label>
                       <div 
                         onClick={() => interiorInputRef.current?.click()}
@@ -372,6 +351,12 @@ const Events = () => {
             </>
           )}
         </AnimatePresence>
+
+        <EventAdminModal 
+          isOpen={isAdminModalOpen} 
+          onClose={() => { setIsAdminModalOpen(false); setEditingEvent(null); }} 
+          event={editingEvent}
+        />
       </main>
       <Footer /><BottomNav />
     </div>
