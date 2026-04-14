@@ -10,8 +10,7 @@ import { useGarage } from '@/hooks/use-garage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Car, Loader2, ChevronRight, AlertCircle, X, Instagram, Phone, MapPin, Camera, Trash2, Settings2 } from 'lucide-react';
+import { Car, Loader2, ChevronRight, AlertCircle, X, Instagram, Phone, MapPin, Camera, Trash2, Settings2, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
@@ -99,8 +98,8 @@ const Events = () => {
       return false;
     }
 
-    if (!formData.modifications.trim() || formData.modifications.length < 10) {
-      showError("Descrivi in modo più dettagliato le modifiche del tuo progetto.");
+    if (!formData.modifications.trim()) {
+      showError("Il veicolo selezionato non ha una descrizione nel Garage. Aggiungila per continuare.");
       return false;
     }
 
@@ -323,6 +322,33 @@ const Events = () => {
                       </div>
                     </div>
 
+                    {/* Sezione Modifiche Sincronizzata (Read Only) */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[10px] font-black uppercase text-zinc-500">Modifiche Principali (Dal Garage) *</Label>
+                        <div className="flex items-center gap-1 text-[8px] font-black uppercase text-red-600 italic">
+                          <Info size={10} /> Sola Lettura
+                        </div>
+                      </div>
+                      <div className={cn(
+                        "p-4 border border-white/5 bg-zinc-900/50 min-h-[80px] transition-all",
+                        !formData.modifications && "border-red-600/20"
+                      )}>
+                        {formData.modifications ? (
+                          <p className="text-xs text-zinc-300 leading-relaxed italic whitespace-pre-wrap">
+                            {formData.modifications}
+                          </p>
+                        ) : (
+                          <p className="text-[10px] text-zinc-600 font-bold uppercase italic">
+                            Seleziona un veicolo per visualizzare le modifiche salvate nel Garage.
+                          </p>
+                        )}
+                      </div>
+                      <p className="text-[8px] text-zinc-600 font-bold uppercase tracking-widest">
+                        Per modificare questi dati, aggiorna la descrizione del veicolo nel tuo Garage.
+                      </p>
+                    </div>
+
                     <div className="space-y-4">
                       <Label className="text-[10px] font-black uppercase text-zinc-500">Foto Interni (Minimo 3) *</Label>
                       <div 
@@ -346,16 +372,6 @@ const Events = () => {
                       )}
                     </div>
 
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-zinc-500">Modifiche Principali (Sincronizzate dal Garage) *</Label>
-                      <Textarea 
-                        required
-                        value={formData.modifications} 
-                        onChange={e => setFormData({...formData, modifications: e.target.value})} 
-                        placeholder="Descrivi le modifiche del tuo progetto..."
-                        className="bg-transparent border-zinc-800 rounded-none min-h-[120px] text-sm" 
-                      />
-                    </div>
                     <Button type="submit" disabled={applyToEvent.isPending} className="w-full bg-red-600 py-8 font-black uppercase italic tracking-widest rounded-none">
                       {applyToEvent.isPending ? <Loader2 className="animate-spin" /> : "Invia Candidatura"}
                     </Button>
