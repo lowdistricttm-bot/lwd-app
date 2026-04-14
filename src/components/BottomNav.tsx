@@ -35,7 +35,7 @@ const BottomNav = () => {
               <div className="relative">
                 <item.icon size={20} strokeWidth={isActive ? 3 : 2} />
                 {item.badge && item.badge > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-white text-[8px] font-black flex items-center justify-center rounded-full border border-black">
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-[14px] bg-red-600 text-white text-[7px] font-black flex items-center justify-center rounded-full border-[1.5px] border-black px-0.5">
                     {item.badge > 9 ? '9+' : item.badge}
                   </span>
                 )}
