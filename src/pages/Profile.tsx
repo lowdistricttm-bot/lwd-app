@@ -171,20 +171,33 @@ const Profile = () => {
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Navbar />
       <main className="flex-1 pb-32">
-        <div className="relative h-56 md:h-80 bg-zinc-900">
-          <div className={cn("absolute inset-0 overflow-hidden cursor-pointer")} onClick={() => setLightboxData({ images: [profile?.cover_url || DEFAULT_COVER], index: 0 })}>
-            <img src={profile?.cover_url || DEFAULT_COVER} className={cn("w-full h-full object-cover opacity-60 grayscale transition-all duration-700 hover:grayscale-0 hover:scale-105")} alt="Cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40" />
+        <div className="relative h-56 md:h-80 bg-zinc-900 group/cover">
+          <div 
+            className="absolute inset-0 overflow-hidden cursor-pointer" 
+            onClick={() => setLightboxData({ images: [profile?.cover_url || DEFAULT_COVER], index: 0 })}
+          >
+            <img 
+              src={profile?.cover_url || DEFAULT_COVER} 
+              className="w-full h-full object-cover transition-all duration-700 hover:scale-105" 
+              alt="Cover" 
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+            
             {isOwnProfile && (
-              <button 
+              <div 
                 onClick={(e) => { e.stopPropagation(); coverInputRef.current?.click(); }}
-                className="absolute top-4 right-4 p-3 bg-black/40 backdrop-blur-md border border-white/10 text-white hover:bg-white hover:text-black transition-all z-30"
+                className="absolute inset-0 bg-black/40 opacity-0 group-hover/cover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 z-30"
               >
-                <Camera size={20} />
-              </button>
+                <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
+                  <Camera size={24} className="text-white" />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-white">Cambia Copertina</span>
+              </div>
             )}
+            
             <input type="file" ref={coverInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'cover')} />
           </div>
+          
           <div className="absolute -bottom-12 left-6 flex items-end gap-4 z-20">
             <div className="relative group/avatar">
               <input type="file" ref={avatarInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'avatar')} />
