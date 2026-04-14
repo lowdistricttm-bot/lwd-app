@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
@@ -11,13 +11,17 @@ import {
   Loader2, 
   XCircle, 
   AlertTriangle,
-  ChevronLeft
+  ChevronLeft,
+  Clock,
+  CheckCircle2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 const AdminApplications = () => {
   const navigate = useNavigate();
   const { isAdmin, checkingAdmin, allApplications, loadingApps, loadError, updateStatus } = useAdmin();
+  const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending');
 
   if (checkingAdmin) {
     return (
@@ -38,6 +42,11 @@ const AdminApplications = () => {
       </div>
     );
   }
+
+  const pendingApps = allApplications?.filter((a: any) => a.status === 'pending') || [];
+  const completedApps = allApplications?.filter((a: any) => a.status !== 'pending') || [];
+  
+  const displayedApps = activeTab === 'pending' ? pendingApps : completedApps;
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -65,10 +74,34 @@ const AdminApplications = () => {
             <div className="text-right">
               <p className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">In Attesa</p>
               <p className="text-2xl font-black italic text-white">
-                {allApplications?.filter((a: any) => a.status === 'pending').length || 0}
+                {pendingApps.length}
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Tab System */}
+        <div className="flex border border-white/5 bg-zinc-900/30 mb-8">
+          <button 
+            onClick={() => setActiveTab('pending')}
+            className={cn(
+              "flex-1 flex items-center justify-center gap-3 py-4 transition-all border-b-2",
+              activeTab === 'pending' ? "border-white text-white bg-white/5" : "border-transparent text-zinc-600 hover:text-zinc-400"
+            )}
+          >
+            <Clock size={16} />
+            <span className="text-[10px] font-black uppercase tracking-widest italic">In Attesa ({pendingApps.length})</span>
+          </button>
+          <button 
+            onClick={() => setActiveTab('completed')}
+            className={cn(
+              "flex-1 flex items-center justify-center gap-3 py-4 transition-all border-b-2",
+              activeTab === 'completed' ? "border-white text-white bg-white/5" : "border-transparent text-zinc-600 hover:text-zinc-400"
+            )}
+          >
+            <CheckCircle2 size={16} />
+            <span className="text-[10px] font-black uppercase tracking-widest italic">Concluse ({completedApps.length})</span>
+          </button>
         </div>
 
         {loadError && (
@@ -85,7 +118,7 @@ const AdminApplications = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {allApplications?.map((app: any) => (
+            {displayedApps.map((app: any) => (
               <AdminApplicationCard 
                 key={app.id} 
                 app={app} 
@@ -93,9 +126,11 @@ const AdminApplications = () => {
                 isUpdating={updateStatus.isPending}
               />
             ))}
-            {allApplications?.length === 0 && (
+            {displayedApps.length === 0 && (
               <div className="text-center py-20 border border-white/5 bg-zinc-900/30">
-                <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Nessuna candidatura presente.</p>
+                <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">
+                  {activeTab === 'pending' ? 'Nessuna candidatura in attesa.' : 'Nessuna candidatura conclusa.'}
+                </p>
               </div>
             )}
           </div>

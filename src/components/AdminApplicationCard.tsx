@@ -54,9 +54,13 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
   const rejectVoters = rejectVotes.map((v: any) => v.profiles?.username || 'Membro').join(', ');
   
   const myVote = votes.find((v: any) => v.user_id === currentUserId)?.vote;
+  const isPending = app.status === 'pending';
 
   return (
-    <div className="bg-zinc-900/40 border border-white/5 overflow-hidden flex flex-col transition-all hover:border-white/10">
+    <div className={cn(
+      "bg-zinc-900/40 border overflow-hidden flex flex-col transition-all hover:border-white/10",
+      isPending ? "border-white/5" : "border-white/10 opacity-80"
+    )}>
       <div 
         onClick={() => setIsExpanded(!isExpanded)}
         className="p-4 md:p-6 flex items-center justify-between cursor-pointer group"
@@ -175,21 +179,23 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
               </div>
 
               <div className="p-6 bg-zinc-900/50 border-t border-white/5 flex flex-col gap-6">
-                {canVote && (
-                  <div className="flex flex-col gap-4">
-                    <div className="flex items-center justify-between">
-                      <p className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">Votazione Staff</p>
-                      <div className="flex gap-4">
-                        <div className="flex flex-col items-end">
-                          <span className="text-[7px] text-zinc-600 font-bold uppercase">Approvazioni ({approveVotes.length})</span>
-                          <span className="text-[8px] text-green-500 font-black italic">{approveVoters || 'Nessuno'}</span>
-                        </div>
-                        <div className="flex flex-col items-end">
-                          <span className="text-[7px] text-zinc-600 font-bold uppercase">Rifiuti ({rejectVotes.length})</span>
-                          <span className="text-[8px] text-red-500 font-black italic">{rejectVoters || 'Nessuno'}</span>
-                        </div>
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">Votazione Staff</p>
+                    <div className="flex gap-4">
+                      <div className="flex flex-col items-end">
+                        <span className="text-[7px] text-zinc-600 font-bold uppercase">Approvazioni ({approveVotes.length})</span>
+                        <span className="text-[8px] text-green-500 font-black italic">{approveVoters || 'Nessuno'}</span>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <span className="text-[7px] text-zinc-600 font-bold uppercase">Rifiuti ({rejectVotes.length})</span>
+                        <span className="text-[8px] text-red-500 font-black italic">{rejectVoters || 'Nessuno'}</span>
                       </div>
                     </div>
+                  </div>
+                  
+                  {/* Il voto è permesso solo se la candidatura è ancora in attesa */}
+                  {canVote && isPending && (
                     <div className="flex gap-3">
                       <Button 
                         onClick={(e) => { e.stopPropagation(); castVote.mutate({ applicationId: app.id, vote: 'approve' }); }}
@@ -212,23 +218,24 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
                         {castVote.isPending ? <Loader2 className="animate-spin" /> : <><ThumbsDown size={14} className="mr-2" /> Vota NO</>}
                       </Button>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
 
-                {canManage && (
+                {/* Azione finale visibile solo se in attesa e se l'utente ha i permessi */}
+                {canManage && isPending && (
                   <div className="flex flex-col gap-3 pt-4 border-t border-white/5">
                     <p className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">Azione Finale</p>
                     <div className="flex gap-3">
                       <Button 
                         onClick={(e) => { e.stopPropagation(); onUpdateStatus(app.id, 'approved'); }}
-                        disabled={app.status === 'approved' || isUpdating}
+                        disabled={isUpdating}
                         className="flex-1 bg-green-600 text-white hover:bg-green-700 rounded-none font-black uppercase italic text-[10px] tracking-widest h-12"
                       >
                         APPROVA
                       </Button>
                       <Button 
                         onClick={(e) => { e.stopPropagation(); onUpdateStatus(app.id, 'rejected'); }}
-                        disabled={app.status === 'rejected' || isUpdating}
+                        disabled={isUpdating}
                         className="flex-1 bg-red-600 text-white hover:bg-red-700 rounded-none font-black uppercase italic text-[10px] tracking-widest h-12"
                       >
                         NEGA
