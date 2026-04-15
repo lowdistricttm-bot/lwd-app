@@ -22,40 +22,35 @@ export const useStories = () => {
   const { data: stories, isLoading } = useQuery({
     queryKey: ['active-stories'],
     queryFn: async () => {
-      // Utilizziamo un join esplicito con hint se necessario, ma dopo il fix SQL basterà questo
+      // Ora che abbiamo la relazione nel DB, questa query funzionerà perfettamente
+      // Recupera la storia e i dati del profilo (username/avatar) in un colpo solo
       const { data, error } = await supabase
         .from('stories')
         .select(`
           *,
-          profiles:user_id (username, avatar_url)
+          profiles:user_id (
+            username,
+            avatar_url
+          )
         `)
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false });
 
       if (error) {
         console.error("[Stories] Errore caricamento:", error.message);
-        // Fallback: se il join fallisce ancora, carichiamo le storie senza profili per non bloccare l'app
-        const { data: fallbackData, error: fallbackError } = await supabase
-          .from('stories')
-          .select('*')
-          .gt('expires_at', new Date().toISOString())
-          .order('created_at', { ascending: false });
-          
-        if (fallbackError) throw fallbackError;
-        return formatStories(fallbackData || []);
+        return [];
       }
 
       return formatStories(data || []);
     }
   });
 
-  // Funzione helper per raggruppare le storie
   const formatStories = (data: any[]) => {
     const grouped = data.reduce((acc: any, story: any) => {
       if (!acc[story.user_id]) {
         acc[story.user_id] = {
           user_id: story.user_id,
-          username: story.profiles?.username || 'Membro',
+          username: story.profiles?.username || 'Membro District',
           avatar_url: story.profiles?.avatar_url,
           items: []
         };
