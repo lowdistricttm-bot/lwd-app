@@ -238,7 +238,7 @@ const Shop = () => {
         {loadingProducts || loadingCats ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Loader2 className="animate-spin text-zinc-500" size={40} />
-            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{t.shop.cart.subtotal}...</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">SINCRONIZZAZIONE...</p>
           </div>
         ) : products?.length === 0 ? (
           <div className="text-center py-20 border border-white/5 bg-zinc-900/30 flex flex-col items-center gap-6">
