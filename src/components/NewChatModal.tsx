@@ -38,7 +38,7 @@ const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
           .from('profiles')
           .select('*')
           .ilike('username', `%${search}%`)
-          .neq('id', currentUserId) // Escludi te stesso
+          .neq('id', currentUserId)
           .limit(10);
 
         if (error) throw error;
@@ -80,7 +80,7 @@ const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
             <div className="flex justify-between items-center mb-8">
               <div>
                 <h2 className="text-xl font-black italic uppercase tracking-tighter">Nuovo Messaggio</h2>
-                <p className="text-[8px] text-zinc-500 font-black uppercase tracking-widest mt-1">Cerca tra i membri registrati nell'app</p>
+                <p className="text-[8px] text-zinc-500 font-black uppercase tracking-widest mt-1">Cerca tra i membri del District</p>
               </div>
               <button onClick={onClose} className="p-2 text-zinc-500 hover:text-white transition-colors">
                 <X size={24} />
@@ -129,12 +129,11 @@ const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
                           </h4>
                           {user.is_admin && <ShieldCheck size={12} className="text-white" />}
                         </div>
-                        <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-widest truncate">
-                          {user.first_name} {user.last_name}
+                        <p className="text-[8px] text-zinc-600 font-bold uppercase tracking-widest">
+                          Membro Ufficiale
                         </p>
                       </div>
                       <div className="flex items-center gap-2 text-zinc-800 group-hover:text-white transition-colors">
-                        <span className="text-[8px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Scrivi</span>
                         <ChevronRight size={16} />
                       </div>
                     </button>

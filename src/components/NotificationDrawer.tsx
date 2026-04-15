@@ -37,7 +37,7 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
   };
 
   const getMessage = (n: Notification) => {
-    const actorName = n.actor?.username || 'Qualcuno';
+    const actorName = n.actor?.username || 'Membro District';
     switch (n.type) {
       case 'like': return <><span className="font-black">{actorName}</span> ha messo like al tuo post</>;
       case 'comment': return <><span className="font-black">{actorName}</span> ha commentato il tuo post</>;
@@ -87,7 +87,7 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
             <div className="flex-1 overflow-y-auto p-4 space-y-2">
               {isLoading ? (
                 <div className="h-full flex items-center justify-center">
-                  <Loader2 className="animate-spin text-zinc-800" size={32} />
+                  <Loader2 className="animate-spin text-zinc-500" size={32} />
                 </div>
               ) : notifications?.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center opacity-20">

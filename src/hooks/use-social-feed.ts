@@ -58,7 +58,7 @@ export const useSocialFeed = () => {
             ...c,
             profiles: {
               ...c.profiles,
-              username: c.profiles?.username || 'Membro'
+              username: c.profiles?.username || 'Membro District'
             }
           })) || []
         };
