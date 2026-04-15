@@ -7,10 +7,11 @@ import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
 import FeedPost from '@/components/FeedPost';
 import { usePost } from '@/hooks/use-social-feed';
-import { Loader2, ChevronLeft, AlertCircle, LogIn } from 'lucide-react';
+import { Loader2, ChevronLeft, Lock, LogIn, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/use-translation';
 import { supabase } from "@/integrations/supabase/client";
+import { motion } from 'framer-motion';
 
 const PostDetail = () => {
   const { postId } = useParams();
@@ -24,6 +25,51 @@ const PostDetail = () => {
       setIsLoggedIn(!!session);
     });
   }, []);
+
+  // Se non è loggato e il post non viene caricato (bloccato da RLS)
+  if (isLoggedIn === false && !post && !isLoading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center px-6 py-20">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-md w-full text-center space-y-8"
+          >
+            <div className="w-20 h-20 bg-zinc-900 border border-white/10 flex items-center justify-center mx-auto rotate-45">
+              <Lock size={32} className="text-white -rotate-45" />
+            </div>
+            
+            <div className="space-y-4">
+              <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] italic">Contenuto Riservato</h2>
+              <h1 className="text-4xl font-black italic uppercase tracking-tighter">Entra nel District</h1>
+              <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest leading-relaxed">
+                Per visualizzare i post e i progetti della community Low District è necessario essere autenticati.
+              </p>
+            </div>
+
+            <div className="pt-4 space-y-4">
+              <Button 
+                onClick={() => navigate('/login')}
+                className="w-full bg-white text-black hover:bg-zinc-200 rounded-none h-16 font-black uppercase italic tracking-widest transition-all group"
+              >
+                <LogIn size={18} className="mr-2" /> Accedi Ora <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
+              </Button>
+              <button 
+                onClick={() => navigate('/')}
+                className="text-[10px] font-black uppercase tracking-widest text-zinc-600 hover:text-white transition-colors"
+              >
+                Torna alla Home
+              </button>
+            </div>
+          </motion.div>
+        </main>
+        <Footer />
+        <BottomNav />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -52,42 +98,18 @@ const PostDetail = () => {
           </div>
         ) : error || !post ? (
           <div className="text-center py-20 border border-white/5 bg-zinc-900/30 p-8">
-            <AlertCircle className="mx-auto text-zinc-800 mb-4" size={48} />
-            <p className="text-sm font-black uppercase tracking-widest text-zinc-500">Post non trovato</p>
-            <p className="text-[10px] text-zinc-600 mt-2 uppercase font-bold">Il post potrebbe essere stato rimosso o il link non è corretto.</p>
+            <Lock className="mx-auto text-zinc-800 mb-4" size={48} />
+            <p className="text-sm font-black uppercase tracking-widest text-zinc-500">Accesso Richiesto</p>
+            <p className="text-[10px] text-zinc-600 mt-2 uppercase font-bold">Devi essere loggato per visualizzare questo contenuto.</p>
             <Button 
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/login')}
               className="mt-8 bg-white text-black rounded-none font-black uppercase italic px-8"
             >
-              Torna alla Home
+              Vai al Login
             </Button>
           </div>
         ) : (
-          <div className="space-y-8">
-            {!isLoggedIn && (
-              <div className="p-6 bg-zinc-900/50 border border-white/5 flex flex-col md:flex-row items-center justify-between gap-6 animate-in fade-in slide-in-from-top-4 duration-500">
-                <div className="flex items-center gap-4">
-                  <AlertCircle className="text-zinc-500 shrink-0" size={24} />
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
-                      Vuoi interagire con questo post?
-                    </p>
-                    <p className="text-[9px] text-zinc-600 font-bold uppercase mt-1">
-                      Accedi al District per mettere like e commentare i progetti della community.
-                    </p>
-                  </div>
-                </div>
-                <Button 
-                  onClick={() => navigate('/login')}
-                  className="bg-white text-black hover:bg-zinc-200 rounded-none text-[9px] font-black uppercase tracking-widest h-10 px-6 italic shrink-0"
-                >
-                  <LogIn size={14} className="mr-2" /> Accedi Ora
-                </Button>
-              </div>
-            )}
-            
-            <FeedPost post={post} />
-          </div>
+          <FeedPost post={post} />
         )}
       </main>
 
