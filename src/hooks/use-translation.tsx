@@ -174,9 +174,6 @@ const translations: Record<Language, any> = {
       bio: 'BIOGRAFIA',
       socials: 'SOCIAL & LINK',
       visit: 'VISITA',
-      usernameNoticeTitle: 'CAMBIO USERNAME',
-      usernameNoticeDesc: 'PER GARANTIRE L\'INTEGRITÀ DEL DISTRICT, IL CAMBIO USERNAME DEVE ESSERE APPROVATO MANUALMENTE. CONTATTA L\'AMMINISTRAZIONE INDICANDO IL NUOVO NOME DESIDERATO.',
-      contactAdmin: 'CONTATTA STAFF',
       roles: {
         admin: 'ADMIN',
         staff: 'MEMBRO DELLO STAFF',
@@ -410,10 +407,7 @@ const translations: Record<Language, any> = {
       changeAvatar: 'CHANGE AVATAR',
       bio: 'BIO',
       socials: 'SOCIAL & LINKS',
-      visit: 'VISITA',
-      usernameNoticeTitle: 'USERNAME CHANGE',
-      usernameNoticeDesc: 'TO ENSURE DISTRICT INTEGRITY, USERNAME CHANGES MUST BE MANUALLY APPROVED. CONTACT ADMINISTRATION WITH YOUR DESIRED NEW NAME.',
-      contactAdmin: 'CONTACT STAFF',
+      visit: 'VISIT',
       roles: {
         admin: 'ADMIN',
         staff: 'STAFF MEMBER',
