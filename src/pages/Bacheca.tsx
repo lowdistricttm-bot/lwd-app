@@ -90,18 +90,18 @@ const Bacheca = () => {
             <Loader2 className="animate-spin text-zinc-500" size={40} />
             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{t.feed.syncing}</p>
           </div>
-        ) : posts?.length === 0 ? (
+        ) : (posts?.length === 0 && user) ? (
           <div className="text-center py-20 border border-white/5 bg-zinc-900/30 p-8">
             <p className="text-sm font-black uppercase tracking-widest text-zinc-500">{t.feed.noPosts}</p>
             <p className="text-[10px] text-zinc-600 mt-2 uppercase font-bold">{t.feed.noPostsDesc}</p>
           </div>
-        ) : (
+        ) : posts && posts.length > 0 ? (
           <div className="space-y-2">
-            {posts?.map((post) => (
+            {posts.map((post) => (
               <FeedPost key={post.id} post={post} />
             ))}
           </div>
-        )}
+        ) : null}
       </main>
 
       <CreatePostModal 
