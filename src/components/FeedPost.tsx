@@ -159,7 +159,7 @@ const FeedPost = ({ post }: { post: Post }) => {
     const shareData = {
       title: `Post di ${username} | Low District`,
       text: `Guarda questo post di ${username} su Low District!`,
-      url: `${window.location.origin}/profile/${post.user_id}` // Per ora puntiamo al profilo dell'autore
+      url: `${window.location.origin}/post/${post.id}`
     };
 
     try {
