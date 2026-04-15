@@ -56,12 +56,17 @@ export const useNotifications = () => {
   const unreadCount = notifications?.filter(n => !n.is_read).length || 0;
 
   useEffect(() => {
+    let channel: any;
+
     const setupSubscription = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const channel = supabase
-        .channel('notifications-realtime')
+      // Usiamo un ID univoco per evitare l'errore di aggiunta callback dopo subscribe
+      const channelId = `notifications-${user.id}-${Math.random().toString(36).substring(2, 9)}`;
+
+      channel = supabase
+        .channel(channelId)
         .on(
           'postgres_changes',
           {
@@ -76,15 +81,14 @@ export const useNotifications = () => {
           }
         )
         .subscribe();
-
-      return channel;
     };
 
-    const sub = setupSubscription();
+    setupSubscription();
+
     return () => {
-      sub.then(channel => {
-        if (channel) supabase.removeChannel(channel);
-      });
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, [queryClient]);
 
