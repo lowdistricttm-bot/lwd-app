@@ -14,8 +14,7 @@ export const useProfileSync = (username?: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // We sync if the username provided matches the one we are looking at 
-      // or if we are syncing the current logged in user's profile
+      // Recuperiamo il profilo attuale per confrontare i dati
       const { data: currentProfile } = await supabase
         .from('profiles')
         .select('username, avatar_url')
@@ -25,9 +24,9 @@ export const useProfileSync = (username?: string) => {
       const bpUsername = bpMember.user_login || bpMember.mention_name;
       const bpAvatar = bpMember.avatar_urls?.full || bpMember.avatar_urls?.thumb;
 
-      // Only update if there's an actual change to avoid infinite loops or unnecessary writes
+      // Aggiorniamo solo se ci sono differenze reali per evitare loop
       if (currentProfile && (currentProfile.username !== bpUsername || currentProfile.avatar_url !== bpAvatar)) {
-        console.log(`[Sync] Updating profile for ${user.id}: ${currentProfile.username} -> ${bpUsername}`);
+        console.log(`[Sync] Aggiornamento profilo per ${user.id}: ${currentProfile.username} -> ${bpUsername}`);
         
         const { error } = await supabase
           .from('profiles')
@@ -38,8 +37,7 @@ export const useProfileSync = (username?: string) => {
           })
           .eq('id', user.id);
 
-        if (error) console.error("[Sync] Errore sincronizzazione profilo:", error.message);
-        else console.log("[Sync] Profilo sincronizzato con successo da BuddyPress");
+        if (error) console.error("[Sync] Errore sincronizzazione:", error.message);
       }
     };
 

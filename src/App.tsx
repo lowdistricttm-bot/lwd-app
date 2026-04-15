@@ -24,7 +24,6 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-// Componente wrapper per attivare gli hook globali
 const AppContent = () => {
   useNotificationListener();
   
@@ -33,11 +32,9 @@ const AppContent = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        // Try to get username from metadata or profile
         const username = session.user.user_metadata?.username;
         if (username) setCurrentUsername(username);
         
-        // Also fetch from profiles table to be sure
         supabase.from('profiles')
           .select('username')
           .eq('id', session.user.id)
@@ -49,7 +46,7 @@ const AppContent = () => {
     });
   }, []);
 
-  // This will trigger the sync whenever the app loads and we have a username
+  // Attiva la sincronizzazione automatica basata sull'utente loggato
   useProfileSync(currentUsername);
   
   return (
