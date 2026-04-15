@@ -53,6 +53,7 @@ export const useWpAuth = () => {
         password: password,
       });
 
+      // 3. Se l'utente non esiste (perché abbiamo resettato il DB), lo creiamo
       if (authError && (authError.status === 400 || authError.status === 422)) {
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: realEmail,
@@ -71,41 +72,10 @@ export const useWpAuth = () => {
 
       if (authError) throw authError;
 
-      // 3. LOGICA DI RECUPERO DATI (MIGRAZIONE PROFONDA)
+      // 4. Creazione/Aggiornamento Profilo
       if (authData?.user) {
-        const currentUserId = authData.user.id;
-
-        // Cerchiamo se esiste un profilo (vecchio o nuovo) con questo ID WordPress
-        const { data: existingProfile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('wp_id', wpId)
-          .maybeSingle();
-
-        if (existingProfile && existingProfile.id !== currentUserId) {
-          console.log("[Auth] Rilevato profilo originale con ID diverso. Avvio migrazione dati...");
-          const oldId = existingProfile.id;
-
-          // Spostiamo tutti i dati collegati dal vecchio ID al nuovo ID
-          // Eseguiamo in sequenza per evitare conflitti
-          await supabase.from('posts').update({ user_id: currentUserId }).eq('user_id', oldId);
-          await supabase.from('vehicles').update({ user_id: currentUserId }).eq('user_id', oldId);
-          await supabase.from('comments').update({ user_id: currentUserId }).eq('user_id', oldId);
-          await supabase.from('likes').update({ user_id: currentUserId }).eq('user_id', oldId);
-          await supabase.from('stories').update({ user_id: currentUserId }).eq('user_id', oldId);
-          await supabase.from('messages').update({ sender_id: currentUserId }).eq('sender_id', oldId);
-          await supabase.from('messages').update({ receiver_id: currentUserId }).eq('receiver_id', oldId);
-          await supabase.from('applications').update({ user_id: currentUserId }).eq('user_id', oldId);
-
-          // Eliminiamo il vecchio record del profilo ormai "svuotato"
-          await supabase.from('profiles').delete().eq('id', oldId);
-          
-          console.log("[Auth] Migrazione completata con successo.");
-        }
-
-        // Aggiorniamo/Creiamo il profilo corrente con i dati corretti
         await supabase.from('profiles').upsert({
-          id: currentUserId,
+          id: authData.user.id,
           username: wpUsername,
           wp_id: wpId,
           updated_at: new Date().toISOString()
