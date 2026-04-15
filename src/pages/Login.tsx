@@ -64,7 +64,7 @@ const Login = () => {
                 </Label>
                 <Input 
                   type="text" 
-                  placeholder={language === 'it' ? "Username o Email" : "Username or Email"}
+                  placeholder="Username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
