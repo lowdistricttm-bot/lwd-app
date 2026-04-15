@@ -6,7 +6,6 @@ import { showSuccess, showError } from '@/utils/toast';
 
 const WP_AUTH_URL = "https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth";
 
-// Helper per decodificare il payload di un JWT senza librerie esterne
 const decodeJwt = (token: string) => {
   try {
     const base64Url = token.split('.')[1];
@@ -16,7 +15,6 @@ const decodeJwt = (token: string) => {
     }).join(''));
     return JSON.parse(jsonPayload);
   } catch (e) {
-    console.error("[JWT Decode] Errore decodifica:", e);
     return null;
   }
 };
@@ -27,8 +25,6 @@ export const useWpAuth = () => {
   const loginWithWp = async (usernameOrEmail: string, password: string) => {
     setIsLoading(true);
     try {
-      console.log("[WP Auth] Tentativo login per:", usernameOrEmail);
-      
       // 1. Autenticazione su WordPress
       const response = await fetch(WP_AUTH_URL, {
         method: 'POST',
@@ -37,70 +33,38 @@ export const useWpAuth = () => {
       });
 
       const rawData = await response.json();
+      if (!response.ok) throw new Error(rawData.message || "Credenziali non valide.");
 
-      if (!response.ok) {
-        console.error("[WP Auth] Errore risposta WordPress:", rawData);
-        throw new Error(rawData.message || "Credenziali non valide sul sito ufficiale. Usa lo Username (es. mario.rossi) invece dell'email.");
-      }
-
-      // Gestione struttura dati flessibile (WordPress può rispondere in vari modi)
       const data = rawData.data || rawData;
       const jwt = data.jwt;
+      const decoded = decodeJwt(jwt);
       
-      if (!jwt) {
-        throw new Error("Token non ricevuto da WordPress.");
-      }
+      const wpId = decoded?.id?.toString() || data.user_id?.toString();
+      const realEmail = decoded?.email || data.user_email || data.email;
+      const wpUsername = decoded?.username || data.user_login || usernameOrEmail;
 
-      // 2. Recupero Email (Strategia Multi-livello)
-      let realEmail = data.user_email || data.email;
-      
-      // Se l'email non è nel corpo della risposta, la estraiamo dal JWT
-      if (!realEmail) {
-        const decoded = decodeJwt(jwt);
-        console.log("[WP Auth] Payload JWT decodificato:", decoded);
-        realEmail = decoded?.email || decoded?.user_email;
-      }
+      if (!realEmail || !wpId) throw new Error("Dati incompleti da WordPress.");
 
-      // Fallback estremo: se l'input era un'email, usiamo quella
-      if (!realEmail && usernameOrEmail.includes('@')) {
-        realEmail = usernameOrEmail;
-      }
-
-      if (!realEmail) {
-        console.error("[WP Auth] Email non trovata nemmeno nel JWT:", data);
-        throw new Error("Impossibile recuperare l'email dal profilo WordPress.");
-      }
-
-      const wpUsername = data.user_login || data.user_nicename || decodeJwt(jwt)?.username || (usernameOrEmail.includes('@') ? usernameOrEmail.split('@')[0] : usernameOrEmail);
-      
       localStorage.setItem('wp-jwt', jwt);
-      localStorage.setItem('wp-user', JSON.stringify(data));
 
-      // 3. Login su Supabase
+      // 2. Login su Supabase
       let { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: realEmail,
         password: password,
       });
 
-      // 4. Gestione nuovo utente o errore credenziali
-      if (authError && (authError.message.includes("Invalid login credentials") || authError.status === 400 || authError.status === 422)) {
-        console.log("[WP Auth] Utente non trovato su Supabase, procedo al SignUp...");
+      // 3. Se l'utente non esiste su Supabase, lo creiamo
+      if (authError && (authError.status === 400 || authError.status === 422)) {
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: realEmail,
           password: password,
-          options: { 
-            data: { 
-              username: wpUsername,
-              full_name: data.user_display_name || wpUsername
-            } 
-          }
+          options: { data: { username: wpUsername } }
         });
         
-        if (!signUpError || signUpError.message.includes("Email not confirmed")) {
-          await new Promise(resolve => setTimeout(resolve, 1500));
+        if (!signUpError) {
           const retry = await supabase.auth.signInWithPassword({ email: realEmail, password: password });
-          authError = retry.error;
           authData = retry.data;
+          authError = retry.error;
         } else {
           throw signUpError;
         }
@@ -108,16 +72,52 @@ export const useWpAuth = () => {
 
       if (authError) throw authError;
 
-      // 5. Sincronizzazione Profilo
+      // 4. LOGICA DI RICONNESSIONE PROFILO (MIGRAZIONE)
       if (authData?.user) {
-        await supabase.from('profiles').upsert({
-          id: authData.user.id,
-          username: wpUsername,
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'id' });
+        const newUserId = authData.user.id;
+
+        // Controlliamo se esiste già un profilo con questo ID WordPress
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('id, username')
+          .eq('wp_id', wpId)
+          .maybeSingle();
+
+        if (existingProfile && existingProfile.id !== newUserId) {
+          console.log("[Auth] Trovato vecchio profilo, avvio migrazione dati...");
+          
+          // Se esiste un profilo "nuovo" vuoto appena creato dal trigger, lo eliminiamo per far spazio a quello vecchio
+          await supabase.from('profiles').delete().eq('id', newUserId);
+
+          // Aggiorniamo il vecchio profilo con il nuovo ID di autenticazione
+          // Nota: Questo richiede che le tabelle collegate (posts, vehicles) abbiano ON UPDATE CASCADE 
+          // o che vengano aggiornate manualmente. Per ora aggiorniamo il profilo.
+          const { error: migrateError } = await supabase
+            .from('profiles')
+            .update({ id: newUserId, updated_at: new Date().toISOString() })
+            .eq('wp_id', wpId);
+
+          if (migrateError) {
+            // Se l'update fallisce (es. vincoli FK), facciamo un upsert standard
+            await supabase.from('profiles').upsert({
+              id: newUserId,
+              username: wpUsername,
+              wp_id: wpId,
+              updated_at: new Date().toISOString()
+            });
+          }
+        } else {
+          // Upsert normale se è tutto sincronizzato o se è un nuovo utente
+          await supabase.from('profiles').upsert({
+            id: newUserId,
+            username: wpUsername,
+            wp_id: wpId,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'id' });
+        }
       }
 
-      return { success: true, user: data };
+      return { success: true };
     } catch (error: any) {
       console.error("[WP Auth Error]", error);
       throw error;
@@ -131,21 +131,12 @@ export const useWpAuth = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Utente non autenticato");
-
-      const { error: sbError } = await supabase
-        .from('profiles')
-        .update({ 
-          username: newUsername,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
-
-      if (sbError) throw sbError;
-
-      showSuccess("District Username aggiornato!");
+      const { error } = await supabase.from('profiles').update({ username: newUsername }).eq('id', user.id);
+      if (error) throw error;
+      showSuccess("Username aggiornato!");
       return true;
     } catch (error: any) {
-      showError(error.message || "Errore durante l'aggiornamento");
+      showError(error.message);
       return false;
     } finally {
       setIsLoading(false);
