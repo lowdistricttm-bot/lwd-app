@@ -11,9 +11,11 @@ import { useSocialFeed } from '@/hooks/use-social-feed';
 import { Loader2, Plus, AlertCircle, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from '@/hooks/use-translation';
 
 const Bacheca = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { posts, isLoading, error } = useSocialFeed();
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -39,25 +41,25 @@ const Bacheca = () => {
       <main className="flex-1 pt-24 pb-24 px-4 md:px-6 max-w-2xl mx-auto w-full">
         <header className="mb-12 flex items-end justify-between">
           <div>
-            <h2 className="text-red-600 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">
-              District Feed
+            <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">
+              {t.feed.subtitle}
             </h2>
             <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">
-              Bacheca
+              {t.feed.title}
             </h1>
           </div>
           <button 
             onClick={handleCreatePost}
-            className="w-12 h-12 bg-red-600 flex items-center justify-center hover:bg-white hover:text-black transition-all shadow-lg shadow-red-600/20"
+            className="w-12 h-12 bg-white text-black flex items-center justify-center hover:bg-zinc-200 transition-all shadow-lg shadow-white/5"
           >
             <Plus size={24} />
           </button>
         </header>
 
         {error && (
-          <div className="mb-8 p-6 bg-red-900/20 border border-red-600/50 flex items-center gap-4">
-            <AlertCircle className="text-red-600" />
-            <p className="text-xs font-bold uppercase">Errore nel caricamento del feed. Riprova più tardi.</p>
+          <div className="mb-8 p-6 bg-zinc-900/20 border border-zinc-700 flex items-center gap-4">
+            <AlertCircle className="text-zinc-500" />
+            <p className="text-xs font-bold uppercase">{t.errors.connection}</p>
           </div>
         )}
 
@@ -67,31 +69,31 @@ const Bacheca = () => {
               <AlertCircle className="text-zinc-500 shrink-0" size={24} />
               <div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
-                  Community Privata
+                  {t.feed.private}
                 </p>
                 <p className="text-[9px] text-zinc-600 font-bold uppercase mt-1">
-                  Accedi per partecipare alle discussioni del District.
+                  {t.feed.privateDesc}
                 </p>
               </div>
             </div>
             <Button 
               onClick={() => navigate('/login')}
-              className="bg-white text-black hover:bg-red-600 hover:text-white rounded-none text-[9px] font-black uppercase tracking-widest h-10 px-6 italic"
+              className="bg-white text-black hover:bg-zinc-200 rounded-none text-[9px] font-black uppercase tracking-widest h-10 px-6 italic"
             >
-              <LogIn size={14} className="mr-2" /> Accedi
+              <LogIn size={14} className="mr-2" /> {t.auth.login}
             </Button>
           </div>
         ) : (
           <>
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-20 gap-4">
-                <Loader2 className="animate-spin text-red-600" size={40} />
-                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Sincronizzazione District...</p>
+                <Loader2 className="animate-spin text-zinc-500" size={40} />
+                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{t.feed.syncing}</p>
               </div>
             ) : posts?.length === 0 ? (
               <div className="text-center py-20 border border-white/5 bg-zinc-900/30 p-8">
-                <p className="text-sm font-black uppercase tracking-widest text-zinc-500">Nessun post presente</p>
-                <p className="text-[10px] text-zinc-600 mt-2 uppercase font-bold">Inaugura la bacheca con il tuo primo post!</p>
+                <p className="text-sm font-black uppercase tracking-widest text-zinc-500">{t.feed.noPosts}</p>
+                <p className="text-[10px] text-zinc-600 mt-2 uppercase font-bold">{t.feed.noPostsDesc}</p>
               </div>
             ) : (
               <div className="space-y-2">

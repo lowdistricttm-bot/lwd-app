@@ -7,22 +7,31 @@ import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
 import { useEvents, Event, useUserApplications } from '@/hooks/use-events';
 import { useGarage } from '@/hooks/use-garage';
+import { useAdmin } from '@/hooks/use-admin';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Car, Loader2, ChevronRight, AlertCircle, X, Instagram, Phone, MapPin, Camera, Trash2, Settings2, Info } from 'lucide-react';
+import { Car, Loader2, ChevronRight, X, MapPin, Camera, Trash2, Settings2, Calendar, Plus, Edit3, Eye, Clock, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
 import { showError } from '@/utils/toast';
+import EventAdminModal from '@/components/EventAdminModal';
+import ManageApplicationModal from '@/components/ManageApplicationModal';
+import { useTranslation } from '@/hooks/use-translation';
 
 const Events = () => {
   const navigate = useNavigate();
+  const { t, language } = useTranslation();
   const interiorInputRef = useRef<HTMLInputElement>(null);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [manageApp, setManageApp] = useState<any>(null);
-  const [user, setUser] = useState<any>(null);
   
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [viewingEvent, setViewingEvent] = useState<Event | null>(null);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+  const [manageApp, setManageApp] = useState<any>(null);
+  
+  const [user, setUser] = useState<any>(null);
   const [formData, setFormData] = useState({
     fullName: '', email: '', phone: '', city: '', instagram: '', vehicleId: '', modifications: ''
   });
@@ -30,9 +39,10 @@ const Events = () => {
   const [interiorFiles, setInteriorFiles] = useState<File[]>([]);
   const [interiorPreviews, setInteriorPreviews] = useState<string[]>([]);
 
-  const { events, isLoading: eventsLoading, applyToEvent, cancelApplication } = useEvents();
+  const { events, isLoading: eventsLoading, applyToEvent, deleteEvent } = useEvents();
   const { vehicles, isLoading: vehiclesLoading } = useGarage();
   const { data: userApps, isLoading: appsLoading, refetch: refetchApps } = useUserApplications();
+  const { isAdmin } = useAdmin();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -41,7 +51,7 @@ const Events = () => {
         setFormData(prev => ({ 
           ...prev, 
           fullName: session.user.user_metadata?.full_name || '',
-          email: '' // Email vuota di default
+          email: session.user.email || ''
         }));
       }
     });
@@ -61,148 +71,158 @@ const Events = () => {
     setInteriorPreviews(prev => prev.filter((_, i) => i !== index));
   };
 
-  const validateForm = () => {
-    if (!formData.fullName.trim()) {
-      showError("Inserisci il tuo nome e cognome completo.");
-      return false;
+  const handleApplyClick = (event: Event) => {
+    if (!user) {
+      showError(t.errors.authRequired);
+      navigate('/login');
+      return;
     }
-    
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formData.email.trim() || !emailRegex.test(formData.email)) {
-      showError("Inserisci un indirizzo email valido.");
-      return false;
-    }
-
-    if (!formData.phone.trim() || formData.phone.length < 8) {
-      showError("Inserisci un numero di telefono valido.");
-      return false;
-    }
-
-    if (!formData.city.trim()) {
-      showError("Inserisci la tua città di provenienza.");
-      return false;
-    }
-
-    if (!formData.instagram.trim()) {
-      showError("Inserisci il tuo profilo Instagram (es. @username).");
-      return false;
-    }
-
-    if (!formData.vehicleId) {
-      showError("Devi selezionare un veicolo dal tuo garage.");
-      return false;
-    }
-
-    if (interiorFiles.length < 3) {
-      showError(`Carica almeno 3 foto degli interni. (Attualmente: ${interiorFiles.length})`);
-      return false;
-    }
-
-    if (!formData.modifications.trim()) {
-      showError("Il veicolo selezionato non ha una descrizione nel Garage. Aggiungila per continuare.");
-      return false;
-    }
-
-    return true;
+    setSelectedEvent(event);
   };
 
   const handleApply = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedEvent) return;
     
-    if (!validateForm()) return;
+    if (!formData.vehicleId) {
+      showError(language === 'it' ? "Seleziona un veicolo dal garage" : "Select a vehicle from garage");
+      return;
+    }
+
+    if (interiorFiles.length < 3) {
+      showError(language === 'it' ? "Carica almeno 3 foto degli interni" : "Upload at least 3 interior photos");
+      return;
+    }
 
     try {
       await applyToEvent.mutateAsync({ eventId: selectedEvent.id, ...formData, interiorFiles });
       setSelectedEvent(null);
       setInteriorFiles([]);
       setInteriorPreviews([]);
-      setFormData({
-        fullName: user?.user_metadata?.full_name || '',
-        email: '', // Reset a vuoto dopo l'invio
-        phone: '',
-        city: '',
-        instagram: '',
-        vehicleId: '',
-        modifications: ''
-      });
       await refetchApps();
     } catch (error) {}
   };
 
-  const handleCancel = async () => {
-    if (!manageApp) return;
-    try {
-      await cancelApplication.mutateAsync(manageApp.id);
-      setManageApp(null);
-      await refetchApps();
-    } catch (error) {
-      console.error("Errore durante l'annullamento:", error);
+  const getAppForEvent = (eventId: string) => userApps?.find(app => app.event_id === eventId);
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'open': return t.events.statusOpen;
+      case 'closed': return t.events.statusClosed;
+      case 'soon': return t.events.statusSoon;
+      default: return t.events.statusOpen;
     }
   };
 
-  const getAppForEvent = (eventId: string) => userApps?.find(app => app.event_id === eventId);
-
-  if (!user && !eventsLoading) {
-    return (
-      <div className="min-h-screen bg-black text-white flex flex-col">
-        <Navbar />
-        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <AlertCircle size={48} className="text-zinc-800 mb-6" />
-          <h1 className="text-2xl font-black uppercase italic mb-4">Accesso Riservato</h1>
-          <Button onClick={() => navigate('/login')} className="bg-red-600 rounded-none font-black uppercase italic px-12 py-6">Accedi Ora</Button>
-        </main>
-        <BottomNav />
-      </div>
-    );
-  }
+  const formatEventDate = (start: string, end?: string) => {
+    const startDate = new Date(start);
+    const locale = language === 'it' ? 'it-IT' : 'en-US';
+    if (!end) return startDate.toLocaleDateString(locale);
+    
+    const endDate = new Date(end);
+    if (startDate.toDateString() === endDate.toDateString()) {
+      return startDate.toLocaleDateString(locale);
+    }
+    
+    return `${startDate.toLocaleDateString(locale, { day: '2-digit', month: '2-digit' })} - ${endDate.toLocaleDateString(locale)}`;
+  };
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Navbar />
       <main className="flex-1 pt-24 pb-32 px-6 max-w-4xl mx-auto w-full">
-        <header className="mb-12">
-          <h2 className="text-red-600 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">District Calendar</h2>
-          <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">Eventi & Selezioni</h1>
+        <header className="mb-12 flex items-end justify-between">
+          <div>
+            <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">{t.events.subtitle}</h2>
+            <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">{t.events.title}</h1>
+          </div>
+          {isAdmin && (
+            <Button 
+              onClick={() => { setEditingEvent(null); setIsAdminModalOpen(true); }}
+              className="w-12 h-12 bg-white text-black flex items-center justify-center hover:bg-zinc-200 transition-all shadow-lg"
+            >
+              <Plus size={24} />
+            </Button>
+          )}
         </header>
 
         {eventsLoading || appsLoading ? (
-          <div className="flex justify-center py-20"><Loader2 className="animate-spin text-red-600" size={40} /></div>
+          <div className="flex justify-center py-20"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>
         ) : (
           <div className="space-y-6">
             {events?.map((event) => {
               const existingApp = getAppForEvent(event.id);
               return (
-                <motion.div key={event.id} className="bg-zinc-900/40 border border-white/5 p-6 group hover:border-red-600/30 transition-all">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div className="space-y-4">
-                      <span className={cn(
-                        "text-[8px] font-black uppercase px-2 py-0.5 italic",
-                        existingApp?.status === 'pending' && "bg-zinc-800 text-zinc-400",
-                        existingApp?.status === 'approved' && "bg-green-600 text-white",
-                        existingApp?.status === 'rejected' && "bg-red-600 text-white",
-                        !existingApp && "bg-green-600 text-white"
-                      )}>
-                        {existingApp ? `STATO: ${existingApp.status === 'pending' ? 'IN ATTESA' : existingApp.status.toUpperCase()}` : "Iscrizioni Aperte"}
-                      </span>
-                      <h3 className="text-2xl font-black italic uppercase tracking-tighter">{event.title}</h3>
-                    </div>
-                    
-                    {existingApp ? (
-                      <Button 
-                        onClick={() => setManageApp(existingApp)}
-                        className="bg-zinc-800 text-white hover:bg-white hover:text-black rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 px-8"
-                      >
-                        <Settings2 size={14} className="mr-2" /> Gestisci Selezione
-                      </Button>
-                    ) : (
-                      <Button 
-                        onClick={() => setSelectedEvent(event)}
-                        className="bg-white text-black hover:bg-red-600 hover:text-white rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 px-8"
-                      >
-                        Candidati <ChevronRight size={14} className="ml-2" />
-                      </Button>
+                <motion.div key={event.id} className="bg-zinc-900/40 border border-white/5 overflow-hidden group hover:border-white/20 transition-all">
+                  <div className="flex flex-col md:flex-row">
+                    {event.image_url && (
+                      <div className="md:w-48 h-48 md:h-auto shrink-0 overflow-hidden">
+                        <img src={event.image_url} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt={event.title} />
+                      </div>
                     )}
+                    <div className="flex-1 p-6 flex flex-col justify-between gap-6">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span className={cn(
+                            "text-[8px] font-black uppercase px-2 py-0.5 italic flex items-center gap-1.5",
+                            existingApp?.status === 'pending' && "bg-zinc-800 text-zinc-400",
+                            existingApp?.status === 'approved' && "bg-white text-black",
+                            !existingApp && event.status === 'open' && "bg-green-600 text-white",
+                            !existingApp && event.status === 'closed' && "bg-red-600 text-white",
+                            !existingApp && event.status === 'soon' && "bg-zinc-700 text-zinc-300"
+                          )}>
+                            {existingApp ? (
+                              <>
+                                {existingApp.status === 'pending' ? <Clock size={10} /> : <Settings2 size={10} />}
+                                {t.events.manageApp.status}: {existingApp.status === 'pending' ? t.events.manageApp.pending : existingApp.status.toUpperCase()}
+                              </>
+                            ) : (
+                              getStatusLabel(event.status)
+                            )}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1 text-[8px] font-black uppercase text-zinc-500">
+                              <MapPin size={10} /> {event.location}
+                            </div>
+                            <div className="flex items-center gap-1 text-[8px] font-black uppercase text-zinc-500">
+                              <Calendar size={10} /> {formatEventDate(event.date, event.end_date)}
+                            </div>
+                          </div>
+                        </div>
+                        <h3 className="text-2xl font-black italic uppercase tracking-tighter">{event.title}</h3>
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-3">
+                        <Button 
+                          onClick={() => setViewingEvent(event)}
+                          variant="outline"
+                          className="border-white/10 text-white hover:bg-white/10 rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 px-6"
+                        >
+                          <Eye size={14} className="mr-2" /> {t.events.viewEvent}
+                        </Button>
+
+                        {existingApp ? (
+                          <Button 
+                            onClick={() => setManageApp(existingApp)}
+                            className="bg-zinc-800 text-white hover:bg-white hover:text-black rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 px-6"
+                          >
+                            <Settings2 size={14} className="mr-2" /> {t.events.manage}
+                          </Button>
+                        ) : (
+                          <Button 
+                            onClick={() => handleApplyClick(event)}
+                            disabled={event.status !== 'open'}
+                            className={cn(
+                              "rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 px-6",
+                              event.status === 'open' ? "bg-white text-black hover:bg-zinc-200" : "bg-zinc-800 text-zinc-500 cursor-not-allowed"
+                            )}
+                          >
+                            {!user && event.status === 'open' && <Lock size={12} className="mr-2" />}
+                            {event.status === 'open' ? t.events.apply : t.events.statusClosed} <ChevronRight size={14} className="ml-2" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </motion.div>
               );
@@ -210,35 +230,59 @@ const Events = () => {
           </div>
         )}
 
-        {/* Modal Gestione Selezione */}
+        {/* Modal Visualizzazione Dettagli Evento */}
         <AnimatePresence>
-          {manageApp && (
+          {viewingEvent && (
             <>
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setManageApp(null)} className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100]" />
-              <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed inset-x-0 bottom-0 z-[101] bg-zinc-950 border-t border-white/10 p-8 rounded-t-[2rem] max-h-[80vh] overflow-y-auto">
-                <div className="max-w-md mx-auto text-center space-y-8">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-xl font-black italic uppercase">La tua Selezione</h3>
-                    <button onClick={() => setManageApp(null)}><X size={24} /></button>
-                  </div>
-                  
-                  <div className="bg-zinc-900 p-6 border border-white/5">
-                    <p className="text-[10px] font-black uppercase text-zinc-500 mb-2">Stato Attuale</p>
-                    <p className="text-2xl font-black italic uppercase text-red-600">
-                      {manageApp.status === 'pending' ? 'IN ATTESA' : manageApp.status.toUpperCase()}
-                    </p>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setViewingEvent(null)} className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100]" />
+              <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed inset-x-0 bottom-0 z-[101] bg-zinc-950 border-t border-white/10 p-8 rounded-t-[2rem] max-h-[90vh] overflow-y-auto">
+                <div className="max-w-3xl mx-auto space-y-12 pb-12">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-3xl font-black italic uppercase tracking-tighter mb-2">{viewingEvent.title}</h3>
+                      <div className="flex gap-4 text-zinc-500 text-[10px] font-black uppercase tracking-widest">
+                        <span className="flex items-center gap-1"><MapPin size={12} /> {viewingEvent.location}</span>
+                        <span className="flex items-center gap-1"><Calendar size={12} /> {formatEventDate(viewingEvent.date, viewingEvent.end_date)}</span>
+                      </div>
+                    </div>
+                    <button onClick={() => setViewingEvent(null)}><X size={24} /></button>
                   </div>
 
-                  <div className="space-y-4">
-                    <p className="text-xs text-zinc-500 font-bold uppercase">Vuoi modificare la tua candidatura? <br/> Devi prima annullare quella attuale.</p>
-                    <Button 
-                      onClick={handleCancel}
-                      disabled={cancelApplication.isPending}
-                      className="w-full bg-red-600 hover:bg-white hover:text-black text-white py-6 rounded-none font-black uppercase italic tracking-widest"
-                    >
-                      {cancelApplication.isPending ? <Loader2 className="animate-spin" /> : <><Trash2 size={16} className="mr-2" /> Annulla Candidatura</>}
-                    </Button>
+                  {viewingEvent.image_url && (
+                    <div className="aspect-video bg-zinc-900 border border-white/5 overflow-hidden">
+                      <img src={viewingEvent.image_url} className="w-full h-full object-cover" alt="Locandina" />
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div className="space-y-4">
+                      <h4 className="text-xs font-black uppercase tracking-widest text-zinc-500 italic border-b border-white/5 pb-2">{t.events.description}</h4>
+                      <div className="prose prose-invert max-w-none">
+                        <p className="text-zinc-300 leading-relaxed whitespace-pre-wrap italic font-medium text-sm">
+                          {viewingEvent.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h4 className="text-xs font-black uppercase tracking-widest text-zinc-500 italic border-b border-white/5 pb-2">{t.events.program}</h4>
+                      <div className="prose prose-invert max-w-none">
+                        <p className="text-zinc-300 leading-relaxed whitespace-pre-wrap italic font-medium text-sm">
+                          {viewingEvent.program || (language === 'it' ? "Programma non ancora disponibile." : "Program not available yet.")}
+                        </p>
+                      </div>
+                    </div>
                   </div>
+
+                  {viewingEvent.status === 'open' && !getAppForEvent(viewingEvent.id) && (
+                    <Button 
+                      onClick={() => { setViewingEvent(null); handleApplyClick(viewingEvent); }}
+                      className="w-full bg-white text-black py-6 font-black uppercase italic tracking-widest rounded-none"
+                    >
+                      {!user && <Lock size={14} className="mr-2" />}
+                      {t.events.applyNow}
+                    </Button>
+                  )}
                 </div>
               </motion.div>
             </>
@@ -259,31 +303,31 @@ const Events = () => {
                   <div className="space-y-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-zinc-500">Nome e Cognome *</Label>
+                        <Label className="text-[10px] font-black uppercase text-zinc-500">{t.events.form.name} *</Label>
                         <Input required value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12 text-sm" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-zinc-500">Email *</Label>
+                        <Label className="text-[10px] font-black uppercase text-zinc-500">{t.events.form.email} *</Label>
                         <Input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12 text-sm" />
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-zinc-500">Telefono *</Label>
+                        <Label className="text-[10px] font-black uppercase text-zinc-500">{t.events.form.phone} *</Label>
                         <Input required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12 text-sm" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-zinc-500">Città *</Label>
+                        <Label className="text-[10px] font-black uppercase text-zinc-500">{t.events.form.city} *</Label>
                         <Input required value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12 text-sm" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-zinc-500">Instagram *</Label>
+                        <Label className="text-[10px] font-black uppercase text-zinc-500">{t.events.form.instagram} *</Label>
                         <Input required value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12 text-sm" />
                       </div>
                     </div>
                     
                     <div className="space-y-4">
-                      <Label className="text-[10px] font-black uppercase text-zinc-500">Seleziona Veicolo dal Garage *</Label>
+                      <Label className="text-[10px] font-black uppercase text-zinc-500">{t.events.form.selectVehicle} *</Label>
                       <div className="grid grid-cols-1 gap-3">
                         {vehicles?.map(v => (
                           <button 
@@ -298,7 +342,7 @@ const Events = () => {
                             }} 
                             className={cn(
                               "flex items-center gap-4 p-3 border transition-all text-left group", 
-                              formData.vehicleId === v.id ? "bg-red-600 border-red-600" : "bg-zinc-900 border-white/5"
+                              formData.vehicleId === v.id ? "bg-white text-black border-white" : "bg-zinc-900 border-white/5"
                             )}
                           >
                             <div className="w-16 h-16 bg-black shrink-0 overflow-hidden border border-white/10">
@@ -310,53 +354,23 @@ const Events = () => {
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-black uppercase italic truncate">{v.brand} {v.model}</p>
-                              <p className="text-[9px] font-bold uppercase text-zinc-500 group-hover:text-white/70">
+                              <p className="text-[9px] font-bold uppercase text-zinc-500 group-hover:text-zinc-400">
                                 {v.suspension_type} • {v.year}
                               </p>
                             </div>
                           </button>
                         ))}
-                        {vehicles?.length === 0 && (
-                          <p className="text-[10px] text-zinc-600 uppercase font-bold italic">Aggiungi prima un veicolo nel tuo Garage per candidarti.</p>
-                        )}
                       </div>
                     </div>
 
-                    {/* Sezione Modifiche Sincronizzata (Read Only) */}
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-[10px] font-black uppercase text-zinc-500">Modifiche Principali (Dal Garage) *</Label>
-                        <div className="flex items-center gap-1 text-[8px] font-black uppercase text-red-600 italic">
-                          <Info size={10} /> Sola Lettura
-                        </div>
-                      </div>
-                      <div className={cn(
-                        "p-4 border border-white/5 bg-zinc-900/50 min-h-[80px] transition-all",
-                        !formData.modifications && "border-red-600/20"
-                      )}>
-                        {formData.modifications ? (
-                          <p className="text-xs text-zinc-300 leading-relaxed italic whitespace-pre-wrap">
-                            {formData.modifications}
-                          </p>
-                        ) : (
-                          <p className="text-[10px] text-zinc-600 font-bold uppercase italic">
-                            Seleziona un veicolo per visualizzare le modifiche salvate nel Garage.
-                          </p>
-                        )}
-                      </div>
-                      <p className="text-[8px] text-zinc-600 font-bold uppercase tracking-widest">
-                        Per modificare questi dati, aggiorna la descrizione del veicolo nel tuo Garage.
-                      </p>
-                    </div>
-
-                    <div className="space-y-4">
-                      <Label className="text-[10px] font-black uppercase text-zinc-500">Foto Interni (Minimo 3) *</Label>
+                      <Label className="text-[10px] font-black uppercase text-zinc-500">{t.events.form.interiorPhotos} *</Label>
                       <div 
                         onClick={() => interiorInputRef.current?.click()}
-                        className="h-24 border border-dashed border-zinc-800 flex flex-col items-center justify-center cursor-pointer hover:border-red-600 transition-colors bg-zinc-900/30"
+                        className="h-24 border border-dashed border-zinc-800 flex flex-col items-center justify-center cursor-pointer hover:border-white transition-colors bg-zinc-900/30"
                       >
                         <Camera size={24} className="text-zinc-600 mb-2" />
-                        <span className="text-[9px] font-black uppercase text-zinc-500">Carica Foto Interni</span>
+                        <span className="text-[9px] font-black uppercase text-zinc-500">{t.events.form.uploadPhotos}</span>
                       </div>
                       <input type="file" ref={interiorInputRef} className="hidden" accept="image/*" multiple onChange={handleFileChange} />
                       
@@ -365,15 +379,15 @@ const Events = () => {
                           {interiorPreviews.map((url, i) => (
                             <div key={i} className="aspect-square relative bg-zinc-800 border border-white/5">
                               <img src={url} className="w-full h-full object-cover" alt="Preview" />
-                              <button type="button" onClick={() => removePreview(i)} className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white flex items-center justify-center rounded-full"><X size={10} /></button>
+                              <button type="button" onClick={() => removePreview(i)} className="absolute -top-1 -right-1 w-5 h-5 bg-zinc-700 text-white flex items-center justify-center rounded-full"><X size={10} /></button>
                             </div>
                           ))}
                         </div>
                       )}
                     </div>
 
-                    <Button type="submit" disabled={applyToEvent.isPending} className="w-full bg-red-600 py-8 font-black uppercase italic tracking-widest rounded-none">
-                      {applyToEvent.isPending ? <Loader2 className="animate-spin" /> : "Invia Candidatura"}
+                    <Button type="submit" disabled={applyToEvent.isPending} className="w-full bg-white text-black py-8 font-black uppercase italic tracking-widest rounded-none">
+                      {applyToEvent.isPending ? <Loader2 className="animate-spin" /> : t.events.form.submit}
                     </Button>
                   </div>
                 </form>
@@ -381,8 +395,21 @@ const Events = () => {
             </>
           )}
         </AnimatePresence>
+
+        <EventAdminModal 
+          isOpen={isAdminModalOpen} 
+          onClose={() => { setIsAdminModalOpen(false); setEditingEvent(null); }} 
+          event={editingEvent}
+        />
+
+        <ManageApplicationModal 
+          isOpen={!!manageApp} 
+          onClose={() => setManageApp(null)} 
+          application={manageApp} 
+        />
       </main>
-      <Footer /><BottomNav />
+      <Footer />
+      <BottomNav />
     </div>
   );
 };

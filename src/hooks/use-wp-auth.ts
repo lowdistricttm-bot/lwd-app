@@ -2,74 +2,111 @@
 
 import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
+import { showSuccess, showError } from '@/utils/toast';
 
-const WP_URL = "https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth";
+const WP_AUTH_URL = "https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth";
+
+const decodeJwt = (token: string) => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+};
 
 export const useWpAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
 
-  const loginWithWp = async (username: string, password: string) => {
+  const loginWithWp = async (usernameOrEmail: string, password: string) => {
     setIsLoading(true);
     try {
-      console.log("[Auth] Tentativo di sincronizzazione con Low District...");
-      
-      const response = await fetch(WP_URL, {
+      // 1. Autenticazione su WordPress
+      const response = await fetch(WP_AUTH_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username: usernameOrEmail, password }),
       });
 
-      const data = await response.json();
-      console.log("[Auth] Risposta ricevuta dal server:", data);
+      const rawData = await response.json();
+      if (!response.ok) throw new Error(rawData.message || "Credenziali non valide.");
 
-      if (!response.ok) {
-        throw new Error(data.message || "Credenziali non valide sul sito ufficiale");
-      }
-
-      // Estrazione flessibile del token (gestisce diversi formati del plugin)
-      const jwt = data.jwt || (data.data && data.data.jwt);
+      const data = rawData.data || rawData;
+      const jwt = data.jwt;
+      const decoded = decodeJwt(jwt);
       
-      if (jwt) {
-        localStorage.setItem('wp-jwt', jwt);
-        localStorage.setItem('wp-user', JSON.stringify(data));
-        console.log("[Auth] Sincronizzazione completata. Token salvato.");
-      } else {
-        console.warn("[Auth] Login riuscito ma nessun token JWT trovato nella risposta.");
-      }
+      const wpId = decoded?.id?.toString() || data.user_id?.toString();
+      const realEmail = decoded?.email || data.user_email || data.email;
+      const wpUsername = decoded?.username || data.user_login || usernameOrEmail;
 
-      const userEmail = data.user_email || (username.includes('@') ? username : `${username}@lowdistrict.it`);
+      if (!realEmail || !wpId) throw new Error("Dati incompleti da WordPress.");
 
-      // Sincronizzazione con Supabase (App)
+      localStorage.setItem('wp-jwt', jwt);
+
+      // 2. Login su Supabase
       let { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: userEmail,
+        email: realEmail,
         password: password,
       });
 
-      if (authError && (authError.message.includes("Invalid login credentials") || authError.status === 400)) {
-        console.log("[Auth] Creazione profilo App in corso...");
-        const { error: signUpError } = await supabase.auth.signUp({
-          email: userEmail,
+      // 3. Se l'utente non esiste (perché abbiamo resettato il DB), lo creiamo
+      if (authError && (authError.status === 400 || authError.status === 422)) {
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: realEmail,
           password: password,
-          options: { data: { username } }
+          options: { data: { username: wpUsername } }
         });
         
-        if (!signUpError || signUpError.message.includes("Email not confirmed")) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          const retry = await supabase.auth.signInWithPassword({ email: userEmail, password: password });
+        if (!signUpError) {
+          const retry = await supabase.auth.signInWithPassword({ email: realEmail, password: password });
+          authData = retry.data;
           authError = retry.error;
+        } else {
+          throw signUpError;
         }
       }
 
-      if (authError) console.error("[Auth] Errore Supabase (non critico per la bacheca):", authError.message);
+      if (authError) throw authError;
 
-      return { success: true, user: data };
+      // 4. Creazione/Aggiornamento Profilo
+      if (authData?.user) {
+        await supabase.from('profiles').upsert({
+          id: authData.user.id,
+          username: wpUsername,
+          wp_id: wpId,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'id' });
+      }
+
+      return { success: true };
     } catch (error: any) {
-      console.error("[Auth] Errore critico:", error.message);
+      console.error("[WP Auth Error]", error);
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  return { loginWithWp, isLoading };
+  const updateUsername = async (newUsername: string) => {
+    setIsLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Utente non autenticato");
+      const { error } = await supabase.from('profiles').update({ username: newUsername }).eq('id', user.id);
+      if (error) throw error;
+      showSuccess("Username aggiornato!");
+      return true;
+    } catch (error: any) {
+      showError(error.message);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return { loginWithWp, updateUsername, isLoading };
 };

@@ -49,7 +49,7 @@ const ActivityItem = ({ activity }: { activity: BPActivity }) => {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-zinc-900/50 border border-white/5 p-6 mb-4 hover:border-red-600/30 transition-all group"
+      className="bg-zinc-900/50 border border-white/5 p-6 mb-4 hover:border-white/20 transition-all group"
     >
       <div className="flex gap-4 mb-4">
         <div className="w-12 h-12 bg-zinc-800 overflow-hidden border border-white/10 shrink-0">
@@ -70,14 +70,14 @@ const ActivityItem = ({ activity }: { activity: BPActivity }) => {
               {formatDistanceToNow(new Date(activity.date), { addSuffix: true, locale: it })}
             </span>
           </div>
-          <p className="text-[10px] text-red-600 font-black uppercase tracking-widest mt-0.5" 
+          <p className="text-[10px] text-zinc-400 font-black uppercase tracking-widest mt-0.5" 
              dangerouslySetInnerHTML={{ __html: activity.action }} />
         </div>
       </div>
 
       <div 
         className="text-zinc-300 text-sm leading-relaxed mb-6 prose prose-invert max-w-none
-                   prose-p:mb-2 prose-a:text-red-600 prose-img:rounded-none"
+                   prose-p:mb-2 prose-a:text-white prose-img:rounded-none"
         dangerouslySetInnerHTML={{ __html: activity.content.rendered }}
       />
 
@@ -87,7 +87,7 @@ const ActivityItem = ({ activity }: { activity: BPActivity }) => {
           disabled={favoriteMutation.isPending}
           className={cn(
             "flex items-center gap-2 transition-colors",
-            favoriteMutation.isPending ? "opacity-50" : "text-zinc-500 hover:text-red-600"
+            favoriteMutation.isPending ? "opacity-50" : "text-zinc-500 hover:text-white"
           )}
         >
           {favoriteMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <Heart size={16} />}
@@ -129,7 +129,7 @@ const ActivityItem = ({ activity }: { activity: BPActivity }) => {
               <button 
                 type="submit"
                 disabled={commentMutation.isPending}
-                className="w-10 h-10 bg-red-600 flex items-center justify-center hover:bg-white hover:text-black transition-all shrink-0"
+                className="w-10 h-10 bg-zinc-700 flex items-center justify-center hover:bg-white hover:text-black transition-all shrink-0"
               >
                 {commentMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
               </button>

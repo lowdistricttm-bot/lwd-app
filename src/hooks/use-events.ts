@@ -8,8 +8,10 @@ export interface Event {
   id: string;
   title: string;
   description: string;
+  program?: string;
   image_url?: string;
   date: string;
+  end_date?: string;
   location: string;
   status: string;
   created_at: string;
@@ -27,19 +29,6 @@ export interface ApplicationData {
   interiorFiles?: File[];
 }
 
-const MOCK_EVENTS: Event[] = [
-  {
-    id: "00000000-0000-0000-0000-000000000001",
-    title: "LOW DISTRICT - SEASON 4",
-    description: "Il capitolo più grande della nostra storia. Il 27 e 28 Giugno 2026, la cultura stance approda ad Atripalda (AV) per un weekend senza precedenti.",
-    image_url: "https://www.lowdistrict.it/wp-content/uploads/DSC01359-1-scaled-e1751832356345.jpg",
-    date: "2026-06-27T09:00:00Z",
-    location: "Atripalda (AV), Italia",
-    status: "open",
-    created_at: new Date().toISOString()
-  }
-];
-
 export const useEvents = () => {
   const queryClient = useQueryClient();
 
@@ -51,32 +40,110 @@ export const useEvents = () => {
         .select('*')
         .order('date', { ascending: true });
 
-      if (error || !data || data.length === 0) return MOCK_EVENTS;
-      return data;
+      if (error) throw new Error(error.message);
+      return data as Event[];
     }
   });
 
-  const uploadInteriors = async (files: File[]) => {
-    const urls: string[] = [];
-    for (const file of files) {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `interiors/${fileName}`;
+  const uploadMedia = async (file: File, path: string) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `${path}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('post-media')
-        .upload(filePath, file);
+    const { error: uploadError } = await supabase.storage
+      .from('post-media')
+      .upload(filePath, file);
 
-      if (uploadError) throw uploadError;
+    if (uploadError) throw new Error(uploadError.message);
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('post-media')
-        .getPublicUrl(filePath);
-        
-      urls.push(publicUrl);
-    }
-    return urls;
+    const { data: { publicUrl } } = supabase.storage
+      .from('post-media')
+      .getPublicUrl(filePath);
+      
+    return publicUrl;
   };
+
+  // --- ADMIN ACTIONS ---
+
+  const createEvent = useMutation({
+    mutationFn: async (data: Partial<Event> & { file?: File }) => {
+      let image_url = data.image_url;
+      if (data.file) {
+        image_url = await uploadMedia(data.file, 'events');
+      }
+
+      const { file, ...eventData } = data;
+      const { error } = await supabase
+        .from('events')
+        .insert([{ 
+          title: eventData.title,
+          description: eventData.description,
+          program: eventData.program,
+          date: eventData.date,
+          end_date: eventData.end_date || null,
+          location: eventData.location,
+          status: eventData.status,
+          image_url: image_url 
+        }]);
+
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['events'] });
+      showSuccess("Evento creato con successo!");
+    },
+    onError: (error: any) => showError(error.message || "Errore durante la creazione dell'evento")
+  });
+
+  const updateEvent = useMutation({
+    mutationFn: async (data: Partial<Event> & { file?: File }) => {
+      let image_url = data.image_url;
+      if (data.file) {
+        image_url = await uploadMedia(data.file, 'events');
+      }
+
+      const { file, id, ...eventData } = data;
+      const updatePayload: any = { 
+        title: eventData.title,
+        description: eventData.description,
+        program: eventData.program,
+        date: eventData.date,
+        end_date: eventData.end_date || null,
+        location: eventData.location,
+        status: eventData.status
+      };
+      
+      if (image_url !== undefined) {
+        updatePayload.image_url = image_url;
+      }
+
+      const { error } = await supabase
+        .from('events')
+        .update(updatePayload)
+        .eq('id', id);
+
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['events'] });
+      showSuccess("Evento aggiornato!");
+    },
+    onError: (error: any) => showError(error.message || "Errore durante l'aggiornamento dell'evento")
+  });
+
+  const deleteEvent = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('events').delete().eq('id', id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['events'] });
+      showSuccess("Evento eliminato.");
+    },
+    onError: (error: any) => showError(error.message || "Errore durante l'eliminazione")
+  });
+
+  // --- USER ACTIONS ---
 
   const applyToEvent = useMutation({
     mutationFn: async (data: ApplicationData) => {
@@ -85,7 +152,10 @@ export const useEvents = () => {
 
       let interiorUrls: string[] = [];
       if (data.interiorFiles && data.interiorFiles.length > 0) {
-        interiorUrls = await uploadInteriors(data.interiorFiles);
+        for (const file of data.interiorFiles) {
+          const url = await uploadMedia(file, 'interiors');
+          interiorUrls.push(url);
+        }
       }
 
       const { error } = await supabase
@@ -104,18 +174,13 @@ export const useEvents = () => {
           interior_urls: interiorUrls
         }]);
 
-      if (error) throw error;
-      return { success: true };
+      if (error) throw new Error(error.message);
     },
-    onSuccess: async () => {
-      // Invalidazione totale per aggiornare UI utente e admin
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['user-applications'] }),
-        queryClient.invalidateQueries({ queryKey: ['admin-applications'] })
-      ]);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-applications'] });
       showSuccess("Candidatura inviata!");
     },
-    onError: (error: any) => showError(error.message)
+    onError: (error: any) => showError(error.message || "Errore durante l'invio della candidatura")
   });
 
   const cancelApplication = useMutation({
@@ -124,22 +189,16 @@ export const useEvents = () => {
         .from('applications')
         .delete()
         .eq('id', applicationId);
-      if (error) throw error;
+      if (error) throw new Error(error.message);
     },
-    onSuccess: async () => {
-      // Pulizia profonda della cache per far sparire la candidatura ovunque
-      queryClient.removeQueries({ queryKey: ['user-applications'] });
-      queryClient.removeQueries({ queryKey: ['admin-applications'] });
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['user-applications'] }),
-        queryClient.invalidateQueries({ queryKey: ['admin-applications'] })
-      ]);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-applications'] });
       showSuccess("Candidatura annullata.");
     },
-    onError: (error: any) => showError("Errore: Assicurati di aver eseguito il comando SQL per i permessi di eliminazione.")
+    onError: (error: any) => showError(error.message || "Errore durante l'annullamento")
   });
 
-  return { events, isLoading, applyToEvent, cancelApplication };
+  return { events, isLoading, createEvent, updateEvent, deleteEvent, applyToEvent, cancelApplication };
 };
 
 export const useUserApplications = () => {
@@ -160,8 +219,6 @@ export const useUserApplications = () => {
 
       if (error) return [];
       return data || [];
-    },
-    staleTime: 0,
-    refetchOnMount: 'always'
+    }
   });
 };

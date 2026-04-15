@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, Loader2, Camera, Film, Trash2 } from 'lucide-react';
+import { X, Send, Loader2, Camera, Trash2, Plus } from 'lucide-react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { useSocialFeed } from '@/hooks/use-social-feed';
@@ -10,34 +10,38 @@ import { showError } from '@/utils/toast';
 
 const CreatePostModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
   const [content, setContent] = useState('');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { createPost } = useSocialFeed();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      const newFiles = [...selectedFiles, ...files].slice(0, 10);
+      setSelectedFiles(newFiles);
+      
+      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+      setPreviews(newPreviews);
     }
   };
 
-  const removeFile = () => {
-    setSelectedFile(null);
-    setPreviewUrl(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
+  const removeFile = (index: number) => {
+    const newFiles = selectedFiles.filter((_, i) => i !== index);
+    setSelectedFiles(newFiles);
+    setPreviews(newFiles.map(file => URL.createObjectURL(file)));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim() && !selectedFile) return;
+    if (!content.trim() && selectedFiles.length === 0) return;
     
     try {
-      await createPost.mutateAsync({ content, file: selectedFile || undefined });
+      await createPost.mutateAsync({ content, files: selectedFiles });
       setContent('');
-      removeFile();
+      setSelectedFiles([]);
+      setPreviews([]);
       onClose();
     } catch (error: any) {
       showError("Errore durante la pubblicazione");
@@ -64,19 +68,32 @@ const CreatePostModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
                 autoFocus
               />
 
-              {previewUrl && (
-                <div className="relative aspect-video bg-zinc-900 overflow-hidden border border-white/5">
-                  {selectedFile?.type.startsWith('video') ? <video src={previewUrl} className="w-full h-full object-cover" controls /> : <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />}
-                  <button type="button" onClick={removeFile} className="absolute top-4 right-4 p-2 bg-black/60 text-white hover:bg-red-600 transition-colors"><Trash2 size={18} /></button>
+              {previews.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {previews.map((url, i) => (
+                    <div key={i} className="relative aspect-square bg-zinc-900 overflow-hidden border border-white/5">
+                      <img src={url} alt="Preview" className="w-full h-full object-cover" />
+                      <button type="button" onClick={() => removeFile(i)} className="absolute top-2 right-2 p-1.5 bg-black/60 text-white hover:bg-zinc-800 transition-colors rounded-full"><Trash2 size={14} /></button>
+                    </div>
+                  ))}
+                  {previews.length < 10 && (
+                    <button 
+                      type="button" 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="aspect-square border-2 border-dashed border-zinc-800 flex items-center justify-center text-zinc-600 hover:border-white hover:text-white transition-all"
+                    >
+                      <Plus size={24} />
+                    </button>
+                  )}
                 </div>
               )}
 
               <div className="flex items-center justify-between pt-6 border-t border-white/5">
                 <div className="flex gap-4">
-                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileChange} />
-                  <button type="button" onClick={() => fileInputRef.current?.click()} className="p-3 bg-zinc-900 text-zinc-400 hover:text-red-600 transition-colors"><Camera size={20} /></button>
+                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*" multiple onChange={handleFileChange} />
+                  <button type="button" onClick={() => fileInputRef.current?.click()} className="p-3 bg-zinc-900 text-zinc-400 hover:text-white transition-colors"><Camera size={20} /></button>
                 </div>
-                <Button type="submit" disabled={(!content.trim() && !selectedFile) || createPost.isPending} className="bg-red-600 hover:bg-white hover:text-black text-white px-8 py-6 rounded-none font-black uppercase italic tracking-widest">
+                <Button type="submit" disabled={(!content.trim() && selectedFiles.length === 0) || createPost.isPending} className="bg-white text-black hover:bg-zinc-200 px-8 py-6 rounded-none font-black uppercase italic tracking-widest">
                   {createPost.isPending ? <Loader2 className="animate-spin" /> : <>Pubblica <Send size={16} className="ml-2" /></>}
                 </Button>
               </div>

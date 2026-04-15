@@ -7,12 +7,16 @@ import BottomNav from '@/components/BottomNav';
 import Hero from '@/components/Hero';
 import Footer from '@/components/Footer';
 import Stories from '@/components/Stories';
+import FeaturedProducts from '@/components/FeaturedProducts';
+import LatestActivities from '@/components/LatestActivities';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
-import { MadeWithDyad } from "@/components/made-with-dyad";
-import { ShoppingBag, Users, Calendar, ArrowRight } from 'lucide-react';
+import { ShoppingBag, Users, Calendar, ArrowRight, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from '@/hooks/use-translation';
 
 const Index = () => {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Navbar />
@@ -21,28 +25,18 @@ const Index = () => {
         <Stories />
         <Hero />
         
-        {/* Sezione Community / Bacheca Preview */}
-        <section className="py-24 px-6 bg-zinc-950">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
-              <div>
-                <h2 className="text-red-600 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">
-                  Join the District
-                </h2>
-                <h3 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">
-                  Community <br /> & Bacheca
-                </h3>
-              </div>
-              <Link to="/bacheca" className="group flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-colors">
-                Vedi tutte le attività <ArrowRight size={16} className="group-hover:translate-x-2 transition-transform" />
-              </Link>
-            </div>
+        <FeaturedProducts />
+        
+        <LatestActivities />
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* Sezione Valori / Stats */}
+        <section className="py-24 px-6 bg-black border-t border-white/5">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
               {[
-                { icon: Users, title: "Membri", desc: "Connettiti con migliaia di appassionati stance in tutta Italia." },
-                { icon: ShoppingBag, title: "Shop", desc: "Drop esclusivi e merchandising ufficiale di alta qualità." },
-                { icon: Calendar, title: "Eventi", desc: "Partecipa ai raduni più esclusivi e seleziona il tuo progetto." }
+                { icon: Users, title: t.home.values.community, desc: t.home.values.communityDesc },
+                { icon: Star, title: t.home.values.quality, desc: t.home.values.qualityDesc },
+                { icon: Calendar, title: t.home.values.events, desc: t.home.values.eventsDesc }
               ].map((item, i) => (
                 <motion.div 
                   key={i}
@@ -50,11 +44,13 @@ const Index = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
-                  className="bg-zinc-900/50 border border-white/5 p-8 hover:border-red-600/30 transition-all group"
+                  className="text-center space-y-4"
                 >
-                  <item.icon className="text-red-600 mb-6 group-hover:scale-110 transition-transform" size={32} />
-                  <h4 className="text-xl font-black italic uppercase mb-4">{item.title}</h4>
-                  <p className="text-zinc-500 text-sm font-bold leading-relaxed uppercase tracking-tight">
+                  <div className="w-16 h-16 bg-zinc-900 border border-white/5 flex items-center justify-center mx-auto mb-6 rotate-45 group hover:rotate-0 transition-transform duration-500">
+                    <item.icon className="text-white -rotate-45 group-hover:rotate-0 transition-transform duration-500" size={24} />
+                  </div>
+                  <h4 className="text-xl font-black italic uppercase tracking-tighter">{item.title}</h4>
+                  <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest leading-relaxed max-w-[200px] mx-auto">
                     {item.desc}
                   </p>
                 </motion.div>
@@ -63,27 +59,38 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Banner Promozionale */}
-        <section className="relative py-32 px-6 overflow-hidden">
+        {/* Banner Promozionale Finale */}
+        <section className="relative py-40 px-6 overflow-hidden">
           <div className="absolute inset-0 z-0">
             <img 
               src="https://www.lowdistrict.it/wp-content/uploads/DSC01359-1-scaled-e1751832356345.jpg" 
-              className="w-full h-full object-cover opacity-20 grayscale"
+              className="w-full h-full object-cover opacity-30 grayscale scale-110"
               alt="Background"
             />
-            <div className="absolute inset-0 bg-black/60"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-black via-black/40 to-black"></div>
           </div>
           
           <div className="relative z-10 max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter mb-8">
-              Il tuo progetto merita <br /> il palcoscenico migliore.
-            </h2>
-            <p className="text-zinc-400 text-sm md:text-base font-bold uppercase tracking-widest mb-12">
-              Candidati per i prossimi eventi ufficiali direttamente dall'app.
-            </p>
-            <Link to="/events" className="inline-block bg-red-600 text-white px-12 py-6 text-xs font-black uppercase tracking-[0.2em] italic hover:bg-white hover:text-black transition-all">
-              Scopri gli Eventi
-            </Link>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+            >
+              <h2 className="text-4xl md:text-7xl font-black italic uppercase tracking-tighter mb-8 leading-none">
+                {t.home.banner.title}
+              </h2>
+              <p className="text-zinc-400 text-xs md:text-sm font-black uppercase tracking-[0.4em] mb-12 italic">
+                {t.home.banner.subtitle}
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Link to="/events" className="w-full sm:w-auto bg-white text-black px-12 py-6 text-[10px] font-black uppercase tracking-[0.2em] italic hover:bg-zinc-200 transition-all">
+                  {t.home.banner.applyBtn}
+                </Link>
+                <Link to="/shop" className="w-full sm:w-auto border border-white/20 text-white px-12 py-6 text-[10px] font-black uppercase tracking-[0.2em] italic hover:bg-white/10 transition-all">
+                  {t.home.banner.shopBtn}
+                </Link>
+              </div>
+            </motion.div>
           </div>
         </section>
       </main>
@@ -91,7 +98,6 @@ const Index = () => {
       <Footer />
       <BottomNav />
       <PWAInstallPrompt />
-      <MadeWithDyad />
     </div>
   );
 };

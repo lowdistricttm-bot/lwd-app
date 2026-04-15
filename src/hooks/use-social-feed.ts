@@ -9,6 +9,7 @@ export interface Post {
   user_id: string;
   content: string;
   image_url?: string;
+  images?: string[];
   created_at: string;
   profiles?: {
     username: string;
@@ -30,70 +31,65 @@ export const useSocialFeed = () => {
       
       const { data: postsData, error: postsError } = await supabase
         .from('posts')
-        .select('*')
+        .select(`
+          *,
+          profiles:user_id (id, username, first_name, last_name, avatar_url),
+          likes (user_id),
+          comments (*, profiles:user_id (id, username, first_name, last_name, avatar_url))
+        `)
         .order('created_at', { ascending: false });
 
       if (postsError) throw postsError;
       if (!postsData) return [];
 
-      const userIds = [...new Set(postsData.map(p => p.user_id))];
-      const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('id, first_name, last_name, avatar_url')
-        .in('id', userIds);
-
-      const postIds = postsData.map(p => p.id);
-      const { data: commentsData } = await supabase
-        .from('comments')
-        .select('*, profiles(first_name, last_name, avatar_url)')
-        .in('post_id', postIds)
-        .order('created_at', { ascending: true });
-
-      const enrichedPosts = await Promise.all(postsData.map(async (post: any) => {
-        const profile = profilesData?.find(p => p.id === post.user_id);
-        
-        const { count: likes_count } = await supabase
-          .from('likes')
-          .select('*', { count: 'exact', head: true })
-          .eq('post_id', post.id);
-        
-        let is_liked = false;
-        if (user) {
-          const { data: userLike } = await supabase
-            .from('likes')
-            .select('id')
-            .eq('post_id', post.id)
-            .eq('user_id', user.id)
-            .maybeSingle();
-          is_liked = !!userLike;
-        }
-
-        const username = profile 
-          ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Membro District'
-          : 'Membro District';
+      return postsData.map((post: any) => {
+        const profile = post.profiles;
+        const likes_count = post.likes?.length || 0;
+        const is_liked = user ? post.likes?.some((l: any) => l.user_id === user.id) : false;
+        const username = profile?.username || 'Utente';
 
         return {
           ...post,
-          profiles: {
-            username,
-            avatar_url: profile?.avatar_url
-          },
-          likes_count: likes_count || 0,
+          images: Array.isArray(post.images) ? post.images : (post.image_url ? [post.image_url] : []),
+          profiles: { username, avatar_url: profile?.avatar_url },
+          likes_count,
           is_liked,
-          comments: commentsData?.filter(c => c.post_id === post.id) || []
+          comments: post.comments?.map((c: any) => ({
+            ...c,
+            profiles: {
+              ...c.profiles,
+              username: c.profiles?.username || 'Utente'
+            }
+          })) || []
         };
-      }));
-
-      return enrichedPosts as Post[];
+      }) as Post[];
     }
   });
 
-  const uploadMedia = async (file: File) => {
+  const checkVideoDuration = (file: File): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if (!file.type.startsWith('video/')) return resolve(true);
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.onloadedmetadata = () => {
+        window.URL.revokeObjectURL(video.src);
+        resolve(video.duration <= 31);
+      };
+      video.src = URL.createObjectURL(file);
+    });
+  };
+
+  const uploadMedia = async (file: File, folder: string = 'posts') => {
+    if (file.type.startsWith('video/')) {
+      const isDurationOk = await checkVideoDuration(file);
+      if (!isDurationOk) throw new Error(`Il video "${file.name}" supera i 30 secondi.`);
+    }
+
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `${fileName}`;
+    const filePath = `${folder}/${fileName}`;
 
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from('post-media')
       .upload(filePath, file);
 
@@ -107,18 +103,26 @@ export const useSocialFeed = () => {
   };
 
   const createPost = useMutation({
-    mutationFn: async ({ content, file }: { content: string, file?: File }) => {
+    mutationFn: async ({ content, files }: { content: string, files?: File[] }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Devi accedere per pubblicare");
 
-      let image_url = undefined;
-      if (file) {
-        image_url = await uploadMedia(file);
+      let imageUrls: string[] = [];
+      if (files && files.length > 0) {
+        for (const file of files) {
+          const url = await uploadMedia(file);
+          imageUrls.push(url);
+        }
       }
 
       const { data, error } = await supabase
         .from('posts')
-        .insert([{ user_id: user.id, content, image_url }])
+        .insert([{ 
+          user_id: user.id, 
+          content, 
+          images: imageUrls,
+          image_url: imageUrls[0] || null 
+        }])
         .select()
         .single();
 
@@ -132,16 +136,53 @@ export const useSocialFeed = () => {
     onError: (error: any) => showError(error.message)
   });
 
-  const updatePost = useMutation({
-    mutationFn: async ({ postId, content, file, removeImage }: { postId: string, content: string, file?: File, removeImage?: boolean }) => {
-      let image_url = undefined;
+  const addComment = useMutation({
+    mutationFn: async ({ postId, content, parentId, file }: { postId: string, content: string, parentId?: string, file?: File }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Accedi per commentare");
+
+      let image_url = null;
       if (file) {
-        image_url = await uploadMedia(file);
+        image_url = await uploadMedia(file, 'comments');
+      }
+
+      const { error } = await supabase
+        .from('comments')
+        .insert([{ 
+          post_id: postId, 
+          user_id: user.id, 
+          content, 
+          parent_id: parentId,
+          image_url
+        }]);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['social-posts'] });
+      showSuccess("Commento aggiunto!");
+    },
+    onError: (error: any) => showError(error.message)
+  });
+
+  const updatePost = useMutation({
+    mutationFn: async ({ postId, content, files, removeImages }: { postId: string, content: string, files?: File[], removeImages?: boolean }) => {
+      let imageUrls: string[] = [];
+      if (files && files.length > 0) {
+        for (const file of files) {
+          const url = await uploadMedia(file);
+          imageUrls.push(url);
+        }
       }
 
       const updateData: any = { content };
-      if (image_url) updateData.image_url = image_url;
-      else if (removeImage) updateData.image_url = null;
+      if (imageUrls.length > 0) {
+        updateData.images = imageUrls;
+        updateData.image_url = imageUrls[0];
+      } else if (removeImages) {
+        updateData.images = [];
+        updateData.image_url = null;
+      }
 
       const { error } = await supabase
         .from('posts')
@@ -159,6 +200,8 @@ export const useSocialFeed = () => {
 
   const deletePost = useMutation({
     mutationFn: async (postId: string) => {
+      await supabase.from('likes').delete().eq('post_id', postId);
+      await supabase.from('comments').delete().eq('post_id', postId);
       const { error } = await supabase.from('posts').delete().eq('id', postId);
       if (error) throw error;
     },
@@ -166,24 +209,6 @@ export const useSocialFeed = () => {
       queryClient.invalidateQueries({ queryKey: ['social-posts'] });
       showSuccess("Post eliminato");
     }
-  });
-
-  const addComment = useMutation({
-    mutationFn: async ({ postId, content, parentId }: { postId: string, content: string, parentId?: string }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Accedi per commentare");
-
-      const { error } = await supabase
-        .from('comments')
-        .insert([{ post_id: postId, user_id: user.id, content, parent_id: parentId }]);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['social-posts'] });
-      showSuccess("Commento aggiunto!");
-    },
-    onError: (error: any) => showError(error.message)
   });
 
   const deleteComment = useMutation({
@@ -200,19 +225,9 @@ export const useSocialFeed = () => {
     mutationFn: async (postId: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Accedi per mettere like");
-
-      const { data: existingLike } = await supabase
-        .from('likes')
-        .select('id')
-        .eq('post_id', postId)
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (existingLike) {
-        await supabase.from('likes').delete().eq('id', existingLike.id);
-      } else {
-        await supabase.from('likes').insert([{ post_id: postId, user_id: user.id }]);
-      }
+      const { data: existingLike } = await supabase.from('likes').select('id').eq('post_id', postId).eq('user_id', user.id).maybeSingle();
+      if (existingLike) await supabase.from('likes').delete().eq('id', existingLike.id);
+      else await supabase.from('likes').insert([{ post_id: postId, user_id: user.id }]);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['social-posts'] });
@@ -220,4 +235,50 @@ export const useSocialFeed = () => {
   });
 
   return { posts, isLoading, error, createPost, updatePost, deletePost, toggleLike, addComment, deleteComment };
+};
+
+export const usePost = (postId?: string) => {
+  return useQuery({
+    queryKey: ['post', postId],
+    queryFn: async () => {
+      if (!postId) return null;
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
+
+      const { data: post, error } = await supabase
+        .from('posts')
+        .select(`
+          *,
+          profiles:user_id (id, username, first_name, last_name, avatar_url),
+          likes (user_id),
+          comments (*, profiles:user_id (id, username, first_name, last_name, avatar_url))
+        `)
+        .eq('id', postId)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!post) return null;
+
+      const profile = post.profiles;
+      const likes_count = post.likes?.length || 0;
+      const is_liked = user ? post.likes?.some((l: any) => l.user_id === user.id) : false;
+      
+      return {
+        ...post,
+        images: Array.isArray(post.images) ? post.images : (post.image_url ? [post.image_url] : []),
+        profiles: { username: profile?.username || 'Utente', avatar_url: profile?.avatar_url },
+        likes_count,
+        is_liked,
+        comments: post.comments?.map((c: any) => ({
+          ...c,
+          profiles: {
+            ...c.profiles,
+            username: c.profiles?.username || 'Utente'
+          }
+        })) || []
+      } as Post;
+    },
+    enabled: !!postId
+  });
 };
