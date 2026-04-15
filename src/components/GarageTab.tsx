@@ -10,6 +10,7 @@ import ImageLightbox from './ImageLightbox';
 import { Plus, Car, Trash2, Camera, Loader2, X, Edit3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/hooks/use-translation';
 
 interface GarageTabProps {
   userId?: string;
@@ -18,6 +19,7 @@ interface GarageTabProps {
 
 const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
   const { vehicles, isLoading, addVehicle, updateVehicle, deleteVehicle } = useGarage(userId);
+  const { t } = useTranslation();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
@@ -112,13 +114,13 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <h3 className="text-xl font-black italic uppercase">Garage</h3>
+        <h3 className="text-xl font-black italic uppercase">{t.garage?.title || "Garage"}</h3>
         {isOwnProfile && !isFormOpen && (
           <Button 
             onClick={() => setIsFormOpen(true)}
             className="bg-white text-black hover:bg-zinc-200 rounded-none font-black uppercase italic text-[10px] tracking-widest"
           >
-            <Plus size={14} className="mr-2" /> Aggiungi Veicolo
+            <Plus size={14} className="mr-2" /> {t.garage?.addBtn || "Aggiungi"}
           </Button>
         )}
       </div>
@@ -134,7 +136,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-zinc-500">Marca</Label>
+                  <Label className="text-[10px] font-black uppercase text-zinc-500">{t.garage?.brand || "Marca"}</Label>
                   <Input 
                     required
                     value={formData.brand}
@@ -143,7 +145,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-zinc-500">Modello</Label>
+                  <Label className="text-[10px] font-black uppercase text-zinc-500">{t.garage?.model || "Modello"}</Label>
                   <Input 
                     required
                     value={formData.model}
@@ -152,7 +154,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-zinc-500">Anno</Label>
+                  <Label className="text-[10px] font-black uppercase text-zinc-500">{t.garage?.year || "Anno"}</Label>
                   <Input 
                     value={formData.year}
                     onChange={e => setFormData({...formData, year: e.target.value})}
@@ -169,7 +171,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-zinc-500">Tipo Assetto</Label>
+                  <Label className="text-[10px] font-black uppercase text-zinc-500">{t.garage?.suspension || "Assetto"}</Label>
                   <div className="grid grid-cols-2 gap-2">
                     {['STATIC', 'AIR'].map((type) => (
                       <button
@@ -275,7 +277,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
         {vehicles?.length === 0 && !isFormOpen ? (
           <div className="col-span-full bg-zinc-900/30 border border-white/5 p-12 text-center">
             <Car className="mx-auto text-zinc-800 mb-6" size={48} />
-            <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Nessun veicolo nel garage.</p>
+            <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{t.garage?.empty || "Nessun veicolo."}</p>
           </div>
         ) : (
           vehicles?.map((vehicle) => (
@@ -319,7 +321,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <p className="text-[10px] font-bold uppercase text-zinc-400"><span className="text-zinc-600">Assetto:</span> {vehicle.suspension_type}</p>
+                  <p className="text-[10px] font-bold uppercase text-zinc-400"><span className="text-zinc-600">{t.garage?.suspension || "Assetto"}:</span> {vehicle.suspension_type}</p>
                   {vehicle.description && <p className="text-xs text-zinc-500 line-clamp-2 italic">{vehicle.description}</p>}
                 </div>
               </div>

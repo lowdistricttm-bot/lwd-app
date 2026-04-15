@@ -4,16 +4,18 @@ import React from 'react';
 import { Home, ShoppingBag, MessageSquare, User, Calendar } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/hooks/use-translation';
 
 const BottomNav = () => {
   const location = useLocation();
+  const { t } = useTranslation();
   
   const items = [
-    { icon: Home, label: 'Home', href: '/' },
+    { icon: Home, label: t.nav?.home || 'Home', href: '/' },
     { icon: MessageSquare, label: 'Bacheca', href: '/bacheca' },
-    { icon: ShoppingBag, label: 'Shop', href: '/shop' },
-    { icon: Calendar, label: 'Eventi', href: '/events' },
-    { icon: User, label: 'Profilo', href: '/profile' },
+    { icon: ShoppingBag, label: t.nav?.shop || 'Shop', href: '/shop' },
+    { icon: Calendar, label: t.nav?.events || 'Eventi', href: '/events' },
+    { icon: User, label: t.nav?.profile || 'Profilo', href: '/profile' },
   ];
 
   return (
