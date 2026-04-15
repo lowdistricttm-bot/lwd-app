@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { showError, showSuccess } from '@/utils/toast';
+import { compressImage } from '@/utils/media';
 
 export interface Vehicle {
   id: string;
@@ -50,7 +51,10 @@ export const useGarage = (targetUserId?: string) => {
 
   const uploadImages = async (files: File[]) => {
     const urls: string[] = [];
-    for (const file of files) {
+    for (let file of files) {
+      // Comprimi l'immagine prima dell'upload
+      file = await compressImage(file);
+
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `vehicles/${fileName}`;

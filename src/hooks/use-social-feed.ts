@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { showError, showSuccess } from '@/utils/toast';
+import { compressImage, validateVideo } from '@/utils/media';
 
 export interface Post {
   id: string;
@@ -66,23 +67,13 @@ export const useSocialFeed = () => {
     }
   });
 
-  const checkVideoDuration = (file: File): Promise<boolean> => {
-    return new Promise((resolve) => {
-      if (!file.type.startsWith('video/')) return resolve(true);
-      const video = document.createElement('video');
-      video.preload = 'metadata';
-      video.onloadedmetadata = () => {
-        window.URL.revokeObjectURL(video.src);
-        resolve(video.duration <= 31);
-      };
-      video.src = URL.createObjectURL(file);
-    });
-  };
-
   const uploadMedia = async (file: File, folder: string = 'posts') => {
+    // Validazione e compressione
     if (file.type.startsWith('video/')) {
-      const isDurationOk = await checkVideoDuration(file);
-      if (!isDurationOk) throw new Error(`Il video "${file.name}" supera i 30 secondi.`);
+      const validation = await validateVideo(file);
+      if (!validation.ok) throw new Error(validation.error);
+    } else {
+      file = await compressImage(file);
     }
 
     const fileExt = file.name.split('.').pop();
@@ -243,7 +234,6 @@ export const usePost = (postId?: string) => {
     queryFn: async () => {
       if (!postId) return null;
       
-      // Recuperiamo la sessione in modo non bloccante
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
 

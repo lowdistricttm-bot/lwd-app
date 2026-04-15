@@ -22,7 +22,17 @@ import Chat from "./pages/Chat";
 import PostDetail from "./pages/PostDetail";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+// Configurazione QueryClient ottimizzata per velocità e precisione
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60, // I dati sono considerati freschi per 1 minuto
+      gcTime: 1000 * 60 * 10, // Mantieni in memoria per 10 minuti
+      refetchOnWindowFocus: false, // Evita ricaricamenti inutili quando torni sulla tab
+      retry: 1,
+    },
+  },
+});
 
 const AppContent = () => {
   useNotificationListener();
@@ -46,7 +56,6 @@ const AppContent = () => {
     });
   }, []);
 
-  // Attiva la sincronizzazione automatica basata sull'utente loggato
   useProfileSync(currentUsername);
   
   return (
