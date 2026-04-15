@@ -16,7 +16,6 @@ import Events from "./pages/Events";
 import AdminApplications from "./pages/AdminApplications";
 import Messages from "./pages/Messages";
 import Chat from "./pages/Chat";
-import PostDetail from "./pages/PostDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,7 +28,6 @@ const AppContent = () => {
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/bacheca" element={<Bacheca />} />
-      <Route path="/post/:postId" element={<PostDetail />} />
       <Route path="/shop" element={<Shop />} />
       <Route path="/product/:id" element={<ProductDetail />} />
       <Route path="/checkout" element={<Checkout />} />
