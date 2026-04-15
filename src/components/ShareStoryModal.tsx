@@ -7,6 +7,7 @@ import { Input } from './ui/input';
 import { supabase } from "@/integrations/supabase/client";
 import { useMessages } from '@/hooks/use-messages';
 import { showSuccess } from '@/utils/toast';
+import { cn } from '@/lib/utils';
 
 interface ShareStoryModalProps {
   isOpen: boolean;
@@ -25,7 +26,6 @@ const ShareStoryModal = ({ isOpen, onClose, storyUrl, authorName }: ShareStoryMo
   useEffect(() => {
     const performSearch = async () => {
       if (search.length < 2) {
-        // Mostra conversazioni recenti se non c'è ricerca
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
         
