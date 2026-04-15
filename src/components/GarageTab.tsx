@@ -114,7 +114,9 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <h3 className="text-xl font-black italic uppercase">{t.garage?.title || "Garage"}</h3>
+        <h3 className="text-xl font-black italic uppercase">
+          {isOwnProfile ? (t.garage?.title || "IL MIO GARAGE") : (t.garage?.publicTitle || "GARAGE")}
+        </h3>
         {isOwnProfile && !isFormOpen && (
           <Button 
             onClick={() => setIsFormOpen(true)}
