@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, MessageSquare, User, MoreHorizontal, Send, Loader2, CornerDownRight, Trash2, Edit3 } from 'lucide-react';
+import { Heart, MessageSquare, User, MoreHorizontal, Send, Loader2, CornerDownRight, Trash2, Edit3, Share2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Post, useSocialFeed } from '@/hooks/use-social-feed';
@@ -11,6 +11,7 @@ import { Input } from './ui/input';
 import { supabase } from "@/integrations/supabase/client";
 import EditPostModal from './EditPostModal';
 import { useNavigate, Link } from 'react-router-dom';
+import { showSuccess } from '@/utils/toast';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,6 +50,26 @@ const FeedPost = ({ post }: FeedPostProps) => {
       setCommentText('');
       setReplyingTo(null);
     } catch (err) {}
+  };
+
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/post/${post.id}`;
+    const shareData = {
+      title: 'Low District Post',
+      text: `Guarda questo post di ${post.profiles?.username} su Low District!`,
+      url: shareUrl
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        showSuccess("Link copiato negli appunti!");
+      }
+    } catch (err) {
+      console.error('Errore condivisione:', err);
+    }
   };
 
   const isVideo = post.image_url?.match(/\.(mp4|webm|ogg|mov)$/i);
@@ -157,6 +178,14 @@ const FeedPost = ({ post }: FeedPostProps) => {
           >
             <MessageSquare size={18} />
             <span className="text-[10px] font-black uppercase">{post.comments?.length || 0}</span>
+          </button>
+
+          <button 
+            onClick={handleShare}
+            className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors ml-auto"
+          >
+            <Share2 size={18} />
+            <span className="text-[10px] font-black uppercase">Condividi</span>
           </button>
         </div>
 
