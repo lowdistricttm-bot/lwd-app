@@ -14,18 +14,25 @@ import ImageLightbox from '@/components/ImageLightbox';
 import ProfileInfoTab from '@/components/ProfileInfoTab';
 import SettingsTab from '@/components/SettingsTab';
 import { useSocialFeed } from '@/hooks/use-social-feed';
-import { useWpAuth } from '@/hooks/use-wp-auth';
 import { 
   User, Settings, LogOut, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Calendar, Package, Users, Edit2, Check, X, Share2, AlertCircle, LogIn
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWcUserOrders } from '@/hooks/use-woocommerce';
 import { showSuccess, showError } from '@/utils/toast';
 import { useTranslation } from '@/hooks/use-translation';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const DEFAULT_COVER = "https://www.lowdistrict.it/wp-content/uploads/DSC01359-1-scaled-e1751832356345.jpg";
 
@@ -43,12 +50,9 @@ const Profile = () => {
   const [uploadingCover, setUploadingCover] = useState(false);
   const [activeTab, setActiveTab] = useState('activity');
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+  const [isUsernameNoticeOpen, setIsUsernameNoticeOpen] = useState(false);
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
   
-  const [isEditingUsername, setIsEditingUsername] = useState(false);
-  const [newUsername, setNewUsername] = useState('');
-  const { updateUsername, isLoading: isUpdatingUsername } = useWpAuth();
-
   const { posts, isLoading: loadingPosts } = useSocialFeed();
   const targetUserId = userId || currentUser?.id;
   const isOwnProfile = !userId || userId === currentUser?.id;
@@ -63,7 +67,6 @@ const Profile = () => {
     const { data: profileData, error } = await supabase.from('profiles').select('*').eq('id', id).maybeSingle();
     if (error) console.error("[Profile] Errore caricamento:", error);
     setProfile(profileData);
-    if (profileData?.username) setNewUsername(profileData.username);
   };
 
   useEffect(() => {
@@ -106,17 +109,11 @@ const Profile = () => {
     }
   };
 
-  const handleUsernameUpdate = async () => {
-    if (!newUsername.trim() || newUsername === profile?.username) {
-      setIsEditingUsername(false);
-      return;
-    }
-
-    const success = await updateUsername(newUsername);
-    if (success) {
-      await fetchProfile(currentUser.id);
-      setIsEditingUsername(false);
-    }
+  const handleContactAdmin = () => {
+    const subject = encodeURIComponent(`Richiesta Cambio Username - ${profile?.username}`);
+    const body = encodeURIComponent(`Ciao Staff,\n\nVorrei richiedere il cambio del mio username.\nUsername attuale: ${profile?.username}\nNuovo username desiderato: `);
+    window.location.href = `mailto:info@lowdistrict.it?subject=${subject}&body=${body}`;
+    setIsUsernameNoticeOpen(false);
   };
 
   const handleShareProfile = async () => {
@@ -196,20 +193,17 @@ const Profile = () => {
             </div>
             <div className="mb-2">
               <div className="flex items-center gap-3">
-                {isEditingUsername ? (
-                  <div className="flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md p-1 border border-white/10">
-                    <Input value={newUsername} onChange={(e) => setNewUsername(e.target.value)} className="bg-transparent border-none h-8 text-lg font-black uppercase italic tracking-tighter focus-visible:ring-0 w-40" autoFocus />
-                    <button onClick={handleUsernameUpdate} disabled={isUpdatingUsername} className="p-1 text-green-500 hover:text-green-400">
-                      {isUpdatingUsername ? <Loader2 size={16} className="animate-spin" /> : <Check size={18} />}
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl md:text-4xl font-black italic uppercase tracking-tighter leading-none">{displayName}</h1>
+                  {isOwnProfile && (
+                    <button 
+                      onClick={() => setIsUsernameNoticeOpen(true)} 
+                      className="p-1.5 text-zinc-500 hover:text-white transition-colors"
+                    >
+                      <Edit2 size={14} />
                     </button>
-                    <button onClick={() => { setIsEditingUsername(false); setNewUsername(profile?.username || ''); }} className="p-1 text-red-500 hover:text-red-400"><X size={18} /></button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-3">
-                    <h1 className="text-2xl md:text-4xl font-black italic uppercase tracking-tighter leading-none">{displayName}</h1>
-                    {isOwnProfile && <button onClick={() => setIsEditingUsername(true)} className="p-1.5 text-zinc-500 hover:text-white transition-colors"><Edit2 size={14} /></button>}
-                  </div>
-                )}
+                  )}
+                </div>
                 {!isOwnProfile && currentUser && <button onClick={() => navigate(`/chat/${profile.id}`)} className="p-2 bg-zinc-800 text-white hover:bg-white hover:text-black transition-all shadow-lg"><Mail size={18} /></button>}
               </div>
               <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.3em] italic mt-1">{roleLabel}</p>
@@ -318,6 +312,24 @@ const Profile = () => {
           </div>
         </div>
       </main>
+
+      <AlertDialog open={isUsernameNoticeOpen} onOpenChange={setIsUsernameNoticeOpen}>
+        <AlertDialogContent className="bg-zinc-950 border-white/10 rounded-none">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white font-black uppercase italic">{t.profile.usernameNoticeTitle}</AlertDialogTitle>
+            <AlertDialogDescription className="text-zinc-500 text-xs font-bold uppercase leading-relaxed">
+              {t.profile.usernameNoticeDesc}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-none border-white/10 text-white font-black uppercase italic text-[10px]">{t.feed.cancel}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleContactAdmin} className="rounded-none bg-white text-black font-black uppercase italic text-[10px] hover:bg-zinc-200">
+              {t.profile.contactAdmin}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <CreatePostModal isOpen={isPostModalOpen} onClose={() => setIsPostModalOpen(false)} />
       <ImageLightbox images={lightboxData?.images || []} initialIndex={lightboxData?.index || 0} isOpen={!!lightboxData} onClose={() => setLightboxData(null)} />
       <Footer /><BottomNav />
