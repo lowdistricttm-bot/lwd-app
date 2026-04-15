@@ -5,6 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useNotificationListener } from "@/hooks/use-notification-listener";
 import { LanguageProvider } from "@/hooks/use-translation";
+import { useProfileSync } from "@/hooks/use-profile-sync";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import Bacheca from "./pages/Bacheca";
 import Shop from "./pages/Shop";
@@ -24,6 +27,30 @@ const queryClient = new QueryClient();
 // Componente wrapper per attivare gli hook globali
 const AppContent = () => {
   useNotificationListener();
+  
+  const [currentUsername, setCurrentUsername] = useState<string | undefined>();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        // Try to get username from metadata or profile
+        const username = session.user.user_metadata?.username;
+        if (username) setCurrentUsername(username);
+        
+        // Also fetch from profiles table to be sure
+        supabase.from('profiles')
+          .select('username')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data }) => {
+            if (data?.username) setCurrentUsername(data.username);
+          });
+      }
+    });
+  }, []);
+
+  // This will trigger the sync whenever the app loads and we have a username
+  useProfileSync(currentUsername);
   
   return (
     <Routes>
