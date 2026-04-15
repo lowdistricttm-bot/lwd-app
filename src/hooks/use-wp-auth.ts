@@ -6,6 +6,21 @@ import { showSuccess, showError } from '@/utils/toast';
 
 const WP_AUTH_URL = "https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth";
 
+// Helper per decodificare il payload di un JWT senza librerie esterne
+const decodeJwt = (token: string) => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    console.error("[JWT Decode] Errore decodifica:", e);
+    return null;
+  }
+};
+
 export const useWpAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -25,58 +40,49 @@ export const useWpAuth = () => {
 
       if (!response.ok) {
         console.error("[WP Auth] Errore risposta WordPress:", rawData);
-        throw new Error(rawData.message || "Credenziali non valide sul sito ufficiale. Nota: prova a usare lo Username se l'email non funziona.");
+        throw new Error(rawData.message || "Credenziali non valide sul sito ufficiale. Usa lo Username (es. mario.rossi) invece dell'email.");
       }
 
-      // Gestione struttura dati flessibile
+      // Gestione struttura dati flessibile (WordPress può rispondere in vari modi)
       const data = rawData.data || rawData;
       const jwt = data.jwt;
       
-      // Tentiamo di estrarre l'email da ogni possibile posizione
-      let realEmail = data.user_email || data.email;
-      if (!realEmail && data.user) {
-        realEmail = data.user.user_email || data.user.email;
+      if (!jwt) {
+        throw new Error("Token non ricevuto da WordPress.");
       }
 
-      // Fallback 1: Se l'utente ha inserito un'email nel campo login, usiamo quella
+      // 2. Recupero Email (Strategia Multi-livello)
+      let realEmail = data.user_email || data.email;
+      
+      // Se l'email non è nel corpo della risposta, la estraiamo dal JWT
+      if (!realEmail) {
+        const decoded = decodeJwt(jwt);
+        console.log("[WP Auth] Payload JWT decodificato:", decoded);
+        realEmail = decoded?.email || decoded?.user_email;
+      }
+
+      // Fallback estremo: se l'input era un'email, usiamo quella
       if (!realEmail && usernameOrEmail.includes('@')) {
         realEmail = usernameOrEmail;
       }
 
-      // Fallback 2: Se abbiamo il JWT ma ancora niente email, interroghiamo il profilo WP
-      if (!realEmail && jwt) {
-        try {
-          const meRes = await fetch("https://www.lowdistrict.it/wp-json/wp/v2/users/me", {
-            headers: { 'Authorization': `Bearer ${jwt}` }
-          });
-          if (meRes.ok) {
-            const meData = await meRes.ok ? await meRes.json() : null;
-            if (meData?.email) realEmail = meData.email;
-          }
-        } catch (e) {
-          console.error("[WP Auth] Errore recupero email da /me:", e);
-        }
-      }
-      
-      const wpUsername = data.user_login || data.user_nicename || (usernameOrEmail.includes('@') ? usernameOrEmail.split('@')[0] : usernameOrEmail);
-      
       if (!realEmail) {
-        console.error("[WP Auth] Email non trovata nella risposta:", data);
-        throw new Error("Impossibile recuperare l'email dal profilo WordPress. Assicurati che l'email sia pubblica o prova a loggarti con lo Username.");
+        console.error("[WP Auth] Email non trovata nemmeno nel JWT:", data);
+        throw new Error("Impossibile recuperare l'email dal profilo WordPress.");
       }
 
-      if (jwt) {
-        localStorage.setItem('wp-jwt', jwt);
-        localStorage.setItem('wp-user', JSON.stringify(data));
-      }
+      const wpUsername = data.user_login || data.user_nicename || decodeJwt(jwt)?.username || (usernameOrEmail.includes('@') ? usernameOrEmail.split('@')[0] : usernameOrEmail);
+      
+      localStorage.setItem('wp-jwt', jwt);
+      localStorage.setItem('wp-user', JSON.stringify(data));
 
-      // 2. Login su Supabase
+      // 3. Login su Supabase
       let { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: realEmail,
         password: password,
       });
 
-      // 3. Gestione nuovo utente o errore credenziali
+      // 4. Gestione nuovo utente o errore credenziali
       if (authError && (authError.message.includes("Invalid login credentials") || authError.status === 400 || authError.status === 422)) {
         console.log("[WP Auth] Utente non trovato su Supabase, procedo al SignUp...");
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
@@ -102,7 +108,7 @@ export const useWpAuth = () => {
 
       if (authError) throw authError;
 
-      // 4. Sincronizzazione Profilo
+      // 5. Sincronizzazione Profilo
       if (authData?.user) {
         await supabase.from('profiles').upsert({
           id: authData.user.id,
