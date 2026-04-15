@@ -6,23 +6,14 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import ImageLightbox from './ImageLightbox';
 import { Plus, Car, Trash2, Camera, Loader2, X, Edit3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { useTranslation } from '@/hooks/use-translation';
 
-interface GarageTabProps {
-  userId?: string;
-  isOwnProfile?: boolean;
-}
-
-const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
-  const { vehicles, isLoading, addVehicle, updateVehicle, deleteVehicle } = useGarage(userId);
-  const { t } = useTranslation();
+const GarageTab = () => {
+  const { vehicles, isLoading, addVehicle, updateVehicle, deleteVehicle } = useGarage();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
   
   const [formData, setFormData] = useState({
     brand: '',
@@ -39,7 +30,6 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleEdit = (vehicle: Vehicle) => {
-    if (!isOwnProfile) return;
     setEditingId(vehicle.id);
     setFormData({
       brand: vehicle.brand,
@@ -91,8 +81,6 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isOwnProfile) return;
-    
     if (editingId) {
       await updateVehicle.mutateAsync({
         id: editingId,
@@ -109,26 +97,24 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
     handleCloseForm();
   };
 
-  if (isLoading) return <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div>;
+  if (isLoading) return <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-red-600" /></div>;
 
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <h3 className="text-xl font-black italic uppercase">
-          {isOwnProfile ? (t.garage?.title || "IL MIO GARAGE") : (t.garage?.publicTitle || "GARAGE")}
-        </h3>
-        {isOwnProfile && !isFormOpen && (
+        <h3 className="text-xl font-black italic uppercase">Il Mio Garage</h3>
+        {!isFormOpen && (
           <Button 
             onClick={() => setIsFormOpen(true)}
-            className="bg-white text-black hover:bg-zinc-200 rounded-none font-black uppercase italic text-[10px] tracking-widest"
+            className="bg-red-600 hover:bg-white hover:text-black text-white rounded-none font-black uppercase italic text-[10px] tracking-widest"
           >
-            <Plus size={14} className="mr-2" /> {t.garage?.addBtn || "Aggiungi"}
+            <Plus size={14} className="mr-2" /> Aggiungi Veicolo
           </Button>
         )}
       </div>
 
       <AnimatePresence>
-        {isOwnProfile && isFormOpen && (
+        {isFormOpen && (
           <motion.div 
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
@@ -138,7 +124,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-zinc-500">{t.garage?.brand || "Marca"}</Label>
+                  <Label className="text-[10px] font-black uppercase text-zinc-500">Marca</Label>
                   <Input 
                     required
                     value={formData.brand}
@@ -147,7 +133,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-zinc-500">{t.garage?.model || "Modello"}</Label>
+                  <Label className="text-[10px] font-black uppercase text-zinc-500">Modello</Label>
                   <Input 
                     required
                     value={formData.model}
@@ -156,7 +142,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-zinc-500">{t.garage?.year || "Anno"}</Label>
+                  <Label className="text-[10px] font-black uppercase text-zinc-500">Anno</Label>
                   <Input 
                     value={formData.year}
                     onChange={e => setFormData({...formData, year: e.target.value})}
@@ -173,7 +159,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-zinc-500">{t.garage?.suspension || "Assetto"}</Label>
+                  <Label className="text-[10px] font-black uppercase text-zinc-500">Tipo Assetto</Label>
                   <div className="grid grid-cols-2 gap-2">
                     {['STATIC', 'AIR'].map((type) => (
                       <button
@@ -183,7 +169,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
                         className={cn(
                           "h-12 border font-black uppercase italic text-xs tracking-widest transition-all",
                           formData.suspension_type === type 
-                            ? "bg-white border-white text-black" 
+                            ? "bg-red-600 border-red-600 text-white" 
                             : "bg-transparent border-zinc-800 text-zinc-500 hover:border-zinc-600"
                         )}
                       >
@@ -197,7 +183,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
                   <Label className="text-[10px] font-black uppercase text-zinc-500">Foto Veicolo (Max 6)</Label>
                   <div 
                     onClick={() => fileInputRef.current?.click()}
-                    className="h-12 border border-dashed border-zinc-800 flex items-center justify-center cursor-pointer hover:border-white transition-colors"
+                    className="h-12 border border-dashed border-zinc-800 flex items-center justify-center cursor-pointer hover:border-red-600 transition-colors"
                   >
                     <Camera size={18} className="text-zinc-600 mr-2" />
                     <span className="text-[10px] font-black uppercase text-zinc-500">
@@ -223,7 +209,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
                       <button 
                         type="button"
                         onClick={() => removeExistingImage(i)}
-                        className="absolute -top-1 -right-1 w-5 h-5 bg-zinc-700 text-white flex items-center justify-center rounded-full"
+                        className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white flex items-center justify-center rounded-full"
                       >
                         <X size={10} />
                       </button>
@@ -257,7 +243,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
                 <Button 
                   type="submit" 
                   disabled={addVehicle.isPending || updateVehicle.isPending}
-                  className="flex-1 bg-white text-black hover:bg-zinc-200 rounded-none h-12 font-black uppercase italic tracking-widest"
+                  className="flex-1 bg-red-600 hover:bg-white hover:text-black text-white rounded-none h-12 font-black uppercase italic tracking-widest"
                 >
                   {(addVehicle.isPending || updateVehicle.isPending) ? <Loader2 className="animate-spin" /> : editingId ? 'Aggiorna Veicolo' : 'Salva Veicolo'}
                 </Button>
@@ -279,7 +265,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
         {vehicles?.length === 0 && !isFormOpen ? (
           <div className="col-span-full bg-zinc-900/30 border border-white/5 p-12 text-center">
             <Car className="mx-auto text-zinc-800 mb-6" size={48} />
-            <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{t.garage?.empty || "Nessun veicolo."}</p>
+            <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Il tuo garage è vuoto.</p>
           </div>
         ) : (
           vehicles?.map((vehicle) => (
@@ -295,8 +281,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
                       <img 
                         key={idx} 
                         src={img} 
-                        onClick={() => setLightboxData({ images: vehicle.images || [], index: idx })}
-                        className="w-full h-full object-cover shrink-0 snap-center cursor-pointer" 
+                        className="w-full h-full object-cover shrink-0 snap-center" 
                         alt={`${vehicle.model} ${idx + 1}`} 
                       />
                     ))}
@@ -305,25 +290,23 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
                   <div className="w-full h-full flex items-center justify-center text-zinc-800"><Car size={48} /></div>
                 )}
                 
-                {isOwnProfile && (
-                  <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all z-10">
-                    <button onClick={() => handleEdit(vehicle)} className="p-2 bg-black/60 text-white hover:bg-white hover:text-black transition-colors"><Edit3 size={16} /></button>
-                    <button onClick={() => deleteVehicle.mutate(vehicle.id)} className="p-2 bg-black/60 text-white hover:bg-zinc-800 transition-colors"><Trash2 size={16} /></button>
-                  </div>
-                )}
+                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all z-10">
+                  <button onClick={() => handleEdit(vehicle)} className="p-2 bg-black/60 text-white hover:bg-white hover:text-black transition-colors"><Edit3 size={16} /></button>
+                  <button onClick={() => deleteVehicle.mutate(vehicle.id)} className="p-2 bg-black/60 text-white hover:bg-red-600 transition-colors"><Trash2 size={16} /></button>
+                </div>
               </div>
               <div className="p-6">
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h4 className="text-xl font-black italic uppercase tracking-tighter">{vehicle.brand} {vehicle.model}</h4>
-                    <p className="text-zinc-500 text-[9px] font-black uppercase tracking-widest italic">{vehicle.year}</p>
+                    <p className="text-red-600 text-[9px] font-black uppercase tracking-widest italic">{vehicle.year}</p>
                   </div>
-                  {isOwnProfile && vehicle.license_plate && (
+                  {vehicle.license_plate && (
                     <div className="bg-white text-black px-2 py-1 text-[9px] font-black tracking-widest border border-black">{vehicle.license_plate}</div>
                   )}
                 </div>
                 <div className="space-y-2">
-                  <p className="text-[10px] font-bold uppercase text-zinc-400"><span className="text-zinc-600">{t.garage?.suspension || "Assetto"}:</span> {vehicle.suspension_type}</p>
+                  <p className="text-[10px] font-bold uppercase text-zinc-400"><span className="text-zinc-600">Assetto:</span> {vehicle.suspension_type}</p>
                   {vehicle.description && <p className="text-xs text-zinc-500 line-clamp-2 italic">{vehicle.description}</p>}
                 </div>
               </div>
@@ -331,13 +314,6 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
           ))
         )}
       </div>
-
-      <ImageLightbox 
-        images={lightboxData?.images || []} 
-        initialIndex={lightboxData?.index || 0} 
-        isOpen={!!lightboxData} 
-        onClose={() => setLightboxData(null)} 
-      />
     </div>
   );
 };

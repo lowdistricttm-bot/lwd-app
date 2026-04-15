@@ -4,19 +4,18 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
+import Logo from '@/components/Logo';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, ArrowRight } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useWpAuth } from '@/hooks/use-wp-auth';
 import { supabase } from "@/integrations/supabase/client";
-import { useTranslation } from '@/hooks/use-translation';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { t, language } = useTranslation();
   const { loginWithWp, isLoading } = useWpAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -27,11 +26,11 @@ const Login = () => {
     try {
       await loginWithWp(username, password);
       const { data: { session } } = await supabase.auth.getSession();
-      showSuccess(language === 'it' ? "Accesso effettuato" : "Login successful");
+      showSuccess("Bentornato nel District!");
       if (session) navigate('/profile');
       else setTimeout(() => navigate('/profile'), 500);
     } catch (error: any) {
-      showError(error.message || (language === 'it' ? "Credenziali non valide" : "Invalid credentials"));
+      showError(error.message || "Credenziali non valide");
     }
   };
 
@@ -41,49 +40,44 @@ const Login = () => {
       
       <main className="flex-1 flex items-center justify-center px-6 pt-20 pb-32">
         <motion.div 
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-[380px]"
+          className="w-full max-w-md"
         >
           <div className="text-center mb-12">
-            <h1 className="text-4xl font-black italic uppercase tracking-tighter mb-3">
-              {t.auth.title}
+            <Logo className="h-12 mx-auto mb-8" variant="white" />
+            <h1 className="text-3xl font-black italic uppercase tracking-tighter mb-2">
+              Area Riservata
             </h1>
-            <div className="h-[1px] w-12 bg-white/20 mx-auto mb-4" />
-            <p className="text-zinc-500 text-[9px] font-black uppercase tracking-[0.4em] leading-relaxed">
-              {t.auth.subtitle}
+            <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.3em]">
+              Accedi con le tue credenziali Low District
             </p>
           </div>
 
-          <div className="space-y-8">
+          <div className="bg-zinc-900/50 border border-white/5 p-8 md:p-10">
             <form onSubmit={handleAuth} className="space-y-6">
               <div className="space-y-2">
-                <Label className="font-black uppercase text-[9px] tracking-[0.2em] text-zinc-500 ml-1">
-                  {t.auth.username}
-                </Label>
+                <Label className="font-black uppercase text-[10px] tracking-[0.2em] text-zinc-500">Username</Label>
                 <Input 
                   type="text" 
-                  placeholder="Username"
+                  placeholder="Il tuo username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
-                  className="bg-zinc-900/30 border-zinc-800 rounded-none h-14 font-bold text-xs tracking-widest focus:border-white focus:bg-zinc-900/50 transition-all duration-300"
+                  className="bg-transparent border-zinc-800 rounded-none h-12 font-bold text-xs tracking-widest focus:border-red-600 transition-colors"
                 />
               </div>
 
               <div className="space-y-2">
-                <div className="flex justify-between items-center ml-1">
-                  <Label className="font-black uppercase text-[9px] tracking-[0.2em] text-zinc-500">
-                    {t.auth.password}
-                  </Label>
+                <div className="flex justify-between items-center">
+                  <Label className="font-black uppercase text-[10px] tracking-[0.2em] text-zinc-500">Password</Label>
                   <a 
                     href="https://www.lowdistrict.it/account/lost-password/" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-[8px] font-black uppercase text-zinc-600 hover:text-white transition-colors tracking-widest"
+                    className="text-[9px] font-black uppercase text-zinc-600 hover:text-white transition-colors"
                   >
-                    {t.auth.forgot}
+                    Smarrita?
                   </a>
                 </div>
                 <Input 
@@ -92,39 +86,32 @@ const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="bg-zinc-900/30 border-zinc-800 rounded-none h-14 font-bold text-xs tracking-widest focus:border-white focus:bg-zinc-900/50 transition-all duration-300"
+                  className="bg-transparent border-zinc-800 rounded-none h-12 font-bold text-xs tracking-widest focus:border-red-600 transition-colors"
                 />
               </div>
 
               <Button 
                 type="submit" 
                 disabled={isLoading}
-                className="w-full bg-white text-black hover:bg-zinc-200 rounded-none h-16 font-black uppercase italic tracking-[0.2em] transition-all duration-500 group"
+                className="w-full bg-red-600 hover:bg-red-700 text-white rounded-none h-14 font-black uppercase italic tracking-widest transition-all"
               >
-                {isLoading ? (
-                  <Loader2 className="animate-spin" size={20} />
-                ) : (
-                  <span className="flex items-center justify-center gap-2">
-                    {t.auth.login} <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                  </span>
-                )}
+                {isLoading ? <Loader2 className="animate-spin" /> : 'Accedi Ora'}
               </Button>
             </form>
+          </div>
 
-            <div className="pt-8 border-t border-white/5 text-center">
-              <p className="text-[9px] text-zinc-600 font-bold uppercase tracking-[0.2em] mb-4">
-                {t.auth.notMember}
-              </p>
-              <a 
-                href="https://www.lowdistrict.it/my-account/" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white hover:text-zinc-400 transition-all group"
-              >
-                {t.auth.register}
-                <div className="h-[1px] w-0 group-hover:w-4 bg-zinc-400 transition-all" />
-              </a>
-            </div>
+          <div className="mt-12 text-center">
+            <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest mb-4">
+              Non sei ancora un membro?
+            </p>
+            <a 
+              href="https://www.lowdistrict.it/my-account/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-[10px] font-black uppercase tracking-widest text-white border-b border-white/20 pb-1 hover:text-red-600 hover:border-red-600 transition-all"
+            >
+              Registrati sul sito ufficiale
+            </a>
           </div>
         </motion.div>
       </main>

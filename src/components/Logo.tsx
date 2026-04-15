@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 interface LogoProps {
   className?: string;
-  variant?: 'white' | 'gray' | 'original';
+  variant?: 'white' | 'red' | 'original';
 }
 
 const Logo = ({ className, variant = 'white' }: LogoProps) => {
@@ -19,7 +19,7 @@ const Logo = ({ className, variant = 'white' }: LogoProps) => {
         className={cn(
           "h-full w-auto object-contain transition-all duration-500",
           variant === 'white' && "brightness-0 invert",
-          variant === 'gray' && "grayscale brightness-75",
+          variant === 'red' && "sepia(1) saturate(10000%) hue-rotate(350deg)",
           variant === 'original' && "brightness-100"
         )}
       />

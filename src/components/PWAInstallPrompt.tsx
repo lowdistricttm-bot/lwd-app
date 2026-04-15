@@ -1,15 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Share, PlusSquare, X, Download } from 'lucide-react';
+import { Share, PlusSquare, X, Download, Smartphone } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const PWAInstallPrompt = () => {
   const [showPrompt, setShowPrompt] = useState(false);
   const [platform, setPlatform] = useState<'ios' | 'android' | 'other'>('other');
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-
-  const APP_ICON = "https://www.lowdistrict.it/wp-content/uploads/cropped-ico-new-culture-2026-1.png";
 
   useEffect(() => {
     // 1. Verifica se l'app è già in modalità standalone (già installata)
@@ -74,8 +72,8 @@ const PWAInstallPrompt = () => {
           </button>
 
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 border border-white/5">
-              <img src={APP_ICON} alt="Low District App" className="w-full h-full object-cover" />
+            <div className="w-12 h-12 bg-red-600 rounded-2xl flex items-center justify-center shrink-0">
+              <Smartphone className="text-white" size={24} />
             </div>
             <div>
               <h3 className="text-sm font-black uppercase tracking-tight text-white">Installa l'App</h3>
@@ -106,7 +104,7 @@ const PWAInstallPrompt = () => {
               </p>
               <button 
                 onClick={handleInstallAndroid}
-                className="w-full bg-white text-black py-3 rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-zinc-800 hover:text-white transition-all"
+                className="w-full bg-white text-black py-3 rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-red-600 hover:text-white transition-all"
               >
                 <Download size={16} /> Installa Ora
               </button>

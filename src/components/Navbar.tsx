@@ -2,24 +2,17 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, ShoppingBag, X, Send, Bell } from 'lucide-react';
+import { Search, ShoppingBag, X } from 'lucide-react';
 import Logo from './Logo';
 import { useCart } from '@/hooks/use-cart';
-import { useMessages } from '@/hooks/use-messages';
-import { useNotifications } from '@/hooks/use-notifications';
 import CartDrawer from './CartDrawer';
-import NotificationDrawer from './NotificationDrawer';
 import { Input } from './ui/input';
 
 const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  
   const { items } = useCart();
-  const { unreadCount: unreadMessages } = useMessages();
-  const { unreadCount: unreadNotifications } = useNotifications();
   const navigate = useNavigate();
 
   const handleSearch = (e: React.FormEvent) => {
@@ -34,24 +27,12 @@ const Navbar = () => {
   return (
     <>
       <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/5 h-[calc(4rem+env(safe-area-inset-top))] px-6 flex items-center justify-between">
-        <div className="flex-1 flex items-center gap-2">
+        <div className="flex-1 flex items-center">
           <button 
             onClick={() => setIsSearchOpen(true)}
             className="p-2 text-zinc-400 hover:text-white transition-colors"
           >
             <Search size={20} />
-          </button>
-          
-          <button 
-            onClick={() => setIsCartOpen(true)}
-            className="p-2 text-zinc-400 hover:text-white transition-colors relative"
-          >
-            <ShoppingBag size={20} />
-            {items.length > 0 && (
-              <span className="absolute top-1 right-1 w-4 h-4 bg-zinc-700 text-white text-[8px] font-black flex items-center justify-center rounded-full border-2 border-black">
-                {items.length}
-              </span>
-            )}
           </button>
         </div>
 
@@ -59,32 +40,18 @@ const Navbar = () => {
           <Logo className="h-6 md:h-8" />
         </Link>
 
-        <div className="flex-1 flex items-center justify-end gap-2">
-          {/* Notifiche a sinistra */}
+        <div className="flex-1 flex items-center justify-end">
           <button 
-            onClick={() => setIsNotificationsOpen(true)}
+            onClick={() => setIsCartOpen(true)}
             className="p-2 text-zinc-400 hover:text-white transition-colors relative"
           >
-            <Bell size={20} />
-            {unreadNotifications > 0 && (
-              <span className="absolute top-1 right-1 w-4 h-4 bg-white text-black text-[8px] font-black flex items-center justify-center rounded-full border-2 border-black">
-                {unreadNotifications > 9 ? '9+' : unreadNotifications}
+            <ShoppingBag size={20} />
+            {items.length > 0 && (
+              <span className="absolute top-1 right-1 w-4 h-4 bg-red-600 text-white text-[8px] font-black flex items-center justify-center rounded-full">
+                {items.length}
               </span>
             )}
           </button>
-
-          {/* Direct a destra */}
-          <Link 
-            to="/messages"
-            className="p-2 text-zinc-400 hover:text-white transition-colors relative"
-          >
-            <Send size={20} className="-rotate-12" />
-            {unreadMessages > 0 && (
-              <span className="absolute top-1 right-1 w-4 h-4 bg-zinc-700 text-white text-[8px] font-black flex items-center justify-center rounded-full border-2 border-black">
-                {unreadMessages > 9 ? '9+' : unreadMessages}
-              </span>
-            )}
-          </Link>
         </div>
       </nav>
 
@@ -97,7 +64,7 @@ const Navbar = () => {
             </button>
           </div>
           <form onSubmit={handleSearch} className="max-w-2xl mx-auto w-full">
-            <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-4 italic">Cerca nel District</h2>
+            <h2 className="text-red-600 text-[10px] font-black uppercase tracking-[0.4em] mb-4 italic">Cerca nel District</h2>
             <Input 
               autoFocus
               placeholder="COSA STAI CERCANDO?"
@@ -110,7 +77,6 @@ const Navbar = () => {
       )}
 
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-      <NotificationDrawer isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
     </>
   );
 };

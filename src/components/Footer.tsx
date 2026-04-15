@@ -13,15 +13,15 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-black border-t border-white/10 pt-20 pb-32 px-6">
+    <footer className="bg-black border-t border-white/10 pt-20 pb-10 px-6">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-20">
           <div className="col-span-1 md:col-span-2">
             <a href="/" className="mb-6 block">
               <Logo className="h-8" />
             </a>
-            <p className="text-gray-400 max-w-sm mb-8 font-bold uppercase italic text-[10px] tracking-widest">
-              Qualità, stile e passione in ogni dettaglio
+            <p className="text-gray-400 max-w-sm mb-8">
+              Definiamo lo standard della cultura stance in Italia. Qualità, stile e passione in ogni dettaglio.
             </p>
             <div className="flex gap-4">
               {socialLinks.map((social, i) => (

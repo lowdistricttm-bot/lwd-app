@@ -1,45 +1,37 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
 import AdminApplicationCard from '@/components/AdminApplicationCard';
-import EmailSettingsModal from '@/components/EmailSettingsModal';
 import { useAdmin } from '@/hooks/use-admin';
 import { 
   Loader2, 
   XCircle, 
   AlertTriangle,
-  ChevronLeft,
-  Clock,
-  CheckCircle2,
-  Mail
+  ChevronLeft
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 const AdminApplications = () => {
   const navigate = useNavigate();
-  const { isAdmin, canVote, checkingAdmin, allApplications, loadingApps, loadError, updateStatus } = useAdmin();
-  const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending');
-  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const { isAdmin, checkingAdmin, allApplications, loadingApps, loadError, updateStatus } = useAdmin();
 
   if (checkingAdmin) {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-4">
-        <Loader2 className="animate-spin text-zinc-500" size={40} />
-        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Verifica permessi...</p>
+        <Loader2 className="animate-spin text-red-600" size={40} />
+        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Verifica permessi admin...</p>
       </div>
     );
   }
 
-  // Accesso consentito solo a chi ha permessi di voto (Admin, Staff, Support)
-  if (!canVote) {
+  if (!isAdmin) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center">
-        <XCircle size={64} className="text-zinc-800 mb-6" />
+        <XCircle size={64} className="text-red-600 mb-6" />
         <h1 className="text-2xl font-black uppercase italic mb-4">Accesso Negato</h1>
         <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-8">Non hai i permessi necessari per accedere a questa sezione.</p>
         <Button onClick={() => navigate('/')} className="bg-white text-black rounded-none font-black uppercase italic px-8 h-12">Torna alla Home</Button>
@@ -47,17 +39,12 @@ const AdminApplications = () => {
     );
   }
 
-  const pendingApps = allApplications?.filter((a: any) => a.status === 'pending') || [];
-  const completedApps = allApplications?.filter((a: any) => a.status !== 'pending') || [];
-  
-  const displayedApps = activeTab === 'pending' ? pendingApps : completedApps;
-
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Navbar />
       
       <main className="flex-1 pt-24 pb-32 px-4 md:px-6 max-w-4xl mx-auto w-full">
-        <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div>
             <button 
               onClick={() => navigate('/profile')}
@@ -65,61 +52,40 @@ const AdminApplications = () => {
             >
               <ChevronLeft size={14} /> Torna al Profilo
             </button>
-            <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Admin Control Panel</h2>
+            <h2 className="text-red-600 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Admin Control Panel</h2>
             <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">Gestione Selezioni</h1>
           </div>
           
-          {/* Il pulsante email è visibile ESCLUSIVAMENTE se isAdmin è true */}
-          {isAdmin === true && (
-            <Button 
-              onClick={() => setIsEmailModalOpen(true)}
-              variant="outline"
-              className="border-white/10 text-zinc-400 hover:text-white hover:bg-white/5 rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 px-6"
-            >
-              <Mail size={16} className="mr-2" /> Configura Email
-            </Button>
-          )}
-        </div>
-
-        {/* Tab System */}
-        <div className="flex border border-white/5 bg-zinc-900/30 mb-8">
-          <button 
-            onClick={() => setActiveTab('pending')}
-            className={cn(
-              "flex-1 flex items-center justify-center gap-3 py-4 transition-all border-b-2",
-              activeTab === 'pending' ? "border-white text-white bg-white/5" : "border-transparent text-zinc-600 hover:text-zinc-400"
-            )}
-          >
-            <Clock size={16} />
-            <span className="text-[10px] font-black uppercase tracking-widest italic">In Attesa ({pendingApps.length})</span>
-          </button>
-          <button 
-            onClick={() => setActiveTab('completed')}
-            className={cn(
-              "flex-1 flex items-center justify-center gap-3 py-4 transition-all border-b-2",
-              activeTab === 'completed' ? "border-white text-white bg-white/5" : "border-transparent text-zinc-600 hover:text-zinc-400"
-            )}
-          >
-            <CheckCircle2 size={16} />
-            <span className="text-[10px] font-black uppercase tracking-widest italic">Completate ({completedApps.length})</span>
-          </button>
+          <div className="bg-zinc-900/50 border border-white/5 px-6 py-4 flex items-center gap-4">
+            <div className="text-right">
+              <p className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">Totale</p>
+              <p className="text-2xl font-black italic">{allApplications?.length || 0}</p>
+            </div>
+            <div className="w-[1px] h-8 bg-white/10" />
+            <div className="text-right">
+              <p className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">In Attesa</p>
+              <p className="text-2xl font-black italic text-red-600">
+                {allApplications?.filter((a: any) => a.status === 'pending').length || 0}
+              </p>
+            </div>
+          </div>
         </div>
 
         {loadError && (
-          <div className="bg-zinc-900/20 border border-zinc-700 p-6 mb-8 flex items-center gap-4">
-            <AlertTriangle className="text-zinc-500" />
+          <div className="bg-red-900/20 border border-red-600/50 p-6 mb-8 flex items-center gap-4">
+            <AlertTriangle className="text-red-600" />
             <p className="text-xs font-bold uppercase">Errore nel caricamento dei dati.</p>
           </div>
         )}
 
         {loadingApps ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <Loader2 className="animate-spin text-zinc-500" size={40} />
+            <Loader2 className="animate-spin text-red-600" size={40} />
             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Recupero candidature...</p>
           </div>
         ) : (
           <div className="space-y-4">
-            {displayedApps.map((app: any) => (
+            {allApplications?.map((app: any) => (
               <AdminApplicationCard 
                 key={app.id} 
                 app={app} 
@@ -127,18 +93,13 @@ const AdminApplications = () => {
                 isUpdating={updateStatus.isPending}
               />
             ))}
-            {displayedApps.length === 0 && (
+            {allApplications?.length === 0 && (
               <div className="text-center py-20 border border-white/5 bg-zinc-900/30">
-                <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">
-                  {activeTab === 'pending' ? 'Nessuna candidatura in attesa.' : 'Nessuna candidatura gestita.'}
-                </p>
+                <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Nessuna candidatura presente.</p>
               </div>
             )}
           </div>
         )}
-
-        {/* Modal caricato solo se l'utente è admin */}
-        {isAdmin === true && <EmailSettingsModal isOpen={isEmailModalOpen} onClose={() => setIsEmailModalOpen(false)} />}
       </main>
 
       <Footer />

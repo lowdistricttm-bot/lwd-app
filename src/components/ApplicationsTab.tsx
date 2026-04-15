@@ -14,7 +14,7 @@ const ApplicationsTab = () => {
     refetch();
   }, [refetch]);
 
-  if (isLoading) return <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div>;
+  if (isLoading) return <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-red-600" /></div>;
 
   return (
     <div className="space-y-8">
@@ -40,8 +40,8 @@ const ApplicationsTab = () => {
                     <span className={cn(
                       "text-[8px] font-black uppercase px-2 py-0.5 italic flex items-center gap-1.5",
                       app.status === 'pending' && "bg-zinc-800 text-zinc-400",
-                      app.status === 'approved' && "bg-white text-black",
-                      app.status === 'rejected' && "bg-zinc-700 text-white"
+                      app.status === 'approved' && "bg-green-600 text-white",
+                      app.status === 'rejected' && "bg-red-600 text-white"
                     )}>
                       {app.status === 'pending' && <Clock size={10} />}
                       {app.status === 'approved' && <CheckCircle2 size={10} />}
@@ -59,13 +59,13 @@ const ApplicationsTab = () => {
 
                   <div className="flex flex-wrap gap-4 text-zinc-500">
                     <div className="flex items-center gap-1.5">
-                      <Calendar size={12} className="text-white" />
+                      <Calendar size={12} className="text-red-600" />
                       <span className="text-[9px] font-black uppercase tracking-widest">
                         {app.events?.date ? new Date(app.events.date).toLocaleDateString('it-IT') : 'TBD'}
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <MapPin size={12} className="text-white" />
+                      <MapPin size={12} className="text-red-600" />
                       <span className="text-[9px] font-black uppercase tracking-widest">
                         {app.events?.location || 'TBD'}
                       </span>

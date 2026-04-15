@@ -44,17 +44,6 @@ export const useCart = () => {
     showSuccess("Aggiunto al carrello!");
   };
 
-  const updateQuantity = (id: number, variationId: number | undefined, newQuantity: number) => {
-    if (newQuantity < 1) return;
-    
-    cartItems = cartItems.map(i => 
-      (i.id === id && i.variationId === variationId) 
-        ? { ...i, quantity: newQuantity } 
-        : i
-    );
-    saveAndNotify();
-  };
-
   const removeFromCart = (id: number, variationId?: number) => {
     cartItems = cartItems.filter(i => !(i.id === id && i.variationId === variationId));
     saveAndNotify();
@@ -72,5 +61,5 @@ export const useCart = () => {
 
   const total = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
-  return { items, addToCart, updateQuantity, removeFromCart, clearCart, total };
+  return { items, addToCart, removeFromCart, clearCart, total };
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 const WC_URL = "https://www.lowdistrict.it/wp-json/wc/v3";
 const CK = "ck_3d72f4e97f4b104d76bcf2f156d7f47b0e92af9b"; 
@@ -8,8 +8,7 @@ const CS = "cs_dfc8bfa35e29acf49067f1af13a98734142d2533";
 
 const getWcAuthHeader = () => {
   return {
-    'Authorization': 'Basic ' + btoa(`${CK}:${CS}`),
-    'Content-Type': 'application/json'
+    'Authorization': 'Basic ' + btoa(`${CK}:${CS}`)
   };
 };
 
@@ -76,77 +75,25 @@ export const useWcUserOrders = (email?: string) => {
     queryFn: async () => {
       if (!email) return [];
       
-      try {
-        const customerResponse = await fetch(`${WC_URL}/customers?email=${encodeURIComponent(email)}`, {
-          headers: getWcAuthHeader()
-        });
-        
-        const customers = await customerResponse.json();
-        const customerId = customers[0]?.id;
-
-        let url = `${WC_URL}/orders?per_page=50`;
-        if (customerId) {
-          url += `&customer=${customerId}`;
-        } else {
-          url += `&search=${encodeURIComponent(email)}`;
-        }
-
-        const ordersResponse = await fetch(url, {
-          headers: getWcAuthHeader()
-        });
-        
-        if (!ordersResponse.ok) return [];
-        const orders = await ordersResponse.json();
-        
-        return orders.filter((order: any) => 
-          order.billing.email.toLowerCase() === email.toLowerCase()
-        );
-      } catch (err) {
-        console.error("Errore recupero ordini:", err);
-        return [];
-      }
+      // Prima cerca l'ID del cliente da email
+      const customerResponse = await fetch(`${WC_URL}/customers?email=${encodeURIComponent(email)}`, {
+        headers: getWcAuthHeader()
+      });
+      
+      if (!customerResponse.ok) return [];
+      const customerData = await customerResponse.json();
+      const customerId = customerData[0]?.id;
+      
+      if (!customerId) return [];
+      
+      // Poi cerca gli ordini con l'ID del cliente
+      const ordersResponse = await fetch(`${WC_URL}/orders?customer=${customerId}`, {
+        headers: getWcAuthHeader()
+      });
+      
+      if (!ordersResponse.ok) return [];
+      return ordersResponse.json();
     },
-    enabled: !!email,
-    staleTime: 0
-  });
-};
-
-export const useWcCreateOrder = () => {
-  return useMutation({
-    mutationFn: async (orderData: any) => {
-      const response = await fetch(`${WC_URL}/orders`, {
-        method: 'POST',
-        headers: getWcAuthHeader(),
-        body: JSON.stringify(orderData)
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Errore durante la creazione dell\'ordine');
-      }
-      return response.json();
-    }
-  });
-};
-
-export const useWcShippingMethods = () => {
-  return useQuery({
-    queryKey: ['wc-shipping-methods'],
-    queryFn: async () => {
-      // Recuperiamo le zone di spedizione
-      const zonesResponse = await fetch(`${WC_URL}/shipping/zones`, {
-        headers: getWcAuthHeader()
-      });
-      if (!zonesResponse.ok) throw new Error('Errore caricamento zone di spedizione');
-      const zones = await zonesResponse.json();
-
-      // Per semplicità, prendiamo i metodi della prima zona (solitamente Italia o Resto del mondo)
-      // In un'app reale si filtrerebbe per la zona corrispondente all'indirizzo dell'utente
-      const zoneId = zones[0]?.id || 0;
-      const methodsResponse = await fetch(`${WC_URL}/shipping/zones/${zoneId}/methods`, {
-        headers: getWcAuthHeader()
-      });
-      if (!methodsResponse.ok) throw new Error('Errore caricamento metodi di spedizione');
-      return methodsResponse.json();
-    }
+    enabled: !!email
   });
 };
