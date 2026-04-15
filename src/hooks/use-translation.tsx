@@ -17,9 +17,9 @@ const translations: Record<Language, any> = {
       messages: 'MESSAGGI'
     },
     hero: { 
-      subtitle: 'THE STANCE CULTURE', 
+      subtitle: 'CARS - CULTURE - LIFESTYLE', 
       title: 'LOW DISTRICT', 
-      desc: "PIÙ DI UNA PASSIONE, UNO STILE DI VITA. ESPLORA IL MERCHANDISING UFFICIALE E PARTECIPA AI RADUNI PIÙ ESCLUSIVI DELLA SCENA STANCE.", 
+      desc: "PIÙ DI UNA PASSIONE, UNO STILE DI VITA.", 
       shopBtn: 'ESPLORA LO SHOP', 
       eventsBtn: 'SCOPRI GLI EVENTI',
       scroll: 'SCORRI'
@@ -37,7 +37,7 @@ const translations: Record<Language, any> = {
         quality: 'QUALITÀ',
         qualityDesc: 'Merchandising selezionato e drop in edizione limitata.',
         events: 'EVENTI',
-        eventsDesc: 'I raduni più esclusivi d\'Italia a portata di app.'
+        eventsDesc: 'Gli eventi più esclusivi d\'Italia a portata di app.'
       },
       banner: {
         title: 'THE STANCE CULTURE IS HERE.',
@@ -250,9 +250,9 @@ const translations: Record<Language, any> = {
       messages: 'MESSAGES'
     },
     hero: { 
-      subtitle: 'THE STANCE CULTURE', 
+      subtitle: 'CARS - CULTURE - LIFESTYLE', 
       title: 'LOW DISTRICT', 
-      desc: "MORE THAN A PASSION, A LIFESTYLE. EXPLORE OFFICIAL MERCHANDISE AND JOIN THE MOST EXCLUSIVE EVENTS IN THE STANCE SCENE.", 
+      desc: "MORE THAN A PASSION, A LIFESTYLE.", 
       shopBtn: 'SHOP NOW', 
       eventsBtn: 'DISCOVER EVENTS',
       scroll: 'SCROLL'
