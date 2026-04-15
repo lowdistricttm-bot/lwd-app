@@ -206,6 +206,7 @@ const translations: Record<Language, any> = {
     },
     garage: { 
       title: 'IL MIO GARAGE', 
+      publicTitle: 'GARAGE',
       subtitle: 'I TUOI PROGETTI STANCE', 
       empty: 'NESSUN VEICOLO NEL GARAGE', 
       addBtn: 'AGGIUNGI', 
@@ -438,6 +439,7 @@ const translations: Record<Language, any> = {
     },
     garage: { 
       title: 'MY GARAGE', 
+      publicTitle: 'GARAGE',
       subtitle: 'YOUR STANCE PROJECTS', 
       empty: 'YOUR GARAGE IS EMPTY', 
       addBtn: 'ADD', 
