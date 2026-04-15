@@ -2,19 +2,24 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, ShoppingBag, X, Send } from 'lucide-react';
+import { Search, ShoppingBag, X, Send, Bell } from 'lucide-react';
 import Logo from './Logo';
 import { useCart } from '@/hooks/use-cart';
 import { useMessages } from '@/hooks/use-messages';
+import { useNotifications } from '@/hooks/use-notifications';
 import CartDrawer from './CartDrawer';
+import NotificationDrawer from './NotificationDrawer';
 import { Input } from './ui/input';
 
 const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  
   const { items } = useCart();
-  const { unreadCount } = useMessages();
+  const { unreadCount: unreadMessages } = useMessages();
+  const { unreadCount: unreadNotifications } = useNotifications();
   const navigate = useNavigate();
 
   const handleSearch = (e: React.FormEvent) => {
@@ -60,12 +65,24 @@ const Navbar = () => {
             className="p-2 text-zinc-400 hover:text-white transition-colors relative"
           >
             <Send size={20} className="-rotate-12" />
-            {unreadCount > 0 && (
+            {unreadMessages > 0 && (
               <span className="absolute top-1 right-1 w-4 h-4 bg-zinc-700 text-white text-[8px] font-black flex items-center justify-center rounded-full border-2 border-black">
-                {unreadCount > 9 ? '9+' : unreadCount}
+                {unreadMessages > 9 ? '9+' : unreadMessages}
               </span>
             )}
           </Link>
+
+          <button 
+            onClick={() => setIsNotificationsOpen(true)}
+            className="p-2 text-zinc-400 hover:text-white transition-colors relative"
+          >
+            <Bell size={20} />
+            {unreadNotifications > 0 && (
+              <span className="absolute top-1 right-1 w-4 h-4 bg-white text-black text-[8px] font-black flex items-center justify-center rounded-full border-2 border-black">
+                {unreadNotifications > 9 ? '9+' : unreadNotifications}
+              </span>
+            )}
+          </button>
         </div>
       </nav>
 
@@ -91,6 +108,7 @@ const Navbar = () => {
       )}
 
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+      <NotificationDrawer isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
     </>
   );
 };
