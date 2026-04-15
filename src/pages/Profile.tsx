@@ -142,10 +142,7 @@ const Profile = () => {
 
   if (loading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
-  const displayName = profile?.username || 
-                     (isOwnProfile ? currentUser?.user_metadata?.username : null) ||
-                     (profile?.first_name || profile?.last_name ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : null) || 
-                     'Membro District';
+  const displayName = profile?.username || 'Utente';
 
   const userRole = profile?.role || (profile?.is_admin ? 'admin' : 'member');
   const roleLabel = t.profile.roles[userRole] || t.profile.roles.member;

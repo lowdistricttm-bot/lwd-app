@@ -54,8 +54,8 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
   const approveVotes = votes.filter((v: any) => v.vote === 'approve');
   const rejectVotes = votes.filter((v: any) => v.vote === 'reject');
   
-  const approveVoters = approveVotes.map((v: any) => v.profiles?.username || 'Membro').join(', ');
-  const rejectVoters = rejectVotes.map((v: any) => v.profiles?.username || 'Membro').join(', ');
+  const approveVoters = approveVotes.map((v: any) => v.profiles?.username || 'Utente').join(', ');
+  const rejectVoters = rejectVotes.map((v: any) => v.profiles?.username || 'Utente').join(', ');
   
   const myVote = votes.find((v: any) => v.user_id === currentUserId)?.vote;
   const isPending = app.status === 'pending';
@@ -87,7 +87,7 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
             </div>
             <div className="min-w-0">
               <h3 className="text-sm md:text-base font-black italic uppercase tracking-tight truncate">
-                {app.profiles?.username || 'Membro District'}
+                {app.profiles?.username || 'Utente'}
               </h3>
               <div className="flex items-center gap-2">
                 <span className="text-[9px] text-zinc-400 font-black uppercase tracking-widest italic truncate">

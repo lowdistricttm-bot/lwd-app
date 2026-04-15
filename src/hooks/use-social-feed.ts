@@ -46,7 +46,7 @@ export const useSocialFeed = () => {
         const profile = post.profiles;
         const likes_count = post.likes?.length || 0;
         const is_liked = user ? post.likes?.some((l: any) => l.user_id === user.id) : false;
-        const username = profile?.username || 'Membro District';
+        const username = profile?.username || 'Utente';
 
         return {
           ...post,
@@ -58,7 +58,7 @@ export const useSocialFeed = () => {
             ...c,
             profiles: {
               ...c.profiles,
-              username: c.profiles?.username || 'Membro District'
+              username: c.profiles?.username || 'Utente'
             }
           })) || []
         };

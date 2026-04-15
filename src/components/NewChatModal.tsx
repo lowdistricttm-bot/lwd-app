@@ -125,7 +125,7 @@ const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
                       <div className="flex-1 text-left min-w-0">
                         <div className="flex items-center gap-2">
                           <h4 className="text-sm font-black italic uppercase tracking-tight truncate">
-                            {user.username || 'Membro District'}
+                            {user.username || 'Utente'}
                           </h4>
                           {user.is_admin && <ShieldCheck size={12} className="text-white" />}
                         </div>
