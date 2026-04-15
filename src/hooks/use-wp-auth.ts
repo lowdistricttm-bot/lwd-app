@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from '@/utils/toast';
 
 const WP_AUTH_URL = "https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth";
-const WP_USER_URL = "https://www.lowdistrict.it/wp-json/wp/v2/users/me";
 
 export const useWpAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -20,16 +19,24 @@ export const useWpAuth = () => {
         body: JSON.stringify({ username: usernameOrEmail, password }),
       });
 
-      const data = await response.json();
+      const rawData = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Credenziali non valide sul sito ufficiale");
+        throw new Error(rawData.message || "Credenziali non valide sul sito ufficiale");
       }
 
-      const jwt = data.jwt || (data.data && data.data.jwt);
-      const realEmail = data.user_email;
+      // Gestione struttura dati flessibile (alcuni plugin mettono tutto in .data)
+      const data = rawData.data || rawData;
+      
+      const jwt = data.jwt;
+      const realEmail = data.user_email || data.email;
       const wpUsername = data.user_login || data.user_nicename || (usernameOrEmail.includes('@') ? usernameOrEmail.split('@')[0] : usernameOrEmail);
       
+      if (!realEmail) {
+        console.error("[WP Auth] Email mancante nella risposta:", data);
+        throw new Error("Impossibile recuperare l'email dal profilo WordPress.");
+      }
+
       if (jwt) {
         localStorage.setItem('wp-jwt', jwt);
         localStorage.setItem('wp-user', JSON.stringify(data));
@@ -42,7 +49,7 @@ export const useWpAuth = () => {
       });
 
       // 3. Gestione nuovo utente o errore credenziali
-      if (authError && (authError.message.includes("Invalid login credentials") || authError.status === 400)) {
+      if (authError && (authError.message.includes("Invalid login credentials") || authError.status === 400 || authError.status === 422)) {
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: realEmail,
           password: password,
@@ -55,7 +62,8 @@ export const useWpAuth = () => {
         });
         
         if (!signUpError || signUpError.message.includes("Email not confirmed")) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          // Piccolo delay per permettere al trigger DB di creare il profilo
+          await new Promise(resolve => setTimeout(resolve, 1500));
           const retry = await supabase.auth.signInWithPassword({ email: realEmail, password: password });
           authError = retry.error;
           authData = retry.data;
@@ -63,6 +71,8 @@ export const useWpAuth = () => {
           throw signUpError;
         }
       }
+
+      if (authError) throw authError;
 
       // 4. Sincronizzazione Profilo (SOLO se non esiste già uno username)
       if (authData?.user) {
@@ -72,7 +82,6 @@ export const useWpAuth = () => {
           .eq('id', authData.user.id)
           .maybeSingle();
 
-        // Se il profilo non esiste o lo username è vuoto, usiamo quello di WP come base
         if (!existingProfile?.username) {
           await supabase.from('profiles').upsert({
             id: authData.user.id,
