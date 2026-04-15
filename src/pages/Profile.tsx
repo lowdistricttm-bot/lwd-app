@@ -16,7 +16,7 @@ import SettingsTab from '@/components/SettingsTab';
 import { useSocialFeed } from '@/hooks/use-social-feed';
 import { useWpAuth } from '@/hooks/use-wp-auth';
 import { 
-  User, Settings, LogOut, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Calendar, Package, Users, Edit2, Check, X, Share2
+  User, Settings, LogOut, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Calendar, Package, Users, Edit2, Check, X, Share2, AlertCircle, LogIn
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -255,7 +255,41 @@ const Profile = () => {
                     <h3 className="text-xl font-black italic uppercase">{isOwnProfile ? t.profile.myPosts : `${t.profile.posts} ${displayName}`}</h3>
                     {isOwnProfile && <Button onClick={() => setIsPostModalOpen(true)} className="bg-white text-black hover:bg-zinc-200 rounded-none text-[10px] font-black uppercase italic tracking-widest h-10 px-6 transition-all"><Plus size={14} className="mr-2" /> {t.feed.newPost}</Button>}
                   </div>
-                  {loadingPosts ? <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div> : posts?.filter(p => p.user_id === targetUserId).length > 0 ? <div className="grid grid-cols-1 gap-4">{posts.filter(p => p.user_id === targetUserId).map((post) => <FeedPost key={post.id} post={post} />)}</div> : <div className="bg-zinc-900/30 border border-white/5 p-12 text-center"><MessageSquare className="mx-auto text-zinc-800 mb-6" size={48} /><p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{isOwnProfile ? t.profile.noPosts : t.feed.noPosts}</p></div>}
+                  
+                  {!currentUser ? (
+                    <div className="bg-zinc-900/50 border border-white/5 p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+                      <div className="flex items-center gap-4">
+                        <AlertCircle className="text-zinc-500 shrink-0" size={24} />
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                            {t.feed.private}
+                          </p>
+                          <p className="text-[9px] text-zinc-600 font-bold uppercase mt-1">
+                            Accedi per visualizzare i post e i progetti della community nel District.
+                          </p>
+                        </div>
+                      </div>
+                      <Button 
+                        onClick={() => navigate('/login')}
+                        className="bg-white text-black hover:bg-zinc-200 rounded-none text-[9px] font-black uppercase tracking-widest h-10 px-6 italic"
+                      >
+                        <LogIn size={14} className="mr-2" /> {t.auth.login}
+                      </Button>
+                    </div>
+                  ) : loadingPosts ? (
+                    <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div>
+                  ) : posts?.filter(p => p.user_id === targetUserId).length > 0 ? (
+                    <div className="grid grid-cols-1 gap-4">
+                      {posts.filter(p => p.user_id === targetUserId).map((post) => <FeedPost key={post.id} post={post} />)}
+                    </div>
+                  ) : (
+                    <div className="bg-zinc-900/30 border border-white/5 p-12 text-center">
+                      <MessageSquare className="mx-auto text-zinc-800 mb-6" size={48} />
+                      <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">
+                        {isOwnProfile ? t.profile.noPosts : t.feed.noPosts}
+                      </p>
+                    </div>
+                  )}
                 </motion.div>
               )}
 
