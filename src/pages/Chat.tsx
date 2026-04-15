@@ -4,11 +4,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { useMessages } from '@/hooks/use-messages';
-import { ChevronLeft, Send, User, Loader2, Mail, Trash2 } from 'lucide-react';
+import { ChevronLeft, Send, User, Loader2, Mail, Trash2, Camera, X, Image as ImageIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from 'framer-motion';
+import ImageLightbox from '@/components/ImageLightbox';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,11 +25,16 @@ const Chat = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
   const [message, setMessage] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [otherUserProfile, setOtherUserProfile] = useState<any>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
+  
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { chatMessages, loadingChat, sendMessage, deleteMessage, markAsRead } = useMessages(userId);
 
@@ -59,12 +65,32 @@ const Chat = () => {
     }
   }, [chatMessages, userId, currentUserId]);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
+  const removeFile = () => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || !userId) return;
+    if ((!message.trim() && !selectedFile) || !userId) return;
+    
     try {
-      await sendMessage.mutateAsync({ receiverId: userId, content: message });
+      await sendMessage.mutateAsync({ 
+        receiverId: userId, 
+        content: message,
+        file: selectedFile || undefined
+      });
       setMessage('');
+      removeFile();
     } catch (err) {
       console.error("Errore invio messaggio:", err);
     }
@@ -110,7 +136,7 @@ const Chat = () => {
         </div>
       </nav>
 
-      <main ref={scrollRef} className="flex-1 pt-24 pb-24 px-6 overflow-y-auto space-y-4">
+      <main ref={scrollRef} className="flex-1 pt-24 pb-32 px-6 overflow-y-auto space-y-4">
         {loadingChat ? (
           <div className="flex justify-center py-20">
             <Loader2 className="animate-spin text-zinc-500" size={32} />
@@ -141,19 +167,30 @@ const Chat = () => {
                     }
                   }}
                   className={cn(
-                    "relative max-w-[80%] p-4 text-sm font-medium shadow-lg z-10",
+                    "relative max-w-[80%] shadow-lg z-10 overflow-hidden",
                     isMe 
                       ? "bg-zinc-800 text-white rounded-2xl rounded-tr-none" 
                       : "bg-zinc-900 text-zinc-200 rounded-2xl rounded-tl-none border border-white/5"
                   )}
                 >
-                  {msg.content}
-                  <p className={cn(
-                    "text-[7px] mt-1 uppercase font-black opacity-50",
-                    isMe ? "text-right" : "text-left"
-                  )}>
-                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
+                  {msg.image_url && (
+                    <div 
+                      className="aspect-square bg-zinc-950 cursor-pointer overflow-hidden"
+                      onClick={() => setLightboxData({ images: [msg.image_url!], index: 0 })}
+                    >
+                      <img src={msg.image_url} className="w-full h-full object-cover" alt="Sent image" />
+                    </div>
+                  )}
+                  
+                  <div className="p-4">
+                    {msg.content && <p className="text-sm font-medium">{msg.content}</p>}
+                    <p className={cn(
+                      "text-[7px] mt-1 uppercase font-black opacity-50",
+                      isMe ? "text-right" : "text-left"
+                    )}>
+                      {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
                 </motion.div>
               </div>
             );
@@ -161,23 +198,67 @@ const Chat = () => {
         )}
       </main>
 
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-black/80 backdrop-blur-xl border-t border-white/5">
-        <form onSubmit={handleSend} className="max-w-2xl mx-auto flex gap-2">
-          <Input 
-            placeholder="Scrivi un messaggio..." 
-            value={message} 
-            onChange={(e) => setMessage(e.target.value)}
-            className="bg-zinc-900 border-zinc-800 rounded-none h-12 font-bold uppercase text-xs tracking-widest focus-visible:ring-white placeholder:text-zinc-700"
-          />
-          <button 
-            type="submit" 
-            disabled={!message.trim() || sendMessage.isPending}
-            className="w-12 h-12 bg-white text-black flex items-center justify-center hover:bg-zinc-200 transition-all shrink-0 disabled:opacity-50"
-          >
-            {sendMessage.isPending ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
-          </button>
-        </form>
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-black/80 backdrop-blur-xl border-t border-white/5 z-50">
+        <div className="max-w-2xl mx-auto space-y-4">
+          <AnimatePresence>
+            {previewUrl && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="relative w-20 h-20 bg-zinc-900 border border-white/10 rounded-xl overflow-hidden"
+              >
+                <img src={previewUrl} className="w-full h-full object-cover" alt="Preview" />
+                <button 
+                  onClick={removeFile}
+                  className="absolute top-1 right-1 p-1 bg-black/60 text-white rounded-full hover:bg-zinc-800 transition-colors"
+                >
+                  <X size={12} />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <form onSubmit={handleSend} className="flex gap-2 items-center">
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              className="hidden" 
+              accept="image/*" 
+              onChange={handleFileChange} 
+            />
+            <button 
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-12 h-12 bg-zinc-900 text-zinc-400 flex items-center justify-center hover:text-white transition-all shrink-0"
+            >
+              <Camera size={20} />
+            </button>
+
+            <Input 
+              placeholder="Scrivi un messaggio..." 
+              value={message} 
+              onChange={(e) => setMessage(e.target.value)}
+              className="bg-zinc-900 border-zinc-800 rounded-none h-12 font-bold uppercase text-xs tracking-widest focus-visible:ring-white placeholder:text-zinc-700"
+            />
+            
+            <button 
+              type="submit" 
+              disabled={(!message.trim() && !selectedFile) || sendMessage.isPending}
+              className="w-12 h-12 bg-white text-black flex items-center justify-center hover:bg-zinc-200 transition-all shrink-0 disabled:opacity-50"
+            >
+              {sendMessage.isPending ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
+            </button>
+          </form>
+        </div>
       </div>
+
+      <ImageLightbox 
+        images={lightboxData?.images || []} 
+        initialIndex={lightboxData?.index || 0} 
+        isOpen={!!lightboxData} 
+        onClose={() => setLightboxData(null)} 
+      />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
         <AlertDialogContent className="bg-zinc-950 border-white/10 rounded-none">
