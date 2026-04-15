@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight, Trash2, Loader2, Volume2, VolumeX, Send, Share2, Heart } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Trash2, Loader2, Volume2, VolumeX, Send, Heart } from 'lucide-react';
 import { useStories } from '@/hooks/use-stories';
 import { useMessages } from '@/hooks/use-messages';
 import { supabase } from "@/integrations/supabase/client";
@@ -261,7 +261,7 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
                 onClick={() => setIsShareModalOpen(true)}
                 className="w-12 h-12 bg-white/10 border border-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all backdrop-blur-md"
               >
-                <Share2 size={20} />
+                <Send size={20} className="-rotate-12" />
               </button>
             </div>
           </div>
