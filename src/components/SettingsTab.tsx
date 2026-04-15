@@ -132,30 +132,7 @@ const SettingsTab = () => {
           icon: Globe, 
           label: t.settings?.language || "Lingua App", 
           desc: languages.find(l => l.code === language)?.label || "Italiano",
-          action: (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors">
-                  <ChevronRight size={16} />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-zinc-900 border-white/10 rounded-none min-w-[150px]">
-                {languages.map((lang) => (
-                  <DropdownMenuItem 
-                    key={lang.code}
-                    onClick={() => {
-                      setLanguage(lang.code);
-                      showSuccess(lang.code === 'it' ? "Lingua aggiornata" : "Language updated");
-                    }}
-                    className="text-[10px] font-black uppercase tracking-widest italic focus:bg-white focus:text-black cursor-pointer flex justify-between items-center"
-                  >
-                    {lang.label}
-                    {language === lang.code && <Check size={12} />}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )
+          isLanguage: true
         },
         { 
           icon: Shield, 
@@ -196,12 +173,8 @@ const SettingsTab = () => {
               {group.title}
             </h4>
             <div className="space-y-2">
-              {group.items.map((item, j) => (
-                <div 
-                  key={j} 
-                  onClick={item.onClick}
-                  className={`flex items-center justify-between p-4 bg-zinc-900/30 border border-white/5 transition-all ${item.onClick ? 'cursor-pointer hover:bg-zinc-900/50' : ''}`}
-                >
+              {group.items.map((item, j) => {
+                const content = (
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-zinc-900 flex items-center justify-center text-zinc-400">
                       <item.icon size={18} />
@@ -211,9 +184,47 @@ const SettingsTab = () => {
                       <p className="text-[9px] text-zinc-600 font-bold uppercase">{item.desc}</p>
                     </div>
                   </div>
-                  {item.action}
-                </div>
-              ))}
+                );
+
+                if (item.isLanguage) {
+                  return (
+                    <DropdownMenu key={j}>
+                      <DropdownMenuTrigger asChild>
+                        <button className="w-full flex items-center justify-between p-4 bg-zinc-900/30 border border-white/5 transition-all cursor-pointer hover:bg-zinc-900/50 text-left">
+                          {content}
+                          <ChevronRight size={16} className="text-zinc-700" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-zinc-900 border-white/10 rounded-none min-w-[180px] z-[200]">
+                        {languages.map((lang) => (
+                          <DropdownMenuItem 
+                            key={lang.code}
+                            onClick={() => {
+                              setLanguage(lang.code);
+                              showSuccess(lang.code === 'it' ? "Lingua aggiornata" : "Language updated");
+                            }}
+                            className="text-[10px] font-black uppercase tracking-widest italic focus:bg-white focus:text-black cursor-pointer flex justify-between items-center py-3"
+                          >
+                            {lang.label}
+                            {language === lang.code && <Check size={12} />}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  );
+                }
+
+                return (
+                  <div 
+                    key={j} 
+                    onClick={item.onClick}
+                    className={`flex items-center justify-between p-4 bg-zinc-900/30 border border-white/5 transition-all ${item.onClick ? 'cursor-pointer hover:bg-zinc-900/50' : ''}`}
+                  >
+                    {content}
+                    {item.action}
+                  </div>
+                );
+              })}
             </div>
           </div>
         ))}
