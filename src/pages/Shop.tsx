@@ -1,18 +1,19 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
 import { useWcProducts, useWcCategories } from '@/hooks/use-woocommerce';
-import { Loader2, Filter, X, ChevronRight } from 'lucide-react';
+import { Loader2, Filter, X, Search as SearchIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const Shop = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentCategoryId = searchParams.get('category') || 'all';
+  const searchQuery = searchParams.get('search') || '';
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const { data: allCategories, isLoading: loadingCats } = useWcCategories();
@@ -36,9 +37,17 @@ const Shop = () => {
     allCategories?.filter((cat: any) => cat.parent === abbigliamentoCat?.id) || [],
   [allCategories, abbigliamentoCat]);
 
-  const productParams = currentCategoryId === 'all' 
-    ? "per_page=100" 
-    : `category=${currentCategoryId}&per_page=100`;
+  // Costruzione parametri per l'API WooCommerce
+  const productParams = useMemo(() => {
+    let params = `per_page=100`;
+    if (currentCategoryId !== 'all') {
+      params += `&category=${currentCategoryId}`;
+    }
+    if (searchQuery) {
+      params += `&search=${encodeURIComponent(searchQuery)}`;
+    }
+    return params;
+  }, [currentCategoryId, searchQuery]);
     
   const { data: products, isLoading: loadingProducts } = useWcProducts(productParams);
 
@@ -52,6 +61,11 @@ const Shop = () => {
     setIsFilterOpen(false);
   };
 
+  const clearSearch = () => {
+    searchParams.delete('search');
+    setSearchParams(searchParams);
+  };
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Navbar />
@@ -61,11 +75,19 @@ const Shop = () => {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
             <div>
               <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">
-                Official Merch
+                {searchQuery ? 'Risultati Ricerca' : 'Official Merch'}
               </h2>
               <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">
-                Shop Online
+                {searchQuery ? `"${searchQuery}"` : 'Shop Online'}
               </h1>
+              {searchQuery && (
+                <button 
+                  onClick={clearSearch}
+                  className="mt-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
+                >
+                  <X size={14} /> Rimuovi Filtro Ricerca
+                </button>
+              )}
             </div>
 
             <div className="hidden md:flex items-center gap-6 overflow-x-auto no-scrollbar pb-2">
@@ -216,8 +238,21 @@ const Shop = () => {
             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Sincronizzazione prodotti...</p>
           </div>
         ) : products?.length === 0 ? (
-          <div className="text-center py-20 border border-white/5 bg-zinc-900/30">
-            <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Nessun prodotto trovato in questa categoria.</p>
+          <div className="text-center py-20 border border-white/5 bg-zinc-900/30 flex flex-col items-center gap-6">
+            <SearchIcon size={48} className="text-zinc-800" />
+            <div>
+              <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Nessun prodotto trovato.</p>
+              {searchQuery && <p className="text-zinc-700 text-[8px] font-bold uppercase mt-2">Prova con termini diversi o esplora le categorie.</p>}
+            </div>
+            {searchQuery && (
+              <Button 
+                onClick={clearSearch}
+                variant="outline"
+                className="border-white/10 text-white rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 px-8"
+              >
+                Mostra Tutti i Prodotti
+              </Button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
