@@ -30,8 +30,8 @@ const Stories = () => {
   }, []);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
     if (!currentUser) {
       showError("Devi accedere per caricare una storia");
@@ -39,8 +39,7 @@ const Stories = () => {
       return;
     }
 
-    await uploadStory.mutateAsync(file);
-    // Reset input
+    await uploadStory.mutateAsync(files);
     e.target.value = '';
   };
 
@@ -52,7 +51,6 @@ const Stories = () => {
     }
   };
 
-  // Trova se l'utente corrente ha storie attive
   const myStories = stories?.find(s => s.user_id === currentUser?.id);
 
   return (
@@ -63,14 +61,15 @@ const Stories = () => {
           <label 
             onClick={handleStoryClick}
             className={cn(
-              "relative block cursor-pointer group rounded-full p-[3px]",
-              myStories ? "bg-gradient-to-tr from-zinc-600 to-white animate-spin-slow" : ""
+              "relative block cursor-pointer group rounded-full p-[2.5px] transition-all duration-500",
+              myStories ? "bg-gradient-to-tr from-zinc-700 via-zinc-400 to-white" : "bg-transparent"
             )}
           >
             <input 
               type="file" 
               className="hidden" 
               accept="image/*" 
+              multiple
               onChange={handleUpload} 
               disabled={uploadStory.isPending} 
             />
@@ -82,7 +81,7 @@ const Stories = () => {
                   setSelectedUserStories(myStories);
                 }
               }}
-              className="w-16 h-16 rounded-full border-2 border-black flex items-center justify-center bg-zinc-900 group-hover:border-zinc-400 transition-all overflow-hidden"
+              className="w-16 h-16 rounded-full border-[2.5px] border-black flex items-center justify-center bg-zinc-900 group-hover:border-zinc-800 transition-all overflow-hidden"
             >
               {uploadStory.isPending ? (
                 <Loader2 className="animate-spin text-zinc-400" size={20} />
@@ -96,8 +95,8 @@ const Stories = () => {
             </div>
             
             {!myStories && (
-              <div className="absolute bottom-0 right-0 w-5 h-5 bg-zinc-700 rounded-full flex items-center justify-center border-2 border-black">
-                <Plus size={10} className="text-white" />
+              <div className="absolute bottom-0 right-0 w-5 h-5 bg-white rounded-full flex items-center justify-center border-2 border-black shadow-lg">
+                <Plus size={12} className="text-black font-bold" />
               </div>
             )}
           </label>
@@ -112,8 +111,8 @@ const Stories = () => {
           onClick={() => setSelectedUserStories(userGroup)}
           className="flex flex-col items-center gap-2 shrink-0 group"
         >
-          <div className="w-16 h-16 rounded-full p-[3px] bg-gradient-to-tr from-zinc-600 to-white">
-            <div className="w-full h-full rounded-full border-2 border-black overflow-hidden bg-zinc-900">
+          <div className="w-16 h-16 rounded-full p-[2.5px] bg-gradient-to-tr from-zinc-700 via-zinc-400 to-white">
+            <div className="w-full h-full rounded-full border-[2.5px] border-black overflow-hidden bg-zinc-900">
               {userGroup.avatar_url ? (
                 <img src={userGroup.avatar_url} alt={userGroup.username} className="w-full h-full object-cover" />
               ) : (

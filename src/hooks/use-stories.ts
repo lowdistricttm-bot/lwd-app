@@ -22,8 +22,6 @@ export const useStories = () => {
   const { data: stories, isLoading } = useQuery({
     queryKey: ['active-stories'],
     queryFn: async () => {
-      // Ora che abbiamo la relazione nel DB, questa query funzionerà perfettamente
-      // Recupera la storia e i dati del profilo (username/avatar) in un colpo solo
       const { data, error } = await supabase
         .from('stories')
         .select(`
@@ -63,34 +61,38 @@ export const useStories = () => {
   };
 
   const uploadStory = useMutation({
-    mutationFn: async (file: File) => {
+    mutationFn: async (files: File[]) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Accedi per caricare una storia");
 
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-      const filePath = `stories/${fileName}`;
+      const uploadPromises = files.map(async (file) => {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+        const filePath = `stories/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('post-media')
-        .upload(filePath, file);
+        const { error: uploadError } = await supabase.storage
+          .from('post-media')
+          .upload(filePath, file);
 
-      if (uploadError) throw uploadError;
+        if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('post-media')
-        .getPublicUrl(filePath);
+        const { data: { publicUrl } } = supabase.storage
+          .from('post-media')
+          .getPublicUrl(filePath);
 
-      const { error: dbError } = await supabase
-        .from('stories')
-        .insert([{ user_id: user.id, image_url: publicUrl }]);
+        const { error: dbError } = await supabase
+          .from('stories')
+          .insert([{ user_id: user.id, image_url: publicUrl }]);
 
-      if (dbError) throw dbError;
-      return publicUrl;
+        if (dbError) throw dbError;
+        return publicUrl;
+      });
+
+      return Promise.all(uploadPromises);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['active-stories'] });
-      showSuccess("Storia pubblicata!");
+      showSuccess("Storie pubblicate con successo!");
     },
     onError: (error: any) => showError(error.message)
   });
