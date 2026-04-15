@@ -10,8 +10,10 @@ import { Loader2, Filter, X, Search as SearchIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/hooks/use-translation';
 
 const Shop = () => {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const currentCategoryId = searchParams.get('category') || 'all';
   const searchQuery = searchParams.get('search') || '';
@@ -76,17 +78,17 @@ const Shop = () => {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
             <div>
               <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">
-                {searchQuery ? 'Risultati Ricerca' : 'Official Merch'}
+                {searchQuery ? t.shop.results : t.shop.subtitle}
               </h2>
               <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">
-                {searchQuery ? `"${searchQuery}"` : 'Shop Online'}
+                {searchQuery ? `"${searchQuery}"` : t.shop.title}
               </h1>
               {searchQuery && (
                 <button 
                   onClick={clearSearch}
                   className="mt-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
                 >
-                  <X size={14} /> Rimuovi Filtro Ricerca
+                  <X size={14} /> {language === 'it' ? 'Rimuovi Filtro Ricerca' : 'Remove Search Filter'}
                 </button>
               )}
             </div>
@@ -99,7 +101,7 @@ const Shop = () => {
                   currentCategoryId === 'all' ? "text-white border-white" : "text-zinc-500 border-transparent hover:text-white"
                 )}
               >
-                Tutti
+                {t.shop.all}
               </button>
               {mainCategories.map((cat: any) => (
                 <button 
@@ -120,7 +122,7 @@ const Shop = () => {
               onClick={() => setIsFilterOpen(true)}
               className="md:hidden flex items-center gap-2 bg-zinc-900 border border-white/10 px-4 py-3 text-[10px] font-black uppercase tracking-widest italic"
             >
-              <Filter size={14} /> Filtra Categorie
+              <Filter size={14} /> {t.shop.filter}
             </button>
           </div>
 
@@ -131,7 +133,7 @@ const Shop = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="flex items-center gap-4 overflow-x-auto no-scrollbar py-4 border-t border-white/5"
               >
-                <span className="text-[8px] font-black uppercase tracking-widest text-zinc-600 shrink-0">Sottocategorie:</span>
+                <span className="text-[8px] font-black uppercase tracking-widest text-zinc-600 shrink-0">{t.shop.subcategories}:</span>
                 <div className="flex gap-3">
                   <button 
                     onClick={() => handleCategorySelect(abbigliamentoCat!.id.toString())}
@@ -142,7 +144,7 @@ const Shop = () => {
                         : "bg-transparent text-zinc-400 border-white/10 hover:border-white/30"
                     )}
                   >
-                    Tutto Abbigliamento
+                    {language === 'it' ? 'Tutto Abbigliamento' : 'All Clothing'}
                   </button>
                   {subCategories.map((sub: any) => (
                     <button 
@@ -180,7 +182,7 @@ const Shop = () => {
                 className="fixed right-0 top-0 bottom-0 w-4/5 bg-zinc-950 z-[101] p-8 border-l border-white/10 overflow-y-auto"
               >
                 <div className="flex justify-between items-center mb-12">
-                  <h3 className="text-xl font-black italic uppercase">Categorie</h3>
+                  <h3 className="text-xl font-black italic uppercase">{t.shop.categories}</h3>
                   <button onClick={() => setIsFilterOpen(false)}><X size={24} /></button>
                 </div>
                 <div className="space-y-8">
@@ -191,7 +193,7 @@ const Shop = () => {
                       currentCategoryId === 'all' ? "text-white" : "text-zinc-500"
                     )}
                   >
-                    Tutti i Prodotti
+                    {language === 'it' ? 'Tutti i Prodotti' : 'All Products'}
                   </button>
                   
                   {mainCategories.map((cat: any) => {
@@ -236,14 +238,14 @@ const Shop = () => {
         {loadingProducts || loadingCats ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Loader2 className="animate-spin text-zinc-500" size={40} />
-            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Sincronizzazione prodotti...</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{t.shop.cart.subtotal}...</p>
           </div>
         ) : products?.length === 0 ? (
           <div className="text-center py-20 border border-white/5 bg-zinc-900/30 flex flex-col items-center gap-6">
             <SearchIcon size={48} className="text-zinc-800" />
             <div>
-              <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Nessun prodotto trovato.</p>
-              {searchQuery && <p className="text-zinc-700 text-[8px] font-bold uppercase mt-2">Prova con termini diversi o esplora le categorie.</p>}
+              <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">{t.shop.noProducts}</p>
+              {searchQuery && <p className="text-zinc-700 text-[8px] font-bold uppercase mt-2">{t.shop.noProductsDesc}</p>}
             </div>
             {searchQuery && (
               <Button 
@@ -251,7 +253,7 @@ const Shop = () => {
                 variant="outline"
                 className="border-white/10 text-white rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 px-8"
               >
-                Mostra Tutti i Prodotti
+                {t.shop.showAll}
               </Button>
             )}
           </div>
@@ -274,7 +276,7 @@ const Shop = () => {
                     />
                     {product.on_sale && (
                       <div className="absolute top-4 left-4 bg-white text-black text-[8px] font-black uppercase px-2 py-1 italic">
-                        Sale
+                        {t.shop.sale}
                       </div>
                     )}
                   </div>

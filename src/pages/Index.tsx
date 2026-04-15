@@ -12,8 +12,11 @@ import LatestActivities from '@/components/LatestActivities';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import { ShoppingBag, Users, Calendar, ArrowRight, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from '@/hooks/use-translation';
 
 const Index = () => {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Navbar />
@@ -31,9 +34,9 @@ const Index = () => {
           <div className="max-w-7xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
               {[
-                { icon: Users, title: "Community", desc: "Migliaia di appassionati uniti dalla stessa cultura stance." },
-                { icon: Star, title: "Qualità", desc: "Merchandising selezionato e drop in edizione limitata." },
-                { icon: Calendar, title: "Eventi", desc: "I raduni più esclusivi d'Italia a portata di app." }
+                { icon: Users, title: t.home.values.community, desc: t.home.values.communityDesc },
+                { icon: Star, title: t.home.values.quality, desc: t.home.values.qualityDesc },
+                { icon: Calendar, title: t.home.values.events, desc: t.home.values.eventsDesc }
               ].map((item, i) => (
                 <motion.div 
                   key={i}
@@ -74,17 +77,17 @@ const Index = () => {
               viewport={{ once: true }}
             >
               <h2 className="text-4xl md:text-7xl font-black italic uppercase tracking-tighter mb-8 leading-none">
-                THE STANCE <br /> CULTURE IS HERE.
+                {t.home.banner.title}
               </h2>
               <p className="text-zinc-400 text-xs md:text-sm font-black uppercase tracking-[0.4em] mb-12 italic">
-                Non restare a guardare. Entra nel District.
+                {t.home.banner.subtitle}
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link to="/events" className="w-full sm:w-auto bg-white text-black px-12 py-6 text-[10px] font-black uppercase tracking-[0.2em] italic hover:bg-zinc-200 transition-all">
-                  Candidati agli Eventi
+                  {t.home.banner.applyBtn}
                 </Link>
                 <Link to="/shop" className="w-full sm:w-auto border border-white/20 text-white px-12 py-6 text-[10px] font-black uppercase tracking-[0.2em] italic hover:bg-white/10 transition-all">
-                  Esplora lo Shop
+                  {t.home.banner.shopBtn}
                 </Link>
               </div>
             </motion.div>

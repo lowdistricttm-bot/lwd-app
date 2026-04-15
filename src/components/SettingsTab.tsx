@@ -84,9 +84,6 @@ const SettingsTab = () => {
   const languages: { code: Language; label: string }[] = [
     { code: 'it', label: 'Italiano' },
     { code: 'en', label: 'English' },
-    { code: 'fr', label: 'Français' },
-    { code: 'de', label: 'Deutsch' },
-    { code: 'es', label: 'Español' },
   ];
 
   if (loading) {
@@ -104,7 +101,7 @@ const SettingsTab = () => {
         { 
           icon: Bell, 
           label: t.settings?.notifications || "Notifiche Push", 
-          desc: "Ricevi avvisi per messaggi e like",
+          desc: language === 'it' ? "Ricevi avvisi per messaggi e like" : "Receive alerts for messages and likes",
           action: (
             <Switch 
               checked={pushEnabled} 
@@ -114,8 +111,8 @@ const SettingsTab = () => {
         },
         { 
           icon: Smartphone, 
-          label: "Notifiche Email", 
-          desc: "Ricevi aggiornamenti sulle selezioni",
+          label: t.settings?.emailNotifications || "Notifiche Email", 
+          desc: language === 'it' ? "Ricevi aggiornamenti sulle selezioni" : "Receive updates on applications",
           action: (
             <Switch 
               checked={emailEnabled} 
@@ -137,13 +134,13 @@ const SettingsTab = () => {
         { 
           icon: Shield, 
           label: t.settings?.privacy || "Privacy Profilo", 
-          desc: "Gestisci chi può vedere il tuo garage",
+          desc: language === 'it' ? "Gestisci chi può vedere il tuo garage" : "Manage who can see your garage",
           action: <ChevronRight size={16} className="text-zinc-700" />
         },
         { 
           icon: Trash2, 
-          label: "Elimina Account", 
-          desc: "Info sulla cancellazione dati",
+          label: t.settings?.deleteAccount || "Elimina Account", 
+          desc: language === 'it' ? "Info sulla cancellazione dati" : "Data deletion info",
           onClick: () => alert("Contatta info@lowdistrict.it per la cancellazione."),
           action: <Info size={16} className="text-zinc-700" />
         }
@@ -155,7 +152,7 @@ const SettingsTab = () => {
         { 
           icon: HelpCircle, 
           label: t.settings?.support || "Centro Assistenza", 
-          desc: "Domande frequenti e supporto tecnico",
+          desc: language === 'it' ? "Domande frequenti e supporto tecnico" : "FAQ and technical support",
           action: <ChevronRight size={16} className="text-zinc-700" />
         }
       ]

@@ -25,19 +25,14 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWcUserOrders } from '@/hooks/use-woocommerce';
 import { showSuccess, showError } from '@/utils/toast';
+import { useTranslation } from '@/hooks/use-translation';
 
 const DEFAULT_COVER = "https://www.lowdistrict.it/wp-content/uploads/DSC01359-1-scaled-e1751832356345.jpg";
-
-const roleLabels: Record<string, string> = {
-  'admin': 'ADMIN',
-  'staff': 'MEMBRO DELLO STAFF',
-  'support': 'SUPPORTO STAFF',
-  'member': 'MEMBRO UFFICIALE'
-};
 
 const Profile = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
+  const { t, language } = useTranslation();
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   
@@ -102,10 +97,10 @@ const Profile = () => {
       if (isAvatar) updateData.avatar_url = publicUrl; else updateData.cover_url = publicUrl;
       const { error: updateError } = await supabase.from('profiles').upsert(updateData);
       if (updateError) throw updateError;
-      showSuccess(isAvatar ? "Foto profilo aggiornata!" : "Copertina aggiornata!");
+      showSuccess(isAvatar ? (language === 'it' ? "Foto profilo aggiornata!" : "Profile photo updated!") : (language === 'it' ? "Copertina aggiornata!" : "Cover updated!"));
       await fetchProfile(currentUser.id);
     } catch (error: any) {
-      showError("Errore durante il caricamento: " + error.message);
+      showError("Errore: " + error.message);
     } finally {
       if (isAvatar) setUploadingAvatar(false); else setUploadingCover(false);
     }
@@ -138,7 +133,7 @@ const Profile = () => {
         await navigator.share(shareData);
       } else {
         await navigator.clipboard.writeText(shareData.url);
-        showSuccess("Link profilo copiato negli appunti!");
+        showSuccess(language === 'it' ? "Link profilo copiato!" : "Profile link copied!");
       }
     } catch (err) {
       console.error('Errore condivisione:', err);
@@ -153,19 +148,19 @@ const Profile = () => {
                      'Membro District';
 
   const userRole = profile?.role || (profile?.is_admin ? 'admin' : 'member');
-  const roleLabel = roleLabels[userRole] || 'MEMBRO UFFICIALE';
+  const roleLabel = t.profile.roles[userRole] || t.profile.roles.member;
 
   const tabs = isOwnProfile ? [
-    { id: 'activity', label: 'Feed', icon: MessageSquare },
-    { id: 'orders', label: 'Ordini', icon: ShoppingBag },
-    { id: 'garage', label: 'Garage', icon: Car },
-    { id: 'selections', label: 'Selezioni', icon: ClipboardCheck },
-    { id: 'profile', label: 'Info', icon: User },
-    { id: 'settings', label: 'Set', icon: Settings },
+    { id: 'activity', label: t.profile.posts, icon: MessageSquare },
+    { id: 'orders', label: t.profile.orders, icon: ShoppingBag },
+    { id: 'garage', label: t.nav.garage, icon: Car },
+    { id: 'selections', label: t.profile.selections, icon: ClipboardCheck },
+    { id: 'profile', label: t.profile.info, icon: User },
+    { id: 'settings', label: t.profile.settings, icon: Settings },
   ] : [
-    { id: 'activity', label: 'Feed', icon: MessageSquare },
-    { id: 'garage', label: 'Garage', icon: Car },
-    { id: 'profile', label: 'Info', icon: User },
+    { id: 'activity', label: t.profile.posts, icon: MessageSquare },
+    { id: 'garage', label: t.nav.garage, icon: Car },
+    { id: 'profile', label: t.profile.info, icon: User },
   ];
 
   return (
@@ -173,56 +168,30 @@ const Profile = () => {
       <Navbar />
       <main className="flex-1 pb-32">
         <div className="relative h-56 md:h-80 bg-zinc-900 group/cover">
-          {/* Container principale per la copertina */}
           <div 
-            className={cn(
-              "absolute inset-0 overflow-hidden",
-              !isOwnProfile && "cursor-pointer"
-            )}
+            className={cn("absolute inset-0 overflow-hidden", !isOwnProfile && "cursor-pointer")}
             onClick={() => !isOwnProfile && setLightboxData({ images: [profile?.cover_url || DEFAULT_COVER], index: 0 })}
           >
-            <img 
-              src={profile?.cover_url || DEFAULT_COVER} 
-              className="w-full h-full object-cover transition-all duration-700 hover:scale-105" 
-              alt="Cover" 
-            />
+            <img src={profile?.cover_url || DEFAULT_COVER} className="w-full h-full object-cover transition-all duration-700 hover:scale-105" alt="Cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-            
-            {/* Overlay per il cambio copertina (solo se è il proprio profilo) */}
             {isOwnProfile && (
               <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/cover:opacity-100 transition-opacity flex flex-col items-center justify-center z-30 pointer-events-none">
-                <button 
-                  onClick={(e) => { 
-                    e.stopPropagation(); 
-                    coverInputRef.current?.click(); 
-                  }}
-                  className="pointer-events-auto w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-all shadow-xl"
-                >
+                <button onClick={(e) => { e.stopPropagation(); coverInputRef.current?.click(); }} className="pointer-events-auto w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-all shadow-xl">
                   <Camera size={24} />
                 </button>
-                <span className="text-[10px] font-black uppercase tracking-widest text-white mt-2 drop-shadow-md">Cambia Copertina</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-white mt-2 drop-shadow-md">{t.profile.changeCover}</span>
               </div>
             )}
-            
             <input type="file" ref={coverInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'cover')} />
           </div>
           
           <div className="absolute -bottom-12 left-6 flex items-end gap-4 z-20">
             <div className="relative group/avatar">
               <input type="file" ref={avatarInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'avatar')} />
-              <div 
-                onClick={() => !isOwnProfile && setLightboxData({ images: [profile?.avatar_url || ""], index: 0 })} 
-                className={cn(
-                  "w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-white rounded-full overflow-hidden shadow-2xl flex items-center justify-center relative",
-                  !isOwnProfile && "cursor-pointer"
-                )}
-              >
+              <div onClick={() => !isOwnProfile && setLightboxData({ images: [profile?.avatar_url || ""], index: 0 })} className={cn("w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-white rounded-full overflow-hidden shadow-2xl flex items-center justify-center relative", !isOwnProfile && "cursor-pointer")}>
                 {uploadingAvatar ? <Loader2 className="animate-spin text-zinc-500" /> : profile?.avatar_url ? <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" /> : <User size={40} className="text-zinc-800" />}
                 {isOwnProfile && (
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); avatarInputRef.current?.click(); }}
-                    className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity bg-black/40 rounded-full"
-                  >
+                  <button onClick={(e) => { e.stopPropagation(); avatarInputRef.current?.click(); }} className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity bg-black/40 rounded-full">
                     <Camera size={24} className="text-white" />
                   </button>
                 )}
@@ -232,27 +201,16 @@ const Profile = () => {
               <div className="flex items-center gap-3">
                 {isEditingUsername ? (
                   <div className="flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md p-1 border border-white/10">
-                    <Input 
-                      value={newUsername}
-                      onChange={(e) => setNewUsername(e.target.value)}
-                      className="bg-transparent border-none h-8 text-lg font-black uppercase italic tracking-tighter focus-visible:ring-0 w-40"
-                      autoFocus
-                    />
+                    <Input value={newUsername} onChange={(e) => setNewUsername(e.target.value)} className="bg-transparent border-none h-8 text-lg font-black uppercase italic tracking-tighter focus-visible:ring-0 w-40" autoFocus />
                     <button onClick={handleUsernameUpdate} disabled={isUpdatingUsername} className="p-1 text-green-500 hover:text-green-400">
                       {isUpdatingUsername ? <Loader2 size={16} className="animate-spin" /> : <Check size={18} />}
                     </button>
-                    <button onClick={() => { setIsEditingUsername(false); setNewUsername(profile?.username || ''); }} className="p-1 text-red-500 hover:text-red-400">
-                      <X size={18} />
-                    </button>
+                    <button onClick={() => { setIsEditingUsername(false); setNewUsername(profile?.username || ''); }} className="p-1 text-red-500 hover:text-red-400"><X size={18} /></button>
                   </div>
                 ) : (
                   <div className="flex items-center gap-3">
                     <h1 className="text-2xl md:text-4xl font-black italic uppercase tracking-tighter leading-none">{displayName}</h1>
-                    {isOwnProfile && (
-                      <button onClick={() => setIsEditingUsername(true)} className="p-1.5 text-zinc-500 hover:text-white transition-colors">
-                        <Edit2 size={14} />
-                      </button>
-                    )}
+                    {isOwnProfile && <button onClick={() => setIsEditingUsername(true)} className="p-1.5 text-zinc-500 hover:text-white transition-colors"><Edit2 size={14} /></button>}
                   </div>
                 )}
                 {!isOwnProfile && currentUser && <button onClick={() => navigate(`/chat/${profile.id}`)} className="p-2 bg-zinc-800 text-white hover:bg-white hover:text-black transition-all shadow-lg"><Mail size={18} /></button>}
@@ -263,40 +221,22 @@ const Profile = () => {
         </div>
 
         <div className="mt-20 px-4 md:px-12 max-w-6xl mx-auto">
-          {/* Dashboard Admin (Solo se autorizzato) */}
           {isOwnProfile && (userRole === 'admin' || userRole === 'staff' || userRole === 'support') && (
-            <button 
-              onClick={() => navigate('/admin/applications')}
-              className="w-full mb-4 bg-zinc-900/40 border border-white/5 p-1 pr-4 flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500 h-12"
-            >
+            <button onClick={() => navigate('/admin/applications')} className="w-full mb-4 bg-zinc-900/40 border border-white/5 p-1 pr-4 flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500 h-12">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 bg-white/5 flex items-center justify-center group-hover:bg-black/10 transition-colors">
                   {userRole === 'admin' ? <ShieldCheck size={18} className="group-hover:scale-110 transition-transform" /> : <Users size={18} className="group-hover:scale-110 transition-transform" />}
                 </div>
-                <div className="text-left">
-                  <p className="text-[10px] font-black uppercase italic tracking-widest">
-                    DASHBOARD {userRole.toUpperCase()}
-                  </p>
-                </div>
+                <div className="text-left"><p className="text-[10px] font-black uppercase italic tracking-widest">DASHBOARD {userRole.toUpperCase()}</p></div>
               </div>
               <ChevronRight size={16} className="text-zinc-800 opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0" />
             </button>
           )}
 
-          {/* Share Card Integrata */}
-          <button 
-            onClick={handleShareProfile}
-            className="w-full mb-6 bg-zinc-900/40 border border-white/5 p-1 pr-4 flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500 h-12"
-          >
+          <button onClick={handleShareProfile} className="w-full mb-6 bg-zinc-900/40 border border-white/5 p-1 pr-4 flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500 h-12">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-white/5 flex items-center justify-center group-hover:bg-black/10 transition-colors">
-                <Share2 size={18} className="group-hover:scale-110 transition-transform" />
-              </div>
-              <div className="text-left">
-                <p className="text-[10px] font-black uppercase italic tracking-widest">
-                  CONDIVIDI QUESTO PROFILO
-                </p>
-              </div>
+              <div className="w-10 h-10 bg-white/5 flex items-center justify-center group-hover:bg-black/10 transition-colors"><Share2 size={18} className="group-hover:scale-110 transition-transform" /></div>
+              <div className="text-left"><p className="text-[10px] font-black uppercase italic tracking-widest">{t.profile.shareProfile}</p></div>
             </div>
             <ChevronRight size={16} className="text-zinc-800 opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0" />
           </button>
@@ -315,80 +255,40 @@ const Profile = () => {
               {activeTab === 'activity' && (
                 <motion.div key="activity" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-black italic uppercase">{isOwnProfile ? 'I Miei Post' : `Post di ${displayName}`}</h3>
-                    {isOwnProfile && <Button onClick={() => setIsPostModalOpen(true)} className="bg-white text-black hover:bg-zinc-200 rounded-none text-[10px] font-black uppercase italic tracking-widest h-10 px-6 transition-all"><Plus size={14} className="mr-2" /> Nuovo Post</Button>}
+                    <h3 className="text-xl font-black italic uppercase">{isOwnProfile ? t.profile.myPosts : `${t.profile.posts} ${displayName}`}</h3>
+                    {isOwnProfile && <Button onClick={() => setIsPostModalOpen(true)} className="bg-white text-black hover:bg-zinc-200 rounded-none text-[10px] font-black uppercase italic tracking-widest h-10 px-6 transition-all"><Plus size={14} className="mr-2" /> {t.feed.newPost}</Button>}
                   </div>
-                  {loadingPosts ? <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div> : posts?.filter(p => p.user_id === targetUserId).length > 0 ? <div className="grid grid-cols-1 gap-4">{posts.filter(p => p.user_id === targetUserId).map((post) => <FeedPost key={post.id} post={post} />)}</div> : <div className="bg-zinc-900/30 border border-white/5 p-12 text-center"><MessageSquare className="mx-auto text-zinc-800 mb-6" size={48} /><p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{isOwnProfile ? 'Non hai ancora pubblicato nulla.' : 'Nessun post presente.'}</p></div>}
+                  {loadingPosts ? <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div> : posts?.filter(p => p.user_id === targetUserId).length > 0 ? <div className="grid grid-cols-1 gap-4">{posts.filter(p => p.user_id === targetUserId).map((post) => <FeedPost key={post.id} post={post} />)}</div> : <div className="bg-zinc-900/30 border border-white/5 p-12 text-center"><MessageSquare className="mx-auto text-zinc-800 mb-6" size={48} /><p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{isOwnProfile ? t.profile.noPosts : t.feed.noPosts}</p></div>}
                 </motion.div>
               )}
 
               {activeTab === 'orders' && isOwnProfile && (
                 <motion.div key="orders" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                  <h3 className="text-xl font-black italic uppercase mb-6">I Miei Ordini</h3>
-                  {loadingOrders ? (
-                    <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div>
-                  ) : orders?.length > 0 ? (
-                    <div className="space-y-4">
-                      {orders.map((order: any) => (
-                        <div key={order.id} className="bg-zinc-900/50 border border-white/5 p-6 group hover:border-white/20 transition-all">
-                          <div className="flex flex-col md:flex-row justify-between gap-4">
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-3">
-                                <span className="bg-white text-black text-[8px] font-black uppercase px-2 py-0.5 italic">#{order.id}</span>
-                                <span className="bg-zinc-800 text-white text-[8px] font-black uppercase px-2 py-0.5 italic">
-                                  {order.status.toUpperCase()}
-                                </span>
-                              </div>
-                              <h4 className="text-sm font-black italic uppercase tracking-tight">
-                                {order.line_items.length} {order.line_items.length === 1 ? 'Prodotto' : 'Prodotti'}
-                              </h4>
-                            </div>
-                            <div className="text-right flex flex-col justify-center">
-                              <p className="text-[8px] font-black uppercase text-zinc-600 tracking-widest mb-1">Totale Ordine</p>
-                              <p className="text-2xl font-black italic tracking-tighter">€{order.total}</p>
-                            </div>
-                          </div>
+                  <h3 className="text-xl font-black italic uppercase mb-6">{t.profile.orders}</h3>
+                  {loadingOrders ? <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div> : orders?.length > 0 ? <div className="space-y-4">{orders.map((order: any) => (
+                    <div key={order.id} className="bg-zinc-900/50 border border-white/5 p-6 group hover:border-white/20 transition-all">
+                      <div className="flex flex-col md:flex-row justify-between gap-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-3"><span className="bg-white text-black text-[8px] font-black uppercase px-2 py-0.5 italic">#{order.id}</span><span className="bg-zinc-800 text-white text-[8px] font-black uppercase px-2 py-0.5 italic">{order.status.toUpperCase()}</span></div>
+                          <h4 className="text-sm font-black italic uppercase tracking-tight">{order.line_items.length} {order.line_items.length === 1 ? (language === 'it' ? 'Prodotto' : 'Product') : (language === 'it' ? 'Prodotti' : 'Products')}</h4>
                         </div>
-                      ))}
+                        <div className="text-right flex flex-col justify-center"><p className="text-[8px] font-black uppercase text-zinc-600 tracking-widest mb-1">{t.checkout.total}</p><p className="text-2xl font-black italic tracking-tighter">€{order.total}</p></div>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="bg-zinc-900/30 border border-white/5 p-12 text-center">
-                      <ShoppingBag className="mx-auto text-zinc-800 mb-6" size={48} />
-                      <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Nessun ordine trovato.</p>
-                    </div>
-                  )}
+                  ))}</div> : <div className="bg-zinc-900/30 border border-white/5 p-12 text-center"><ShoppingBag className="mx-auto text-zinc-800 mb-6" size={48} /><p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{t.profile.noOrders}</p></div>}
                 </motion.div>
               )}
 
               {activeTab === 'garage' && <motion.div key="garage" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><GarageTab userId={targetUserId} isOwnProfile={isOwnProfile} /></motion.div>}
               {activeTab === 'selections' && isOwnProfile && <motion.div key="selections" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><ApplicationsTab /></motion.div>}
-              
-              {activeTab === 'profile' && (
-                <motion.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                  <ProfileInfoTab 
-                    profile={profile} 
-                    isOwnProfile={isOwnProfile} 
-                    onUpdate={() => fetchProfile(targetUserId)} 
-                  />
-                </motion.div>
-              )}
-
-              {activeTab === 'settings' && isOwnProfile && (
-                <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                  <SettingsTab />
-                </motion.div>
-              )}
+              {activeTab === 'profile' && <motion.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><ProfileInfoTab profile={profile} isOwnProfile={isOwnProfile} onUpdate={() => fetchProfile(targetUserId)} /></motion.div>}
+              {activeTab === 'settings' && isOwnProfile && <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><SettingsTab /></motion.div>}
             </AnimatePresence>
           </div>
         </div>
       </main>
       <CreatePostModal isOpen={isPostModalOpen} onClose={() => setIsPostModalOpen(false)} />
-      <ImageLightbox 
-        images={lightboxData?.images || []} 
-        initialIndex={lightboxData?.index || 0} 
-        isOpen={!!lightboxData} 
-        onClose={() => setLightboxData(null)} 
-      />
+      <ImageLightbox images={lightboxData?.images || []} initialIndex={lightboxData?.index || 0} isOpen={!!lightboxData} onClose={() => setLightboxData(null)} />
       <Footer /><BottomNav />
     </div>
   );

@@ -18,9 +18,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { showError } from '@/utils/toast';
 import EventAdminModal from '@/components/EventAdminModal';
 import ManageApplicationModal from '@/components/ManageApplicationModal';
+import { useTranslation } from '@/hooks/use-translation';
 
 const Events = () => {
   const navigate = useNavigate();
+  const { t, language } = useTranslation();
   const interiorInputRef = useRef<HTMLInputElement>(null);
   
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -71,7 +73,7 @@ const Events = () => {
 
   const handleApplyClick = (event: Event) => {
     if (!user) {
-      showError("Devi accedere per candidarti agli eventi");
+      showError(t.errors.authRequired);
       navigate('/login');
       return;
     }
@@ -83,12 +85,12 @@ const Events = () => {
     if (!selectedEvent) return;
     
     if (!formData.vehicleId) {
-      showError("Seleziona un veicolo dal garage");
+      showError(language === 'it' ? "Seleziona un veicolo dal garage" : "Select a vehicle from garage");
       return;
     }
 
     if (interiorFiles.length < 3) {
-      showError("Carica almeno 3 foto degli interni");
+      showError(language === 'it' ? "Carica almeno 3 foto degli interni" : "Upload at least 3 interior photos");
       return;
     }
 
@@ -105,23 +107,24 @@ const Events = () => {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'open': return 'Iscrizioni Aperte';
-      case 'closed': return 'Iscrizioni Chiuse';
-      case 'soon': return 'In Arrivo';
-      default: return 'Iscrizioni Aperte';
+      case 'open': return t.events.statusOpen;
+      case 'closed': return t.events.statusClosed;
+      case 'soon': return t.events.statusSoon;
+      default: return t.events.statusOpen;
     }
   };
 
   const formatEventDate = (start: string, end?: string) => {
     const startDate = new Date(start);
-    if (!end) return startDate.toLocaleDateString('it-IT');
+    const locale = language === 'it' ? 'it-IT' : 'en-US';
+    if (!end) return startDate.toLocaleDateString(locale);
     
     const endDate = new Date(end);
     if (startDate.toDateString() === endDate.toDateString()) {
-      return startDate.toLocaleDateString('it-IT');
+      return startDate.toLocaleDateString(locale);
     }
     
-    return `${startDate.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })} - ${endDate.toLocaleDateString('it-IT')}`;
+    return `${startDate.toLocaleDateString(locale, { day: '2-digit', month: '2-digit' })} - ${endDate.toLocaleDateString(locale)}`;
   };
 
   return (
@@ -130,8 +133,8 @@ const Events = () => {
       <main className="flex-1 pt-24 pb-32 px-6 max-w-4xl mx-auto w-full">
         <header className="mb-12 flex items-end justify-between">
           <div>
-            <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">District Calendar</h2>
-            <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">Eventi & Selezioni</h1>
+            <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">{t.events.subtitle}</h2>
+            <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">{t.events.title}</h1>
           </div>
           {isAdmin && (
             <Button 
@@ -171,7 +174,7 @@ const Events = () => {
                             {existingApp ? (
                               <>
                                 {existingApp.status === 'pending' ? <Clock size={10} /> : <Settings2 size={10} />}
-                                STATO: {existingApp.status === 'pending' ? 'IN ATTESA' : existingApp.status.toUpperCase()}
+                                {t.events.manageApp.status}: {existingApp.status === 'pending' ? t.events.manageApp.pending : existingApp.status.toUpperCase()}
                               </>
                             ) : (
                               getStatusLabel(event.status)
@@ -195,7 +198,7 @@ const Events = () => {
                           variant="outline"
                           className="border-white/10 text-white hover:bg-white/10 rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 px-6"
                         >
-                          <Eye size={14} className="mr-2" /> VISUALIZZA EVENTO
+                          <Eye size={14} className="mr-2" /> {t.events.viewEvent}
                         </Button>
 
                         {existingApp ? (
@@ -203,7 +206,7 @@ const Events = () => {
                             onClick={() => setManageApp(existingApp)}
                             className="bg-zinc-800 text-white hover:bg-white hover:text-black rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 px-6"
                           >
-                            <Settings2 size={14} className="mr-2" /> Gestisci
+                            <Settings2 size={14} className="mr-2" /> {t.events.manage}
                           </Button>
                         ) : (
                           <Button 
@@ -215,25 +218,8 @@ const Events = () => {
                             )}
                           >
                             {!user && event.status === 'open' && <Lock size={12} className="mr-2" />}
-                            {event.status === 'open' ? 'Candidati' : 'Iscrizioni Chiuse'} <ChevronRight size={14} className="ml-2" />
+                            {event.status === 'open' ? t.events.apply : t.events.statusClosed} <ChevronRight size={14} className="ml-2" />
                           </Button>
-                        )}
-
-                        {isAdmin && (
-                          <div className="flex gap-2 ml-auto">
-                            <button 
-                              onClick={() => { setEditingEvent(event); setIsAdminModalOpen(true); }}
-                              className="p-2 bg-zinc-800 text-white hover:bg-white hover:text-black transition-colors"
-                            >
-                              <Edit3 size={16} />
-                            </button>
-                            <button 
-                              onClick={() => { if(confirm('Eliminare questo evento?')) deleteEvent.mutate(event.id); }}
-                              className="p-2 bg-zinc-800 text-white hover:bg-red-600 transition-colors"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
                         )}
                       </div>
                     </div>
@@ -270,7 +256,7 @@ const Events = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                     <div className="space-y-4">
-                      <h4 className="text-xs font-black uppercase tracking-widest text-zinc-500 italic border-b border-white/5 pb-2">Descrizione</h4>
+                      <h4 className="text-xs font-black uppercase tracking-widest text-zinc-500 italic border-b border-white/5 pb-2">{t.events.description}</h4>
                       <div className="prose prose-invert max-w-none">
                         <p className="text-zinc-300 leading-relaxed whitespace-pre-wrap italic font-medium text-sm">
                           {viewingEvent.description}
@@ -279,10 +265,10 @@ const Events = () => {
                     </div>
 
                     <div className="space-y-4">
-                      <h4 className="text-xs font-black uppercase tracking-widest text-zinc-500 italic border-b border-white/5 pb-2">Programma</h4>
+                      <h4 className="text-xs font-black uppercase tracking-widest text-zinc-500 italic border-b border-white/5 pb-2">{t.events.program}</h4>
                       <div className="prose prose-invert max-w-none">
                         <p className="text-zinc-300 leading-relaxed whitespace-pre-wrap italic font-medium text-sm">
-                          {viewingEvent.program || "Programma non ancora disponibile."}
+                          {viewingEvent.program || (language === 'it' ? "Programma non ancora disponibile." : "Program not available yet.")}
                         </p>
                       </div>
                     </div>
@@ -294,7 +280,7 @@ const Events = () => {
                       className="w-full bg-white text-black py-6 font-black uppercase italic tracking-widest rounded-none"
                     >
                       {!user && <Lock size={14} className="mr-2" />}
-                      Candidati Ora
+                      {t.events.applyNow}
                     </Button>
                   )}
                 </div>
@@ -317,31 +303,31 @@ const Events = () => {
                   <div className="space-y-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-zinc-500">Nome e Cognome *</Label>
+                        <Label className="text-[10px] font-black uppercase text-zinc-500">{t.events.form.name} *</Label>
                         <Input required value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12 text-sm" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-zinc-500">Email *</Label>
+                        <Label className="text-[10px] font-black uppercase text-zinc-500">{t.events.form.email} *</Label>
                         <Input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12 text-sm" />
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-zinc-500">Telefono *</Label>
+                        <Label className="text-[10px] font-black uppercase text-zinc-500">{t.events.form.phone} *</Label>
                         <Input required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12 text-sm" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-zinc-500">Città *</Label>
+                        <Label className="text-[10px] font-black uppercase text-zinc-500">{t.events.form.city} *</Label>
                         <Input required value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12 text-sm" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-zinc-500">Instagram *</Label>
+                        <Label className="text-[10px] font-black uppercase text-zinc-500">{t.events.form.instagram} *</Label>
                         <Input required value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12 text-sm" />
                       </div>
                     </div>
                     
                     <div className="space-y-4">
-                      <Label className="text-[10px] font-black uppercase text-zinc-500">Seleziona Veicolo dal Garage *</Label>
+                      <Label className="text-[10px] font-black uppercase text-zinc-500">{t.events.form.selectVehicle} *</Label>
                       <div className="grid grid-cols-1 gap-3">
                         {vehicles?.map(v => (
                           <button 
@@ -378,13 +364,13 @@ const Events = () => {
                     </div>
 
                     <div className="space-y-4">
-                      <Label className="text-[10px] font-black uppercase text-zinc-500">Foto Interni (Minimo 3) *</Label>
+                      <Label className="text-[10px] font-black uppercase text-zinc-500">{t.events.form.interiorPhotos} *</Label>
                       <div 
                         onClick={() => interiorInputRef.current?.click()}
                         className="h-24 border border-dashed border-zinc-800 flex flex-col items-center justify-center cursor-pointer hover:border-white transition-colors bg-zinc-900/30"
                       >
                         <Camera size={24} className="text-zinc-600 mb-2" />
-                        <span className="text-[9px] font-black uppercase text-zinc-500">Carica Foto Interni</span>
+                        <span className="text-[9px] font-black uppercase text-zinc-500">{t.events.form.uploadPhotos}</span>
                       </div>
                       <input type="file" ref={interiorInputRef} className="hidden" accept="image/*" multiple onChange={handleFileChange} />
                       
@@ -401,7 +387,7 @@ const Events = () => {
                     </div>
 
                     <Button type="submit" disabled={applyToEvent.isPending} className="w-full bg-white text-black py-8 font-black uppercase italic tracking-widest rounded-none">
-                      {applyToEvent.isPending ? <Loader2 className="animate-spin" /> : "Invia Candidatura"}
+                      {applyToEvent.isPending ? <Loader2 className="animate-spin" /> : t.events.form.submit}
                     </Button>
                   </div>
                 </form>
@@ -422,7 +408,8 @@ const Events = () => {
           application={manageApp} 
         />
       </main>
-      <Footer /><BottomNav />
+      <Footer />
+      <BottomNav />
     </div>
   );
 };

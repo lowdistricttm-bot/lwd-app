@@ -7,10 +7,11 @@ import BottomNav from '@/components/BottomNav';
 import { useMessages } from '@/hooks/use-messages';
 import { User, MessageSquare, ChevronRight, Loader2, Plus, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { it } from 'date-fns/locale';
+import { it, enUS } from 'date-fns/locale';
 import NewChatModal from '@/components/NewChatModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from '@/hooks/use-translation';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +25,7 @@ import {
 
 const Messages = () => {
   const navigate = useNavigate();
+  const { t, language } = useTranslation();
   const { conversations, loadingConvs, deleteConversation } = useMessages();
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -60,8 +62,8 @@ const Messages = () => {
       <main className="flex-1 pt-24 pb-32 px-6 max-w-2xl mx-auto w-full">
         <header className="mb-12 flex items-end justify-between">
           <div>
-            <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Direct</h2>
-            <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">Messaggi</h1>
+            <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">{t.messages.subtitle}</h2>
+            <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">{t.messages.title}</h1>
           </div>
           <button 
             onClick={() => setIsNewChatOpen(true)}
@@ -76,7 +78,7 @@ const Messages = () => {
         ) : conversations?.length === 0 ? (
           <div className="text-center py-20 border border-white/5 bg-zinc-900/30">
             <MessageSquare className="mx-auto text-zinc-800 mb-6" size={48} />
-            <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Nessuna conversazione attiva.</p>
+            <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">{t.messages.noConvs}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -111,7 +113,10 @@ const Messages = () => {
                         {conv.otherUser?.username || 'Membro District'}
                       </h4>
                       <span className="text-[8px] text-zinc-600 font-bold uppercase">
-                        {formatDistanceToNow(new Date(conv.lastMessage.created_at), { addSuffix: true, locale: it })}
+                        {formatDistanceToNow(new Date(conv.lastMessage.created_at), { 
+                          addSuffix: true, 
+                          locale: language === 'it' ? it : enUS 
+                        })}
                       </span>
                     </div>
                     <p className="text-xs text-zinc-500 truncate font-medium">
@@ -129,14 +134,14 @@ const Messages = () => {
       <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
         <AlertDialogContent className="bg-zinc-950 border-white/10 rounded-none">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-white font-black uppercase italic">Elimina Conversazione?</AlertDialogTitle>
+            <AlertDialogTitle className="text-white font-black uppercase italic">{t.messages.deleteConv}</AlertDialogTitle>
             <AlertDialogDescription className="text-zinc-500 text-xs font-bold uppercase">
-              Questa azione eliminerà tutti i messaggi con questo utente. Non potrai tornare indietro.
+              {t.messages.deleteConvDesc}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-none border-white/10 text-white font-black uppercase italic text-[10px]">Annulla</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="rounded-none bg-zinc-800 text-white font-black uppercase italic text-[10px]">Elimina</AlertDialogAction>
+            <AlertDialogCancel className="rounded-none border-white/10 text-white font-black uppercase italic text-[10px]">{t.feed.cancel}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="rounded-none bg-zinc-800 text-white font-black uppercase italic text-[10px]">{t.feed.delete}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

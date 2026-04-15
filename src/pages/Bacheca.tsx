@@ -11,9 +11,11 @@ import { useSocialFeed } from '@/hooks/use-social-feed';
 import { Loader2, Plus, AlertCircle, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from '@/hooks/use-translation';
 
 const Bacheca = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { posts, isLoading, error } = useSocialFeed();
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -40,10 +42,10 @@ const Bacheca = () => {
         <header className="mb-12 flex items-end justify-between">
           <div>
             <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">
-              District Feed
+              {t.feed.subtitle}
             </h2>
             <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">
-              Bacheca
+              {t.feed.title}
             </h1>
           </div>
           <button 
@@ -57,7 +59,7 @@ const Bacheca = () => {
         {error && (
           <div className="mb-8 p-6 bg-zinc-900/20 border border-zinc-700 flex items-center gap-4">
             <AlertCircle className="text-zinc-500" />
-            <p className="text-xs font-bold uppercase">Errore nel caricamento del feed. Riprova più tardi.</p>
+            <p className="text-xs font-bold uppercase">{t.errors.connection}</p>
           </div>
         )}
 
@@ -67,10 +69,10 @@ const Bacheca = () => {
               <AlertCircle className="text-zinc-500 shrink-0" size={24} />
               <div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
-                  Community Privata
+                  {t.feed.private}
                 </p>
                 <p className="text-[9px] text-zinc-600 font-bold uppercase mt-1">
-                  Accedi per partecipare alle discussioni del District.
+                  {t.feed.privateDesc}
                 </p>
               </div>
             </div>
@@ -78,7 +80,7 @@ const Bacheca = () => {
               onClick={() => navigate('/login')}
               className="bg-white text-black hover:bg-zinc-200 rounded-none text-[9px] font-black uppercase tracking-widest h-10 px-6 italic"
             >
-              <LogIn size={14} className="mr-2" /> Accedi
+              <LogIn size={14} className="mr-2" /> {t.auth.login}
             </Button>
           </div>
         ) : (
@@ -86,12 +88,12 @@ const Bacheca = () => {
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-20 gap-4">
                 <Loader2 className="animate-spin text-zinc-500" size={40} />
-                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Sincronizzazione District...</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{t.feed.syncing}</p>
               </div>
             ) : posts?.length === 0 ? (
               <div className="text-center py-20 border border-white/5 bg-zinc-900/30 p-8">
-                <p className="text-sm font-black uppercase tracking-widest text-zinc-500">Nessun post presente</p>
-                <p className="text-[10px] text-zinc-600 mt-2 uppercase font-bold">Inaugura la bacheca con il tuo primo post!</p>
+                <p className="text-sm font-black uppercase tracking-widest text-zinc-500">{t.feed.noPosts}</p>
+                <p className="text-[10px] text-zinc-600 mt-2 uppercase font-bold">{t.feed.noPostsDesc}</p>
               </div>
             ) : (
               <div className="space-y-2">
