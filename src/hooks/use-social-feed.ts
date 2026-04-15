@@ -66,7 +66,25 @@ export const useSocialFeed = () => {
     }
   });
 
+  const checkVideoDuration = (file: File): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if (!file.type.startsWith('video/')) return resolve(true);
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.onloadedmetadata = () => {
+        window.URL.revokeObjectURL(video.src);
+        resolve(video.duration <= 31);
+      };
+      video.src = URL.createObjectURL(file);
+    });
+  };
+
   const uploadMedia = async (file: File, folder: string = 'posts') => {
+    if (file.type.startsWith('video/')) {
+      const isDurationOk = await checkVideoDuration(file);
+      if (!isDurationOk) throw new Error(`Il video "${file.name}" supera i 30 secondi.`);
+    }
+
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `${folder}/${fileName}`;
@@ -147,7 +165,6 @@ export const useSocialFeed = () => {
     onError: (error: any) => showError(error.message)
   });
 
-  // ... rest of the hook (updatePost, deletePost, toggleLike, deleteComment)
   const updatePost = useMutation({
     mutationFn: async ({ postId, content, files, removeImages }: { postId: string, content: string, files?: File[], removeImages?: boolean }) => {
       let imageUrls: string[] = [];

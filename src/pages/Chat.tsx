@@ -21,6 +21,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+const isVideo = (url: string) => url.match(/\.(mp4|webm|ogg|mov)$/i) || url.includes('video');
+
 const Chat = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
@@ -111,8 +113,12 @@ const Chat = () => {
                 {msgImages.length > 0 && (
                   <div className={cn("grid gap-0.5 bg-black", msgImages.length === 1 ? "grid-cols-1" : "grid-cols-2")}>
                     {msgImages.map((url, idx) => (
-                      <div key={idx} className="aspect-square bg-zinc-950 cursor-pointer overflow-hidden" onClick={() => setLightboxData({ images: msgImages, index: idx })}>
-                        <img src={url} className="w-full h-full object-cover" alt="" />
+                      <div key={idx} className="aspect-square bg-zinc-950 cursor-pointer overflow-hidden" onClick={() => !isVideo(url) && setLightboxData({ images: msgImages, index: idx })}>
+                        {isVideo(url) ? (
+                          <video src={url} className="w-full h-full object-cover" controls />
+                        ) : (
+                          <img src={url} className="w-full h-full object-cover" alt="" />
+                        )}
                       </div>
                     ))}
                   </div>
@@ -134,7 +140,11 @@ const Chat = () => {
               <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                 {previews.map((url, i) => (
                   <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="relative w-20 h-20 bg-zinc-900 border border-white/10 rounded-xl overflow-hidden shrink-0">
-                    <img src={url} className="w-full h-full object-cover" alt="" />
+                    {selectedFiles[i]?.type.startsWith('video/') ? (
+                      <video src={url} className="w-full h-full object-cover" />
+                    ) : (
+                      <img src={url} className="w-full h-full object-cover" alt="" />
+                    )}
                     <button onClick={() => removeFile(i)} className="absolute top-1 right-1 p-1 bg-black/60 text-white rounded-full"><X size={10} /></button>
                   </motion.div>
                 ))}
@@ -143,7 +153,7 @@ const Chat = () => {
           </AnimatePresence>
 
           <form onSubmit={handleSend} className="flex gap-2 items-center">
-            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" multiple onChange={handleFileChange} />
+            <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" multiple onChange={handleFileChange} />
             <button type="button" onClick={() => fileInputRef.current?.click()} className="w-12 h-12 bg-zinc-900 text-zinc-400 flex items-center justify-center hover:text-white transition-all shrink-0"><Camera size={20} /></button>
             <Input placeholder="Scrivi un messaggio..." value={message} onChange={(e) => setMessage(e.target.value)} className="bg-zinc-900 border-zinc-800 rounded-none h-12 font-bold uppercase text-xs tracking-widest focus-visible:ring-white placeholder:text-zinc-700" />
             <button type="submit" disabled={(!message.trim() && selectedFiles.length === 0) || sendMessage.isPending} className="w-12 h-12 bg-white text-black flex items-center justify-center hover:bg-zinc-200 transition-all shrink-0 disabled:opacity-50">

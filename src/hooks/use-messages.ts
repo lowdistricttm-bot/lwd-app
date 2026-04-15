@@ -107,7 +107,25 @@ export const useMessages = (otherUserId?: string) => {
     return () => { supabase.removeChannel(channel); };
   }, [otherUserId, queryClient]);
 
+  const checkVideoDuration = (file: File): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if (!file.type.startsWith('video/')) return resolve(true);
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.onloadedmetadata = () => {
+        window.URL.revokeObjectURL(video.src);
+        resolve(video.duration <= 31);
+      };
+      video.src = URL.createObjectURL(file);
+    });
+  };
+
   const uploadImage = async (file: File) => {
+    if (file.type.startsWith('video/')) {
+      const isDurationOk = await checkVideoDuration(file);
+      if (!isDurationOk) throw new Error(`Il video "${file.name}" supera i 30 secondi.`);
+    }
+
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `chat/${fileName}`;

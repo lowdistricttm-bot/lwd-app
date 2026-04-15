@@ -18,6 +18,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+const isVideo = (url: string) => url.match(/\.(mp4|webm|ogg|mov)$/i) || url.includes('video');
+
 const CommentItem = ({ 
   comment, 
   allComments, 
@@ -56,9 +58,13 @@ const CommentItem = ({
             {comment.image_url && (
               <div 
                 className="mt-2 max-w-[200px] aspect-square bg-zinc-950 overflow-hidden cursor-pointer border border-white/5"
-                onClick={() => onImageClick(comment.image_url)}
+                onClick={() => !isVideo(comment.image_url) && onImageClick(comment.image_url)}
               >
-                <img src={comment.image_url} className="w-full h-full object-cover" alt="Comment attachment" />
+                {isVideo(comment.image_url) ? (
+                  <video src={comment.image_url} className="w-full h-full object-cover" controls />
+                ) : (
+                  <img src={comment.image_url} className="w-full h-full object-cover" alt="Comment attachment" />
+                )}
               </div>
             )}
 
@@ -185,12 +191,17 @@ const FeedPost = ({ post }: { post: Post }) => {
               <div 
                 key={idx} 
                 className={cn(
-                  "aspect-square bg-zinc-950 overflow-hidden cursor-pointer relative",
-                  images.length === 3 && idx === 0 ? "row-span-2" : ""
+                  "aspect-square bg-zinc-950 overflow-hidden relative",
+                  images.length === 3 && idx === 0 ? "row-span-2" : "",
+                  !isVideo(url) && "cursor-pointer"
                 )}
-                onClick={() => setLightboxData({ images, index: idx })}
+                onClick={() => !isVideo(url) && setLightboxData({ images, index: idx })}
               >
-                <img src={url} className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" alt="" />
+                {isVideo(url) ? (
+                  <video src={url} className="w-full h-full object-cover" controls />
+                ) : (
+                  <img src={url} className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" alt="" />
+                )}
               </div>
             ))}
           </div>
@@ -233,13 +244,17 @@ const FeedPost = ({ post }: { post: Post }) => {
                   
                   {commentPreview && (
                     <div className="relative w-20 h-20 mb-4 bg-zinc-900 border border-white/10 overflow-hidden">
-                      <img src={commentPreview} className="w-full h-full object-cover" alt="" />
+                      {commentFile?.type.startsWith('video/') ? (
+                        <video src={commentPreview} className="w-full h-full object-cover" />
+                      ) : (
+                        <img src={commentPreview} className="w-full h-full object-cover" alt="" />
+                      )}
                       <button onClick={() => { setCommentFile(null); setCommentPreview(null); }} className="absolute top-1 right-1 p-1 bg-black/60 text-white rounded-full"><X size={10} /></button>
                     </div>
                   )}
 
                   <form onSubmit={handleAddComment} className="flex gap-2 items-center">
-                    <input type="file" ref={commentFileInputRef} className="hidden" accept="image/*" onChange={handleCommentFileChange} />
+                    <input type="file" ref={commentFileInputRef} className="hidden" accept="image/*,video/*" onChange={handleCommentFileChange} />
                     <button type="button" onClick={() => commentFileInputRef.current?.click()} className="w-10 h-10 bg-zinc-900 text-zinc-500 flex items-center justify-center hover:text-white transition-all shrink-0"><Camera size={16} /></button>
                     <Input placeholder="Scrivi un commento..." value={commentText} onChange={(e) => setCommentText(e.target.value)} className="bg-zinc-900 border-zinc-800 rounded-none h-10 text-xs font-bold uppercase tracking-widest" />
                     <button type="submit" disabled={addComment.isPending} className="w-10 h-10 bg-zinc-700 flex items-center justify-center hover:bg-white hover:text-black transition-all shrink-0">
