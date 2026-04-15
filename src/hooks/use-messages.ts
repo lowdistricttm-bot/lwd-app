@@ -11,6 +11,7 @@ export interface Message {
   receiver_id: string;
   content: string;
   image_url?: string;
+  images?: string[];
   is_read: boolean;
   created_at: string;
   sender?: { username: string, avatar_url: string };
@@ -87,58 +88,46 @@ export const useMessages = (otherUserId?: string) => {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      return data as Message[];
+      
+      return data.map((msg: any) => ({
+        ...msg,
+        images: Array.isArray(msg.images) ? msg.images : (msg.image_url ? [msg.image_url] : [])
+      })) as Message[];
     },
     enabled: !!otherUserId
   });
 
   useEffect(() => {
     const channelId = `chat-updates-${otherUserId || 'global'}-${Math.random().toString(36).substr(2, 9)}`;
-    
-    const channel = supabase
-      .channel(channelId)
-      .on(
-        'postgres_changes', 
-        { event: '*', schema: 'public', table: 'messages' }, 
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['conversations'] });
-          queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
-          if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    const channel = supabase.channel(channelId).on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
+      if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
+    }).subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, [otherUserId, queryClient]);
 
   const uploadImage = async (file: File) => {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `chat/${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('post-media')
-      .upload(filePath, file);
-
-    if (uploadError) throw uploadError;
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('post-media')
-      .getPublicUrl(filePath);
-      
+    const { error } = await supabase.storage.from('post-media').upload(filePath, file);
+    if (error) throw error;
+    const { data: { publicUrl } } = supabase.storage.from('post-media').getPublicUrl(filePath);
     return publicUrl;
   };
 
   const sendMessage = useMutation({
-    mutationFn: async ({ receiverId, content, file }: { receiverId: string, content: string, file?: File }) => {
+    mutationFn: async ({ receiverId, content, files }: { receiverId: string, content: string, files?: File[] }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Accedi per inviare messaggi");
 
-      let image_url = undefined;
-      if (file) {
-        image_url = await uploadImage(file);
+      let imageUrls: string[] = [];
+      if (files && files.length > 0) {
+        for (const file of files) {
+          const url = await uploadImage(file);
+          imageUrls.push(url);
+        }
       }
 
       const { error } = await supabase
@@ -147,7 +136,8 @@ export const useMessages = (otherUserId?: string) => {
           sender_id: user.id, 
           receiver_id: receiverId, 
           content,
-          image_url 
+          images: imageUrls,
+          image_url: imageUrls[0] || null 
         }]);
 
       if (error) throw error;
@@ -162,16 +152,9 @@ export const useMessages = (otherUserId?: string) => {
     mutationFn: async (senderId: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      await supabase
-        .from('messages')
-        .update({ is_read: true })
-        .eq('receiver_id', user.id)
-        .eq('sender_id', senderId)
-        .eq('is_read', false);
+      await supabase.from('messages').update({ is_read: true }).eq('receiver_id', user.id).eq('sender_id', senderId).eq('is_read', false);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
-    }
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] }); }
   });
 
   const deleteMessage = useMutation({
@@ -181,7 +164,6 @@ export const useMessages = (otherUserId?: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
       if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
     }
   });
@@ -190,22 +172,12 @@ export const useMessages = (otherUserId?: string) => {
     mutationFn: async (otherId: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-
-      const { error } = await supabase
-        .from('messages')
-        .delete()
-        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${otherId}),and(sender_id.eq.${otherId},receiver_id.eq.${user.id})`);
-
+      const { error } = await supabase.from('messages').delete().or(`and(sender_id.eq.${user.id},receiver_id.eq.${otherId}),and(sender_id.eq.${otherId},receiver_id.eq.${user.id})`);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
       showSuccess("Conversazione eliminata");
-    },
-    onError: (err: any) => {
-      console.error("Errore cancellazione conversazione:", err);
-      showError("Impossibile eliminare la conversazione");
     }
   });
 
