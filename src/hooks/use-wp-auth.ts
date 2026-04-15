@@ -53,7 +53,6 @@ export const useWpAuth = () => {
         password: password,
       });
 
-      // 3. Se l'utente non esiste su Supabase, lo creiamo
       if (authError && (authError.status === 400 || authError.status === 422)) {
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: realEmail,
@@ -72,49 +71,45 @@ export const useWpAuth = () => {
 
       if (authError) throw authError;
 
-      // 4. LOGICA DI RICONNESSIONE PROFILO (MIGRAZIONE)
+      // 3. LOGICA DI RECUPERO DATI (MIGRAZIONE PROFONDA)
       if (authData?.user) {
-        const newUserId = authData.user.id;
+        const currentUserId = authData.user.id;
 
-        // Controlliamo se esiste già un profilo con questo ID WordPress
+        // Cerchiamo se esiste un profilo (vecchio o nuovo) con questo ID WordPress
         const { data: existingProfile } = await supabase
           .from('profiles')
-          .select('id, username')
+          .select('*')
           .eq('wp_id', wpId)
           .maybeSingle();
 
-        if (existingProfile && existingProfile.id !== newUserId) {
-          console.log("[Auth] Trovato vecchio profilo, avvio migrazione dati...");
+        if (existingProfile && existingProfile.id !== currentUserId) {
+          console.log("[Auth] Rilevato profilo originale con ID diverso. Avvio migrazione dati...");
+          const oldId = existingProfile.id;
+
+          // Spostiamo tutti i dati collegati dal vecchio ID al nuovo ID
+          // Eseguiamo in sequenza per evitare conflitti
+          await supabase.from('posts').update({ user_id: currentUserId }).eq('user_id', oldId);
+          await supabase.from('vehicles').update({ user_id: currentUserId }).eq('user_id', oldId);
+          await supabase.from('comments').update({ user_id: currentUserId }).eq('user_id', oldId);
+          await supabase.from('likes').update({ user_id: currentUserId }).eq('user_id', oldId);
+          await supabase.from('stories').update({ user_id: currentUserId }).eq('user_id', oldId);
+          await supabase.from('messages').update({ sender_id: currentUserId }).eq('sender_id', oldId);
+          await supabase.from('messages').update({ receiver_id: currentUserId }).eq('receiver_id', oldId);
+          await supabase.from('applications').update({ user_id: currentUserId }).eq('user_id', oldId);
+
+          // Eliminiamo il vecchio record del profilo ormai "svuotato"
+          await supabase.from('profiles').delete().eq('id', oldId);
           
-          // Se esiste un profilo "nuovo" vuoto appena creato dal trigger, lo eliminiamo per far spazio a quello vecchio
-          await supabase.from('profiles').delete().eq('id', newUserId);
-
-          // Aggiorniamo il vecchio profilo con il nuovo ID di autenticazione
-          // Nota: Questo richiede che le tabelle collegate (posts, vehicles) abbiano ON UPDATE CASCADE 
-          // o che vengano aggiornate manualmente. Per ora aggiorniamo il profilo.
-          const { error: migrateError } = await supabase
-            .from('profiles')
-            .update({ id: newUserId, updated_at: new Date().toISOString() })
-            .eq('wp_id', wpId);
-
-          if (migrateError) {
-            // Se l'update fallisce (es. vincoli FK), facciamo un upsert standard
-            await supabase.from('profiles').upsert({
-              id: newUserId,
-              username: wpUsername,
-              wp_id: wpId,
-              updated_at: new Date().toISOString()
-            });
-          }
-        } else {
-          // Upsert normale se è tutto sincronizzato o se è un nuovo utente
-          await supabase.from('profiles').upsert({
-            id: newUserId,
-            username: wpUsername,
-            wp_id: wpId,
-            updated_at: new Date().toISOString()
-          }, { onConflict: 'id' });
+          console.log("[Auth] Migrazione completata con successo.");
         }
+
+        // Aggiorniamo/Creiamo il profilo corrente con i dati corretti
+        await supabase.from('profiles').upsert({
+          id: currentUserId,
+          username: wpUsername,
+          wp_id: wpId,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'id' });
       }
 
       return { success: true };
