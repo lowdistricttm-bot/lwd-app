@@ -242,6 +242,8 @@ export const usePost = (postId?: string) => {
     queryKey: ['social-post', postId],
     queryFn: async () => {
       if (!postId) return null;
+      
+      // Recuperiamo la sessione in modo non bloccante
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
 
@@ -256,7 +258,11 @@ export const usePost = (postId?: string) => {
         .eq('id', postId)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error("[usePost] Errore query:", error);
+        throw error;
+      }
+      
       if (!post) return null;
 
       const profile = post.profiles;
@@ -279,6 +285,7 @@ export const usePost = (postId?: string) => {
         })) || []
       } as Post;
     },
-    enabled: !!postId
+    enabled: !!postId,
+    retry: 1
   });
 };

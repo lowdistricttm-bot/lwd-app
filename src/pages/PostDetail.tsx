@@ -1,21 +1,29 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
 import FeedPost from '@/components/FeedPost';
 import { usePost } from '@/hooks/use-social-feed';
-import { Loader2, ChevronLeft, AlertCircle } from 'lucide-react';
+import { Loader2, ChevronLeft, AlertCircle, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/use-translation';
+import { supabase } from "@/integrations/supabase/client";
 
 const PostDetail = () => {
   const { postId } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { data: post, isLoading, error } = usePost(postId);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsLoggedIn(!!session);
+    });
+  }, []);
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -55,7 +63,31 @@ const PostDetail = () => {
             </Button>
           </div>
         ) : (
-          <FeedPost post={post} />
+          <div className="space-y-8">
+            {!isLoggedIn && (
+              <div className="p-6 bg-zinc-900/50 border border-white/5 flex flex-col md:flex-row items-center justify-between gap-6 animate-in fade-in slide-in-from-top-4 duration-500">
+                <div className="flex items-center gap-4">
+                  <AlertCircle className="text-zinc-500 shrink-0" size={24} />
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                      Vuoi interagire con questo post?
+                    </p>
+                    <p className="text-[9px] text-zinc-600 font-bold uppercase mt-1">
+                      Accedi al District per mettere like e commentare i progetti della community.
+                    </p>
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => navigate('/login')}
+                  className="bg-white text-black hover:bg-zinc-200 rounded-none text-[9px] font-black uppercase tracking-widest h-10 px-6 italic shrink-0"
+                >
+                  <LogIn size={14} className="mr-2" /> Accedi Ora
+                </Button>
+              </div>
+            )}
+            
+            <FeedPost post={post} />
+          </div>
         )}
       </main>
 
