@@ -7,6 +7,7 @@ import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
 import { useWcProducts, useWcCategories } from '@/hooks/use-woocommerce';
 import { Loader2, Filter, X, Search as SearchIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
