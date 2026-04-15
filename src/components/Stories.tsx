@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Plus, Loader2, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStories } from '@/hooks/use-stories';
@@ -12,6 +12,7 @@ import { showError } from '@/utils/toast';
 
 const Stories = () => {
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { stories, isLoading, uploadStory } = useStories();
   const [selectedUserStories, setSelectedUserStories] = useState<any>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -43,12 +44,14 @@ const Stories = () => {
     e.target.value = '';
   };
 
-  const handleStoryClick = (e: React.MouseEvent) => {
-    if (!currentUser && !myStories) {
-      e.preventDefault();
+  const handlePlusClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!currentUser) {
       showError("Accedi per partecipare al District");
       navigate('/login');
+      return;
     }
+    fileInputRef.current?.click();
   };
 
   const myStories = stories?.find(s => s.user_id === currentUser?.id);
@@ -58,30 +61,28 @@ const Stories = () => {
       {/* Upload / My Story Button */}
       <div className="flex flex-col items-center gap-2 shrink-0">
         <div className="relative">
-          <label 
-            onClick={handleStoryClick}
+          <div 
             className={cn(
-              "relative block cursor-pointer group rounded-full p-[2.5px] transition-all duration-500",
+              "relative rounded-full p-[2.5px] transition-all duration-500",
               myStories ? "bg-gradient-to-tr from-zinc-700 via-zinc-400 to-white" : "bg-transparent"
             )}
           >
             <input 
               type="file" 
+              ref={fileInputRef}
               className="hidden" 
               accept="image/*" 
               multiple
               onChange={handleUpload} 
-              disabled={uploadStory.isPending} 
             />
-            <div 
-              onClick={(e) => {
-                if (myStories) {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setSelectedUserStories(myStories);
-                }
-              }}
-              className="w-16 h-16 rounded-full border-[2.5px] border-black flex items-center justify-center bg-zinc-900 group-hover:border-zinc-800 transition-all overflow-hidden"
+            
+            <button 
+              onClick={() => myStories && setSelectedUserStories(myStories)}
+              disabled={!myStories && uploadStory.isPending}
+              className={cn(
+                "w-16 h-16 rounded-full border-[2.5px] border-black flex items-center justify-center bg-zinc-900 transition-all overflow-hidden",
+                myStories ? "cursor-pointer hover:opacity-80" : "cursor-default"
+              )}
             >
               {uploadStory.isPending ? (
                 <Loader2 className="animate-spin text-zinc-400" size={20} />
@@ -92,14 +93,16 @@ const Stories = () => {
               ) : (
                 <User size={24} className="text-zinc-700" />
               )}
-            </div>
+            </button>
             
-            {!myStories && (
-              <div className="absolute bottom-0 right-0 w-5 h-5 bg-white rounded-full flex items-center justify-center border-2 border-black shadow-lg">
-                <Plus size={12} className="text-black font-bold" />
-              </div>
-            )}
-          </label>
+            {/* Tasto + sempre visibile */}
+            <button 
+              onClick={handlePlusClick}
+              className="absolute bottom-0 right-0 w-5 h-5 bg-white rounded-full flex items-center justify-center border-2 border-black shadow-lg hover:scale-110 transition-transform z-10"
+            >
+              <Plus size={12} className="text-black font-bold" />
+            </button>
+          </div>
         </div>
         <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">La tua storia</span>
       </div>
