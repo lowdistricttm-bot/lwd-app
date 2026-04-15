@@ -267,7 +267,7 @@ const Profile = () => {
           {isOwnProfile && (userRole === 'admin' || userRole === 'staff' || userRole === 'support') && (
             <button 
               onClick={() => navigate('/admin/applications')}
-              className="w-full mb-4 bg-zinc-900/40 border border-white/5 p-4 flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500"
+              className="w-full mb-4 bg-zinc-900/40 border border-white/5 p-1 pr-4 flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500 h-12"
             >
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 bg-white/5 flex items-center justify-center group-hover:bg-black/10 transition-colors">
@@ -286,7 +286,7 @@ const Profile = () => {
           {/* Share Card Integrata */}
           <button 
             onClick={handleShareProfile}
-            className="w-full mb-6 bg-zinc-900/40 border border-white/5 p-4 flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500"
+            className="w-full mb-6 bg-zinc-900/40 border border-white/5 p-1 pr-4 flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500 h-12"
           >
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 bg-white/5 flex items-center justify-center group-hover:bg-black/10 transition-colors">
