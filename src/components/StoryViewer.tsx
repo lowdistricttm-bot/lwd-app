@@ -29,7 +29,6 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
   const [progress, setProgress] = useState(0);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState(false);
-  const [isVideoLoading, setIsVideoLoading] = useState(false);
   const [replyText, setReplyText] = useState('');
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
@@ -49,10 +48,7 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
 
   useEffect(() => {
     setProgress(0);
-    if (isVideo) {
-      setIsVideoLoading(true);
-    }
-  }, [currentIndex, isVideo]);
+  }, [currentIndex]);
 
   useEffect(() => {
     if (isVideo || isShareModalOpen) return;
@@ -102,7 +98,6 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
     if (!replyText.trim() || !currentUserId) return;
 
     try {
-      // Inviamo il messaggio con l'URL della storia come immagine allegata
       await sendMessage.mutateAsync({
         receiverId: userStories.user_id,
         content: replyText,
@@ -210,12 +205,6 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
 
         {/* Media Content */}
         <div className="flex-1 relative flex items-center justify-center bg-black">
-          {isVideoLoading && (
-            <div className="absolute inset-0 flex items-center justify-center z-10">
-              <Loader2 className="animate-spin text-white/20" size={40} />
-            </div>
-          )}
-          
           {isVideo ? (
             <video
               ref={videoRef}
@@ -224,7 +213,6 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
               autoPlay
               playsInline
               muted={isMuted}
-              onLoadedData={() => setIsVideoLoading(false)}
               onTimeUpdate={handleVideoTimeUpdate}
               onEnded={handleNext}
             />
