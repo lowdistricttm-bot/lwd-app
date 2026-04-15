@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/use-translation';
 
 const Shop = () => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const currentCategoryId = searchParams.get('category') || 'all';
   const searchQuery = searchParams.get('search') || '';

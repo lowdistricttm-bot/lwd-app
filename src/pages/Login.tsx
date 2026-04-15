@@ -17,7 +17,7 @@ import { useTranslation } from '@/hooks/use-translation';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const { loginWithWp, isLoading } = useWpAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
