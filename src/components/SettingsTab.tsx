@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from './ui/button';
 import { Switch } from './ui/switch';
+import { useTranslation, Language } from '@/hooks/use-translation';
 import { 
   LogOut, 
   Bell, 
@@ -15,12 +16,20 @@ import {
   ChevronRight, 
   Trash2,
   Info,
-  Loader2
+  Loader2,
+  Check
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const SettingsTab = () => {
   const navigate = useNavigate();
+  const { language, setLanguage, t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [pushEnabled, setPushEnabled] = useState(true);
   const [emailEnabled, setEmailEnabled] = useState(false);
@@ -50,7 +59,6 @@ const SettingsTab = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Aggiorna stato locale immediatamente per reattività
     if (field === 'push_notifications') setPushEnabled(value);
     if (field === 'email_notifications') setEmailEnabled(value);
 
@@ -60,12 +68,11 @@ const SettingsTab = () => {
       .eq('id', user.id);
 
     if (error) {
-      showError("Errore durante il salvataggio");
-      // Revert in caso di errore
+      showError(t.errors?.connection || "Errore durante il salvataggio");
       if (field === 'push_notifications') setPushEnabled(!value);
       if (field === 'email_notifications') setEmailEnabled(!value);
     } else {
-      showSuccess("Impostazione salvata");
+      showSuccess(t.garage?.active || "Impostazione salvata");
     }
   };
 
@@ -74,9 +81,13 @@ const SettingsTab = () => {
     navigate('/login');
   };
 
-  const showDeleteInfo = () => {
-    alert("CANCELLAZIONE ACCOUNT\n\nPuoi eliminare il tuo account direttamente dal sito ufficiale lowdistrict.it nella sezione 'Il mio Account', oppure inviando una richiesta formale a info@lowdistrict.it.\n\nL'operazione è irreversibile.");
-  };
+  const languages: { code: Language; label: string }[] = [
+    { code: 'it', label: 'Italiano' },
+    { code: 'en', label: 'English' },
+    { code: 'fr', label: 'Français' },
+    { code: 'de', label: 'Deutsch' },
+    { code: 'es', label: 'Español' },
+  ];
 
   if (loading) {
     return (
@@ -88,11 +99,11 @@ const SettingsTab = () => {
 
   const settingsGroups = [
     {
-      title: "Notifiche",
+      title: t.settings?.notifications || "Notifiche",
       items: [
         { 
           icon: Bell, 
-          label: "Notifiche Push", 
+          label: t.settings?.notifications || "Notifiche Push", 
           desc: "Ricevi avvisi per messaggi e like",
           action: (
             <Switch 
@@ -115,35 +126,58 @@ const SettingsTab = () => {
       ]
     },
     {
-      title: "Account & Sicurezza",
+      title: t.settings?.account || "Account & Sicurezza",
       items: [
         { 
-          icon: Shield, 
-          label: "Privacy Profilo", 
-          desc: "Gestisci chi può vedere il tuo garage",
-          action: <ChevronRight size={16} className="text-zinc-700" />
+          icon: Globe, 
+          label: t.settings?.language || "Lingua App", 
+          desc: languages.find(l => l.code === language)?.label || "Italiano",
+          action: (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors">
+                  <ChevronRight size={16} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-zinc-900 border-white/10 rounded-none min-w-[150px]">
+                {languages.map((lang) => (
+                  <DropdownMenuItem 
+                    key={lang.code}
+                    onClick={() => {
+                      setLanguage(lang.code);
+                      showSuccess(lang.code === 'it' ? "Lingua aggiornata" : "Language updated");
+                    }}
+                    className="text-[10px] font-black uppercase tracking-widest italic focus:bg-white focus:text-black cursor-pointer flex justify-between items-center"
+                  >
+                    {lang.label}
+                    {language === lang.code && <Check size={12} />}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )
         },
         { 
-          icon: Globe, 
-          label: "Lingua App", 
-          desc: "Italiano (Predefinito)",
+          icon: Shield, 
+          label: t.settings?.privacy || "Privacy Profilo", 
+          desc: "Gestisci chi può vedere il tuo garage",
           action: <ChevronRight size={16} className="text-zinc-700" />
         },
         { 
           icon: Trash2, 
           label: "Elimina Account", 
           desc: "Info sulla cancellazione dati",
-          onClick: showDeleteInfo,
+          onClick: () => alert("Contatta info@lowdistrict.it per la cancellazione."),
           action: <Info size={16} className="text-zinc-700" />
         }
       ]
     },
     {
-      title: "Supporto",
+      title: t.settings?.support || "Supporto",
       items: [
         { 
           icon: HelpCircle, 
-          label: "Centro Assistenza", 
+          label: t.settings?.support || "Centro Assistenza", 
           desc: "Domande frequenti e supporto tecnico",
           action: <ChevronRight size={16} className="text-zinc-700" />
         }
@@ -153,7 +187,7 @@ const SettingsTab = () => {
 
   return (
     <div className="space-y-12 animate-in fade-in duration-500">
-      <h3 className="text-xl font-black italic uppercase">Impostazioni</h3>
+      <h3 className="text-xl font-black italic uppercase">{t.settings?.title || "Impostazioni"}</h3>
 
       <div className="space-y-10">
         {settingsGroups.map((group, i) => (
@@ -190,7 +224,7 @@ const SettingsTab = () => {
             variant="outline" 
             className="w-full border-white/10 text-zinc-400 hover:bg-white hover:text-black rounded-none font-black uppercase text-[10px] tracking-widest italic h-14"
           >
-            <LogOut className="mr-2" size={14} /> ESCI
+            <LogOut className="mr-2" size={14} /> {t.settings?.logout || "ESCI"}
           </Button>
         </div>
       </div>
