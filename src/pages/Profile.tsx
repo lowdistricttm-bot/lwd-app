@@ -263,6 +263,26 @@ const Profile = () => {
         </div>
 
         <div className="mt-20 px-4 md:px-12 max-w-6xl mx-auto">
+          {/* Dashboard Admin (Solo se autorizzato) */}
+          {isOwnProfile && (userRole === 'admin' || userRole === 'staff' || userRole === 'support') && (
+            <button 
+              onClick={() => navigate('/admin/applications')}
+              className="w-full mb-4 bg-zinc-900/40 border border-white/5 p-4 flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-white/5 flex items-center justify-center group-hover:bg-black/10 transition-colors">
+                  {userRole === 'admin' ? <ShieldCheck size={18} className="group-hover:scale-110 transition-transform" /> : <Users size={18} className="group-hover:scale-110 transition-transform" />}
+                </div>
+                <div className="text-left">
+                  <p className="text-[10px] font-black uppercase italic tracking-widest">
+                    DASHBOARD {userRole.toUpperCase()}
+                  </p>
+                </div>
+              </div>
+              <ChevronRight size={16} className="text-zinc-800 opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0" />
+            </button>
+          )}
+
           {/* Share Card Integrata */}
           <button 
             onClick={handleShareProfile}
@@ -289,23 +309,6 @@ const Profile = () => {
               </button>
             ))}
           </div>
-
-          {isOwnProfile && (userRole === 'admin' || userRole === 'staff' || userRole === 'support') && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10 bg-zinc-900 border-l-4 border-white p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-zinc-800 flex items-center justify-center shrink-0">
-                  {userRole === 'admin' ? <ShieldCheck className="text-white" size={24} /> : <Users className="text-white" size={24} />}
-                </div>
-                <div>
-                  <h2 className="text-lg font-black italic uppercase tracking-tighter">Dashboard {userRole.toUpperCase()}</h2>
-                  <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
-                    {userRole === 'support' ? 'Vota le selezioni della community' : 'Gestisci selezioni, eventi e community'}
-                  </p>
-                </div>
-              </div>
-              <Button onClick={() => navigate('/admin/applications')} className="bg-white text-black hover:bg-zinc-200 rounded-none px-8 h-12 font-black uppercase italic tracking-widest transition-all group">Entra Ora <ChevronRight className="ml-2 group-hover:translate-x-1 transition-transform" size={16} /></Button>
-            </motion.div>
-          )}
 
           <div className="min-h-[400px]">
             <AnimatePresence mode="wait">
