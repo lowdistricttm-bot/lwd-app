@@ -1,7 +1,6 @@
 "use client";
 
 import { Capacitor } from '@capacitor/core';
-import { Haptics, NotificationType } from '@capacitor/haptics';
 
 // URL di un suono di notifica pulito e moderno
 const NOTIFICATION_SOUND_URL = "https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3";
@@ -10,18 +9,23 @@ export const playNotificationSound = async () => {
   try {
     const isNative = Capacitor.isNativePlatform();
 
-    // 1. Feedback Aptico (Vibrazione) - Solo su Native
+    // 1. Feedback Aptico (Vibrazione) - Solo su Native con caricamento dinamico
     if (isNative) {
-      await Haptics.notification({
-        type: NotificationType.Success
-      });
+      try {
+        // Carichiamo il plugin solo se siamo su mobile per evitare errori di build su web
+        const { Haptics, NotificationType } = await import('@capacitor/haptics');
+        await Haptics.notification({
+          type: NotificationType.Success
+        });
+      } catch (hapticErr) {
+        console.warn("[Sound] Plugin Haptics non disponibile:", hapticErr);
+      }
     }
 
     // 2. Riproduzione Audio
     const audio = new Audio(NOTIFICATION_SOUND_URL);
     audio.volume = 0.6;
     
-    // Su piattaforme native, forziamo il caricamento immediato
     if (isNative) {
       audio.preload = "auto";
     }
@@ -30,10 +34,7 @@ export const playNotificationSound = async () => {
     
     if (playPromise !== undefined) {
       playPromise.catch(error => {
-        console.log("[Sound] Riproduzione bloccata o fallita:", error);
-        
-        // Se siamo su web e fallisce, non possiamo fare molto senza interazione.
-        // Se siamo su native e fallisce, di solito è un problema di permessi o file.
+        console.log("[Sound] Riproduzione audio bloccata (normale su Web senza interazione):", error);
       });
     }
   } catch (err) {
