@@ -60,12 +60,32 @@ export const useStories = () => {
     return Object.values(grouped);
   };
 
+  const checkVideoDuration = (file: File): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if (!file.type.startsWith('video/')) return resolve(true);
+      
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.onloadedmetadata = () => {
+        window.URL.revokeObjectURL(video.src);
+        resolve(video.duration <= 31); // 30 secondi + 1 di tolleranza
+      };
+      video.src = URL.createObjectURL(file);
+    });
+  };
+
   const uploadStory = useMutation({
     mutationFn: async (files: File[]) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Accedi per caricare una storia");
 
       const uploadPromises = files.map(async (file) => {
+        // Validazione durata video
+        if (file.type.startsWith('video/')) {
+          const isDurationOk = await checkVideoDuration(file);
+          if (!isDurationOk) throw new Error(`Il video "${file.name}" supera i 30 secondi.`);
+        }
+
         const fileExt = file.name.split('.').pop();
         const fileName = `${user.id}-${Math.random()}.${fileExt}`;
         const filePath = `stories/${fileName}`;
@@ -92,7 +112,7 @@ export const useStories = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['active-stories'] });
-      showSuccess("Storie pubblicate con successo!");
+      showSuccess("Contenuto pubblicato nelle storie!");
     },
     onError: (error: any) => showError(error.message)
   });

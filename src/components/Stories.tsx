@@ -35,13 +35,13 @@ const Stories = () => {
     if (files.length === 0) return;
 
     if (!currentUser) {
-      showError("Devi accedere per caricare una storia");
+      showError("Devi accedere per partecipare al District");
       navigate('/login');
       return;
     }
 
     await uploadStory.mutateAsync(files);
-    e.target.value = '';
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handlePlusClick = (e: React.MouseEvent) => {
@@ -71,7 +71,7 @@ const Stories = () => {
               type="file" 
               ref={fileInputRef}
               className="hidden" 
-              accept="image/*" 
+              accept="image/*,video/*" 
               multiple
               onChange={handleUpload} 
             />
@@ -95,7 +95,6 @@ const Stories = () => {
               )}
             </button>
             
-            {/* Tasto + sempre visibile */}
             <button 
               onClick={handlePlusClick}
               className="absolute bottom-0 right-0 w-5 h-5 bg-white rounded-full flex items-center justify-center border-2 border-black shadow-lg hover:scale-110 transition-transform z-10"
@@ -129,7 +128,6 @@ const Stories = () => {
         </button>
       ))}
 
-      {/* Story Viewer Modal */}
       <AnimatePresence>
         {selectedUserStories && (
           <StoryViewer 

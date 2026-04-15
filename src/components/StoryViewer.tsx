@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight, Trash2, Loader2 } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Trash2, Loader2, Volume2, VolumeX } from 'lucide-react';
 import { useStories } from '@/hooks/use-stories';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -23,9 +23,13 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isVideoLoading, setIsVideoLoading] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const { deleteStory } = useStories();
   
   const currentStory = userStories.items[currentIndex];
+  const isVideo = currentStory?.image_url.match(/\.(mp4|webm|ogg|mov)$/i) || currentStory?.image_url.includes('video');
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -34,43 +38,50 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
   }, []);
 
   useEffect(() => {
-    const duration = 15000; // 15 secondi richiesti
+    setProgress(0);
+    if (isVideo) {
+      setIsVideoLoading(true);
+    }
+  }, [currentIndex, isVideo]);
+
+  useEffect(() => {
+    if (isVideo) return; // Se è un video, il progresso è gestito da onTimeUpdate
+
+    const duration = 15000; // 15 secondi per le immagini
     const interval = 50; 
     const increment = (interval / duration) * 100;
 
     const timer = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
-          if (currentIndex < userStories.items.length - 1) {
-            setCurrentIndex(prevIndex => prevIndex + 1);
-            return 0;
-          } else {
-            onClose();
-            return 100;
-          }
+          handleNext();
+          return 100;
         }
         return prev + increment;
       });
     }, interval);
 
     return () => clearInterval(timer);
-  }, [currentIndex, userStories.items.length, onClose]);
+  }, [currentIndex, isVideo]);
 
-  const handleNext = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
+  const handleNext = () => {
     if (currentIndex < userStories.items.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-      setProgress(0);
+      setCurrentIndex(prev => prev + 1);
     } else {
       onClose();
     }
   };
 
-  const handlePrev = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
+  const handlePrev = () => {
     if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-      setProgress(0);
+      setCurrentIndex(prev => prev - 1);
+    }
+  };
+
+  const handleVideoTimeUpdate = () => {
+    if (videoRef.current) {
+      const p = (videoRef.current.currentTime / videoRef.current.duration) * 100;
+      setProgress(p);
     }
   };
 
@@ -126,6 +137,11 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
           </div>
           
           <div className="flex items-center gap-2">
+            {isVideo && (
+              <button onClick={() => setIsMuted(!isMuted)} className="p-2 text-white/70 hover:text-white drop-shadow-md">
+                {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+              </button>
+            )}
             {isOwner && (
               <button 
                 onClick={handleDelete}
@@ -150,13 +166,33 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
           <div className="w-2/3 h-full cursor-pointer" onClick={handleNext} />
         </div>
 
-        {/* Image */}
-        <div className="flex-1 relative">
-          <img 
-            src={currentStory.image_url} 
-            className="w-full h-full object-cover" 
-            alt="Story" 
-          />
+        {/* Media Content */}
+        <div className="flex-1 relative flex items-center justify-center">
+          {isVideoLoading && (
+            <div className="absolute inset-0 flex items-center justify-center z-10">
+              <Loader2 className="animate-spin text-white/20" size={40} />
+            </div>
+          )}
+          
+          {isVideo ? (
+            <video
+              ref={videoRef}
+              src={currentStory.image_url}
+              className="w-full h-full object-cover"
+              autoPlay
+              playsInline
+              muted={isMuted}
+              onLoadedData={() => setIsVideoLoading(false)}
+              onTimeUpdate={handleVideoTimeUpdate}
+              onEnded={handleNext}
+            />
+          ) : (
+            <img 
+              src={currentStory.image_url} 
+              className="w-full h-full object-cover" 
+              alt="Story" 
+            />
+          )}
         </div>
 
         {/* Desktop Controls */}
