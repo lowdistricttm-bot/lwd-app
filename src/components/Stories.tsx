@@ -55,6 +55,7 @@ const Stories = () => {
   };
 
   const myStories = stories?.find(s => s.user_id === currentUser?.id);
+  const lastStoryContent = myStories?.items[0]?.image_url;
 
   return (
     <div className="flex gap-4 overflow-x-auto no-scrollbar py-6 px-6 bg-black border-b border-white/5">
@@ -86,8 +87,12 @@ const Stories = () => {
             >
               {uploadStory.isPending ? (
                 <Loader2 className="animate-spin text-zinc-400" size={20} />
-              ) : myStories ? (
-                <img src={myStories.items[0].image_url} className="w-full h-full object-cover" alt="My Story" />
+              ) : lastStoryContent ? (
+                lastStoryContent.match(/\.(mp4|webm|ogg|mov)$/i) ? (
+                  <video src={lastStoryContent} className="w-full h-full object-cover" muted playsInline />
+                ) : (
+                  <img src={lastStoryContent} className="w-full h-full object-cover" alt="My Story" />
+                )
               ) : userProfile?.avatar_url ? (
                 <img src={userProfile.avatar_url} className="w-full h-full object-cover" alt="Avatar" />
               ) : (

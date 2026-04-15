@@ -48,7 +48,7 @@ export const useStories = () => {
       if (!acc[story.user_id]) {
         acc[story.user_id] = {
           user_id: story.user_id,
-          username: story.profiles?.username || 'Membro District',
+          username: story.profiles?.username || 'Utente',
           avatar_url: story.profiles?.avatar_url,
           items: []
         };
