@@ -60,18 +60,7 @@ const Navbar = () => {
         </Link>
 
         <div className="flex-1 flex items-center justify-end gap-2">
-          <Link 
-            to="/messages"
-            className="p-2 text-zinc-400 hover:text-white transition-colors relative"
-          >
-            <Send size={20} className="-rotate-12" />
-            {unreadMessages > 0 && (
-              <span className="absolute top-1 right-1 w-4 h-4 bg-zinc-700 text-white text-[8px] font-black flex items-center justify-center rounded-full border-2 border-black">
-                {unreadMessages > 9 ? '9+' : unreadMessages}
-              </span>
-            )}
-          </Link>
-
+          {/* Notifiche a sinistra */}
           <button 
             onClick={() => setIsNotificationsOpen(true)}
             className="p-2 text-zinc-400 hover:text-white transition-colors relative"
@@ -83,6 +72,19 @@ const Navbar = () => {
               </span>
             )}
           </button>
+
+          {/* Direct a destra */}
+          <Link 
+            to="/messages"
+            className="p-2 text-zinc-400 hover:text-white transition-colors relative"
+          >
+            <Send size={20} className="-rotate-12" />
+            {unreadMessages > 0 && (
+              <span className="absolute top-1 right-1 w-4 h-4 bg-zinc-700 text-white text-[8px] font-black flex items-center justify-center rounded-full border-2 border-black">
+                {unreadMessages > 9 ? '9+' : unreadMessages}
+              </span>
+            )}
+          </Link>
         </div>
       </nav>
 
