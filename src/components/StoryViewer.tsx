@@ -102,10 +102,11 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
     if (!replyText.trim() || !currentUserId) return;
 
     try {
-      const message = `Ha risposto alla tua storia: "${replyText}"\n\n${currentStory.image_url}`;
+      // Inviamo il messaggio con l'URL della storia come immagine allegata
       await sendMessage.mutateAsync({
         receiverId: userStories.user_id,
-        content: message
+        content: replyText,
+        imageUrl: currentStory.image_url
       });
       setReplyText('');
       showSuccess("Risposta inviata!");

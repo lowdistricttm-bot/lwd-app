@@ -136,12 +136,16 @@ export const useMessages = (otherUserId?: string) => {
   };
 
   const sendMessage = useMutation({
-    mutationFn: async ({ receiverId, content, files }: { receiverId: string, content: string, files?: File[] }) => {
+    mutationFn: async ({ receiverId, content, files, imageUrl }: { receiverId: string, content: string, files?: File[], imageUrl?: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Accedi per inviare messaggi");
 
       let imageUrls: string[] = [];
-      if (files && files.length > 0) {
+      
+      // Se viene passato un URL diretto (es. da una storia), lo usiamo
+      if (imageUrl) {
+        imageUrls = [imageUrl];
+      } else if (files && files.length > 0) {
         for (const file of files) {
           const url = await uploadImage(file);
           imageUrls.push(url);

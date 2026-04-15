@@ -54,10 +54,11 @@ const ShareStoryModal = ({ isOpen, onClose, storyUrl, authorName }: ShareStoryMo
   const handleShare = async (targetUser: any) => {
     setSendingTo(targetUser.id);
     try {
-      const message = `Ti ha inviato la storia di @${authorName}: ${storyUrl}`;
+      // Inviamo il messaggio con l'URL della storia come immagine allegata
       await sendMessage.mutateAsync({ 
         receiverId: targetUser.id, 
-        content: message 
+        content: `Inoltrata la storia di @${authorName}`,
+        imageUrl: storyUrl
       });
       showSuccess(`Inviato a ${targetUser.username}`);
     } catch (err) {

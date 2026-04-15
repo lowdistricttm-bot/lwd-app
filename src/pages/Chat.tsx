@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { useMessages } from '@/hooks/use-messages';
-import { ChevronLeft, Send, User, Loader2, Mail, Trash2, Camera, X, Plus } from 'lucide-react';
+import { ChevronLeft, Send, User, Loader2, Mail, Trash2, Camera, X, Plus, Play } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
@@ -102,30 +102,80 @@ const Chat = () => {
         </div>
       </nav>
 
-      <main ref={scrollRef} className="flex-1 pt-24 pb-32 px-6 overflow-y-auto space-y-4">
-        {loadingChat ? <div className="flex justify-center py-20"><Loader2 className="animate-spin text-zinc-500" size={32} /></div> : chatMessages?.length === 0 ? <div className="h-full flex flex-col items-center justify-center text-center opacity-30 py-20"><Mail size={48} className="mb-4" /><p className="text-[10px] font-black uppercase tracking-widest">Inizia la conversazione</p></div> : chatMessages?.map((msg) => {
+      <main ref={scrollRef} className="flex-1 pt-24 pb-32 px-6 overflow-y-auto space-y-6 custom-scrollbar">
+        {loadingChat ? (
+          <div className="flex justify-center py-20"><Loader2 className="animate-spin text-zinc-500" size={32} /></div>
+        ) : chatMessages?.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-center opacity-30 py-20">
+            <Mail size={48} className="mb-4" />
+            <p className="text-[10px] font-black uppercase tracking-widest">Inizia la conversazione</p>
+          </div>
+        ) : chatMessages?.map((msg) => {
           const isMe = msg.sender_id === currentUserId;
           const msgImages = msg.images || [];
+          const isStoryReply = msgImages.length === 1 && msg.content && (msgImages[0].includes('stories') || msg.content.includes('storia'));
+
           return (
             <div key={msg.id} className={cn("flex relative", isMe ? "justify-end" : "justify-start")}>
               {isMe && <div className="absolute inset-y-0 right-0 w-20 bg-zinc-800 flex items-center justify-center rounded-2xl rounded-tr-none"><Trash2 size={16} className="text-white" /></div>}
-              <motion.div drag={isMe ? "x" : false} dragConstraints={{ left: -80, right: 0 }} dragElastic={0.1} onDragEnd={(_, info) => { if (info.offset.x < -50) setDeleteTarget(msg.id); }} className={cn("relative max-w-[80%] shadow-lg z-10 overflow-hidden", isMe ? "bg-zinc-800 text-white rounded-2xl rounded-tr-none" : "bg-zinc-900 text-zinc-200 rounded-2xl rounded-tl-none border border-white/5")}>
+              
+              <motion.div 
+                drag={isMe ? "x" : false} 
+                dragConstraints={{ left: -80, right: 0 }} 
+                dragElastic={0.1} 
+                onDragEnd={(_, info) => { if (info.offset.x < -50) setDeleteTarget(msg.id); }} 
+                className={cn(
+                  "relative max-w-[85%] shadow-2xl z-10 overflow-hidden transition-all", 
+                  isMe ? "bg-zinc-800 text-white rounded-3xl rounded-tr-none" : "bg-zinc-900 text-zinc-200 rounded-3xl rounded-tl-none border border-white/5"
+                )}
+              >
                 {msgImages.length > 0 && (
-                  <div className={cn("grid gap-0.5 bg-black", msgImages.length === 1 ? "grid-cols-1" : "grid-cols-2")}>
+                  <div className={cn(
+                    "relative bg-black", 
+                    msgImages.length === 1 ? "aspect-[3/4] w-64" : "grid grid-cols-2 gap-0.5"
+                  )}>
                     {msgImages.map((url, idx) => (
-                      <div key={idx} className="aspect-square bg-zinc-950 cursor-pointer overflow-hidden" onClick={() => !isVideo(url) && setLightboxData({ images: msgImages, index: idx })}>
+                      <div 
+                        key={idx} 
+                        className="w-full h-full cursor-pointer overflow-hidden relative group" 
+                        onClick={() => !isVideo(url) && setLightboxData({ images: msgImages, index: idx })}
+                      >
                         {isVideo(url) ? (
-                          <video src={url} className="w-full h-full object-cover" controls />
+                          <>
+                            <video src={url} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                              <Play size={32} className="text-white opacity-80" fill="currentColor" />
+                            </div>
+                          </>
                         ) : (
                           <img src={url} className="w-full h-full object-cover" alt="" />
+                        )}
+                        
+                        {isStoryReply && (
+                          <div className="absolute top-4 left-4 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
+                            <p className="text-[8px] font-black uppercase tracking-widest text-white italic">Risposta alla storia</p>
+                          </div>
                         )}
                       </div>
                     ))}
                   </div>
                 )}
+                
                 <div className="p-4">
-                  {msg.content && <p className="text-sm font-medium">{msg.content}</p>}
-                  <p className={cn("text-[7px] mt-1 uppercase font-black opacity-50", isMe ? "text-right" : "text-left")}>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                  {msg.content && (
+                    <p className={cn(
+                      "text-sm font-medium leading-relaxed",
+                      isStoryReply ? "italic text-zinc-300" : ""
+                    )}>
+                      {msg.content}
+                    </p>
+                  )}
+                  <div className={cn("flex items-center gap-2 mt-2", isMe ? "justify-end" : "justify-start")}>
+                    <p className="text-[7px] uppercase font-black opacity-40">
+                      {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                    {isMe && msg.is_read && <div className="w-1 h-1 bg-white rounded-full opacity-40" />}
+                  </div>
                 </div>
               </motion.div>
             </div>
