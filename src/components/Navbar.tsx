@@ -29,12 +29,24 @@ const Navbar = () => {
   return (
     <>
       <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/5 h-[calc(4rem+env(safe-area-inset-top))] px-6 flex items-center justify-between">
-        <div className="flex-1 flex items-center">
+        <div className="flex-1 flex items-center gap-2">
           <button 
             onClick={() => setIsSearchOpen(true)}
             className="p-2 text-zinc-400 hover:text-white transition-colors"
           >
             <Search size={20} />
+          </button>
+          
+          <button 
+            onClick={() => setIsCartOpen(true)}
+            className="p-2 text-zinc-400 hover:text-white transition-colors relative"
+          >
+            <ShoppingBag size={20} />
+            {items.length > 0 && (
+              <span className="absolute top-1 right-1 w-4 h-4 bg-zinc-700 text-white text-[8px] font-black flex items-center justify-center rounded-full border-2 border-black">
+                {items.length}
+              </span>
+            )}
           </button>
         </div>
 
@@ -54,18 +66,6 @@ const Navbar = () => {
               </span>
             )}
           </Link>
-          
-          <button 
-            onClick={() => setIsCartOpen(true)}
-            className="p-2 text-zinc-400 hover:text-white transition-colors relative"
-          >
-            <ShoppingBag size={20} />
-            {items.length > 0 && (
-              <span className="absolute top-1 right-1 w-4 h-4 bg-zinc-700 text-white text-[8px] font-black flex items-center justify-center rounded-full border-2 border-black">
-                {items.length}
-              </span>
-            )}
-          </button>
         </div>
       </nav>
 
