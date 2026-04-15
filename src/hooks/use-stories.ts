@@ -22,38 +22,50 @@ export const useStories = () => {
   const { data: stories, isLoading } = useQuery({
     queryKey: ['active-stories'],
     queryFn: async () => {
-      // Utilizziamo una sintassi più semplice per il join
+      // Utilizziamo un join esplicito con hint se necessario, ma dopo il fix SQL basterà questo
       const { data, error } = await supabase
         .from('stories')
         .select(`
           *,
-          profiles(username, avatar_url)
+          profiles:user_id (username, avatar_url)
         `)
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false });
 
       if (error) {
         console.error("[Stories] Errore caricamento:", error.message);
-        throw error;
+        // Fallback: se il join fallisce ancora, carichiamo le storie senza profili per non bloccare l'app
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('stories')
+          .select('*')
+          .gt('expires_at', new Date().toISOString())
+          .order('created_at', { ascending: false });
+          
+        if (fallbackError) throw fallbackError;
+        return formatStories(fallbackData || []);
       }
 
-      // Raggruppiamo le storie per utente
-      const grouped = data.reduce((acc: any, story: any) => {
-        if (!acc[story.user_id]) {
-          acc[story.user_id] = {
-            user_id: story.user_id,
-            username: story.profiles?.username || 'Membro',
-            avatar_url: story.profiles?.avatar_url,
-            items: []
-          };
-        }
-        acc[story.user_id].items.push(story);
-        return acc;
-      }, {});
-
-      return Object.values(grouped);
+      return formatStories(data || []);
     }
   });
+
+  // Funzione helper per raggruppare le storie
+  const formatStories = (data: any[]) => {
+    const grouped = data.reduce((acc: any, story: any) => {
+      if (!acc[story.user_id]) {
+        acc[story.user_id] = {
+          user_id: story.user_id,
+          username: story.profiles?.username || 'Membro',
+          avatar_url: story.profiles?.avatar_url,
+          items: []
+        };
+      }
+      acc[story.user_id].items.push(story);
+      return acc;
+    }, {});
+
+    return Object.values(grouped);
+  };
 
   const uploadStory = useMutation({
     mutationFn: async (file: File) => {

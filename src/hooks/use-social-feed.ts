@@ -28,47 +28,28 @@ export const useSocialFeed = () => {
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
       
+      // Utilizziamo una singola query con join per caricare tutto: profili, likes e commenti
       const { data: postsData, error: postsError } = await supabase
         .from('posts')
-        .select('*')
+        .select(`
+          *,
+          profiles:user_id (id, username, first_name, last_name, avatar_url),
+          likes (user_id),
+          comments (*, profiles:user_id (id, username, first_name, last_name, avatar_url))
+        `)
         .order('created_at', { ascending: false });
 
       if (postsError) throw postsError;
       if (!postsData) return [];
 
-      const userIds = [...new Set(postsData.map(p => p.user_id))];
-      const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('id, username, first_name, last_name, avatar_url')
-        .in('id', userIds);
-
-      const postIds = postsData.map(p => p.id);
-      const { data: commentsData } = await supabase
-        .from('comments')
-        .select('*, profiles(id, username, first_name, last_name, avatar_url)')
-        .in('post_id', postIds)
-        .order('created_at', { ascending: true });
-
-      const enrichedPosts = await Promise.all(postsData.map(async (post: any) => {
-        const profile = profilesData?.find(p => p.id === post.user_id);
+      return postsData.map((post: any) => {
+        const profile = post.profiles;
         
-        const { count: likes_count } = await supabase
-          .from('likes')
-          .select('*', { count: 'exact', head: true })
-          .eq('post_id', post.id);
-        
-        let is_liked = false;
-        if (user) {
-          const { data: userLike } = await supabase
-            .from('likes')
-            .select('id')
-            .eq('post_id', post.id)
-            .eq('user_id', user.id)
-            .maybeSingle();
-          is_liked = !!userLike;
-        }
+        // Calcoliamo i like e se l'utente corrente ha messo like
+        const likes_count = post.likes?.length || 0;
+        const is_liked = user ? post.likes?.some((l: any) => l.user_id === user.id) : false;
 
-        // Fonte di verità per l'username: campo username del profilo
+        // Fonte di verità per l'username
         const username = profile?.username || 
                         (profile?.first_name || profile?.last_name ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : null) || 
                         'Membro District';
@@ -79,9 +60,9 @@ export const useSocialFeed = () => {
             username,
             avatar_url: profile?.avatar_url
           },
-          likes_count: likes_count || 0,
+          likes_count,
           is_liked,
-          comments: commentsData?.filter(c => c.post_id === post.id).map(c => ({
+          comments: post.comments?.map((c: any) => ({
             ...c,
             profiles: {
               ...c.profiles,
@@ -89,9 +70,7 @@ export const useSocialFeed = () => {
             }
           })) || []
         };
-      }));
-
-      return enrichedPosts as Post[];
+      }) as Post[];
     }
   });
 
@@ -100,7 +79,7 @@ export const useSocialFeed = () => {
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `${fileName}`;
 
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from('post-media')
       .upload(filePath, file);
 
