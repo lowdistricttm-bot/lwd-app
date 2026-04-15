@@ -10,8 +10,8 @@ import { cn } from '@/lib/utils';
 import { Input } from './ui/input';
 import { supabase } from "@/integrations/supabase/client";
 import ImageLightbox from './ImageLightbox';
-import { Link } from 'react-router-dom';
-import { showSuccess } from '@/utils/toast';
+import { Link, useNavigate } from 'react-router-dom';
+import { showSuccess, showError } from '@/utils/toast';
 import { useTranslation } from '@/hooks/use-translation';
 import {
   DropdownMenu,
@@ -114,6 +114,7 @@ const CommentItem = ({
 };
 
 const FeedPost = ({ post }: { post: Post }) => {
+  const navigate = useNavigate();
   const { t, language } = useTranslation();
   const { toggleLike, addComment, deletePost, deleteComment } = useSocialFeed();
   const [showComments, setShowComments] = useState(false);
@@ -129,8 +130,22 @@ const FeedPost = ({ post }: { post: Post }) => {
     supabase.auth.getUser().then(({ data: { user } }) => setCurrentUserId(user?.id || null));
   }, []);
 
+  const handleLike = () => {
+    if (!currentUserId) {
+      showError(language === 'it' ? "Accedi per mettere like" : "Login to like");
+      navigate('/login');
+      return;
+    }
+    toggleLike.mutate(post.id);
+  };
+
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentUserId) {
+      showError(language === 'it' ? "Accedi per commentare" : "Login to comment");
+      navigate('/login');
+      return;
+    }
     if (!commentText.trim() && !commentFile) return;
     try {
       await addComment.mutateAsync({ 
@@ -159,7 +174,7 @@ const FeedPost = ({ post }: { post: Post }) => {
     const shareData = {
       title: `Post di ${username} | Low District`,
       text: `Guarda questo post di ${username} su Low District!`,
-      url: `${window.location.origin}/profile/${post.user_id}` // Per ora puntiamo al profilo dell'autore
+      url: `${window.location.origin}/post/${post.id}`
     };
 
     try {
@@ -231,7 +246,7 @@ const FeedPost = ({ post }: { post: Post }) => {
         )}
 
         <div className="p-4 flex items-center gap-6 border-t border-white/5">
-          <button onClick={() => toggleLike.mutate(post.id)} className={cn("flex items-center gap-2 transition-all", post.is_liked ? "text-white" : "text-zinc-500 hover:text-white")}>
+          <button onClick={handleLike} className={cn("flex items-center gap-2 transition-all", post.is_liked ? "text-white" : "text-zinc-500 hover:text-white")}>
             <Heart size={18} fill={post.is_liked ? "currentColor" : "none"} />
             <span className="text-[10px] font-black uppercase">{post.likes_count || 0}</span>
           </button>
@@ -254,7 +269,14 @@ const FeedPost = ({ post }: { post: Post }) => {
                     key={comment.id} 
                     comment={comment} 
                     allComments={post.comments || []} 
-                    onReply={(id, name) => setReplyingTo({ id, name })}
+                    onReply={(id, name) => {
+                      if (!currentUserId) {
+                        showError(language === 'it' ? "Accedi per rispondere" : "Login to reply");
+                        navigate('/login');
+                        return;
+                      }
+                      setReplyingTo({ id, name });
+                    }}
                     onDelete={(id) => deleteComment.mutate(id)}
                     currentUserId={currentUserId}
                     onImageClick={(url) => setLightboxData({ images: [url], index: 0 })}
@@ -262,32 +284,41 @@ const FeedPost = ({ post }: { post: Post }) => {
                 ))}
 
                 <div className="pt-4 border-t border-white/5">
-                  {replyingTo && (
-                    <div className="flex items-center justify-between mb-2 px-2">
-                      <p className="text-[9px] font-black uppercase text-zinc-400 italic">Risposta a {replyingTo.name}</p>
-                      <button onClick={() => setReplyingTo(null)} className="text-[9px] text-zinc-600 hover:text-white uppercase font-bold">Annulla</button>
+                  {!currentUserId ? (
+                    <div className="text-center py-4">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Accedi per partecipare alla discussione</p>
+                      <Button onClick={() => navigate('/login')} className="bg-white text-black rounded-none text-[9px] font-black uppercase italic h-8 px-4">Accedi</Button>
                     </div>
-                  )}
-                  
-                  {commentPreview && (
-                    <div className="relative w-20 h-20 mb-4 bg-zinc-900 border border-white/10 overflow-hidden">
-                      {commentFile?.type.startsWith('video/') ? (
-                        <video src={commentPreview} className="w-full h-full object-cover" />
-                      ) : (
-                        <img src={commentPreview} className="w-full h-full object-cover" alt="" />
+                  ) : (
+                    <>
+                      {replyingTo && (
+                        <div className="flex items-center justify-between mb-2 px-2">
+                          <p className="text-[9px] font-black uppercase text-zinc-400 italic">Risposta a {replyingTo.name}</p>
+                          <button onClick={() => setReplyingTo(null)} className="text-[9px] text-zinc-600 hover:text-white uppercase font-bold">Annulla</button>
+                        </div>
                       )}
-                      <button onClick={() => { setCommentFile(null); setCommentPreview(null); }} className="absolute top-1 right-1 p-1 bg-black/60 text-white rounded-full"><X size={10} /></button>
-                    </div>
-                  )}
+                      
+                      {commentPreview && (
+                        <div className="relative w-20 h-20 mb-4 bg-zinc-900 border border-white/10 overflow-hidden">
+                          {commentFile?.type.startsWith('video/') ? (
+                            <video src={commentPreview} className="w-full h-full object-cover" />
+                          ) : (
+                            <img src={commentPreview} className="w-full h-full object-cover" alt="" />
+                          )}
+                          <button onClick={() => { setCommentFile(null); setCommentPreview(null); }} className="absolute top-1 right-1 p-1 bg-black/60 text-white rounded-full"><X size={10} /></button>
+                        </div>
+                      )}
 
-                  <form onSubmit={handleAddComment} className="flex gap-2 items-center">
-                    <input type="file" ref={commentFileInputRef} className="hidden" accept="image/*,video/*" onChange={handleCommentFileChange} />
-                    <button type="button" onClick={() => commentFileInputRef.current?.click()} className="w-10 h-10 bg-zinc-900 text-zinc-500 flex items-center justify-center hover:text-white transition-all shrink-0"><Camera size={16} /></button>
-                    <Input placeholder="Scrivi un commento..." value={commentText} onChange={(e) => setCommentText(e.target.value)} className="bg-zinc-900 border-zinc-800 rounded-none h-10 text-xs font-bold uppercase tracking-widest" />
-                    <button type="submit" disabled={addComment.isPending} className="w-10 h-10 bg-zinc-700 flex items-center justify-center hover:bg-white hover:text-black transition-all shrink-0">
-                      {addComment.isPending ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} />}
-                    </button>
-                  </form>
+                      <form onSubmit={handleAddComment} className="flex gap-2 items-center">
+                        <input type="file" ref={commentFileInputRef} className="hidden" accept="image/*,video/*" onChange={handleCommentFileChange} />
+                        <button type="button" onClick={() => commentFileInputRef.current?.click()} className="w-10 h-10 bg-zinc-900 text-zinc-500 flex items-center justify-center hover:text-white transition-all shrink-0"><Camera size={16} /></button>
+                        <Input placeholder="Scrivi un commento..." value={commentText} onChange={(e) => setCommentText(e.target.value)} className="bg-zinc-900 border-zinc-800 rounded-none h-10 text-xs font-bold uppercase tracking-widest" />
+                        <button type="submit" disabled={addComment.isPending} className="w-10 h-10 bg-zinc-700 flex items-center justify-center hover:bg-white hover:text-black transition-all shrink-0">
+                          {addComment.isPending ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} />}
+                        </button>
+                      </form>
+                    </>
+                  )}
                 </div>
               </div>
             </motion.div>

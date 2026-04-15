@@ -16,6 +16,7 @@ import Events from "./pages/Events";
 import AdminApplications from "./pages/AdminApplications";
 import Messages from "./pages/Messages";
 import Chat from "./pages/Chat";
+import PostDetail from "./pages/PostDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const AppContent = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/profile/:userId" element={<Profile />} />
+      <Route path="/post/:postId" element={<PostDetail />} />
       <Route path="/events" element={<Events />} />
       <Route path="/messages" element={<Messages />} />
       <Route path="/chat/:userId" element={<Chat />} />

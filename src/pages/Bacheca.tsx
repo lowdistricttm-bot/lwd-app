@@ -63,7 +63,7 @@ const Bacheca = () => {
           </div>
         )}
 
-        {!user ? (
+        {!user && (
           <div className="mb-8 p-6 bg-zinc-900/50 border border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-4">
               <AlertCircle className="text-zinc-500 shrink-0" size={24} />
@@ -72,7 +72,7 @@ const Bacheca = () => {
                   {t.feed.private}
                 </p>
                 <p className="text-[9px] text-zinc-600 font-bold uppercase mt-1">
-                  {t.feed.privateDesc}
+                  Accedi per pubblicare, commentare e mettere like nel District.
                 </p>
               </div>
             </div>
@@ -83,26 +83,24 @@ const Bacheca = () => {
               <LogIn size={14} className="mr-2" /> {t.auth.login}
             </Button>
           </div>
+        )}
+
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <Loader2 className="animate-spin text-zinc-500" size={40} />
+            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{t.feed.syncing}</p>
+          </div>
+        ) : posts?.length === 0 ? (
+          <div className="text-center py-20 border border-white/5 bg-zinc-900/30 p-8">
+            <p className="text-sm font-black uppercase tracking-widest text-zinc-500">{t.feed.noPosts}</p>
+            <p className="text-[10px] text-zinc-600 mt-2 uppercase font-bold">{t.feed.noPostsDesc}</p>
+          </div>
         ) : (
-          <>
-            {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-4">
-                <Loader2 className="animate-spin text-zinc-500" size={40} />
-                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{t.feed.syncing}</p>
-              </div>
-            ) : posts?.length === 0 ? (
-              <div className="text-center py-20 border border-white/5 bg-zinc-900/30 p-8">
-                <p className="text-sm font-black uppercase tracking-widest text-zinc-500">{t.feed.noPosts}</p>
-                <p className="text-[10px] text-zinc-600 mt-2 uppercase font-bold">{t.feed.noPostsDesc}</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {posts?.map((post) => (
-                  <FeedPost key={post.id} post={post} />
-                ))}
-              </div>
-            )}
-          </>
+          <div className="space-y-2">
+            {posts?.map((post) => (
+              <FeedPost key={post.id} post={post} />
+            ))}
+          </div>
         )}
       </main>
 
