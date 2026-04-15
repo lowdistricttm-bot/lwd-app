@@ -44,6 +44,15 @@ const Stories = () => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const handleStoryClick = (userGroup: any) => {
+    if (!currentUser) {
+      showError("Accedi per visualizzare le storie del District");
+      navigate('/login');
+      return;
+    }
+    setSelectedUserStories(userGroup);
+  };
+
   const handlePlusClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!currentUser) {
@@ -78,11 +87,11 @@ const Stories = () => {
             />
             
             <button 
-              onClick={() => myStories && setSelectedUserStories(myStories)}
+              onClick={() => myStories ? handleStoryClick(myStories) : handlePlusClick(null as any)}
               disabled={!myStories && uploadStory.isPending}
               className={cn(
                 "w-16 h-16 rounded-full border-[2.5px] border-black flex items-center justify-center bg-zinc-900 transition-all overflow-hidden",
-                myStories ? "cursor-pointer hover:opacity-80" : "cursor-default"
+                (myStories || !currentUser) ? "cursor-pointer hover:opacity-80" : "cursor-default"
               )}
             >
               {uploadStory.isPending ? (
@@ -115,7 +124,7 @@ const Stories = () => {
       {stories?.filter(s => s.user_id !== currentUser?.id).map((userGroup) => (
         <button 
           key={userGroup.user_id} 
-          onClick={() => setSelectedUserStories(userGroup)}
+          onClick={() => handleStoryClick(userGroup)}
           className="flex flex-col items-center gap-2 shrink-0 group"
         >
           <div className="w-16 h-16 rounded-full p-[2.5px] bg-gradient-to-tr from-zinc-700 via-zinc-400 to-white">
