@@ -12,18 +12,19 @@ export const playNotificationSound = async () => {
     // 1. Feedback Aptico (Vibrazione) - Solo su Native
     if (isNative) {
       try {
-        // Usiamo un import dinamico con commento ignore per Vite
-        // Questo impedisce a Vite di bloccare la build se il pacchetto non è presente
-        const { Haptics, NotificationType } = await import(/* @vite-ignore */ '@capacitor/haptics');
+        // Usiamo una variabile per il nome del pacchetto per impedire a Vite di analizzarlo staticamente.
+        // Questo evita l'errore 'Failed to resolve import' se il pacchetto non è ancora installato.
+        const hapticsPackageName = '@capacitor/haptics';
+        const hapticsModule = await import(/* @vite-ignore */ hapticsPackageName);
         
-        if (Haptics) {
-          await Haptics.notification({
-            type: NotificationType.Success
+        if (hapticsModule && hapticsModule.Haptics) {
+          await hapticsModule.Haptics.notification({
+            type: hapticsModule.NotificationType.Success
           });
         }
       } catch (hapticErr) {
-        // Silenziamo l'errore se il plugin non è installato o disponibile
-        console.warn("[Sound] Feedback aptico non disponibile.");
+        // Silenziamo l'errore se il plugin non è installato o non risolto
+        console.warn("[Sound] Feedback aptico non disponibile o pacchetto non trovato.");
       }
     }
 
