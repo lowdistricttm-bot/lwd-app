@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, MessageSquare, User, MoreHorizontal, Send, Loader2, CornerDownRight, Trash2, Edit3, Camera, X } from 'lucide-react';
+import { Heart, MessageSquare, User, MoreHorizontal, Send, Loader2, CornerDownRight, Trash2, Edit3, Camera, X, Share2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Post, useSocialFeed } from '@/hooks/use-social-feed';
@@ -11,6 +11,8 @@ import { Input } from './ui/input';
 import { supabase } from "@/integrations/supabase/client";
 import ImageLightbox from './ImageLightbox';
 import { Link } from 'react-router-dom';
+import { showSuccess } from '@/utils/toast';
+import { useTranslation } from '@/hooks/use-translation';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -112,6 +114,7 @@ const CommentItem = ({
 };
 
 const FeedPost = ({ post }: { post: Post }) => {
+  const { t, language } = useTranslation();
   const { toggleLike, addComment, deletePost, deleteComment } = useSocialFeed();
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
@@ -148,6 +151,26 @@ const FeedPost = ({ post }: { post: Post }) => {
     if (file) {
       setCommentFile(file);
       setCommentPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleShare = async () => {
+    const username = post.profiles?.username || 'Membro';
+    const shareData = {
+      title: `Post di ${username} | Low District`,
+      text: `Guarda questo post di ${username} su Low District!`,
+      url: `${window.location.origin}/profile/${post.user_id}` // Per ora puntiamo al profilo dell'autore
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareData.url);
+        showSuccess(language === 'it' ? "Link post copiato!" : "Post link copied!");
+      }
+    } catch (err) {
+      console.error('Errore condivisione:', err);
     }
   };
 
@@ -215,6 +238,10 @@ const FeedPost = ({ post }: { post: Post }) => {
           <button onClick={() => setShowComments(!showComments)} className={cn("flex items-center gap-2 transition-colors", showComments ? "text-white" : "text-zinc-500 hover:text-white")}>
             <MessageSquare size={18} />
             <span className="text-[10px] font-black uppercase">{post.comments?.length || 0}</span>
+          </button>
+          <button onClick={handleShare} className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors ml-auto">
+            <Share2 size={18} />
+            <span className="text-[10px] font-black uppercase hidden sm:inline">{t.feed.share}</span>
           </button>
         </div>
 

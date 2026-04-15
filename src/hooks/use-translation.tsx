@@ -110,6 +110,7 @@ const translations: Record<Language, any> = {
       delete: 'ELIMINA',
       like: 'LIKE',
       comment: 'COMMENTA',
+      share: 'CONDIVIDI',
       reply: 'RISPONDI',
       cancel: 'ANNULLA'
     },
@@ -343,6 +344,7 @@ const translations: Record<Language, any> = {
       delete: 'DELETE',
       like: 'LIKE',
       comment: 'COMMENT',
+      share: 'SHARE',
       reply: 'REPLY',
       cancel: 'CANCEL'
     },
