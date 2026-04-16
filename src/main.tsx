@@ -2,26 +2,30 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./globals.css";
 
-// Registrazione Service Worker senza ricarica forzata automatica
+// Registrazione Service Worker con gestione errori migliorata
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then(reg => {
-        console.log('SW registrato con successo');
+        console.log('[SW] Registrato con successo');
         
-        // Controlla aggiornamenti in background senza forzare il refresh
         reg.onupdatefound = () => {
           const installingWorker = reg.installing;
           if (installingWorker) {
             installingWorker.onstatechange = () => {
               if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('Nuova versione disponibile. Sarà attiva al prossimo riavvio manuale.');
+                console.log('[SW] Nuova versione disponibile.');
               }
             };
           }
         };
       })
-      .catch(err => console.error('Errore registrazione SW:', err));
+      .catch(err => {
+        // Ignoriamo l'errore del Lock se è un AbortError (comune in Chrome durante i refresh)
+        if (err.name !== 'AbortError') {
+          console.error('[SW] Errore registrazione:', err);
+        }
+      });
   });
 }
 
