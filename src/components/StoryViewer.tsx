@@ -31,6 +31,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [showViewers, setShowViewers] = useState(false);
+  const [isMediaLoading, setIsMediaLoading] = useState(true);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const { deleteStory, recordView, getStoryViews } = useStories();
@@ -53,17 +54,16 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
     };
   }, []);
 
-  // Registra la visualizzazione
   useEffect(() => {
     if (currentStory?.id && currentUserId && !isOwner) {
-      console.log("[Stories] Registrazione vista per:", currentStory.id);
       recordView.mutate(currentStory.id);
     }
     setProgress(0);
+    setIsMediaLoading(true);
   }, [currentStory?.id, currentUserId, isOwner]);
 
   useEffect(() => {
-    if (isVideo || isShareModalOpen || showViewers || !currentStory) return;
+    if (isVideo || isShareModalOpen || showViewers || !currentStory || isMediaLoading) return;
 
     const duration = 10000;
     const interval = 50; 
@@ -80,7 +80,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
     }, interval);
 
     return () => clearInterval(timer);
-  }, [userIndex, currentIndex, isVideo, isShareModalOpen, showViewers, currentStory]);
+  }, [userIndex, currentIndex, isVideo, isShareModalOpen, showViewers, currentStory, isMediaLoading]);
 
   const handleNext = () => {
     if (currentIndex < userStories.items.length - 1) {
@@ -232,6 +232,12 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
         </div>
 
         <div className="flex-1 relative flex items-center justify-center bg-black">
+          {isMediaLoading && (
+            <div className="absolute inset-0 flex items-center justify-center z-10">
+              <Loader2 className="animate-spin text-white/20" size={40} />
+            </div>
+          )}
+          
           {isVideo ? (
             <video
               ref={videoRef}
@@ -241,6 +247,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
               autoPlay
               playsInline
               muted={isMuted}
+              onLoadedData={() => setIsMediaLoading(false)}
               onTimeUpdate={handleVideoTimeUpdate}
               onEnded={handleNext}
             />
@@ -250,6 +257,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
               src={currentStory.image_url} 
               className="w-full h-full object-contain" 
               alt="Story" 
+              onLoad={() => setIsMediaLoading(false)}
             />
           )}
         </div>

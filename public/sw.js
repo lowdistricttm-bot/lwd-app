@@ -1,8 +1,8 @@
-// Service Worker per Low District - Versione v4 (Lock Fix)
-const CACHE_NAME = 'low-district-v4';
+// Service Worker per Low District - Versione v5 (Cloudinary SWR Optimization)
+const CACHE_NAME = 'low-district-v5';
+const MEDIA_CACHE = 'low-district-media-v1';
 
 self.addEventListener('install', (event) => {
-  // Forza l'attivazione immediata del nuovo SW
   self.skipWaiting();
 });
 
@@ -11,21 +11,45 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
+          if (cacheName !== CACHE_NAME && cacheName !== MEDIA_CACHE) {
             console.log('[SW] Eliminazione vecchia cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
     }).then(() => {
-      // Prende il controllo immediato di tutte le schede aperte
       return self.clients.claim();
     })
   );
 });
 
 self.addEventListener('fetch', (event) => {
-  // Strategia Network First per evitare lock su risorse stale
+  const url = new URL(event.request.url);
+
+  // Strategia Stale-While-Revalidate per Cloudinary
+  if (url.host === 'res.cloudinary.com') {
+    event.respondWith(
+      caches.open(MEDIA_CACHE).then((cache) => {
+        return cache.match(event.request).then((cachedResponse) => {
+          const fetchPromise = fetch(event.request).then((networkResponse) => {
+            // Aggiorna la cache con la nuova risposta dal network
+            if (networkResponse.ok) {
+              cache.put(event.request, networkResponse.clone());
+            }
+            return networkResponse;
+          }).catch(() => {
+            // Fallback silenzioso se il network fallisce
+          });
+
+          // Restituisce la versione in cache se esiste, altrimenti aspetta il network
+          return cachedResponse || fetchPromise;
+        });
+      })
+    );
+    return;
+  }
+
+  // Strategia Network First per le navigazioni (per evitare lock su risorse stale)
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request).catch(() => {
@@ -35,6 +59,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Strategia Cache First per gli altri asset statici locali
   event.respondWith(
     caches.match(event.request).then((response) => {
       return response || fetch(event.request);
