@@ -41,7 +41,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
   const isVideo = currentStory?.image_url.match(/\.(mp4|webm|ogg|mov)$/i) || currentStory?.image_url.includes('video');
   const isOwner = currentUserId === userStories?.user_id;
 
-  // Recupera le visualizzazioni in tempo reale se l'utente è il proprietario
   const { data: views, isLoading: loadingViews } = getStoryViews(isOwner ? currentStory?.id : null);
 
   useEffect(() => {
@@ -54,12 +53,13 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
     };
   }, []);
 
-  // Registra la visualizzazione ogni volta che cambia la storia
+  // Registra la visualizzazione
   useEffect(() => {
-    setProgress(0);
     if (currentStory?.id && currentUserId && !isOwner) {
+      console.log("[Stories] Registrazione vista per:", currentStory.id);
       recordView.mutate(currentStory.id);
     }
+    setProgress(0);
   }, [currentStory?.id, currentUserId, isOwner]);
 
   useEffect(() => {
@@ -169,7 +169,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
       </div>
 
       <div className="relative w-full max-w-[500px] h-full bg-black overflow-hidden flex flex-col shadow-2xl">
-        {/* Progress Bars */}
         <div className="absolute top-[calc(1rem+env(safe-area-inset-top))] left-4 right-4 z-50 flex gap-1.5">
           {userStories.items.map((_, i) => (
             <div key={i} className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden">
@@ -183,7 +182,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           ))}
         </div>
 
-        {/* Header */}
         <div className="absolute top-[calc(2.5rem+env(safe-area-inset-top))] left-4 right-4 z-50 flex items-center justify-between">
           <button 
             onClick={handleProfileClick}
@@ -228,13 +226,11 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           </div>
         </div>
 
-        {/* Navigation Areas */}
         <div className="absolute inset-0 z-20 flex">
           <div className="w-1/3 h-full cursor-pointer" onClick={handlePrev} />
           <div className="w-2/3 h-full cursor-pointer" onClick={handleNext} />
         </div>
 
-        {/* Content */}
         <div className="flex-1 relative flex items-center justify-center bg-black">
           {isVideo ? (
             <video
@@ -258,7 +254,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           )}
         </div>
 
-        {/* Bottom Bar - Differenziata per Owner */}
         <div className="absolute bottom-0 left-0 right-0 z-50 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
           {isOwner ? (
             <div className="flex flex-col items-center gap-4">
@@ -316,7 +311,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           )}
         </div>
 
-        {/* Viewers List Drawer */}
         <AnimatePresence>
           {showViewers && (
             <>
@@ -371,7 +365,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           )}
         </AnimatePresence>
 
-        {/* Desktop Navigation Buttons */}
         <button 
           onClick={handlePrev}
           className="hidden md:flex absolute -left-20 top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-30 text-white transition-all border border-white/10"

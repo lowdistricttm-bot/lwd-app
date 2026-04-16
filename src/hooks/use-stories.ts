@@ -71,14 +71,16 @@ export const useStories = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Registriamo la visualizzazione. La policy RLS si occupa della sicurezza.
-      // Usiamo upsert così se l'utente guarda la storia più volte non creiamo duplicati.
-      await supabase
+      // Usiamo upsert per evitare duplicati. 
+      // Richiede il vincolo UNIQUE(story_id, user_id) nel DB.
+      const { error } = await supabase
         .from('story_views')
         .upsert(
           { story_id: storyId, user_id: user.id }, 
           { onConflict: 'story_id, user_id' }
         );
+      
+      if (error) console.error("[Stories] Errore registrazione vista:", error.message);
     }
   });
 
@@ -100,10 +102,9 @@ export const useStories = () => {
         return data;
       },
       enabled: !!storyId,
-      staleTime: 0 // Forza il recupero di dati freschi
+      staleTime: 0
     });
 
-    // Sottoscrizione Realtime per aggiornare l'elenco visualizzazioni istantaneamente
     useEffect(() => {
       if (!storyId) return;
 
@@ -126,7 +127,7 @@ export const useStories = () => {
       return () => {
         supabase.removeChannel(channel);
       };
-    }, [storyId, query]);
+    }, [storyId]);
 
     return query;
   };
