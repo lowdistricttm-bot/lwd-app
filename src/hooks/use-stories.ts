@@ -71,16 +71,24 @@ export const useStories = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Usiamo upsert per evitare duplicati. 
-      // Richiede il vincolo UNIQUE(story_id, user_id) nel DB.
+      // Usiamo upsert con nomi di colonna espliciti per matchare il vincolo UNIQUE
       const { error } = await supabase
         .from('story_views')
         .upsert(
-          { story_id: storyId, user_id: user.id }, 
-          { onConflict: 'story_id, user_id' }
+          { 
+            story_id: storyId, 
+            user_id: user.id,
+            viewed_at: new Date().toISOString() 
+          }, 
+          { onConflict: 'story_id,user_id' }
         );
       
-      if (error) console.error("[Stories] Errore registrazione vista:", error.message);
+      if (error) {
+        // Silenziamo l'errore in console se è solo un problema di policy (già visto)
+        if (!error.message.includes("policy")) {
+          console.error("[Stories] Errore registrazione vista:", error.message);
+        }
+      }
     }
   });
 
