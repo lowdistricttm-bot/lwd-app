@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight, Trash2, Loader2, Volume2, VolumeX, Send, Heart } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Trash2, Loader2, Volume2, VolumeX, Send, Heart, Eye, User } from 'lucide-react';
 import { useStories } from '@/hooks/use-stories';
 import { useMessages } from '@/hooks/use-messages';
 import { supabase } from "@/integrations/supabase/client";
@@ -30,14 +30,19 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
   const [replyText, setReplyText] = useState('');
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const [showViewers, setShowViewers] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
-  const { deleteStory } = useStories();
+  const { deleteStory, recordView, getStoryViews } = useStories();
   const { sendMessage } = useMessages();
   
   const userStories = allStories[userIndex];
   const currentStory = userStories?.items[currentIndex];
   const isVideo = currentStory?.image_url.match(/\.(mp4|webm|ogg|mov)$/i) || currentStory?.image_url.includes('video');
+  const isOwner = currentUserId === userStories?.user_id;
+
+  // Recupera le visualizzazioni se l'utente è il proprietario
+  const { data: views, isLoading: loadingViews } = getStoryViews(isOwner ? currentStory?.id : null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -51,10 +56,13 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
 
   useEffect(() => {
     setProgress(0);
-  }, [userIndex, currentIndex]);
+    if (currentStory && !isOwner) {
+      recordView.mutate(currentStory.id);
+    }
+  }, [userIndex, currentIndex, currentStory, isOwner]);
 
   useEffect(() => {
-    if (isVideo || isShareModalOpen || !currentStory) return;
+    if (isVideo || isShareModalOpen || showViewers || !currentStory) return;
 
     const duration = 10000;
     const interval = 50; 
@@ -71,7 +79,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
     }, interval);
 
     return () => clearInterval(timer);
-  }, [userIndex, currentIndex, isVideo, isShareModalOpen, currentStory]);
+  }, [userIndex, currentIndex, isVideo, isShareModalOpen, showViewers, currentStory]);
 
   const handleNext = () => {
     if (currentIndex < userStories.items.length - 1) {
@@ -99,7 +107,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
   };
 
   const handleVideoTimeUpdate = () => {
-    if (videoRef.current && !isShareModalOpen) {
+    if (videoRef.current && !isShareModalOpen && !showViewers) {
       const p = (videoRef.current.currentTime / videoRef.current.duration) * 100;
       setProgress(p);
     }
@@ -146,7 +154,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
 
   if (!userStories || !currentStory) return null;
 
-  const isOwner = currentUserId === userStories.user_id;
   const roleLabel = t.profile.roles[userStories.role] || t.profile.roles.member;
 
   return (
@@ -161,7 +168,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
       </div>
 
       <div className="relative w-full max-w-[500px] h-full bg-black overflow-hidden flex flex-col shadow-2xl">
-        {/* Progress Bars - Posizionate sotto la safe area */}
+        {/* Progress Bars */}
         <div className="absolute top-[calc(1rem+env(safe-area-inset-top))] left-4 right-4 z-50 flex gap-1.5">
           {userStories.items.map((_, i) => (
             <div key={i} className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden">
@@ -175,7 +182,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           ))}
         </div>
 
-        {/* Header - Allineato con il layout dell'app */}
+        {/* Header */}
         <div className="absolute top-[calc(2.5rem+env(safe-area-inset-top))] left-4 right-4 z-50 flex items-center justify-between">
           <button 
             onClick={handleProfileClick}
@@ -220,11 +227,13 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           </div>
         </div>
 
+        {/* Navigation Areas */}
         <div className="absolute inset-0 z-20 flex">
           <div className="w-1/3 h-full cursor-pointer" onClick={handlePrev} />
           <div className="w-2/3 h-full cursor-pointer" onClick={handleNext} />
         </div>
 
+        {/* Content */}
         <div className="flex-1 relative flex items-center justify-center bg-black">
           {isVideo ? (
             <video
@@ -248,47 +257,120 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           )}
         </div>
 
+        {/* Bottom Bar - Differenziata per Owner */}
         <div className="absolute bottom-0 left-0 right-0 z-50 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
-          <div className="flex items-center gap-4">
-            <form onSubmit={handleReply} className="flex-1 flex gap-2">
-              <Input 
-                placeholder={`Rispondi a ${userStories.username}...`}
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-                onFocus={() => videoRef.current?.pause()}
-                onBlur={() => videoRef.current?.play()}
-                className="bg-white/10 border-white/20 rounded-full h-12 px-6 text-xs font-bold uppercase tracking-widest text-white placeholder:text-white/40 focus-visible:ring-white/30 backdrop-blur-md"
-              />
-              {replyText.trim() && (
-                <button 
-                  type="submit"
-                  className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 transition-transform shrink-0"
-                >
-                  <Send size={18} />
-                </button>
-              )}
-            </form>
-            
-            <div className="flex items-center gap-2">
+          {isOwner ? (
+            <div className="flex flex-col items-center gap-4">
               <button 
-                onClick={() => setIsLiked(!isLiked)}
-                className={cn(
-                  "w-12 h-12 rounded-full flex items-center justify-center transition-all backdrop-blur-md border border-white/10",
-                  isLiked ? "bg-red-500 border-red-500 text-white" : "bg-white/10 text-white hover:bg-white/20"
-                )}
+                onClick={() => setShowViewers(true)}
+                className="flex flex-col items-center gap-1 group"
               >
-                <Heart size={20} fill={isLiked ? "currentColor" : "none"} />
-              </button>
-              <button 
-                onClick={() => setIsShareModalOpen(true)}
-                className="w-12 h-12 bg-white/10 border border-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all backdrop-blur-md"
-              >
-                <Send size={20} className="-rotate-12" />
+                <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
+                  <Eye size={20} />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-white drop-shadow-md">
+                  {views?.length || 0} Visualizzazioni
+                </span>
               </button>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-center gap-4">
+              <form onSubmit={handleReply} className="flex-1 flex gap-2">
+                <Input 
+                  placeholder={`Rispondi a ${userStories.username}...`}
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  onFocus={() => videoRef.current?.pause()}
+                  onBlur={() => videoRef.current?.play()}
+                  className="bg-white/10 border-white/20 rounded-full h-12 px-6 text-xs font-bold uppercase tracking-widest text-white placeholder:text-white/40 focus-visible:ring-white/30 backdrop-blur-md"
+                />
+                {replyText.trim() && (
+                  <button 
+                    type="submit"
+                    className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 transition-transform shrink-0"
+                  >
+                    <Send size={18} />
+                  </button>
+                )}
+              </form>
+              
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setIsLiked(!isLiked)}
+                  className={cn(
+                    "w-12 h-12 rounded-full flex items-center justify-center transition-all backdrop-blur-md border border-white/10",
+                    isLiked ? "bg-red-500 border-red-500 text-white" : "bg-white/10 text-white hover:bg-white/20"
+                  )}
+                >
+                  <Heart size={20} fill={isLiked ? "currentColor" : "none"} />
+                </button>
+                <button 
+                  onClick={() => setIsShareModalOpen(true)}
+                  className="w-12 h-12 bg-white/10 border border-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all backdrop-blur-md"
+                >
+                  <Send size={20} className="-rotate-12" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
+        {/* Viewers List Drawer */}
+        <AnimatePresence>
+          {showViewers && (
+            <>
+              <motion.div 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                exit={{ opacity: 0 }} 
+                onClick={() => setShowViewers(false)}
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm z-[60]" 
+              />
+              <motion.div 
+                initial={{ y: '100%' }} 
+                animate={{ y: 0 }} 
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="absolute inset-x-0 bottom-0 z-[61] bg-zinc-950 border-t border-white/10 rounded-t-[2rem] max-h-[60%] flex flex-col"
+              >
+                <div className="p-6 border-b border-white/5 flex items-center justify-between">
+                  <h3 className="text-lg font-black italic uppercase tracking-tighter">Visualizzazioni</h3>
+                  <button onClick={() => setShowViewers(false)} className="p-2 text-zinc-500"><X size={24} /></button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+                  {loadingViews ? (
+                    <div className="flex justify-center py-10"><Loader2 className="animate-spin text-zinc-800" /></div>
+                  ) : views?.length === 0 ? (
+                    <div className="text-center py-10 opacity-30">
+                      <Eye size={40} className="mx-auto mb-2" />
+                      <p className="text-[10px] font-black uppercase tracking-widest">Nessuna visualizzazione</p>
+                    </div>
+                  ) : (
+                    views?.map((view: any) => (
+                      <div key={view.id} className="flex items-center justify-between p-3 bg-zinc-900/40 border border-white/5 rounded-2xl">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-zinc-800 rounded-full overflow-hidden">
+                            {view.profiles?.avatar_url ? (
+                              <img src={view.profiles.avatar_url} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-zinc-700"><User size={20} /></div>
+                            )}
+                          </div>
+                          <span className="text-xs font-black italic uppercase">{view.profiles?.username}</span>
+                        </div>
+                        <span className="text-[8px] font-bold text-zinc-600 uppercase">
+                          {new Date(view.viewed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+
+        {/* Desktop Navigation Buttons */}
         <button 
           onClick={handlePrev}
           className="hidden md:flex absolute -left-20 top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-30 text-white transition-all border border-white/10"

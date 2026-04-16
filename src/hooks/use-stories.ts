@@ -65,17 +65,37 @@ export const useStories = () => {
     return Object.values(grouped);
   };
 
-  const checkVideoDuration = (file: File): Promise<boolean> => {
-    return new Promise((resolve) => {
-      if (!file.type.startsWith('video/')) return resolve(true);
-      
-      const video = document.createElement('video');
-      video.preload = 'metadata';
-      video.onloadedmetadata = () => {
-        window.URL.revokeObjectURL(video.src);
-        resolve(video.duration <= 31); // 30 secondi + 1 di tolleranza
-      };
-      video.src = URL.createObjectURL(file);
+  const recordView = useMutation({
+    mutationFn: async (storyId: string) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Non registrare la visualizzazione se è la propria storia
+      const { data: story } = await supabase.from('stories').select('user_id').eq('id', storyId).single();
+      if (story?.user_id === user.id) return;
+
+      await supabase
+        .from('story_views')
+        .upsert({ story_id: storyId, user_id: user.id }, { onConflict: 'story_id, user_id' });
+    }
+  });
+
+  const getStoryViews = (storyId: string) => {
+    return useQuery({
+      queryKey: ['story-views', storyId],
+      queryFn: async () => {
+        const { data, error } = await supabase
+          .from('story_views')
+          .select(`
+            *,
+            profiles:user_id (username, avatar_url)
+          `)
+          .eq('story_id', storyId);
+        
+        if (error) throw error;
+        return data;
+      },
+      enabled: !!storyId
     });
   };
 
@@ -85,11 +105,6 @@ export const useStories = () => {
       if (!user) throw new Error("Accedi per caricare una storia");
 
       const uploadPromises = files.map(async (file) => {
-        if (file.type.startsWith('video/')) {
-          const isDurationOk = await checkVideoDuration(file);
-          if (!isDurationOk) throw new Error(`Il video "${file.name}" supera i 30 secondi.`);
-        }
-
         const fileExt = file.name.split('.').pop();
         const fileName = `${user.id}-${Math.random()}.${fileExt}`;
         const filePath = `stories/${fileName}`;
@@ -136,5 +151,5 @@ export const useStories = () => {
     onError: (error: any) => showError("Errore durante l'eliminazione")
   });
 
-  return { stories, isLoading, uploadStory, deleteStory };
+  return { stories, isLoading, uploadStory, deleteStory, recordView, getStoryViews };
 };
