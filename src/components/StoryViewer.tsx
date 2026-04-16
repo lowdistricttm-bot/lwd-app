@@ -339,7 +339,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
                   {loadingViews ? (
-                    <div className="flex justify-center py-10"><Loader2 className="animate-spin text-zinc-800" /></div>
+                    <div className="flex justify-center py-10"><Loader2 className="animate-spin text-zinc-500" /></div>
                   ) : views?.length === 0 ? (
                     <div className="text-center py-10 opacity-30">
                       <Eye size={40} className="mx-auto mb-2" />
