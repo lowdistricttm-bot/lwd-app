@@ -13,6 +13,8 @@ export interface Story {
   profiles?: {
     username: string;
     avatar_url: string;
+    role?: string;
+    is_admin?: boolean;
   };
 }
 
@@ -28,7 +30,9 @@ export const useStories = () => {
           *,
           profiles:user_id (
             username,
-            avatar_url
+            avatar_url,
+            role,
+            is_admin
           )
         `)
         .gt('expires_at', new Date().toISOString())
@@ -50,6 +54,7 @@ export const useStories = () => {
           user_id: story.user_id,
           username: story.profiles?.username || 'Utente',
           avatar_url: story.profiles?.avatar_url,
+          role: story.profiles?.role || (story.profiles?.is_admin ? 'admin' : 'member'),
           items: []
         };
       }
@@ -80,7 +85,6 @@ export const useStories = () => {
       if (!user) throw new Error("Accedi per caricare una storia");
 
       const uploadPromises = files.map(async (file) => {
-        // Validazione durata video
         if (file.type.startsWith('video/')) {
           const isDurationOk = await checkVideoDuration(file);
           if (!isDurationOk) throw new Error(`Il video "${file.name}" supera i 30 secondi.`);

@@ -10,6 +10,8 @@ import { Input } from './ui/input';
 import { showSuccess, showError } from '@/utils/toast';
 import ShareStoryModal from './ShareStoryModal';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from '@/hooks/use-translation';
 
 interface StoryViewerProps {
   allStories: any[];
@@ -18,6 +20,8 @@ interface StoryViewerProps {
 }
 
 const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps) => {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
   const [userIndex, setUserIndex] = useState(initialUserIndex);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -45,7 +49,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
     };
   }, []);
 
-  // Reset quando cambia l'utente o la storia
   useEffect(() => {
     setProgress(0);
   }, [userIndex, currentIndex]);
@@ -53,7 +56,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
   useEffect(() => {
     if (isVideo || isShareModalOpen || !currentStory) return;
 
-    const duration = 10000; // 10 secondi per le immagini
+    const duration = 10000;
     const interval = 50; 
     const increment = (interval / duration) * 100;
 
@@ -72,27 +75,22 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
 
   const handleNext = () => {
     if (currentIndex < userStories.items.length - 1) {
-      // Prossima storia dello stesso utente
       setCurrentIndex(prev => prev + 1);
       setIsLiked(false);
     } else if (userIndex < allStories.length - 1) {
-      // Passa all'utente successivo
       setUserIndex(prev => prev + 1);
       setCurrentIndex(0);
       setIsLiked(false);
     } else {
-      // Fine di tutte le storie
       onClose();
     }
   };
 
   const handlePrev = () => {
     if (currentIndex > 0) {
-      // Storia precedente dello stesso utente
       setCurrentIndex(prev => prev - 1);
       setIsLiked(false);
     } else if (userIndex > 0) {
-      // Torna all'utente precedente (all'ultima sua storia)
       const prevUserIndex = userIndex - 1;
       setUserIndex(prevUserIndex);
       setCurrentIndex(allStories[prevUserIndex].items.length - 1);
@@ -140,9 +138,16 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
     }
   };
 
+  const handleProfileClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onClose();
+    navigate(`/profile/${userStories.user_id}`);
+  };
+
   if (!userStories || !currentStory) return null;
 
   const isOwner = currentUserId === userStories.user_id;
+  const roleLabel = t.profile.roles[userStories.role] || t.profile.roles.member;
 
   return (
     <motion.div 
@@ -151,14 +156,13 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[200] bg-black flex items-center justify-center overflow-hidden touch-none"
     >
-      {/* Background Blur Immersivo */}
       <div className="absolute inset-0 z-0 opacity-50 blur-[100px] scale-150">
         <img src={currentStory.image_url} className="w-full h-full object-cover" alt="" />
       </div>
 
       <div className="relative w-full max-w-[500px] h-full bg-black overflow-hidden flex flex-col shadow-2xl">
-        {/* Progress Bars */}
-        <div className="absolute top-4 left-4 right-4 z-50 flex gap-1.5">
+        {/* Progress Bars - Posizionate sotto la safe area */}
+        <div className="absolute top-[calc(1rem+env(safe-area-inset-top))] left-4 right-4 z-50 flex gap-1.5">
           {userStories.items.map((_, i) => (
             <div key={i} className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden">
               <div 
@@ -171,23 +175,26 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           ))}
         </div>
 
-        {/* Header */}
-        <div className="absolute top-8 left-4 right-4 z-50 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full border-2 border-white/20 overflow-hidden bg-zinc-800">
+        {/* Header - Allineato con il layout dell'app */}
+        <div className="absolute top-[calc(2.5rem+env(safe-area-inset-top))] left-4 right-4 z-50 flex items-center justify-between">
+          <button 
+            onClick={handleProfileClick}
+            className="flex items-center gap-3 group text-left"
+          >
+            <div className="w-10 h-10 rounded-full border-2 border-white/20 overflow-hidden bg-zinc-800 group-hover:border-white transition-all">
               {userStories.avatar_url && (
                 <img src={userStories.avatar_url} className="w-full h-full object-cover" alt="" />
               )}
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-black uppercase italic tracking-widest text-white drop-shadow-lg">
+              <span className="text-sm font-black uppercase italic tracking-widest text-white drop-shadow-lg group-hover:text-zinc-300 transition-colors">
                 {userStories.username}
               </span>
               <span className="text-[8px] font-bold text-white/60 uppercase tracking-widest">
-                Low District Member
+                {roleLabel}
               </span>
             </div>
-          </div>
+          </button>
           
           <div className="flex items-center gap-1">
             {isVideo && (
@@ -213,13 +220,11 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           </div>
         </div>
 
-        {/* Navigation Areas (Touch) */}
         <div className="absolute inset-0 z-20 flex">
           <div className="w-1/3 h-full cursor-pointer" onClick={handlePrev} />
           <div className="w-2/3 h-full cursor-pointer" onClick={handleNext} />
         </div>
 
-        {/* Media Content */}
         <div className="flex-1 relative flex items-center justify-center bg-black">
           {isVideo ? (
             <video
@@ -243,7 +248,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           )}
         </div>
 
-        {/* Footer Interaction */}
         <div className="absolute bottom-0 left-0 right-0 z-50 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
           <div className="flex items-center gap-4">
             <form onSubmit={handleReply} className="flex-1 flex gap-2">
@@ -285,7 +289,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           </div>
         </div>
 
-        {/* Desktop Controls */}
         <button 
           onClick={handlePrev}
           className="hidden md:flex absolute -left-20 top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-30 text-white transition-all border border-white/10"
