@@ -24,6 +24,7 @@ import { useWcUserOrders } from '@/hooks/use-woocommerce';
 import { showSuccess, showError } from '@/utils/toast';
 import { useTranslation } from '@/hooks/use-translation';
 import { uploadToCloudinary } from '@/utils/cloudinary';
+import { compressImage, validateVideo } from '@/utils/media';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -86,16 +87,25 @@ const Profile = () => {
   }, [navigate, userId]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'cover') => {
-    const file = e.target.files?.[0];
+    let file = e.target.files?.[0];
     if (!file || !currentUser || !isOwnProfile) return;
     
     const isAvatar = type === 'avatar';
     if (isAvatar) setUploadingAvatar(true); else setUploadingCover(true);
     
     try {
-      // Caricamento su Cloudinary invece di Supabase Storage
+      // 1. Ottimizzazione locale prima dell'upload
+      if (file.type.startsWith('video/')) {
+        const validation = await validateVideo(file);
+        if (!validation.ok) throw new Error(validation.error);
+      } else {
+        file = await compressImage(file);
+      }
+
+      // 2. Caricamento su Cloudinary (l'utility aggiunge f_auto/vc_auto all'URL)
       const publicUrl = await uploadToCloudinary(file);
 
+      // 3. Salvataggio URL nel database
       const updateData: any = { 
         id: currentUser.id, 
         updated_at: new Date().toISOString() 
@@ -183,12 +193,12 @@ const Profile = () => {
                 <span className="text-[10px] font-black uppercase tracking-widest text-white mt-2 drop-shadow-md">{t.profile.changeCover}</span>
               </div>
             )}
-            <input type="file" ref={coverInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'cover')} />
+            <input type="file" ref={coverInputRef} className="hidden" accept="image/*,video/*" onChange={(e) => handleFileUpload(e, 'cover')} />
           </div>
           
           <div className="absolute -bottom-12 left-6 flex items-end gap-4 z-20">
             <div className="relative group/avatar">
-              <input type="file" ref={avatarInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'avatar')} />
+              <input type="file" ref={avatarInputRef} className="hidden" accept="image/*,video/*" onChange={(e) => handleFileUpload(e, 'avatar')} />
               <div onClick={() => !isOwnProfile && setLightboxData({ images: [profile?.avatar_url || ""], index: 0 })} className={cn("w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-white rounded-full overflow-hidden shadow-2xl flex items-center justify-center relative", !isOwnProfile && "cursor-pointer")}>
                 {uploadingAvatar ? <Loader2 className="animate-spin text-zinc-500" /> : profile?.avatar_url ? <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" /> : <User size={40} className="text-zinc-800" />}
                 {isOwnProfile && (
