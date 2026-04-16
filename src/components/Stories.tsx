@@ -14,7 +14,7 @@ const Stories = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { stories, isLoading, uploadStory } = useStories();
-  const [selectedUserStories, setSelectedUserStories] = useState<any>(null);
+  const [selectedUserIndex, setSelectedUserIndex] = useState<number | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
 
@@ -44,13 +44,13 @@ const Stories = () => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleStoryClick = (userGroup: any) => {
+  const handleStoryClick = (index: number) => {
     if (!currentUser) {
       showError("Accedi per visualizzare le storie del District");
       navigate('/login');
       return;
     }
-    setSelectedUserStories(userGroup);
+    setSelectedUserIndex(index);
   };
 
   const handlePlusClick = (e: React.MouseEvent) => {
@@ -63,7 +63,9 @@ const Stories = () => {
     fileInputRef.current?.click();
   };
 
-  const myStories = stories?.find(s => s.user_id === currentUser?.id);
+  // Trova l'indice della mia storia se presente
+  const myStoriesIndex = stories?.findIndex(s => s.user_id === currentUser?.id);
+  const myStories = myStoriesIndex !== -1 ? stories?.[myStoriesIndex as number] : null;
   const lastStoryContent = myStories?.items[0]?.image_url;
 
   return (
@@ -87,7 +89,7 @@ const Stories = () => {
             />
             
             <button 
-              onClick={() => myStories ? handleStoryClick(myStories) : handlePlusClick(null as any)}
+              onClick={() => myStories ? handleStoryClick(myStoriesIndex as number) : handlePlusClick(null as any)}
               disabled={!myStories && uploadStory.isPending}
               className={cn(
                 "w-16 h-16 rounded-full border-[2.5px] border-black flex items-center justify-center bg-zinc-900 transition-all overflow-hidden",
@@ -121,32 +123,37 @@ const Stories = () => {
       </div>
 
       {/* Other Stories */}
-      {stories?.filter(s => s.user_id !== currentUser?.id).map((userGroup) => (
-        <button 
-          key={userGroup.user_id} 
-          onClick={() => handleStoryClick(userGroup)}
-          className="flex flex-col items-center gap-2 shrink-0 group"
-        >
-          <div className="w-16 h-16 rounded-full p-[2.5px] bg-gradient-to-tr from-zinc-700 via-zinc-400 to-white">
-            <div className="w-full h-full rounded-full border-[2.5px] border-black overflow-hidden bg-zinc-900">
-              {userGroup.avatar_url ? (
-                <img src={userGroup.avatar_url} alt={userGroup.username} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-zinc-700"><User size={24} /></div>
-              )}
+      {stories?.map((userGroup, index) => {
+        if (userGroup.user_id === currentUser?.id) return null;
+        
+        return (
+          <button 
+            key={userGroup.user_id} 
+            onClick={() => handleStoryClick(index)}
+            className="flex flex-col items-center gap-2 shrink-0 group"
+          >
+            <div className="w-16 h-16 rounded-full p-[2.5px] bg-gradient-to-tr from-zinc-700 via-zinc-400 to-white">
+              <div className="w-full h-full rounded-full border-[2.5px] border-black overflow-hidden bg-zinc-900">
+                {userGroup.avatar_url ? (
+                  <img src={userGroup.avatar_url} alt={userGroup.username} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-zinc-700"><User size={24} /></div>
+                )}
+              </div>
             </div>
-          </div>
-          <span className="text-[8px] font-black uppercase tracking-widest text-zinc-300 truncate w-16 text-center">
-            {userGroup.username}
-          </span>
-        </button>
-      ))}
+            <span className="text-[8px] font-black uppercase tracking-widest text-zinc-300 truncate w-16 text-center">
+              {userGroup.username}
+            </span>
+          </button>
+        );
+      })}
 
       <AnimatePresence>
-        {selectedUserStories && (
+        {selectedUserIndex !== null && stories && (
           <StoryViewer 
-            userStories={selectedUserStories} 
-            onClose={() => setSelectedUserStories(null)} 
+            allStories={stories}
+            initialUserIndex={selectedUserIndex} 
+            onClose={() => setSelectedUserIndex(null)} 
           />
         )}
       </AnimatePresence>

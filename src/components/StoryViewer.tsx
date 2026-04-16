@@ -12,19 +12,13 @@ import ShareStoryModal from './ShareStoryModal';
 import { cn } from '@/lib/utils';
 
 interface StoryViewerProps {
-  userStories: {
-    user_id: string;
-    username: string;
-    avatar_url?: string;
-    items: Array<{
-      id: string;
-      image_url: string;
-    }>;
-  };
+  allStories: any[];
+  initialUserIndex: number;
   onClose: () => void;
 }
 
-const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
+const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps) => {
+  const [userIndex, setUserIndex] = useState(initialUserIndex);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -37,26 +31,27 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
   const { deleteStory } = useStories();
   const { sendMessage } = useMessages();
   
-  const currentStory = userStories.items[currentIndex];
+  const userStories = allStories[userIndex];
+  const currentStory = userStories?.items[currentIndex];
   const isVideo = currentStory?.image_url.match(/\.(mp4|webm|ogg|mov)$/i) || currentStory?.image_url.includes('video');
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setCurrentUserId(user?.id || null);
     });
-    // Blocca lo scroll del body quando le storie sono aperte
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = 'unset';
     };
   }, []);
 
+  // Reset quando cambia l'utente o la storia
   useEffect(() => {
     setProgress(0);
-  }, [currentIndex]);
+  }, [userIndex, currentIndex]);
 
   useEffect(() => {
-    if (isVideo || isShareModalOpen) return;
+    if (isVideo || isShareModalOpen || !currentStory) return;
 
     const duration = 10000; // 10 secondi per le immagini
     const interval = 50; 
@@ -73,20 +68,34 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
     }, interval);
 
     return () => clearInterval(timer);
-  }, [currentIndex, isVideo, isShareModalOpen]);
+  }, [userIndex, currentIndex, isVideo, isShareModalOpen, currentStory]);
 
   const handleNext = () => {
     if (currentIndex < userStories.items.length - 1) {
+      // Prossima storia dello stesso utente
       setCurrentIndex(prev => prev + 1);
       setIsLiked(false);
+    } else if (userIndex < allStories.length - 1) {
+      // Passa all'utente successivo
+      setUserIndex(prev => prev + 1);
+      setCurrentIndex(0);
+      setIsLiked(false);
     } else {
+      // Fine di tutte le storie
       onClose();
     }
   };
 
   const handlePrev = () => {
     if (currentIndex > 0) {
+      // Storia precedente dello stesso utente
       setCurrentIndex(prev => prev - 1);
+      setIsLiked(false);
+    } else if (userIndex > 0) {
+      // Torna all'utente precedente (all'ultima sua storia)
+      const prevUserIndex = userIndex - 1;
+      setUserIndex(prevUserIndex);
+      setCurrentIndex(allStories[prevUserIndex].items.length - 1);
       setIsLiked(false);
     }
   };
@@ -123,13 +132,15 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
       try {
         await deleteStory.mutateAsync(currentStory.id);
         if (userStories.items.length === 1) {
-          onClose();
-        } else {
           handleNext();
+        } else {
+          setCurrentIndex(prev => Math.min(prev, userStories.items.length - 2));
         }
       } catch (err) {}
     }
   };
+
+  if (!userStories || !currentStory) return null;
 
   const isOwner = currentUserId === userStories.user_id;
 
@@ -213,6 +224,7 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
           {isVideo ? (
             <video
               ref={videoRef}
+              key={currentStory.id}
               src={currentStory.image_url}
               className="w-full h-full object-contain"
               autoPlay
@@ -223,6 +235,7 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
             />
           ) : (
             <img 
+              key={currentStory.id}
               src={currentStory.image_url} 
               className="w-full h-full object-contain" 
               alt="Story" 
