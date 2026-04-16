@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { showError, showSuccess } from '@/utils/toast';
 import { useEffect } from 'react';
+import { compressImage, validateVideo } from '@/utils/media';
 
 export interface Story {
   id: string;
@@ -71,7 +72,6 @@ export const useStories = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Usiamo upsert con nomi di colonna espliciti per matchare il vincolo UNIQUE
       const { error } = await supabase
         .from('story_views')
         .upsert(
@@ -84,7 +84,6 @@ export const useStories = () => {
         );
       
       if (error) {
-        // Silenziamo l'errore in console se è solo un problema di policy (già visto)
         if (!error.message.includes("policy")) {
           console.error("[Stories] Errore registrazione vista:", error.message);
         }
@@ -145,14 +144,26 @@ export const useStories = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Accedi per caricare una storia");
 
-      const uploadPromises = files.map(async (file) => {
+      const uploadPromises = files.map(async (originalFile) => {
+        let file = originalFile;
+        
+        if (file.type.startsWith('video/')) {
+          const validation = await validateVideo(file);
+          if (!validation.ok) throw new Error(validation.error);
+        } else {
+          file = await compressImage(file);
+        }
+
         const fileExt = file.name.split('.').pop();
         const fileName = `${user.id}-${Math.random()}.${fileExt}`;
         const filePath = `stories/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
           .from('post-media')
-          .upload(filePath, file);
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
 
         if (uploadError) throw uploadError;
 

@@ -52,7 +52,6 @@ export const useGarage = (targetUserId?: string) => {
   const uploadImages = async (files: File[]) => {
     const urls: string[] = [];
     for (let file of files) {
-      // Comprimi l'immagine prima dell'upload
       file = await compressImage(file);
 
       const fileExt = file.name.split('.').pop();
@@ -61,7 +60,10 @@ export const useGarage = (targetUserId?: string) => {
 
       const { error: uploadError } = await supabase.storage
         .from('post-media')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (uploadError) throw uploadError;
 

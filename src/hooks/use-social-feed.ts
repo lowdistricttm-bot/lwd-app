@@ -68,7 +68,6 @@ export const useSocialFeed = () => {
   });
 
   const uploadMedia = async (file: File, folder: string = 'posts') => {
-    // Validazione e compressione
     if (file.type.startsWith('video/')) {
       const validation = await validateVideo(file);
       if (!validation.ok) throw new Error(validation.error);
@@ -82,7 +81,10 @@ export const useSocialFeed = () => {
 
     const { error } = await supabase.storage
       .from('post-media')
-      .upload(filePath, file);
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
 
     if (error) throw error;
 
