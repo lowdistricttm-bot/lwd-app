@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { showError, showSuccess } from '@/utils/toast';
 import { compressImage, validateVideo } from '@/utils/media';
+import { uploadToCloudinary } from '@/utils/cloudinary';
 
 export interface Post {
   id: string;
@@ -67,7 +68,7 @@ export const useSocialFeed = () => {
     }
   });
 
-  const uploadMedia = async (file: File, folder: string = 'posts') => {
+  const processAndUpload = async (file: File) => {
     if (file.type.startsWith('video/')) {
       const validation = await validateVideo(file);
       if (!validation.ok) throw new Error(validation.error);
@@ -75,24 +76,8 @@ export const useSocialFeed = () => {
       file = await compressImage(file);
     }
 
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `${folder}/${fileName}`;
-
-    const { error } = await supabase.storage
-      .from('post-media')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
-
-    if (error) throw error;
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('post-media')
-      .getPublicUrl(filePath);
-
-    return publicUrl;
+    // Caricamento su Cloudinary invece di Supabase Storage
+    return await uploadToCloudinary(file);
   };
 
   const createPost = useMutation({
@@ -103,7 +88,7 @@ export const useSocialFeed = () => {
       let imageUrls: string[] = [];
       if (files && files.length > 0) {
         for (const file of files) {
-          const url = await uploadMedia(file);
+          const url = await processAndUpload(file);
           imageUrls.push(url);
         }
       }
@@ -136,7 +121,7 @@ export const useSocialFeed = () => {
 
       let image_url = null;
       if (file) {
-        image_url = await uploadMedia(file, 'comments');
+        image_url = await processAndUpload(file);
       }
 
       const { error } = await supabase
@@ -163,7 +148,7 @@ export const useSocialFeed = () => {
       let imageUrls: string[] = [];
       if (files && files.length > 0) {
         for (const file of files) {
-          const url = await uploadMedia(file);
+          const url = await processAndUpload(file);
           imageUrls.push(url);
         }
       }

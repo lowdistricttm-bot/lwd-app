@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from 'react';
 import { showSuccess, showError } from '@/utils/toast';
 import { compressImage, validateVideo } from '@/utils/media';
+import { uploadToCloudinary } from '@/utils/cloudinary';
 
 export interface Message {
   id: string;
@@ -108,7 +109,7 @@ export const useMessages = (otherUserId?: string) => {
     return () => { supabase.removeChannel(channel); };
   }, [otherUserId, queryClient]);
 
-  const uploadImage = async (file: File) => {
+  const processAndUpload = async (file: File) => {
     if (file.type.startsWith('video/')) {
       const validation = await validateVideo(file);
       if (!validation.ok) throw new Error(validation.error);
@@ -116,19 +117,8 @@ export const useMessages = (otherUserId?: string) => {
       file = await compressImage(file);
     }
 
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `chat/${fileName}`;
-    const { error } = await supabase.storage
-      .from('post-media')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
-
-    if (error) throw error;
-    const { data: { publicUrl } } = supabase.storage.from('post-media').getPublicUrl(filePath);
-    return publicUrl;
+    // Caricamento su Cloudinary
+    return await uploadToCloudinary(file);
   };
 
   const sendMessage = useMutation({
@@ -142,7 +132,7 @@ export const useMessages = (otherUserId?: string) => {
         imageUrls = [imageUrl];
       } else if (files && files.length > 0) {
         for (const file of files) {
-          const url = await uploadImage(file);
+          const url = await processAndUpload(file);
           imageUrls.push(url);
         }
       }

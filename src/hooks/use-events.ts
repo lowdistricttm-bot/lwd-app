@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { showError, showSuccess } from '@/utils/toast';
+import { uploadToCloudinary } from '@/utils/cloudinary';
 
 export interface Event {
   id: string;
@@ -45,31 +46,13 @@ export const useEvents = () => {
     }
   });
 
-  const uploadMedia = async (file: File, path: string) => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `${path}/${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('post-media')
-      .upload(filePath, file);
-
-    if (uploadError) throw new Error(uploadError.message);
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('post-media')
-      .getPublicUrl(filePath);
-      
-    return publicUrl;
-  };
-
   // --- ADMIN ACTIONS ---
 
   const createEvent = useMutation({
     mutationFn: async (data: Partial<Event> & { file?: File }) => {
       let image_url = data.image_url;
       if (data.file) {
-        image_url = await uploadMedia(data.file, 'events');
+        image_url = await uploadToCloudinary(data.file);
       }
 
       const { file, ...eventData } = data;
@@ -99,7 +82,7 @@ export const useEvents = () => {
     mutationFn: async (data: Partial<Event> & { file?: File }) => {
       let image_url = data.image_url;
       if (data.file) {
-        image_url = await uploadMedia(data.file, 'events');
+        image_url = await uploadToCloudinary(data.file);
       }
 
       const { file, id, ...eventData } = data;
@@ -153,7 +136,7 @@ export const useEvents = () => {
       let interiorUrls: string[] = [];
       if (data.interiorFiles && data.interiorFiles.length > 0) {
         for (const file of data.interiorFiles) {
-          const url = await uploadMedia(file, 'interiors');
+          const url = await uploadToCloudinary(file);
           interiorUrls.push(url);
         }
       }

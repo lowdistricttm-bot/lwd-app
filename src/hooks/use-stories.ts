@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { showError, showSuccess } from '@/utils/toast';
 import { useEffect } from 'react';
 import { compressImage, validateVideo } from '@/utils/media';
+import { uploadToCloudinary } from '@/utils/cloudinary';
 
 export interface Story {
   id: string;
@@ -154,22 +155,8 @@ export const useStories = () => {
           file = await compressImage(file);
         }
 
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-        const filePath = `stories/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('post-media')
-          .upload(filePath, file, {
-            cacheControl: '3600',
-            upsert: false
-          });
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('post-media')
-          .getPublicUrl(filePath);
+        // Caricamento su Cloudinary
+        const publicUrl = await uploadToCloudinary(file);
 
         const { error: dbError } = await supabase
           .from('stories')
