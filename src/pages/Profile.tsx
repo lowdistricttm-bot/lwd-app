@@ -23,6 +23,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useWcUserOrders } from '@/hooks/use-woocommerce';
 import { showSuccess, showError } from '@/utils/toast';
 import { useTranslation } from '@/hooks/use-translation';
+import { uploadToCloudinary } from '@/utils/cloudinary';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -87,19 +88,25 @@ const Profile = () => {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'cover') => {
     const file = e.target.files?.[0];
     if (!file || !currentUser || !isOwnProfile) return;
+    
     const isAvatar = type === 'avatar';
     if (isAvatar) setUploadingAvatar(true); else setUploadingCover(true);
+    
     try {
-      const fileExt = file.name.split('.').pop();
-      const bucket = isAvatar ? 'avatars' : 'covers';
-      const fileName = `${currentUser.id}-${Math.random()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage.from(bucket).upload(fileName, file);
-      if (uploadError) throw uploadError;
-      const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(fileName);
-      const updateData: any = { id: currentUser.id, updated_at: new Date().toISOString() };
-      if (isAvatar) updateData.avatar_url = publicUrl; else updateData.cover_url = publicUrl;
+      // Caricamento su Cloudinary invece di Supabase Storage
+      const publicUrl = await uploadToCloudinary(file);
+
+      const updateData: any = { 
+        id: currentUser.id, 
+        updated_at: new Date().toISOString() 
+      };
+      
+      if (isAvatar) updateData.avatar_url = publicUrl; 
+      else updateData.cover_url = publicUrl;
+
       const { error: updateError } = await supabase.from('profiles').upsert(updateData);
       if (updateError) throw updateError;
+
       showSuccess(isAvatar ? (language === 'it' ? "Foto profilo aggiornata!" : "Profile photo updated!") : (language === 'it' ? "Copertina aggiornata!" : "Cover updated!"));
       await fetchProfile(currentUser.id);
     } catch (error: any) {
