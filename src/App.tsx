@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import Bacheca from "./pages/Bacheca";
+import Discover from "./pages/Discover";
 import Shop from "./pages/Shop";
 import ProductDetail from "./pages/ProductDetail";
 import Checkout from "./pages/Checkout";
@@ -22,13 +23,12 @@ import Chat from "./pages/Chat";
 import PostDetail from "./pages/PostDetail";
 import NotFound from "./pages/NotFound";
 
-// Configurazione QueryClient ottimizzata per velocità e precisione
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60, // I dati sono considerati freschi per 1 minuto
-      gcTime: 1000 * 60 * 10, // Mantieni in memoria per 10 minuti
-      refetchOnWindowFocus: false, // Evita ricaricamenti inutili quando torni sulla tab
+      staleTime: 1000 * 60,
+      gcTime: 1000 * 60 * 10,
+      refetchOnWindowFocus: false,
       retry: 1,
     },
   },
@@ -62,6 +62,7 @@ const AppContent = () => {
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/bacheca" element={<Bacheca />} />
+      <Route path="/discover" element={<Discover />} />
       <Route path="/shop" element={<Shop />} />
       <Route path="/product/:id" element={<ProductDetail />} />
       <Route path="/checkout" element={<Checkout />} />

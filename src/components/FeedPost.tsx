@@ -124,6 +124,7 @@ const FeedPost = ({ post }: { post: Post }) => {
   const [replyingTo, setReplyingTo] = useState<{ id: string, name: string } | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
+  const [showHeartPop, setShowHeartPop] = useState(false);
   const commentFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -135,6 +136,10 @@ const FeedPost = ({ post }: { post: Post }) => {
       showError(language === 'it' ? "Accedi per mettere like" : "Login to like");
       navigate('/login');
       return;
+    }
+    if (!post.is_liked) {
+      setShowHeartPop(true);
+      setTimeout(() => setShowHeartPop(false), 1000);
     }
     toggleLike.mutate(post.id);
   };
@@ -221,16 +226,19 @@ const FeedPost = ({ post }: { post: Post }) => {
         <div className="px-4 pb-4"><p className="text-sm text-zinc-300 leading-relaxed font-medium">{post.content}</p></div>
 
         {images.length > 0 && (
-          <div className={cn(
-            "grid gap-0.5 bg-black border-y border-white/5",
-            images.length === 1 ? "grid-cols-1" : images.length === 2 ? "grid-cols-2" : "grid-cols-2"
-          )}>
+          <div 
+            className={cn(
+              "grid gap-0.5 bg-black border-y border-white/5 relative",
+              images.length === 1 ? "grid-cols-1" : "grid-cols-2"
+            )}
+            onDoubleClick={handleLike}
+          >
             {images.map((url, idx) => (
               <div 
                 key={idx} 
                 className={cn(
                   "aspect-square bg-zinc-950 overflow-hidden relative",
-                  images.length === 3 && idx === 0 ? "row-span-2" : "",
+                  images.length === 3 && idx === 0 ? "row-span-2 h-full" : "",
                   !isVideo(url) && "cursor-pointer"
                 )}
                 onClick={() => !isVideo(url) && setLightboxData({ images, index: idx })}
@@ -242,6 +250,19 @@ const FeedPost = ({ post }: { post: Post }) => {
                 )}
               </div>
             ))}
+
+            <AnimatePresence>
+              {showHeartPop && (
+                <motion.div 
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1.5, opacity: 1 }}
+                  exit={{ scale: 2, opacity: 0 }}
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
+                >
+                  <Heart size={80} className="text-white fill-white drop-shadow-2xl" />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         )}
 
