@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { showError, showSuccess } from '@/utils/toast';
 
-export type UserRole = 'admin' | 'staff' | 'support' | 'member' | 'registered';
+export type UserRole = 'admin' | 'staff' | 'support' | 'member';
 
 export const useAdmin = () => {
   const queryClient = useQueryClient();
@@ -27,7 +27,7 @@ export const useAdmin = () => {
   });
 
   // Logica di determinazione del ruolo: la colonna 'role' ha la precedenza
-  const role = profile?.role || (profile?.is_admin ? 'admin' : 'registered');
+  const role = profile?.role || (profile?.is_admin ? 'admin' : 'member');
   
   // Definizioni strette dei permessi
   const isAdmin = role === 'admin';
