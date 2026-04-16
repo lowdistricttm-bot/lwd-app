@@ -27,7 +27,7 @@ export const useAdmin = () => {
   });
 
   // Logica di determinazione del ruolo: la colonna 'role' ha la precedenza
-  const role = profile?.role || (profile?.is_admin ? 'admin' : 'member');
+  const role = profile?.role || (profile?.is_admin ? 'admin' : 'registered');
   
   // Definizioni strette dei permessi
   const isAdmin = role === 'admin';
