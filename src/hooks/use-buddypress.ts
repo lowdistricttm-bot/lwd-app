@@ -39,18 +39,21 @@ export const useBPActivity = () => {
   });
 };
 
-// Nuova funzione per cercare membri su tutto il sito WordPress
 export const useBPSearchMembers = (search: string) => {
   return useQuery({
     queryKey: ['bp-members-search', search],
     queryFn: async () => {
       if (search.length < 2) return [];
       const headers = await getAuthHeader();
-      const response = await fetch(`${BP_API_URL}/members?search=${encodeURIComponent(search)}&per_page=20`, {
-        headers: { 'Accept': 'application/json', ...headers }
-      });
-      if (!response.ok) return [];
-      return response.json();
+      try {
+        const response = await fetch(`${BP_API_URL}/members?search=${encodeURIComponent(search)}&per_page=20`, {
+          headers: { 'Accept': 'application/json', ...headers }
+        });
+        if (!response.ok) return [];
+        return response.json();
+      } catch (err) {
+        return [];
+      }
     },
     enabled: search.length >= 2
   });
@@ -101,13 +104,33 @@ export const useBPMember = (username?: string) => {
     queryFn: async () => {
       if (!username) return null;
       const headers = await getAuthHeader();
-      const response = await fetch(`${BP_API_URL}/members?search=${username}`, {
-        headers: { 'Accept': 'application/json', ...headers }
-      });
-      if (!response.ok) return null;
-      const data = await response.json();
-      return data[0];
+      
+      // Puliamo lo username per la ricerca (rimuoviamo trattini se presenti per la ricerca testuale)
+      const searchTerm = username.replace(/-/g, ' ');
+      
+      try {
+        const response = await fetch(`${BP_API_URL}/members?search=${encodeURIComponent(searchTerm)}`, {
+          headers: { 'Accept': 'application/json', ...headers }
+        });
+        
+        if (!response.ok) return null;
+        const data = await response.json();
+        
+        // Cerchiamo una corrispondenza esatta se possibile
+        if (Array.isArray(data) && data.length > 0) {
+          return data.find((m: any) => 
+            m.user_login === username || 
+            m.mention_name === username || 
+            m.name === searchTerm
+          ) || data[0];
+        }
+        return null;
+      } catch (err) {
+        console.error("[BuddyPress] Errore ricerca membro:", err);
+        return null;
+      }
     },
-    enabled: !!username
+    enabled: !!username,
+    retry: false // Evitiamo loop di retry su errori 400
   });
 };
