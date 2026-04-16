@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { showError, showSuccess } from '@/utils/toast';
+import { useEffect } from 'react';
 
 export interface Story {
   id: string;
@@ -70,33 +71,71 @@ export const useStories = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Non registrare la visualizzazione se è la propria storia
-      const { data: story } = await supabase.from('stories').select('user_id').eq('id', storyId).single();
-      if (story?.user_id === user.id) return;
+      // Verifichiamo se la storia appartiene all'utente corrente
+      const { data: story } = await supabase
+        .from('stories')
+        .select('user_id')
+        .eq('id', storyId)
+        .maybeSingle();
+      
+      if (!story || story.user_id === user.id) return;
 
+      // Usiamo upsert per evitare duplicati e registrare solo la prima volta
       await supabase
         .from('story_views')
-        .upsert({ story_id: storyId, user_id: user.id }, { onConflict: 'story_id, user_id' });
+        .upsert(
+          { story_id: storyId, user_id: user.id }, 
+          { onConflict: 'story_id, user_id' }
+        );
     }
   });
 
-  const getStoryViews = (storyId: string) => {
-    return useQuery({
+  const getStoryViews = (storyId: string | null) => {
+    const query = useQuery({
       queryKey: ['story-views', storyId],
       queryFn: async () => {
+        if (!storyId) return [];
         const { data, error } = await supabase
           .from('story_views')
           .select(`
             *,
             profiles:user_id (username, avatar_url)
           `)
-          .eq('story_id', storyId);
+          .eq('story_id', storyId)
+          .order('viewed_at', { ascending: false });
         
         if (error) throw error;
         return data;
       },
       enabled: !!storyId
     });
+
+    // Sottoscrizione Realtime per aggiornare l'elenco visualizzazioni istantaneamente
+    useEffect(() => {
+      if (!storyId) return;
+
+      const channel = supabase
+        .channel(`views-${storyId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'story_views',
+            filter: `story_id=eq.${storyId}`
+          },
+          () => {
+            query.refetch();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }, [storyId, query]);
+
+    return query;
   };
 
   const uploadStory = useMutation({

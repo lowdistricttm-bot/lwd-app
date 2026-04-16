@@ -41,7 +41,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
   const isVideo = currentStory?.image_url.match(/\.(mp4|webm|ogg|mov)$/i) || currentStory?.image_url.includes('video');
   const isOwner = currentUserId === userStories?.user_id;
 
-  // Recupera le visualizzazioni se l'utente è il proprietario
+  // Recupera le visualizzazioni in tempo reale se l'utente è il proprietario
   const { data: views, isLoading: loadingViews } = getStoryViews(isOwner ? currentStory?.id : null);
 
   useEffect(() => {
@@ -54,12 +54,13 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
     };
   }, []);
 
+  // Registra la visualizzazione ogni volta che cambia la storia
   useEffect(() => {
     setProgress(0);
-    if (currentStory && !isOwner) {
+    if (currentStory?.id && currentUserId && !isOwner) {
       recordView.mutate(currentStory.id);
     }
-  }, [userIndex, currentIndex, currentStory, isOwner]);
+  }, [currentStory?.id, currentUserId, isOwner]);
 
   useEffect(() => {
     if (isVideo || isShareModalOpen || showViewers || !currentStory) return;
