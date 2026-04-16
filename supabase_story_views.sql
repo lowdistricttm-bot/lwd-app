@@ -1,20 +1,27 @@
--- Rimuovo le vecchie policy per resettarle correttamente
-DROP POLICY IF EXISTS "Users can view views for their own stories" ON public.story_views;
-DROP POLICY IF EXISTS "Users can insert their own views" ON public.story_views;
+-- Assicuriamoci che la tabella sia pulita e configurata bene
+DROP POLICY IF EXISTS "story_views_insert_policy" ON public.story_views;
+DROP POLICY IF EXISTS "story_views_select_policy" ON public.story_views;
 
--- 1. Permetti a chiunque autenticato di inserire una visualizzazione (il check user_id garantisce l'identità)
+-- 1. Permetti l'inserimento a tutti gli utenti autenticati
 CREATE POLICY "story_views_insert_policy" ON public.story_views
 FOR INSERT TO authenticated
 WITH CHECK (auth.uid() = user_id);
 
--- 2. Permetti al proprietario della storia di vedere chi l'ha visualizzata
+-- 2. Permetti la lettura al proprietario della storia (join diretto su stories)
 CREATE POLICY "story_views_select_policy" ON public.story_views
 FOR SELECT TO authenticated
 USING (
-  story_id IN (
-    SELECT id FROM public.stories WHERE user_id = auth.uid()
+  EXISTS (
+    SELECT 1 FROM public.stories 
+    WHERE stories.id = story_views.story_id 
+    AND stories.user_id = auth.uid()
   )
 );
 
--- Assicuriamoci che il Realtime sia attivo per questa tabella
-ALTER PUBLICATION supabase_realtime ADD TABLE story_views;
+-- Forza l'abilitazione del Realtime (metodo sicuro)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE tablename = 'story_views') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE story_views;
+  END IF;
+END $$;

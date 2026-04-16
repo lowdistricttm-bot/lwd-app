@@ -71,16 +71,8 @@ export const useStories = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Verifichiamo se la storia appartiene all'utente corrente
-      const { data: story } = await supabase
-        .from('stories')
-        .select('user_id')
-        .eq('id', storyId)
-        .maybeSingle();
-      
-      if (!story || story.user_id === user.id) return;
-
-      // Usiamo upsert per evitare duplicati e registrare solo la prima volta
+      // Registriamo la visualizzazione. La policy RLS si occupa della sicurezza.
+      // Usiamo upsert così se l'utente guarda la storia più volte non creiamo duplicati.
       await supabase
         .from('story_views')
         .upsert(
@@ -107,7 +99,8 @@ export const useStories = () => {
         if (error) throw error;
         return data;
       },
-      enabled: !!storyId
+      enabled: !!storyId,
+      staleTime: 0 // Forza il recupero di dati freschi
     });
 
     // Sottoscrizione Realtime per aggiornare l'elenco visualizzazioni istantaneamente
@@ -119,7 +112,7 @@ export const useStories = () => {
         .on(
           'postgres_changes',
           {
-            event: 'INSERT',
+            event: '*',
             schema: 'public',
             table: 'story_views',
             filter: `story_id=eq.${storyId}`
