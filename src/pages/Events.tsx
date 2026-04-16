@@ -127,6 +127,12 @@ const Events = () => {
     return `${startDate.toLocaleDateString(locale, { day: '2-digit', month: '2-digit' })} - ${endDate.toLocaleDateString(locale)}`;
   };
 
+  const handleDeleteEvent = (id: string) => {
+    if (confirm(language === 'it' ? "Sei sicuro di voler eliminare questo evento?" : "Are you sure you want to delete this event?")) {
+      deleteEvent.mutate(id);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Navbar />
@@ -220,6 +226,25 @@ const Events = () => {
                             {!user && event.status === 'open' && <Lock size={12} className="mr-2" />}
                             {event.status === 'open' ? t.events.apply : t.events.statusClosed} <ChevronRight size={14} className="ml-2" />
                           </Button>
+                        )}
+
+                        {isAdmin && (
+                          <div className="flex gap-2 ml-auto">
+                            <Button 
+                              onClick={() => { setEditingEvent(event); setIsAdminModalOpen(true); }}
+                              variant="outline"
+                              className="border-white/10 text-zinc-400 hover:bg-white hover:text-black rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 px-4"
+                            >
+                              <Edit3 size={14} />
+                            </Button>
+                            <Button 
+                              onClick={() => handleDeleteEvent(event.id)}
+                              variant="outline"
+                              className="border-white/10 text-red-500 hover:bg-red-600 hover:text-white rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 px-4"
+                            >
+                              <Trash2 size={14} />
+                            </Button>
+                          </div>
                         )}
                       </div>
                     </div>

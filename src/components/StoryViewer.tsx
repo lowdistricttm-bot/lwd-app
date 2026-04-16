@@ -44,6 +44,11 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setCurrentUserId(user?.id || null);
     });
+    // Blocca lo scroll del body quando le storie sono aperte
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
   }, []);
 
   useEffect(() => {
@@ -133,14 +138,14 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[200] bg-black flex items-center justify-center overflow-hidden"
+      className="fixed inset-0 z-[200] bg-black flex items-center justify-center overflow-hidden touch-none"
     >
-      {/* Background Blur */}
-      <div className="absolute inset-0 z-0 opacity-40 blur-3xl scale-110">
+      {/* Background Blur Immersivo */}
+      <div className="absolute inset-0 z-0 opacity-50 blur-[100px] scale-150">
         <img src={currentStory.image_url} className="w-full h-full object-cover" alt="" />
       </div>
 
-      <div className="relative w-full max-w-[450px] h-full md:h-[92vh] bg-zinc-950 overflow-hidden md:rounded-[2.5rem] flex flex-col shadow-2xl border border-white/5">
+      <div className="relative w-full max-w-[500px] h-full bg-black overflow-hidden flex flex-col shadow-2xl">
         {/* Progress Bars */}
         <div className="absolute top-4 left-4 right-4 z-50 flex gap-1.5">
           {userStories.items.map((_, i) => (
@@ -158,13 +163,13 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
         {/* Header */}
         <div className="absolute top-8 left-4 right-4 z-50 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full border-2 border-white/20 overflow-hidden bg-zinc-800">
+            <div className="w-10 h-10 rounded-full border-2 border-white/20 overflow-hidden bg-zinc-800">
               {userStories.avatar_url && (
                 <img src={userStories.avatar_url} className="w-full h-full object-cover" alt="" />
               )}
             </div>
             <div className="flex flex-col">
-              <span className="text-xs font-black uppercase italic tracking-widest text-white drop-shadow-lg">
+              <span className="text-sm font-black uppercase italic tracking-widest text-white drop-shadow-lg">
                 {userStories.username}
               </span>
               <span className="text-[8px] font-bold text-white/60 uppercase tracking-widest">
@@ -199,8 +204,8 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
 
         {/* Navigation Areas (Touch) */}
         <div className="absolute inset-0 z-20 flex">
-          <div className="w-1/4 h-full cursor-pointer" onClick={handlePrev} />
-          <div className="w-3/4 h-full cursor-pointer" onClick={handleNext} />
+          <div className="w-1/3 h-full cursor-pointer" onClick={handlePrev} />
+          <div className="w-2/3 h-full cursor-pointer" onClick={handleNext} />
         </div>
 
         {/* Media Content */}
@@ -209,7 +214,7 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
             <video
               ref={videoRef}
               src={currentStory.image_url}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
               autoPlay
               playsInline
               muted={isMuted}
@@ -219,14 +224,14 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
           ) : (
             <img 
               src={currentStory.image_url} 
-              className="w-full h-full object-cover" 
+              className="w-full h-full object-contain" 
               alt="Story" 
             />
           )}
         </div>
 
         {/* Footer Interaction */}
-        <div className="absolute bottom-0 left-0 right-0 z-50 p-6 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+        <div className="absolute bottom-0 left-0 right-0 z-50 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
           <div className="flex items-center gap-4">
             <form onSubmit={handleReply} className="flex-1 flex gap-2">
               <Input 
@@ -270,15 +275,15 @@ const StoryViewer = ({ userStories, onClose }: StoryViewerProps) => {
         {/* Desktop Controls */}
         <button 
           onClick={handlePrev}
-          className="hidden md:flex absolute -left-16 top-1/2 -translate-y-1/2 w-12 h-12 items-center justify-center bg-white/10 hover:bg-white/20 rounded-full z-30 text-white transition-all border border-white/10"
+          className="hidden md:flex absolute -left-20 top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-30 text-white transition-all border border-white/10"
         >
-          <ChevronLeft size={24} />
+          <ChevronLeft size={32} />
         </button>
         <button 
           onClick={handleNext}
-          className="hidden md:flex absolute -right-16 top-1/2 -translate-y-1/2 w-12 h-12 items-center justify-center bg-white/10 hover:bg-white/20 rounded-full z-30 text-white transition-all border border-white/10"
+          className="hidden md:flex absolute -right-20 top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-30 text-white transition-all border border-white/10"
         >
-          <ChevronRight size={24} />
+          <ChevronRight size={32} />
         </button>
       </div>
 
