@@ -72,6 +72,18 @@ const Events = () => {
     } catch (error) {}
   };
 
+  // Funzione per formattare correttamente date singole o range di date
+  const formatDateRange = (start: string, end?: string) => {
+    const startDate = new Date(start).toLocaleDateString();
+    if (end) {
+      const endDate = new Date(end).toLocaleDateString();
+      if (startDate !== endDate) {
+        return `${startDate} - ${endDate}`;
+      }
+    }
+    return startDate;
+  };
+
   const btnBaseClass = "rounded-full font-black uppercase italic text-[10px] tracking-widest h-12 w-full sm:w-48 backdrop-blur-md transition-all flex items-center justify-center gap-2 border shadow-lg";
 
   return (
@@ -120,7 +132,7 @@ const Events = () => {
 
                         <div className="flex flex-wrap justify-center gap-6 text-[10px] font-black uppercase text-zinc-500">
                           <span className="flex items-center gap-1.5"><MapPin size={14} /> {event.location}</span>
-                          <span className="flex items-center gap-1.5"><Calendar size={14} /> {new Date(event.date).toLocaleDateString()}</span>
+                          <span className="flex items-center gap-1.5"><Calendar size={14} /> {formatDateRange(event.date, event.end_date)}</span>
                         </div>
                       </div>
                       
@@ -165,7 +177,7 @@ const Events = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-zinc-900/50 border border-white/5 p-4 rounded-2xl">
                       <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest mb-1">{t.events.date}</p>
-                      <p className="text-sm font-bold uppercase">{new Date(viewingEvent.date).toLocaleDateString()}</p>
+                      <p className="text-sm font-bold uppercase">{formatDateRange(viewingEvent.date, viewingEvent.end_date)}</p>
                     </div>
                     <div className="bg-zinc-900/50 border border-white/5 p-4 rounded-2xl">
                       <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest mb-1">{t.events.location}</p>
@@ -200,16 +212,12 @@ const Events = () => {
             <>
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedEvent(null)} className="fixed inset-0 bg-black/90 backdrop-blur-md z-[150]" />
               <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed inset-x-0 bottom-0 z-[151] bg-zinc-950 border-t border-white/10 p-8 rounded-t-[2rem] max-h-[85vh] overflow-y-auto">
-                <div className="flex justify-between items-start mb-8 gap-4">
-                  <div className="flex-1 min-w-0 overflow-hidden">
+                <div className="flex justify-between items-center mb-8">
+                  <div>
                     <h3 className="text-2xl font-black italic uppercase tracking-tighter">{t.events.apply}</h3>
-                    <div className="w-full overflow-x-auto no-scrollbar mt-1">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 whitespace-nowrap pr-4">
-                        {selectedEvent.title}
-                      </p>
-                    </div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{selectedEvent.title}</p>
                   </div>
-                  <button onClick={() => setSelectedEvent(null)} className="p-2 text-zinc-500 hover:text-white shrink-0"><X size={24} /></button>
+                  <button onClick={() => setSelectedEvent(null)} className="p-2 text-zinc-500 hover:text-white"><X size={24} /></button>
                 </div>
 
                 <form onSubmit={handleApply} className="space-y-6">
