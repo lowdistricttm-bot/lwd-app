@@ -10,12 +10,36 @@ import Stories from '@/components/Stories';
 import FeaturedProducts from '@/components/FeaturedProducts';
 import LatestActivities from '@/components/LatestActivities';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
-import { ShoppingBag, Users, Calendar, ArrowRight, Star, Music, Play } from 'lucide-react';
+import { ShoppingBag, Users, Calendar, ArrowRight, Star, Music, Play, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from '@/hooks/use-translation';
 
 const Index = () => {
   const { t } = useTranslation();
+
+  const navigationTabs = [
+    { 
+      icon: Users, 
+      title: t.home.values.community, 
+      desc: t.home.values.communityDesc,
+      href: '/bacheca',
+      label: 'Entra nel Feed'
+    },
+    { 
+      icon: Star, 
+      title: t.home.values.quality, 
+      desc: t.home.values.qualityDesc,
+      href: '/shop',
+      label: 'Vai allo Shop'
+    },
+    { 
+      icon: Calendar, 
+      title: t.home.values.events, 
+      desc: t.home.values.eventsDesc,
+      href: '/events',
+      label: 'Vedi Calendario'
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -70,30 +94,46 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Sezione Valori / Stats */}
+        {/* Sezione Navigazione Rapida (Ex Valori) */}
         <section className="py-24 px-6 bg-black">
           <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-              {[
-                { icon: Users, title: t.home.values.community, desc: t.home.values.communityDesc },
-                { icon: Star, title: t.home.values.quality, desc: t.home.values.qualityDesc },
-                { icon: Calendar, title: t.home.values.events, desc: t.home.values.eventsDesc }
-              ].map((item, i) => (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
+              {navigationTabs.map((item, i) => (
                 <motion.div 
                   key={i}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
-                  className="text-center space-y-4"
                 >
-                  <div className="w-16 h-16 bg-zinc-900 border border-white/5 flex items-center justify-center mx-auto mb-6 rotate-45 group hover:rotate-0 transition-transform duration-500">
-                    <item.icon className="text-white -rotate-45 group-hover:rotate-0 transition-transform duration-500" size={24} />
-                  </div>
-                  <h4 className="text-xl font-black italic uppercase tracking-tighter">{item.title}</h4>
-                  <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest leading-relaxed max-w-[200px] mx-auto">
-                    {item.desc}
-                  </p>
+                  <Link 
+                    to={item.href}
+                    className="group block relative bg-zinc-900/30 border border-white/5 p-8 md:p-12 hover:bg-white hover:border-white transition-all duration-500 overflow-hidden"
+                  >
+                    {/* Background Decorativo */}
+                    <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+                      <item.icon size={120} className="text-white group-hover:text-black" />
+                    </div>
+
+                    <div className="relative z-10 space-y-6">
+                      <div className="w-12 h-12 bg-zinc-800 border border-white/5 flex items-center justify-center rotate-45 group-hover:bg-black group-hover:rotate-0 transition-all duration-500">
+                        <item.icon className="text-white -rotate-45 group-hover:rotate-0 transition-transform duration-500" size={20} />
+                      </div>
+                      
+                      <div>
+                        <h4 className="text-2xl font-black italic uppercase tracking-tighter group-hover:text-black transition-colors">
+                          {item.title}
+                        </h4>
+                        <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest leading-relaxed mt-2 group-hover:text-black/60 transition-colors">
+                          {item.desc}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] text-white group-hover:text-black transition-colors pt-4 border-t border-white/5 group-hover:border-black/10">
+                        {item.label} <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </div>
+                  </Link>
                 </motion.div>
               ))}
             </div>
