@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Car, Loader2, ChevronRight, X, MapPin, Camera, Trash2, Settings2, Calendar, Plus, Edit3, Clock, Lock } from 'lucide-react';
+import { Car, Loader2, ChevronRight, X, MapPin, Camera, Trash2, Settings2, Calendar, Plus, Edit3, Clock, Lock, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
@@ -60,7 +60,7 @@ const Events = () => {
   const handleApply = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedEvent || !formData.vehicleId || interiorFiles.length < 3) {
-      showError(language === 'it' ? "Compila tutti i campi e carica almeno 3 foto" : "Fill all fields and upload at least 3 photos");
+      showError(language === 'it' ? "Compila tutti i campi, seleziona un veicolo e carica almeno 3 foto" : "Fill all fields, select a vehicle and upload at least 3 photos");
       return;
     }
     try {
@@ -242,15 +242,54 @@ const Events = () => {
                       <Label className="text-[10px] font-black uppercase text-zinc-500">{t.events.form.instagram}</Label>
                       <Input required value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})} placeholder="@username" className="bg-transparent border-zinc-800 rounded-none h-12" />
                     </div>
-                    <div className="space-y-2">
+                    
+                    <div className="space-y-3 md:col-span-2 pt-2">
                       <Label className="text-[10px] font-black uppercase text-zinc-500">{t.events.form.selectVehicle}</Label>
-                      <select required value={formData.vehicleId} onChange={e => setFormData({...formData, vehicleId: e.target.value})} className="w-full bg-transparent border border-zinc-800 rounded-none h-12 px-3 text-sm italic">
-                        <option value="" className="bg-zinc-950">Seleziona un veicolo...</option>
-                        {vehicles?.map(v => (
-                          <option key={v.id} value={v.id} className="bg-zinc-950">{v.brand} {v.model}</option>
-                        ))}
-                      </select>
-                      {vehicles?.length === 0 && <p className="text-[10px] text-red-500 mt-1 italic">Devi prima aggiungere un veicolo nel tuo Garage.</p>}
+                      {vehicles?.length === 0 ? (
+                        <div className="bg-zinc-900/30 border border-white/5 p-6 rounded-xl text-center">
+                          <Car size={24} className="mx-auto text-zinc-600 mb-2" />
+                          <p className="text-[10px] text-red-500 italic font-bold">Devi prima aggiungere un veicolo nel tuo Garage.</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                          {vehicles?.map(v => {
+                            const isSelected = formData.vehicleId === v.id;
+                            const image = v.images?.[0] || v.image_url;
+                            return (
+                              <div 
+                                key={v.id}
+                                onClick={() => setFormData({...formData, vehicleId: v.id})}
+                                className={cn(
+                                  "relative rounded-xl overflow-hidden cursor-pointer border-2 transition-all duration-300",
+                                  isSelected ? "border-white" : "border-transparent hover:border-white/30 bg-zinc-900/50"
+                                )}
+                              >
+                                <div className="aspect-video relative bg-zinc-950">
+                                  {image ? (
+                                    <img src={image} className={cn("w-full h-full object-cover transition-opacity", isSelected ? "opacity-100" : "opacity-60")} alt="" />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                      <Car size={24} className={cn("transition-colors", isSelected ? "text-white" : "text-zinc-700")} />
+                                    </div>
+                                  )}
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                                  
+                                  <div className="absolute bottom-2 left-2 right-2">
+                                    <p className={cn("text-[10px] font-black italic uppercase truncate transition-colors", isSelected ? "text-white" : "text-zinc-300")}>{v.brand}</p>
+                                    <p className="text-[8px] text-zinc-500 font-bold uppercase truncate">{v.model}</p>
+                                  </div>
+                                  
+                                  {isSelected && (
+                                    <div className="absolute top-2 right-2 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-lg">
+                                      <CheckCircle2 size={12} className="text-black" />
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   </div>
 
