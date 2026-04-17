@@ -117,7 +117,7 @@ const Navbar = () => {
           </AlertDialogHeader>
           <AlertDialogFooter className="sm:flex-col gap-2">
             <AlertDialogAction 
-              onClick={() => window.location.href = 'https://www.lowdistrict.it/selezioni/'} 
+              onClick={() => window.open('https://www.lowdistrict.it/selection-lwdstrct/', '_blank')} 
               className="rounded-none bg-white text-black font-black uppercase italic text-[10px] w-full"
             >
               Invia Selezione
