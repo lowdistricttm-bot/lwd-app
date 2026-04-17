@@ -194,16 +194,11 @@ const Profile = () => {
                   </button>
                 )}
               </div>
-              <AnimatePresence>
-                {isOnline && (
-                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} className="absolute top-1.5 left-1.5 w-5 h-5 md:w-7 md:h-7 rounded-full z-30 bg-green-500 border-2 border-black shadow-[0_0_15px_rgba(34,197,94,0.6)]" />
-                )}
-              </AnimatePresence>
               <input type="file" ref={avatarInputRef} className="hidden" accept="image/*,video/*" onChange={(e) => handleFileUpload(e, 'avatar')} />
             </div>
             <div className="mb-2 min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-nowrap w-full overflow-visible">
-                <h1 className="text-sm md:text-xl font-black italic uppercase tracking-tighter leading-none">{profile?.username || 'Utente'}</h1>
+                <h1 className="text-xs md:text-lg font-black italic uppercase tracking-tighter leading-none">{profile?.username || 'Utente'}</h1>
                 <div className="flex items-center gap-1 shrink-0">
                   {!isOwnProfile && currentUser && (!isTargetSubscriber || canVote) && (
                     <button onClick={() => navigate(`/chat/${profile.id}`)} className="p-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all"><Mail size={18} /></button>
@@ -216,12 +211,18 @@ const Profile = () => {
               </div>
               <div className="mt-1">
                 <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.3em] italic">{t.profile.roles[userRole] || t.profile.roles.member}</p>
-                <p className={cn(
-                  "text-[7px] font-black uppercase tracking-widest mt-0.5",
-                  isOnline ? "text-green-500" : "text-zinc-600"
-                )}>
-                  {isOnline ? 'Online' : lastSeen ? `Ultimo accesso ${lastSeen}` : 'Offline'}
-                </p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <div className={cn(
+                    "w-1.5 h-1.5 rounded-full",
+                    isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" : "bg-zinc-600"
+                  )} />
+                  <p className={cn(
+                    "text-[7px] font-black uppercase tracking-widest",
+                    isOnline ? "text-green-500" : "text-zinc-600"
+                  )}>
+                    {isOnline ? 'Online' : lastSeen ? `Ultimo accesso ${lastSeen}` : 'Offline'}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -287,7 +288,7 @@ const Profile = () => {
       </AlertDialog>
 
       <CreatePostModal isOpen={isPostModalOpen} onClose={() => setIsPostModalOpen(false)} />
-      <ImageLightbox images={lightboxData?.images || []} initialIndex={lightboxData?.index || 0} isOpen={!!lightboxData} onClose={() => setLightboxData(null)} />
+      <ImageLightbox images={lightboxData?.images || []} initialIndex={lightboxData?.index || 0} isOpen={!!lightboxData} onClose={(() => setLightboxData(null))} />
       <BottomNav />
     </div>
   );

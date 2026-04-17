@@ -96,35 +96,29 @@ const Chat = () => {
           onClick={() => navigate(`/profile/${userId}`)}
           className="flex items-center gap-3 hover:opacity-70 transition-opacity text-left"
         >
-          <div className="relative">
-            <div className="w-10 h-10 bg-zinc-800 rounded-full overflow-hidden border border-white/10">
-              {otherUserProfile?.avatar_url ? (
-                <img src={otherUserProfile.avatar_url} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center"><User size={18} strokeWidth={1.5} className="text-zinc-600" /></div>
-              )}
-            </div>
-            <AnimatePresence>
-              {isOnline && (
-                <motion.div 
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0 }}
-                  className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-black rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)]" 
-                />
-              )}
-            </AnimatePresence>
+          <div className="w-10 h-10 bg-zinc-800 rounded-full overflow-hidden border border-white/10">
+            {otherUserProfile?.avatar_url ? (
+              <img src={otherUserProfile.avatar_url} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center"><User size={18} strokeWidth={1.5} className="text-zinc-600" /></div>
+            )}
           </div>
           <div>
             <h4 className="text-sm font-black italic uppercase tracking-tight leading-none">
               {otherUserProfile?.username || 'Membro District'}
             </h4>
-            <p className={cn(
-              "text-[8px] font-black uppercase tracking-widest mt-1 transition-colors duration-500",
-              isOnline ? "text-green-500" : "text-zinc-500"
-            )}>
-              {isOnline ? 'Online' : lastSeen ? `Ultimo accesso ${lastSeen}` : 'Offline'}
-            </p>
+            <div className="flex items-center gap-1.5 mt-1">
+              <div className={cn(
+                "w-1.5 h-1.5 rounded-full",
+                isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" : "bg-zinc-600"
+              )} />
+              <p className={cn(
+                "text-[8px] font-black uppercase tracking-widest transition-colors duration-500",
+                isOnline ? "text-green-500" : "text-zinc-500"
+              )}>
+                {isOnline ? 'Online' : lastSeen ? `Ultimo accesso ${lastSeen}` : 'Offline'}
+              </p>
+            </div>
           </div>
         </button>
       </nav>
