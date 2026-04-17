@@ -115,7 +115,7 @@ const translations: Record<Language, any> = {
       cancel: 'ANNULLA'
     },
     events: {
-      title: 'EVENTI & SELEZIONI',
+      title: 'EVENTI',
       subtitle: 'DISTRICT CALENDAR',
       apply: 'INVIA SELEZIONE',
       statusOpen: 'ISCRIZIONI APERTE',
@@ -353,7 +353,7 @@ const translations: Record<Language, any> = {
       cancel: 'CANCEL'
     },
     events: {
-      title: 'EVENTS & SELECTIONS',
+      title: 'EVENTS',
       subtitle: 'DISTRICT CALENDAR',
       apply: 'SUBMIT SELECTION',
       statusOpen: 'REGISTRATION OPEN',
