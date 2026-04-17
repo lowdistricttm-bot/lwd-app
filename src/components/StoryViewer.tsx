@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, Trash2, Loader2, Volume2, VolumeX, Send, Heart, Eye, User, Star, AtSign, RefreshCw } from 'lucide-react';
 import { useStories, useStoryViews } from '@/hooks/use-stories';
 import { useMessages } from '@/hooks/use-messages';
+import { useAdmin } from '@/hooks/use-admin';
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from './ui/input';
 import { showSuccess, showError } from '@/utils/toast';
@@ -23,7 +24,8 @@ interface StoryViewerProps {
 
 const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps) => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+  const { role } = useAdmin();
   const [userIndex, setUserIndex] = useState(initialUserIndex);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -152,6 +154,18 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
     } catch (err) {
       showError("Errore nell'invio della risposta");
     }
+  };
+
+  const handleShareClick = () => {
+    if (!currentUserId) {
+      navigate('/login');
+      return;
+    }
+    if (role === 'subscriber') {
+      showError(language === 'it' ? "L'inoltro delle storie è riservato ai membri ufficiali." : "Forwarding stories is reserved for official members.");
+      return;
+    }
+    setIsShareModalOpen(true);
   };
 
   const handleDelete = async (e: React.MouseEvent) => {
@@ -344,7 +358,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
                   <Heart size={20} fill={isLiked ? "currentColor" : "none"} />
                 </button>
                 <button 
-                  onClick={() => setIsShareModalOpen(true)}
+                  onClick={handleShareClick}
                   className="w-12 h-12 bg-white/10 border border-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all backdrop-blur-md"
                 >
                   <Send size={20} className="-rotate-12" />

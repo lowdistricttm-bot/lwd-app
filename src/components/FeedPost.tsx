@@ -6,6 +6,7 @@ import { Heart, MessageSquare, User, MoreHorizontal, Send, Loader2, CornerDownRi
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Post, useSocialFeed } from '@/hooks/use-social-feed';
+import { useAdmin } from '@/hooks/use-admin';
 import { cn } from '@/lib/utils';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
@@ -119,6 +120,7 @@ const FeedPost = ({ post }: { post: Post }) => {
   const navigate = useNavigate();
   const { t, language } = useTranslation();
   const { toggleLike, addComment, deletePost, deleteComment } = useSocialFeed();
+  const { role } = useAdmin();
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [commentFile, setCommentFile] = useState<File | null>(null);
@@ -175,6 +177,18 @@ const FeedPost = ({ post }: { post: Post }) => {
       setCommentFile(file);
       setCommentPreview(URL.createObjectURL(file));
     }
+  };
+
+  const handleShareClick = () => {
+    if (!currentUserId) {
+      navigate('/login');
+      return;
+    }
+    if (role === 'subscriber') {
+      showError(language === 'it' ? "L'inoltro dei post è riservato ai membri ufficiali." : "Forwarding posts is reserved for official members.");
+      return;
+    }
+    setIsShareModalOpen(true);
   };
 
   const handleNativeShare = async () => {
@@ -299,7 +313,7 @@ const FeedPost = ({ post }: { post: Post }) => {
             
             {/* Pulsante Inoltro Direct */}
             <button 
-              onClick={() => setIsShareModalOpen(true)} 
+              onClick={handleShareClick} 
               className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors"
             >
               <Send size={18} className="-rotate-12" />
