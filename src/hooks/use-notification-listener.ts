@@ -29,14 +29,17 @@ export const useNotificationListener = () => {
           (payload) => {
             const newMessage = payload.new;
             
-            // Riproduci il suono solo se il destinatario è l'utente corrente
-            // e non è lui stesso ad aver inviato il messaggio (es. da un altro dispositivo)
+            // Se il messaggio è per me
             if (newMessage.receiver_id === currentUserId) {
+              // 1. Riproduci suono
               playNotificationSound();
               
-              // Invalida le query per aggiornare i contatori e le liste ovunque
+              // 2. Invalida TUTTE le query relative ai messaggi per forzare il refresh
               queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
               queryClient.invalidateQueries({ queryKey: ['conversations'] });
+              
+              // 3. Se sono in una chat specifica, invalida anche quella
+              queryClient.invalidateQueries({ queryKey: ['chat'] });
             }
           }
         )

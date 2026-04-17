@@ -99,27 +99,28 @@ export const useMessages = (otherUserId?: string) => {
     enabled: !!otherUserId
   });
 
+  // Listener specifico per la chat aperta o la lista conversazioni
   useEffect(() => {
-    const channelId = `chat-updates-${otherUserId || 'global'}-${Math.random().toString(36).substr(2, 9)}`;
-    const channel = supabase.channel(channelId).on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
-      if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
-    }).subscribe();
-    return () => { supabase.removeChannel(channel); };
+    const channel = supabase
+      .channel(`messages-realtime-${otherUserId || 'list'}`)
+      .on(
+        'postgres_changes', 
+        { event: '*', schema: 'public', table: 'messages' }, 
+        () => {
+          // Quando succede qualcosa nella tabella messaggi, aggiorna tutto
+          queryClient.invalidateQueries({ queryKey: ['conversations'] });
+          queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
+          if (otherUserId) {
+            queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [otherUserId, queryClient]);
-
-  const processAndUpload = async (file: File) => {
-    if (file.type.startsWith('video/')) {
-      const validation = await validateVideo(file);
-      if (!validation.ok) throw new Error(validation.error);
-    } else {
-      file = await compressImage(file);
-    }
-
-    // Caricamento su Cloudinary
-    return await uploadToCloudinary(file);
-  };
 
   const sendMessage = useMutation({
     mutationFn: async ({ receiverId, content, files, imageUrl }: { receiverId: string, content: string, files?: File[], imageUrl?: string }) => {
@@ -132,8 +133,12 @@ export const useMessages = (otherUserId?: string) => {
         imageUrls = [imageUrl];
       } else if (files && files.length > 0) {
         for (const file of files) {
-          const url = await processAndUpload(file);
-          imageUrls.push(url);
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('upload_preset', 'ml_default');
+          const res = await fetch('https://api.cloudinary.com/v1_1/dcogakkza/upload', { method: 'POST', body: formData });
+          const data = await res.json();
+          imageUrls.push(data.secure_url);
         }
       }
 
@@ -161,17 +166,9 @@ export const useMessages = (otherUserId?: string) => {
       if (!user) return;
       await supabase.from('messages').update({ is_read: true }).eq('receiver_id', user.id).eq('sender_id', senderId).eq('is_read', false);
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] }); }
-  });
-
-  const deleteMessage = useMutation({
-    mutationFn: async (messageId: string) => {
-      const { error } = await supabase.from('messages').delete().eq('id', messageId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
+    onSuccess: () => { 
+      queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] }); 
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
     }
   });
 
@@ -188,5 +185,5 @@ export const useMessages = (otherUserId?: string) => {
     }
   });
 
-  return { conversations, unreadCount, loadingConvs, chatMessages, loadingChat, sendMessage, markAsRead, deleteMessage, deleteConversation };
+  return { conversations, unreadCount, loadingConvs, chatMessages, loadingChat, sendMessage, markAsRead, deleteConversation };
 };
