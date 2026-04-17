@@ -73,7 +73,7 @@ export const useStories = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Usiamo upsert per gestire visualizzazioni multiple dallo stesso utente
+      // Registriamo la visualizzazione (upsert gestisce il vincolo UNIQUE)
       const { error } = await supabase
         .from('story_views')
         .upsert(
@@ -143,7 +143,6 @@ export const useStories = () => {
   return { stories, isLoading, uploadStory, deleteStory, recordView };
 };
 
-// Hook dedicato per recuperare le visualizzazioni di una specifica storia
 export const useStoryViews = (storyId: string | null) => {
   const queryClient = useQueryClient();
 
@@ -151,16 +150,28 @@ export const useStoryViews = (storyId: string | null) => {
     queryKey: ['story-views', storyId],
     queryFn: async () => {
       if (!storyId) return [];
+      
+      console.log(`[Debug] Recupero visualizzazioni per storia: ${storyId}`);
+      
       const { data, error } = await supabase
         .from('story_views')
         .select(`
-          *,
-          profiles:user_id (username, avatar_url)
+          id,
+          viewed_at,
+          profiles:user_id (
+            username,
+            avatar_url
+          )
         `)
         .eq('story_id', storyId)
         .order('viewed_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error("[Debug] Errore recupero visualizzazioni:", error);
+        throw error;
+      }
+      
+      console.log(`[Debug] Visualizzazioni trovate: ${data?.length || 0}`, data);
       return data;
     },
     enabled: !!storyId,
@@ -180,7 +191,8 @@ export const useStoryViews = (storyId: string | null) => {
           table: 'story_views',
           filter: `story_id=eq.${storyId}`
         },
-        () => {
+        (payload) => {
+          console.log("[Debug] Cambio visualizzazioni rilevato in tempo reale:", payload);
           queryClient.invalidateQueries({ queryKey: ['story-views', storyId] });
         }
       )
