@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from 'react';
 import { playNotificationSound } from '@/utils/sound';
+import { showSuccess, showError } from '@/utils/toast';
 
 export interface Notification {
   id: string;
@@ -132,5 +133,21 @@ export const useNotifications = () => {
     }
   });
 
-  return { notifications, unreadCount, isLoading, markAsRead, markAllAsRead, error };
+  const deleteNotification = useMutation({
+    mutationFn: async (notificationId: string) => {
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', notificationId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      showSuccess("Notifica rimossa");
+    },
+    onError: (err: any) => showError(err.message)
+  });
+
+  return { notifications, unreadCount, isLoading, markAsRead, markAllAsRead, deleteNotification, error };
 };

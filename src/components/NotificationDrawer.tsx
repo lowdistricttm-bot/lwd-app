@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Bell, Heart, MessageSquare, ClipboardCheck, User, Loader2 } from 'lucide-react';
+import { X, Bell, Heart, MessageSquare, ClipboardCheck, User, Loader2, Trash2 } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/use-notifications';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -16,7 +16,7 @@ interface NotificationDrawerProps {
 
 const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
   const navigate = useNavigate();
-  const { notifications, isLoading, markAsRead, markAllAsRead } = useNotifications();
+  const { notifications, isLoading, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
 
   const handleNotificationClick = async (n: Notification) => {
     // 1. Segna come letta se non lo è già
@@ -38,6 +38,11 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
       // Naviga al profilo attivando il tab delle selezioni
       navigate('/profile?tab=selections');
     }
+  };
+
+  const handleDelete = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    deleteNotification.mutate(id);
   };
 
   const getIcon = (type: string) => {
@@ -109,42 +114,54 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
                 </div>
               ) : (
                 notifications?.map((n) => (
-                  <button
-                    key={n.id}
-                    onClick={() => handleNotificationClick(n)}
-                    className={cn(
-                      "w-full p-4 flex gap-4 text-left transition-all border border-transparent",
-                      !n.is_read ? "bg-white/5 border-white/5" : "opacity-60 hover:bg-white/5"
+                  <div key={n.id} className="relative group">
+                    <button
+                      onClick={() => handleNotificationClick(n)}
+                      className={cn(
+                        "w-full p-4 flex gap-4 text-left transition-all border border-transparent",
+                        !n.is_read ? "bg-white/5 border-white/5" : "opacity-60 hover:bg-white/5"
+                      )}
+                    >
+                      <div className="relative shrink-0">
+                        <div className={cn(
+                          "w-10 h-10 bg-zinc-900 rounded-full overflow-hidden border border-white/10",
+                          !n.is_read ? "border-white/40" : "border-white/10"
+                        )}>
+                          {n.actor?.avatar_url ? (
+                            <img src={n.actor.avatar_url} className="w-full h-full object-cover" alt="" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-zinc-700"><User size={16} /></div>
+                          )}
+                        </div>
+                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-black border border-white/10 rounded-full flex items-center justify-center">
+                          {getIcon(n.type)}
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0 pr-8">
+                        <p className={cn(
+                          "text-[11px] leading-tight mb-1",
+                          !n.is_read ? "text-white font-medium" : "text-zinc-400"
+                        )}>
+                          {getMessage(n)}
+                        </p>
+                        <p className="text-[8px] font-black uppercase text-zinc-600 tracking-widest">
+                          {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: it })}
+                        </p>
+                      </div>
+                      {!n.is_read && <div className="w-1.5 h-1.5 bg-white rounded-full mt-2 shrink-0 animate-pulse" />}
+                    </button>
+
+                    {/* Pulsante elimina: nascosto per le notifiche di sistema (candidature) */}
+                    {n.type !== 'application_status' && (
+                      <button
+                        onClick={(e) => handleDelete(e, n.id)}
+                        disabled={deleteNotification.isPending}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-zinc-700 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                      >
+                        {deleteNotification.isPending ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                      </button>
                     )}
-                  >
-                    <div className="relative shrink-0">
-                      <div className={cn(
-                        "w-10 h-10 bg-zinc-900 rounded-full overflow-hidden border border-white/10",
-                        !n.is_read ? "border-white/40" : "border-white/10"
-                      )}>
-                        {n.actor?.avatar_url ? (
-                          <img src={n.actor.avatar_url} className="w-full h-full object-cover" alt="" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-zinc-700"><User size={16} /></div>
-                        )}
-                      </div>
-                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-black border border-white/10 rounded-full flex items-center justify-center">
-                        {getIcon(n.type)}
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={cn(
-                        "text-[11px] leading-tight mb-1",
-                        !n.is_read ? "text-white font-medium" : "text-zinc-400"
-                      )}>
-                        {getMessage(n)}
-                      </p>
-                      <p className="text-[8px] font-black uppercase text-zinc-600 tracking-widest">
-                        {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: it })}
-                      </p>
-                    </div>
-                    {!n.is_read && <div className="w-1.5 h-1.5 bg-white rounded-full mt-2 shrink-0 animate-pulse" />}
-                  </button>
+                  </div>
                 ))
               )}
             </div>
