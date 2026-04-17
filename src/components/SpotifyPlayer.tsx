@@ -9,8 +9,8 @@ const SpotifyPlayer = () => {
   const [isOpen, setIsOpen] = useState(false);
   const playlistId = "49mK52uCtaHSCLY1VC9GR3";
   
-  // Spostiamo il punto di chiusura leggermente più a sinistra per "stringere" sul bordo
-  const CLOSED_X = -284;
+  // CLOSED_X impostato a -280 per nascondere esattamente il corpo del player (w-[280px])
+  const CLOSED_X = -280;
   const x = useMotionValue(CLOSED_X); 
   const controls = useAnimation();
 
@@ -57,15 +57,15 @@ const SpotifyPlayer = () => {
           />
         </div>
 
-        {/* Linguetta Ultra-Minimal - Ridotta larghezza a w-6 */}
+        {/* Linguetta Ultra-Minimal - Ridotta a w-5 h-10 e icona size 12 */}
         <div 
           onClick={() => isOpen ? closePlayer() : openPlayer()}
           className={cn(
-            "w-6 h-12 flex items-center justify-center cursor-pointer rounded-r-lg border-y border-r border-white/10 shadow-xl transition-all duration-500",
+            "w-5 h-10 flex items-center justify-center cursor-pointer rounded-r-md border-y border-r border-white/10 shadow-xl transition-all duration-500",
             isOpen ? "bg-white text-black" : "bg-zinc-900/80 backdrop-blur-md text-white hover:bg-zinc-800"
           )}
         >
-          <Music size={14} className={cn(isOpen && "animate-pulse")} />
+          <Music size={12} className={cn(isOpen && "animate-pulse")} />
         </div>
       </motion.div>
     </div>
