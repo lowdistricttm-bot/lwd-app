@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Bell, Heart, MessageSquare, ClipboardCheck, User, Loader2, Trash2 } from 'lucide-react';
+import { X, Bell, Heart, MessageSquare, ClipboardCheck, User, Loader2, Trash2, Calendar } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/use-notifications';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -37,6 +37,9 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
     } else if (n.type === 'application_status') {
       // Naviga al profilo attivando il tab delle selezioni
       navigate('/profile?tab=selections');
+    } else if (n.type === 'event_update') {
+      // Naviga alla pagina eventi aprendo automaticamente il modal dell'evento
+      navigate(`/events?view=${n.event_id}`);
     }
   };
 
@@ -50,6 +53,7 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
       case 'like': return <Heart size={14} className="text-red-500 fill-red-500" />;
       case 'comment': return <MessageSquare size={14} className="text-blue-500" />;
       case 'application_status': return <ClipboardCheck size={14} className="text-green-500" />;
+      case 'event_update': return <Calendar size={14} className="text-purple-500" />;
       default: return <Bell size={14} />;
     }
   };
@@ -62,6 +66,8 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
       case 'application_status': 
         const status = n.applications?.status === 'approved' ? 'APPROVATA' : 'NEGATA';
         return <>La tua candidatura per <span className="font-black">{n.applications?.events?.title}</span> è stata <span className="font-black">{status}</span></>;
+      case 'event_update':
+        return <>Nuovo aggiornamento per l'evento: <span className="font-black">{n.event?.title || 'Low District'}</span></>;
       default: return 'Nuova notifica';
     }
   };

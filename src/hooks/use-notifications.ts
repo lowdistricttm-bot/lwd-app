@@ -10,9 +10,10 @@ export interface Notification {
   id: string;
   user_id: string;
   actor_id: string;
-  type: 'like' | 'comment' | 'application_status';
+  type: 'like' | 'comment' | 'application_status' | 'event_update';
   post_id?: string;
   application_id?: string;
+  event_id?: string;
   is_read: boolean;
   created_at: string;
   actor?: {
@@ -25,6 +26,9 @@ export interface Notification {
   applications?: {
     status: string;
     events: { title: string };
+  };
+  event?: {
+    title: string;
   };
 }
 
@@ -44,7 +48,8 @@ export const useNotifications = () => {
             *,
             actor:actor_id (username, avatar_url),
             posts:post_id (content),
-            applications:application_id (status, events:event_id (title))
+            applications:application_id (status, events:event_id (title)),
+            event:event_id (title)
           `)
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })

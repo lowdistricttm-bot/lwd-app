@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import { useEvents, Event, useUserApplications } from '@/hooks/use-events';
@@ -22,6 +22,7 @@ import { useTranslation } from '@/hooks/use-translation';
 
 const Events = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { t, language } = useTranslation();
   const interiorInputRef = useRef<HTMLInputElement>(null);
   
@@ -41,6 +42,9 @@ const Events = () => {
   const { data: userApps, isLoading: appsLoading, refetch: refetchApps } = useUserApplications();
   const { isAdmin } = useAdmin();
 
+  // Verifica se è stato richiesto di aprire un evento specifico (es. dalla notifica)
+  const viewEventId = searchParams.get('view');
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
@@ -49,6 +53,19 @@ const Events = () => {
       }
     });
   }, []);
+
+  // Gestisce l'apertura automatica del modal se arriviamo dal link di una notifica
+  useEffect(() => {
+    if (viewEventId && events && events.length > 0) {
+      const ev = events.find(e => e.id === viewEventId);
+      if (ev) {
+        setViewingEvent(ev);
+        // Pulisce l'URL per non riaprire in loop
+        searchParams.delete('view');
+        setSearchParams(searchParams, { replace: true });
+      }
+    }
+  }, [viewEventId, events, searchParams, setSearchParams]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -205,13 +222,13 @@ const Events = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-zinc-900/50 border border-white/5 p-3 sm:p-4 rounded-2xl overflow-hidden">
                       <p className="text-[9px] font-black uppercase text-zinc-500 tracking-widest mb-1 truncate">{t.events.date}</p>
-                      <p className="text-xs sm:text-sm font-black uppercase whitespace-nowrap overflow-x-auto no-scrollbar">
+                      <p className="text-sm sm:text-base font-black uppercase whitespace-nowrap overflow-x-auto no-scrollbar">
                         {formatDateRange(viewingEvent.date, viewingEvent.end_date)}
                       </p>
                     </div>
                     <div className="bg-zinc-900/50 border border-white/5 p-3 sm:p-4 rounded-2xl overflow-hidden">
                       <p className="text-[9px] font-black uppercase text-zinc-500 tracking-widest mb-1 truncate">{t.events.location}</p>
-                      <p className="text-xs sm:text-sm font-black uppercase whitespace-nowrap overflow-x-auto no-scrollbar">
+                      <p className="text-sm sm:text-base font-black uppercase whitespace-nowrap overflow-x-auto no-scrollbar">
                         {viewingEvent.location}
                       </p>
                     </div>
