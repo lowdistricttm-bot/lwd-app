@@ -4,7 +4,6 @@ import React from 'react';
 import { Home, ShoppingBag, MessageSquare, User, Calendar, Compass } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { useTranslation } from '@/hooks/use-translation';
 import { motion } from 'framer-motion';
 
 const BottomNav = () => {
@@ -20,7 +19,7 @@ const BottomNav = () => {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-black/60 backdrop-blur-2xl border-t border-white/5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+    <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-black/60 backdrop-blur-2xl border-t border-white/5 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
       <div className="flex items-center justify-around max-w-md mx-auto px-6">
         {items.map((item, i) => {
           const isActive = location.pathname === item.href;
@@ -29,11 +28,11 @@ const BottomNav = () => {
               key={i} 
               to={item.href}
               className={cn(
-                "flex flex-col items-center transition-all duration-300 relative p-2",
+                "flex flex-col items-center transition-all duration-300 relative p-1.5",
                 isActive ? "text-white scale-110" : "text-zinc-500 hover:text-zinc-300"
               )}
             >
-              <item.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+              <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} />
               {isActive && (
                 <motion.div 
                   layoutId="nav-indicator"

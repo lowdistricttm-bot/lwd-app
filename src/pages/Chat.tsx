@@ -20,7 +20,7 @@ import { showError } from '@/utils/toast';
 const Chat = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
-  const { canVote } = useAdmin(); // canVote è true per Admin, Staff e Supporto
+  const { canVote } = useAdmin();
   const [message, setMessage] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -35,10 +35,8 @@ const Chat = () => {
   const { chatMessages, loadingChat, sendMessage, markAsRead } = useMessages(userId);
   const { reshareStory } = useStories();
   
-  // Consumiamo lo stato globale
   const { isUserOnline, getLastSeen } = usePresence();
   const isOnline = isUserOnline(userId);
-  // Priorità: 1. Stato real-time dal context, 2. Fallback dal DB caricato all'inizio
   const lastSeen = getLastSeen(userId) || dbLastSeen;
 
   useEffect(() => {
@@ -48,20 +46,17 @@ const Chat = () => {
     });
     
     if (userId) {
-      // Carichiamo il profilo e l'ultimo accesso salvato nel DB come fallback iniziale
       supabase.from('profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle()
         .then(({ data }) => {
           if (data) {
-            // Controllo permessi: se il target è un iscritto e l'utente non è staff, blocca l'accesso
             if (data.role === 'subscriber' && !canVote) {
               showError("Non hai i permessi per contattare questo utente.");
               navigate('/messages');
               return;
             }
-            
             setOtherUserProfile(data);
             if (data.last_seen_at) {
               setDbLastSeen(formatDistanceToNow(new Date(data.last_seen_at), { addSuffix: true, locale: it }));
@@ -94,8 +89,8 @@ const Chat = () => {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/5 h-20 px-6 flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="p-2 text-zinc-400 hover:text-white"><ChevronLeft size={24} /></button>
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/5 h-20 px-6 flex items-center gap-4 pt-[env(safe-area-inset-top)]">
+        <button onClick={() => navigate(-1)} className="p-2 text-zinc-400 hover:text-white"><ChevronLeft size={24} strokeWidth={2.5} /></button>
         
         <button 
           onClick={() => navigate(`/profile/${userId}`)}
@@ -106,7 +101,7 @@ const Chat = () => {
               {otherUserProfile?.avatar_url ? (
                 <img src={otherUserProfile.avatar_url} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center"><User size={18} className="text-zinc-600" /></div>
+                <div className="w-full h-full flex items-center justify-center"><User size={18} strokeWidth={1.5} className="text-zinc-600" /></div>
               )}
             </div>
             <AnimatePresence>
@@ -143,8 +138,8 @@ const Chat = () => {
           return (
             <div key={msg.id} className={cn("flex", isMe ? "justify-end" : "justify-start")}>
               <div className={cn(
-                "relative max-w-[85%] shadow-2xl overflow-hidden rounded-3xl", 
-                isMe ? "bg-zinc-800 rounded-tr-none" : "bg-zinc-900 rounded-tl-none border border-white/5",
+                "relative max-w-[85%] shadow-2xl overflow-hidden rounded-[2rem]", 
+                isMe ? "bg-primary text-white rounded-tr-none" : "bg-zinc-900 rounded-tl-none border border-white/5",
                 isMention && "border-white/20 bg-zinc-900"
               )}>
                 {msgImages.length > 0 && (
@@ -152,22 +147,22 @@ const Chat = () => {
                     <img src={msgImages[0]} className="w-full h-full object-cover" />
                     {isMention && (
                       <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center p-6 text-center">
-                        <AtSign size={32} className="mb-2 text-white" />
+                        <AtSign size={32} strokeWidth={2} className="mb-2 text-white" />
                         <p className="text-[10px] font-black uppercase tracking-widest mb-4">Sei stato menzionato!</p>
                         <button 
                           onClick={(e) => { e.stopPropagation(); handleReshare(msgImages[0], msg.sender_id); }}
                           disabled={reshareStory.isPending}
-                          className="bg-white text-black px-4 py-2 rounded-full text-[9px] font-black uppercase italic flex items-center gap-2 hover:scale-105 transition-all"
+                          className="bg-white text-black px-6 py-2.5 rounded-full text-[9px] font-black uppercase italic flex items-center gap-2 hover:scale-105 transition-all"
                         >
-                          {reshareStory.isPending ? <Loader2 size={12} className="animate-spin" /> : <><RefreshCw size={12} /> Aggiungi alla tua storia</>}
+                          {reshareStory.isPending ? <Loader2 size={12} className="animate-spin" /> : <><RefreshCw size={12} strokeWidth={2.5} /> Aggiungi</>}
                         </button>
                       </div>
                     )}
                   </div>
                 )}
                 <div className="p-4">
-                  <p className="text-sm font-medium">{msg.content}</p>
-                  <p className="text-[7px] uppercase font-black opacity-40 mt-2">
+                  <p className="text-sm font-medium leading-relaxed">{msg.content}</p>
+                  <p className={cn("text-[7px] uppercase font-black mt-2", isMe ? "text-white/50" : "text-zinc-600")}>
                     {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
@@ -177,11 +172,18 @@ const Chat = () => {
         })}
       </main>
 
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-black/80 backdrop-blur-xl border-t border-white/5 z-50">
-        <form onSubmit={handleSend} className="max-w-2xl mx-auto flex gap-2">
-          <Input placeholder="Scrivi un messaggio..." value={message} onChange={(e) => setMessage(e.target.value)} className="bg-zinc-900 border-zinc-800 rounded-none h-12 font-bold uppercase text-xs tracking-widest" />
-          <button type="submit" className="w-12 h-12 bg-white text-black flex items-center justify-center hover:bg-zinc-200 transition-all shrink-0">
-            <Send size={20} />
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-black/80 backdrop-blur-xl border-t border-white/5 z-50 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+        <form onSubmit={handleSend} className="max-w-2xl mx-auto flex gap-3 items-center">
+          <div className="flex-1 relative">
+            <Input 
+              placeholder="Messaggio" 
+              value={message} 
+              onChange={(e) => setMessage(e.target.value)} 
+              className="bg-zinc-900/80 border-zinc-800 rounded-full h-12 px-6 font-medium text-sm focus-visible:ring-primary/30" 
+            />
+          </div>
+          <button type="submit" className="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 shrink-0">
+            <Send size={20} strokeWidth={2.5} className="-rotate-12" />
           </button>
         </form>
       </div>
