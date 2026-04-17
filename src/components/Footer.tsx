@@ -13,7 +13,7 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-black border-t border-white/10 pt-20 pb-32 px-6">
+    <footer className="bg-black border-t border-white/10 pt-20 pb-20 px-6">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-20">
           <div className="col-span-1 md:col-span-2">
@@ -48,7 +48,7 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t border-white/5 pt-10 flex flex-col md:flex-row justify-center items-center gap-4 text-gray-500 text-[8px] md:text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
+        <div className="border-t border-white/5 py-10 flex flex-col md:flex-row justify-center items-center gap-4 text-gray-500 text-[8px] md:text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
           <p>© 2026 LOW DISTRICT. ALL RIGHTS RESERVED. ©</p>
         </div>
       </div>
