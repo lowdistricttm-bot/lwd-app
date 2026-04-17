@@ -225,22 +225,24 @@ const Discover = () => {
                         </div>
                       </div>
 
-                      <div className="p-6 flex flex-col justify-between flex-1 min-w-0">
+                      <div className="p-4 md:p-6 flex flex-col justify-between flex-1 min-w-0">
                         <div className={cn(
                           "flex flex-col gap-4",
                           viewMode === 'list' && "md:flex-row md:items-center md:justify-between h-full"
                         )}>
                           <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-3 mb-1">
-                              <h4 className="text-lg md:text-xl font-black italic uppercase tracking-tight truncate leading-none">
+                            {/* Marca e Modello su riga singola */}
+                            <div className="flex items-baseline gap-2 mb-1 overflow-hidden">
+                              <h4 className="text-sm md:text-xl font-black italic uppercase tracking-tight truncate leading-none">
                                 {vehicle.brand}
                               </h4>
-                              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest bg-white/5 px-1.5 py-0.5">
-                                {vehicle.year || 'N/A'}
+                              <span className="text-[10px] md:text-xs font-black uppercase text-zinc-500 italic truncate">
+                                {vehicle.model}
                               </span>
                             </div>
-                            <p className="text-xs font-black uppercase text-zinc-400 italic truncate">
-                              {vehicle.model}
+                            
+                            <p className="text-[8px] font-bold text-zinc-600 uppercase tracking-widest">
+                              {vehicle.year || 'N/A'}
                             </p>
                             
                             {viewMode === 'list' && vehicle.description && (
@@ -275,7 +277,7 @@ const Discover = () => {
                           )}>
                             <button 
                               onClick={() => navigate(`/profile/${vehicle.user_id}`)}
-                              className="flex items-center gap-3 hover:opacity-70 transition-opacity group/user text-left"
+                              className="flex items-center gap-3 hover:opacity-70 transition-opacity group/user text-left min-w-0"
                             >
                               {viewMode === 'list' && (
                                 <div className="w-8 h-8 bg-zinc-800 rounded-full overflow-hidden border border-white/10 group-hover/user:border-white transition-colors">
@@ -286,15 +288,16 @@ const Discover = () => {
                                   )}
                                 </div>
                               )}
-                              <div className="flex flex-col items-start">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="text-[10px] font-black uppercase italic text-zinc-300 group-hover/user:text-white transition-colors">
+                              {/* Utente e Ruolo su riga singola */}
+                              <div className="flex items-center gap-2 overflow-hidden">
+                                <div className="flex items-center gap-1 min-w-0">
+                                  <span className="text-[9px] font-black uppercase italic text-zinc-300 group-hover/user:text-white transition-colors truncate">
                                     {vehicle.profiles?.username}
                                   </span>
-                                  {vehicle.profiles?.is_admin && <ShieldCheck size={10} className="text-white" />}
+                                  {vehicle.profiles?.is_admin && <ShieldCheck size={8} className="text-white shrink-0" />}
                                 </div>
-                                <span className="text-[7px] font-bold text-zinc-600 uppercase tracking-widest leading-none">
-                                  {roleLabel}
+                                <span className="text-[7px] font-bold text-zinc-600 uppercase tracking-widest shrink-0">
+                                  • {roleLabel}
                                 </span>
                               </div>
                             </button>
@@ -309,12 +312,12 @@ const Discover = () => {
                         </div>
                         
                         {viewMode === 'grid' && (
-                          <div className="mt-6 pt-4 border-t border-white/5 flex justify-end">
+                          <div className="mt-4 pt-3 border-t border-white/5 flex justify-end">
                             <button 
                               onClick={() => navigate(`/profile/${vehicle.user_id}?tab=garage`)}
-                              className="group flex items-center gap-2 text-[9px] font-black uppercase italic text-zinc-400 hover:text-white transition-all"
+                              className="group flex items-center gap-2 text-[8px] font-black uppercase italic text-zinc-500 hover:text-white transition-all"
                             >
-                              Vedi Progetto <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                              Vedi Progetto <ChevronRight size={12} className="group-hover:translate-x-1 transition-transform" />
                             </button>
                           </div>
                         )}
