@@ -13,6 +13,10 @@ export interface Story {
   created_at: string;
   expires_at: string;
   mentions?: string[];
+  reshared_from_profile_id?: string;
+  reshared_from?: {
+    username: string;
+  };
   profiles?: {
     username: string;
     avatar_url: string;
@@ -57,6 +61,9 @@ export const useStories = () => {
             avatar_url,
             role,
             is_admin
+          ),
+          reshared_from:reshared_from_profile_id (
+            username
           )
         `)
         .gt('expires_at', new Date().toISOString())
@@ -183,7 +190,7 @@ export const useStories = () => {
   });
 
   const reshareStory = useMutation({
-    mutationFn: async (storyUrl: string) => {
+    mutationFn: async ({ storyUrl, originalAuthorId }: { storyUrl: string, originalAuthorId: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Accedi per ricondividere");
 
@@ -192,7 +199,8 @@ export const useStories = () => {
         .insert([{ 
           user_id: user.id, 
           image_url: storyUrl,
-          mentions: []
+          mentions: [],
+          reshared_from_profile_id: originalAuthorId
         }]);
 
       if (error) throw new Error(error.message);

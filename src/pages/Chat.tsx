@@ -52,8 +52,8 @@ const Chat = () => {
     setPreviews([]);
   };
 
-  const handleReshare = async (url: string) => {
-    await reshareStory.mutateAsync(url);
+  const handleReshare = async (url: string, originalAuthorId: string) => {
+    await reshareStory.mutateAsync({ storyUrl: url, originalAuthorId });
     navigate('/');
   };
 
@@ -92,7 +92,7 @@ const Chat = () => {
                         <AtSign size={32} className="mb-2 text-white" />
                         <p className="text-[10px] font-black uppercase tracking-widest mb-4">Sei stato menzionato!</p>
                         <button 
-                          onClick={(e) => { e.stopPropagation(); handleReshare(msgImages[0]); }}
+                          onClick={(e) => { e.stopPropagation(); handleReshare(msgImages[0], msg.sender_id); }}
                           disabled={reshareStory.isPending}
                           className="bg-white text-black px-4 py-2 rounded-full text-[9px] font-black uppercase italic flex items-center gap-2 hover:scale-105 transition-all"
                         >

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight, Trash2, Loader2, Volume2, VolumeX, Send, Heart, Eye, User, Star, AtSign } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Trash2, Loader2, Volume2, VolumeX, Send, Heart, Eye, User, Star, AtSign, RefreshCw } from 'lucide-react';
 import { useStories, useStoryViews } from '@/hooks/use-stories';
 import { useMessages } from '@/hooks/use-messages';
 import { supabase } from "@/integrations/supabase/client";
@@ -240,6 +240,18 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
             </button>
           </div>
         </div>
+
+        {/* Badge Ricondivisa da */}
+        {currentStory.reshared_from && (
+          <div className="absolute top-[calc(6rem+env(safe-area-inset-top))] left-4 z-50 animate-in fade-in slide-in-from-left-4 duration-500">
+            <div className="bg-black/40 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-full flex items-center gap-2">
+              <RefreshCw size={10} className="text-white/60" />
+              <span className="text-[9px] font-black uppercase italic tracking-widest text-white">
+                Ricondivisa da @{currentStory.reshared_from.username}
+              </span>
+            </div>
+          </div>
+        )}
 
         <div className="absolute inset-0 z-20 flex">
           <div className="w-1/3 h-full cursor-pointer" onClick={handlePrev} />
