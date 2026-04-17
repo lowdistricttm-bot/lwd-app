@@ -105,14 +105,14 @@ const Chat = () => {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/5 h-20 px-6 flex items-center gap-4 pt-[env(safe-area-inset-top)]">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-black/60 backdrop-blur-2xl border-b border-white/10 h-20 px-6 flex items-center gap-4 pt-[env(safe-area-inset-top)]">
         <button onClick={() => navigate(-1)} className="p-2 text-zinc-400 hover:text-white"><ChevronLeft size={24} strokeWidth={2.5} /></button>
         
         <button 
           onClick={() => navigate(`/profile/${userId}`)}
           className="flex items-center gap-3 hover:opacity-70 transition-opacity text-left"
         >
-          <div className="w-10 h-10 bg-zinc-800 rounded-full overflow-hidden border border-white/10">
+          <div className="w-10 h-10 bg-black/40 rounded-full overflow-hidden border border-white/10">
             {otherUserProfile?.avatar_url ? (
               <img src={otherUserProfile.avatar_url} className="w-full h-full object-cover" />
             ) : (
@@ -130,7 +130,7 @@ const Chat = () => {
               )} />
               <p className={cn(
                 "text-[8px] font-black uppercase tracking-widest transition-colors duration-500",
-                isOnline ? "text-green-500" : "text-zinc-500"
+                isOnline ? "text-green-500" : "text-zinc-400"
               )}>
                 {isOnline ? 'Online' : lastSeen ? `Ultimo accesso ${lastSeen}` : 'Offline'}
               </p>
@@ -149,24 +149,24 @@ const Chat = () => {
             <div key={msg.id} className={cn("flex", isMe ? "justify-end" : "justify-start")}>
               <div className={cn(
                 "relative max-w-[85%] shadow-2xl overflow-hidden rounded-[2rem]", 
-                isMe ? "bg-white text-black rounded-tr-none" : "bg-zinc-900 rounded-tl-none border border-white/5",
-                isMention && "border-white/20 bg-zinc-900"
+                isMe ? "bg-white text-black rounded-tr-none" : "bg-black/60 backdrop-blur-2xl rounded-tl-none border border-white/10",
+                isMention && "border-white/30 bg-black/80 backdrop-blur-2xl"
               )}>
                 {msgImages.length > 0 && (
-                  <div className="relative aspect-[3/4] w-64 bg-black cursor-pointer" onClick={() => setLightboxData({ images: msgImages, index: 0 })}>
+                  <div className="relative aspect-[3/4] w-64 bg-black/50 cursor-pointer" onClick={() => setLightboxData({ images: msgImages, index: 0 })}>
                     {msgImages[0].match(/\.(mp4|webm|ogg|mov)$/i) || msgImages[0].includes('video') ? (
                       <video src={msgImages[0]} className="w-full h-full object-cover" controls />
                     ) : (
                       <img src={msgImages[0]} className="w-full h-full object-cover" />
                     )}
                     {isMention && (
-                      <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center p-6 text-center">
-                        <AtSign size={32} strokeWidth={2} className="mb-2 text-white" />
-                        <p className="text-[10px] font-black uppercase tracking-widest mb-4">Sei stato menzionato!</p>
+                      <div className="absolute inset-0 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+                        <AtSign size={32} strokeWidth={2} className="mb-2 text-white drop-shadow-lg" />
+                        <p className="text-[10px] font-black uppercase tracking-widest mb-4 drop-shadow-lg">Sei stato menzionato!</p>
                         <button 
                           onClick={(e) => { e.stopPropagation(); handleReshare(msgImages[0], msg.sender_id); }}
                           disabled={reshareStory.isPending}
-                          className="bg-white text-black px-6 py-2.5 rounded-full text-[9px] font-black uppercase italic flex items-center gap-2 hover:scale-105 transition-all"
+                          className="bg-white text-black px-6 py-2.5 rounded-full text-[9px] font-black uppercase italic flex items-center gap-2 hover:scale-105 transition-all shadow-xl"
                         >
                           {reshareStory.isPending ? <Loader2 size={12} className="animate-spin" /> : <><RefreshCw size={12} strokeWidth={2.5} /> Aggiungi</>}
                         </button>
@@ -177,7 +177,7 @@ const Chat = () => {
                 {msg.content && (
                   <div className="p-4">
                     <p className="text-sm font-medium leading-relaxed">{msg.content}</p>
-                    <p className={cn("text-[7px] uppercase font-black mt-2", isMe ? "text-black/40" : "text-zinc-600")}>
+                    <p className={cn("text-[7px] uppercase font-black mt-2", isMe ? "text-black/40" : "text-zinc-500")}>
                       {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
@@ -188,14 +188,14 @@ const Chat = () => {
         })}
       </main>
 
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-black/80 backdrop-blur-xl border-t border-white/5 z-50 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-black/60 backdrop-blur-2xl border-t border-white/10 z-50 pb-[calc(1rem+env(safe-area-inset-bottom))]">
         <div className="max-w-2xl mx-auto flex flex-col gap-3">
           
           {/* Anteprime Immagini/Video */}
           {previews.length > 0 && (
             <div className="flex gap-2 overflow-x-auto no-scrollbar">
               {previews.map((url, i) => (
-                <div key={i} className="relative w-16 h-16 shrink-0 bg-zinc-900 border border-white/10 rounded-xl overflow-hidden">
+                <div key={i} className="relative w-16 h-16 shrink-0 bg-black/40 border border-white/10 rounded-xl overflow-hidden backdrop-blur-md">
                   {selectedFiles[i]?.type.startsWith('video/') ? (
                     <video src={url} className="w-full h-full object-cover" />
                   ) : (
@@ -204,7 +204,7 @@ const Chat = () => {
                   <button 
                     type="button" 
                     onClick={() => removeFile(i)} 
-                    className="absolute top-1 right-1 p-1 bg-black/60 text-white rounded-full hover:bg-zinc-800 transition-colors"
+                    className="absolute top-1 right-1 p-1 bg-black/60 text-white rounded-full hover:bg-white/20 transition-colors backdrop-blur-md"
                   >
                     <X size={10} />
                   </button>
@@ -226,7 +226,7 @@ const Chat = () => {
             <button 
               type="button" 
               onClick={() => fileInputRef.current?.click()} 
-              className="w-12 h-12 bg-zinc-900 border border-white/5 text-zinc-400 rounded-full flex items-center justify-center hover:text-white transition-colors shrink-0"
+              className="w-12 h-12 bg-white/5 border border-white/10 text-zinc-400 rounded-full flex items-center justify-center hover:text-white hover:bg-white/10 transition-colors shrink-0 backdrop-blur-md"
             >
               <Camera size={20} />
             </button>
@@ -236,14 +236,14 @@ const Chat = () => {
                 placeholder="Messaggio" 
                 value={message} 
                 onChange={(e) => setMessage(e.target.value)} 
-                className="bg-zinc-900/80 border-zinc-800 rounded-full h-12 px-6 font-medium text-sm focus-visible:ring-white/20" 
+                className="bg-white/5 border-white/10 rounded-full h-12 px-6 font-medium text-sm focus-visible:ring-white/20 text-white placeholder:text-zinc-500 backdrop-blur-md" 
               />
             </div>
             
             <button 
               type="submit" 
               disabled={sendMessage.isPending || (!message.trim() && selectedFiles.length === 0)} 
-              className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg shrink-0 disabled:opacity-50"
+              className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-xl shrink-0 disabled:opacity-50"
             >
               {sendMessage.isPending ? <Loader2 size={20} className="animate-spin text-black" /> : <Send size={20} strokeWidth={2.5} className="-rotate-12" />}
             </button>
