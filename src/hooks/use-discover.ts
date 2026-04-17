@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { Vehicle } from './use-garage';
 
-const AUTHORIZED_ROLES = ['admin', 'staff', 'support', 'member'];
+const AUTHORIZED_ROLES = ['admin', 'staff', 'support', 'member', 'subscriber'];
 
 export const useDiscover = (searchQuery: string = "") => {
   const { data: vehicles, isLoading: loadingVehicles } = useQuery({

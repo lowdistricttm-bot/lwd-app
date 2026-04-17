@@ -181,7 +181,8 @@ const translations: Record<Language, any> = {
         admin: 'ADMIN',
         staff: 'MEMBRO DELLO STAFF',
         support: 'SUPPORTO STAFF',
-        member: 'MEMBRO UFFICIALE'
+        member: 'MEMBRO UFFICIALE',
+        subscriber: 'ISCRITTO'
       }
     },
     messages: {
@@ -418,7 +419,8 @@ const translations: Record<Language, any> = {
         admin: 'ADMIN',
         staff: 'STAFF MEMBER',
         support: 'STAFF SUPPORT',
-        member: 'OFFICIAL MEMBER'
+        member: 'OFFICIAL MEMBER',
+        subscriber: 'SUBSCRIBER'
       }
     },
     messages: {

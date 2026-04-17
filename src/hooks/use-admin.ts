@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { showError, showSuccess } from '@/utils/toast';
 
-export type UserRole = 'admin' | 'staff' | 'support' | 'member';
+export type UserRole = 'admin' | 'staff' | 'support' | 'member' | 'subscriber';
 
 export const useAdmin = () => {
   const queryClient = useQueryClient();
