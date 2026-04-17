@@ -194,7 +194,6 @@ const Profile = () => {
   const userPosts = posts?.filter(p => p.user_id === targetUserId) || [];
 
   // Funzione per calcolare la dimensione del font in base alla lunghezza dell'username
-  // Resa ultra-aggressiva per evitare troncamenti su mobile
   const getUsernameSize = (name: string) => {
     const len = name?.length || 0;
     if (len > 20) return "text-[12px] md:text-xl";
@@ -233,15 +232,28 @@ const Profile = () => {
                 )}
               </div>
 
-              {/* Pallino Online Real-time - In alto a sinistra, sovrapposto al bordo */}
+              {/* Pallino Online Real-time - Effetto 3D LED in alto a sinistra */}
               <AnimatePresence>
                 {isOnline && (
                   <motion.div 
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     exit={{ scale: 0 }}
-                    className="absolute -top-1 -left-1 w-6 h-6 md:w-8 md:h-8 bg-green-500 border-2 border-black rounded-full shadow-[0_0_15px_rgba(34,197,94,0.6)] z-30" 
-                  />
+                    className="absolute -top-1 -left-1 w-6 h-6 md:w-8 md:h-8 rounded-full border-2 border-black z-30 flex items-center justify-center overflow-hidden shadow-[0_0_20px_rgba(34,197,94,0.5)]"
+                  >
+                    {/* Base Gradient 3D */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-green-400 via-green-500 to-green-700" />
+                    
+                    {/* Punto Luce (Highlight) per effetto sferico */}
+                    <div className="absolute top-[15%] left-[15%] w-[35%] h-[35%] bg-white/40 rounded-full blur-[1px]" />
+                    
+                    {/* Animazione Pulse interna (Respiro) */}
+                    <motion.div
+                      animate={{ opacity: [0.3, 0.7, 0.3] }}
+                      transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                      className="absolute inset-0 bg-green-300/20"
+                    />
+                  </motion.div>
                 )}
               </AnimatePresence>
             </div>
