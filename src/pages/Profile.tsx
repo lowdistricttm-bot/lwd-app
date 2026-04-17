@@ -276,8 +276,8 @@ const Profile = () => {
                     </button>
                   )}
 
-                  {/* 2. Condividi (Sempre visibile se non è un iscritto semplice) */}
-                  {!isTargetSubscriber && (
+                  {/* 2. Condividi (Sempre visibile sul proprio profilo, o se il target non è un iscritto semplice) */}
+                  {(isOwnProfile || !isTargetSubscriber) && (
                     <button 
                       onClick={handleShareProfile} 
                       className="p-1 text-zinc-500 hover:text-white transition-colors"
