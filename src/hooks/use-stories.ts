@@ -13,6 +13,7 @@ export interface Story {
   image_url: string;
   created_at: string;
   expires_at: string;
+  mentions?: string[];
   profiles?: {
     username: string;
     avatar_url: string;
@@ -41,11 +42,7 @@ export const useStories = () => {
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error("[Stories] Errore caricamento:", error.message);
-        return [];
-      }
-
+      if (error) return [];
       return formatStories(data || []);
     }
   });
@@ -64,41 +61,16 @@ export const useStories = () => {
       acc[story.user_id].items.push(story);
       return acc;
     }, {});
-
     return Object.values(grouped);
   };
 
-  const recordView = useMutation({
-    mutationFn: async (storyId: string) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Registriamo la visualizzazione usando upsert per gestire il vincolo UNIQUE
-      const { error } = await supabase
-        .from('story_views')
-        .upsert(
-          { 
-            story_id: storyId, 
-            user_id: user.id,
-            viewed_at: new Date().toISOString() 
-          }, 
-          { onConflict: 'story_id,user_id' }
-        );
-      
-      if (error && !error.message.includes("policy")) {
-        console.error("[Stories] Errore registrazione vista:", error.message);
-      }
-    }
-  });
-
   const uploadStory = useMutation({
-    mutationFn: async (files: File[]) => {
+    mutationFn: async ({ files, mentions = [] }: { files: File[], mentions?: string[] }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Accedi per caricare una storia");
 
       const uploadPromises = files.map(async (originalFile) => {
         let file = originalFile;
-        
         if (file.type.startsWith('video/')) {
           const validation = await validateVideo(file);
           if (!validation.ok) throw new Error(validation.error);
@@ -108,11 +80,32 @@ export const useStories = () => {
 
         const publicUrl = await uploadToCloudinary(file);
 
-        const { error: dbError } = await supabase
+        const { data: newStory, error: dbError } = await supabase
           .from('stories')
-          .insert([{ user_id: user.id, image_url: publicUrl }]);
+          .insert([{ 
+            user_id: user.id, 
+            image_url: publicUrl,
+            mentions: mentions 
+          }])
+          .select()
+          .single();
 
         if (dbError) throw dbError;
+
+        // Invia DM ai menzionati
+        if (mentions.length > 0) {
+          const { data: myProfile } = await supabase.from('profiles').select('username').eq('id', user.id).single();
+          for (const mentionId of mentions) {
+            await supabase.from('messages').insert([{
+              sender_id: user.id,
+              receiver_id: mentionId,
+              content: `✨ Ti ha menzionato in una storia!`,
+              image_url: publicUrl,
+              images: [publicUrl]
+            }]);
+          }
+        }
+
         return publicUrl;
       });
 
@@ -120,85 +113,31 @@ export const useStories = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['active-stories'] });
-      showSuccess("Contenuto pubblicato nelle storie!");
+      showSuccess("Storia pubblicata!");
     },
     onError: (error: any) => showError(error.message)
   });
 
-  const deleteStory = useMutation({
-    mutationFn: async (storyId: string) => {
+  const reshareStory = useMutation({
+    mutationFn: async (storyUrl: string) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Accedi per ricondividere");
+
       const { error } = await supabase
         .from('stories')
-        .delete()
-        .eq('id', storyId);
+        .insert([{ 
+          user_id: user.id, 
+          image_url: storyUrl,
+          mentions: [] // Reset menzioni nella ricondivisione
+        }]);
+
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['active-stories'] });
-      showSuccess("Storia eliminata.");
-    },
-    onError: (error: any) => showError("Errore durante l'eliminazione")
+      showSuccess("Storia ricondivisa!");
+    }
   });
 
-  return { stories, isLoading, uploadStory, deleteStory, recordView };
-};
-
-export const useStoryViews = (storyId: string | null) => {
-  const queryClient = useQueryClient();
-
-  const query = useQuery({
-    queryKey: ['story-views', storyId],
-    queryFn: async () => {
-      if (!storyId) return [];
-      
-      const { data, error } = await supabase
-        .from('story_views')
-        .select(`
-          id,
-          user_id,
-          viewed_at,
-          profiles:user_id (
-            username,
-            avatar_url
-          )
-        `)
-        .eq('story_id', storyId)
-        .order('viewed_at', { ascending: false });
-      
-      if (error) {
-        console.error("[Debug] Errore recupero visualizzazioni:", error);
-        throw error;
-      }
-      
-      return data;
-    },
-    enabled: !!storyId,
-    staleTime: 0
-  });
-
-  useEffect(() => {
-    if (!storyId) return;
-
-    const channel = supabase
-      .channel(`views-${storyId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'story_views',
-          filter: `story_id=eq.${storyId}`
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['story-views', storyId] });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [storyId, queryClient]);
-
-  return query;
+  return { stories, isLoading, uploadStory, reshareStory };
 };
