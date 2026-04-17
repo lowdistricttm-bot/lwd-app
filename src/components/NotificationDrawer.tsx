@@ -16,12 +16,24 @@ interface NotificationDrawerProps {
 
 const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
   const navigate = useNavigate();
-  const { notifications, isLoading, markAllAsRead } = useNotifications();
+  const { notifications, isLoading, markAsRead, markAllAsRead } = useNotifications();
 
-  const handleNotificationClick = (n: Notification) => {
+  const handleNotificationClick = async (n: Notification) => {
+    // 1. Segna come letta se non lo è già
+    if (!n.is_read) {
+      markAsRead.mutate(n.id);
+    }
+
+    // 2. Chiudi il drawer
     onClose();
+
+    // 3. Naviga alla sezione corretta
     if (n.type === 'like' || n.type === 'comment') {
-      navigate('/bacheca');
+      if (n.post_id) {
+        navigate(`/post/${n.post_id}`);
+      } else {
+        navigate('/bacheca');
+      }
     } else if (n.type === 'application_status') {
       // Naviga al profilo attivando il tab delle selezioni
       navigate('/profile?tab=selections');
@@ -77,7 +89,7 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
                   onClick={() => markAllAsRead.mutate()}
                   className="text-[8px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
                 >
-                  Segna come lette
+                  Segna tutte come lette
                 </button>
                 <button onClick={onClose} className="p-2 hover:bg-white/5 transition-colors">
                   <X size={24} />
@@ -106,7 +118,10 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
                     )}
                   >
                     <div className="relative shrink-0">
-                      <div className="w-10 h-10 bg-zinc-900 rounded-full overflow-hidden border border-white/10">
+                      <div className={cn(
+                        "w-10 h-10 bg-zinc-900 rounded-full overflow-hidden border border-white/10",
+                        !n.is_read ? "border-white/40" : "border-white/10"
+                      )}>
                         {n.actor?.avatar_url ? (
                           <img src={n.actor.avatar_url} className="w-full h-full object-cover" alt="" />
                         ) : (
@@ -118,14 +133,17 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[11px] text-zinc-300 leading-tight mb-1">
+                      <p className={cn(
+                        "text-[11px] leading-tight mb-1",
+                        !n.is_read ? "text-white font-medium" : "text-zinc-400"
+                      )}>
                         {getMessage(n)}
                       </p>
                       <p className="text-[8px] font-black uppercase text-zinc-600 tracking-widest">
                         {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: it })}
                       </p>
                     </div>
-                    {!n.is_read && <div className="w-1.5 h-1.5 bg-white rounded-full mt-2 shrink-0" />}
+                    {!n.is_read && <div className="w-1.5 h-1.5 bg-white rounded-full mt-2 shrink-0 animate-pulse" />}
                   </button>
                 ))
               )}

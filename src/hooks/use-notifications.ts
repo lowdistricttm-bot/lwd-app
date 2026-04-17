@@ -50,9 +50,8 @@ export const useNotifications = () => {
           .limit(20);
 
         if (error) {
-          // Se la tabella non esiste ancora, restituiamo un array vuoto invece di crashare
           if (error.code === '42P01' || error.message?.includes('not found')) {
-            console.warn("[Notifications] Tabella non trovata, assicurati di aver eseguito l'SQL.");
+            console.warn("[Notifications] Tabella non trovata.");
             return [];
           }
           throw error;
@@ -103,6 +102,20 @@ export const useNotifications = () => {
     };
   }, [queryClient]);
 
+  const markAsRead = useMutation({
+    mutationFn: async (notificationId: string) => {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('id', notificationId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    }
+  });
+
   const markAllAsRead = useMutation({
     mutationFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -119,5 +132,5 @@ export const useNotifications = () => {
     }
   });
 
-  return { notifications, unreadCount, isLoading, markAllAsRead, error };
+  return { notifications, unreadCount, isLoading, markAsRead, markAllAsRead, error };
 };
