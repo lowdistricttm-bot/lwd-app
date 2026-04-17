@@ -120,7 +120,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
         {isOwnProfile && !isFormOpen && (
           <Button 
             onClick={() => setIsFormOpen(true)}
-            className="bg-white text-black hover:bg-zinc-200 rounded-none font-black uppercase italic text-[10px] tracking-widest"
+            className="bg-white/90 backdrop-blur-md text-black hover:bg-white rounded-none font-black uppercase italic text-[10px] tracking-widest transition-all"
           >
             <Plus size={14} className="mr-2" /> {t.garage?.addBtn || "Aggiungi"}
           </Button>
@@ -257,7 +257,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
                 <Button 
                   type="submit" 
                   disabled={addVehicle.isPending || updateVehicle.isPending}
-                  className="flex-1 bg-white text-black hover:bg-zinc-200 rounded-none h-12 font-black uppercase italic tracking-widest"
+                  className="flex-1 bg-white/90 backdrop-blur-md text-black hover:bg-white rounded-none h-12 font-black uppercase italic tracking-widest transition-all"
                 >
                   {(addVehicle.isPending || updateVehicle.isPending) ? <Loader2 className="animate-spin" /> : editingId ? 'Aggiorna Veicolo' : 'Salva Veicolo'}
                 </Button>

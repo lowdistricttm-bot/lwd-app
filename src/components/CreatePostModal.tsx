@@ -93,7 +93,7 @@ const CreatePostModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
                   <input type="file" ref={fileInputRef} className="hidden" accept="image/*" multiple onChange={handleFileChange} />
                   <button type="button" onClick={() => fileInputRef.current?.click()} className="p-3 bg-zinc-900 text-zinc-400 hover:text-white transition-colors"><Camera size={20} /></button>
                 </div>
-                <Button type="submit" disabled={(!content.trim() && selectedFiles.length === 0) || createPost.isPending} className="bg-white text-black hover:bg-zinc-200 px-8 py-6 rounded-none font-black uppercase italic tracking-widest">
+                <Button type="submit" disabled={(!content.trim() && selectedFiles.length === 0) || createPost.isPending} className="bg-white/90 backdrop-blur-md text-black hover:bg-white px-8 py-6 rounded-none font-black uppercase italic tracking-widest transition-all">
                   {createPost.isPending ? <Loader2 className="animate-spin" /> : <>Pubblica <Send size={16} className="ml-2" /></>}
                 </Button>
               </div>

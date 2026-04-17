@@ -154,7 +154,7 @@ const Checkout = () => {
             Riceverai una mail di conferma a breve.
           </p>
           <div className="w-full space-y-4">
-            <Button onClick={handleWhatsAppGarage} className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white py-8 text-lg font-black uppercase italic tracking-widest rounded-none transition-colors shadow-lg shadow-[#25D366]/10">
+            <Button onClick={handleWhatsAppGarage} className="w-full bg-[#25D366]/90 backdrop-blur-md hover:bg-[#128C7E] text-white py-8 text-lg font-black uppercase italic tracking-widest rounded-none transition-all shadow-lg shadow-[#25D366]/10">
               <WhatsAppIcon className="mr-3 w-6 h-6" /> Paga su WhatsApp
             </Button>
             <Button variant="outline" onClick={() => navigate('/')} className="w-full border-white/10 text-zinc-500 hover:text-white py-8 text-sm font-black uppercase tracking-widest rounded-none italic">
@@ -240,7 +240,7 @@ const Checkout = () => {
                   <span className="text-3xl font-black italic tracking-tighter">€{finalTotal.toFixed(2)}</span>
                 </div>
               </div>
-              <Button type="submit" disabled={createOrder.isPending} className="w-full bg-white text-black hover:bg-zinc-200 py-8 text-lg font-black uppercase italic tracking-widest rounded-none">
+              <Button type="submit" disabled={createOrder.isPending} className="w-full bg-white/90 backdrop-blur-md text-black hover:bg-white py-8 text-lg font-black uppercase italic tracking-widest rounded-none transition-all">
                 {createOrder.isPending ? <Loader2 className="animate-spin" /> : "Conferma Ordine"}
               </Button>
             </div>

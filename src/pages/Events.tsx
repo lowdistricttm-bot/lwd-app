@@ -158,7 +158,7 @@ const Events = () => {
           {isAdmin && (
             <Button 
               onClick={() => { setEditingEvent(null); setIsAdminModalOpen(true); }}
-              className="w-12 h-12 bg-white text-black flex items-center justify-center hover:bg-zinc-200 transition-all shadow-lg ml-4 shrink-0"
+              className="w-12 h-12 bg-white/90 backdrop-blur-md text-black flex items-center justify-center hover:bg-white transition-all shadow-lg ml-4 shrink-0"
             >
               <Plus size={24} />
             </Button>
@@ -320,7 +320,7 @@ const Events = () => {
                   {viewingEvent.status === 'open' && !getAppForEvent(viewingEvent.id) && (
                     <Button 
                       onClick={() => { setViewingEvent(null); handleApplyClick(viewingEvent); }}
-                      className="w-full bg-white text-black py-6 font-black uppercase italic tracking-widest rounded-none"
+                      className="w-full bg-white/90 backdrop-blur-md text-black py-6 font-black uppercase italic tracking-widest rounded-none hover:bg-white transition-all"
                     >
                       {!user && <Lock size={14} className="mr-2" />}
                       {t.events.applyNow}
@@ -429,7 +429,7 @@ const Events = () => {
                       )}
                     </div>
 
-                    <Button type="submit" disabled={applyToEvent.isPending} className="w-full bg-white text-black py-8 font-black uppercase italic tracking-widest rounded-none">
+                    <Button type="submit" disabled={applyToEvent.isPending} className="w-full bg-white/90 backdrop-blur-md text-black py-8 font-black uppercase italic tracking-widest rounded-none hover:bg-white transition-all">
                       {applyToEvent.isPending ? <Loader2 className="animate-spin" /> : t.events.form.submit}
                     </Button>
                   </div>
