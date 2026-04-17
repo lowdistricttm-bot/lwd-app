@@ -233,14 +233,14 @@ const Profile = () => {
                 )}
               </div>
 
-              {/* Pallino Online Real-time - Spostato fuori da overflow-hidden per sovrapporsi al bordo */}
+              {/* Pallino Online Real-time - Spostato in alto a sinistra */}
               <AnimatePresence>
                 {isOnline && (
                   <motion.div 
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     exit={{ scale: 0 }}
-                    className="absolute bottom-1 right-1 w-5 h-5 md:w-7 md:h-7 bg-green-500 border-2 border-black rounded-full shadow-[0_0_15px_rgba(34,197,94,0.6)] z-30" 
+                    className="absolute top-1 left-1 w-5 h-5 md:w-7 md:h-7 bg-green-500 border-2 border-black rounded-full shadow-[0_0_15px_rgba(34,197,94,0.6)] z-30" 
                   />
                 )}
               </AnimatePresence>
