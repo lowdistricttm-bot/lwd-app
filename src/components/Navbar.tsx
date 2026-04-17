@@ -112,16 +112,15 @@ const Navbar = () => {
             </div>
             <AlertDialogTitle className="text-white font-black uppercase italic text-center">Accesso Limitato</AlertDialogTitle>
             <AlertDialogDescription className="text-zinc-500 text-xs font-bold uppercase leading-relaxed text-center">
-              I messaggi privati sono una funzione esclusiva riservata ai membri ufficiali del District. 
-              Contatta lo staff per scoprire come elevare il tuo grado.
+              I messaggi privati sono una funzione esclusiva riservata ai membri ufficiali del District. Invia la selezione dal sito per diventare membro ufficiale anche tu!
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="sm:flex-col gap-2">
             <AlertDialogAction 
-              onClick={() => window.location.href = 'mailto:info@lowdistrict.it'} 
+              onClick={() => window.location.href = 'https://www.lowdistrict.it/selezioni/'} 
               className="rounded-none bg-white text-black font-black uppercase italic text-[10px] w-full"
             >
-              Contatta Staff
+              Invia Selezione
             </AlertDialogAction>
             <AlertDialogCancel className="rounded-none border-white/10 text-white font-black uppercase italic text-[10px] w-full">
               Chiudi
