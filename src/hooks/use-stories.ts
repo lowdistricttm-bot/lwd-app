@@ -73,7 +73,7 @@ export const useStories = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Registriamo la visualizzazione (upsert gestisce il vincolo UNIQUE)
+      // Registriamo la visualizzazione
       const { error } = await supabase
         .from('story_views')
         .upsert(
@@ -151,12 +151,13 @@ export const useStoryViews = (storyId: string | null) => {
     queryFn: async () => {
       if (!storyId) return [];
       
+      // Utilizziamo il nome della tabella 'profiles' direttamente per il join
       const { data, error } = await supabase
         .from('story_views')
         .select(`
           id,
           viewed_at,
-          profiles:user_id (
+          profiles (
             username,
             avatar_url
           )
