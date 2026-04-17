@@ -24,6 +24,7 @@ export const PresenceProvider = ({ children }: { children: ReactNode }): React.J
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Canale globale unico per tutti gli utenti dell'app
       const channelName = 'global-presence-v3';
 
       channel = supabase.channel(channelName, {
@@ -57,6 +58,7 @@ export const PresenceProvider = ({ children }: { children: ReactNode }): React.J
               user_id: user.id
             });
             
+            // Aggiornamento DB per persistenza
             await supabase
               .from('profiles')
               .update({ last_seen_at: new Date().toISOString() })
@@ -67,6 +69,7 @@ export const PresenceProvider = ({ children }: { children: ReactNode }): React.J
 
     setupPresence();
 
+    // Listener per il cambio di stato Auth (login/logout)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN') {
         setupPresence();
@@ -108,6 +111,7 @@ export const PresenceProvider = ({ children }: { children: ReactNode }): React.J
 export const usePresence = () => {
   const context = useContext(PresenceContext);
   if (context === undefined) {
+    // Fallback silenzioso se usato fuori dal provider (evita crash)
     return {
       onlineUsers: [],
       isUserOnline: () => false,
