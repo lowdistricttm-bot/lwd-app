@@ -19,15 +19,10 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
   const { notifications, isLoading, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
 
   const handleNotificationClick = async (n: Notification) => {
-    // 1. Segna come letta se non lo è già
     if (!n.is_read) {
       markAsRead.mutate(n.id);
     }
-
-    // 2. Chiudi il drawer
     onClose();
-
-    // 3. Naviga alla sezione corretta
     if (n.type === 'like' || n.type === 'comment') {
       if (n.post_id) {
         navigate(`/post/${n.post_id}`);
@@ -48,7 +43,6 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
 
   const getIcon = (type: string) => {
     if (type.startsWith('event_')) return <Calendar size={14} className="text-purple-500" />;
-    
     switch (type) {
       case 'like': return <Heart size={14} className="text-red-500 fill-red-500" />;
       case 'comment': return <MessageSquare size={14} className="text-blue-500" />;
@@ -59,7 +53,6 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
 
   const getMessage = (n: Notification) => {
     const actorName = n.actor?.username || 'Membro District';
-    
     switch (n.type) {
       case 'like': return <><span className="font-black">{actorName}</span> ha messo like al tuo post</>;
       case 'comment': return <><span className="font-black">{actorName}</span> ha commentato il tuo post</>;
@@ -87,14 +80,14 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[100]"
           />
           <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-zinc-950 border-l border-white/10 z-[101] flex flex-col shadow-2xl"
+            className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-black/60 backdrop-blur-2xl border-l border-white/10 z-[101] flex flex-col shadow-2xl pt-[env(safe-area-inset-top)]"
           >
             <div className="p-6 border-b border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -104,17 +97,17 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
               <div className="flex items-center gap-4">
                 <button 
                   onClick={() => markAllAsRead.mutate()}
-                  className="text-[8px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
+                  className="text-[8px] font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-colors"
                 >
-                  Segna tutte come lette
+                  Segna tutte lette
                 </button>
-                <button onClick={onClose} className="p-2 hover:bg-white/5 transition-colors">
+                <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
                   <X size={24} />
                 </button>
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            <div className="flex-1 overflow-y-auto p-4 space-y-2 pb-[calc(1rem+env(safe-area-inset-bottom))]">
               {isLoading ? (
                 <div className="h-full flex items-center justify-center">
                   <Loader2 className="animate-spin text-zinc-500" size={32} />
@@ -130,22 +123,22 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
                     <button
                       onClick={() => handleNotificationClick(n)}
                       className={cn(
-                        "w-full p-4 flex gap-4 text-left transition-all border border-transparent",
-                        !n.is_read ? "bg-white/5 border-white/5" : "opacity-60 hover:bg-white/5"
+                        "w-full p-4 flex gap-4 text-left transition-all border border-transparent rounded-2xl",
+                        !n.is_read ? "bg-white/10 border-white/10" : "bg-black/20 hover:bg-white/5"
                       )}
                     >
                       <div className="relative shrink-0">
                         <div className={cn(
-                          "w-10 h-10 bg-zinc-900 rounded-full overflow-hidden border border-white/10",
+                          "w-10 h-10 bg-black/40 rounded-full overflow-hidden border",
                           !n.is_read ? "border-white/40" : "border-white/10"
                         )}>
                           {n.actor?.avatar_url ? (
                             <img src={n.actor.avatar_url} className="w-full h-full object-cover" alt="" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-zinc-700"><User size={16} /></div>
+                            <div className="w-full h-full flex items-center justify-center text-zinc-600"><User size={16} /></div>
                           )}
                         </div>
-                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-black border border-white/10 rounded-full flex items-center justify-center">
+                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-zinc-900 border border-white/10 rounded-full flex items-center justify-center">
                           {getIcon(n.type)}
                         </div>
                       </div>
@@ -156,21 +149,20 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
                         )}>
                           {getMessage(n)}
                         </p>
-                        <p className="text-[8px] font-black uppercase text-zinc-600 tracking-widest">
+                        <p className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">
                           {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: it })}
                         </p>
                       </div>
-                      {!n.is_read && <div className="w-1.5 h-1.5 bg-white rounded-full mt-2 shrink-0 animate-pulse" />}
+                      {!n.is_read && <div className="w-1.5 h-1.5 bg-white rounded-full mt-2 shrink-0 animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
                     </button>
 
-                    {/* Pulsante elimina: nascosto per le notifiche di sistema (candidature) */}
                     {n.type !== 'application_status' && (
                       <button
                         onClick={(e) => handleDelete(e, n.id)}
                         disabled={deleteNotification.isPending}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-zinc-700 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-black/40 rounded-full text-zinc-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
                       >
-                        {deleteNotification.isPending ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                        {deleteNotification.isPending ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
                       </button>
                     )}
                   </div>
