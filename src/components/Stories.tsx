@@ -10,6 +10,13 @@ import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { showError } from '@/utils/toast';
 
+interface StoryGroup {
+  user_id: string;
+  username: string;
+  avatar_url?: string;
+  items: any[];
+}
+
 const Stories = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -54,7 +61,7 @@ const Stories = () => {
   };
 
   const handlePlusClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
+    if (e) e.stopPropagation();
     if (!currentUser) {
       showError("Accedi per partecipare al District");
       navigate('/login');
@@ -64,8 +71,9 @@ const Stories = () => {
   };
 
   // Trova l'indice della mia storia se presente
-  const myStoriesIndex = stories?.findIndex(s => s.user_id === currentUser?.id);
-  const myStories = myStoriesIndex !== -1 ? stories?.[myStoriesIndex as number] : null;
+  const typedStories = stories as StoryGroup[] | undefined;
+  const myStoriesIndex = typedStories?.findIndex(s => s.user_id === currentUser?.id);
+  const myStories = myStoriesIndex !== undefined && myStoriesIndex !== -1 ? typedStories?.[myStoriesIndex] : null;
   const lastStoryContent = myStories?.items[0]?.image_url;
 
   return (
@@ -89,7 +97,7 @@ const Stories = () => {
             />
             
             <button 
-              onClick={() => myStories ? handleStoryClick(myStoriesIndex as number) : handlePlusClick(null as any)}
+              onClick={() => (myStories && myStoriesIndex !== undefined) ? handleStoryClick(myStoriesIndex) : handlePlusClick(null as any)}
               disabled={!myStories && uploadStory.isPending}
               className={cn(
                 "w-16 h-16 rounded-full border-[2.5px] border-black flex items-center justify-center bg-zinc-900 transition-all overflow-hidden",
@@ -123,7 +131,7 @@ const Stories = () => {
       </div>
 
       {/* Other Stories */}
-      {stories?.map((userGroup, index) => {
+      {typedStories?.map((userGroup, index) => {
         if (userGroup.user_id === currentUser?.id) return null;
         
         return (
@@ -149,9 +157,9 @@ const Stories = () => {
       })}
 
       <AnimatePresence>
-        {selectedUserIndex !== null && stories && (
+        {selectedUserIndex !== null && typedStories && (
           <StoryViewer 
-            allStories={stories}
+            allStories={typedStories}
             initialUserIndex={selectedUserIndex} 
             onClose={() => setSelectedUserIndex(null)} 
           />

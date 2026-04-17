@@ -54,8 +54,8 @@ const EditPostModal = ({ isOpen, onClose, post }: EditPostModalProps) => {
       await updatePost.mutateAsync({ 
         postId: post.id, 
         content, 
-        file: selectedFile || undefined,
-        removeImage
+        files: selectedFile ? [selectedFile] : undefined,
+        removeImages: removeImage
       });
       onClose();
     } catch (error: any) {

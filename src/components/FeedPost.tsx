@@ -8,6 +8,7 @@ import { it } from 'date-fns/locale';
 import { Post, useSocialFeed } from '@/hooks/use-social-feed';
 import { cn } from '@/lib/utils';
 import { Input } from './ui/input';
+import { Button } from './ui/button';
 import { supabase } from "@/integrations/supabase/client";
 import ImageLightbox from './ImageLightbox';
 import { Link, useNavigate } from 'react-router-dom';
@@ -99,7 +100,7 @@ const CommentItem = ({
             <CommentItem 
               key={reply.id} 
               comment={reply} 
-              allComments={allComments} 
+              allComments={post.comments || []} 
               onReply={onReply} 
               onDelete={onDelete} 
               currentUserId={currentUserId}
