@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Play } from 'lucide-react';
+import { ChevronRight, CalendarDays } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from '@/hooks/use-translation';
 import Logo from './Logo';
@@ -50,7 +50,7 @@ const Hero = () => {
             </Link>
             <Link to="/events" className="w-full sm:w-auto">
               <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 rounded-none px-12 py-8 text-sm font-black uppercase tracking-widest w-full italic backdrop-blur-sm">
-                <Play className="mr-2 fill-current" size={16} /> {t.hero?.eventsBtn}
+                <CalendarDays className="mr-2" size={16} /> {t.hero?.eventsBtn}
               </Button>
             </Link>
           </div>

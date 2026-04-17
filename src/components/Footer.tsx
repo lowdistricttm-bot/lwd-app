@@ -48,7 +48,7 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t border-white/5 pt-10 flex flex-col md:flex-row justify-center items-center gap-4 text-gray-500 text-[10px] font-black uppercase tracking-widest">
+        <div className="border-t border-white/5 pt-10 flex flex-col md:flex-row justify-center items-center gap-4 text-gray-500 text-[8px] md:text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
           <p>© 2026 LOW DISTRICT. ALL RIGHTS RESERVED. ©</p>
         </div>
       </div>
