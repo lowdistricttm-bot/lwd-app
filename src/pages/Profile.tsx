@@ -37,7 +37,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const DEFAULT_COVER = "https://www.lowdistrict.it/wp-content/uploads/DSC01359-1-scaled-e1751832356345.jpg";
+// Placeholder standard per profili vuoti
+const DEFAULT_AVATAR = "https://www.lowdistrict.it/wp-content/uploads/cropped-ico-new-culture-2026-1.png";
+const DEFAULT_COVER = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1964&auto=format&fit=crop";
 
 const Profile = () => {
   const { userId } = useParams();
@@ -207,8 +209,8 @@ const Profile = () => {
           <div className="absolute -bottom-12 left-6 flex items-end gap-4 z-20">
             <div className="relative group/avatar">
               <input type="file" ref={avatarInputRef} className="hidden" accept="image/*,video/*" onChange={(e) => handleFileUpload(e, 'avatar')} />
-              <div onClick={() => !isOwnProfile && setLightboxData({ images: [profile?.avatar_url || ""], index: 0 })} className="w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-white rounded-full overflow-hidden shadow-2xl flex items-center justify-center relative">
-                {uploadingAvatar ? <Loader2 className="animate-spin text-zinc-500" /> : profile?.avatar_url ? <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" /> : <User size={40} className="text-zinc-800" />}
+              <div onClick={() => !isOwnProfile && setLightboxData({ images: [profile?.avatar_url || DEFAULT_AVATAR], index: 0 })} className="w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-white rounded-full overflow-hidden shadow-2xl flex items-center justify-center relative">
+                {uploadingAvatar ? <Loader2 className="animate-spin text-zinc-500" /> : (profile?.avatar_url || DEFAULT_AVATAR) ? <img src={profile?.avatar_url || DEFAULT_AVATAR} alt="Avatar" className="w-full h-full object-cover" /> : <User size={40} className="text-zinc-800" />}
                 {isOwnProfile && (
                   <button onClick={(e) => { e.stopPropagation(); avatarInputRef.current?.click(); }} className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity bg-black/40 rounded-full">
                     <Camera size={24} className="text-white" />

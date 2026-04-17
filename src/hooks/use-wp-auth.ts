@@ -6,6 +6,10 @@ import { showSuccess, showError } from '@/utils/toast';
 
 const WP_AUTH_URL = "https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth";
 
+// Placeholder predefiniti per nuovi utenti
+const DEFAULT_AVATAR = "https://www.lowdistrict.it/wp-content/uploads/cropped-ico-new-culture-2026-1.png";
+const DEFAULT_COVER = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1964&auto=format&fit=crop";
+
 const decodeJwt = (token: string) => {
   try {
     const base64Url = token.split('.')[1];
@@ -72,12 +76,21 @@ export const useWpAuth = () => {
 
       if (authError) throw authError;
 
-      // 4. Creazione/Aggiornamento Profilo
+      // 4. Creazione/Aggiornamento Profilo con Placeholder se nuovi
       if (authData?.user) {
+        // Verifichiamo se il profilo esiste già per non sovrascrivere foto esistenti
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('avatar_url, cover_url')
+          .eq('id', authData.user.id)
+          .maybeSingle();
+
         await supabase.from('profiles').upsert({
           id: authData.user.id,
           username: wpUsername,
           wp_id: wpId,
+          avatar_url: existingProfile?.avatar_url || DEFAULT_AVATAR,
+          cover_url: existingProfile?.cover_url || DEFAULT_COVER,
           updated_at: new Date().toISOString()
         }, { onConflict: 'id' });
       }
