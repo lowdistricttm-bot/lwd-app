@@ -105,7 +105,7 @@ const Events = () => {
                       <div className="space-y-4 w-full">
                         <span className={cn(
                           "text-[8px] font-black uppercase px-3 py-1 italic rounded-full inline-flex items-center gap-1.5",
-                          existingApp?.status === 'pending' ? "bg-zinc-800 text-zinc-400" : existingApp?.status === 'approved' ? "bg-white text-black" : "bg-primary text-white"
+                          existingApp?.status === 'pending' ? "bg-zinc-800 text-zinc-400" : existingApp?.status === 'approved' ? "bg-white text-black" : "bg-zinc-700 text-white"
                         )}>
                           {existingApp ? <Clock size={10} /> : <Calendar size={10} />}
                           {existingApp ? `${t.events.manageApp.status}: ${existingApp.status.toUpperCase()}` : t.events.statusOpen}
@@ -122,7 +122,7 @@ const Events = () => {
                         {existingApp ? (
                           <button onClick={() => setManageApp(existingApp)} className={cn(btnBaseClass, "bg-zinc-800 text-white border-white/10 hover:bg-zinc-700")}>{t.events.manage} <Settings2 size={14} /></button>
                         ) : (
-                          <button onClick={() => { if(!user) navigate('/login'); else setSelectedEvent(event); }} disabled={event.status !== 'open'} className={cn(btnBaseClass, event.status === 'open' ? "bg-primary text-white border-primary/20 hover:scale-105" : "bg-zinc-900 text-zinc-600 cursor-not-allowed")}>
+                          <button onClick={() => { if(!user) navigate('/login'); else setSelectedEvent(event); }} disabled={event.status !== 'open'} className={cn(btnBaseClass, event.status === 'open' ? "bg-white text-black border-white/20 hover:scale-105" : "bg-zinc-900 text-zinc-600 cursor-not-allowed")}>
                             {!user && <Lock size={12} />} {t.events.apply} <ChevronRight size={14} />
                           </button>
                         )}

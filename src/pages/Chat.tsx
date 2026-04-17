@@ -139,7 +139,7 @@ const Chat = () => {
             <div key={msg.id} className={cn("flex", isMe ? "justify-end" : "justify-start")}>
               <div className={cn(
                 "relative max-w-[85%] shadow-2xl overflow-hidden rounded-[2rem]", 
-                isMe ? "bg-primary text-white rounded-tr-none" : "bg-zinc-900 rounded-tl-none border border-white/5",
+                isMe ? "bg-white text-black rounded-tr-none" : "bg-zinc-900 rounded-tl-none border border-white/5",
                 isMention && "border-white/20 bg-zinc-900"
               )}>
                 {msgImages.length > 0 && (
@@ -162,7 +162,7 @@ const Chat = () => {
                 )}
                 <div className="p-4">
                   <p className="text-sm font-medium leading-relaxed">{msg.content}</p>
-                  <p className={cn("text-[7px] uppercase font-black mt-2", isMe ? "text-white/50" : "text-zinc-600")}>
+                  <p className={cn("text-[7px] uppercase font-black mt-2", isMe ? "text-black/40" : "text-zinc-600")}>
                     {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
@@ -179,10 +179,10 @@ const Chat = () => {
               placeholder="Messaggio" 
               value={message} 
               onChange={(e) => setMessage(e.target.value)} 
-              className="bg-zinc-900/80 border-zinc-800 rounded-full h-12 px-6 font-medium text-sm focus-visible:ring-primary/30" 
+              className="bg-zinc-900/80 border-zinc-800 rounded-full h-12 px-6 font-medium text-sm focus-visible:ring-white/20" 
             />
           </div>
-          <button type="submit" className="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 shrink-0">
+          <button type="submit" className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg shrink-0">
             <Send size={20} strokeWidth={2.5} className="-rotate-12" />
           </button>
         </form>

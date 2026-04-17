@@ -14,11 +14,11 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#007AFF", // iOS System Blue
-          foreground: "#ffffff",
+          DEFAULT: "#ffffff", // Tornato a Bianco
+          foreground: "#000000",
         },
         secondary: {
-          DEFAULT: "#1c1c1e", // iOS Dark Secondary
+          DEFAULT: "#1c1c1e",
           foreground: "#ffffff",
         },
         zinc: {
