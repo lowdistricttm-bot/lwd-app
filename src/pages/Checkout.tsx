@@ -153,7 +153,7 @@ const Checkout = () => {
             Riceverai una mail di conferma a breve.
           </p>
           <div className="w-full space-y-4">
-            <Button onClick={handleWhatsAppGarage} className="w-full bg-[#25D366]/90 backdrop-blur-md hover:bg-[#128C7E] hover:scale-[1.02] active:scale-[0.98] text-white py-8 text-lg font-black uppercase italic tracking-widest rounded-none transition-all shadow-lg shadow-[#25D366]/10">
+            <Button onClick={handleWhatsAppGarage} className="w-full bg-[#25D366]/90 backdrop-blur-md hover:bg-[#128C7E] hover:scale-[1.05] active:scale-[0.98] text-white py-8 text-lg font-black uppercase italic tracking-widest rounded-none transition-all shadow-lg shadow-[#25D366]/10">
               <WhatsAppIcon className="mr-3 w-6 h-6" /> Paga su WhatsApp
             </Button>
             <Button variant="outline" onClick={() => navigate('/')} className="w-full border-white/10 text-zinc-500 hover:bg-white/5 hover:text-white py-8 text-sm font-black uppercase tracking-widest rounded-none italic transition-all">
@@ -239,7 +239,7 @@ const Checkout = () => {
                   <span className="text-3xl font-black italic tracking-tighter">€{finalTotal.toFixed(2)}</span>
                 </div>
               </div>
-              <Button type="submit" disabled={createOrder.isPending} className="w-full bg-white/90 backdrop-blur-md text-black hover:bg-white hover:scale-[1.02] active:scale-[0.98] py-8 text-lg font-black uppercase italic tracking-widest rounded-none transition-all duration-300 shadow-xl shadow-white/5">
+              <Button type="submit" disabled={createOrder.isPending} className="w-full bg-white/70 backdrop-blur-2xl text-black hover:bg-white hover:scale-[1.05] active:scale-[0.98] py-8 text-lg font-black uppercase italic tracking-widest rounded-none transition-all duration-500 shadow-2xl border-none">
                 {createOrder.isPending ? <Loader2 className="animate-spin" /> : "Conferma Ordine"}
               </Button>
             </div>

@@ -106,7 +106,7 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                 </div>
                 <Button 
                   onClick={handleCheckout}
-                  className="w-full bg-white text-black hover:bg-zinc-200 py-8 text-sm font-black uppercase tracking-widest rounded-none italic"
+                  className="w-full bg-white/70 backdrop-blur-2xl text-black hover:bg-white hover:scale-[1.05] active:scale-[0.98] py-8 text-sm font-black uppercase tracking-widest rounded-none italic transition-all duration-500 shadow-2xl border-none"
                 >
                   Vai al Checkout
                 </Button>

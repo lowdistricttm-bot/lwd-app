@@ -99,7 +99,7 @@ const Login = () => {
               <Button 
                 type="submit" 
                 disabled={isLoading}
-                className="w-full bg-white/90 backdrop-blur-md text-black hover:bg-white hover:scale-[1.02] active:scale-[0.98] rounded-none h-16 font-black uppercase italic tracking-[0.2em] transition-all duration-500 group shadow-xl shadow-white/5"
+                className="w-full bg-white/70 backdrop-blur-2xl text-black hover:bg-white hover:scale-[1.05] active:scale-[0.98] rounded-none h-16 font-black uppercase italic tracking-[0.2em] transition-all duration-500 group shadow-2xl border-none"
               >
                 {isLoading ? (
                   <Loader2 className="animate-spin" size={20} />
