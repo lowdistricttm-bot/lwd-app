@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import PullToRefresh from "@/components/PullToRefresh";
 import SpotifyPlayer from "@/components/SpotifyPlayer";
 import ScrollToTop from "@/components/ScrollToTop";
+import BackgroundDecoration from "@/components/BackgroundDecoration";
 import Index from "./pages/Index";
 import Bacheca from "./pages/Bacheca";
 import Discover from "./pages/Discover";
@@ -66,6 +67,7 @@ const AppContent = () => {
   
   return (
     <>
+      <BackgroundDecoration />
       <PullToRefresh />
       <SpotifyPlayer />
       <Routes>
