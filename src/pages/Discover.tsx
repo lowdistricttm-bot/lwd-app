@@ -39,11 +39,11 @@ const Discover = () => {
       <main className="flex-1 pt-24 pb-32 px-4 md:px-8 max-w-7xl mx-auto w-full">
         <header className="mb-10">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-8">
-            <div className="space-y-2">
+            <div className="min-w-0 flex-1">
               <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">
                 {debouncedSearch ? "Risultati Ricerca" : "District Showroom"}
               </h2>
-              <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter uppercase leading-none">
+              <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-6xl font-black italic tracking-tighter uppercase whitespace-nowrap overflow-hidden text-ellipsis">
                 {debouncedSearch ? `"${debouncedSearch}"` : "Esplora"}
               </h1>
             </div>
@@ -94,7 +94,7 @@ const Discover = () => {
               animate={{ opacity: 1, y: 0 }}
               className="mb-12 space-y-6"
             >
-              <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 flex items-center gap-2 italic border-b border-white/5 pb-4">
+              <h3 className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 flex items-center gap-2 italic border-b border-white/5 pb-4">
                 <Users size={12} /> Membri Trovati
               </h3>
               <div className="flex gap-6 overflow-x-auto no-scrollbar pb-4">
@@ -126,7 +126,7 @@ const Discover = () => {
 
         {!debouncedSearch && newMembers && newMembers.length > 0 && (
           <section className="mb-14">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 flex items-center gap-2 italic mb-6">
+            <h3 className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 flex items-center gap-2 italic mb-6">
               <Sparkles size={12} /> Nuovi nel District
             </h3>
             <div className="flex gap-6 overflow-x-auto no-scrollbar pb-4">
@@ -156,7 +156,7 @@ const Discover = () => {
 
         <section>
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 flex items-center gap-2 italic">
+            <h3 className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 flex items-center gap-2 italic">
               <Car size={12} /> {debouncedSearch ? "Progetti Corrispondenti" : "Ultimi Progetti Caricati"}
             </h3>
           </div>
@@ -164,7 +164,7 @@ const Discover = () => {
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-24 gap-4">
               <Loader2 className="animate-spin text-zinc-500" size={40} />
-              <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 italic">Sincronizzazione Garage...</p>
+              <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500 italic">Sincronizzazione Garage...</p>
             </div>
           ) : (
             <div className={cn(
@@ -236,7 +236,7 @@ const Discover = () => {
                               <h4 className="text-sm md:text-xl font-black italic uppercase tracking-tight truncate leading-none">
                                 {vehicle.brand}
                               </h4>
-                              <span className="text-[10px] md:text-xs font-black uppercase text-zinc-500 italic truncate">
+                              <span className="text-[9px] md:text-xs font-black uppercase text-zinc-500 italic truncate">
                                 {vehicle.model}
                               </span>
                             </div>
@@ -258,14 +258,14 @@ const Discover = () => {
                                 <p className="text-[7px] font-black text-zinc-600 uppercase tracking-widest">Assetto</p>
                                 <div className="flex items-center gap-2 text-zinc-300">
                                   <Gauge size={12} />
-                                  <span className="text-[10px] font-black uppercase italic">{vehicle.suspension_type}</span>
+                                  <span className="text-[9px] font-black uppercase italic">{vehicle.suspension_type}</span>
                                 </div>
                               </div>
                               <div className="space-y-1">
                                 <p className="text-[7px] font-black text-zinc-600 uppercase tracking-widest">Apprezzamenti</p>
                                 <div className="flex items-center gap-2 text-zinc-300">
                                   <Heart size={12} className={vehicle.is_liked ? "text-red-500 fill-red-500" : ""} />
-                                  <span className="text-[10px] font-black uppercase italic">{vehicle.likes_count || 0} Like</span>
+                                  <span className="text-[9px] font-black uppercase italic">{vehicle.likes_count || 0} Like</span>
                                 </div>
                               </div>
                             </div>
@@ -317,7 +317,7 @@ const Discover = () => {
                           <div className="mt-4 pt-3 border-t border-white/5 flex justify-end">
                             <button 
                               onClick={() => navigate(`/profile/${vehicle.user_id}?tab=garage`)}
-                              className="group flex items-center gap-2 text-[8px] font-black uppercase italic text-zinc-500 hover:text-white transition-all"
+                              className="group flex items-center gap-2 text-[9px] font-black uppercase italic text-zinc-500 hover:text-white transition-all"
                             >
                               Vedi Progetto <ChevronRight size={12} className="group-hover:translate-x-1 transition-transform" />
                             </button>
@@ -328,7 +328,7 @@ const Discover = () => {
                           <div className="hidden md:block ml-6">
                             <button 
                               onClick={() => navigate(`/profile/${vehicle.user_id}?tab=garage`)}
-                              className="h-10 px-6 bg-white text-black hover:bg-zinc-200 transition-all text-[9px] font-black uppercase italic tracking-widest flex items-center gap-2"
+                              className="h-10 px-6 bg-white/90 backdrop-blur-md text-black hover:bg-white transition-all text-[9px] font-black uppercase italic tracking-widest flex items-center gap-2"
                             >
                               Vedi Progetto <ChevronRight size={14} />
                             </button>

@@ -224,8 +224,8 @@ const FeedPost = ({ post }: { post: Post }) => {
               {post.profiles?.avatar_url && <img src={post.profiles.avatar_url} alt="Avatar" className="w-full h-full object-cover" />}
             </div>
             <div>
-              <h4 className="text-xs font-black italic uppercase tracking-tight">{post.profiles?.username}</h4>
-              <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest">
+              <h4 className="text-[9px] font-black uppercase italic tracking-widest text-zinc-300">{post.profiles?.username}</h4>
+              <p className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest">
                 {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: it })}
               </p>
             </div>
@@ -234,7 +234,7 @@ const FeedPost = ({ post }: { post: Post }) => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild><button className="text-zinc-600 hover:text-white p-2"><MoreHorizontal size={18} /></button></DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-zinc-900 border-white/10 rounded-none">
-                <DropdownMenuItem onClick={() => deletePost.mutate(post.id)} className="text-[10px] font-black uppercase tracking-widest italic text-zinc-400 focus:bg-zinc-800 focus:text-white cursor-pointer"><Trash2 size={14} className="mr-2" /> Elimina</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => deletePost.mutate(post.id)} className="text-[9px] font-black uppercase tracking-widest italic text-zinc-400 focus:bg-zinc-800 focus:text-white cursor-pointer"><Trash2 size={14} className="mr-2" /> Elimina</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
@@ -304,11 +304,11 @@ const FeedPost = ({ post }: { post: Post }) => {
           <div className="flex items-center gap-6">
             <button onClick={handleLike} className={cn("flex items-center gap-2 transition-all", post.is_liked ? "text-white" : "text-zinc-500 hover:text-white")}>
               <Heart size={18} fill={post.is_liked ? "currentColor" : "none"} />
-              <span className="text-[10px] font-black uppercase">{post.likes_count || 0}</span>
+              <span className="text-[9px] font-black uppercase">{post.likes_count || 0}</span>
             </button>
             <button onClick={() => setShowComments(!showComments)} className={cn("flex items-center gap-2 transition-colors", showComments ? "text-white" : "text-zinc-500 hover:text-white")}>
               <MessageSquare size={18} />
-              <span className="text-[10px] font-black uppercase">{post.comments?.length || 0}</span>
+              <span className="text-[9px] font-black uppercase">{post.comments?.length || 0}</span>
             </button>
             
             {/* Pulsante Inoltro Direct */}
@@ -317,12 +317,12 @@ const FeedPost = ({ post }: { post: Post }) => {
               className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors"
             >
               <Send size={18} className="-rotate-12" />
-              <span className="text-[10px] font-black uppercase hidden sm:inline">Invia</span>
+              <span className="text-[9px] font-black uppercase hidden sm:inline">Invia</span>
             </button>
 
             <button onClick={handleNativeShare} className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors ml-auto">
               <Share2 size={18} />
-              <span className="text-[10px] font-black uppercase hidden sm:inline">{t.feed.share}</span>
+              <span className="text-[9px] font-black uppercase hidden sm:inline">{t.feed.share}</span>
             </button>
           </div>
         </div>
@@ -353,7 +353,7 @@ const FeedPost = ({ post }: { post: Post }) => {
                 <div className="pt-4 border-t border-white/5">
                   {!currentUserId ? (
                     <div className="text-center py-4">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2">Accedi per partecipare alla discussione</p>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-2">Accedi per partecipare alla discussione</p>
                       <Button onClick={() => navigate('/login')} className="bg-white text-black rounded-none text-[9px] font-black uppercase italic h-8 px-4">Accedi</Button>
                     </div>
                   ) : (

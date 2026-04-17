@@ -75,17 +75,17 @@ const Shop = () => {
       <main className="flex-1 pt-24 pb-24 px-6 max-w-7xl mx-auto w-full">
         <header className="mb-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
-            <div>
+            <div className="min-w-0 flex-1">
               <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">
                 {searchQuery ? t.shop.results : t.shop.subtitle}
               </h2>
-              <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">
+              <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-6xl font-black italic tracking-tighter uppercase whitespace-nowrap overflow-hidden text-ellipsis">
                 {searchQuery ? `"${searchQuery}"` : t.shop.title}
               </h1>
               {searchQuery && (
                 <button 
                   onClick={clearSearch}
-                  className="mt-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
+                  className="mt-4 flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
                 >
                   <X size={14} /> {language === 'it' ? 'Rimuovi Filtro Ricerca' : 'Remove Search Filter'}
                 </button>
@@ -96,7 +96,7 @@ const Shop = () => {
               <button 
                 onClick={() => handleCategorySelect('all')}
                 className={cn(
-                  "text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border-b-2 pb-1",
+                  "text-[9px] font-black uppercase tracking-widest whitespace-nowrap transition-all border-b-2 pb-1",
                   currentCategoryId === 'all' ? "text-white border-white" : "text-zinc-500 border-transparent hover:text-white"
                 )}
               >
@@ -107,7 +107,7 @@ const Shop = () => {
                   key={cat.id}
                   onClick={() => handleCategorySelect(cat.id.toString())}
                   className={cn(
-                    "text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border-b-2 pb-1",
+                    "text-[9px] font-black uppercase tracking-widest whitespace-nowrap transition-all border-b-2 pb-1",
                     (currentCategoryId === cat.id.toString() || (cat.slug === 'abbigliamento' && isAbbigliamentoActive)) 
                       ? "text-white border-white" 
                       : "text-zinc-500 border-transparent hover:text-white"
@@ -119,7 +119,7 @@ const Shop = () => {
 
             <button 
               onClick={() => setIsFilterOpen(true)}
-              className="md:hidden flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md border border-white/10 px-4 py-3 text-[10px] font-black uppercase tracking-widest italic"
+              className="md:hidden flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md border border-white/10 px-4 py-3 text-[9px] font-black uppercase tracking-widest italic"
             >
               <Filter size={14} /> {t.shop.filter}
             </button>
@@ -217,7 +217,7 @@ const Shop = () => {
                                 key={sub.id}
                                 onClick={() => handleCategorySelect(sub.id.toString())}
                                 className={cn(
-                                  "block w-full text-left text-[10px] font-black uppercase tracking-widest italic",
+                                  "block w-full text-left text-[9px] font-black uppercase tracking-widest italic",
                                   currentCategoryId === sub.id.toString() ? "text-white" : "text-zinc-600"
                                 )}
                                 dangerouslySetInnerHTML={{ __html: sub.name }}
@@ -237,20 +237,20 @@ const Shop = () => {
         {loadingProducts || loadingCats ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Loader2 className="animate-spin text-zinc-500" size={40} />
-            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">SINCRONIZZAZIONE...</p>
+            <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500">SINCRONIZZAZIONE...</p>
           </div>
         ) : products?.length === 0 ? (
           <div className="text-center py-20 border border-white/5 bg-zinc-900/30 flex flex-col items-center gap-6">
             <SearchIcon size={48} className="text-zinc-800" />
             <div>
-              <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">{t.shop.noProducts}</p>
+              <p className="text-zinc-500 text-[9px] font-black uppercase tracking-widest">{t.shop.noProducts}</p>
               {searchQuery && <p className="text-zinc-700 text-[8px] font-bold uppercase mt-2">{t.shop.noProductsDesc}</p>}
             </div>
             {searchQuery && (
               <Button 
                 onClick={clearSearch}
                 variant="outline"
-                className="border-white/10 backdrop-blur-md text-white rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 px-8"
+                className="border-white/10 backdrop-blur-md text-white rounded-none font-black uppercase italic text-[9px] tracking-widest h-12 px-8"
               >
                 {t.shop.showAll}
               </Button>

@@ -51,13 +51,17 @@ const Bacheca = () => {
       
       <main className="flex-1 pt-24 pb-24 px-4 md:px-6 max-w-2xl mx-auto w-full">
         <header className="mb-12 flex items-end justify-between">
-          <div>
-            <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">{t.feed.subtitle}</h2>
-            <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">{t.feed.title}</h1>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">
+              {t.feed.subtitle}
+            </h2>
+            <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-6xl font-black italic tracking-tighter uppercase whitespace-nowrap overflow-hidden text-ellipsis">
+              {t.feed.title}
+            </h1>
           </div>
           
           {user && (
-            <div className="flex gap-2">
+            <div className="flex gap-2 ml-4 shrink-0">
               <button onClick={handleManualRefresh} className="w-12 h-12 bg-zinc-900/50 backdrop-blur-md text-white flex items-center justify-center hover:bg-zinc-800 transition-all shadow-lg border border-white/5">
                 <RefreshCw size={20} className={cn(isRefreshing && "animate-spin")} />
               </button>
@@ -82,7 +86,7 @@ const Bacheca = () => {
             <div className="flex items-center gap-4">
               <AlertCircle className="text-zinc-500 shrink-0" size={24} />
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">{t.feed.private}</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">{t.feed.private}</p>
                 <p className="text-[9px] text-zinc-600 font-bold uppercase mt-1">Accedi per partecipare alle discussioni del District.</p>
               </div>
             </div>
@@ -93,12 +97,12 @@ const Bacheca = () => {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Loader2 className="animate-spin text-zinc-500" size={40} />
-            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{t.feed.syncing}</p>
+            <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500">{t.feed.syncing}</p>
           </div>
         ) : (posts?.length === 0 && user) ? (
           <div className="text-center py-20 border border-white/5 bg-zinc-900/30 p-8">
             <p className="text-sm font-black uppercase tracking-widest text-zinc-500">{t.feed.noPosts}</p>
-            <p className="text-[10px] text-zinc-600 mt-2 uppercase font-bold">{t.feed.noPostsDesc}</p>
+            <p className="text-[9px] text-zinc-600 mt-2 uppercase font-bold">{t.feed.noPostsDesc}</p>
           </div>
         ) : posts && posts.length > 0 ? (
           <div className="space-y-2">
