@@ -206,13 +206,13 @@ const Profile = () => {
             <div className="w-full">
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-sm md:text-xl font-black italic uppercase tracking-tighter leading-none">{profile?.username || 'Utente'}</h1>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 shrink-0">
                   {!isOwnProfile && currentUser && (!isTargetSubscriber || canVote) && (
-                    <button onClick={() => navigate(`/chat/${profile.id}`)} className="p-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-white hover:bg-white hover:text-black transition-all"><Mail size={16} /></button>
+                    <button onClick={() => navigate(`/chat/${profile.id}`)} className="p-1.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all"><Mail size={14} /></button>
                   )}
-                  <button onClick={handleShareProfile} className="p-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-white hover:bg-white hover:text-black transition-all"><Share2 size={16} /></button>
+                  <button onClick={handleShareProfile} className="p-1.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all"><Share2 size={14} /></button>
                   {isOwnProfile && (
-                    <button onClick={() => setIsUsernameNoticeOpen(true)} className="p-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-white hover:bg-white hover:text-black transition-all"><Edit2 size={14} /></button>
+                    <button onClick={() => setIsUsernameNoticeOpen(true)} className="p-1.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all"><Edit2 size={12} /></button>
                   )}
                 </div>
               </div>
