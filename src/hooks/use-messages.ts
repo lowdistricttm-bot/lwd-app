@@ -101,7 +101,6 @@ export const useMessages = (otherUserId?: string) => {
 
   // Listener specifico per la chat aperta o la lista conversazioni
   useEffect(() => {
-    // Creiamo un ID istanza unico per evitare conflitti di sottoscrizione
     const instanceId = Math.random().toString(36).substring(2, 9);
     const channelName = `messages-realtime-${otherUserId || 'list'}-${instanceId}`;
 
@@ -188,5 +187,16 @@ export const useMessages = (otherUserId?: string) => {
     }
   });
 
-  return { conversations, unreadCount, loadingConvs, chatMessages, loadingChat, sendMessage, markAsRead, deleteConversation };
+  const deleteMessage = useMutation({
+    mutationFn: async (messageId: string) => {
+      const { error } = await supabase.from('messages').delete().eq('id', messageId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
+    }
+  });
+
+  return { conversations, unreadCount, loadingConvs, chatMessages, loadingChat, sendMessage, markAsRead, deleteConversation, deleteMessage };
 };

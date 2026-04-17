@@ -16,10 +16,22 @@ import ImageLightbox from '@/components/ImageLightbox';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { showError } from '@/utils/toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useTranslation } from '@/hooks/use-translation';
 
 const Chat = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { canVote } = useAdmin();
   const [message, setMessage] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -28,11 +40,13 @@ const Chat = () => {
   const [otherUserProfile, setOtherUserProfile] = useState<any>(null);
   const [dbLastSeen, setDbLastSeen] = useState<string | null>(null);
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
+  const [deleteMessageTarget, setDeleteMessageTarget] = useState<string | null>(null);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isDragging = useRef(false);
   
-  const { chatMessages, loadingChat, sendMessage, markAsRead } = useMessages(userId);
+  const { chatMessages, loadingChat, sendMessage, markAsRead, deleteMessage } = useMessages(userId);
   const { reshareStory } = useStories();
   
   const { isUserOnline, getLastSeen } = usePresence();
@@ -101,6 +115,13 @@ const Chat = () => {
     navigate('/');
   };
 
+  const handleDeleteMessage = async () => {
+    if (deleteMessageTarget) {
+      await deleteMessage.mutateAsync(deleteMessageTarget);
+      setDeleteMessageTarget(null);
+    }
+  };
+
   if (loadingChat) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
   return (
@@ -139,49 +160,90 @@ const Chat = () => {
         </button>
       </nav>
 
-      <main ref={scrollRef} className="flex-1 pt-24 pb-[140px] px-6 overflow-y-auto space-y-6 custom-scrollbar">
+      <main ref={scrollRef} className="flex-1 pt-24 pb-[140px] px-6 overflow-y-auto space-y-6 custom-scrollbar overflow-x-hidden">
         {chatMessages?.map((msg) => {
           const isMe = msg.sender_id === currentUserId;
           const isMention = msg.content.includes('Ti ha menzionato');
           const msgImages = msg.images || [];
 
           return (
-            <div key={msg.id} className={cn("flex", isMe ? "justify-end" : "justify-start")}>
-              <div className={cn(
-                "relative max-w-[85%] shadow-2xl overflow-hidden rounded-[2rem]", 
-                isMe ? "bg-white text-black rounded-tr-none" : "bg-black/60 backdrop-blur-2xl rounded-tl-none border border-white/10",
-                isMention && "border-white/30 bg-black/80 backdrop-blur-2xl"
-              )}>
-                {msgImages.length > 0 && (
-                  <div className="relative aspect-[3/4] w-64 bg-black/50 cursor-pointer" onClick={() => setLightboxData({ images: msgImages, index: 0 })}>
-                    {msgImages[0].match(/\.(mp4|webm|ogg|mov)$/i) || msgImages[0].includes('video') ? (
-                      <video src={msgImages[0]} className="w-full h-full object-cover" controls />
-                    ) : (
-                      <img src={msgImages[0]} className="w-full h-full object-cover" />
-                    )}
-                    {isMention && (
-                      <div className="absolute inset-0 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
-                        <AtSign size={32} strokeWidth={2} className="mb-2 text-white drop-shadow-lg" />
-                        <p className="text-[10px] font-black uppercase tracking-widest mb-4 drop-shadow-lg">Sei stato menzionato!</p>
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); handleReshare(msgImages[0], msg.sender_id); }}
-                          disabled={reshareStory.isPending}
-                          className="bg-white text-black px-6 py-2.5 rounded-full text-[9px] font-black uppercase italic flex items-center gap-2 hover:scale-105 transition-all shadow-xl"
-                        >
-                          {reshareStory.isPending ? <Loader2 size={12} className="animate-spin" /> : <><RefreshCw size={12} strokeWidth={2.5} /> Aggiungi</>}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-                {msg.content && (
-                  <div className="p-4">
-                    <p className="text-sm font-medium leading-relaxed">{msg.content}</p>
-                    <p className={cn("text-[7px] uppercase font-black mt-2", isMe ? "text-black/40" : "text-zinc-500")}>
-                      {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                )}
+            <div key={msg.id} className={cn("flex w-full", isMe ? "justify-end" : "justify-start")}>
+              <div className="relative max-w-[85%] w-fit">
+                
+                {/* Sfondo cestino della stessa dimensione esatta della bolla */}
+                <div className={cn(
+                  "absolute inset-0 flex items-center justify-end px-5 rounded-[2rem]",
+                  isMe ? "bg-red-950/40" : "bg-red-950/60 border border-white/5"
+                )}>
+                  <Trash2 size={18} strokeWidth={2} className="text-red-400/80" />
+                </div>
+
+                <motion.div
+                  drag="x"
+                  dragSnapToOrigin={true}
+                  dragConstraints={{ left: -80, right: 0 }}
+                  dragElastic={0.1}
+                  onDragStart={() => {
+                    isDragging.current = true;
+                  }}
+                  onDragEnd={(_, info) => {
+                    setTimeout(() => {
+                      isDragging.current = false;
+                    }, 150);
+                    if (info.offset.x < -50) {
+                      setDeleteMessageTarget(msg.id);
+                    }
+                  }}
+                  className={cn(
+                    "relative z-10 shadow-2xl overflow-hidden rounded-[2rem]", 
+                    isMe ? "bg-white text-black rounded-tr-none" : "bg-black/60 backdrop-blur-2xl rounded-tl-none border border-white/10",
+                    isMention && "border-white/30 bg-black/80 backdrop-blur-2xl"
+                  )}
+                >
+                  {msgImages.length > 0 && (
+                    <div 
+                      className="relative aspect-[3/4] w-64 bg-black/50 cursor-pointer" 
+                      onClick={(e) => {
+                        if (isDragging.current) {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          return;
+                        }
+                        setLightboxData({ images: msgImages, index: 0 });
+                      }}
+                    >
+                      {msgImages[0].match(/\.(mp4|webm|ogg|mov)$/i) || msgImages[0].includes('video') ? (
+                        <video src={msgImages[0]} className="w-full h-full object-cover" controls />
+                      ) : (
+                        <img src={msgImages[0]} className="w-full h-full object-cover" />
+                      )}
+                      {isMention && (
+                        <div className="absolute inset-0 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+                          <AtSign size={32} strokeWidth={2} className="mb-2 text-white drop-shadow-lg" />
+                          <p className="text-[10px] font-black uppercase tracking-widest mb-4 drop-shadow-lg">Sei stato menzionato!</p>
+                          <button 
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              if(!isDragging.current) handleReshare(msgImages[0], msg.sender_id); 
+                            }}
+                            disabled={reshareStory.isPending}
+                            className="bg-white text-black px-6 py-2.5 rounded-full text-[9px] font-black uppercase italic flex items-center gap-2 hover:scale-105 transition-all shadow-xl"
+                          >
+                            {reshareStory.isPending ? <Loader2 size={12} className="animate-spin" /> : <><RefreshCw size={12} strokeWidth={2.5} /> Aggiungi</>}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {msg.content && (
+                    <div className="p-4">
+                      <p className="text-sm font-medium leading-relaxed">{msg.content}</p>
+                      <p className={cn("text-[7px] uppercase font-black mt-2", isMe ? "text-black/40" : "text-zinc-500")}>
+                        {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                  )}
+                </motion.div>
               </div>
             </div>
           );
@@ -191,7 +253,6 @@ const Chat = () => {
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-black/60 backdrop-blur-2xl border-t border-white/10 z-50 pb-[calc(1rem+env(safe-area-inset-bottom))]">
         <div className="max-w-2xl mx-auto flex flex-col gap-3">
           
-          {/* Anteprime Immagini/Video */}
           {previews.length > 0 && (
             <div className="flex gap-2 overflow-x-auto no-scrollbar">
               {previews.map((url, i) => (
@@ -250,6 +311,25 @@ const Chat = () => {
           </form>
         </div>
       </div>
+
+      <AlertDialog open={!!deleteMessageTarget} onOpenChange={() => setDeleteMessageTarget(null)}>
+        <AlertDialogContent className="bg-black/60 backdrop-blur-2xl border-white/10 rounded-[2rem]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white font-black uppercase italic">{t.messages.deleteMsg || "Elimina Messaggio"}</AlertDialogTitle>
+            <AlertDialogDescription className="text-zinc-400 text-xs font-bold uppercase">
+              Questa azione eliminerà il messaggio per entrambi gli utenti.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex flex-col gap-2">
+            <AlertDialogAction onClick={handleDeleteMessage} className="rounded-full bg-white text-black font-black uppercase italic text-[10px] h-12 hover:bg-zinc-200">
+              Elimina Definitivamente
+            </AlertDialogAction>
+            <AlertDialogCancel className="rounded-full border-white/10 text-white bg-transparent hover:bg-white/10 font-black uppercase italic text-[10px] h-12 mt-0">
+              Annulla
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <ImageLightbox images={lightboxData?.images || []} initialIndex={lightboxData?.index || 0} isOpen={!!lightboxData} onClose={() => setLightboxData(null)} />
     </div>
