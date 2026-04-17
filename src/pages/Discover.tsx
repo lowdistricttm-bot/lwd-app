@@ -30,8 +30,8 @@ const Discover = () => {
       <Navbar />
       
       <main className="flex-1 pt-24 pb-32 px-4 md:px-8 max-w-7xl mx-auto w-full">
-        <header className="mb-12">
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-10">
+        <header className="mb-10">
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-8">
             <div className="space-y-2">
               <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.5em] italic">
                 {debouncedSearch ? "Risultati Ricerca" : "District Showroom"}
@@ -88,7 +88,7 @@ const Discover = () => {
             <motion.section 
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-16 space-y-6"
+              className="mb-12 space-y-6"
             >
               <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 flex items-center gap-2 italic border-b border-white/5 pb-4">
                 <Users size={12} /> Membri Trovati
@@ -122,8 +122,8 @@ const Discover = () => {
 
         {/* Sezione Nuovi Membri (Mostrata solo quando non si cerca) */}
         {!debouncedSearch && newMembers && newMembers.length > 0 && (
-          <section className="mb-20">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 flex items-center gap-2 italic mb-8">
+          <section className="mb-14">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 flex items-center gap-2 italic mb-6">
               <Sparkles size={12} /> Nuovi nel District
             </h3>
             <div className="flex gap-6 overflow-x-auto no-scrollbar pb-4">
@@ -153,19 +153,19 @@ const Discover = () => {
 
         {/* Griglia/Lista Veicoli */}
         <section>
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-6">
             <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 flex items-center gap-2 italic">
               <Car size={12} /> {debouncedSearch ? "Progetti Corrispondenti" : "Ultimi Progetti Caricati"}
             </h3>
           </div>
 
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-32 gap-4">
-              <Loader2 className="animate-spin text-zinc-500" size={48} />
-              <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 italic animate-pulse">Sincronizzazione Garage...</p>
+            <div className="flex flex-col items-center justify-center py-24 gap-4">
+              <Loader2 className="animate-spin text-zinc-500" size={40} />
+              <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 italic">Sincronizzazione Garage...</p>
             </div>
           ) : vehicles?.length === 0 ? (
-            <div className="text-center py-32 border border-white/5 bg-zinc-900/10">
+            <div className="text-center py-24 border border-white/5 bg-zinc-900/10">
               <Car className="mx-auto text-zinc-800 mb-6" size={64} />
               <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Nessun veicolo trovato nel District.</p>
             </div>
