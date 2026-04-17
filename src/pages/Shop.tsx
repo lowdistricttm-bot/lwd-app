@@ -119,7 +119,7 @@ const Shop = () => {
 
             <button 
               onClick={() => setIsFilterOpen(true)}
-              className="md:hidden flex items-center gap-2 bg-zinc-900 border border-white/10 px-4 py-3 text-[10px] font-black uppercase tracking-widest italic"
+              className="md:hidden flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md border border-white/10 px-4 py-3 text-[10px] font-black uppercase tracking-widest italic"
             >
               <Filter size={14} /> {t.shop.filter}
             </button>
@@ -137,9 +137,9 @@ const Shop = () => {
                   <button 
                     onClick={() => handleCategorySelect(abbigliamentoCat!.id.toString())}
                     className={cn(
-                      "px-4 py-1.5 text-[9px] font-black uppercase tracking-widest border transition-all",
+                      "px-4 py-1.5 text-[9px] font-black uppercase tracking-widest border backdrop-blur-md transition-all",
                       currentCategoryId === abbigliamentoCat!.id.toString() 
-                        ? "bg-white text-black border-white" 
+                        ? "bg-white/90 text-black border-white" 
                         : "bg-transparent text-zinc-400 border-white/10 hover:border-white/30"
                     )}
                   >
@@ -150,9 +150,9 @@ const Shop = () => {
                       key={sub.id}
                       onClick={() => handleCategorySelect(sub.id.toString())}
                       className={cn(
-                        "px-4 py-1.5 text-[9px] font-black uppercase tracking-widest border transition-all",
+                        "px-4 py-1.5 text-[9px] font-black uppercase tracking-widest border backdrop-blur-md transition-all",
                         currentCategoryId === sub.id.toString() 
-                          ? "bg-white text-black border-white" 
+                          ? "bg-white/90 text-black border-white" 
                           : "bg-transparent text-zinc-400 border-white/10 hover:border-white/30"
                       )}
                       dangerouslySetInnerHTML={{ __html: sub.name }}
@@ -250,7 +250,7 @@ const Shop = () => {
               <Button 
                 onClick={clearSearch}
                 variant="outline"
-                className="border-white/10 text-white rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 px-8"
+                className="border-white/10 backdrop-blur-md text-white rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 px-8"
               >
                 {t.shop.showAll}
               </Button>
@@ -274,7 +274,7 @@ const Shop = () => {
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     />
                     {product.on_sale && (
-                      <div className="absolute top-4 left-4 bg-white text-black text-[8px] font-black uppercase px-2 py-1 italic">
+                      <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md text-black text-[8px] font-black uppercase px-2 py-1 italic">
                         {t.shop.sale}
                       </div>
                     )}

@@ -115,7 +115,7 @@ const Index = () => {
                     href="https://open.spotify.com/playlist/49mK52uCtaHSCLY1VC9GR3" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-3 bg-[#1DB954] text-black px-6 py-3 text-[9px] font-black uppercase tracking-widest italic hover:scale-105 transition-transform"
+                    className="inline-flex items-center gap-3 bg-[#1DB954]/90 backdrop-blur-md text-black px-6 py-3 text-[9px] font-black uppercase tracking-widest italic hover:scale-105 transition-transform"
                   >
                     <Play size={14} fill="currentColor" /> Apri su Spotify
                   </a>
@@ -161,10 +161,10 @@ const Index = () => {
                 {t.home.banner.subtitle}
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md mx-auto">
-                <Link to="/events" className="w-full sm:w-auto bg-white text-black px-10 py-4 text-[10px] font-black uppercase tracking-[0.2em] italic hover:bg-zinc-200 transition-all">
+                <Link to="/events" className="w-full sm:w-auto bg-white/90 backdrop-blur-md text-black px-10 py-4 text-[10px] font-black uppercase tracking-[0.2em] italic hover:bg-white transition-all">
                   {t.home.banner.applyBtn}
                 </Link>
-                <Link to="/shop" className="w-full sm:w-auto border border-white/20 text-white px-10 py-4 text-[10px] font-black uppercase tracking-[0.2em] italic hover:bg-white/10 transition-all">
+                <Link to="/shop" className="w-full sm:w-auto border border-white/20 backdrop-blur-md text-white px-10 py-4 text-[10px] font-black uppercase tracking-[0.2em] italic hover:bg-white/10 transition-all">
                   {t.home.banner.shopBtn}
                 </Link>
               </div>

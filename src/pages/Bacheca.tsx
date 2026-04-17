@@ -58,11 +58,11 @@ const Bacheca = () => {
           
           {user && (
             <div className="flex gap-2">
-              <button onClick={handleManualRefresh} className="w-12 h-12 bg-zinc-900/50 text-white flex items-center justify-center hover:bg-zinc-800 transition-all shadow-lg border border-white/5">
+              <button onClick={handleManualRefresh} className="w-12 h-12 bg-zinc-900/50 backdrop-blur-md text-white flex items-center justify-center hover:bg-zinc-800 transition-all shadow-lg border border-white/5">
                 <RefreshCw size={20} className={cn(isRefreshing && "animate-spin")} />
               </button>
               {!isSubscriber && (
-                <button onClick={handleCreatePost} className="w-12 h-12 bg-white text-black flex items-center justify-center hover:bg-zinc-200 transition-all shadow-lg shadow-white/5">
+                <button onClick={handleCreatePost} className="w-12 h-12 bg-white/90 backdrop-blur-md text-black flex items-center justify-center hover:bg-white transition-all shadow-lg shadow-white/5">
                   <Plus size={24} />
                 </button>
               )}
@@ -78,7 +78,7 @@ const Bacheca = () => {
         )}
 
         {!user && (
-          <div className="mb-8 p-6 bg-zinc-900/50 border border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="mb-8 p-6 bg-zinc-900/50 backdrop-blur-md border border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-4">
               <AlertCircle className="text-zinc-500 shrink-0" size={24} />
               <div>
@@ -86,7 +86,7 @@ const Bacheca = () => {
                 <p className="text-[9px] text-zinc-600 font-bold uppercase mt-1">Accedi per partecipare alle discussioni del District.</p>
               </div>
             </div>
-            <Button onClick={() => navigate('/login')} className="bg-white text-black hover:bg-zinc-200 rounded-none text-[9px] font-black uppercase tracking-widest h-10 px-6 italic"><LogIn size={14} className="mr-2" /> {t.auth.login}</Button>
+            <Button onClick={() => navigate('/login')} className="bg-white/90 backdrop-blur-md text-black hover:bg-white rounded-none text-[9px] font-black uppercase tracking-widest h-10 px-6 italic"><LogIn size={14} className="mr-2" /> {t.auth.login}</Button>
           </div>
         )}
 

@@ -231,7 +231,7 @@ const Profile = () => {
                   )}
 
                   {!isOwnProfile && currentUser && canMessageTarget && (
-                    <button onClick={() => navigate(`/chat/${profile.id}`)} className="p-1.5 bg-zinc-800 text-white hover:bg-white hover:text-black transition-all shadow-lg"><Mail size={16} /></button>
+                    <button onClick={() => navigate(`/chat/${profile.id}`)} className="p-1.5 bg-zinc-800/80 backdrop-blur-md text-white hover:bg-white hover:text-black transition-all shadow-lg"><Mail size={16} /></button>
                   )}
                 </div>
               </div>
@@ -244,7 +244,7 @@ const Profile = () => {
           {!isTargetSubscriber && targetUserId && <HighlightsBar userId={targetUserId} isOwnProfile={isOwnProfile} />}
 
           {isOwnProfile && (userRole === 'admin' || userRole === 'staff' || userRole === 'support') && (
-            <button onClick={() => navigate('/admin')} className="w-full mb-4 bg-zinc-900/40 border border-white/5 p-1 pr-4 flex items-center justify-between group hover:bg-zinc-800 transition-all duration-500 h-12">
+            <button onClick={() => navigate('/admin')} className="w-full mb-4 bg-zinc-900/40 backdrop-blur-md border border-white/5 p-1 pr-4 flex items-center justify-between group hover:bg-zinc-800 transition-all duration-500 h-12">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-colors">
                   {userRole === 'admin' ? <ShieldCheck size={18} /> : <Users size={18} />}
@@ -255,7 +255,7 @@ const Profile = () => {
             </button>
           )}
 
-          <div className={cn("grid border border-white/5 bg-zinc-900/30 mb-6", gridColsClass)}>
+          <div className={cn("grid border border-white/5 bg-zinc-900/30 backdrop-blur-md mb-6", gridColsClass)}>
             {tabs.map((tab) => (
               <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={cn("flex flex-col items-center justify-center gap-2 py-4 transition-all border-b-2", activeTab === tab.id ? "border-white text-white bg-white/5" : "border-transparent text-zinc-600 hover:text-zinc-400")}>
                 <tab.icon size={18} className={activeTab === tab.id ? "text-white" : ""} />
@@ -270,7 +270,7 @@ const Profile = () => {
                 <motion.div key="activity" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-xl font-black italic uppercase">{isOwnProfile ? t.profile.myPosts : `${t.profile.posts} ${displayName}`}</h3>
-                    {isOwnProfile && <Button onClick={() => setIsPostModalOpen(true)} className="bg-white text-black hover:bg-zinc-200 rounded-none text-[10px] font-black uppercase italic tracking-widest h-10 px-6"><Plus size={14} className="mr-2" /> {t.feed.newPost}</Button>}
+                    {isOwnProfile && <Button onClick={() => setIsPostModalOpen(true)} className="bg-white/90 backdrop-blur-md text-black hover:bg-white rounded-none text-[10px] font-black uppercase italic tracking-widest h-10 px-6"><Plus size={14} className="mr-2" /> {t.feed.newPost}</Button>}
                   </div>
                   
                   {loadingPosts ? (
@@ -326,7 +326,7 @@ const Profile = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="rounded-none border-white/10 text-white font-black uppercase italic text-[10px]">{t.feed.cancel}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => window.location.href = 'mailto:info@lowdistrict.it'} className="rounded-none bg-white text-black font-black uppercase italic text-[10px]">{t.profile.contactAdmin}</AlertDialogAction>
+            <AlertDialogAction onClick={() => window.location.href = 'mailto:info@lowdistrict.it'} className="rounded-none bg-white/90 backdrop-blur-md text-black font-black uppercase italic text-[10px]">{t.profile.contactAdmin}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
