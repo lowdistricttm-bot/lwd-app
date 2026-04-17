@@ -255,12 +255,9 @@ const Discover = () => {
                               <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">
                                 {vehicle.year || 'N/A'}
                               </p>
-                              {vehicle.license_plate && (
-                                <span className={cn(
-                                  "text-[7px] font-black uppercase px-1.5 py-0.5 italic flex items-center gap-1",
-                                  canSeePlate ? "text-zinc-400" : "text-zinc-700"
-                                )}>
-                                  {canSeePlate ? vehicle.license_plate : <><EyeOff size={8} /> OSCURATA</>}
+                              {vehicle.license_plate && canSeePlate && (
+                                <span className="text-[7px] font-black uppercase px-1.5 py-0.5 italic flex items-center gap-1 text-zinc-400">
+                                  {vehicle.license_plate}
                                 </span>
                               )}
                             </div>

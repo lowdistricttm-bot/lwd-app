@@ -344,16 +344,9 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
                       <h4 className="text-xl font-black italic uppercase tracking-tighter">{vehicle.brand} {vehicle.model}</h4>
                       <p className="text-zinc-500 text-[9px] font-black uppercase tracking-widest italic">{vehicle.year}</p>
                     </div>
-                    {vehicle.license_plate && (
-                      <div className={cn(
-                        "px-2 py-1 text-[9px] font-black tracking-widest border flex items-center gap-2",
-                        canSeePlate ? "bg-white text-black border-black" : "bg-zinc-800 text-zinc-500 border-white/5"
-                      )}>
-                        {canSeePlate ? (
-                          vehicle.license_plate
-                        ) : (
-                          <><EyeOff size={10} /> OSCURATA</>
-                        )}
+                    {vehicle.license_plate && canSeePlate && (
+                      <div className="px-2 py-1 text-[9px] font-black tracking-widest border flex items-center gap-2 bg-white text-black border-black">
+                        {vehicle.license_plate}
                       </div>
                     )}
                   </div>
