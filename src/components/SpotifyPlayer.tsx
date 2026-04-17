@@ -1,60 +1,52 @@
 "use client";
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Music, ChevronDown, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, useMotionValue, useTransform, useAnimation } from 'framer-motion';
+import { Music, ChevronLeft, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const SpotifyPlayer = () => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const playlistId = "49mK52uCtaHSCLY1VC9GR3";
+  
+  const x = useMotionValue(-280); // Inizia quasi tutto fuori schermo (larghezza player 300 - 20 di maniglia)
+  const controls = useAnimation();
+
+  // Gestione apertura/chiusura con snap
+  const handleDragEnd = (_: any, info: any) => {
+    const threshold = -150;
+    if (info.point.x > 100 || info.offset.x > 50) {
+      openPlayer();
+    } else {
+      closePlayer();
+    }
+  };
+
+  const openPlayer = () => {
+    setIsOpen(true);
+    controls.start({ x: 0 });
+  };
+
+  const closePlayer = () => {
+    setIsOpen(false);
+    controls.start({ x: -280 });
+  };
 
   return (
-    <div className="fixed bottom-24 md:bottom-8 left-4 md:left-8 z-[60] pointer-events-none">
-      {/* Container del Player */}
+    <div className="fixed bottom-32 left-0 z-[100] pointer-events-none">
       <motion.div
-        initial={false}
-        animate={{
-          width: isExpanded ? '300px' : '48px',
-          height: isExpanded ? '152px' : '48px',
-          borderRadius: isExpanded ? '12px' : '50%',
-          opacity: 1
-        }}
-        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className={cn(
-          "pointer-events-auto bg-zinc-950 border border-white/10 shadow-2xl overflow-hidden flex flex-col",
-          !isExpanded && "hover:border-white/40 transition-colors cursor-pointer"
-        )}
-        onClick={() => !isExpanded && setIsExpanded(true)}
+        drag="x"
+        dragConstraints={{ left: -280, right: 0 }}
+        dragElastic={0.1}
+        dragMomentum={false}
+        onDragEnd={handleDragEnd}
+        animate={controls}
+        initial={{ x: -280 }}
+        style={{ x }}
+        className="pointer-events-auto flex items-center"
       >
-        {/* Pulsante di chiusura rapida (visibile solo se espanso) */}
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.button
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={(e) => { e.stopPropagation(); setIsExpanded(false); }}
-              className="absolute top-2 right-2 z-10 p-1 bg-black/60 hover:bg-black rounded-full text-white/70 hover:text-white transition-all"
-            >
-              <X size={14} />
-            </motion.button>
-          )}
-        </AnimatePresence>
-
-        {/* Icona Musica (visibile solo se contratto) */}
-        {!isExpanded && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Music size={20} className="text-white" />
-            <div className="absolute -top-1 -right-1 w-2 h-2 bg-white rounded-full animate-pulse" />
-          </div>
-        )}
-        
-        {/* Iframe Spotify - Versione Compact (152px) */}
-        <div className={cn(
-          "flex-1 bg-black transition-opacity duration-500 overflow-hidden",
-          isExpanded ? "opacity-100" : "opacity-0 pointer-events-none"
-        )}>
+        {/* Corpo del Player */}
+        <div className="w-[280px] h-[152px] bg-black border-y border-r border-white/10 shadow-2xl overflow-hidden">
           <iframe 
             src={`https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator&theme=0`} 
             width="100%" 
@@ -63,6 +55,19 @@ const SpotifyPlayer = () => {
             allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
             loading="lazy"
           />
+        </div>
+
+        {/* Maniglia Trascinabile (Linguetta) */}
+        <div 
+          onClick={() => isOpen ? closePlayer() : openPlayer()}
+          className={cn(
+            "w-10 h-20 bg-zinc-900 border-y border-r border-white/10 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing rounded-r-2xl shadow-xl transition-colors",
+            isOpen ? "bg-white text-black" : "text-white hover:bg-zinc-800"
+          )}
+        >
+          <GripVertical size={14} className="opacity-30 mb-1" />
+          <Music size={18} className={cn(isOpen && "animate-pulse")} />
+          {isOpen && <ChevronLeft size={14} className="mt-1" />}
         </div>
       </motion.div>
     </div>
