@@ -12,12 +12,12 @@ export const useDiscover = (searchQuery: string = "") => {
   const { data: vehicles, isLoading: loadingVehicles } = useQuery({
     queryKey: ['discover-vehicles', searchQuery],
     queryFn: async () => {
-      // Usiamo profiles:user_id!inner per specificare la chiave esterna e forzare l'inner join
+      // Usiamo profiles!inner per forzare l'inner join basato sulla FK
       let query = supabase
         .from('vehicles')
         .select(`
           *,
-          profiles:user_id!inner (
+          profiles!inner (
             username, 
             avatar_url, 
             role, 
@@ -28,7 +28,7 @@ export const useDiscover = (searchQuery: string = "") => {
         .order('created_at', { ascending: false });
 
       if (searchQuery) {
-        // Ricerca per marca o modello (il case-insensitive è gestito da ilike)
+        // Ricerca per marca o modello
         query = query.or(`brand.ilike.%${searchQuery}%,model.ilike.%${searchQuery}%`);
       } else {
         query = query.limit(40);
