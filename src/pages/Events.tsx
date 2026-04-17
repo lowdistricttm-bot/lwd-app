@@ -139,11 +139,14 @@ const Events = () => {
                     <div className="flex-1 p-8 flex flex-col items-center justify-center text-center gap-8 min-w-0">
                       <div className="space-y-4 w-full">
                         <span className={cn(
-                          "text-[8px] font-black uppercase px-3 py-1 italic rounded-full inline-flex items-center gap-1.5",
+                          "text-[8px] font-black uppercase px-3 py-1 italic rounded-full inline-flex items-center gap-1.5 transition-all duration-300",
                           existingApp?.status === 'pending' ? "bg-zinc-800 text-zinc-400" : 
                           existingApp?.status === 'approved' ? "bg-white text-black" : 
                           existingApp?.status === 'rejected' ? "bg-zinc-700 text-white" :
-                          event.status === 'open' ? "bg-white text-black" : "bg-zinc-800 text-zinc-400"
+                          event.status === 'open' ? "bg-green-600 text-white shadow-[0_0_15px_rgba(22,163,74,0.4)]" : 
+                          event.status === 'closed' ? "bg-red-600 text-white shadow-[0_0_15px_rgba(220,38,38,0.4)]" :
+                          event.status === 'soon' ? "bg-white text-black animate-pulse shadow-[0_0_15px_rgba(255,255,255,0.6)]" :
+                          "bg-zinc-800 text-zinc-400"
                         )}>
                           {existingApp ? <Clock size={10} /> : <Calendar size={10} />}
                           {existingApp ? `${t.events.manageApp.status}: ${existingApp.status.toUpperCase()}` : getStatusText()}
