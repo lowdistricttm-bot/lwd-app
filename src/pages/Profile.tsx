@@ -170,6 +170,7 @@ const Profile = () => {
     <div className="min-h-screen text-white flex flex-col bg-transparent">
       <Navbar />
       <main className="flex-1 pb-32 pt-16">
+        {/* Cover Section */}
         <div className="relative aspect-[2/1] md:h-80 md:aspect-auto bg-zinc-900 group/cover">
           <div className="absolute inset-0 overflow-hidden" onClick={() => !isOwnProfile && setLightboxData({ images: [profile?.cover_url || DEFAULT_COVER], index: 0 })}>
             <img src={profile?.cover_url || DEFAULT_COVER} className="w-full h-full object-cover transition-all duration-700 hover:scale-105" alt="Cover" />
@@ -183,10 +184,14 @@ const Profile = () => {
             )}
             <input type="file" ref={coverInputRef} className="hidden" accept="image/*,video/*" onChange={(e) => handleFileUpload(e, 'cover')} />
           </div>
-          
-          <div className="absolute -bottom-12 left-6 right-6 flex items-end gap-4 z-20">
+        </div>
+
+        {/* Profile Info Section (Below Cover) */}
+        <div className="px-6 md:px-12 max-w-6xl mx-auto">
+          <div className="relative flex flex-col items-start gap-6 -mt-12 md:-mt-16 z-20">
+            {/* Avatar */}
             <div className="relative group/avatar shrink-0">
-              <div onClick={() => !isOwnProfile && setLightboxData({ images: [profile?.avatar_url || DEFAULT_AVATAR], index: 0 })} className="w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-white rounded-full overflow-hidden shadow-2xl flex items-center justify-center relative">
+              <div onClick={() => !isOwnProfile && setLightboxData({ images: [profile?.avatar_url || DEFAULT_AVATAR], index: 0 })} className="w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-black rounded-full overflow-hidden shadow-2xl flex items-center justify-center relative">
                 {uploadingAvatar ? <Loader2 className="animate-spin text-zinc-500" /> : (profile?.avatar_url || DEFAULT_AVATAR) ? <img src={profile?.avatar_url || DEFAULT_AVATAR} alt="Avatar" className="w-full h-full object-cover" /> : <User size={40} className="text-zinc-800" />}
                 {isOwnProfile && (
                   <button onClick={(e) => { e.stopPropagation(); avatarInputRef.current?.click(); }} className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity bg-black/40 rounded-full">
@@ -196,22 +201,25 @@ const Profile = () => {
               </div>
               <input type="file" ref={avatarInputRef} className="hidden" accept="image/*,video/*" onChange={(e) => handleFileUpload(e, 'avatar')} />
             </div>
-            <div className="mb-2 min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-nowrap w-full overflow-visible">
-                <h1 className="text-xs md:text-lg font-black italic uppercase tracking-tighter leading-none">{profile?.username || 'Utente'}</h1>
-                <div className="flex items-center gap-1 shrink-0">
+
+            {/* Username and Social Icons */}
+            <div className="w-full">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-sm md:text-xl font-black italic uppercase tracking-tighter leading-none">{profile?.username || 'Utente'}</h1>
+                <div className="flex items-center gap-1.5">
                   {!isOwnProfile && currentUser && (!isTargetSubscriber || canVote) && (
-                    <button onClick={() => navigate(`/chat/${profile.id}`)} className="p-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all"><Mail size={18} /></button>
+                    <button onClick={() => navigate(`/chat/${profile.id}`)} className="p-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-white hover:bg-white hover:text-black transition-all"><Mail size={16} /></button>
                   )}
-                  <button onClick={handleShareProfile} className="p-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all"><Share2 size={18} /></button>
+                  <button onClick={handleShareProfile} className="p-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-white hover:bg-white hover:text-black transition-all"><Share2 size={16} /></button>
                   {isOwnProfile && (
-                    <button onClick={() => setIsUsernameNoticeOpen(true)} className="p-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all"><Edit2 size={16} /></button>
+                    <button onClick={() => setIsUsernameNoticeOpen(true)} className="p-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-full text-white hover:bg-white hover:text-black transition-all"><Edit2 size={14} /></button>
                   )}
                 </div>
               </div>
-              <div className="mt-1">
+              
+              <div className="mt-2">
                 <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.3em] italic">{t.profile.roles[userRole] || t.profile.roles.member}</p>
-                <div className="flex items-center gap-1.5 mt-0.5">
+                <div className="flex items-center gap-1.5 mt-1">
                   <div className={cn(
                     "w-1.5 h-1.5 rounded-full",
                     isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" : "bg-zinc-600"
@@ -226,56 +234,57 @@ const Profile = () => {
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="mt-20 px-4 md:px-12 max-w-6xl mx-auto">
-          {!isTargetSubscriber && targetUserId && <HighlightsBar userId={targetUserId} isOwnProfile={isOwnProfile} />}
+          {/* Content Tabs */}
+          <div className="mt-12">
+            {!isTargetSubscriber && targetUserId && <HighlightsBar userId={targetUserId} isOwnProfile={isOwnProfile} />}
 
-          {isOwnProfile && (userRole === 'admin' || userRole === 'staff' || userRole === 'support') && (
-            <button onClick={() => navigate('/admin')} className="w-full mb-8 bg-white/10 backdrop-blur-md border border-white/10 p-4 rounded-3xl flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center group-hover:bg-black/10 transition-colors">
-                  {userRole === 'admin' ? <ShieldCheck size={18} /> : <Users size={18} />}
-                </div>
-                <p className="text-xs font-black uppercase italic tracking-widest">DASHBOARD {userRole.toUpperCase()}</p>
-              </div>
-              <ChevronRight size={20} />
-            </button>
-          )}
-
-          <div className="flex bg-zinc-900/50 backdrop-blur-md rounded-full p-1 mb-8 border border-white/5 overflow-x-auto no-scrollbar">
-            {tabs.map((tab) => (
-              <button 
-                key={tab.id} 
-                onClick={() => setActiveTab(tab.id)} 
-                className={cn(
-                  "flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-full transition-all duration-500 whitespace-nowrap",
-                  activeTab === tab.id ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-zinc-300"
-                )}
-              >
-                <tab.icon size={16} />
-                <span className="text-[9px] font-black uppercase tracking-widest hidden sm:block">{tab.label}</span>
-              </button>
-            ))}
-          </div>
-
-          <div className="min-h-[400px]">
-            <AnimatePresence mode="wait">
-              {activeTab === 'activity' && (
-                <motion.div key="activity" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-black italic uppercase">{isOwnProfile ? t.profile.myPosts : t.profile.posts}</h3>
-                    {isOwnProfile && <Button onClick={() => setIsPostModalOpen(true)} className="bg-primary text-white hover:scale-105 rounded-full text-[10px] font-black uppercase italic tracking-widest h-10 px-6 shadow-lg shadow-primary/20"><Plus size={14} className="mr-2" /> {t.feed.newPost}</Button>}
+            {isOwnProfile && (userRole === 'admin' || userRole === 'staff' || userRole === 'support') && (
+              <button onClick={() => navigate('/admin')} className="w-full mb-8 bg-white/10 backdrop-blur-md border border-white/10 p-4 rounded-3xl flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center group-hover:bg-black/10 transition-colors">
+                    {userRole === 'admin' ? <ShieldCheck size={18} /> : <Users size={18} />}
                   </div>
-                  {loadingPosts ? <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div> : userPosts.length > 0 ? <div className="grid grid-cols-3 gap-1 md:gap-4">{userPosts.map((post) => <ProfilePostGridItem key={post.id} post={post} />)}</div> : <div className="bg-zinc-900/30 border border-white/5 p-12 rounded-[2rem] text-center"><MessageSquare className="mx-auto text-zinc-800 mb-6" size={48} /><p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{isOwnProfile ? t.profile.noPosts : t.feed.noPosts}</p></div>}
-                </motion.div>
-              )}
-              {activeTab === 'garage' && <motion.div key="garage" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><GarageTab userId={targetUserId} isOwnProfile={isOwnProfile} /></motion.div>}
-              {activeTab === 'orders' && <motion.div key="orders" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><h3 className="text-xl font-black italic uppercase mb-6">{t.profile.orders}</h3>{loadingOrders ? <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div> : orders?.length > 0 ? <div className="space-y-4">{orders.map((order: any) => <div key={order.id} className="bg-zinc-900/50 border border-white/5 p-6 rounded-3xl group hover:border-white/20 transition-all"><div className="flex flex-col md:flex-row justify-between gap-4"><div className="space-y-2"><div className="flex items-center gap-3"><span className="bg-white text-black text-[8px] font-black uppercase px-2 py-0.5 italic rounded-full">#{order.id}</span><span className="bg-zinc-800 text-white text-[8px] font-black uppercase px-2 py-0.5 italic rounded-full">{order.status.toUpperCase()}</span></div><h4 className="text-sm font-black italic uppercase tracking-tight">{order.line_items.length} Prodotti</h4></div><div className="text-right flex flex-col justify-center"><p className="text-[8px] font-black uppercase text-zinc-600 tracking-widest mb-1">{t.checkout.total}</p><p className="text-2xl font-black italic tracking-tighter">€{order.total}</p></div></div></div>)}</div> : <div className="bg-zinc-900/30 border border-white/5 p-12 rounded-[2rem] text-center"><ShoppingBag className="mx-auto text-zinc-800 mb-6" size={48} /><p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{t.profile.noOrders}</p></div>}</motion.div>}
-              {activeTab === 'selections' && <motion.div key="selections" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><ApplicationsTab /></motion.div>}
-              {activeTab === 'profile' && <motion.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><ProfileInfoTab profile={profile} isOwnProfile={isOwnProfile} onUpdate={() => fetchProfile(targetUserId)} /></motion.div>}
-              {activeTab === 'settings' && <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><SettingsTab /></motion.div>}
-            </AnimatePresence>
+                  <p className="text-xs font-black uppercase italic tracking-widest">DASHBOARD {userRole.toUpperCase()}</p>
+                </div>
+                <ChevronRight size={20} />
+              </button>
+            )}
+
+            <div className="flex bg-zinc-900/50 backdrop-blur-md rounded-full p-1 mb-8 border border-white/5 overflow-x-auto no-scrollbar">
+              {tabs.map((tab) => (
+                <button 
+                  key={tab.id} 
+                  onClick={() => setActiveTab(tab.id)} 
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-full transition-all duration-500 whitespace-nowrap",
+                    activeTab === tab.id ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-zinc-300"
+                  )}
+                >
+                  <tab.icon size={16} />
+                  <span className="text-[9px] font-black uppercase tracking-widest hidden sm:block">{tab.label}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="min-h-[400px]">
+              <AnimatePresence mode="wait">
+                {activeTab === 'activity' && (
+                  <motion.div key="activity" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-xl font-black italic uppercase">{isOwnProfile ? t.profile.myPosts : t.profile.posts}</h3>
+                      {isOwnProfile && <Button onClick={() => setIsPostModalOpen(true)} className="bg-primary text-white hover:scale-105 rounded-full text-[10px] font-black uppercase italic tracking-widest h-10 px-6 shadow-lg shadow-primary/20"><Plus size={14} className="mr-2" /> {t.feed.newPost}</Button>}
+                    </div>
+                    {loadingPosts ? <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div> : userPosts.length > 0 ? <div className="grid grid-cols-3 gap-1 md:gap-4">{userPosts.map((post) => <ProfilePostGridItem key={post.id} post={post} />)}</div> : <div className="bg-zinc-900/30 border border-white/5 p-12 rounded-[2rem] text-center"><MessageSquare className="mx-auto text-zinc-800 mb-6" size={48} /><p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{isOwnProfile ? t.profile.noPosts : t.feed.noPosts}</p></div>}
+                  </motion.div>
+                )}
+                {activeTab === 'garage' && <motion.div key="garage" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><GarageTab userId={targetUserId} isOwnProfile={isOwnProfile} /></motion.div>}
+                {activeTab === 'orders' && <motion.div key="orders" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><h3 className="text-xl font-black italic uppercase mb-6">{t.profile.orders}</h3>{loadingOrders ? <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div> : orders?.length > 0 ? <div className="space-y-4">{orders.map((order: any) => <div key={order.id} className="bg-zinc-900/50 border border-white/5 p-6 rounded-3xl group hover:border-white/20 transition-all"><div className="flex flex-col md:flex-row justify-between gap-4"><div className="space-y-2"><div className="flex items-center gap-3"><span className="bg-white text-black text-[8px] font-black uppercase px-2 py-0.5 italic rounded-full">#{order.id}</span><span className="bg-zinc-800 text-white text-[8px] font-black uppercase px-2 py-0.5 italic rounded-full">{order.status.toUpperCase()}</span></div><h4 className="text-sm font-black italic uppercase tracking-tight">{order.line_items.length} Prodotti</h4></div><div className="text-right flex flex-col justify-center"><p className="text-[8px] font-black uppercase text-zinc-600 tracking-widest mb-1">{t.checkout.total}</p><p className="text-2xl font-black italic tracking-tighter">€{order.total}</p></div></div></div>)}</div> : <div className="bg-zinc-900/30 border border-white/5 p-12 rounded-[2rem] text-center"><ShoppingBag className="mx-auto text-zinc-800 mb-6" size={48} /><p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{t.profile.noOrders}</p></div>}</motion.div>}
+                {activeTab === 'selections' && <motion.div key="selections" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><ApplicationsTab /></motion.div>}
+                {activeTab === 'profile' && <motion.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><ProfileInfoTab profile={profile} isOwnProfile={isOwnProfile} onUpdate={() => fetchProfile(targetUserId)} /></motion.div>}
+                {activeTab === 'settings' && <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><SettingsTab /></motion.div>}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
       </main>
@@ -288,7 +297,7 @@ const Profile = () => {
       </AlertDialog>
 
       <CreatePostModal isOpen={isPostModalOpen} onClose={() => setIsPostModalOpen(false)} />
-      <ImageLightbox images={lightboxData?.images || []} initialIndex={lightboxData?.index || 0} isOpen={!!lightboxData} onClose={(() => setLightboxData(null))} />
+      <ImageLightbox images={lightboxData?.images || []} initialIndex={lightboxData?.index || 0} isOpen={!!lightboxData} onClose={() => setLightboxData(null)} />
       <BottomNav />
     </div>
   );
