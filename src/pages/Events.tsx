@@ -132,6 +132,8 @@ const Events = () => {
     }
   };
 
+  const btnBaseClass = "rounded-none font-black uppercase italic text-[9px] tracking-widest h-12 w-full sm:w-48 backdrop-blur-md transition-all flex items-center justify-center gap-2 border";
+
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent">
       <Navbar />
@@ -167,7 +169,7 @@ const Events = () => {
                         <img src={event.image_url} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt={event.title} />
                       </div>
                     )}
-                    <div className="flex-1 p-6 flex flex-col justify-between gap-6">
+                    <div className="flex-1 p-6 flex flex-col justify-between gap-8">
                       <div className="space-y-4">
                         <div className="flex flex-wrap items-center justify-between gap-4">
                           <span className={cn(
@@ -199,33 +201,35 @@ const Events = () => {
                         <h3 className="text-lg font-black italic uppercase tracking-tight leading-tight">{event.title}</h3>
                       </div>
                       
-                      <div className="flex flex-wrap gap-3">
-                        <Button 
+                      <div className="flex flex-wrap gap-4">
+                        <button 
                           onClick={() => setViewingEvent(event)}
-                          className="bg-black text-white border border-white/10 hover:bg-zinc-900 rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 w-44"
+                          className={cn(btnBaseClass, "bg-black/40 border-white/10 text-white hover:bg-white/5")}
                         >
-                          {t.events.viewEvent} <ChevronRight size={14} className="ml-2" />
-                        </Button>
+                          {t.events.viewEvent} <ChevronRight size={14} />
+                        </button>
 
                         {existingApp ? (
-                          <Button 
+                          <button 
                             onClick={() => setManageApp(existingApp)}
-                            className="bg-zinc-800 text-white hover:bg-white hover:text-black rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 w-44"
+                            className={cn(btnBaseClass, "bg-zinc-800/60 border-white/10 text-white hover:bg-zinc-800")}
                           >
-                            {t.events.manage} <Settings2 size={14} className="ml-2" />
-                          </Button>
+                            {t.events.manage} <Settings2 size={14} />
+                          </button>
                         ) : (
-                          <Button 
+                          <button 
                             onClick={() => handleApplyClick(event)}
                             disabled={event.status !== 'open'}
                             className={cn(
-                              "rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 w-44",
-                              event.status === 'open' ? "bg-white text-black hover:bg-zinc-200" : "bg-zinc-800 text-zinc-500 cursor-not-allowed"
+                              btnBaseClass,
+                              event.status === 'open' 
+                                ? "bg-white/90 border-white/10 text-black hover:bg-white" 
+                                : "bg-zinc-900/40 border-white/5 text-zinc-600 cursor-not-allowed"
                             )}
                           >
-                            {!user && event.status === 'open' && <Lock size={12} className="mr-2" />}
-                            {event.status === 'open' ? t.events.apply : t.events.statusClosed} <ChevronRight size={14} className="ml-2" />
-                          </Button>
+                            {!user && event.status === 'open' && <Lock size={12} />}
+                            {event.status === 'open' ? t.events.apply : t.events.statusClosed} <ChevronRight size={14} />
+                          </button>
                         )}
 
                         {isAdmin && (
@@ -233,14 +237,14 @@ const Events = () => {
                             <Button 
                               onClick={() => { setEditingEvent(event); setIsAdminModalOpen(true); }}
                               variant="outline"
-                              className="border-white/10 text-zinc-400 hover:bg-white hover:text-black rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 px-4"
+                              className="border-white/10 text-zinc-400 hover:bg-white hover:text-black rounded-none font-black uppercase italic text-[9px] tracking-widest h-12 px-4 backdrop-blur-md"
                             >
                               <Edit3 size={14} />
                             </Button>
                             <Button 
                               onClick={() => handleDeleteEvent(event.id)}
                               variant="outline"
-                              className="border-white/10 text-red-500 hover:bg-red-600 hover:text-white rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 px-4"
+                              className="border-white/10 text-red-500 hover:bg-red-600 hover:text-white rounded-none font-black uppercase italic text-[9px] tracking-widest h-12 px-4 backdrop-blur-md"
                             >
                               <Trash2 size={14} />
                             </Button>
