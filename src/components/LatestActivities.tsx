@@ -104,7 +104,7 @@ const LatestActivities = () => {
                   href="https://www.lowdistrict.it/account" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center border border-white/10 text-white hover:bg-white/5 h-14 px-10 text-[10px] font-black uppercase tracking-widest italic transition-all"
+                  className="flex items-center justify-center border border-white/10 text-white hover:bg-white/5 h-14 px-10 text-[10px] font-black uppercase tracking-widest italic transition-all whitespace-nowrap"
                 >
                   Registrati sul Sito
                 </a>
