@@ -73,16 +73,19 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
 
     const timer = setInterval(() => {
       setProgress((prev) => {
-        if (prev >= 100) {
-          handleNext();
-          return 100;
-        }
-        return prev + increment;
+        const next = prev + increment;
+        return next >= 100 ? 100 : next;
       });
     }, interval);
 
     return () => clearInterval(timer);
   }, [userIndex, currentIndex, isVideo, isShareModalOpen, showViewers, currentStory, isMediaLoading]);
+
+  useEffect(() => {
+    if (progress >= 100 && !isVideo) {
+      handleNext();
+    }
+  }, [progress, isVideo]);
 
   const handleNext = () => {
     if (currentIndex < userStories.items.length - 1) {
@@ -166,6 +169,11 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
     e.stopPropagation();
     onClose();
     navigate(`/profile/${userStories.user_id}`);
+  };
+
+  const handleViewerClick = (viewerId: string) => {
+    onClose();
+    navigate(`/profile/${viewerId}`);
   };
 
   if (!userStories || !currentStory) return null;
@@ -288,7 +296,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
                   {loadingViews ? <Loader2 size={20} className="animate-spin text-white" /> : <Eye size={20} />}
                 </div>
                 <span className="text-[10px] font-black uppercase tracking-widest text-white drop-shadow-md">
-                  {loadingViews ? '...' : (views?.length || 0)} Visualizzazioni
+                  {views?.length || 0} Visualizzazioni
                 </span>
               </button>
             </div>
@@ -365,21 +373,27 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
                     </div>
                   ) : (
                     views?.map((view: any) => (
-                      <div key={view.id} className="flex items-center justify-between p-3 bg-zinc-900/40 border border-white/5 rounded-2xl">
+                      <button 
+                        key={view.id} 
+                        onClick={() => handleViewerClick(view.user_id)}
+                        className="w-full flex items-center justify-between p-3 bg-zinc-900/40 border border-white/5 rounded-2xl hover:bg-zinc-900 transition-all group"
+                      >
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-zinc-800 rounded-full overflow-hidden">
+                          <div className="w-10 h-10 bg-zinc-800 rounded-full overflow-hidden border border-white/10 group-hover:border-white transition-colors">
                             {view.profiles?.avatar_url ? (
                               <img src={view.profiles.avatar_url} className="w-full h-full object-cover" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-zinc-700"><User size={20} /></div>
                             )}
                           </div>
-                          <span className="text-xs font-black italic uppercase">{view.profiles?.username}</span>
+                          <span className="text-xs font-black italic uppercase text-zinc-300 group-hover:text-white transition-colors">
+                            {view.profiles?.username}
+                          </span>
                         </div>
                         <span className="text-[8px] font-bold text-zinc-600 uppercase">
                           {new Date(view.viewed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
-                      </div>
+                      </button>
                     ))
                   )}
                 </div>
