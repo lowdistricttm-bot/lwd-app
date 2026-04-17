@@ -6,10 +6,10 @@ import Logo from './Logo';
 
 const Footer = () => {
   const socialLinks = [
-    { icon: Instagram, href: "https://www.instagram.com/lowdistrict.it/" },
-    { icon: Facebook, href: "https://www.facebook.com/lowdistrict.it/" },
-    { icon: Youtube, href: "https://www.youtube.com/@lowdistrict" },
-    { icon: Music2, href: "https://www.tiktok.com/@lowdistrict.it" }
+    { icon: Instagram, href: "https://www.instagram.com/lwdstrct.crw/" },
+    { icon: Facebook, href: "https://www.facebook.com/lowdistrictcrew/" },
+    { icon: Youtube, href: "https://www.youtube.com/@lowdistrictcrew" },
+    { icon: Music2, href: "https://www.tiktok.com/@lowdistrictcrew" }
   ];
 
   return (
