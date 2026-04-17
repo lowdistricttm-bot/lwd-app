@@ -72,9 +72,9 @@ const Profile = () => {
     if (error) console.error("[Profile] Errore caricamento:", error);
     setProfile(profileData);
     
-    // Imposta il tab iniziale in base al ruolo
+    // Imposta il tab iniziale in base al ruolo del profilo visualizzato
     if (!activeTab) {
-      const role = profileData?.role || 'member';
+      const role = profileData?.role || 'subscriber';
       setActiveTab(role === 'subscriber' ? 'profile' : 'activity');
     }
   };
@@ -130,19 +130,26 @@ const Profile = () => {
   const displayName = profile?.username || 'Utente';
   const userRole = profile?.role || 'subscriber';
   const roleLabel = t.profile.roles[userRole] || t.profile.roles.member;
-  const isSubscriber = userRole === 'subscriber';
+  
+  // Verifichiamo se il profilo che stiamo guardando è di un iscritto
+  const isTargetSubscriber = userRole === 'subscriber';
 
-  // Generazione dinamica dei tab in base al ruolo
+  // Generazione dinamica dei tab in base al ruolo del profilo visualizzato
   const tabs = [];
-  if (!isSubscriber) {
+  if (!isTargetSubscriber) {
     tabs.push({ id: 'activity', label: t.profile.posts, icon: MessageSquare });
     tabs.push({ id: 'garage', label: t.nav.garage, icon: Car });
   }
+  
+  // Tab esclusivi per il proprio profilo
   if (isOwnProfile) {
     tabs.push({ id: 'orders', label: t.profile.orders, icon: ShoppingBag });
     tabs.push({ id: 'selections', label: t.profile.selections, icon: ClipboardCheck });
   }
+  
+  // Tab sempre visibili
   tabs.push({ id: 'profile', label: t.profile.info, icon: User });
+  
   if (isOwnProfile) {
     tabs.push({ id: 'settings', label: t.profile.settings, icon: Settings });
   }
@@ -181,7 +188,7 @@ const Profile = () => {
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl md:text-4xl font-black italic uppercase tracking-tighter leading-none">{displayName}</h1>
                 {isOwnProfile && <button onClick={() => setIsUsernameNoticeOpen(true)} className="p-1.5 text-zinc-500 hover:text-white transition-colors"><Edit2 size={14} /></button>}
-                {!isOwnProfile && currentUser && !isSubscriber && (
+                {!isOwnProfile && currentUser && !isTargetSubscriber && (
                   <button onClick={() => navigate(`/chat/${profile.id}`)} className="p-2 bg-zinc-800 text-white hover:bg-white hover:text-black transition-all shadow-lg"><Mail size={18} /></button>
                 )}
               </div>
@@ -191,7 +198,8 @@ const Profile = () => {
         </div>
 
         <div className="mt-20 px-4 md:px-12 max-w-6xl mx-auto">
-          {!isSubscriber && targetUserId && <HighlightsBar userId={targetUserId} isOwnProfile={isOwnProfile} />}
+          {/* Nascondi highlights per gli iscritti */}
+          {!isTargetSubscriber && targetUserId && <HighlightsBar userId={targetUserId} isOwnProfile={isOwnProfile} />}
 
           {isOwnProfile && (userRole === 'admin' || userRole === 'staff' || userRole === 'support') && (
             <button onClick={() => navigate('/admin')} className="w-full mb-4 bg-zinc-900/40 border border-white/5 p-1 pr-4 flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500 h-12">
@@ -216,7 +224,7 @@ const Profile = () => {
 
           <div className="min-h-[400px]">
             <AnimatePresence mode="wait">
-              {activeTab === 'activity' && !isSubscriber && (
+              {activeTab === 'activity' && !isTargetSubscriber && (
                 <motion.div key="activity" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-xl font-black italic uppercase">{isOwnProfile ? t.profile.myPosts : `${t.profile.posts} ${displayName}`}</h3>
@@ -230,7 +238,7 @@ const Profile = () => {
                 </motion.div>
               )}
 
-              {activeTab === 'orders' && (
+              {activeTab === 'orders' && isOwnProfile && (
                 <motion.div key="orders" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                   <h3 className="text-xl font-black italic uppercase mb-6">{t.profile.orders}</h3>
                   {loadingOrders ? <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div> : orders?.length > 0 ? <div className="space-y-4">{orders.map((order: any) => (
@@ -247,10 +255,10 @@ const Profile = () => {
                 </motion.div>
               )}
 
-              {activeTab === 'garage' && !isSubscriber && <motion.div key="garage" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><GarageTab userId={targetUserId} isOwnProfile={isOwnProfile} /></motion.div>}
-              {activeTab === 'selections' && <motion.div key="selections" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><ApplicationsTab /></motion.div>}
+              {activeTab === 'garage' && !isTargetSubscriber && <motion.div key="garage" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><GarageTab userId={targetUserId} isOwnProfile={isOwnProfile} /></motion.div>}
+              {activeTab === 'selections' && isOwnProfile && <motion.div key="selections" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><ApplicationsTab /></motion.div>}
               {activeTab === 'profile' && <motion.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><ProfileInfoTab profile={profile} isOwnProfile={isOwnProfile} onUpdate={() => fetchProfile(targetUserId)} /></motion.div>}
-              {activeTab === 'settings' && <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><SettingsTab /></motion.div>}
+              {activeTab === 'settings' && isOwnProfile && <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><SettingsTab /></motion.div>}
             </AnimatePresence>
           </div>
         </div>
