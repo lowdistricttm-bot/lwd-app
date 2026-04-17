@@ -296,9 +296,11 @@ const Discover = () => {
                                   </span>
                                   {vehicle.profiles?.is_admin && <ShieldCheck size={8} className="text-white shrink-0" />}
                                 </div>
-                                <span className="text-[7px] font-bold text-zinc-600 uppercase tracking-widest shrink-0">
-                                  • {roleLabel}
-                                </span>
+                                {viewMode === 'list' && (
+                                  <span className="text-[7px] font-bold text-zinc-600 uppercase tracking-widest shrink-0">
+                                    • {roleLabel}
+                                  </span>
+                                )}
                               </div>
                             </button>
 
