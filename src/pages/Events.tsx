@@ -169,9 +169,9 @@ const Events = () => {
                     )}
                     <div className="flex-1 p-6 flex flex-col justify-between gap-6">
                       <div className="space-y-4">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between gap-4">
                           <span className={cn(
-                            "text-[8px] font-black uppercase px-2 py-0.5 italic flex items-center gap-1.5",
+                            "text-[7px] font-black uppercase px-1.5 py-0.5 italic flex items-center gap-1.5 shrink-0",
                             existingApp?.status === 'pending' && "bg-zinc-800 text-zinc-400",
                             existingApp?.status === 'approved' && "bg-white text-black",
                             !existingApp && event.status === 'open' && "bg-green-600 text-white",
@@ -187,12 +187,12 @@ const Events = () => {
                               getStatusLabel(event.status)
                             )}
                           </span>
-                          <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-1 text-[8px] font-black uppercase text-zinc-500">
-                              <MapPin size={10} /> {event.location}
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="flex items-center gap-1 text-[8px] font-black uppercase text-zinc-500 truncate">
+                              <MapPin size={10} className="shrink-0" /> {event.location}
                             </div>
-                            <div className="flex items-center gap-1 text-[8px] font-black uppercase text-zinc-500">
-                              <Calendar size={10} /> {formatEventDate(event.date, event.end_date)}
+                            <div className="flex items-center gap-1 text-[8px] font-black uppercase text-zinc-500 shrink-0">
+                              <Calendar size={10} className="shrink-0" /> {formatEventDate(event.date, event.end_date)}
                             </div>
                           </div>
                         </div>
