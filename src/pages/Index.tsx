@@ -151,23 +151,24 @@ const Index = () => {
             <div className="absolute inset-0 bg-gradient-to-b from-black via-black/40 to-black"></div>
           </div>
           
-          <div className="relative z-10 max-w-5xl mx-auto text-center">
+          <div className="relative z-10 max-w-5xl mx-auto text-center flex flex-col items-center">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
+              className="w-full"
             >
-              <h2 className="text-2xl xs:text-3xl md:text-7xl font-black italic uppercase tracking-tighter mb-8 leading-none whitespace-nowrap">
+              <h2 className="text-[6.5vw] xs:text-2xl sm:text-4xl md:text-6xl lg:text-7xl font-black italic uppercase tracking-tighter mb-6 leading-none whitespace-nowrap">
                 {t.home.banner.title}
               </h2>
-              <p className="text-zinc-400 text-[10px] md:text-sm font-black uppercase tracking-[0.15em] md:tracking-[0.4em] mb-12 italic whitespace-nowrap">
+              <p className="text-zinc-400 text-[2.8vw] xs:text-[10px] md:text-sm font-black uppercase tracking-[0.15em] md:tracking-[0.4em] mb-12 italic whitespace-nowrap">
                 {t.home.banner.subtitle}
               </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link to="/events" className="w-full sm:w-auto bg-white text-black px-12 py-4 text-[10px] font-black uppercase tracking-[0.2em] italic hover:bg-zinc-200 transition-all">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md mx-auto">
+                <Link to="/events" className="w-full sm:w-auto bg-white text-black px-10 py-4 text-[10px] font-black uppercase tracking-[0.2em] italic hover:bg-zinc-200 transition-all">
                   {t.home.banner.applyBtn}
                 </Link>
-                <Link to="/shop" className="w-full sm:w-auto border border-white/20 text-white px-12 py-4 text-[10px] font-black uppercase tracking-[0.2em] italic hover:bg-white/10 transition-all">
+                <Link to="/shop" className="w-full sm:w-auto border border-white/20 text-white px-10 py-4 text-[10px] font-black uppercase tracking-[0.2em] italic hover:bg-white/10 transition-all">
                   {t.home.banner.shopBtn}
                 </Link>
               </div>
