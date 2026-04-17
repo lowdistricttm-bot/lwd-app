@@ -42,7 +42,6 @@ const ProfileInfoTab = ({ profile, isOwnProfile, onUpdate }: ProfileInfoTabProps
   const handleSave = async () => {
     setLoading(true);
     try {
-      // Verifichiamo prima se le colonne esistono o se l'update fallisce per colonne mancanti
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -55,13 +54,7 @@ const ProfileInfoTab = ({ profile, isOwnProfile, onUpdate }: ProfileInfoTabProps
         })
         .eq('id', profile.id);
 
-      if (error) {
-        console.error("Errore salvataggio profilo:", error);
-        if (error.message?.includes("column") && error.message?.includes("does not exist")) {
-          throw new Error("Il database non è ancora aggiornato. Riprova tra qualche istante o contatta l'assistenza.");
-        }
-        throw error;
-      }
+      if (error) throw error;
       
       showSuccess("Informazioni aggiornate!");
       setIsEditing(false);
@@ -80,7 +73,11 @@ const ProfileInfoTab = ({ profile, isOwnProfile, onUpdate }: ProfileInfoTabProps
           <h3 className="text-xl font-black italic uppercase">Modifica Info</h3>
           <div className="flex gap-2">
             <Button onClick={() => setIsEditing(false)} variant="outline" className="border-white/10 h-10 px-4 rounded-none text-[10px] font-black uppercase italic">Annulla</Button>
-            <Button onClick={handleSave} disabled={loading} className="bg-white text-black h-10 px-6 rounded-none text-[10px] font-black uppercase italic">
+            <Button 
+              onClick={handleSave} 
+              disabled={loading} 
+              className="bg-white/90 backdrop-blur-md text-black hover:bg-white hover:scale-[1.02] active:scale-[0.98] h-10 px-6 rounded-none text-[10px] font-black uppercase italic transition-all duration-300 shadow-xl shadow-white/5"
+            >
               {loading ? "Salvataggio..." : "Salva"}
             </Button>
           </div>

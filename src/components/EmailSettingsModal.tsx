@@ -69,7 +69,7 @@ const EmailSettingsModal = ({ isOpen, onClose }: EmailSettingsModalProps) => {
         <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed inset-x-0 bottom-0 z-[251] bg-zinc-950 border-t border-white/10 p-8 rounded-t-[2rem] flex flex-col items-center justify-center py-20">
           <ShieldAlert size={48} className="text-zinc-800 mb-4" />
           <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Accesso riservato agli amministratori</p>
-          <Button onClick={onClose} className="mt-6 bg-white text-black rounded-none font-black uppercase italic px-8 h-12">Chiudi</Button>
+          <Button onClick={onClose} className="mt-6 bg-white/90 backdrop-blur-md text-black hover:bg-white hover:scale-[1.02] active:scale-[0.98] rounded-none font-black uppercase italic px-8 h-12 transition-all duration-300 shadow-xl shadow-white/5">Chiudi</Button>
         </motion.div>
       </AnimatePresence>
     );
@@ -139,7 +139,7 @@ const EmailSettingsModal = ({ isOpen, onClose }: EmailSettingsModalProps) => {
                       <Button 
                         onClick={() => handleSave(template.type)}
                         disabled={saving}
-                        className="w-full bg-white text-black hover:bg-zinc-200 rounded-none h-12 font-black uppercase italic tracking-wider text-[10px]"
+                        className="w-full bg-white/90 backdrop-blur-md text-black hover:bg-white hover:scale-[1.02] active:scale-[0.98] rounded-none h-12 font-black uppercase italic tracking-wider text-[10px] transition-all duration-300 shadow-xl shadow-white/5"
                       >
                         {saving ? <Loader2 className="animate-spin" size={14} /> : <><Save size={14} className="mr-2" /> Salva Template {template.type === 'approval' ? 'Approvazione' : 'Rifiuto'}</>}
                       </Button>

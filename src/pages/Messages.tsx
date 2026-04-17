@@ -66,7 +66,7 @@ const Messages = () => {
           <ShieldAlert size={64} className="text-zinc-800 mb-6" />
           <h1 className="text-2xl font-black uppercase italic mb-4">Accesso Limitato</h1>
           <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-8">I messaggi privati sono riservati ai membri ufficiali del District.</p>
-          <button onClick={() => navigate('/')} className="bg-white text-black h-12 px-8 font-black uppercase italic">Torna alla Home</button>
+          <button onClick={() => navigate('/')} className="bg-white/90 backdrop-blur-md text-black h-12 px-8 font-black uppercase italic hover:bg-white transition-all">Torna alla Home</button>
         </main>
         <BottomNav />
       </div>
@@ -82,7 +82,12 @@ const Messages = () => {
             <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">{t.messages.subtitle}</h2>
             <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">{t.messages.title}</h1>
           </div>
-          <button onClick={() => setIsNewChatOpen(true)} className="w-12 h-12 bg-white text-black flex items-center justify-center hover:bg-zinc-200 transition-all shadow-lg shadow-white/5"><Plus size={24} /></button>
+          <button 
+            onClick={() => setIsNewChatOpen(true)} 
+            className="w-12 h-12 bg-white/90 backdrop-blur-md text-black flex items-center justify-center hover:bg-white hover:scale-[1.05] active:scale-[0.95] transition-all shadow-xl shadow-white/5"
+          >
+            <Plus size={24} />
+          </button>
         </header>
 
         {loadingConvs ? (

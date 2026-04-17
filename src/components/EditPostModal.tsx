@@ -135,7 +135,7 @@ const EditPostModal = ({ isOpen, onClose, post }: EditPostModalProps) => {
                 <Button 
                   type="submit"
                   disabled={updatePost.isPending}
-                  className="bg-white text-black hover:bg-zinc-200 text-white px-8 py-6 rounded-none font-black uppercase italic tracking-widest transition-all"
+                  className="bg-white/90 backdrop-blur-md text-black hover:bg-white hover:scale-[1.02] active:scale-[0.98] px-8 py-6 rounded-none font-black uppercase italic tracking-widest transition-all duration-300 shadow-xl shadow-white/5"
                 >
                   {updatePost.isPending ? <Loader2 className="animate-spin" /> : 'Salva Modifiche'}
                 </Button>

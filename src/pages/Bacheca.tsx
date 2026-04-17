@@ -66,7 +66,10 @@ const Bacheca = () => {
                 <RefreshCw size={20} className={cn(isRefreshing && "animate-spin")} />
               </button>
               {!isSubscriber && (
-                <button onClick={handleCreatePost} className="w-12 h-12 bg-white/90 backdrop-blur-md text-black flex items-center justify-center hover:bg-white transition-all shadow-lg shadow-white/5">
+                <button 
+                  onClick={handleCreatePost} 
+                  className="w-12 h-12 bg-white/90 backdrop-blur-md text-black flex items-center justify-center hover:bg-white hover:scale-[1.05] active:scale-[0.95] transition-all shadow-xl shadow-white/5"
+                >
                   <Plus size={24} />
                 </button>
               )}
@@ -90,7 +93,12 @@ const Bacheca = () => {
                 <p className="text-[9px] text-zinc-600 font-bold uppercase mt-1">Accedi per partecipare alle discussioni del District.</p>
               </div>
             </div>
-            <Button onClick={() => navigate('/login')} className="bg-white/90 backdrop-blur-md text-black hover:bg-zinc-200 rounded-none text-[9px] font-black uppercase tracking-widest h-10 px-6 italic transition-all"><LogIn size={14} className="mr-2" /> {t.auth.login}</Button>
+            <Button 
+              onClick={() => navigate('/login')} 
+              className="bg-white/90 backdrop-blur-md text-black hover:bg-white hover:scale-[1.02] active:scale-[0.98] rounded-none text-[9px] font-black uppercase tracking-widest h-10 px-6 italic transition-all duration-300 shadow-xl shadow-white/5"
+            >
+              <LogIn size={14} className="mr-2" /> {t.auth.login}
+            </Button>
           </div>
         )}
 
