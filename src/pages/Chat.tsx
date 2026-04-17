@@ -5,6 +5,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { useMessages } from '@/hooks/use-messages';
 import { useStories } from '@/hooks/use-stories';
+import { usePresence } from '@/hooks/use-presence';
 import { ChevronLeft, Send, User, Loader2, Mail, Trash2, Camera, X, Plus, Play, AtSign, RefreshCw } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -27,6 +28,7 @@ const Chat = () => {
   
   const { chatMessages, loadingChat, sendMessage, markAsRead } = useMessages(userId);
   const { reshareStory } = useStories();
+  const { isOnline, lastSeen } = usePresence(userId);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -63,12 +65,35 @@ const Chat = () => {
     <div className="min-h-screen bg-black text-white flex flex-col">
       <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/5 h-20 px-6 flex items-center gap-4">
         <button onClick={() => navigate(-1)} className="p-2 text-zinc-400 hover:text-white"><ChevronLeft size={24} /></button>
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-zinc-800 rounded-full overflow-hidden border border-white/10">
-            {otherUserProfile?.avatar_url ? <img src={otherUserProfile.avatar_url} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><User size={18} className="text-zinc-600" /></div>}
+        
+        <button 
+          onClick={() => navigate(`/profile/${userId}`)}
+          className="flex items-center gap-3 hover:opacity-70 transition-opacity text-left"
+        >
+          <div className="relative">
+            <div className="w-10 h-10 bg-zinc-800 rounded-full overflow-hidden border border-white/10">
+              {otherUserProfile?.avatar_url ? (
+                <img src={otherUserProfile.avatar_url} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center"><User size={18} className="text-zinc-600" /></div>
+              )}
+            </div>
+            {isOnline && (
+              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-black rounded-full" />
+            )}
           </div>
-          <h4 className="text-sm font-black italic uppercase tracking-tight">{otherUserProfile?.username || 'Membro District'}</h4>
-        </div>
+          <div>
+            <h4 className="text-sm font-black italic uppercase tracking-tight leading-none">
+              {otherUserProfile?.username || 'Membro District'}
+            </h4>
+            <p className={cn(
+              "text-[8px] font-black uppercase tracking-widest mt-1",
+              isOnline ? "text-green-500" : "text-zinc-500"
+            )}>
+              {isOnline ? 'Online Ora' : lastSeen ? `Ultimo accesso ${lastSeen}` : 'Offline'}
+            </p>
+          </div>
+        </button>
       </nav>
 
       <main ref={scrollRef} className="flex-1 pt-24 pb-32 px-6 overflow-y-auto space-y-6 custom-scrollbar">
