@@ -33,6 +33,7 @@ export const useAdmin = () => {
   const canManage = isAdmin || isStaff;
   const canVote = isAdmin || isStaff || isSupport;
 
+  // Query per le candidature (necessaria per AdminApplications.tsx)
   const { data: allApplications, isLoading: loadingApps, error: loadError } = useQuery({
     queryKey: ['admin-applications'],
     queryFn: async () => {
@@ -56,6 +57,21 @@ export const useAdmin = () => {
       }));
     },
     enabled: canVote
+  });
+
+  // Query per tutti gli utenti (Solo Admin)
+  const { data: allUsers, isLoading: loadingUsers } = useQuery({
+    queryKey: ['admin-all-users'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('username', { ascending: true });
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: isAdmin
   });
 
   const updateStatus = useMutation({
@@ -90,6 +106,28 @@ export const useAdmin = () => {
     onError: (error: any) => showError(error.message)
   });
 
+  const updateUserRole = useMutation({
+    mutationFn: async ({ userId, newRole }: { userId: string, newRole: UserRole }) => {
+      if (!isAdmin) throw new Error("Solo gli amministratori possono cambiare i ruoli");
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          role: newRole,
+          is_admin: newRole === 'admin'
+        })
+        .eq('id', userId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-all-users'] });
+      queryClient.invalidateQueries({ queryKey: ['user-role'] });
+      showSuccess("Ruolo utente aggiornato!");
+    },
+    onError: (error: any) => showError(error.message)
+  });
+
   const castVote = useMutation({
     mutationFn: async ({ applicationId, vote }: { applicationId: string, vote: 'approve' | 'reject' }) => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -103,28 +141,13 @@ export const useAdmin = () => {
   const deleteApplication = useMutation({
     mutationFn: async (id: string) => {
       if (!canManage) throw new Error("Permessi insufficienti");
-
-      // 1. Eliminiamo prima i voti per evitare errori di chiave esterna
-      const { error: votesError } = await supabase
-        .from('application_votes')
-        .delete()
-        .eq('application_id', id);
-      
+      const { error: votesError } = await supabase.from('application_votes').delete().eq('application_id', id);
       if (votesError) throw votesError;
-
-      // 2. Eliminiamo le notifiche associate
       await supabase.from('notifications').delete().eq('application_id', id);
-
-      // 3. Eliminiamo la candidatura
-      const { error } = await supabase
-        .from('applications')
-        .delete()
-        .eq('id', id);
-
+      const { error } = await supabase.from('applications').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
-      // Forza il ricaricamento di tutte le liste
       queryClient.invalidateQueries({ queryKey: ['admin-applications'] });
       queryClient.invalidateQueries({ queryKey: ['user-applications'] });
       showSuccess("Candidatura eliminata definitivamente");
@@ -132,5 +155,22 @@ export const useAdmin = () => {
     onError: (error: any) => showError(error.message)
   });
 
-  return { role, isAdmin, isStaff, isSupport, canManage, canVote, checkingAdmin: checkingRole, allApplications, loadingApps, loadError, updateStatus, castVote, deleteApplication };
+  return { 
+    role, 
+    isAdmin, 
+    isStaff, 
+    isSupport, 
+    canManage, 
+    canVote, 
+    checkingAdmin: checkingRole, 
+    allApplications, 
+    loadingApps, 
+    loadError, 
+    updateStatus, 
+    castVote, 
+    deleteApplication,
+    allUsers,
+    loadingUsers,
+    updateUserRole
+  };
 };

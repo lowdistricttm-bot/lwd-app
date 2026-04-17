@@ -15,7 +15,8 @@ import {
   ChevronLeft,
   Clock,
   CheckCircle2,
-  Mail
+  Mail,
+  Users
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -35,7 +36,6 @@ const AdminApplications = () => {
     );
   }
 
-  // Accesso consentito solo a chi ha permessi di voto (Admin, Staff, Support)
   if (!canVote) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center">
@@ -69,19 +69,28 @@ const AdminApplications = () => {
             <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">Gestione Selezioni</h1>
           </div>
           
-          {/* Il pulsante email è visibile ESCLUSIVAMENTE se isAdmin è true */}
-          {isAdmin === true && (
-            <Button 
-              onClick={() => setIsEmailModalOpen(true)}
-              variant="outline"
-              className="border-white/10 text-zinc-400 hover:text-white hover:bg-white/5 rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 px-6"
-            >
-              <Mail size={16} className="mr-2" /> Configura Email
-            </Button>
-          )}
+          <div className="flex gap-3">
+            {isAdmin === true && (
+              <>
+                <Button 
+                  onClick={() => navigate('/admin/users')}
+                  variant="outline"
+                  className="border-white/10 text-zinc-400 hover:text-white hover:bg-white/5 rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 px-6"
+                >
+                  <Users size={16} className="mr-2" /> Gestione Membri
+                </Button>
+                <Button 
+                  onClick={() => setIsEmailModalOpen(true)}
+                  variant="outline"
+                  className="border-white/10 text-zinc-400 hover:text-white hover:bg-white/5 rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 px-6"
+                >
+                  <Mail size={16} className="mr-2" /> Configura Email
+                </Button>
+              </>
+            )}
+          </div>
         </div>
 
-        {/* Tab System */}
         <div className="flex border border-white/5 bg-zinc-900/30 mb-8">
           <button 
             onClick={() => setActiveTab('pending')}
@@ -137,7 +146,6 @@ const AdminApplications = () => {
           </div>
         )}
 
-        {/* Modal caricato solo se l'utente è admin */}
         {isAdmin === true && <EmailSettingsModal isOpen={isEmailModalOpen} onClose={() => setIsEmailModalOpen(false)} />}
       </main>
 
