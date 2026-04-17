@@ -12,6 +12,7 @@ import NewChatModal from '@/components/NewChatModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from '@/hooks/use-translation';
+import { cn } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,12 +31,14 @@ const Messages = () => {
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
         navigate('/login');
       } else {
+        setCurrentUserId(session.user.id);
         setCheckingAuth(false);
       }
     });
@@ -82,51 +85,79 @@ const Messages = () => {
           </div>
         ) : (
           <div className="space-y-2">
-            {conversations?.map((conv: any) => (
-              <div key={conv.otherId} className="relative overflow-hidden bg-zinc-900/40 border border-white/5 group">
-                <div className="absolute inset-0 bg-zinc-800 flex items-center justify-end px-6">
-                  <Trash2 size={20} className="text-white" />
-                </div>
+            {conversations?.map((conv: any) => {
+              const isUnread = !conv.lastMessage.is_read && conv.lastMessage.receiver_id === currentUserId;
+              
+              return (
+                <div key={conv.otherId} className="relative overflow-hidden bg-zinc-900/40 border border-white/5 group">
+                  <div className="absolute inset-0 bg-zinc-800 flex items-center justify-end px-6">
+                    <Trash2 size={20} className="text-white" />
+                  </div>
 
-                <motion.button 
-                  drag="x"
-                  dragConstraints={{ left: -100, right: 0 }}
-                  dragElastic={0.1}
-                  onDragEnd={(_, info) => {
-                    if (info.offset.x < -70) {
-                      setDeleteTarget(conv.otherId);
-                    }
-                  }}
-                  onClick={() => navigate(`/chat/${conv.otherId}`)}
-                  className="relative w-full bg-zinc-950 p-4 flex items-center gap-4 hover:bg-zinc-900 transition-colors z-10"
-                >
-                  <div className="w-14 h-14 bg-zinc-800 rounded-full overflow-hidden border border-white/10 shrink-0">
-                    {conv.otherUser?.avatar_url ? (
-                      <img src={conv.otherUser.avatar_url} className="w-full h-full object-cover" alt="Avatar" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-zinc-600"><User size={24} /></div>
+                  <motion.button 
+                    drag="x"
+                    dragConstraints={{ left: -100, right: 0 }}
+                    dragElastic={0.1}
+                    onDragEnd={(_, info) => {
+                      if (info.offset.x < -70) {
+                        setDeleteTarget(conv.otherId);
+                      }
+                    }}
+                    onClick={() => navigate(`/chat/${conv.otherId}`)}
+                    className={cn(
+                      "relative w-full p-4 flex items-center gap-4 transition-colors z-10",
+                      isUnread ? "bg-zinc-900" : "bg-zinc-950 hover:bg-zinc-900"
                     )}
-                  </div>
-                  <div className="flex-1 text-left min-w-0">
-                    <div className="flex justify-between items-center mb-1">
-                      <h4 className="text-sm font-black italic uppercase tracking-tight truncate">
-                        {conv.otherUser?.username || 'Membro District'}
-                      </h4>
-                      <span className="text-[8px] text-zinc-600 font-bold uppercase">
-                        {formatDistanceToNow(new Date(conv.lastMessage.created_at), { 
-                          addSuffix: true, 
-                          locale: language === 'it' ? it : enUS 
-                        })}
-                      </span>
+                  >
+                    <div className="relative shrink-0">
+                      <div className={cn(
+                        "w-14 h-14 bg-zinc-800 rounded-full overflow-hidden border shrink-0",
+                        isUnread ? "border-white/40" : "border-white/10"
+                      )}>
+                        {conv.otherUser?.avatar_url ? (
+                          <img src={conv.otherUser.avatar_url} className="w-full h-full object-cover" alt="Avatar" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-zinc-600"><User size={24} /></div>
+                        )}
+                      </div>
+                      {isUnread && (
+                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full border-2 border-black animate-pulse" />
+                      )}
                     </div>
-                    <p className="text-xs text-zinc-500 truncate font-medium">
-                      {conv.lastMessage.content}
-                    </p>
-                  </div>
-                  <ChevronRight size={16} className="text-zinc-800 group-hover:text-white transition-colors" />
-                </motion.button>
-              </div>
-            ))}
+
+                    <div className="flex-1 text-left min-w-0">
+                      <div className="flex justify-between items-center mb-1">
+                        <h4 className={cn(
+                          "text-sm font-black italic uppercase tracking-tight truncate",
+                          isUnread ? "text-white" : "text-zinc-300"
+                        )}>
+                          {conv.otherUser?.username || 'Membro District'}
+                        </h4>
+                        <span className={cn(
+                          "text-[8px] font-bold uppercase",
+                          isUnread ? "text-white" : "text-zinc-600"
+                        )}>
+                          {formatDistanceToNow(new Date(conv.lastMessage.created_at), { 
+                            addSuffix: true, 
+                            locale: language === 'it' ? it : enUS 
+                          })}
+                        </span>
+                      </div>
+                      <p className={cn(
+                        "text-xs truncate font-medium",
+                        isUnread ? "text-zinc-200 font-bold" : "text-zinc-500"
+                      )}>
+                        {conv.lastMessage.content}
+                      </p>
+                    </div>
+                    <ChevronRight size={16} className={cn(
+                      "transition-colors",
+                      isUnread ? "text-white" : "text-zinc-800 group-hover:text-white"
+                    )} />
+                  </motion.button>
+                </div>
+              );
+            })}
           </div>
         )}
       </main>
