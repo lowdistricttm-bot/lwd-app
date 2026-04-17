@@ -72,11 +72,9 @@ const Profile = () => {
     if (error) console.error("[Profile] Errore caricamento:", error);
     setProfile(profileData);
     
-    // Imposta il tab iniziale in base al ruolo e alla proprietà del profilo
     if (!activeTab) {
       const role = profileData?.role || 'subscriber';
       if (role === 'subscriber') {
-        // Se è un iscritto, vede il garage se è il suo profilo, altrimenti solo le info
         setActiveTab(isOwnProfile ? 'garage' : 'profile');
       } else {
         setActiveTab('activity');
@@ -158,32 +156,30 @@ const Profile = () => {
   const isTargetSubscriber = userRole === 'subscriber';
 
   const tabs = [];
-  
-  // 1. Activity (Post): Solo se il profilo visualizzato NON è un iscritto
   if (!isTargetSubscriber) {
     tabs.push({ id: 'activity', label: t.profile.posts, icon: MessageSquare });
   }
-
-  // 2. Garage: 
-  // - Se è il mio profilo: Sempre (anche se sono subscriber, per permettere l'inserimento per le selezioni)
-  // - Se è il profilo di un altro: Solo se l'altro NON è un iscritto (i veicoli degli iscritti sono privati)
   if (isOwnProfile || !isTargetSubscriber) {
     tabs.push({ id: 'garage', label: t.nav.garage, icon: Car });
   }
-
-  // 3. Ordini e Selezioni: Solo per il proprio profilo
   if (isOwnProfile) {
     tabs.push({ id: 'orders', label: t.profile.orders, icon: ShoppingBag });
     tabs.push({ id: 'selections', label: t.profile.selections, icon: ClipboardCheck });
   }
-
-  // 4. Info: Sempre visibile
   tabs.push({ id: 'profile', label: t.profile.info, icon: User });
-
-  // 5. Impostazioni: Solo proprio profilo
   if (isOwnProfile) {
     tabs.push({ id: 'settings', label: t.profile.settings, icon: Settings });
   }
+
+  // Mappatura esplicita delle colonne per Tailwind
+  const gridColsClass = {
+    1: 'grid-cols-1',
+    2: 'grid-cols-2',
+    3: 'grid-cols-3',
+    4: 'grid-cols-4',
+    5: 'grid-cols-5',
+    6: 'grid-cols-6',
+  }[tabs.length] || 'grid-cols-1';
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -252,7 +248,7 @@ const Profile = () => {
             </button>
           )}
 
-          <div className={cn("grid border border-white/5 bg-zinc-900/30 mb-6", `grid-cols-${tabs.length}`)}>
+          <div className={cn("grid border border-white/5 bg-zinc-900/30 mb-6", gridColsClass)}>
             {tabs.map((tab) => (
               <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={cn("flex flex-col items-center justify-center gap-2 py-4 transition-all border-b-2", activeTab === tab.id ? "border-white text-white bg-white/5" : "border-transparent text-zinc-600 hover:text-zinc-400")}>
                 <tab.icon size={18} className={activeTab === tab.id ? "text-white" : ""} />
