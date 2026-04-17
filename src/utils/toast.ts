@@ -4,7 +4,12 @@ export const showSuccess = (message: string) => {
   toast.success(message);
 };
 
-export const showError = (message: string) => {
+export const showError = (error: any) => {
+  // Estrae il messaggio se l'input è un oggetto di errore, altrimenti usa il valore come stringa
+  const message = typeof error === 'string' 
+    ? error 
+    : error?.message || error?.error_description || "Si è verificato un errore imprevisto";
+    
   toast.error(message);
 };
 

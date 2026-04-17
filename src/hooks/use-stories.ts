@@ -35,7 +35,7 @@ export const useStoryViews = (storyId: string | null) => {
         .eq('story_id', storyId)
         .order('viewed_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) throw new Error(error.message);
       return data;
     },
     enabled: !!storyId
@@ -110,7 +110,7 @@ export const useStories = () => {
           .select()
           .single();
 
-        if (dbError) throw dbError;
+        if (dbError) throw new Error(dbError.message);
 
         if (mentions.length > 0) {
           for (const mentionId of mentions) {
@@ -133,18 +133,19 @@ export const useStories = () => {
       queryClient.invalidateQueries({ queryKey: ['active-stories'] });
       showSuccess("Storia pubblicata!");
     },
-    onError: (error: any) => showError(error.message)
+    onError: (error: any) => showError(error)
   });
 
   const deleteStory = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from('stories').delete().eq('id', id);
-      if (error) throw error;
+      if (error) throw new Error(error.message);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['active-stories'] });
       showSuccess("Storia eliminata");
-    }
+    },
+    onError: (error: any) => showError(error)
   });
 
   const recordView = useMutation({
@@ -171,12 +172,13 @@ export const useStories = () => {
           mentions: []
         }]);
 
-      if (error) throw error;
+      if (error) throw new Error(error.message);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['active-stories'] });
       showSuccess("Storia ricondivisa!");
-    }
+    },
+    onError: (error: any) => showError(error)
   });
 
   return { stories, isLoading, uploadStory, deleteStory, recordView, reshareStory };

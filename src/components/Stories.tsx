@@ -73,8 +73,12 @@ const Stories = () => {
 
   const handleFinalUpload = async () => {
     const mentionIds = selectedMentions.map(m => m.id);
-    await uploadStory.mutateAsync({ files: pendingFiles, mentions: mentionIds });
-    resetModal();
+    // Usiamo mutate invece di mutateAsync per lasciare che l'hook gestisca l'errore tramite onError
+    uploadStory.mutate({ files: pendingFiles, mentions: mentionIds }, {
+      onSuccess: () => {
+        resetModal();
+      }
+    });
   };
 
   const resetModal = () => {
