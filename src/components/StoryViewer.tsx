@@ -61,6 +61,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
     }
     setProgress(0);
     setIsMediaLoading(true);
+    setIsLiked(false);
   }, [currentStory?.id, currentUserId, isOwner]);
 
   useEffect(() => {
@@ -86,11 +87,9 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
   const handleNext = () => {
     if (currentIndex < userStories.items.length - 1) {
       setCurrentIndex(prev => prev + 1);
-      setIsLiked(false);
     } else if (userIndex < allStories.length - 1) {
       setUserIndex(prev => prev + 1);
       setCurrentIndex(0);
-      setIsLiked(false);
     } else {
       onClose();
     }
@@ -99,12 +98,10 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
   const handlePrev = () => {
     if (currentIndex > 0) {
       setCurrentIndex(prev => prev - 1);
-      setIsLiked(false);
     } else if (userIndex > 0) {
       const prevUserIndex = userIndex - 1;
       setUserIndex(prevUserIndex);
       setCurrentIndex(allStories[prevUserIndex].items.length - 1);
-      setIsLiked(false);
     }
   };
 
@@ -112,6 +109,23 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
     if (videoRef.current && !isShareModalOpen && !showViewers) {
       const p = (videoRef.current.currentTime / videoRef.current.duration) * 100;
       setProgress(p);
+    }
+  };
+
+  const handleLike = async () => {
+    if (isLiked || isOwner || !currentUserId) return;
+    
+    setIsLiked(true);
+    try {
+      await sendMessage.mutateAsync({
+        receiverId: userStories.user_id,
+        content: "❤️ Ha messo like alla tua storia",
+        imageUrl: currentStory.image_url
+      });
+      showSuccess("Like inviato via Direct!");
+    } catch (err) {
+      setIsLiked(false);
+      showError("Errore nell'invio del like");
     }
   };
 
@@ -301,7 +315,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
               
               <div className="flex items-center gap-2">
                 <button 
-                  onClick={() => setIsLiked(!isLiked)}
+                  onClick={handleLike}
                   className={cn(
                     "w-12 h-12 rounded-full flex items-center justify-center transition-all backdrop-blur-md border border-white/10",
                     isLiked ? "bg-red-500 border-red-500 text-white" : "bg-white/10 text-white hover:bg-white/20"

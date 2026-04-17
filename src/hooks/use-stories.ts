@@ -73,7 +73,9 @@ export const useStories = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Registriamo la visualizzazione
+      console.log(`[Debug] Tentativo registrazione vista per storia: ${storyId}`);
+
+      // Registriamo la visualizzazione usando upsert per gestire il vincolo UNIQUE
       const { error } = await supabase
         .from('story_views')
         .upsert(
@@ -85,8 +87,10 @@ export const useStories = () => {
           { onConflict: 'story_id,user_id' }
         );
       
-      if (error && !error.message.includes("policy")) {
+      if (error) {
         console.error("[Stories] Errore registrazione vista:", error.message);
+      } else {
+        console.log("[Stories] Vista registrata con successo");
       }
     }
   });
@@ -151,13 +155,13 @@ export const useStoryViews = (storyId: string | null) => {
     queryFn: async () => {
       if (!storyId) return [];
       
-      // Utilizziamo il nome della tabella 'profiles' direttamente per il join
+      // Utilizziamo profiles:user_id per forzare il join sulla colonna corretta
       const { data, error } = await supabase
         .from('story_views')
         .select(`
           id,
           viewed_at,
-          profiles (
+          profiles:user_id (
             username,
             avatar_url
           )
