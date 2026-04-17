@@ -142,18 +142,18 @@ const Messages = () => {
                     )}
                   >
                     <div className="relative shrink-0">
-                      <div className={cn("w-12 h-12 rounded-full overflow-hidden border-2 shrink-0", isUnread ? "bg-zinc-700 border-white" : "bg-black/40 border-white/10")}>
+                      <div className={cn("w-12 h-12 rounded-full overflow-hidden border-2 shrink-0 bg-black/40", isUnread ? "border-white" : "border-white/10")}>
                         {conv.otherUser?.avatar_url ? (
                           <img src={conv.otherUser.avatar_url} className="w-full h-full object-cover" alt="Avatar" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-zinc-500"><User size={20} strokeWidth={1.5} /></div>
                         )}
                       </div>
-                      {isUnread && <div className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-white rounded-full border-2 border-black animate-pulse shadow-[0_0_10px_rgba(255,255,255,0.5)]" />}
+                      {isUnread && <div className="absolute -top-0.5 -left-0.5 w-3.5 h-3.5 bg-white rounded-full border-2 border-black animate-pulse shadow-[0_0_10px_rgba(255,255,255,0.5)]" />}
                     </div>
                     <div className="flex-1 text-left min-w-0 pointer-events-none">
                       <div className="flex justify-between items-center mb-0.5">
-                        <h4 className={cn("text-sm font-black italic uppercase tracking-tight truncate", isUnread ? "text-white" : "text-zinc-300")}>
+                        <h4 className={cn("text-xs font-black italic uppercase tracking-tight truncate", isUnread ? "text-white" : "text-zinc-300")}>
                           {conv.otherUser?.username || 'Membro District'}
                         </h4>
                         <span className={cn("text-[8px] font-bold uppercase shrink-0 pl-2", isUnread ? "text-white" : "text-zinc-500")}>
