@@ -128,7 +128,7 @@ const Chat = () => {
               "text-[8px] font-black uppercase tracking-widest mt-1 transition-colors duration-500",
               isOnline ? "text-green-500" : "text-zinc-500"
             )}>
-              {isOnline ? 'Online Ora' : lastSeen ? `Ultimo accesso ${lastSeen}` : 'Offline'}
+              {isOnline ? 'Online' : lastSeen ? `Ultimo accesso ${lastSeen}` : 'Offline'}
             </p>
           </div>
         </button>

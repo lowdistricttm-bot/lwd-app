@@ -194,7 +194,6 @@ const Profile = () => {
   const userPosts = posts?.filter(p => p.user_id === targetUserId) || [];
 
   // Funzione per calcolare la dimensione del font in base alla lunghezza dell'username
-  // Ridimensionata per essere più piccola ed elegante di default
   const getUsernameSize = (name: string) => {
     const len = name?.length || 0;
     if (len > 30) return "text-[8px] md:text-sm";
@@ -298,7 +297,7 @@ const Profile = () => {
                   "text-[6px] md:text-[7px] font-black uppercase tracking-widest transition-colors duration-500",
                   isOnline ? "text-green-500" : "text-zinc-600"
                 )}>
-                  {isOnline ? 'Online Ora' : profile?.last_seen_at ? `Ultimo accesso ${formatDistanceToNow(new Date(profile.last_seen_at), { addSuffix: true, locale: it })}` : 'Offline'}
+                  {isOnline ? 'Online' : profile?.last_seen_at ? `Ultimo accesso ${formatDistanceToNow(new Date(profile.last_seen_at), { addSuffix: true, locale: it })}` : 'Offline'}
                 </p>
               </div>
             </div>
