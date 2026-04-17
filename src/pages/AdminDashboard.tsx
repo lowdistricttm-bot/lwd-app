@@ -95,18 +95,18 @@ const AdminDashboard = () => {
             <button
               key={i}
               onClick={item.action}
-              className="w-full bg-zinc-900/40 border border-white/5 p-6 flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500 text-left"
+              className="w-full bg-zinc-900/40 border border-white/5 p-6 flex items-center justify-between group hover:bg-zinc-800 transition-all duration-500 text-left"
             >
               <div className="flex items-center gap-6">
-                <div className="w-14 h-14 bg-white/5 flex items-center justify-center group-hover:bg-black/10 transition-colors">
+                <div className="w-14 h-14 bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-colors">
                   <item.icon size={24} className="group-hover:scale-110 transition-transform" />
                 </div>
                 <div>
                   <h3 className="text-lg font-black uppercase italic tracking-tight">{item.title}</h3>
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 group-hover:text-black/60 mt-1">{item.desc}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 group-hover:text-zinc-400 mt-1 transition-colors">{item.desc}</p>
                 </div>
               </div>
-              <ChevronRight size={20} className="text-zinc-800 opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0" />
+              <ChevronRight size={20} className="text-zinc-700 group-hover:text-white transition-all translate-x-[-10px] group-hover:translate-x-0" />
             </button>
           ))}
         </div>
