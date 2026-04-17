@@ -11,6 +11,7 @@ import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { supabase } from "@/integrations/supabase/client";
 import ImageLightbox from './ImageLightbox';
+import SharePostModal from './SharePostModal';
 import { Link, useNavigate } from 'react-router-dom';
 import { showSuccess, showError } from '@/utils/toast';
 import { useTranslation } from '@/hooks/use-translation';
@@ -125,6 +126,7 @@ const FeedPost = ({ post }: { post: Post }) => {
   const [replyingTo, setReplyingTo] = useState<{ id: string, name: string } | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [showHeartPop, setShowHeartPop] = useState(false);
   const commentFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -175,7 +177,7 @@ const FeedPost = ({ post }: { post: Post }) => {
     }
   };
 
-  const handleShare = async () => {
+  const handleNativeShare = async () => {
     const username = post.profiles?.username || 'Membro';
     const shareData = {
       title: `Post di ${username} | Low District`,
@@ -268,7 +270,6 @@ const FeedPost = ({ post }: { post: Post }) => {
         )}
 
         <div className="p-4 flex flex-col gap-4 border-t border-white/5">
-          {/* Elenco Like - Spostato sopra i pulsanti */}
           {post.liked_by && post.liked_by.length > 0 && (
             <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[9px] font-bold uppercase tracking-widest text-zinc-500">
               <span className="text-zinc-600 italic">Piace a:</span>
@@ -295,7 +296,17 @@ const FeedPost = ({ post }: { post: Post }) => {
               <MessageSquare size={18} />
               <span className="text-[10px] font-black uppercase">{post.comments?.length || 0}</span>
             </button>
-            <button onClick={handleShare} className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors ml-auto">
+            
+            {/* Pulsante Inoltro Direct */}
+            <button 
+              onClick={() => setIsShareModalOpen(true)} 
+              className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors"
+            >
+              <Send size={18} className="-rotate-12" />
+              <span className="text-[10px] font-black uppercase hidden sm:inline">Invia</span>
+            </button>
+
+            <button onClick={handleNativeShare} className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors ml-auto">
               <Share2 size={18} />
               <span className="text-[10px] font-black uppercase hidden sm:inline">{t.feed.share}</span>
             </button>
@@ -369,6 +380,14 @@ const FeedPost = ({ post }: { post: Post }) => {
       </motion.div>
 
       <ImageLightbox images={lightboxData?.images || []} initialIndex={lightboxData?.index || 0} isOpen={!!lightboxData} onClose={() => setLightboxData(null)} />
+      
+      <SharePostModal 
+        isOpen={isShareModalOpen} 
+        onClose={() => setIsShareModalOpen(false)} 
+        postId={post.id}
+        postImageUrl={post.images?.[0]}
+        postContent={post.content}
+      />
     </>
   );
 };
