@@ -41,7 +41,6 @@ const Index = () => {
                   <h3 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase leading-none">District <br /> Radio</h3>
                 </div>
                 <p className="text-zinc-400 text-sm font-bold uppercase tracking-tight leading-relaxed max-w-md italic">
-                  La colonna sonora ufficiale della cultura stance. <br />
                   Metti in play e goditi il viaggio nel District.
                 </p>
                 <div className="flex justify-center md:justify-start">

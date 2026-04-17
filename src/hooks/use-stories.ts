@@ -3,7 +3,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { showError, showSuccess } from '@/utils/toast';
-import { useEffect } from 'react';
 import { compressImage, validateVideo } from '@/utils/media';
 import { uploadToCloudinary } from '@/utils/cloudinary';
 
@@ -21,6 +20,27 @@ export interface Story {
     is_admin?: boolean;
   };
 }
+
+export const useStoryViews = (storyId: string | null) => {
+  return useQuery({
+    queryKey: ['story-views', storyId],
+    queryFn: async () => {
+      if (!storyId) return [];
+      const { data, error } = await supabase
+        .from('story_views')
+        .select(`
+          *,
+          profiles:user_id (username, avatar_url)
+        `)
+        .eq('story_id', storyId)
+        .order('viewed_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!storyId
+  });
+};
 
 export const useStories = () => {
   const queryClient = useQueryClient();
@@ -92,9 +112,7 @@ export const useStories = () => {
 
         if (dbError) throw dbError;
 
-        // Invia DM ai menzionati
         if (mentions.length > 0) {
-          const { data: myProfile } = await supabase.from('profiles').select('username').eq('id', user.id).single();
           for (const mentionId of mentions) {
             await supabase.from('messages').insert([{
               sender_id: user.id,
@@ -118,6 +136,28 @@ export const useStories = () => {
     onError: (error: any) => showError(error.message)
   });
 
+  const deleteStory = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('stories').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['active-stories'] });
+      showSuccess("Storia eliminata");
+    }
+  });
+
+  const recordView = useMutation({
+    mutationFn: async (storyId: string) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      await supabase
+        .from('story_views')
+        .upsert([{ story_id: storyId, user_id: user.id }], { onConflict: 'story_id, user_id' });
+    }
+  });
+
   const reshareStory = useMutation({
     mutationFn: async (storyUrl: string) => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -128,7 +168,7 @@ export const useStories = () => {
         .insert([{ 
           user_id: user.id, 
           image_url: storyUrl,
-          mentions: [] // Reset menzioni nella ricondivisione
+          mentions: []
         }]);
 
       if (error) throw error;
@@ -139,5 +179,5 @@ export const useStories = () => {
     }
   });
 
-  return { stories, isLoading, uploadStory, reshareStory };
+  return { stories, isLoading, uploadStory, deleteStory, recordView, reshareStory };
 };
