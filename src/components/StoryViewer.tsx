@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight, Trash2, Loader2, Volume2, VolumeX, Send, Heart, Eye, User } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Trash2, Loader2, Volume2, VolumeX, Send, Heart, Eye, User, HeartIcon, MoreHorizontal, Star } from 'lucide-react';
 import { useStories, useStoryViews } from '@/hooks/use-stories';
 import { useMessages } from '@/hooks/use-messages';
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from './ui/input';
 import { showSuccess, showError } from '@/utils/toast';
 import ShareStoryModal from './ShareStoryModal';
+import HighlightModal from './HighlightModal';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/use-translation';
@@ -29,6 +30,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
   const [isMuted, setIsMuted] = useState(false);
   const [replyText, setReplyText] = useState('');
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isHighlightModalOpen, setIsHighlightModalOpen] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [showViewers, setShowViewers] = useState(false);
   const [isMediaLoading, setIsMediaLoading] = useState(true);
@@ -42,6 +44,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
   const isVideo = currentStory?.image_url.match(/\.(mp4|webm|ogg|mov)$/i) || currentStory?.image_url.includes('video');
   
   const isOwner = currentUserId === userStories?.user_id;
+  const isHighlight = userStories?.role === 'highlight';
 
   const { data: views, isLoading: loadingViews } = useStoryViews(isOwner ? currentStory?.id : null);
 
@@ -56,16 +59,16 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
   }, []);
 
   useEffect(() => {
-    if (currentStory?.id && currentUserId && !isOwner) {
+    if (currentStory?.id && currentUserId && !isOwner && !isHighlight) {
       recordView.mutate(currentStory.id);
     }
     setProgress(0);
     setIsMediaLoading(true);
     setIsLiked(false);
-  }, [currentStory?.id, currentUserId, isOwner]);
+  }, [currentStory?.id, currentUserId, isOwner, isHighlight]);
 
   useEffect(() => {
-    if (isVideo || isShareModalOpen || showViewers || !currentStory || isMediaLoading) return;
+    if (isVideo || isShareModalOpen || isHighlightModalOpen || showViewers || !currentStory || isMediaLoading) return;
 
     const duration = 10000;
     const interval = 50; 
@@ -79,7 +82,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
     }, interval);
 
     return () => clearInterval(timer);
-  }, [userIndex, currentIndex, isVideo, isShareModalOpen, showViewers, currentStory, isMediaLoading]);
+  }, [userIndex, currentIndex, isVideo, isShareModalOpen, isHighlightModalOpen, showViewers, currentStory, isMediaLoading]);
 
   useEffect(() => {
     if (progress >= 100 && !isVideo) {
@@ -109,7 +112,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
   };
 
   const handleVideoTimeUpdate = () => {
-    if (videoRef.current && !isShareModalOpen && !showViewers) {
+    if (videoRef.current && !isShareModalOpen && !isHighlightModalOpen && !showViewers) {
       const p = (videoRef.current.currentTime / videoRef.current.duration) * 100;
       setProgress(p);
     }
@@ -167,18 +170,14 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
 
   const handleProfileClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (isHighlight) return;
     onClose();
     navigate(`/profile/${userStories.user_id}`);
   };
 
-  const handleViewerClick = (viewerId: string) => {
-    onClose();
-    navigate(`/profile/${viewerId}`);
-  };
-
   if (!userStories || !currentStory) return null;
 
-  const roleLabel = t.profile.roles[userStories.role] || t.profile.roles.member;
+  const roleLabel = isHighlight ? 'RACCOLTA' : (t.profile.roles[userStories.role] || t.profile.roles.member);
 
   return (
     <motion.div 
@@ -231,15 +230,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
                 {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
               </button>
             )}
-            {isOwner && (
-              <button 
-                onClick={handleDelete}
-                disabled={deleteStory.isPending}
-                className="p-2 text-white/80 hover:text-red-500 transition-all drop-shadow-md"
-              >
-                {deleteStory.isPending ? <Loader2 size={20} className="animate-spin" /> : <Trash2 size={20} />}
-              </button>
-            )}
             <button 
               onClick={onClose} 
               className="p-2 text-white/80 hover:text-white transition-all drop-shadow-md"
@@ -286,21 +276,24 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
         </div>
 
         <div className="absolute bottom-0 left-0 right-0 z-50 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
-          {isOwner ? (
-            <div className="flex flex-col items-center gap-4">
-              <button 
-                onClick={() => setShowViewers(true)}
-                className="flex flex-col items-center gap-1 group"
-              >
-                <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
-                  {loadingViews ? <Loader2 size={20} className="animate-spin text-white" /> : <Eye size={20} />}
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-white drop-shadow-md">
-                  {views?.length || 0} Visualizzazioni
-                </span>
+          {isOwner && !isHighlight ? (
+            <div className="flex items-center justify-around py-4 border-t border-white/10">
+              <button onClick={() => setShowViewers(true)} className="flex flex-col items-center gap-1 group">
+                <Eye size={20} className="text-white group-hover:scale-110 transition-transform" />
+                <span className="text-[8px] font-black uppercase tracking-widest text-white">Attività</span>
+              </button>
+              
+              <button onClick={() => setIsHighlightModalOpen(true)} className="flex flex-col items-center gap-1 group">
+                <Star size={20} className="text-white group-hover:scale-110 transition-transform" />
+                <span className="text-[8px] font-black uppercase tracking-widest text-white">Metti in evidenza</span>
+              </button>
+
+              <button onClick={handleDelete} className="flex flex-col items-center gap-1 group">
+                <Trash2 size={20} className="text-white group-hover:text-red-500 transition-colors" />
+                <span className="text-[8px] font-black uppercase tracking-widest text-white">Altro</span>
               </button>
             </div>
-          ) : (
+          ) : !isHighlight && (
             <div className="flex items-center gap-4">
               <form onSubmit={handleReply} className="flex-1 flex gap-2">
                 <Input 
@@ -346,16 +339,12 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           {showViewers && (
             <>
               <motion.div 
-                initial={{ opacity: 0 }} 
-                animate={{ opacity: 1 }} 
-                exit={{ opacity: 0 }} 
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
                 onClick={() => setShowViewers(false)}
                 className="absolute inset-0 bg-black/60 backdrop-blur-sm z-[60]" 
               />
               <motion.div 
-                initial={{ y: '100%' }} 
-                animate={{ y: 0 }} 
-                exit={{ y: '100%' }}
+                initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                 className="absolute inset-x-0 bottom-0 z-[61] bg-zinc-950 border-t border-white/10 rounded-t-[2rem] max-h-[60%] flex flex-col"
               >
@@ -375,7 +364,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
                     views?.map((view: any) => (
                       <button 
                         key={view.id} 
-                        onClick={() => handleViewerClick(view.user_id)}
+                        onClick={() => { onClose(); navigate(`/profile/${view.user_id}`); }}
                         className="w-full flex items-center justify-between p-3 bg-zinc-900/40 border border-white/5 rounded-2xl hover:bg-zinc-900 transition-all group"
                       >
                         <div className="flex items-center gap-3">
@@ -422,6 +411,15 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
         storyUrl={currentStory.image_url}
         authorName={userStories.username}
       />
+
+      {currentUserId && (
+        <HighlightModal 
+          isOpen={isHighlightModalOpen}
+          onClose={() => setIsHighlightModalOpen(false)}
+          story={currentStory}
+          userId={currentUserId}
+        />
+      )}
     </motion.div>
   );
 };

@@ -13,6 +13,7 @@ import CreatePostModal from '@/components/CreatePostModal';
 import ImageLightbox from '@/components/ImageLightbox';
 import ProfileInfoTab from '@/components/ProfileInfoTab';
 import SettingsTab from '@/components/SettingsTab';
+import HighlightsBar from '@/components/HighlightsBar';
 import { useSocialFeed } from '@/hooks/use-social-feed';
 import { 
   User, Settings, LogOut, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Calendar, Package, Users, Edit2, Check, X, Share2, AlertCircle, LogIn
@@ -66,7 +67,6 @@ const Profile = () => {
     if (activeTab === 'orders') refetchOrders();
   }, [activeTab, refetchOrders]);
 
-  // Sincronizza il tab se cambia l'URL
   useEffect(() => {
     const tabParam = searchParams.get('tab');
     if (tabParam) setActiveTab(tabParam);
@@ -232,6 +232,9 @@ const Profile = () => {
         </div>
 
         <div className="mt-20 px-4 md:px-12 max-w-6xl mx-auto">
+          {/* Highlights Bar */}
+          {targetUserId && <HighlightsBar userId={targetUserId} isOwnProfile={isOwnProfile} />}
+
           {isOwnProfile && (userRole === 'admin' || userRole === 'staff' || userRole === 'support') && (
             <button onClick={() => navigate('/admin/applications')} className="w-full mb-4 bg-zinc-900/40 border border-white/5 p-1 pr-4 flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500 h-12">
               <div className="flex items-center gap-4">
