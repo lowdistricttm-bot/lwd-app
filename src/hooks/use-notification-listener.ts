@@ -15,7 +15,6 @@ export const useNotificationListener = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Se esiste già un canale, lo rimuoviamo prima di crearne uno nuovo
       if (channel) supabase.removeChannel(channel);
 
       channel = supabase
@@ -29,14 +28,11 @@ export const useNotificationListener = () => {
             filter: `receiver_id=eq.${user.id}`
           },
           () => {
-            console.log("[Realtime] Nuovo messaggio ricevuto!");
-            // 1. Feedback audio/vibrazione
             playNotificationSound();
-            
-            // 2. Forza il ricaricamento immediato dei contatori e delle liste
-            queryClient.refetchQueries({ queryKey: ['unread-messages-count'] });
-            queryClient.refetchQueries({ queryKey: ['conversations'] });
-            queryClient.refetchQueries({ queryKey: ['chat'] });
+            // Ricarica contatori e liste messaggi
+            queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
+            queryClient.invalidateQueries({ queryKey: ['conversations'] });
+            queryClient.invalidateQueries({ queryKey: ['chat'] });
           }
         )
         .subscribe();
@@ -44,11 +40,28 @@ export const useNotificationListener = () => {
 
     startListening();
 
-    // Ascoltiamo anche i cambi di stato auth per riattivare il listener se l'utente logga
+    // Gestione transizioni di stato Auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN') startListening();
-      if (event === 'SIGNED_OUT' && channel) {
-        supabase.removeChannel(channel);
+      if (event === 'SIGNED_IN') {
+        console.log("[Auth] Utente loggato, reset cache e avvio listener...");
+        
+        // 1. Avvia il listener realtime per i messaggi
+        startListening();
+        
+        // 2. Invalida TUTTE le query (Bacheca, Messaggi, Ordini, etc.) 
+        // per forzare il ricaricamento dei dati ora che l'utente è autenticato
+        queryClient.invalidateQueries();
+        
+        // 3. Forza il refetch immediato delle query vitali
+        queryClient.refetchQueries({ queryKey: ['social-posts'] });
+        queryClient.refetchQueries({ queryKey: ['conversations'] });
+        queryClient.refetchQueries({ queryKey: ['user-role'] });
+      }
+      
+      if (event === 'SIGNED_OUT') {
+        if (channel) supabase.removeChannel(channel);
+        // Pulisce i dati privati al logout
+        queryClient.clear();
       }
     });
 
