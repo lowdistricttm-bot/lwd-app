@@ -7,7 +7,7 @@ import BottomNav from '@/components/BottomNav';
 import { useDiscover } from '@/hooks/use-discover';
 import { useGarage } from '@/hooks/use-garage';
 import { useAdmin } from '@/hooks/use-admin';
-import { Loader2, Car, Search, LayoutGrid, StretchHorizontal, User, ChevronRight, ShieldCheck, Sparkles, Calendar, Gauge, Users, Heart, EyeOff } from 'lucide-react';
+import { Loader2, Car, Search, LayoutGrid, StretchHorizontal, User, ChevronRight, ShieldCheck, Sparkles, Calendar, Gauge, Users, Heart, EyeOff, CreditCard } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import ImageLightbox from '@/components/ImageLightbox';
@@ -216,18 +216,10 @@ const Discover = () => {
                         )}
                         <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
                         
-                        <div className="absolute top-4 left-4 flex flex-col gap-2">
+                        <div className="absolute top-4 left-4">
                           <span className="bg-white text-black text-[8px] font-black uppercase px-2 py-1 italic shadow-2xl">
                             {vehicle.suspension_type}
                           </span>
-                          {vehicle.license_plate && (
-                            <span className={cn(
-                              "text-[7px] font-black uppercase px-2 py-1 italic shadow-2xl flex items-center gap-1.5",
-                              canSeePlate ? "bg-zinc-900 text-white" : "bg-black/60 text-zinc-500"
-                            )}>
-                              {canSeePlate ? vehicle.license_plate : <><EyeOff size={8} /> OSCURATA</>}
-                            </span>
-                          )}
                         </div>
 
                         <div className="absolute bottom-4 right-4">
@@ -250,7 +242,6 @@ const Discover = () => {
                           viewMode === 'list' && "md:flex-row md:items-center md:justify-between h-full"
                         )}>
                           <div className="min-w-0 flex-1">
-                            {/* Marca e Modello su riga singola */}
                             <div className="flex items-baseline gap-2 mb-1 overflow-hidden">
                               <h4 className="text-sm md:text-xl font-black italic uppercase tracking-tight truncate leading-none">
                                 {vehicle.brand}
@@ -260,9 +251,19 @@ const Discover = () => {
                               </span>
                             </div>
                             
-                            <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">
-                              {vehicle.year || 'N/A'}
-                            </p>
+                            <div className="flex items-center gap-3">
+                              <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">
+                                {vehicle.year || 'N/A'}
+                              </p>
+                              {vehicle.license_plate && (
+                                <span className={cn(
+                                  "text-[7px] font-black uppercase px-1.5 py-0.5 italic flex items-center gap-1",
+                                  canSeePlate ? "text-zinc-400" : "text-zinc-700"
+                                )}>
+                                  {canSeePlate ? vehicle.license_plate : <><EyeOff size={8} /> OSCURATA</>}
+                                </span>
+                              )}
+                            </div>
                             
                             {viewMode === 'list' && vehicle.description && (
                               <p className="text-[11px] text-zinc-500 italic line-clamp-2 mt-3 leading-relaxed hidden md:block">
@@ -307,7 +308,6 @@ const Discover = () => {
                                   )}
                                 </div>
                               )}
-                              {/* Utente e Ruolo su riga singola */}
                               <div className="flex items-center gap-2 overflow-hidden">
                                 <div className="flex items-center gap-1 min-w-0">
                                   <span className="text-[9px] font-black uppercase italic text-zinc-300 group-hover/user:text-white transition-colors truncate">
