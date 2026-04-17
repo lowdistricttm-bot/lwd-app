@@ -13,15 +13,15 @@ const Hero = () => {
 
   return (
     <section className="relative h-[85vh] w-full flex items-center justify-center overflow-hidden bg-transparent">
-      {/* Background con overlay dinamico */}
+      {/* Background con overlay dinamico e sfocatura aumentata */}
       <div className="absolute inset-0 z-0">
         <img 
           src="https://www.lowdistrict.it/wp-content/uploads/DSC01359-1-scaled-e1751832356345.jpg" 
           alt="Low District Stance" 
-          className="w-full h-full object-cover opacity-50 grayscale scale-110 animate-pulse-slow"
+          className="w-full h-full object-cover opacity-40 grayscale scale-110 blur-[12px] animate-pulse-slow"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-transparent"></div>
       </div>
 
       <div className="relative z-10 text-center px-6 max-w-5xl mx-auto">

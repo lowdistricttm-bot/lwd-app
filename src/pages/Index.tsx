@@ -141,7 +141,7 @@ const Index = () => {
           <div className="absolute inset-0 z-0">
             <img 
               src="https://www.lowdistrict.it/wp-content/uploads/DSC01359-1-scaled-e1751832356345.jpg" 
-              className="w-full h-full object-cover opacity-30 grayscale scale-110"
+              className="w-full h-full object-cover opacity-20 grayscale scale-110 blur-[20px]"
               alt="Background"
             />
             <div className="absolute inset-0 bg-gradient-to-b from-black via-black/40 to-black"></div>

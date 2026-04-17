@@ -37,80 +37,48 @@ const LatestActivities = () => {
   const latestPosts = posts?.slice(0, 9) || [];
 
   return (
-    <section className="py-12 px-6 bg-transparent overflow-hidden min-h-[400px]">
+    <section className="py-12 px-6 bg-transparent overflow-hidden min-h-[350px]">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
           <div>
-            <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">District Live</h2>
-            <h3 className="text-3xl xs:text-4xl md:text-5xl font-black italic tracking-tighter uppercase whitespace-nowrap">
+            <h2 className="text-zinc-500 text-[9px] font-black uppercase tracking-[0.4em] mb-1 italic">District Live</h2>
+            <h3 className="text-2xl xs:text-3xl md:text-4xl font-black italic tracking-tighter uppercase whitespace-nowrap">
               Community Activity
             </h3>
           </div>
           
           {user && (
-            <motion.div
-              animate={{ opacity: [0.4, 1, 0.4] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <Link to="/bacheca" className="group flex items-center gap-3 text-[9px] font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-colors">
-                Entra nella Bacheca <MessageSquare size={14} className="group-hover:scale-110 transition-transform" />
-              </Link>
-            </motion.div>
+            <Link to="/bacheca" className="group flex items-center gap-2 text-[8px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors">
+              Entra nella Bacheca <MessageSquare size={12} className="group-hover:scale-110 transition-transform" />
+            </Link>
           )}
         </div>
 
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <Loader2 className="animate-spin text-zinc-800" size={40} />
-            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-700 italic">Sincronizzazione District...</p>
+            <Loader2 className="animate-spin text-zinc-800" size={32} />
+            <p className="text-[9px] font-black uppercase tracking-widest text-zinc-700 italic">Sincronizzazione...</p>
           </div>
         ) : !user ? (
-          /* --- AVVISO PER UTENTI NON LOGGATI --- */
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="relative w-full bg-zinc-900/20 border border-white/5 p-8 md:p-16 overflow-hidden group"
+            className="relative w-full bg-zinc-900/20 border border-white/5 p-8 md:p-12 overflow-hidden group"
           >
             <div className="absolute top-0 right-0 w-1/3 h-full bg-white/5 blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-            <div className="absolute -left-10 -bottom-10 opacity-[0.02] pointer-events-none">
-              <ShieldCheck size={300} />
-            </div>
-
             <div className="relative z-10 flex flex-col items-center text-center max-w-2xl mx-auto">
-              <div className="w-16 h-16 bg-zinc-900 border border-white/10 flex items-center justify-center rotate-45 mb-8 group-hover:border-white/30 transition-colors duration-700">
-                <Lock size={24} className="text-white -rotate-45" />
+              <div className="w-14 h-14 bg-zinc-900 border border-white/10 flex items-center justify-center rotate-45 mb-6">
+                <Lock size={20} className="text-white -rotate-45" />
               </div>
-              
-              <h4 className="text-zinc-500 text-[9px] font-black uppercase tracking-[0.5em] mb-4 italic">Area Riservata</h4>
-              <h3 className="text-2xl md:text-4xl font-black italic uppercase tracking-tighter mb-6 leading-none">
-                Sblocca il District Feed
-              </h3>
-              
-              <p className="text-zinc-400 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed mb-10 italic">
-                Accedi per visualizzare i post in tempo reale, <br className="hidden md:block" /> 
-                interagire con i membri, commentare e mettere like ai progetti.
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-                <Button 
-                  onClick={() => navigate('/login')}
-                  className="bg-white text-black hover:bg-zinc-200 rounded-none h-12 px-8 text-[10px] font-black uppercase italic tracking-widest transition-all group/btn"
-                >
-                  Accedi Ora <ArrowRight size={14} className="ml-2 group-hover/btn:translate-x-1 transition-transform" />
-                </Button>
-              </div>
+              <h3 className="text-xl md:text-3xl font-black italic uppercase tracking-tighter mb-4">Sblocca il District Feed</h3>
+              <p className="text-zinc-400 text-[10px] font-bold uppercase tracking-widest leading-relaxed mb-8 italic">Accedi per visualizzare i post in tempo reale.</p>
+              <Button onClick={() => navigate('/login')} className="bg-white text-black hover:bg-zinc-200 rounded-none h-12 px-8 text-[10px] font-black uppercase italic tracking-widest transition-all">Accedi Ora</Button>
             </div>
           </motion.div>
-        ) : latestPosts.length === 0 ? (
-          <div className="text-center py-20 border border-white/5 bg-zinc-900/10">
-            <MessageSquare className="mx-auto text-zinc-900 mb-4" size={48} />
-            <p className="text-zinc-600 text-[10px] font-black uppercase tracking-widest">Il District è silenzioso oggi.</p>
-          </div>
         ) : (
-          /* --- CAROUSEL PER UTENTI LOGGATI --- */
           <div className="embla overflow-hidden cursor-grab active:cursor-grabbing" ref={emblaRef}>
-            <div className="embla__container flex gap-4">
+            <div className="embla__container flex gap-3">
               {latestPosts.map((post, i) => {
                 const firstMedia = post.images?.[0] || post.image_url;
                 const mediaIsVideo = firstMedia ? isVideo(firstMedia) : false;
@@ -121,24 +89,17 @@ const LatestActivities = () => {
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ delay: i * 0.1 }}
+                    transition={{ delay: i * 0.05 }}
                     onClick={() => navigate(`/post/${post.id}`)}
-                    className="embla__slide flex-[0_0_85%] sm:flex-[0_0_45%] md:flex-[0_0_32%] min-w-0 bg-zinc-900/30 border border-white/5 hover:border-white/10 transition-all group flex flex-col"
+                    className="embla__slide flex-[0_0_65%] sm:flex-[0_0_40%] md:flex-[0_0_31%] min-w-0 bg-zinc-900/30 border border-white/5 hover:border-white/10 transition-all group flex flex-col"
                   >
-                    <div className="p-4 pb-3">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-6 h-6 bg-zinc-800 rounded-full overflow-hidden border border-white/10">
-                          {post.profiles?.avatar_url ? (
-                            <img src={post.profiles.avatar_url} className="w-full h-full object-cover" alt="" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-zinc-700"><User size={12} /></div>
-                          )}
+                    <div className="p-3 pb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 bg-zinc-800 rounded-full overflow-hidden border border-white/10">
+                          {post.profiles?.avatar_url && <img src={post.profiles.avatar_url} className="w-full h-full object-cover" alt="" />}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-[9px] font-black uppercase italic truncate">{post.profiles?.username || 'Membro'}</p>
-                          <p className="text-[7px] text-zinc-600 font-bold uppercase">
-                            {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: it })}
-                          </p>
+                          <p className="text-[8px] font-black uppercase italic truncate">{post.profiles?.username || 'Membro'}</p>
                         </div>
                       </div>
                     </div>
@@ -147,50 +108,31 @@ const LatestActivities = () => {
                       {firstMedia ? (
                         <>
                           {mediaIsVideo ? (
-                            <video 
-                              src={firstMedia} 
-                              className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity"
-                              muted
-                              playsInline
-                              loop
-                            />
+                            <video src={firstMedia} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" muted playsInline loop />
                           ) : (
-                            <img 
-                              src={firstMedia} 
-                              className="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" 
-                              alt="" 
-                            />
+                            <img src={firstMedia} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" alt="" />
                           )}
-                          {mediaIsVideo && (
-                            <div className="absolute top-2 right-2 text-white/50">
-                              <Play size={12} fill="currentColor" />
-                            </div>
-                          )}
+                          {mediaIsVideo && <div className="absolute top-2 right-2 text-white/50"><Play size={10} fill="currentColor" /></div>}
                         </>
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-zinc-950">
-                          <MessageSquare size={24} className="text-zinc-800" />
-                        </div>
+                        <div className="w-full h-full flex items-center justify-center bg-zinc-950"><MessageSquare size={18} className="text-zinc-800" /></div>
                       )}
                     </div>
 
-                    <div className="p-4 flex-1 flex flex-col">
+                    <div className="p-3 flex-1 flex flex-col">
                       {post.content ? (
-                        <p className="text-[10px] text-zinc-400 line-clamp-2 mb-4 italic font-medium h-7">
-                          "{post.content}"
-                        </p>
+                        <p className="text-[8px] text-zinc-500 line-clamp-1 mb-3 italic font-medium">"{post.content}"</p>
                       ) : (
-                        <div className="mb-4 h-7" />
+                        <div className="mb-3 h-3" />
                       )}
-
-                      <div className="flex items-center gap-4 text-zinc-700 pt-3 border-t border-white/5 mt-auto">
-                        <div className="flex items-center gap-1.5">
-                          <Heart size={10} className={cn(post.is_liked && "text-white fill-white")} />
-                          <span className="text-[8px] font-black">{post.likes_count || 0}</span>
+                      <div className="flex items-center gap-3 text-zinc-700 pt-2 border-t border-white/5 mt-auto">
+                        <div className="flex items-center gap-1">
+                          <Heart size={8} className={cn(post.is_liked && "text-white fill-white")} />
+                          <span className="text-[7px] font-black">{post.likes_count || 0}</span>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                          <MessageSquare size={10} />
-                          <span className="text-[8px] font-black">{post.comments?.length || 0}</span>
+                        <div className="flex items-center gap-1">
+                          <MessageSquare size={8} />
+                          <span className="text-[7px] font-black">{post.comments?.length || 0}</span>
                         </div>
                       </div>
                     </div>
