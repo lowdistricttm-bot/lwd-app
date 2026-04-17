@@ -25,8 +25,9 @@ const Stories = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { stories, isLoading, uploadStory } = useStories();
   const { role } = useAdmin();
-  const [selectedUserIndex, setSelectedUserIndex] = useState<number | null>(null);
-  const [isViewingSelf, setIsViewingSelf] = useState(false);
+  
+  // Utilizziamo un solo indice per la coda combinata di tutte le storie (mie + altri)
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -47,6 +48,9 @@ const Stories = () => {
   const myStoriesGroup: any = (stories as any[])?.find((group: any) => group.user_id === currentUser?.id);
   const otherStories: any[] = (stories as any[])?.filter((group: any) => group.user_id !== currentUser?.id) || [];
 
+  // Combina le storie per permettere uno scorrimento automatico e continuo
+  const combinedStories = myStoriesGroup ? [myStoriesGroup, ...otherStories] : otherStories;
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []) as File[];
     if (files.length === 0) return;
@@ -66,7 +70,7 @@ const Stories = () => {
     if (!currentUser) {
       setIsAuthModalOpen(true);
     } else {
-      setSelectedUserIndex(index);
+      setSelectedIndex(index);
     }
   };
 
@@ -80,7 +84,7 @@ const Stories = () => {
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" multiple onChange={handleFileSelect} />
               <button 
                 onClick={() => {
-                  if (myStoriesGroup) setIsViewingSelf(true);
+                  if (myStoriesGroup) handleStoryClick(0); // La tua storia è sempre all'indice 0 della coda combinata se esiste
                   else if (!isSubscriber) fileInputRef.current?.click();
                 }}
                 className={cn(
@@ -111,23 +115,24 @@ const Stories = () => {
           </div>
         )}
 
-        {otherStories.map((userGroup: any, index: number) => (
-          <button key={userGroup.user_id} onClick={() => handleStoryClick(index)} className="flex flex-col items-center gap-2 shrink-0">
-            <div className="w-16 h-16 rounded-full p-[2.5px] bg-gradient-to-tr from-zinc-700 via-zinc-400 to-white">
-              <div className="w-full h-full rounded-full border-[2.5px] border-black overflow-hidden bg-zinc-900">
-                {userGroup.avatar_url ? <img src={userGroup.avatar_url} className="w-full h-full object-cover" /> : <User size={24} className="m-auto text-zinc-700" />}
+        {otherStories.map((userGroup: any, index: number) => {
+          // Calcola il vero indice all'interno dell'array combinato
+          const actualIndex = myStoriesGroup ? index + 1 : index;
+          
+          return (
+            <button key={userGroup.user_id} onClick={() => handleStoryClick(actualIndex)} className="flex flex-col items-center gap-2 shrink-0">
+              <div className="w-16 h-16 rounded-full p-[2.5px] bg-gradient-to-tr from-zinc-700 via-zinc-400 to-white">
+                <div className="w-full h-full rounded-full border-[2.5px] border-black overflow-hidden bg-zinc-900">
+                  {userGroup.avatar_url ? <img src={userGroup.avatar_url} className="w-full h-full object-cover" /> : <User size={24} className="m-auto text-zinc-700" />}
+                </div>
               </div>
-            </div>
-            <span className="text-[8px] font-black uppercase tracking-widest text-zinc-300 truncate w-16 text-center">{userGroup.username}</span>
-          </button>
-        ))}
+              <span className="text-[8px] font-black uppercase tracking-widest text-zinc-300 truncate w-16 text-center">{userGroup.username}</span>
+            </button>
+          );
+        })}
 
-        {selectedUserIndex !== null && (
-          <StoryViewer allStories={otherStories} initialUserIndex={selectedUserIndex} onClose={() => setSelectedUserIndex(null)} />
-        )}
-
-        {isViewingSelf && myStoriesGroup && (
-          <StoryViewer allStories={[myStoriesGroup]} initialUserIndex={0} onClose={() => setIsViewingSelf(false)} />
+        {selectedIndex !== null && (
+          <StoryViewer allStories={combinedStories} initialUserIndex={selectedIndex} onClose={() => setSelectedIndex(null)} />
         )}
       </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, Trash2, Loader2, Volume2, VolumeX, Send, Heart, Eye, User, Star, AtSign, RefreshCw } from 'lucide-react';
 import { useStories, useStoryViews } from '@/hooks/use-stories';
@@ -71,6 +71,27 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
     setIsLiked(false);
   }, [currentStory?.id, currentUserId, isOwner, isHighlight]);
 
+  const handleNext = useCallback(() => {
+    if (currentIndex < allStories[userIndex].items.length - 1) {
+      setCurrentIndex(prev => prev + 1);
+    } else if (userIndex < allStories.length - 1) {
+      setUserIndex(prev => prev + 1);
+      setCurrentIndex(0);
+    } else {
+      onClose();
+    }
+  }, [currentIndex, userIndex, allStories, onClose]);
+
+  const handlePrev = useCallback(() => {
+    if (currentIndex > 0) {
+      setCurrentIndex(prev => prev - 1);
+    } else if (userIndex > 0) {
+      const prevUserIndex = userIndex - 1;
+      setUserIndex(prevUserIndex);
+      setCurrentIndex(allStories[prevUserIndex].items.length - 1);
+    }
+  }, [currentIndex, userIndex, allStories]);
+
   useEffect(() => {
     if (isVideo || isShareModalOpen || isHighlightModalOpen || isMentionModalOpen || showViewers || !currentStory || isMediaLoading) return;
 
@@ -92,28 +113,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
     if (progress >= 100 && !isVideo) {
       handleNext();
     }
-  }, [progress, isVideo]);
-
-  const handleNext = () => {
-    if (currentIndex < userStories.items.length - 1) {
-      setCurrentIndex(prev => prev + 1);
-    } else if (userIndex < allStories.length - 1) {
-      setUserIndex(prev => prev + 1);
-      setCurrentIndex(0);
-    } else {
-      onClose();
-    }
-  };
-
-  const handlePrev = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(prev => prev - 1);
-    } else if (userIndex > 0) {
-      const prevUserIndex = userIndex - 1;
-      setUserIndex(prevUserIndex);
-      setCurrentIndex(allStories[prevUserIndex].items.length - 1);
-    }
-  };
+  }, [progress, isVideo, handleNext]);
 
   const handleVideoTimeUpdate = () => {
     if (videoRef.current && !isShareModalOpen && !isHighlightModalOpen && !isMentionModalOpen && !showViewers) {
