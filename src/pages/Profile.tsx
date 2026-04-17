@@ -72,9 +72,15 @@ const Profile = () => {
     if (error) console.error("[Profile] Errore caricamento:", error);
     setProfile(profileData);
     
+    // Imposta il tab iniziale in base al ruolo e alla proprietà del profilo
     if (!activeTab) {
       const role = profileData?.role || 'subscriber';
-      setActiveTab(role === 'subscriber' ? 'profile' : 'activity');
+      if (role === 'subscriber') {
+        // Se è un iscritto, vede il garage se è il suo profilo, altrimenti solo le info
+        setActiveTab(isOwnProfile ? 'garage' : 'profile');
+      } else {
+        setActiveTab('activity');
+      }
     }
   };
 
@@ -152,15 +158,29 @@ const Profile = () => {
   const isTargetSubscriber = userRole === 'subscriber';
 
   const tabs = [];
+  
+  // 1. Activity (Post): Solo se il profilo visualizzato NON è un iscritto
   if (!isTargetSubscriber) {
     tabs.push({ id: 'activity', label: t.profile.posts, icon: MessageSquare });
+  }
+
+  // 2. Garage: 
+  // - Se è il mio profilo: Sempre (anche se sono subscriber, per permettere l'inserimento per le selezioni)
+  // - Se è il profilo di un altro: Solo se l'altro NON è un iscritto (i veicoli degli iscritti sono privati)
+  if (isOwnProfile || !isTargetSubscriber) {
     tabs.push({ id: 'garage', label: t.nav.garage, icon: Car });
   }
+
+  // 3. Ordini e Selezioni: Solo per il proprio profilo
   if (isOwnProfile) {
     tabs.push({ id: 'orders', label: t.profile.orders, icon: ShoppingBag });
     tabs.push({ id: 'selections', label: t.profile.selections, icon: ClipboardCheck });
   }
+
+  // 4. Info: Sempre visibile
   tabs.push({ id: 'profile', label: t.profile.info, icon: User });
+
+  // 5. Impostazioni: Solo proprio profilo
   if (isOwnProfile) {
     tabs.push({ id: 'settings', label: t.profile.settings, icon: Settings });
   }
@@ -201,7 +221,6 @@ const Profile = () => {
                 <div className="flex items-center gap-2">
                   {isOwnProfile && <button onClick={() => setIsUsernameNoticeOpen(true)} className="p-1.5 text-zinc-500 hover:text-white transition-colors"><Edit2 size={14} /></button>}
                   
-                  {/* Pulsante Condividi - Nascosto per gli iscritti */}
                   {!isTargetSubscriber && (
                     <button onClick={handleShareProfile} className="p-1.5 text-zinc-500 hover:text-white transition-colors">
                       <Share2 size={16} />
@@ -275,7 +294,7 @@ const Profile = () => {
                 </motion.div>
               )}
 
-              {activeTab === 'garage' && !isTargetSubscriber && <motion.div key="garage" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><GarageTab userId={targetUserId} isOwnProfile={isOwnProfile} /></motion.div>}
+              {activeTab === 'garage' && (isOwnProfile || !isTargetSubscriber) && <motion.div key="garage" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><GarageTab userId={targetUserId} isOwnProfile={isOwnProfile} /></motion.div>}
               {activeTab === 'selections' && isOwnProfile && <motion.div key="selections" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><ApplicationsTab /></motion.div>}
               {activeTab === 'profile' && <motion.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><ProfileInfoTab profile={profile} isOwnProfile={isOwnProfile} onUpdate={() => fetchProfile(targetUserId)} /></motion.div>}
               {activeTab === 'settings' && isOwnProfile && <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><SettingsTab /></motion.div>}
