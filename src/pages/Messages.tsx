@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
@@ -34,6 +34,9 @@ const Messages = () => {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  
+  // Ref per evitare che il click parta accidentalmente alla fine dello swipe
+  const isDragging = useRef(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -99,18 +102,66 @@ const Messages = () => {
               const isUnread = !conv.lastMessage.is_read && conv.lastMessage.receiver_id === currentUserId;
               return (
                 <div key={conv.otherId} className="relative overflow-hidden rounded-3xl bg-zinc-900/40 border border-white/5 group">
-                  <div className="absolute inset-0 bg-zinc-800 flex items-center justify-end px-6"><Trash2 size={20} strokeWidth={2} className="text-zinc-400" /></div>
-                  <motion.button drag="x" dragConstraints={{ left: -100, right: 0 }} dragElastic={0.1} onDragEnd={(_, info) => { if (info.offset.x < -70) setDeleteTarget(conv.otherId); }} onClick={() => navigate(`/chat/${conv.otherId}`)} className={cn("relative w-full p-4 flex items-center gap-4 transition-colors z-10", isUnread ? "bg-zinc-900/80" : "bg-zinc-950 hover:bg-zinc-900")}>
+                  <div className="absolute inset-0 bg-zinc-800 flex items-center justify-end px-6">
+                    <Trash2 size={20} strokeWidth={2} className="text-zinc-400" />
+                  </div>
+                  
+                  <motion.div 
+                    drag="x" 
+                    dragSnapToOrigin={true}
+                    dragConstraints={{ left: -100, right: 0 }} 
+                    dragElastic={0.1} 
+                    onDragStart={() => {
+                      isDragging.current = true;
+                    }}
+                    onDragEnd={(_, info) => { 
+                      setTimeout(() => {
+                        isDragging.current = false;
+                      }, 150);
+                      
+                      if (info.offset.x < -50) {
+                        setDeleteTarget(conv.otherId); 
+                      }
+                    }} 
+                    onClick={(e) => {
+                      // Impediamo la navigazione se stavamo facendo uno swipe
+                      if (isDragging.current) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return;
+                      }
+                      navigate(`/chat/${conv.otherId}`);
+                    }} 
+                    className={cn(
+                      "relative w-full p-4 flex items-center gap-4 transition-colors z-10 cursor-pointer", 
+                      isUnread ? "bg-zinc-900/80" : "bg-zinc-950 hover:bg-zinc-900"
+                    )}
+                  >
                     <div className="relative shrink-0">
-                      <div className={cn("w-14 h-14 bg-zinc-800 rounded-full overflow-hidden border-2 shrink-0", isUnread ? "border-white" : "border-white/10")}>{conv.otherUser?.avatar_url ? <img src={conv.otherUser.avatar_url} className="w-full h-full object-cover" alt="Avatar" /> : <div className="w-full h-full flex items-center justify-center text-zinc-600"><User size={24} strokeWidth={1.5} /></div>}</div>
+                      <div className={cn("w-14 h-14 bg-zinc-800 rounded-full overflow-hidden border-2 shrink-0", isUnread ? "border-white" : "border-white/10")}>
+                        {conv.otherUser?.avatar_url ? (
+                          <img src={conv.otherUser.avatar_url} className="w-full h-full object-cover" alt="Avatar" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-zinc-600"><User size={24} strokeWidth={1.5} /></div>
+                        )}
+                      </div>
                       {isUnread && <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-white rounded-full border-2 border-black animate-pulse" />}
                     </div>
-                    <div className="flex-1 text-left min-w-0">
-                      <div className="flex justify-between items-center mb-1"><h4 className={cn("text-sm font-black italic uppercase tracking-tight truncate", isUnread ? "text-white" : "text-zinc-300")}>{conv.otherUser?.username || 'Membro District'}</h4><span className={cn("text-[8px] font-bold uppercase", isUnread ? "text-white" : "text-zinc-600")}>{formatDistanceToNow(new Date(conv.lastMessage.created_at), { addSuffix: true, locale: language === 'it' ? it : enUS })}</span></div>
-                      <p className={cn("text-xs truncate font-medium", isUnread ? "text-zinc-200 font-bold" : "text-zinc-500")}>{conv.lastMessage.content}</p>
+                    <div className="flex-1 text-left min-w-0 pointer-events-none">
+                      <div className="flex justify-between items-center mb-1">
+                        <h4 className={cn("text-sm font-black italic uppercase tracking-tight truncate", isUnread ? "text-white" : "text-zinc-300")}>
+                          {conv.otherUser?.username || 'Membro District'}
+                        </h4>
+                        <span className={cn("text-[8px] font-bold uppercase", isUnread ? "text-white" : "text-zinc-600")}>
+                          {formatDistanceToNow(new Date(conv.lastMessage.created_at), { addSuffix: true, locale: language === 'it' ? it : enUS })}
+                        </span>
+                      </div>
+                      <p className={cn("text-xs truncate font-medium", isUnread ? "text-zinc-200 font-bold" : "text-zinc-500")}>
+                        {conv.lastMessage.content}
+                      </p>
                     </div>
                     <ChevronRight size={18} strokeWidth={2} className={cn("transition-colors", isUnread ? "text-white" : "text-zinc-800 group-hover:text-white")} />
-                  </motion.button>
+                  </motion.div>
                 </div>
               );
             })}
@@ -120,10 +171,17 @@ const Messages = () => {
 
       <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
         <AlertDialogContent className="bg-zinc-900/90 backdrop-blur-2xl border-white/10 rounded-3xl">
-          <AlertDialogHeader><AlertDialogTitle className="text-white font-black uppercase italic">{t.messages.deleteConv}</AlertDialogTitle><AlertDialogDescription className="text-zinc-500 text-xs font-bold uppercase">{t.messages.deleteConvDesc}</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white font-black uppercase italic">{t.messages.deleteConv}</AlertDialogTitle>
+            <AlertDialogDescription className="text-zinc-500 text-xs font-bold uppercase">{t.messages.deleteConvDesc}</AlertDialogDescription>
+          </AlertDialogHeader>
           <AlertDialogFooter className="flex flex-col gap-2">
-            <AlertDialogAction onClick={handleDelete} className="rounded-full bg-white text-black font-black uppercase italic text-[10px] h-12 hover:bg-zinc-200">Elimina</AlertDialogAction>
-            <AlertDialogCancel className="rounded-full border-white/10 text-white font-black uppercase italic text-[10px] h-12 hover:bg-zinc-800">Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="rounded-full bg-white text-black font-black uppercase italic text-[10px] h-12 hover:bg-zinc-200">
+              Elimina
+            </AlertDialogAction>
+            <AlertDialogCancel className="rounded-full border-white/10 text-white font-black uppercase italic text-[10px] h-12 hover:bg-zinc-800">
+              Annulla
+            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
