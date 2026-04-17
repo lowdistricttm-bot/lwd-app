@@ -6,7 +6,7 @@ import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
 import { useDiscover } from '@/hooks/use-discover';
-import { Loader2, Car, Search, LayoutGrid, StretchHorizontal, User, ChevronRight, ShieldCheck, Sparkles, Calendar, Gauge } from 'lucide-react';
+import { Loader2, Car, Search, LayoutGrid, StretchHorizontal, User, ChevronRight, ShieldCheck, Sparkles, Calendar, Gauge, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import ImageLightbox from '@/components/ImageLightbox';
@@ -82,7 +82,7 @@ const Discover = () => {
           </div>
         </header>
 
-        {/* Sezione Utenti (Ricerca) */}
+        {/* Sezione Utenti (Risultati Ricerca) */}
         <AnimatePresence>
           {debouncedSearch && users && users.length > 0 && (
             <motion.section 
@@ -91,7 +91,7 @@ const Discover = () => {
               className="mb-16 space-y-6"
             >
               <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 flex items-center gap-2 italic border-b border-white/5 pb-4">
-                <User size={12} /> Membri Trovati
+                <Users size={12} /> Membri Trovati
               </h3>
               <div className="flex gap-6 overflow-x-auto no-scrollbar pb-4">
                 {users.map((user) => (
@@ -119,6 +119,37 @@ const Discover = () => {
             </motion.section>
           )}
         </AnimatePresence>
+
+        {/* Sezione Nuovi Membri (Mostrata solo quando non si cerca) */}
+        {!debouncedSearch && newMembers && newMembers.length > 0 && (
+          <section className="mb-20">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 flex items-center gap-2 italic mb-8">
+              <Sparkles size={12} /> Nuovi nel District
+            </h3>
+            <div className="flex gap-6 overflow-x-auto no-scrollbar pb-4">
+              {newMembers.map((member) => (
+                <button 
+                  key={member.id}
+                  onClick={() => navigate(`/profile/${member.id}`)}
+                  className="flex flex-col items-center gap-3 shrink-0 group"
+                >
+                  <div className="w-16 h-16 rounded-full p-[2px] bg-zinc-900 border border-white/10 group-hover:border-white transition-all duration-500">
+                    <div className="w-full h-full rounded-full overflow-hidden bg-zinc-950">
+                      {member.avatar_url ? (
+                        <img src={member.avatar_url} className="w-full h-full object-cover" alt="" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-zinc-800"><User size={24} /></div>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-[9px] font-black uppercase italic truncate w-20 text-center text-zinc-500 group-hover:text-white transition-colors">
+                    {member.username}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Griglia/Lista Veicoli */}
         <section>
