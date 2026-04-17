@@ -13,6 +13,7 @@ import { Button } from './ui/button';
 import { supabase } from "@/integrations/supabase/client";
 import ImageLightbox from './ImageLightbox';
 import SharePostModal from './SharePostModal';
+import LikesModal from './LikesModal';
 import { Link, useNavigate } from 'react-router-dom';
 import { showSuccess, showError } from '@/utils/toast';
 import { useTranslation } from '@/hooks/use-translation';
@@ -129,6 +130,7 @@ const FeedPost = ({ post }: { post: Post }) => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isLikesModalOpen, setIsLikesModalOpen] = useState(false);
   const [showHeartPop, setShowHeartPop] = useState(false);
   const commentFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -214,6 +216,7 @@ const FeedPost = ({ post }: { post: Post }) => {
   const isAuthor = currentUserId === post.user_id;
   const mainComments = post.comments?.filter(c => !c.parent_id) || [];
   const images = post.images || [];
+  const likedBy = post.liked_by || [];
 
   return (
     <>
@@ -284,20 +287,39 @@ const FeedPost = ({ post }: { post: Post }) => {
         )}
 
         <div className="p-4 flex flex-col gap-4 border-t border-white/5">
-          {post.liked_by && post.liked_by.length > 0 && (
+          {likedBy.length > 0 && (
             <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[9px] font-bold uppercase tracking-widest text-zinc-500">
               <span className="text-zinc-600 italic">Piace a:</span>
-              {post.liked_by.map((liker, idx) => (
-                <React.Fragment key={liker.user_id}>
+              
+              {likedBy.length <= 3 ? (
+                likedBy.map((liker, idx) => (
+                  <React.Fragment key={liker.user_id}>
+                    <Link 
+                      to={`/profile/${liker.user_id}`}
+                      className="text-zinc-300 hover:text-white transition-colors italic"
+                    >
+                      {liker.username}
+                    </Link>
+                    {idx < likedBy.length - 1 && <span className="text-zinc-800">•</span>}
+                  </React.Fragment>
+                ))
+              ) : (
+                <>
                   <Link 
-                    to={`/profile/${liker.user_id}`}
+                    to={`/profile/${likedBy[0].user_id}`}
                     className="text-zinc-300 hover:text-white transition-colors italic"
                   >
-                    {liker.username}
+                    {likedBy[0].username}
                   </Link>
-                  {idx < post.liked_by!.length - 1 && <span className="text-zinc-800">•</span>}
-                </React.Fragment>
-              ))}
+                  <span className="text-zinc-800">•</span>
+                  <button 
+                    onClick={() => setIsLikesModalOpen(true)}
+                    className="text-zinc-300 hover:text-white transition-colors italic"
+                  >
+                    e altri {likedBy.length - 1} utenti
+                  </button>
+                </>
+              )}
             </div>
           )}
 
@@ -311,7 +333,6 @@ const FeedPost = ({ post }: { post: Post }) => {
               <span className="text-[9px] font-black uppercase">{post.comments?.length || 0}</span>
             </button>
             
-            {/* Pulsante Inoltro Direct */}
             <button 
               onClick={handleShareClick} 
               className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors"
@@ -401,6 +422,12 @@ const FeedPost = ({ post }: { post: Post }) => {
         postId={post.id}
         postImageUrl={post.images?.[0]}
         postContent={post.content}
+      />
+
+      <LikesModal 
+        isOpen={isLikesModalOpen}
+        onClose={() => setIsLikesModalOpen(false)}
+        likes={likedBy}
       />
     </>
   );
