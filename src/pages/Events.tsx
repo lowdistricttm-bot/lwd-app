@@ -205,7 +205,7 @@ const Events = () => {
                           variant="outline"
                           className="border-white/10 text-white hover:bg-white/10 rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 w-44"
                         >
-                          <Eye size={14} className="mr-2" /> {t.events.viewEvent}
+                          {t.events.viewEvent} <Eye size={14} className="ml-2" />
                         </Button>
 
                         {existingApp ? (
@@ -213,7 +213,7 @@ const Events = () => {
                             onClick={() => setManageApp(existingApp)}
                             className="bg-zinc-800 text-white hover:bg-white hover:text-black rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 w-44"
                           >
-                            <Settings2 size={14} className="mr-2" /> {t.events.manage}
+                            {t.events.manage} <Settings2 size={14} className="ml-2" />
                           </Button>
                         ) : (
                           <Button 
