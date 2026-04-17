@@ -184,10 +184,13 @@ const Profile = () => {
             )}
             <input type="file" ref={coverInputRef} className="hidden" accept="image/*,video/*" onChange={(e) => handleFileUpload(e, 'cover')} />
           </div>
+        </div>
 
-          {/* Avatar overlapping the cover bottom edge */}
-          <div className="absolute -bottom-12 left-6 z-20">
-            <div className="relative group/avatar">
+        {/* Profile Info Section (Aligned to Cover Edge) */}
+        <div className="px-6 md:px-12 max-w-6xl mx-auto relative">
+          <div className="flex items-start gap-4 md:gap-6 -mt-12 md:-mt-16">
+            {/* Avatar */}
+            <div className="relative group/avatar shrink-0 z-20">
               <div onClick={() => !isOwnProfile && setLightboxData({ images: [profile?.avatar_url || DEFAULT_AVATAR], index: 0 })} className="w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-black rounded-full overflow-hidden shadow-2xl flex items-center justify-center relative">
                 {uploadingAvatar ? <Loader2 className="animate-spin text-zinc-500" /> : (profile?.avatar_url || DEFAULT_AVATAR) ? <img src={profile?.avatar_url || DEFAULT_AVATAR} alt="Avatar" className="w-full h-full object-cover" /> : <User size={40} className="text-zinc-800" />}
                 {isOwnProfile && (
@@ -198,38 +201,36 @@ const Profile = () => {
               </div>
               <input type="file" ref={avatarInputRef} className="hidden" accept="image/*,video/*" onChange={(e) => handleFileUpload(e, 'avatar')} />
             </div>
-          </div>
-        </div>
 
-        {/* Profile Info Section - Starts exactly where cover ends */}
-        <div className="px-6 md:px-12 max-w-6xl mx-auto pt-4">
-          <div className="pl-28 md:pl-36"> {/* Offset to align with avatar */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-xs md:text-lg font-black italic uppercase tracking-tighter leading-none">{profile?.username || 'Utente'}</h1>
-              <div className="flex items-center gap-1 shrink-0">
-                {!isOwnProfile && currentUser && (!isTargetSubscriber || canVote) && (
-                  <button onClick={() => navigate(`/chat/${profile.id}`)} className="p-1.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all"><Mail size={14} /></button>
-                )}
-                <button onClick={handleShareProfile} className="p-1.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all"><Share2 size={14} /></button>
-                {isOwnProfile && (
-                  <button onClick={() => setIsUsernameNoticeOpen(true)} className="p-1.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all"><Edit2 size={12} /></button>
-                )}
+            {/* Text Info - Pulled up to align with cover line */}
+            <div className="pt-12 md:pt-16 flex-1 min-w-0">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-sm md:text-xl font-black italic uppercase tracking-tighter leading-none">{profile?.username || 'Utente'}</h1>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {!isOwnProfile && currentUser && (!isTargetSubscriber || canVote) && (
+                    <button onClick={() => navigate(`/chat/${profile.id}`)} className="p-1.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all"><Mail size={14} /></button>
+                  )}
+                  <button onClick={handleShareProfile} className="p-1.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all"><Share2 size={14} /></button>
+                  {isOwnProfile && (
+                    <button onClick={() => setIsUsernameNoticeOpen(true)} className="p-1.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all"><Edit2 size={12} /></button>
+                  )}
+                </div>
               </div>
-            </div>
-            
-            <div className="mt-2">
-              <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.3em] italic">{t.profile.roles[userRole] || t.profile.roles.member}</p>
-              <div className="flex items-center gap-1.5 mt-1">
-                <div className={cn(
-                  "w-1.5 h-1.5 rounded-full",
-                  isOnline ? "bg-green-500" : "bg-zinc-600"
-                )} />
-                <p className={cn(
-                  "text-[7px] font-black uppercase tracking-widest",
-                  isOnline ? "text-green-500" : "text-zinc-600"
-                )}>
-                  {isOnline ? 'Online' : lastSeen ? `Ultimo accesso ${lastSeen}` : 'Offline'}
-                </p>
+              
+              <div className="mt-0.5">
+                <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.3em] italic leading-tight">{t.profile.roles[userRole] || t.profile.roles.member}</p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <div className={cn(
+                    "w-1.5 h-1.5 rounded-full",
+                    isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" : "bg-zinc-600"
+                  )} />
+                  <p className={cn(
+                    "text-[7px] font-black uppercase tracking-widest",
+                    isOnline ? "text-green-500" : "text-zinc-600"
+                  )}>
+                    {isOnline ? 'Online' : lastSeen ? `Ultimo accesso ${lastSeen}` : 'Offline'}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
