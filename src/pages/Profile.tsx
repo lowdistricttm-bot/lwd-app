@@ -217,16 +217,17 @@ const Profile = () => {
                 </div>
               </div>
               
-              <div className="mt-0.5 flex items-center gap-2 flex-wrap">
-                <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.3em] italic leading-none">{t.profile.roles[userRole] || t.profile.roles.member}</p>
-                <span className="text-zinc-800 text-[8px] font-black">-</span>
-                <div className="flex items-center gap-1.5">
+              <div className="mt-0 flex items-center gap-3">
+                <p className="text-zinc-500 text-[7px] font-black uppercase tracking-[0.2em] italic leading-none">
+                  {t.profile.roles[userRole] || t.profile.roles.member}
+                </p>
+                <div className="flex items-center gap-1">
                   <div className={cn(
                     "w-1 h-1 rounded-full",
                     isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" : "bg-zinc-600"
                   )} />
                   <p className={cn(
-                    "text-[7px] font-black uppercase tracking-widest leading-none",
+                    "text-[6px] font-black uppercase tracking-widest leading-none",
                     isOnline ? "text-green-500" : "text-zinc-600"
                   )}>
                     {isOnline ? 'Online' : lastSeen ? `Ultimo accesso ${lastSeen}` : 'Offline'}
