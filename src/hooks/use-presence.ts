@@ -17,8 +17,13 @@ export const usePresence = (targetUserId?: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Creiamo un canale globale per la presenza
-      channel = supabase.channel('online-tracker', {
+      // Creiamo un nome canale unico per questa istanza dell'hook per evitare collisioni
+      // ma usiamo lo stesso "topic" per il tracciamento se necessario.
+      // In Supabase, canali con nomi diversi sono isolati, quindi usiamo un ID unico.
+      const instanceId = Math.random().toString(36).substring(2, 9);
+      const channelName = `presence-tracker-${targetUserId || 'global'}-${instanceId}`;
+
+      channel = supabase.channel(channelName, {
         config: {
           presence: {
             key: user.id,
@@ -36,20 +41,20 @@ export const usePresence = (targetUserId?: string) => {
             setIsOnline(ids.includes(targetUserId));
           }
         })
-        .on('presence', { event: 'join' }, ({ key, newPresences }: any) => {
+        .on('presence', { event: 'join' }, ({ key }: any) => {
           if (key === targetUserId) setIsOnline(true);
         })
-        .on('presence', { event: 'leave' }, ({ key, leftPresences }: any) => {
+        .on('presence', { event: 'leave' }, ({ key }: any) => {
           if (key === targetUserId) setIsOnline(false);
         })
         .subscribe(async (status: string) => {
           if (status === 'SUBSCRIBED') {
-            // Tracciamo l'utente corrente come online
+            // Tracciamo l'utente corrente
             await channel.track({
               online_at: new Date().toISOString(),
             });
             
-            // Aggiorniamo anche il DB per il "Last Seen" persistente
+            // Aggiorniamo il DB per il Last Seen persistente
             await supabase
               .from('profiles')
               .update({ last_seen_at: new Date().toISOString() })
@@ -60,13 +65,13 @@ export const usePresence = (targetUserId?: string) => {
 
     setupPresence();
 
-    // Se abbiamo un targetUserId, recuperiamo l'ultimo accesso dal DB come fallback
+    // Recupero fallback dal DB
     if (targetUserId) {
       supabase
         .from('profiles')
         .select('last_seen_at')
         .eq('id', targetUserId)
-        .single()
+        .maybeSingle()
         .then(({ data }) => {
           if (data?.last_seen_at) {
             setLastSeen(formatDistanceToNow(new Date(data.last_seen_at), { addSuffix: true, locale: it }));
