@@ -194,7 +194,6 @@ const Profile = () => {
   const userPosts = posts?.filter(p => p.user_id === targetUserId) || [];
 
   // Funzione per calcolare la dimensione del font in base alla lunghezza dell'username
-  // Resa ultra-aggressiva e senza troncamento per garantire che tutto stia su una riga
   const getUsernameSize = (name: string) => {
     const len = name?.length || 0;
     if (len > 30) return "text-[9px] md:text-base";
@@ -235,28 +234,27 @@ const Profile = () => {
                 )}
               </div>
 
-              {/* Pallino Online Real-time - Posizionato più all'interno e senza bordo nero */}
+              {/* Pallino Online Real-time - Sincronizzato con il colore del testo */}
               <AnimatePresence>
                 {isOnline && (
                   <motion.div 
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     exit={{ scale: 0 }}
-                    className="absolute top-1.5 left-1.5 w-5 h-5 md:w-7 md:h-7 rounded-full z-30 flex items-center justify-center overflow-hidden shadow-[0_0_15px_rgba(34,197,94,0.8)]"
+                    className="absolute top-1.5 left-1.5 w-5 h-5 md:w-7 md:h-7 rounded-full z-30 flex items-center justify-center overflow-hidden shadow-[0_0_15px_rgba(34,197,94,0.6)]"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-br from-green-400 via-green-500 to-green-700" />
-                    <div className="absolute top-[15%] left-[15%] w-[35%] h-[35%] bg-white/40 rounded-full blur-[1px]" />
+                    <div className="absolute inset-0 bg-green-500" />
+                    <div className="absolute top-[15%] left-[15%] w-[35%] h-[35%] bg-white/30 rounded-full blur-[1px]" />
                     <motion.div
-                      animate={{ opacity: [0.3, 0.7, 0.3] }}
-                      transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-                      className="absolute inset-0 bg-green-300/20"
+                      animate={{ opacity: [0.4, 0.8, 0.4] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                      className="absolute inset-0 bg-white/10"
                     />
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
             <div className="mb-2 min-w-0 flex-1">
-              {/* Container Username + Pulsanti: flex-nowrap e whitespace-nowrap per forzare la riga singola senza troncamento */}
               <div className="flex items-center gap-2 flex-nowrap w-full overflow-visible">
                 <h1 className={cn(
                   "font-black italic uppercase tracking-tighter leading-none whitespace-nowrap flex-shrink min-w-0",
