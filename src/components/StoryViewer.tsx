@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, Trash2, Loader2, Volume2, VolumeX, Send, Heart, Eye, User } from 'lucide-react';
-import { useStories } from '@/hooks/use-stories';
+import { useStories, useStoryViews } from '@/hooks/use-stories';
 import { useMessages } from '@/hooks/use-messages';
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from './ui/input';
@@ -34,7 +34,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
   const [isMediaLoading, setIsMediaLoading] = useState(true);
   
   const videoRef = useRef<HTMLVideoElement>(null);
-  const { deleteStory, recordView, getStoryViews } = useStories();
+  const { deleteStory, recordView } = useStories();
   const { sendMessage } = useMessages();
   
   const userStories = allStories[userIndex];
@@ -42,7 +42,8 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
   const isVideo = currentStory?.image_url.match(/\.(mp4|webm|ogg|mov)$/i) || currentStory?.image_url.includes('video');
   const isOwner = currentUserId === userStories?.user_id;
 
-  const { data: views, isLoading: loadingViews } = getStoryViews(isOwner ? currentStory?.id : null);
+  // Utilizziamo il nuovo hook dedicato per le visualizzazioni
+  const { data: views, isLoading: loadingViews } = useStoryViews(isOwner ? currentStory?.id : null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {

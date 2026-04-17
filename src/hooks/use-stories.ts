@@ -73,6 +73,7 @@ export const useStories = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Usiamo upsert per gestire visualizzazioni multiple dallo stesso utente
       const { error } = await supabase
         .from('story_views')
         .upsert(
@@ -84,61 +85,11 @@ export const useStories = () => {
           { onConflict: 'story_id,user_id' }
         );
       
-      if (error) {
-        if (!error.message.includes("policy")) {
-          console.error("[Stories] Errore registrazione vista:", error.message);
-        }
+      if (error && !error.message.includes("policy")) {
+        console.error("[Stories] Errore registrazione vista:", error.message);
       }
     }
   });
-
-  const getStoryViews = (storyId: string | null) => {
-    const query = useQuery({
-      queryKey: ['story-views', storyId],
-      queryFn: async () => {
-        if (!storyId) return [];
-        const { data, error } = await supabase
-          .from('story_views')
-          .select(`
-            *,
-            profiles:user_id (username, avatar_url)
-          `)
-          .eq('story_id', storyId)
-          .order('viewed_at', { ascending: false });
-        
-        if (error) throw error;
-        return data;
-      },
-      enabled: !!storyId,
-      staleTime: 0
-    });
-
-    useEffect(() => {
-      if (!storyId) return;
-
-      const channel = supabase
-        .channel(`views-${storyId}`)
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'story_views',
-            filter: `story_id=eq.${storyId}`
-          },
-          () => {
-            query.refetch();
-          }
-        )
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }, [storyId]);
-
-    return query;
-  };
 
   const uploadStory = useMutation({
     mutationFn: async (files: File[]) => {
@@ -155,7 +106,6 @@ export const useStories = () => {
           file = await compressImage(file);
         }
 
-        // Caricamento su Cloudinary
         const publicUrl = await uploadToCloudinary(file);
 
         const { error: dbError } = await supabase
@@ -190,5 +140,56 @@ export const useStories = () => {
     onError: (error: any) => showError("Errore durante l'eliminazione")
   });
 
-  return { stories, isLoading, uploadStory, deleteStory, recordView, getStoryViews };
+  return { stories, isLoading, uploadStory, deleteStory, recordView };
+};
+
+// Hook dedicato per recuperare le visualizzazioni di una specifica storia
+export const useStoryViews = (storyId: string | null) => {
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+    queryKey: ['story-views', storyId],
+    queryFn: async () => {
+      if (!storyId) return [];
+      const { data, error } = await supabase
+        .from('story_views')
+        .select(`
+          *,
+          profiles:user_id (username, avatar_url)
+        `)
+        .eq('story_id', storyId)
+        .order('viewed_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!storyId,
+    staleTime: 0
+  });
+
+  useEffect(() => {
+    if (!storyId) return;
+
+    const channel = supabase
+      .channel(`views-${storyId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'story_views',
+          filter: `story_id=eq.${storyId}`
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['story-views', storyId] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [storyId, queryClient]);
+
+  return query;
 };
