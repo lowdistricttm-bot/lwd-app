@@ -20,11 +20,19 @@ const LatestActivities = () => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
           <div>
             <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">District Live</h2>
-            <h3 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">Community <br /> Activity</h3>
+            <h3 className="text-3xl xs:text-4xl md:text-6xl font-black italic tracking-tighter uppercase whitespace-nowrap">
+              Community Activity
+            </h3>
           </div>
-          <Link to="/bacheca" className="group flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-colors">
-            Entra nella Bacheca <MessageSquare size={16} className="group-hover:scale-110 transition-transform" />
-          </Link>
+          
+          <motion.div
+            animate={{ opacity: [0.4, 1, 0.4] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <Link to="/bacheca" className="group flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-colors">
+              Entra nella Bacheca <MessageSquare size={16} className="group-hover:scale-110 transition-transform" />
+            </Link>
+          </motion.div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
