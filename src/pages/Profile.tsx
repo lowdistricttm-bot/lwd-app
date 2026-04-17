@@ -197,7 +197,7 @@ const Profile = () => {
             </div>
             <div className="mb-2 min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-nowrap w-full overflow-visible">
-                <h1 className="text-lg md:text-2xl font-black italic uppercase tracking-tighter leading-none truncate">{profile?.username || 'Utente'}</h1>
+                <h1 className="text-base md:text-2xl font-black italic uppercase tracking-tighter leading-none">{profile?.username || 'Utente'}</h1>
                 <div className="flex items-center gap-1 shrink-0">
                   {!isOwnProfile && currentUser && (!isTargetSubscriber || canVote) && (
                     <button onClick={() => navigate(`/chat/${profile.id}`)} className="p-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all"><Mail size={18} /></button>
