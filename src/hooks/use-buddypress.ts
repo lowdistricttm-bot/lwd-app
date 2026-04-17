@@ -43,7 +43,7 @@ export const useBPSearchMembers = (search: string) => {
   return useQuery({
     queryKey: ['bp-members-search', search],
     queryFn: async () => {
-      if (search.length < 2) return [];
+      if (!search || search.length < 2) return [];
       const headers = await getAuthHeader();
       try {
         const response = await fetch(`${BP_API_URL}/members?search=${encodeURIComponent(search)}&per_page=20`, {
@@ -55,7 +55,7 @@ export const useBPSearchMembers = (search: string) => {
         return [];
       }
     },
-    enabled: search.length >= 2
+    enabled: !!search && search.length >= 2
   });
 };
 
@@ -105,8 +105,9 @@ export const useBPMember = (username?: string) => {
       if (!username) return null;
       const headers = await getAuthHeader();
       
-      // Puliamo lo username per la ricerca (rimuoviamo trattini se presenti per la ricerca testuale)
-      const searchTerm = username.replace(/-/g, ' ');
+      // Puliamo lo username per la ricerca
+      const searchTerm = username.replace(/-/g, ' ').trim();
+      if (!searchTerm) return null;
       
       try {
         const response = await fetch(`${BP_API_URL}/members?search=${encodeURIComponent(searchTerm)}`, {
@@ -116,7 +117,6 @@ export const useBPMember = (username?: string) => {
         if (!response.ok) return null;
         const data = await response.json();
         
-        // Cerchiamo una corrispondenza esatta se possibile
         if (Array.isArray(data) && data.length > 0) {
           return data.find((m: any) => 
             m.user_login === username || 
@@ -130,7 +130,8 @@ export const useBPMember = (username?: string) => {
         return null;
       }
     },
-    enabled: !!username,
-    retry: false // Evitiamo loop di retry su errori 400
+    enabled: !!username && username.length > 0,
+    retry: false,
+    staleTime: 1000 * 60 * 5 // Cache per 5 minuti
   });
 };

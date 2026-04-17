@@ -30,26 +30,38 @@ export interface Notification {
 export const useNotifications = () => {
   const queryClient = useQueryClient();
 
-  const { data: notifications, isLoading } = useQuery({
+  const { data: notifications, isLoading, error } = useQuery({
     queryKey: ['notifications'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
 
-      const { data, error } = await supabase
-        .from('notifications')
-        .select(`
-          *,
-          actor:actor_id (username, avatar_url),
-          posts:post_id (content),
-          applications:application_id (status, events:event_id (title))
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(20);
+      try {
+        const { data, error } = await supabase
+          .from('notifications')
+          .select(`
+            *,
+            actor:actor_id (username, avatar_url),
+            posts:post_id (content),
+            applications:application_id (status, events:event_id (title))
+          `)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(20);
 
-      if (error) throw error;
-      return data as Notification[];
+        if (error) {
+          // Se la tabella non esiste ancora, restituiamo un array vuoto invece di crashare
+          if (error.code === '42P01' || error.message?.includes('not found')) {
+            console.warn("[Notifications] Tabella non trovata, assicurati di aver eseguito l'SQL.");
+            return [];
+          }
+          throw error;
+        }
+        return data as Notification[];
+      } catch (err) {
+        console.error("[Notifications] Errore query:", err);
+        return [];
+      }
     }
   });
 
@@ -62,7 +74,6 @@ export const useNotifications = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Usiamo un ID univoco per evitare l'errore di aggiunta callback dopo subscribe
       const channelId = `notifications-${user.id}-${Math.random().toString(36).substring(2, 9)}`;
 
       channel = supabase
@@ -108,5 +119,5 @@ export const useNotifications = () => {
     }
   });
 
-  return { notifications, unreadCount, isLoading, markAllAsRead };
+  return { notifications, unreadCount, isLoading, markAllAsRead, error };
 };
