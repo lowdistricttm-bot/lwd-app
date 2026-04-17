@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { showError, showSuccess } from '@/utils/toast';
 import { compressImage, validateVideo } from '@/utils/media';
 import { uploadToCloudinary } from '@/utils/cloudinary';
@@ -26,13 +26,25 @@ export interface Post {
 
 export const useSocialFeed = () => {
   const queryClient = useQueryClient();
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Monitoriamo lo stato dell'utente per aggiornare la queryKey
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUserId(session?.user?.id || null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserId(session?.user?.id || null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const { data: posts, isLoading, error } = useQuery({
-    queryKey: ['social-posts'],
+    // Includiamo userId nella queryKey così React Query ricarica i post quando l'utente entra/esce
+    queryKey: ['social-posts', userId],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const user = session?.user;
-      
       const { data: postsData, error: postsError } = await supabase
         .from('posts')
         .select(`
@@ -53,7 +65,7 @@ export const useSocialFeed = () => {
       return postsData.map((post: any) => {
         const profile = post.profiles;
         const likes_count = post.likes?.length || 0;
-        const is_liked = user ? post.likes?.some((l: any) => l.user_id === user.id) : false;
+        const is_liked = userId ? post.likes?.some((l: any) => l.user_id === userId) : false;
         const username = profile?.username || 'Membro District';
         
         const liked_by = post.likes?.map((l: any) => ({
@@ -82,7 +94,6 @@ export const useSocialFeed = () => {
 
   // --- REALTIME LISTENER ---
   useEffect(() => {
-    // Generiamo un ID unico per il canale per evitare conflitti tra istanze
     const channelId = `feed-${Math.random().toString(36).substring(2, 9)}`;
     
     const channel = supabase
