@@ -15,9 +15,9 @@ const SpotifyPlayer = () => {
       <motion.div
         initial={false}
         animate={{
-          width: isExpanded ? (window.innerWidth < 768 ? '280px' : '320px') : '48px',
-          height: isExpanded ? (window.innerHeight < 600 ? '350px' : '400px') : '48px',
-          borderRadius: isExpanded ? '16px' : '50%',
+          width: isExpanded ? (window.innerWidth < 768 ? '300px' : '350px') : '48px',
+          height: isExpanded ? '400px' : '48px',
+          borderRadius: isExpanded ? '12px' : '50%',
           opacity: 1
         }}
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
@@ -31,10 +31,10 @@ const SpotifyPlayer = () => {
         <AnimatePresence>
           {isExpanded && (
             <motion.div 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="flex items-center justify-between p-3 border-b border-white/5 bg-zinc-900/50 shrink-0"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex items-center justify-between p-3 border-b border-white/5 bg-zinc-900/80 shrink-0"
             >
               <div className="flex items-center gap-2">
                 <Music size={14} className="text-zinc-400" />
@@ -58,9 +58,9 @@ const SpotifyPlayer = () => {
           </div>
         )}
         
-        {/* Iframe Spotify - Sempre presente per continuità audio */}
+        {/* Iframe Spotify - Occupa tutto il resto del container */}
         <div className={cn(
-          "flex-1 bg-black transition-opacity duration-500",
+          "flex-1 w-full h-full transition-opacity duration-500",
           isExpanded ? "opacity-100" : "opacity-0 pointer-events-none"
         )}>
           <iframe 
@@ -70,7 +70,7 @@ const SpotifyPlayer = () => {
             frameBorder="0" 
             allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
             loading="lazy"
-            className="rounded-b-2xl"
+            style={{ display: 'block' }}
           />
         </div>
       </motion.div>
