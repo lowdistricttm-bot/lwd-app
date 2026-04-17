@@ -3,30 +3,19 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSocialFeed } from '@/hooks/use-social-feed';
-import { MessageSquare, User, Heart, Play, LogIn, ArrowRight, ShieldCheck, Loader2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { MessageSquare, User, Heart, Play, LogIn, ArrowRight, ShieldCheck, Loader2, Sparkles, Lock } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import useEmblaCarousel from 'embla-carousel-react';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from './ui/button';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 const LatestActivities = () => {
   const navigate = useNavigate();
   const { posts, isLoading } = useSocialFeed();
   const [user, setUser] = useState<any>(null);
-  const [showAuthModal, setShowAuthModal] = useState(false);
   
   const [emblaRef] = useEmblaCarousel({ 
     align: 'start', 
@@ -45,14 +34,6 @@ const LatestActivities = () => {
     return url.match(/\.(mp4|webm|ogg|mov)$/i) || url.includes('video');
   };
 
-  const handlePostClick = (postId: string) => {
-    if (!user) {
-      setShowAuthModal(true);
-    } else {
-      navigate(`/post/${postId}`);
-    }
-  };
-
   const latestPosts = posts?.slice(0, 6) || [];
 
   return (
@@ -66,14 +47,16 @@ const LatestActivities = () => {
             </h3>
           </div>
           
-          <motion.div
-            animate={{ opacity: [0.4, 1, 0.4] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <Link to="/bacheca" className="group flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-colors">
-              Entra nella Bacheca <MessageSquare size={16} className="group-hover:scale-110 transition-transform" />
-            </Link>
-          </motion.div>
+          {user && (
+            <motion.div
+              animate={{ opacity: [0.4, 1, 0.4] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <Link to="/bacheca" className="group flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-colors">
+                Entra nella Bacheca <MessageSquare size={16} className="group-hover:scale-110 transition-transform" />
+              </Link>
+            </motion.div>
+          )}
         </div>
 
         {isLoading ? (
@@ -81,12 +64,60 @@ const LatestActivities = () => {
             <Loader2 className="animate-spin text-zinc-800" size={40} />
             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-700 italic">Sincronizzazione District...</p>
           </div>
+        ) : !user ? (
+          /* --- AVVISO PER UTENTI NON LOGGATI --- */
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="relative w-full bg-zinc-900/20 border border-white/5 p-8 md:p-16 overflow-hidden group"
+          >
+            {/* Background Decorativo */}
+            <div className="absolute top-0 right-0 w-1/3 h-full bg-white/5 blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+            <div className="absolute -left-10 -bottom-10 opacity-[0.02] pointer-events-none">
+              <ShieldCheck size={300} />
+            </div>
+
+            <div className="relative z-10 flex flex-col items-center text-center max-w-2xl mx-auto">
+              <div className="w-20 h-20 bg-zinc-900 border border-white/10 flex items-center justify-center rotate-45 mb-10 group-hover:border-white/30 transition-colors duration-700">
+                <Lock size={32} className="text-white -rotate-45" />
+              </div>
+              
+              <h4 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.5em] mb-4 italic">Area Riservata</h4>
+              <h3 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter mb-6 leading-none">
+                Sblocca il District Feed
+              </h3>
+              
+              <p className="text-zinc-400 text-xs md:text-sm font-bold uppercase tracking-widest leading-relaxed mb-10 italic">
+                Accedi per visualizzare i post in tempo reale, <br className="hidden md:block" /> 
+                interagire con i membri, commentare e mettere like ai progetti.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                <Button 
+                  onClick={() => navigate('/login')}
+                  className="bg-white text-black hover:bg-zinc-200 rounded-none h-14 px-10 font-black uppercase italic tracking-widest transition-all group/btn"
+                >
+                  Accedi Ora <ArrowRight size={16} className="ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                </Button>
+                <a 
+                  href="https://www.lowdistrict.it/my-account/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center border border-white/10 text-white hover:bg-white/5 h-14 px-10 text-[10px] font-black uppercase tracking-widest italic transition-all"
+                >
+                  Registrati sul Sito
+                </a>
+              </div>
+            </div>
+          </motion.div>
         ) : latestPosts.length === 0 ? (
           <div className="text-center py-20 border border-white/5 bg-zinc-900/10">
             <MessageSquare className="mx-auto text-zinc-900 mb-4" size={48} />
             <p className="text-zinc-600 text-[10px] font-black uppercase tracking-widest">Il District è silenzioso oggi. Sii il primo a pubblicare!</p>
           </div>
         ) : (
+          /* --- CAROUSEL PER UTENTI LOGGATI --- */
           <div className="embla overflow-hidden cursor-grab active:cursor-grabbing" ref={emblaRef}>
             <div className="embla__container flex gap-6">
               {latestPosts.map((post, i) => {
@@ -100,10 +131,9 @@ const LatestActivities = () => {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.1 }}
-                    onClick={() => handlePostClick(post.id)}
+                    onClick={() => navigate(`/post/${post.id}`)}
                     className="embla__slide flex-[0_0_85%] sm:flex-[0_0_45%] lg:flex-[0_0_30%] min-w-0 bg-zinc-900/30 border border-white/5 hover:border-white/10 transition-all group flex flex-col"
                   >
-                    {/* 1. Author Info Header */}
                     <div className="p-6 pb-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-zinc-800 rounded-full overflow-hidden border border-white/10">
@@ -122,7 +152,6 @@ const LatestActivities = () => {
                       </div>
                     </div>
 
-                    {/* 2. Media Preview */}
                     <div className="aspect-video bg-black relative overflow-hidden">
                       {firstMedia ? (
                         <>
@@ -152,14 +181,8 @@ const LatestActivities = () => {
                           <MessageSquare size={32} className="text-zinc-800" />
                         </div>
                       )}
-                      {!user && (
-                        <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <ShieldCheck size={32} className="text-white/50" />
-                        </div>
-                      )}
                     </div>
 
-                    {/* 3. Content & Stats */}
                     <div className="p-6 flex-1 flex flex-col">
                       <p className="text-xs text-zinc-400 line-clamp-2 mb-6 italic font-medium h-8">
                         "{post.content}"
@@ -183,34 +206,6 @@ const LatestActivities = () => {
           </div>
         )}
       </div>
-
-      {/* Modal Invito Registrazione */}
-      <AlertDialog open={showAuthModal} onOpenChange={setShowAuthModal}>
-        <AlertDialogContent className="bg-zinc-950 border-white/10 rounded-none">
-          <AlertDialogHeader>
-            <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-zinc-900 border border-white/10 flex items-center justify-center rotate-45">
-                <ShieldCheck size={32} className="text-white -rotate-45" />
-              </div>
-            </div>
-            <AlertDialogTitle className="text-white font-black uppercase italic text-center">Entra nel District</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-500 text-xs font-bold uppercase leading-relaxed text-center">
-              Per visualizzare i post completi, i media in alta qualità e interagire con la community Low District, devi far parte del club.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
-            <AlertDialogAction 
-              onClick={() => navigate('/login')} 
-              className="rounded-none bg-white text-black font-black uppercase italic text-[10px] w-full h-12"
-            >
-              Accedi Ora <ArrowRight size={14} className="ml-2" />
-            </AlertDialogAction>
-            <AlertDialogCancel className="rounded-none border-white/10 text-white font-black uppercase italic text-[10px] w-full h-12 mt-0">
-              Continua a Esplorare
-            </AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </section>
   );
 };
