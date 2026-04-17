@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from 'react';
 import { showError, showSuccess } from '@/utils/toast';
 import { compressImage, validateVideo } from '@/utils/media';
 import { uploadToCloudinary } from '@/utils/cloudinary';
@@ -42,14 +43,18 @@ export const useSocialFeed = () => {
         `)
         .order('created_at', { ascending: false });
 
-      if (postsError) throw postsError;
+      if (postsError) {
+        console.error("[SocialFeed] Errore query:", postsError);
+        throw postsError;
+      }
+      
       if (!postsData) return [];
 
       return postsData.map((post: any) => {
         const profile = post.profiles;
         const likes_count = post.likes?.length || 0;
         const is_liked = user ? post.likes?.some((l: any) => l.user_id === user.id) : false;
-        const username = profile?.username || 'Utente';
+        const username = profile?.username || 'Membro District';
         
         const liked_by = post.likes?.map((l: any) => ({
           user_id: l.user_id,
@@ -74,6 +79,35 @@ export const useSocialFeed = () => {
       }) as Post[];
     }
   });
+
+  // --- REALTIME LISTENER ---
+  useEffect(() => {
+    const channel = supabase
+      .channel('social-feed-realtime')
+      .on(
+        'postgres_changes', 
+        { event: '*', schema: 'public', table: 'posts' }, 
+        () => {
+          console.log("[Realtime] Nuovo post rilevato, aggiorno feed...");
+          queryClient.invalidateQueries({ queryKey: ['social-posts'] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'likes' },
+        () => queryClient.invalidateQueries({ queryKey: ['social-posts'] })
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'comments' },
+        () => queryClient.invalidateQueries({ queryKey: ['social-posts'] })
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const processAndUpload = async (file: File) => {
     if (file.type.startsWith('video/')) {
@@ -250,7 +284,7 @@ export const usePost = (postId?: string) => {
       const profile = post.profiles;
       const likes_count = post.likes?.length || 0;
       const is_liked = user ? post.likes?.some((l: any) => l.user_id === user.id) : false;
-      const username = profile?.username || 'Utente';
+      const username = profile?.username || 'Membro District';
       
       const liked_by = post.likes?.map((l: any) => ({
         user_id: l.user_id,
