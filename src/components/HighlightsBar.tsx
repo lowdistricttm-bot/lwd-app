@@ -30,7 +30,7 @@ const HighlightsBar = ({ userId, isOwnProfile }: HighlightsBarProps) => {
   return (
     <div className="mb-8 border-b border-white/5 pb-6">
       {(highlights?.length > 0 || isOwnProfile) && (
-        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 italic mb-4">
+        <h3 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] italic mb-4">
           Storie in evidenza
         </h3>
       )}

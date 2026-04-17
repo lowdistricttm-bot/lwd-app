@@ -235,7 +235,7 @@ const Profile = () => {
                   )}
                 </div>
               </div>
-              <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.3em] italic mt-1">{roleLabel}</p>
+              <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] italic mt-1">{roleLabel}</p>
             </div>
           </div>
         </div>

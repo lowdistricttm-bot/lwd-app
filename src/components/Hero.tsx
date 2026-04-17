@@ -30,7 +30,7 @@ const Hero = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
         >
-          <h2 className="text-zinc-500 font-black tracking-[0.6em] uppercase mb-6 text-[10px] md:text-xs italic">
+          <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-6 italic">
             {t.hero?.subtitle}
           </h2>
           
