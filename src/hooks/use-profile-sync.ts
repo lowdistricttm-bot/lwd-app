@@ -5,42 +5,45 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBPMember } from './use-buddypress';
 
 export const useProfileSync = (username?: string) => {
-  const { data: bpMember } = useBPMember(username);
+  const { data: bpMember, error } = useBPMember(username);
 
   useEffect(() => {
     const syncProfile = async () => {
-      if (!bpMember) return;
+      // Se l'API BuddyPress fallisce o non trova l'utente, usciamo silenziosamente
+      if (!bpMember || error) return;
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Recuperiamo il profilo attuale per confrontare i dati
-      const { data: currentProfile } = await supabase
-        .from('profiles')
-        .select('username, avatar_url')
-        .eq('id', user.id)
-        .single();
-
-      const bpUsername = bpMember.user_login || bpMember.mention_name;
-      const bpAvatar = bpMember.avatar_urls?.full || bpMember.avatar_urls?.thumb;
-
-      // Aggiorniamo solo se ci sono differenze reali per evitare loop
-      if (currentProfile && (currentProfile.username !== bpUsername || currentProfile.avatar_url !== bpAvatar)) {
-        console.log(`[Sync] Aggiornamento profilo per ${user.id}: ${currentProfile.username} -> ${bpUsername}`);
-        
-        const { error } = await supabase
+      try {
+        // Recuperiamo il profilo attuale per confrontare i dati
+        const { data: currentProfile } = await supabase
           .from('profiles')
-          .update({
-            username: bpUsername,
-            avatar_url: bpAvatar,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', user.id);
+          .select('username, avatar_url')
+          .eq('id', user.id)
+          .maybeSingle();
 
-        if (error) console.error("[Sync] Errore sincronizzazione:", error.message);
+        const bpUsername = bpMember.user_login || bpMember.mention_name;
+        const bpAvatar = bpMember.avatar_urls?.full || bpMember.avatar_urls?.thumb;
+
+        // Aggiorniamo solo se ci sono differenze reali per evitare loop
+        if (currentProfile && (currentProfile.username !== bpUsername || currentProfile.avatar_url !== bpAvatar)) {
+          console.log(`[Sync] Aggiornamento profilo per ${user.id}: ${currentProfile.username} -> ${bpUsername}`);
+          
+          await supabase
+            .from('profiles')
+            .update({
+              username: bpUsername,
+              avatar_url: bpAvatar,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', user.id);
+        }
+      } catch (err) {
+        // Errore silenzioso per non disturbare l'esperienza utente
       }
     };
 
     syncProfile();
-  }, [bpMember]);
+  }, [bpMember, error]);
 };

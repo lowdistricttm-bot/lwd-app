@@ -32,11 +32,16 @@ export const useBPActivity = () => {
   return useQuery({
     queryKey: ['bp-activity'],
     queryFn: async () => {
-      const response = await fetch(`${BP_API_URL}/activity?per_page=20`, {
-        headers: getAuthHeader()
-      });
-      if (!response.ok) throw new Error('Errore caricamento bacheca');
-      return response.json() as Promise<BPActivity[]>;
+      try {
+        const response = await fetch(`${BP_API_URL}/activity?per_page=20`, {
+          headers: getAuthHeader()
+        });
+        if (response.status === 401) return [];
+        if (!response.ok) throw new Error('Errore caricamento bacheca');
+        return response.json() as Promise<BPActivity[]>;
+      } catch (err) {
+        return [];
+      }
     },
     refetchInterval: 60000,
   });
@@ -49,19 +54,21 @@ export const useBPSearchMembers = (search: string) => {
       if (!search || search.length < 2) return [];
       
       try {
-        // Rimosso context=view che spesso causa il 400 se non si hanno permessi su tutti i campi
         const url = `${BP_API_URL}/members?search=${encodeURIComponent(search)}&type=active`;
         const response = await fetch(url, {
           headers: getAuthHeader()
         });
         
+        // Se non autorizzato, restituiamo array vuoto senza errore
+        if (response.status === 401) return [];
         if (!response.ok) return [];
+        
         return response.json();
       } catch (err) {
         return [];
       }
     },
-    enabled: !!search && search.length >= 2
+    enabled: false // Disabilitato: usiamo Supabase per la ricerca
   });
 };
 
@@ -118,12 +125,12 @@ export const useBPMember = (username?: string) => {
       if (!searchTerm) return null;
       
       try {
-        // Versione ultra-semplificata della query per evitare il 400
         const url = `${BP_API_URL}/members?search=${encodeURIComponent(searchTerm)}`;
         const response = await fetch(url, {
           headers: getAuthHeader()
         });
         
+        if (response.status === 401) return null;
         if (!response.ok) return null;
         
         const data = await response.json();
