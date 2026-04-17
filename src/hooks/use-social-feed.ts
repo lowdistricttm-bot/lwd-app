@@ -82,13 +82,15 @@ export const useSocialFeed = () => {
 
   // --- REALTIME LISTENER ---
   useEffect(() => {
+    // Generiamo un ID unico per il canale per evitare conflitti tra istanze
+    const channelId = `feed-${Math.random().toString(36).substring(2, 9)}`;
+    
     const channel = supabase
-      .channel('social-feed-realtime')
+      .channel(channelId)
       .on(
         'postgres_changes', 
         { event: '*', schema: 'public', table: 'posts' }, 
         () => {
-          console.log("[Realtime] Nuovo post rilevato, aggiorno feed...");
           queryClient.invalidateQueries({ queryKey: ['social-posts'] });
         }
       )
