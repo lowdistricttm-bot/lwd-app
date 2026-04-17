@@ -268,22 +268,7 @@ const FeedPost = ({ post }: { post: Post }) => {
         )}
 
         <div className="p-4 flex flex-col gap-4 border-t border-white/5">
-          <div className="flex items-center gap-6">
-            <button onClick={handleLike} className={cn("flex items-center gap-2 transition-all", post.is_liked ? "text-white" : "text-zinc-500 hover:text-white")}>
-              <Heart size={18} fill={post.is_liked ? "currentColor" : "none"} />
-              <span className="text-[10px] font-black uppercase">{post.likes_count || 0}</span>
-            </button>
-            <button onClick={() => setShowComments(!showComments)} className={cn("flex items-center gap-2 transition-colors", showComments ? "text-white" : "text-zinc-500 hover:text-white")}>
-              <MessageSquare size={18} />
-              <span className="text-[10px] font-black uppercase">{post.comments?.length || 0}</span>
-            </button>
-            <button onClick={handleShare} className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors ml-auto">
-              <Share2 size={18} />
-              <span className="text-[10px] font-black uppercase hidden sm:inline">{t.feed.share}</span>
-            </button>
-          </div>
-
-          {/* Elenco Like */}
+          {/* Elenco Like - Spostato sopra i pulsanti */}
           {post.liked_by && post.liked_by.length > 0 && (
             <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[9px] font-bold uppercase tracking-widest text-zinc-500">
               <span className="text-zinc-600 italic">Piace a:</span>
@@ -300,6 +285,21 @@ const FeedPost = ({ post }: { post: Post }) => {
               ))}
             </div>
           )}
+
+          <div className="flex items-center gap-6">
+            <button onClick={handleLike} className={cn("flex items-center gap-2 transition-all", post.is_liked ? "text-white" : "text-zinc-500 hover:text-white")}>
+              <Heart size={18} fill={post.is_liked ? "currentColor" : "none"} />
+              <span className="text-[10px] font-black uppercase">{post.likes_count || 0}</span>
+            </button>
+            <button onClick={() => setShowComments(!showComments)} className={cn("flex items-center gap-2 transition-colors", showComments ? "text-white" : "text-zinc-500 hover:text-white")}>
+              <MessageSquare size={18} />
+              <span className="text-[10px] font-black uppercase">{post.comments?.length || 0}</span>
+            </button>
+            <button onClick={handleShare} className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors ml-auto">
+              <Share2 size={18} />
+              <span className="text-[10px] font-black uppercase hidden sm:inline">{t.feed.share}</span>
+            </button>
+          </div>
         </div>
 
         <AnimatePresence>
