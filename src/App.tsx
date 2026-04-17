@@ -9,6 +9,7 @@ import { useProfileSync } from "@/hooks/use-profile-sync";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import PullToRefresh from "@/components/PullToRefresh";
+import SpotifyPlayer from "@/components/SpotifyPlayer";
 import Index from "./pages/Index";
 import Bacheca from "./pages/Bacheca";
 import Discover from "./pages/Discover";
@@ -62,6 +63,7 @@ const AppContent = () => {
   return (
     <>
       <PullToRefresh />
+      <SpotifyPlayer />
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/bacheca" element={<Bacheca />} />

@@ -10,7 +10,7 @@ import Stories from '@/components/Stories';
 import FeaturedProducts from '@/components/FeaturedProducts';
 import LatestActivities from '@/components/LatestActivities';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
-import { ShoppingBag, Users, Calendar, ArrowRight, Star } from 'lucide-react';
+import { ShoppingBag, Users, Calendar, ArrowRight, Star, Music, Play } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from '@/hooks/use-translation';
 
@@ -29,8 +29,49 @@ const Index = () => {
         
         <LatestActivities />
 
+        {/* Sezione District Radio */}
+        <section className="py-24 px-6 bg-zinc-950 border-y border-white/5 overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-1/2 h-full bg-white/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+          
+          <div className="max-w-7xl mx-auto relative z-10">
+            <div className="flex flex-col md:flex-row items-center gap-12">
+              <div className="flex-1 space-y-8 text-center md:text-left">
+                <div>
+                  <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">The Sound of District</h2>
+                  <h3 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase leading-none">District <br /> Radio</h3>
+                </div>
+                <p className="text-zinc-400 text-sm font-bold uppercase tracking-tight leading-relaxed max-w-md italic">
+                  La colonna sonora ufficiale della cultura stance. <br />
+                  Metti in play e goditi il viaggio nel District.
+                </p>
+                <div className="flex justify-center md:justify-start">
+                  <a 
+                    href="https://open.spotify.com/playlist/49mK52uCtaHSCLY1VC9GR3" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-3 bg-[#1DB954] text-black px-8 py-4 text-[10px] font-black uppercase tracking-widest italic hover:scale-105 transition-transform"
+                  >
+                    <Play size={16} fill="currentColor" /> Apri su Spotify
+                  </a>
+                </div>
+              </div>
+              
+              <div className="w-full md:w-[400px] aspect-square bg-zinc-900 border border-white/10 p-1 shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-700">
+                <iframe 
+                  src="https://open.spotify.com/embed/playlist/49mK52uCtaHSCLY1VC9GR3?utm_source=generator&theme=0" 
+                  width="100%" 
+                  height="100%" 
+                  frameBorder="0" 
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Sezione Valori / Stats */}
-        <section className="py-24 px-6 bg-black border-t border-white/5">
+        <section className="py-24 px-6 bg-black">
           <div className="max-w-7xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
               {[
