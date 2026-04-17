@@ -100,7 +100,7 @@ const CommentItem = ({
             <CommentItem 
               key={reply.id} 
               comment={reply} 
-              allComments={post.comments || []} 
+              allComments={allComments} 
               onReply={onReply} 
               onDelete={onDelete} 
               currentUserId={currentUserId}
