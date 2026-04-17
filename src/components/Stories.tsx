@@ -72,7 +72,7 @@ const Stories = () => {
 
   return (
     <>
-      <div className="flex gap-4 overflow-x-auto no-scrollbar py-6 px-6 bg-transparent">
+      <div className="flex gap-4 overflow-x-auto no-scrollbar py-6 px-6 bg-gradient-to-b from-black via-black/95 to-zinc-950/20 border-b border-white/5">
         {/* Sezione 'La tua storia' - Solo se l'utente è loggato */}
         {currentUser && (!isSubscriber || myStoriesGroup) && (
           <div className="flex flex-col items-center gap-2 shrink-0">
@@ -93,7 +93,9 @@ const Stories = () => {
                 ) : (myStoriesGroup?.avatar_url || userProfile?.avatar_url) ? (
                   <img src={myStoriesGroup?.avatar_url || userProfile?.avatar_url} className="w-full h-full object-cover" />
                 ) : (
-                  <User size={24} className="text-zinc-700" />
+                  <div className="w-full h-full flex items-center justify-center bg-zinc-800">
+                    <User size={24} className="text-zinc-600" />
+                  </div>
                 )}
               </button>
               {!isSubscriber && (
