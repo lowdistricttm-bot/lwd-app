@@ -42,7 +42,7 @@ const translations: Record<Language, any> = {
       banner: {
         title: 'THE LOW CULTURE IS HERE.',
         subtitle: 'NON RESTARE A GUARDARE. ENTRA NEL DISTRICT.',
-        applyBtn: 'CANDIDATI AGLI EVENTI',
+        applyBtn: 'INVIA SELEZIONE',
         shopBtn: 'ESPLORA LO SHOP'
       }
     },
@@ -117,7 +117,7 @@ const translations: Record<Language, any> = {
     events: {
       title: 'EVENTI & SELEZIONI',
       subtitle: 'DISTRICT CALENDAR',
-      apply: 'CANDIDATI',
+      apply: 'INVIA SELEZIONE',
       statusOpen: 'ISCRIZIONI APERTE',
       statusClosed: 'ISCRIZIONI CHIUSE',
       statusSoon: 'IN ARRIVO',
@@ -128,7 +128,7 @@ const translations: Record<Language, any> = {
       details: 'DETTAGLI EVENTO',
       program: 'PROGRAMMA',
       description: 'DESCRIZIONE',
-      applyNow: 'CANDIDATI ORA',
+      applyNow: 'INVIA SELEZIONE ORA',
       form: {
         name: 'NOME E COGNOME',
         email: 'EMAIL',
@@ -280,7 +280,7 @@ const translations: Record<Language, any> = {
       banner: {
         title: 'THE LOW CULTURE IS HERE.',
         subtitle: 'DON\'T JUST WATCH. JOIN THE DISTRICT.',
-        applyBtn: 'APPLY TO EVENTS',
+        applyBtn: 'SUBMIT SELECTION',
         shopBtn: 'EXPLORE SHOP'
       }
     },
@@ -355,7 +355,7 @@ const translations: Record<Language, any> = {
     events: {
       title: 'EVENTS & SELECTIONS',
       subtitle: 'DISTRICT CALENDAR',
-      apply: 'APPLY',
+      apply: 'SUBMIT SELECTION',
       statusOpen: 'REGISTRATION OPEN',
       statusClosed: 'REGISTRATION CLOSED',
       statusSoon: 'COMING SOON',
@@ -366,7 +366,7 @@ const translations: Record<Language, any> = {
       details: 'EVENT DETAILS',
       program: 'PROGRAM',
       description: 'DESCRIPTION',
-      applyNow: 'APPLY NOW',
+      applyNow: 'SUBMIT SELECTION NOW',
       form: {
         name: 'FULL NAME',
         email: 'EMAIL',

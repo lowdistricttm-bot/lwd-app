@@ -196,7 +196,7 @@ const Events = () => {
                             </div>
                           </div>
                         </div>
-                        <h3 className="text-2xl font-black italic uppercase tracking-tighter">{event.title}</h3>
+                        <h3 className="text-2xl font-black italic uppercase tracking-tighter truncate">{event.title}</h3>
                       </div>
                       
                       <div className="flex flex-wrap gap-3">
@@ -265,7 +265,7 @@ const Events = () => {
                 <div className="max-w-3xl mx-auto space-y-12 pb-12">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="text-3xl font-black italic uppercase tracking-tighter mb-2">{viewingEvent.title}</h3>
+                      <h3 className="text-3xl font-black italic uppercase tracking-tighter mb-2 truncate">{viewingEvent.title}</h3>
                       <div className="flex gap-4 text-zinc-500 text-[10px] font-black uppercase tracking-widest">
                         <span className="flex items-center gap-1"><MapPin size={12} /> {viewingEvent.location}</span>
                         <span className="flex items-center gap-1"><Calendar size={12} /> {formatEventDate(viewingEvent.date, viewingEvent.end_date)}</span>
@@ -323,7 +323,7 @@ const Events = () => {
               <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed inset-x-0 bottom-0 z-[101] bg-zinc-950 border-t border-white/10 p-8 rounded-t-[2rem] max-h-[90vh] overflow-y-auto">
                 <form onSubmit={handleApply} className="max-w-2xl mx-auto pb-12">
                   <div className="flex justify-between items-start mb-8">
-                    <h3 className="text-3xl font-black italic uppercase tracking-tighter">{selectedEvent.title}</h3>
+                    <h3 className="text-3xl font-black italic uppercase tracking-tighter truncate">{selectedEvent.title}</h3>
                     <button type="button" onClick={() => setSelectedEvent(null)}><X size={24} /></button>
                   </div>
                   <div className="space-y-8">
