@@ -194,7 +194,6 @@ const Profile = () => {
   const userPosts = posts?.filter(p => p.user_id === targetUserId) || [];
 
   // Funzione per calcolare la dimensione del font in base alla lunghezza dell'username
-  // Resa ultra-aggressiva per garantire che tutto stia su una riga
   const getUsernameSize = (name: string) => {
     const len = name?.length || 0;
     if (len > 25) return "text-[10px] md:text-lg";
@@ -234,14 +233,14 @@ const Profile = () => {
                 )}
               </div>
 
-              {/* Pallino Online Real-time - Effetto 3D LED in alto a sinistra */}
+              {/* Pallino Online Real-time - Posizionato più all'interno e senza bordo nero */}
               <AnimatePresence>
                 {isOnline && (
                   <motion.div 
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     exit={{ scale: 0 }}
-                    className="absolute -top-1 -left-1 w-6 h-6 md:w-8 md:h-8 rounded-full border-2 border-black z-30 flex items-center justify-center overflow-hidden shadow-[0_0_20px_rgba(34,197,94,0.5)]"
+                    className="absolute top-1.5 left-1.5 w-5 h-5 md:w-7 md:h-7 rounded-full z-30 flex items-center justify-center overflow-hidden shadow-[0_0_15px_rgba(34,197,94,0.8)]"
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-green-400 via-green-500 to-green-700" />
                     <div className="absolute top-[15%] left-[15%] w-[35%] h-[35%] bg-white/40 rounded-full blur-[1px]" />
@@ -255,7 +254,6 @@ const Profile = () => {
               </AnimatePresence>
             </div>
             <div className="mb-2 min-w-0 flex-1">
-              {/* Container Username + Pulsanti: flex-nowrap per forzare la riga singola */}
               <div className="flex items-center gap-2 flex-nowrap w-full">
                 <h1 className={cn(
                   "font-black italic uppercase tracking-tighter leading-none truncate",
