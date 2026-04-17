@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar';
 import { useMessages } from '@/hooks/use-messages';
 import { useStories } from '@/hooks/use-stories';
 import { usePresence } from '@/hooks/use-presence';
+import { useAdmin } from '@/hooks/use-admin';
 import { ChevronLeft, Send, User, Loader2, Mail, Trash2, Camera, X, Plus, Play, AtSign, RefreshCw } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -14,10 +15,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ImageLightbox from '@/components/ImageLightbox';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
+import { showError } from '@/utils/toast';
 
 const Chat = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
+  const { canVote } = useAdmin(); // canVote è true per Admin, Staff e Supporto
   const [message, setMessage] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -51,14 +54,23 @@ const Chat = () => {
         .eq('id', userId)
         .maybeSingle()
         .then(({ data }) => {
-          setOtherUserProfile(data);
-          if (data?.last_seen_at) {
-            setDbLastSeen(formatDistanceToNow(new Date(data.last_seen_at), { addSuffix: true, locale: it }));
+          if (data) {
+            // Controllo permessi: se il target è un iscritto e l'utente non è staff, blocca l'accesso
+            if (data.role === 'subscriber' && !canVote) {
+              showError("Non hai i permessi per contattare questo utente.");
+              navigate('/messages');
+              return;
+            }
+            
+            setOtherUserProfile(data);
+            if (data.last_seen_at) {
+              setDbLastSeen(formatDistanceToNow(new Date(data.last_seen_at), { addSuffix: true, locale: it }));
+            }
           }
         });
       markAsRead.mutate(userId);
     }
-  }, [userId, navigate]);
+  }, [userId, navigate, canVote]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;

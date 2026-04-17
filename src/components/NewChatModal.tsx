@@ -6,6 +6,7 @@ import { X, Search, User, Loader2, ChevronRight, Users, ShieldCheck } from 'luci
 import { Input } from './ui/input';
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from 'react-router-dom';
+import { useAdmin } from '@/hooks/use-admin';
 
 interface NewChatModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface NewChatModalProps {
 
 const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
   const navigate = useNavigate();
+  const { canVote } = useAdmin(); // canVote è true per Admin, Staff e Supporto
   const [search, setSearch] = useState('');
   const [results, setResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -34,12 +36,19 @@ const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
 
       setIsLoading(true);
       try {
-        const { data, error } = await supabase
+        let query = supabase
           .from('profiles')
           .select('*')
           .ilike('username', `%${search}%`)
           .neq('id', currentUserId)
           .limit(10);
+
+        // Se l'utente NON è staff/admin/supporto, non può vedere gli iscritti nella ricerca
+        if (!canVote) {
+          query = query.neq('role', 'subscriber');
+        }
+
+        const { data, error } = await query;
 
         if (error) throw error;
         setResults(data || []);
@@ -52,7 +61,7 @@ const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
 
     const timer = setTimeout(performSearch, 300);
     return () => clearTimeout(timer);
-  }, [search, currentUserId]);
+  }, [search, currentUserId, canVote]);
 
   const handleStartChat = (user: any) => {
     onClose();
@@ -130,7 +139,7 @@ const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
                           {user.is_admin && <ShieldCheck size={12} className="text-white" />}
                         </div>
                         <p className="text-[8px] text-zinc-600 font-bold uppercase tracking-widest">
-                          Membro Ufficiale
+                          {user.role === 'subscriber' ? 'Iscritto' : 'Membro Ufficiale'}
                         </p>
                       </div>
                       <div className="flex items-center gap-2 text-zinc-800 group-hover:text-white transition-colors">

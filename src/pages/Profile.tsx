@@ -15,6 +15,7 @@ import ProfileInfoTab from '@/components/ProfileInfoTab';
 import SettingsTab from '@/components/SettingsTab';
 import HighlightsBar from '@/components/HighlightsBar';
 import { useSocialFeed } from '@/hooks/use-social-feed';
+import { useAdmin } from '@/hooks/use-admin';
 import { 
   User, Settings, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Share2, Edit2, LogIn, AlertCircle, Users
 } from 'lucide-react';
@@ -44,6 +45,7 @@ const Profile = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { t, language } = useTranslation();
+  const { canVote } = useAdmin(); // canVote è true per Admin, Staff e Supporto
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   
@@ -155,6 +157,9 @@ const Profile = () => {
   const roleLabel = t.profile.roles[userRole] || t.profile.roles.member;
   const isTargetSubscriber = userRole === 'subscriber';
 
+  // Logica restrizione messaggi: solo staff può scrivere agli iscritti
+  const canMessageTarget = !isTargetSubscriber || canVote;
+
   const tabs = [];
   if (!isTargetSubscriber) {
     tabs.push({ id: 'activity', label: t.profile.posts, icon: MessageSquare });
@@ -224,7 +229,7 @@ const Profile = () => {
                     </button>
                   )}
 
-                  {!isOwnProfile && currentUser && !isTargetSubscriber && (
+                  {!isOwnProfile && currentUser && canMessageTarget && (
                     <button onClick={() => navigate(`/chat/${profile.id}`)} className="p-2 bg-zinc-800 text-white hover:bg-white hover:text-black transition-all shadow-lg"><Mail size={18} /></button>
                   )}
                 </div>
