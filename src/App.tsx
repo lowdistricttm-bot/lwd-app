@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useNotificationListener } from "@/hooks/use-notification-listener";
 import { LanguageProvider } from "@/hooks/use-translation";
 import { useProfileSync } from "@/hooks/use-profile-sync";
-import { usePresence } from "@/hooks/use-presence";
+import { PresenceProvider } from "@/hooks/use-presence";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import PullToRefresh from "@/components/PullToRefresh";
@@ -39,8 +39,6 @@ const queryClient = new QueryClient({
 
 const AppContent = () => {
   useNotificationListener();
-  // Attiviamo il tracciamento presenza globale
-  usePresence();
   
   const [currentUsername, setCurrentUsername] = useState<string | undefined>();
 
@@ -91,13 +89,15 @@ const AppContent = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <LanguageProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <AppContent />
-        </BrowserRouter>
-      </TooltipProvider>
+      <PresenceProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <AppContent />
+          </BrowserRouter>
+        </TooltipProvider>
+      </PresenceProvider>
     </LanguageProvider>
   </QueryClientProvider>
 );

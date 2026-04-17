@@ -12,6 +12,8 @@ import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from 'framer-motion';
 import ImageLightbox from '@/components/ImageLightbox';
+import { formatDistanceToNow } from 'date-fns';
+import { it } from 'date-fns/locale';
 
 const Chat = () => {
   const { userId } = useParams();
@@ -21,6 +23,7 @@ const Chat = () => {
   const [previews, setPreviews] = useState<string[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [otherUserProfile, setOtherUserProfile] = useState<any>(null);
+  const [dbLastSeen, setDbLastSeen] = useState<string | null>(null);
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
   
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -29,16 +32,30 @@ const Chat = () => {
   const { chatMessages, loadingChat, sendMessage, markAsRead } = useMessages(userId);
   const { reshareStory } = useStories();
   
-  // Hook Presence: monitora specificamente l'utente con cui stiamo parlando
-  const { isOnline, lastSeen } = usePresence(userId);
+  // Consumiamo lo stato globale
+  const { isUserOnline, getLastSeen } = usePresence();
+  const isOnline = isUserOnline(userId);
+  // Priorità: 1. Stato real-time dal context, 2. Fallback dal DB caricato all'inizio
+  const lastSeen = getLastSeen(userId) || dbLastSeen;
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) navigate('/login');
       else { setCurrentUserId(session.user.id); }
     });
+    
     if (userId) {
-      supabase.from('profiles').select('*').eq('id', userId).maybeSingle().then(({ data }) => setOtherUserProfile(data));
+      // Carichiamo il profilo e l'ultimo accesso salvato nel DB come fallback iniziale
+      supabase.from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle()
+        .then(({ data }) => {
+          setOtherUserProfile(data);
+          if (data?.last_seen_at) {
+            setDbLastSeen(formatDistanceToNow(new Date(data.last_seen_at), { addSuffix: true, locale: it }));
+          }
+        });
       markAsRead.mutate(userId);
     }
   }, [userId, navigate]);
@@ -80,7 +97,6 @@ const Chat = () => {
                 <div className="w-full h-full flex items-center justify-center"><User size={18} className="text-zinc-600" /></div>
               )}
             </div>
-            {/* Indicatore Online Animato */}
             <AnimatePresence>
               {isOnline && (
                 <motion.div 

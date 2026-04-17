@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -13,7 +13,7 @@ interface PresenceContextType {
 
 const PresenceContext = createContext<PresenceContextType | undefined>(undefined);
 
-export const PresenceProvider = ({ children }: { children: React.ReactNode }) => {
+export const PresenceProvider = ({ children }: { children: ReactNode }): React.JSX.Element => {
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const [lastSeenMap, setLastSeenMap] = useState<Record<string, string>>({});
 
@@ -24,7 +24,6 @@ export const PresenceProvider = ({ children }: { children: React.ReactNode }) =>
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Canale globale unico per tutti gli utenti dell'app
       const channelName = 'global-presence-v3';
 
       channel = supabase.channel(channelName, {
@@ -39,7 +38,6 @@ export const PresenceProvider = ({ children }: { children: React.ReactNode }) =>
         .on('presence', { event: 'sync' }, () => {
           const state = channel.presenceState();
           const ids = Object.keys(state);
-          console.log("[Presence] Sync globale:", ids);
           setOnlineUsers(ids);
         })
         .on('presence', { event: 'join' }, ({ key }: any) => {
@@ -59,7 +57,6 @@ export const PresenceProvider = ({ children }: { children: React.ReactNode }) =>
               user_id: user.id
             });
             
-            // Aggiornamento DB per persistenza
             await supabase
               .from('profiles')
               .update({ last_seen_at: new Date().toISOString() })
@@ -70,7 +67,6 @@ export const PresenceProvider = ({ children }: { children: React.ReactNode }) =>
 
     setupPresence();
 
-    // Listener per il cambio di stato Auth (login/logout)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN') {
         setupPresence();
@@ -112,7 +108,6 @@ export const PresenceProvider = ({ children }: { children: React.ReactNode }) =>
 export const usePresence = () => {
   const context = useContext(PresenceContext);
   if (context === undefined) {
-    // Fallback silenzioso se usato fuori dal provider (evita crash)
     return {
       onlineUsers: [],
       isUserOnline: () => false,
