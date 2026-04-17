@@ -248,7 +248,7 @@ const Discover = () => {
                           {/* Qui potremmo aggiungere icone per modifiche specifiche in futuro */}
                         </div>
                         <button 
-                          onClick={() => navigate(`/profile/${vehicle.user_id}`)}
+                          onClick={() => navigate(`/profile/${vehicle.user_id}?tab=garage`)}
                           className="group flex items-center gap-2 text-[9px] font-black uppercase italic text-white transition-all"
                         >
                           Vedi Progetto <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
@@ -40,6 +40,7 @@ const DEFAULT_COVER = "https://www.lowdistrict.it/wp-content/uploads/DSC01359-1-
 
 const Profile = () => {
   const { userId } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { t, language } = useTranslation();
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -50,7 +51,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
-  const [activeTab, setActiveTab] = useState('activity');
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'activity');
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isUsernameNoticeOpen, setIsUsernameNoticeOpen] = useState(false);
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
@@ -64,6 +65,12 @@ const Profile = () => {
   useEffect(() => {
     if (activeTab === 'orders') refetchOrders();
   }, [activeTab, refetchOrders]);
+
+  // Sincronizza il tab se cambia l'URL
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam) setActiveTab(tabParam);
+  }, [searchParams]);
 
   const fetchProfile = async (id: string) => {
     const { data: profileData, error } = await supabase.from('profiles').select('*').eq('id', id).maybeSingle();
@@ -94,7 +101,6 @@ const Profile = () => {
     if (isAvatar) setUploadingAvatar(true); else setUploadingCover(true);
     
     try {
-      // 1. Ottimizzazione locale prima dell'upload
       if (file.type.startsWith('video/')) {
         const validation = await validateVideo(file);
         if (!validation.ok) throw new Error(validation.error);
@@ -102,10 +108,8 @@ const Profile = () => {
         file = await compressImage(file);
       }
 
-      // 2. Caricamento su Cloudinary (l'utility aggiunge f_auto/vc_auto all'URL)
       const publicUrl = await uploadToCloudinary(file);
 
-      // 3. Salvataggio URL nel database
       const updateData: any = { 
         id: currentUser.id, 
         updated_at: new Date().toISOString() 
@@ -157,7 +161,6 @@ const Profile = () => {
   if (loading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
   const displayName = profile?.username || 'Utente';
-
   const userRole = profile?.role || (profile?.is_admin ? 'admin' : 'member');
   const roleLabel = t.profile.roles[userRole] || t.profile.roles.member;
 
