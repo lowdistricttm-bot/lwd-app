@@ -194,14 +194,15 @@ const Profile = () => {
   const userPosts = posts?.filter(p => p.user_id === targetUserId) || [];
 
   // Funzione per calcolare la dimensione del font in base alla lunghezza dell'username
+  // Ridimensionata per essere più piccola ed elegante di default
   const getUsernameSize = (name: string) => {
     const len = name?.length || 0;
-    if (len > 30) return "text-[9px] md:text-base";
-    if (len > 25) return "text-[11px] md:text-lg";
-    if (len > 20) return "text-[13px] md:text-xl";
-    if (len > 15) return "text-[16px] md:text-2xl";
-    if (len > 10) return "text-[20px] md:text-3xl";
-    return "text-[26px] md:text-4xl";
+    if (len > 30) return "text-[8px] md:text-sm";
+    if (len > 25) return "text-[9px] md:text-base";
+    if (len > 20) return "text-[10px] md:text-lg";
+    if (len > 15) return "text-[12px] md:text-xl";
+    if (len > 10) return "text-[14px] md:text-2xl";
+    return "text-[16px] md:text-2xl";
   };
 
   return (
