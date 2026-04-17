@@ -94,13 +94,22 @@ const Messages = () => {
         {loadingConvs ? (
           <div className="flex justify-center py-20"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>
         ) : conversations?.length === 0 ? (
-          <div className="text-center py-20 bg-black/60 backdrop-blur-2xl border border-white/10 rounded-[2rem]"><MessageSquare className="mx-auto text-zinc-600 mb-6" size={48} strokeWidth={1.5} /><p className="text-zinc-400 text-[10px] font-bold uppercase tracking-widest">{t.messages.noConvs}</p></div>
+          <div className="text-center py-20 bg-zinc-900/20 border border-white/5 rounded-[2rem]"><MessageSquare className="mx-auto text-zinc-800 mb-6" size={48} strokeWidth={1.5} /><p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{t.messages.noConvs}</p></div>
         ) : (
           <div className="space-y-3">
             {conversations?.map((conv: any) => {
               const isUnread = !conv.lastMessage.is_read && conv.lastMessage.receiver_id === currentUserId;
+              
               return (
-                <div key={conv.otherId} className="relative overflow-hidden rounded-[2rem] bg-black/60 backdrop-blur-2xl border border-white/10 shadow-lg group">
+                <div 
+                  key={conv.otherId} 
+                  className={cn(
+                    "relative overflow-hidden rounded-[2rem] border transition-all duration-300 group",
+                    isUnread 
+                      ? "bg-white/10 backdrop-blur-2xl border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.15)]" 
+                      : "bg-zinc-900/40 border-white/5 shadow-none"
+                  )}
+                >
                   <div className="absolute inset-0 bg-red-950/40 flex items-center justify-end px-8">
                     <Trash2 size={24} strokeWidth={2} className="text-red-400/80" />
                   </div>
@@ -132,11 +141,11 @@ const Messages = () => {
                     }} 
                     className={cn(
                       "relative w-full p-5 flex items-center gap-4 transition-colors z-10 cursor-pointer", 
-                      isUnread ? "bg-white/10 backdrop-blur-3xl" : "bg-transparent hover:bg-white/5"
+                      isUnread ? "bg-transparent" : "bg-zinc-950 hover:bg-zinc-900"
                     )}
                   >
                     <div className="relative shrink-0">
-                      <div className={cn("w-14 h-14 bg-black/40 rounded-full overflow-hidden border-2 shrink-0", isUnread ? "border-white" : "border-white/10")}>
+                      <div className={cn("w-14 h-14 rounded-full overflow-hidden border-2 shrink-0 bg-black/40", isUnread ? "border-white" : "border-white/10")}>
                         {conv.otherUser?.avatar_url ? (
                           <img src={conv.otherUser.avatar_url} className="w-full h-full object-cover" alt="Avatar" />
                         ) : (
@@ -154,7 +163,7 @@ const Messages = () => {
                           {formatDistanceToNow(new Date(conv.lastMessage.created_at), { addSuffix: true, locale: language === 'it' ? it : enUS })}
                         </span>
                       </div>
-                      <p className={cn("text-xs truncate font-medium", isUnread ? "text-white font-bold" : "text-zinc-400")}>
+                      <p className={cn("text-xs truncate font-medium", isUnread ? "text-white font-bold" : "text-zinc-500")}>
                         {conv.lastMessage.content}
                       </p>
                     </div>
