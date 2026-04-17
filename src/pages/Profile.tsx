@@ -8,7 +8,7 @@ import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
 import GarageTab from '@/components/GarageTab';
 import ApplicationsTab from '@/components/ApplicationsTab';
-import FeedPost from '@/components/FeedPost';
+import ProfilePostGridItem from '@/components/ProfilePostGridItem';
 import CreatePostModal from '@/components/CreatePostModal';
 import ImageLightbox from '@/components/ImageLightbox';
 import ProfileInfoTab from '@/components/ProfileInfoTab';
@@ -171,7 +171,6 @@ const Profile = () => {
     tabs.push({ id: 'settings', label: t.profile.settings, icon: Settings });
   }
 
-  // Mappatura esplicita delle colonne per Tailwind
   const gridColsClass = {
     1: 'grid-cols-1',
     2: 'grid-cols-2',
@@ -180,6 +179,8 @@ const Profile = () => {
     5: 'grid-cols-5',
     6: 'grid-cols-6',
   }[tabs.length] || 'grid-cols-1';
+
+  const userPosts = posts?.filter(p => p.user_id === targetUserId) || [];
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -265,10 +266,22 @@ const Profile = () => {
                     <h3 className="text-xl font-black italic uppercase">{isOwnProfile ? t.profile.myPosts : `${t.profile.posts} ${displayName}`}</h3>
                     {isOwnProfile && <Button onClick={() => setIsPostModalOpen(true)} className="bg-white text-black hover:bg-zinc-200 rounded-none text-[10px] font-black uppercase italic tracking-widest h-10 px-6"><Plus size={14} className="mr-2" /> {t.feed.newPost}</Button>}
                   </div>
-                  {loadingPosts ? <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div> : posts?.filter(p => p.user_id === targetUserId).length > 0 ? (
-                    <div className="grid grid-cols-1 gap-4">{posts.filter(p => p.user_id === targetUserId).map((post) => <FeedPost key={post.id} post={post} />)}</div>
+                  
+                  {loadingPosts ? (
+                    <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div>
+                  ) : userPosts.length > 0 ? (
+                    <div className="grid grid-cols-3 gap-1 md:gap-4">
+                      {userPosts.map((post) => (
+                        <ProfilePostGridItem key={post.id} post={post} />
+                      ))}
+                    </div>
                   ) : (
-                    <div className="bg-zinc-900/30 border border-white/5 p-12 text-center"><MessageSquare className="mx-auto text-zinc-800 mb-6" size={48} /><p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{isOwnProfile ? t.profile.noPosts : t.feed.noPosts}</p></div>
+                    <div className="bg-zinc-900/30 border border-white/5 p-12 text-center">
+                      <MessageSquare className="mx-auto text-zinc-800 mb-6" size={48} />
+                      <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">
+                        {isOwnProfile ? t.profile.noPosts : t.feed.noPosts}
+                      </p>
+                    </div>
                   )}
                 </motion.div>
               )}
