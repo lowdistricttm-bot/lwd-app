@@ -12,24 +12,34 @@ export const useDiscover = (searchQuery: string = "") => {
   const { data: vehicles, isLoading: loadingVehicles } = useQuery({
     queryKey: ['discover-vehicles', searchQuery],
     queryFn: async () => {
-      // Usiamo !inner per forzare un inner join: se il profilo non ha il ruolo corretto, il veicolo viene escluso
+      // Usiamo profiles:user_id!inner per specificare la chiave esterna e forzare l'inner join
       let query = supabase
         .from('vehicles')
         .select(`
           *,
-          profiles!inner (username, avatar_url, role, is_admin)
+          profiles:user_id!inner (
+            username, 
+            avatar_url, 
+            role, 
+            is_admin
+          )
         `)
         .in('profiles.role', AUTHORIZED_ROLES)
         .order('created_at', { ascending: false });
 
       if (searchQuery) {
+        // Ricerca per marca o modello (il case-insensitive è gestito da ilike)
         query = query.or(`brand.ilike.%${searchQuery}%,model.ilike.%${searchQuery}%`);
       } else {
         query = query.limit(40);
       }
 
       const { data, error } = await query;
-      if (error) throw error;
+      
+      if (error) {
+        console.error("[Discover] Errore query veicoli:", error);
+        return [];
+      }
 
       return data.map(v => ({
         ...v,
