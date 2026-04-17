@@ -83,7 +83,7 @@ const CommentItem = ({
             )}
           </div>
           <div className="flex items-center gap-4 mt-1 ml-1">
-            <span className="text-[8px] text-zinc-600 font-bold uppercase">
+            <span className="text-[9px] text-zinc-600 font-bold uppercase">
               {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: it })}
             </span>
             <button 
@@ -225,7 +225,7 @@ const FeedPost = ({ post }: { post: Post }) => {
             </div>
             <div>
               <h4 className="text-xs font-black italic uppercase tracking-tight">{post.profiles?.username}</h4>
-              <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-widest">
+              <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest">
                 {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: it })}
               </p>
             </div>

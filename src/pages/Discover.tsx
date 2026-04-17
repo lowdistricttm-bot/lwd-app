@@ -40,7 +40,7 @@ const Discover = () => {
         <header className="mb-10">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-8">
             <div className="space-y-2">
-              <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.5em] italic">
+              <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">
                 {debouncedSearch ? "Risultati Ricerca" : "District Showroom"}
               </h2>
               <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter uppercase leading-none">
@@ -94,7 +94,7 @@ const Discover = () => {
               animate={{ opacity: 1, y: 0 }}
               className="mb-12 space-y-6"
             >
-              <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 flex items-center gap-2 italic border-b border-white/5 pb-4">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 flex items-center gap-2 italic border-b border-white/5 pb-4">
                 <Users size={12} /> Membri Trovati
               </h3>
               <div className="flex gap-6 overflow-x-auto no-scrollbar pb-4">
@@ -126,7 +126,7 @@ const Discover = () => {
 
         {!debouncedSearch && newMembers && newMembers.length > 0 && (
           <section className="mb-14">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 flex items-center gap-2 italic mb-6">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 flex items-center gap-2 italic mb-6">
               <Sparkles size={12} /> Nuovi nel District
             </h3>
             <div className="flex gap-6 overflow-x-auto no-scrollbar pb-4">
@@ -156,7 +156,7 @@ const Discover = () => {
 
         <section>
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 flex items-center gap-2 italic">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 flex items-center gap-2 italic">
               <Car size={12} /> {debouncedSearch ? "Progetti Corrispondenti" : "Ultimi Progetti Caricati"}
             </h3>
           </div>
@@ -241,7 +241,7 @@ const Discover = () => {
                               </span>
                             </div>
                             
-                            <p className="text-[8px] font-bold text-zinc-600 uppercase tracking-widest">
+                            <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">
                               {vehicle.year || 'N/A'}
                             </p>
                             
@@ -297,7 +297,7 @@ const Discover = () => {
                                   {vehicle.profiles?.is_admin && <ShieldCheck size={8} className="text-white shrink-0" />}
                                 </div>
                                 {viewMode === 'list' && (
-                                  <span className="text-[7px] font-bold text-zinc-600 uppercase tracking-widest shrink-0">
+                                  <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest shrink-0">
                                     • {roleLabel}
                                   </span>
                                 )}
