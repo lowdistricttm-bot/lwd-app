@@ -32,7 +32,7 @@ export const useBPActivity = () => {
   return useQuery({
     queryKey: ['bp-activity'],
     queryFn: async () => {
-      const response = await fetch(`${BP_API_URL}/activity?per_page=20&context=view`, {
+      const response = await fetch(`${BP_API_URL}/activity?per_page=20`, {
         headers: getAuthHeader()
       });
       if (!response.ok) throw new Error('Errore caricamento bacheca');
@@ -49,19 +49,15 @@ export const useBPSearchMembers = (search: string) => {
       if (!search || search.length < 2) return [];
       
       try {
-        // Aggiungiamo type=active e per_page per rendere la query più robusta
-        const url = `${BP_API_URL}/members?search=${encodeURIComponent(search)}&per_page=20&context=view&type=active`;
+        // Rimosso context=view che spesso causa il 400 se non si hanno permessi su tutti i campi
+        const url = `${BP_API_URL}/members?search=${encodeURIComponent(search)}&type=active`;
         const response = await fetch(url, {
           headers: getAuthHeader()
         });
         
-        if (!response.ok) {
-          console.warn(`[BuddyPress] Search failed with status ${response.status}`);
-          return [];
-        }
+        if (!response.ok) return [];
         return response.json();
       } catch (err) {
-        console.error("[BuddyPress] Search error:", err);
         return [];
       }
     },
@@ -122,30 +118,24 @@ export const useBPMember = (username?: string) => {
       if (!searchTerm) return null;
       
       try {
-        // Aggiunto type=active per evitare l'errore 400 su alcune configurazioni server
-        const url = `${BP_API_URL}/members?search=${encodeURIComponent(searchTerm)}&context=view&type=active`;
+        // Versione ultra-semplificata della query per evitare il 400
+        const url = `${BP_API_URL}/members?search=${encodeURIComponent(searchTerm)}`;
         const response = await fetch(url, {
           headers: getAuthHeader()
         });
         
-        if (!response.ok) {
-          console.warn(`[BuddyPress] Member fetch failed: ${response.status}`);
-          return null;
-        }
+        if (!response.ok) return null;
         
         const data = await response.json();
         
         if (Array.isArray(data) && data.length > 0) {
-          // Cerchiamo la corrispondenza più precisa
           return data.find((m: any) => 
             m.user_login === username || 
-            m.mention_name === username || 
-            m.name === searchTerm
+            m.mention_name === username
           ) || data[0];
         }
         return null;
       } catch (err) {
-        console.error("[BuddyPress] Errore ricerca membro:", err);
         return null;
       }
     },
