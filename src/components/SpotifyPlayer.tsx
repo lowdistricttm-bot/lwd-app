@@ -15,9 +15,9 @@ const SpotifyPlayer = () => {
       <motion.div
         initial={false}
         animate={{
-          width: isExpanded ? (window.innerWidth < 768 ? '280px' : '320px') : '48px',
-          height: isExpanded ? (window.innerHeight < 600 ? '350px' : '400px') : '48px',
-          borderRadius: isExpanded ? '16px' : '50%',
+          width: isExpanded ? (window.innerWidth < 768 ? '300px' : '320px') : '48px',
+          height: isExpanded ? '380px' : '48px',
+          borderRadius: isExpanded ? '12px' : '50%',
           opacity: 1
         }}
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
@@ -58,19 +58,19 @@ const SpotifyPlayer = () => {
           </div>
         )}
         
-        {/* Iframe Spotify - Sempre presente per continuità audio */}
+        {/* Iframe Spotify - Altezza fissa a 100% del contenitore flex */}
         <div className={cn(
-          "flex-1 bg-black transition-opacity duration-500",
+          "flex-1 bg-black transition-opacity duration-500 overflow-hidden",
           isExpanded ? "opacity-100" : "opacity-0 pointer-events-none"
         )}>
           <iframe 
             src={`https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator&theme=0`} 
             width="100%" 
             height="100%" 
+            style={{ minHeight: isExpanded ? '330px' : '0' }}
             frameBorder="0" 
             allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
             loading="lazy"
-            className="rounded-b-2xl"
           />
         </div>
       </motion.div>
