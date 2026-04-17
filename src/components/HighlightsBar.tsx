@@ -28,23 +28,31 @@ const HighlightsBar = ({ userId, isOwnProfile }: HighlightsBarProps) => {
   })).filter(h => h.items.length > 0) || [];
 
   return (
-    <div className="flex gap-6 overflow-x-auto no-scrollbar py-6 mb-8 border-b border-white/5">
-      {highlights?.map((h, idx) => (
-        <button 
-          key={h.id} 
-          onClick={() => setSelectedHighlightIndex(idx)}
-          className="flex flex-col items-center gap-2 shrink-0 group"
-        >
-          <div className="w-16 h-16 rounded-full p-[2px] border border-white/10 group-hover:border-white transition-all duration-500">
-            <div className="w-full h-full rounded-full overflow-hidden bg-zinc-900">
-              <img src={h.cover_url} className="w-full h-full object-cover" alt={h.title} />
+    <div className="mb-8 border-b border-white/5 pb-6">
+      {(highlights?.length > 0 || isOwnProfile) && (
+        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 italic mb-4">
+          Storie in evidenza
+        </h3>
+      )}
+      
+      <div className="flex gap-6 overflow-x-auto no-scrollbar">
+        {highlights?.map((h, idx) => (
+          <button 
+            key={h.id} 
+            onClick={() => setSelectedHighlightIndex(idx)}
+            className="flex flex-col items-center gap-2 shrink-0 group"
+          >
+            <div className="w-16 h-16 rounded-full p-[2px] border border-white/10 group-hover:border-white transition-all duration-500">
+              <div className="w-full h-full rounded-full overflow-hidden bg-zinc-900">
+                <img src={h.cover_url} className="w-full h-full object-cover" alt={h.title} />
+              </div>
             </div>
-          </div>
-          <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 group-hover:text-white transition-colors truncate w-16 text-center">
-            {h.title}
-          </span>
-        </button>
-      ))}
+            <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 group-hover:text-white transition-colors truncate w-16 text-center">
+              {h.title}
+            </span>
+          </button>
+        ))}
+      </div>
 
       <AnimatePresence>
         {selectedHighlightIndex !== null && (
