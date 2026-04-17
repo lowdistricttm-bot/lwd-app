@@ -4,12 +4,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { showError, showSuccess } from '@/utils/toast';
 
 const BP_API_URL = "https://www.lowdistrict.it/wp-json/buddypress/v1";
-const WP_API_URL = "https://www.lowdistrict.it/wp-json/wp/v2";
 
-const getAuthHeader = async () => {
+const getAuthHeader = () => {
   const token = localStorage.getItem('wp-jwt');
-  if (!token) return {};
-  return { 'Authorization': `Bearer ${token}` };
+  const headers: Record<string, string> = {
+    'Accept': 'application/json'
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
 };
 
 export interface BPActivity {
@@ -28,9 +32,8 @@ export const useBPActivity = () => {
   return useQuery({
     queryKey: ['bp-activity'],
     queryFn: async () => {
-      const headers = await getAuthHeader();
       const response = await fetch(`${BP_API_URL}/activity?per_page=20&context=view`, {
-        headers: { 'Accept': 'application/json', ...headers }
+        headers: getAuthHeader()
       });
       if (!response.ok) throw new Error('Errore caricamento bacheca');
       return response.json() as Promise<BPActivity[]>;
@@ -44,14 +47,21 @@ export const useBPSearchMembers = (search: string) => {
     queryKey: ['bp-members-search', search],
     queryFn: async () => {
       if (!search || search.length < 2) return [];
-      const headers = await getAuthHeader();
+      
       try {
-        const response = await fetch(`${BP_API_URL}/members?search=${encodeURIComponent(search)}&per_page=20`, {
-          headers: { 'Accept': 'application/json', ...headers }
+        // Aggiungiamo context=view e type=active per rendere la query più standard
+        const url = `${BP_API_URL}/members?search=${encodeURIComponent(search)}&per_page=20&context=view&type=active`;
+        const response = await fetch(url, {
+          headers: getAuthHeader()
         });
-        if (!response.ok) return [];
+        
+        if (!response.ok) {
+          console.warn(`[BuddyPress] Search failed with status ${response.status}`);
+          return [];
+        }
         return response.json();
       } catch (err) {
+        console.error("[BuddyPress] Search error:", err);
         return [];
       }
     },
@@ -64,10 +74,12 @@ export const useBPActions = () => {
 
   const favoriteMutation = useMutation({
     mutationFn: async (activityId: number) => {
-      const headers = await getAuthHeader();
       const response = await fetch(`${BP_API_URL}/activity/${activityId}/favorite`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...headers }
+        headers: { 
+          ...getAuthHeader(),
+          'Content-Type': 'application/json'
+        }
       });
       if (!response.ok) throw new Error('Errore Like');
       return response.json();
@@ -80,10 +92,12 @@ export const useBPActions = () => {
 
   const commentMutation = useMutation({
     mutationFn: async ({ activityId, content }: { activityId: number, content: string }) => {
-      const headers = await getAuthHeader();
       const response = await fetch(`${BP_API_URL}/activity/${activityId}/comment`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...headers },
+        headers: { 
+          ...getAuthHeader(),
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({ content })
       });
       if (!response.ok) throw new Error('Errore invio commento');
@@ -103,15 +117,14 @@ export const useBPMember = (username?: string) => {
     queryKey: ['bp-member', username],
     queryFn: async () => {
       if (!username) return null;
-      const headers = await getAuthHeader();
       
-      // Puliamo lo username per la ricerca
       const searchTerm = username.replace(/-/g, ' ').trim();
       if (!searchTerm) return null;
       
       try {
-        const response = await fetch(`${BP_API_URL}/members?search=${encodeURIComponent(searchTerm)}`, {
-          headers: { 'Accept': 'application/json', ...headers }
+        const url = `${BP_API_URL}/members?search=${encodeURIComponent(searchTerm)}&context=view`;
+        const response = await fetch(url, {
+          headers: getAuthHeader()
         });
         
         if (!response.ok) return null;
@@ -132,6 +145,6 @@ export const useBPMember = (username?: string) => {
     },
     enabled: !!username && username.length > 0,
     retry: false,
-    staleTime: 1000 * 60 * 5 // Cache per 5 minuti
+    staleTime: 1000 * 60 * 5
   });
 };
