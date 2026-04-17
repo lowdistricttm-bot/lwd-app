@@ -103,15 +103,10 @@ const Messages = () => {
               return (
                 <div 
                   key={conv.otherId} 
-                  className={cn(
-                    "relative overflow-hidden rounded-[1.5rem] border transition-all duration-300 group",
-                    isUnread 
-                      ? "bg-white/10 backdrop-blur-2xl border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.15)]" 
-                      : "bg-zinc-900/40 border-white/5 shadow-none"
-                  )}
+                  className="relative rounded-[1.5rem] bg-red-950 overflow-hidden"
                 >
-                  <div className="absolute inset-0 bg-red-950/40 flex items-center justify-end px-6">
-                    <Trash2 size={20} strokeWidth={2} className="text-red-400/80" />
+                  <div className="absolute inset-0 flex items-center justify-end px-6">
+                    <Trash2 size={20} strokeWidth={2} className="text-red-400" />
                   </div>
                   
                   <motion.div 
@@ -140,12 +135,14 @@ const Messages = () => {
                       navigate(`/chat/${conv.otherId}`);
                     }} 
                     className={cn(
-                      "relative w-full px-4 py-3 flex items-center gap-3 transition-colors z-10 cursor-pointer", 
-                      isUnread ? "bg-transparent" : "bg-zinc-950 hover:bg-zinc-900"
+                      "relative w-full px-4 py-3 flex items-center gap-4 transition-colors z-10 cursor-pointer rounded-[1.5rem] border", 
+                      isUnread 
+                        ? "bg-zinc-800 border-white/20" 
+                        : "bg-zinc-950 border-white/5 hover:bg-zinc-900"
                     )}
                   >
                     <div className="relative shrink-0">
-                      <div className={cn("w-12 h-12 rounded-full overflow-hidden border-2 shrink-0 bg-black/40", isUnread ? "border-white" : "border-white/10")}>
+                      <div className={cn("w-12 h-12 rounded-full overflow-hidden border-2 shrink-0", isUnread ? "bg-zinc-700 border-white" : "bg-black/40 border-white/10")}>
                         {conv.otherUser?.avatar_url ? (
                           <img src={conv.otherUser.avatar_url} className="w-full h-full object-cover" alt="Avatar" />
                         ) : (
@@ -167,7 +164,7 @@ const Messages = () => {
                         {conv.lastMessage.content}
                       </p>
                     </div>
-                    <ChevronRight size={16} strokeWidth={2} className={cn("transition-colors shrink-0", isUnread ? "text-white" : "text-zinc-600 group-hover:text-white")} />
+                    <ChevronRight size={16} strokeWidth={2} className={cn("transition-colors shrink-0", isUnread ? "text-white" : "text-zinc-600")} />
                   </motion.div>
                 </div>
               );
@@ -183,7 +180,7 @@ const Messages = () => {
             <AlertDialogDescription className="text-zinc-400 text-xs font-bold uppercase">{t.messages.deleteConvDesc}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex flex-col gap-2">
-            <AlertDialogAction onClick={handleDelete} className="rounded-full bg-white text-black font-black uppercase italic text-[10px] h-12 hover:bg-zinc-200">
+            <AlertDialogAction onClick={handleDelete} className="rounded-full bg-white text-black font-black uppercase italic text-[10px] h-12 hover:bg-zinc-200 focus-visible:ring-0 focus-visible:ring-offset-0">
               Elimina
             </AlertDialogAction>
             <AlertDialogCancel className="rounded-full border-white/10 text-white bg-transparent hover:bg-white/10 font-black uppercase italic text-[10px] h-12 mt-0 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0">
