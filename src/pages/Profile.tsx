@@ -15,6 +15,9 @@ import SettingsTab from '@/components/SettingsTab';
 import HighlightsBar from '@/components/HighlightsBar';
 import { useSocialFeed } from '@/hooks/use-social-feed';
 import { useAdmin } from '@/hooks/use-admin';
+import { usePresence } from '@/hooks/use-presence';
+import { formatDistanceToNow } from 'date-fns';
+import { it } from 'date-fns/locale';
 import { 
   User, Settings, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Share2, Edit2, LogIn, AlertCircle, Users
 } from 'lucide-react';
@@ -47,6 +50,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const { t, language } = useTranslation();
   const { canVote } = useAdmin(); // canVote è true per Admin, Staff e Supporto
+  const { isUserOnline } = usePresence();
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   
@@ -63,6 +67,7 @@ const Profile = () => {
   const { posts, isLoading: loadingPosts } = useSocialFeed();
   const targetUserId = userId || currentUser?.id;
   const isOwnProfile = !userId || userId === currentUser?.id;
+  const isOnline = isUserOnline(targetUserId);
 
   const { data: orders, isLoading: loadingOrders, refetch: refetchOrders } = useWcUserOrders(isOwnProfile ? currentUser?.email : undefined);
 
@@ -216,6 +221,18 @@ const Profile = () => {
                     <Camera size={24} className="text-white" />
                   </button>
                 )}
+                
+                {/* Pallino Online Real-time */}
+                <AnimatePresence>
+                  {isOnline && (
+                    <motion.div 
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      exit={{ scale: 0 }}
+                      className="absolute bottom-1 right-1 w-5 h-5 md:w-7 md:h-7 bg-green-500 border-4 border-black rounded-full shadow-[0_0_15px_rgba(34,197,94,0.6)] z-10" 
+                    />
+                  )}
+                </AnimatePresence>
               </div>
             </div>
             <div className="mb-2 min-w-0 flex-1">
@@ -235,7 +252,15 @@ const Profile = () => {
                   )}
                 </div>
               </div>
-              <p className="text-zinc-500 text-[7px] md:text-[8px] font-black uppercase tracking-[0.3em] italic mt-1 truncate">{roleLabel}</p>
+              <div className="flex flex-col gap-0.5 mt-1">
+                <p className="text-zinc-500 text-[7px] md:text-[8px] font-black uppercase tracking-[0.3em] italic truncate">{roleLabel}</p>
+                <p className={cn(
+                  "text-[6px] md:text-[7px] font-black uppercase tracking-widest transition-colors duration-500",
+                  isOnline ? "text-green-500" : "text-zinc-600"
+                )}>
+                  {isOnline ? 'Online Ora' : profile?.last_seen_at ? `Ultimo accesso ${formatDistanceToNow(new Date(profile.last_seen_at), { addSuffix: true, locale: it })}` : 'Offline'}
+                </p>
+              </div>
             </div>
           </div>
         </div>
