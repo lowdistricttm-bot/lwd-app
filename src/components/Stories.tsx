@@ -16,10 +16,10 @@ const Stories = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { stories, isLoading, uploadStory } = useStories();
   const [selectedUserIndex, setSelectedUserIndex] = useState<number | null>(null);
+  const [isViewingSelf, setIsViewingSelf] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   
-  // Stato per il caricamento con menzioni
   const [isMentionModalOpen, setIsMentionModalOpen] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -55,6 +55,10 @@ const Stories = () => {
     const timer = setTimeout(searchUsers, 300);
     return () => clearTimeout(timer);
   }, [searchQuery, currentUser]);
+
+  // Separiamo la propria storia dalle altre con casting per evitare errori TS
+  const myStoriesGroup: any = (stories as any[])?.find((group: any) => group.user_id === currentUser?.id);
+  const otherStories: any[] = (stories as any[])?.filter((group: any) => group.user_id !== currentUser?.id) || [];
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -93,21 +97,43 @@ const Stories = () => {
 
   return (
     <div className="flex gap-4 overflow-x-auto no-scrollbar py-6 px-6 bg-black border-b border-white/5">
+      {/* La tua storia (Sempre primo) */}
       <div className="flex flex-col items-center gap-2 shrink-0">
         <div className="relative">
           <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" multiple onChange={handleFileSelect} />
           <button 
-            onClick={() => fileInputRef.current?.click()}
-            className="w-16 h-16 rounded-full border-[2.5px] border-zinc-800 flex items-center justify-center bg-zinc-900 overflow-hidden"
+            onClick={() => {
+              if (myStoriesGroup) setIsViewingSelf(true);
+              else fileInputRef.current?.click();
+            }}
+            className={cn(
+              "w-16 h-16 rounded-full border-[2.5px] flex items-center justify-center bg-zinc-900 overflow-hidden transition-all",
+              myStoriesGroup ? "border-white" : "border-zinc-800"
+            )}
           >
-            {uploadStory.isPending ? <Loader2 className="animate-spin text-zinc-400" size={20} /> : userProfile?.avatar_url ? <img src={userProfile.avatar_url} className="w-full h-full object-cover" /> : <User size={24} className="text-zinc-700" />}
+            {uploadStory.isPending ? (
+              <Loader2 className="animate-spin text-zinc-400" size={20} />
+            ) : (myStoriesGroup?.avatar_url || userProfile?.avatar_url) ? (
+              <img src={myStoriesGroup?.avatar_url || userProfile?.avatar_url} className="w-full h-full object-cover" />
+            ) : (
+              <User size={24} className="text-zinc-700" />
+            )}
           </button>
-          <div className="absolute bottom-0 right-0 w-5 h-5 bg-white rounded-full flex items-center justify-center border-2 border-black shadow-lg"><Plus size={12} className="text-black font-bold" /></div>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              fileInputRef.current?.click();
+            }}
+            className="absolute bottom-0 right-0 w-5 h-5 bg-white rounded-full flex items-center justify-center border-2 border-black shadow-lg"
+          >
+            <Plus size={12} className="text-black font-bold" />
+          </button>
         </div>
         <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">La tua storia</span>
       </div>
 
-      {stories?.map((userGroup: any, index: number) => (
+      {/* Storie degli altri utenti */}
+      {otherStories.map((userGroup: any, index: number) => (
         <button key={userGroup.user_id} onClick={() => setSelectedUserIndex(index)} className="flex flex-col items-center gap-2 shrink-0">
           <div className="w-16 h-16 rounded-full p-[2.5px] bg-gradient-to-tr from-zinc-700 via-zinc-400 to-white">
             <div className="w-full h-full rounded-full border-[2.5px] border-black overflow-hidden bg-zinc-900">
@@ -174,8 +200,14 @@ const Stories = () => {
         )}
       </AnimatePresence>
 
-      {selectedUserIndex !== null && stories && (
-        <StoryViewer allStories={stories} initialUserIndex={selectedUserIndex} onClose={() => setSelectedUserIndex(null)} />
+      {/* Viewer per le storie degli altri */}
+      {selectedUserIndex !== null && (
+        <StoryViewer allStories={otherStories} initialUserIndex={selectedUserIndex} onClose={() => setSelectedUserIndex(null)} />
+      )}
+
+      {/* Viewer per la propria storia */}
+      {isViewingSelf && myStoriesGroup && (
+        <StoryViewer allStories={[myStoriesGroup]} initialUserIndex={0} onClose={() => setIsViewingSelf(false)} />
       )}
     </div>
   );
