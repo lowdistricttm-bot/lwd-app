@@ -102,7 +102,7 @@ const Events = () => {
                         <img src={event.image_url} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt={event.title} />
                       </div>
                     )}
-                    <div className="flex-1 p-8 flex flex-col items-center justify-center text-center gap-8">
+                    <div className="flex-1 p-8 flex flex-col items-center justify-center text-center gap-8 min-w-0">
                       <div className="space-y-4 w-full">
                         <span className={cn(
                           "text-[8px] font-black uppercase px-3 py-1 italic rounded-full inline-flex items-center gap-1.5",
@@ -111,7 +111,13 @@ const Events = () => {
                           {existingApp ? <Clock size={10} /> : <Calendar size={10} />}
                           {existingApp ? `${t.events.manageApp.status}: ${existingApp.status.toUpperCase()}` : t.events.statusOpen}
                         </span>
-                        <h3 className="text-xl md:text-2xl font-black italic uppercase tracking-tight truncate">{event.title}</h3>
+                        
+                        <div className="w-full overflow-x-auto no-scrollbar">
+                          <h3 className="text-[clamp(18px,4vw,24px)] md:text-2xl font-black italic uppercase tracking-tight whitespace-nowrap px-1">
+                            {event.title}
+                          </h3>
+                        </div>
+
                         <div className="flex flex-wrap justify-center gap-6 text-[10px] font-black uppercase text-zinc-500">
                           <span className="flex items-center gap-1.5"><MapPin size={14} /> {event.location}</span>
                           <span className="flex items-center gap-1.5"><Calendar size={14} /> {new Date(event.date).toLocaleDateString()}</span>
@@ -143,9 +149,13 @@ const Events = () => {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setViewingEvent(null)} className="fixed inset-0 bg-black/90 backdrop-blur-md z-[150]" />
               <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed inset-x-0 bottom-0 z-[151] bg-zinc-950 border-t border-white/10 p-8 rounded-t-[2rem] max-h-[85vh] overflow-y-auto">
                 <div className="max-w-2xl mx-auto space-y-8 pb-12">
-                  <div className="flex justify-between items-start">
-                    <h3 className="text-3xl font-black italic uppercase tracking-tighter">{viewingEvent.title}</h3>
-                    <button onClick={() => setViewingEvent(null)} className="p-2 text-zinc-500 hover:text-white"><X size={24} /></button>
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="flex-1 min-w-0 overflow-x-auto no-scrollbar">
+                      <h3 className="text-2xl sm:text-3xl font-black italic uppercase tracking-tighter whitespace-nowrap pr-4">
+                        {viewingEvent.title}
+                      </h3>
+                    </div>
+                    <button onClick={() => setViewingEvent(null)} className="p-2 text-zinc-500 hover:text-white shrink-0"><X size={24} /></button>
                   </div>
                   {viewingEvent.image_url && (
                     <div className="aspect-video bg-zinc-900 rounded-2xl overflow-hidden border border-white/5">
@@ -190,12 +200,16 @@ const Events = () => {
             <>
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedEvent(null)} className="fixed inset-0 bg-black/90 backdrop-blur-md z-[150]" />
               <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed inset-x-0 bottom-0 z-[151] bg-zinc-950 border-t border-white/10 p-8 rounded-t-[2rem] max-h-[85vh] overflow-y-auto">
-                <div className="flex justify-between items-center mb-8">
-                  <div>
+                <div className="flex justify-between items-start mb-8 gap-4">
+                  <div className="flex-1 min-w-0 overflow-hidden">
                     <h3 className="text-2xl font-black italic uppercase tracking-tighter">{t.events.apply}</h3>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{selectedEvent.title}</p>
+                    <div className="w-full overflow-x-auto no-scrollbar mt-1">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 whitespace-nowrap pr-4">
+                        {selectedEvent.title}
+                      </p>
+                    </div>
                   </div>
-                  <button onClick={() => setSelectedEvent(null)} className="p-2 text-zinc-500 hover:text-white"><X size={24} /></button>
+                  <button onClick={() => setSelectedEvent(null)} className="p-2 text-zinc-500 hover:text-white shrink-0"><X size={24} /></button>
                 </div>
 
                 <form onSubmit={handleApply} className="space-y-6">
