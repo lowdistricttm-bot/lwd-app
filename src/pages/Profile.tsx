@@ -194,12 +194,14 @@ const Profile = () => {
   const userPosts = posts?.filter(p => p.user_id === targetUserId) || [];
 
   // Funzione per calcolare la dimensione del font in base alla lunghezza dell'username
+  // Resa ultra-aggressiva per garantire che tutto stia su una riga
   const getUsernameSize = (name: string) => {
     const len = name?.length || 0;
+    if (len > 25) return "text-[10px] md:text-lg";
     if (len > 20) return "text-[12px] md:text-xl";
-    if (len > 15) return "text-[15px] md:text-2xl";
+    if (len > 15) return "text-[14px] md:text-2xl";
     if (len > 10) return "text-[18px] md:text-3xl";
-    return "text-[24px] md:text-4xl";
+    return "text-[22px] md:text-4xl";
   };
 
   return (
@@ -241,13 +243,8 @@ const Profile = () => {
                     exit={{ scale: 0 }}
                     className="absolute -top-1 -left-1 w-6 h-6 md:w-8 md:h-8 rounded-full border-2 border-black z-30 flex items-center justify-center overflow-hidden shadow-[0_0_20px_rgba(34,197,94,0.5)]"
                   >
-                    {/* Base Gradient 3D */}
                     <div className="absolute inset-0 bg-gradient-to-br from-green-400 via-green-500 to-green-700" />
-                    
-                    {/* Punto Luce (Highlight) per effetto sferico */}
                     <div className="absolute top-[15%] left-[15%] w-[35%] h-[35%] bg-white/40 rounded-full blur-[1px]" />
-                    
-                    {/* Animazione Pulse interna (Respiro) */}
                     <motion.div
                       animate={{ opacity: [0.3, 0.7, 0.3] }}
                       transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
@@ -258,24 +255,40 @@ const Profile = () => {
               </AnimatePresence>
             </div>
             <div className="mb-2 min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
+              {/* Container Username + Pulsanti: flex-nowrap per forzare la riga singola */}
+              <div className="flex items-center gap-2 flex-nowrap w-full">
                 <h1 className={cn(
-                  "font-black italic uppercase tracking-tighter leading-none",
+                  "font-black italic uppercase tracking-tighter leading-none truncate",
                   getUsernameSize(displayName)
                 )}>
                   {displayName}
                 </h1>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  {isOwnProfile && <button onClick={() => setIsUsernameNoticeOpen(true)} className="p-1 text-zinc-500 hover:text-white transition-colors"><Edit2 size={14} /></button>}
+                <div className="flex items-center gap-1 shrink-0">
+                  {isOwnProfile && (
+                    <button 
+                      onClick={() => setIsUsernameNoticeOpen(true)} 
+                      className="p-1 text-zinc-500 hover:text-white transition-colors"
+                    >
+                      <Edit2 size={14} />
+                    </button>
+                  )}
                   
                   {!isTargetSubscriber && (
-                    <button onClick={handleShareProfile} className="p-1 text-zinc-500 hover:text-white transition-colors">
+                    <button 
+                      onClick={handleShareProfile} 
+                      className="p-1 text-zinc-500 hover:text-white transition-colors"
+                    >
                       <Share2 size={16} />
                     </button>
                   )}
 
                   {!isOwnProfile && currentUser && canMessageTarget && (
-                    <button onClick={() => navigate(`/chat/${profile.id}`)} className="p-1.5 bg-zinc-800/80 backdrop-blur-md text-white hover:bg-white hover:text-black transition-all shadow-lg"><Mail size={16} /></button>
+                    <button 
+                      onClick={() => navigate(`/chat/${profile.id}`)} 
+                      className="p-1.5 bg-zinc-800/80 backdrop-blur-md text-white hover:bg-white hover:text-black transition-all shadow-lg"
+                    >
+                      <Mail size={16} />
+                    </button>
                   )}
                 </div>
               </div>
