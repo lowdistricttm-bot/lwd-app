@@ -38,7 +38,7 @@ const Footer = () => {
             </div>
           </div>
 
-          <div>
+          <div className="hidden md:block">
             <h4 className="text-white font-bold uppercase tracking-widest mb-6 italic">Link Rapidi</h4>
             <ul className="space-y-4 text-gray-400">
               <li><a href="/shop" className="hover:text-white transition-colors uppercase text-xs font-black italic">Shop Online</a></li>
