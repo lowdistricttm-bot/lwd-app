@@ -1,15 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, Loader2, User, AtSign, X, Search, Check } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, Loader2, User } from 'lucide-react';
 import { useStories } from '@/hooks/use-stories';
 import { supabase } from "@/integrations/supabase/client";
 import StoryViewer from './StoryViewer';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { showError } from '@/utils/toast';
-import { Input } from './ui/input';
 
 const Stories = () => {
   const navigate = useNavigate();
@@ -19,12 +17,6 @@ const Stories = () => {
   const [isViewingSelf, setIsViewingSelf] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
-  
-  const [isMentionModalOpen, setIsMentionModalOpen] = useState(false);
-  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [selectedMentions, setSelectedMentions] = useState<any[]>([]);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -38,28 +30,10 @@ const Stories = () => {
     checkUser();
   }, []);
 
-  useEffect(() => {
-    if (searchQuery.length < 2) {
-      setSearchResults([]);
-      return;
-    }
-    const searchUsers = async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('id, username, avatar_url')
-        .ilike('username', `%${searchQuery}%`)
-        .neq('id', currentUser?.id)
-        .limit(5);
-      setSearchResults(data || []);
-    };
-    const timer = setTimeout(searchUsers, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery, currentUser]);
-
   const myStoriesGroup: any = (stories as any[])?.find((group: any) => group.user_id === currentUser?.id);
   const otherStories: any[] = (stories as any[])?.filter((group: any) => group.user_id !== currentUser?.id) || [];
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
     if (!currentUser) {
@@ -67,35 +41,8 @@ const Stories = () => {
       navigate('/login');
       return;
     }
-    setPendingFiles(files);
-    setIsMentionModalOpen(true);
-  };
-
-  const handleFinalUpload = async () => {
-    const mentionIds = selectedMentions.map(m => m.id);
-    // Usiamo mutate invece di mutateAsync per lasciare che l'hook gestisca l'errore tramite onError
-    uploadStory.mutate({ files: pendingFiles, mentions: mentionIds }, {
-      onSuccess: () => {
-        resetModal();
-      }
-    });
-  };
-
-  const resetModal = () => {
-    setIsMentionModalOpen(false);
-    setPendingFiles([]);
-    setSelectedMentions([]);
-    setSearchQuery('');
+    await uploadStory.mutateAsync({ files });
     if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const toggleMention = (user: any) => {
-    if (selectedMentions.find(m => m.id === user.id)) {
-      setSelectedMentions(prev => prev.filter(m => m.id !== user.id));
-    } else {
-      setSelectedMentions(prev => [...prev, user]);
-      setSearchQuery('');
-    }
   };
 
   return (
@@ -144,62 +91,6 @@ const Stories = () => {
           <span className="text-[8px] font-black uppercase tracking-widest text-zinc-300 truncate w-16 text-center">{userGroup.username}</span>
         </button>
       ))}
-
-      <AnimatePresence>
-        {isMentionModalOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[300] bg-black/95 backdrop-blur-xl flex items-center justify-center p-6">
-            <div className="w-full max-w-md space-y-8">
-              <div className="text-center">
-                <AtSign size={40} className="mx-auto mb-4 text-white" />
-                <h2 className="text-2xl font-black italic uppercase tracking-tighter">Menziona qualcuno?</h2>
-                <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mt-2">Riceveranno un messaggio nei Direct</p>
-              </div>
-
-              <div className="space-y-4">
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
-                  <Input 
-                    placeholder="CERCA USERNAME..." 
-                    value={searchQuery} 
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="bg-zinc-900 border-zinc-800 rounded-none h-14 pl-12 font-black uppercase text-xs"
-                  />
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {selectedMentions.map(user => (
-                    <div key={user.id} className="bg-white text-black px-3 py-1.5 flex items-center gap-2 rounded-full">
-                      <span className="text-[10px] font-black uppercase italic">@{user.username}</span>
-                      <button onClick={() => toggleMention(user)}><X size={12} /></button>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {searchResults.map(user => (
-                    <button key={user.id} onClick={() => toggleMention(user)} className="w-full flex items-center justify-between p-3 bg-zinc-900/50 border border-white/5 hover:bg-zinc-800 transition-all">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full overflow-hidden bg-zinc-800">
-                          {user.avatar_url ? <img src={user.avatar_url} className="w-full h-full object-cover" /> : <User size={14} className="m-auto h-full" />}
-                        </div>
-                        <span className="text-xs font-black italic uppercase">@{user.username}</span>
-                      </div>
-                      {selectedMentions.find(m => m.id === user.id) && <Check size={16} className="text-white" />}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                <button onClick={resetModal} className="flex-1 h-14 border border-white/10 font-black uppercase italic text-xs tracking-widest">Annulla</button>
-                <button onClick={handleFinalUpload} disabled={uploadStory.isPending} className="flex-1 h-14 bg-white text-black font-black uppercase italic text-xs tracking-widest flex items-center justify-center gap-2">
-                  {uploadStory.isPending ? <Loader2 className="animate-spin" /> : 'Pubblica'}
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {selectedUserIndex !== null && (
         <StoryViewer allStories={otherStories} initialUserIndex={selectedUserIndex} onClose={() => setSelectedUserIndex(null)} />

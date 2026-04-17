@@ -35,7 +35,7 @@ export const useStoryViews = (storyId: string | null) => {
         .eq('story_id', storyId)
         .order('viewed_at', { ascending: false });
 
-      if (error) throw new Error(error.message);
+      if (error) throw error;
       return data;
     },
     enabled: !!storyId
@@ -85,7 +85,7 @@ export const useStories = () => {
   };
 
   const uploadStory = useMutation({
-    mutationFn: async ({ files, mentions = [] }: { files: File[], mentions?: string[] }) => {
+    mutationFn: async ({ files }: { files: File[] }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Accedi per caricare una storia");
 
@@ -100,30 +100,15 @@ export const useStories = () => {
 
         const publicUrl = await uploadToCloudinary(file);
 
-        const { data: newStory, error: dbError } = await supabase
+        const { error: dbError } = await supabase
           .from('stories')
           .insert([{ 
             user_id: user.id, 
             image_url: publicUrl,
-            mentions: mentions 
-          }])
-          .select()
-          .single();
+            mentions: [] 
+          }]);
 
-        if (dbError) throw new Error(dbError.message);
-
-        if (mentions.length > 0) {
-          for (const mentionId of mentions) {
-            await supabase.from('messages').insert([{
-              sender_id: user.id,
-              receiver_id: mentionId,
-              content: `✨ Ti ha menzionato in una storia!`,
-              image_url: publicUrl,
-              images: [publicUrl]
-            }]);
-          }
-        }
-
+        if (dbError) throw dbError;
         return publicUrl;
       });
 
@@ -132,6 +117,41 @@ export const useStories = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['active-stories'] });
       showSuccess("Storia pubblicata!");
+    },
+    onError: (error: any) => showError(error)
+  });
+
+  const addMention = useMutation({
+    mutationFn: async ({ storyId, mentionId, storyUrl }: { storyId: string, mentionId: string, storyUrl: string }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Accedi per menzionare");
+
+      // 1. Recupera menzioni attuali
+      const { data: story } = await supabase.from('stories').select('mentions').eq('id', storyId).single();
+      const currentMentions = Array.isArray(story?.mentions) ? story.mentions : [];
+      
+      if (currentMentions.includes(mentionId)) throw new Error("Utente già menzionato");
+
+      // 2. Aggiorna DB
+      const { error: updateError } = await supabase
+        .from('stories')
+        .update({ mentions: [...currentMentions, mentionId] })
+        .eq('id', storyId);
+
+      if (updateError) throw updateError;
+
+      // 3. Invia Direct
+      await supabase.from('messages').insert([{
+        sender_id: user.id,
+        receiver_id: mentionId,
+        content: `✨ Ti ha menzionato in una storia!`,
+        image_url: storyUrl,
+        images: [storyUrl]
+      }]);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['active-stories'] });
+      showSuccess("Menzione inviata!");
     },
     onError: (error: any) => showError(error)
   });
@@ -181,5 +201,5 @@ export const useStories = () => {
     onError: (error: any) => showError(error)
   });
 
-  return { stories, isLoading, uploadStory, deleteStory, recordView, reshareStory };
+  return { stories, isLoading, uploadStory, addMention, deleteStory, recordView, reshareStory };
 };

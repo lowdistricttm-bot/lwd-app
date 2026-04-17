@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight, Trash2, Loader2, Volume2, VolumeX, Send, Heart, Eye, User, HeartIcon, MoreHorizontal, Star } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Trash2, Loader2, Volume2, VolumeX, Send, Heart, Eye, User, Star, AtSign } from 'lucide-react';
 import { useStories, useStoryViews } from '@/hooks/use-stories';
 import { useMessages } from '@/hooks/use-messages';
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,7 @@ import { Input } from './ui/input';
 import { showSuccess, showError } from '@/utils/toast';
 import ShareStoryModal from './ShareStoryModal';
 import HighlightModal from './HighlightModal';
+import AddMentionModal from './AddMentionModal';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/use-translation';
@@ -31,6 +32,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
   const [replyText, setReplyText] = useState('');
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isHighlightModalOpen, setIsHighlightModalOpen] = useState(false);
+  const [isMentionModalOpen, setIsMentionModalOpen] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [showViewers, setShowViewers] = useState(false);
   const [isMediaLoading, setIsMediaLoading] = useState(true);
@@ -68,7 +70,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
   }, [currentStory?.id, currentUserId, isOwner, isHighlight]);
 
   useEffect(() => {
-    if (isVideo || isShareModalOpen || isHighlightModalOpen || showViewers || !currentStory || isMediaLoading) return;
+    if (isVideo || isShareModalOpen || isHighlightModalOpen || isMentionModalOpen || showViewers || !currentStory || isMediaLoading) return;
 
     const duration = 10000;
     const interval = 50; 
@@ -82,7 +84,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
     }, interval);
 
     return () => clearInterval(timer);
-  }, [userIndex, currentIndex, isVideo, isShareModalOpen, isHighlightModalOpen, showViewers, currentStory, isMediaLoading]);
+  }, [userIndex, currentIndex, isVideo, isShareModalOpen, isHighlightModalOpen, isMentionModalOpen, showViewers, currentStory, isMediaLoading]);
 
   useEffect(() => {
     if (progress >= 100 && !isVideo) {
@@ -112,7 +114,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
   };
 
   const handleVideoTimeUpdate = () => {
-    if (videoRef.current && !isShareModalOpen && !isHighlightModalOpen && !showViewers) {
+    if (videoRef.current && !isShareModalOpen && !isHighlightModalOpen && !isMentionModalOpen && !showViewers) {
       const p = (videoRef.current.currentTime / videoRef.current.duration) * 100;
       setProgress(p);
     }
@@ -283,14 +285,19 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
                 <span className="text-[8px] font-black uppercase tracking-widest text-white">Attività</span>
               </button>
               
+              <button onClick={() => setIsMentionModalOpen(true)} className="flex flex-col items-center gap-1 group">
+                <AtSign size={20} className="text-white group-hover:scale-110 transition-transform" />
+                <span className="text-[8px] font-black uppercase tracking-widest text-white">Menziona</span>
+              </button>
+
               <button onClick={() => setIsHighlightModalOpen(true)} className="flex flex-col items-center gap-1 group">
                 <Star size={20} className="text-white group-hover:scale-110 transition-transform" />
-                <span className="text-[8px] font-black uppercase tracking-widest text-white">Metti in evidenza</span>
+                <span className="text-[8px] font-black uppercase tracking-widest text-white">Evidenza</span>
               </button>
 
               <button onClick={handleDelete} className="flex flex-col items-center gap-1 group">
                 <Trash2 size={20} className="text-white group-hover:text-red-500 transition-colors" />
-                <span className="text-[8px] font-black uppercase tracking-widest text-white">Altro</span>
+                <span className="text-[8px] font-black uppercase tracking-widest text-white">Elimina</span>
               </button>
             </div>
           ) : !isHighlight && (
@@ -418,6 +425,16 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           onClose={() => setIsHighlightModalOpen(false)}
           story={currentStory}
           userId={currentUserId}
+        />
+      )}
+
+      {isOwner && (
+        <AddMentionModal 
+          isOpen={isMentionModalOpen}
+          onClose={() => setIsMentionModalOpen(false)}
+          storyId={currentStory.id}
+          storyUrl={currentStory.image_url}
+          existingMentions={currentStory.mentions || []}
         />
       )}
     </motion.div>
