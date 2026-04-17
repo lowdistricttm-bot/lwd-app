@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useNotificationListener } from "@/hooks/use-notification-listener";
 import { LanguageProvider } from "@/hooks/use-translation";
 import { useProfileSync } from "@/hooks/use-profile-sync";
+import { usePresence } from "@/hooks/use-presence";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import PullToRefresh from "@/components/PullToRefresh";
@@ -38,6 +39,8 @@ const queryClient = new QueryClient({
 
 const AppContent = () => {
   useNotificationListener();
+  // Attiviamo il tracciamento presenza globale
+  usePresence();
   
   const [currentUsername, setCurrentUsername] = useState<string | undefined>();
 
