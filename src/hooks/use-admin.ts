@@ -62,7 +62,6 @@ export const useAdmin = () => {
     mutationFn: async ({ id, status }: { id: string, status: 'approved' | 'rejected' }) => {
       if (!canManage) throw new Error("Permessi insufficienti");
       
-      // 1. Aggiorna lo stato nel DB (questo attiva il trigger della notifica in-app)
       const { error } = await supabase
         .from('applications')
         .update({ status })
@@ -70,7 +69,6 @@ export const useAdmin = () => {
       
       if (error) throw error;
 
-      // 2. Chiama la Edge Function per inviare l'email via Resend
       const { data: { session } } = await supabase.auth.getSession();
       try {
         await fetch('https://cxjqbxhhslxqpkfcwqhr.supabase.co/functions/v1/send-application-email', {
@@ -83,12 +81,11 @@ export const useAdmin = () => {
         });
       } catch (emailErr) {
         console.error("[Admin] Errore invio email:", emailErr);
-        // Non blocchiamo l'utente se solo l'email fallisce
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-applications'] });
-      showSuccess("Stato aggiornato e notifiche inviate!");
+      showSuccess("Stato aggiornato!");
     },
     onError: (error: any) => showError(error.message)
   });
@@ -105,13 +102,34 @@ export const useAdmin = () => {
 
   const deleteApplication = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('applications').delete().eq('id', id);
+      if (!canManage) throw new Error("Permessi insufficienti");
+
+      // 1. Eliminiamo prima i voti per evitare errori di chiave esterna
+      const { error: votesError } = await supabase
+        .from('application_votes')
+        .delete()
+        .eq('application_id', id);
+      
+      if (votesError) throw votesError;
+
+      // 2. Eliminiamo le notifiche associate
+      await supabase.from('notifications').delete().eq('application_id', id);
+
+      // 3. Eliminiamo la candidatura
+      const { error } = await supabase
+        .from('applications')
+        .delete()
+        .eq('id', id);
+
       if (error) throw error;
     },
     onSuccess: () => {
+      // Forza il ricaricamento di tutte le liste
       queryClient.invalidateQueries({ queryKey: ['admin-applications'] });
-      showSuccess("Candidatura eliminata");
-    }
+      queryClient.invalidateQueries({ queryKey: ['user-applications'] });
+      showSuccess("Candidatura eliminata definitivamente");
+    },
+    onError: (error: any) => showError(error.message)
   });
 
   return { role, isAdmin, isStaff, isSupport, canManage, canVote, checkingAdmin: checkingRole, allApplications, loadingApps, loadError, updateStatus, castVote, deleteApplication };
