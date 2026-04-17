@@ -6,24 +6,32 @@ import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import { useDiscover } from '@/hooks/use-discover';
 import { useGarage } from '@/hooks/use-garage';
-import { Loader2, Car, Search, LayoutGrid, StretchHorizontal, User, ChevronRight, ShieldCheck, Sparkles, Calendar, Gauge, Users, Heart } from 'lucide-react';
+import { useAdmin } from '@/hooks/use-admin';
+import { Loader2, Car, Search, LayoutGrid, StretchHorizontal, User, ChevronRight, ShieldCheck, Sparkles, Calendar, Gauge, Users, Heart, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import ImageLightbox from '@/components/ImageLightbox';
 import { useTranslation } from '@/hooks/use-translation';
+import { supabase } from "@/integrations/supabase/client";
 
 const Discover = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { canVote } = useAdmin();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchQuery), 400);
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => setCurrentUserId(user?.id || null));
+  }, []);
 
   const { vehicles, users, newMembers, isLoading } = useDiscover(debouncedSearch);
   const { toggleLike } = useGarage();
@@ -174,6 +182,9 @@ const Discover = () => {
               <AnimatePresence mode="popLayout">
                 {vehicles?.map((vehicle, i) => {
                   const roleLabel = getRoleLabel(vehicle.profiles?.role || 'member');
+                  const isPublic = vehicle.profiles?.license_plate_privacy === 'public';
+                  const isOwn = currentUserId === vehicle.user_id;
+                  const canSeePlate = isOwn || canVote || isPublic;
                   
                   return (
                     <motion.div 
@@ -209,6 +220,14 @@ const Discover = () => {
                           <span className="bg-white text-black text-[8px] font-black uppercase px-2 py-1 italic shadow-2xl">
                             {vehicle.suspension_type}
                           </span>
+                          {vehicle.license_plate && (
+                            <span className={cn(
+                              "text-[7px] font-black uppercase px-2 py-1 italic shadow-2xl flex items-center gap-1.5",
+                              canSeePlate ? "bg-zinc-900 text-white" : "bg-black/60 text-zinc-500"
+                            )}>
+                              {canSeePlate ? vehicle.license_plate : <><EyeOff size={8} /> OSCURATA</>}
+                            </span>
+                          )}
                         </div>
 
                         <div className="absolute bottom-4 right-4">

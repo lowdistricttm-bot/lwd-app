@@ -2,15 +2,17 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useGarage, Vehicle } from '@/hooks/use-garage';
+import { useAdmin } from '@/hooks/use-admin';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import ImageLightbox from './ImageLightbox';
-import { Plus, Car, Trash2, Camera, Loader2, X, Edit3, Heart } from 'lucide-react';
+import { Plus, Car, Trash2, Camera, Loader2, X, Edit3, Heart, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/use-translation';
+import { supabase } from "@/integrations/supabase/client";
 
 interface GarageTabProps {
   userId?: string;
@@ -19,10 +21,12 @@ interface GarageTabProps {
 
 const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
   const { vehicles, isLoading, addVehicle, updateVehicle, deleteVehicle, toggleLike } = useGarage(userId);
+  const { canVote } = useAdmin();
   const { t } = useTranslation();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     brand: '',
@@ -37,6 +41,10 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
   const [previews, setPreviews] = useState<string[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => setCurrentUserId(user?.id || null));
+  }, []);
 
   const handleEdit = (vehicle: Vehicle) => {
     if (!isOwnProfile) return;
@@ -282,67 +290,81 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
             <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{t.garage?.empty || "Nessun veicolo."}</p>
           </div>
         ) : (
-          vehicles?.map((vehicle) => (
-            <motion.div 
-              key={vehicle.id}
-              layout
-              className="bg-zinc-900/50 border border-white/5 overflow-hidden group"
-            >
-              <div className="aspect-video bg-zinc-950 relative overflow-hidden">
-                {vehicle.images && vehicle.images.length > 0 ? (
-                  <div className="flex h-full overflow-x-auto no-scrollbar snap-x snap-mandatory">
-                    {vehicle.images.map((img, idx) => (
-                      <img 
-                        key={idx} 
-                        src={img} 
-                        onClick={() => setLightboxData({ images: vehicle.images || [], index: idx })}
-                        className="w-full h-full object-cover shrink-0 snap-center cursor-pointer" 
-                        alt={`${vehicle.model} ${idx + 1}`} 
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-zinc-800"><Car size={48} /></div>
-                )}
-                
-                {isOwnProfile && (
-                  <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all z-10">
-                    <button onClick={() => handleEdit(vehicle)} className="p-2 bg-black/60 text-white hover:bg-white hover:text-black transition-colors"><Edit3 size={16} /></button>
-                    <button onClick={() => deleteVehicle.mutate(vehicle.id)} className="p-2 bg-black/60 text-white hover:bg-zinc-800 transition-colors"><Trash2 size={16} /></button>
-                  </div>
-                )}
-                
-                {/* Like Button on Image (Floating) */}
-                <div className="absolute bottom-4 right-4 z-10">
-                   <button 
-                    onClick={(e) => { e.stopPropagation(); toggleLike.mutate(vehicle.id); }}
-                    className={cn(
-                      "flex items-center gap-2 px-3 py-1.5 backdrop-blur-md border transition-all",
-                      vehicle.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-black/40 border-white/10 text-white hover:bg-white/20"
-                    )}
-                  >
-                    <Heart size={14} fill={vehicle.is_liked ? "currentColor" : "none"} />
-                    <span className="text-[10px] font-black">{vehicle.likes_count || 0}</span>
-                  </button>
-                </div>
-              </div>
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h4 className="text-xl font-black italic uppercase tracking-tighter">{vehicle.brand} {vehicle.model}</h4>
-                    <p className="text-zinc-500 text-[9px] font-black uppercase tracking-widest italic">{vehicle.year}</p>
-                  </div>
-                  {isOwnProfile && vehicle.license_plate && (
-                    <div className="bg-white text-black px-2 py-1 text-[9px] font-black tracking-widest border border-black">{vehicle.license_plate}</div>
+          vehicles?.map((vehicle) => {
+            const isPublic = vehicle.profiles?.license_plate_privacy === 'public';
+            const canSeePlate = isOwnProfile || canVote || isPublic;
+
+            return (
+              <motion.div 
+                key={vehicle.id}
+                layout
+                className="bg-zinc-900/50 border border-white/5 overflow-hidden group"
+              >
+                <div className="aspect-video bg-zinc-950 relative overflow-hidden">
+                  {vehicle.images && vehicle.images.length > 0 ? (
+                    <div className="flex h-full overflow-x-auto no-scrollbar snap-x snap-mandatory">
+                      {vehicle.images.map((img, idx) => (
+                        <img 
+                          key={idx} 
+                          src={img} 
+                          onClick={() => setLightboxData({ images: vehicle.images || [], index: idx })}
+                          className="w-full h-full object-cover shrink-0 snap-center cursor-pointer" 
+                          alt={`${vehicle.model} ${idx + 1}`} 
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-zinc-800"><Car size={48} /></div>
                   )}
+                  
+                  {isOwnProfile && (
+                    <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all z-10">
+                      <button onClick={() => handleEdit(vehicle)} className="p-2 bg-black/60 text-white hover:bg-white hover:text-black transition-colors"><Edit3 size={16} /></button>
+                      <button onClick={() => deleteVehicle.mutate(vehicle.id)} className="p-2 bg-black/60 text-white hover:bg-zinc-800 transition-colors"><Trash2 size={16} /></button>
+                    </div>
+                  )}
+                  
+                  {/* Like Button on Image (Floating) */}
+                  <div className="absolute bottom-4 right-4 z-10">
+                     <button 
+                      onClick={(e) => { e.stopPropagation(); toggleLike.mutate(vehicle.id); }}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-1.5 backdrop-blur-md border transition-all",
+                        vehicle.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-black/40 border-white/10 text-white hover:bg-white/20"
+                      )}
+                    >
+                      <Heart size={14} fill={vehicle.is_liked ? "currentColor" : "none"} />
+                      <span className="text-[10px] font-black">{vehicle.likes_count || 0}</span>
+                    </button>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <p className="text-[10px] font-bold uppercase text-zinc-400"><span className="text-zinc-600">{t.garage?.suspension || "Assetto"}:</span> {vehicle.suspension_type}</p>
-                  {vehicle.description && <p className="text-xs text-zinc-500 line-clamp-2 italic">{vehicle.description}</p>}
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h4 className="text-xl font-black italic uppercase tracking-tighter">{vehicle.brand} {vehicle.model}</h4>
+                      <p className="text-zinc-500 text-[9px] font-black uppercase tracking-widest italic">{vehicle.year}</p>
+                    </div>
+                    {vehicle.license_plate && (
+                      <div className={cn(
+                        "px-2 py-1 text-[9px] font-black tracking-widest border flex items-center gap-2",
+                        canSeePlate ? "bg-white text-black border-black" : "bg-zinc-800 text-zinc-500 border-white/5"
+                      )}>
+                        {canSeePlate ? (
+                          vehicle.license_plate
+                        ) : (
+                          <><EyeOff size={10} /> OSCURATA</>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-bold uppercase text-zinc-400"><span className="text-zinc-600">{t.garage?.suspension || "Assetto"}:</span> {vehicle.suspension_type}</p>
+                    {vehicle.description && <p className="text-xs text-zinc-500 line-clamp-2 italic">{vehicle.description}</p>}
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          ))
+              </motion.div>
+            );
+          })
         )}
       </div>
 

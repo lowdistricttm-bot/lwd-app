@@ -21,6 +21,9 @@ export interface Vehicle {
   created_at: string;
   likes_count?: number;
   is_liked?: boolean;
+  profiles?: {
+    license_plate_privacy: string;
+  };
 }
 
 export const useGarage = (targetUserId?: string) => {
@@ -41,6 +44,7 @@ export const useGarage = (targetUserId?: string) => {
         .from('vehicles')
         .select(`
           *,
+          profiles:user_id (license_plate_privacy),
           vehicle_likes (user_id)
         `)
         .eq('user_id', uid)
@@ -145,7 +149,7 @@ export const useGarage = (targetUserId?: string) => {
         .from('vehicles')
         .update({ 
           ...vehicleData, 
-          images: imageUrls,
+          images: imageUrls, 
           image_url: imageUrls[0] || null
         })
         .eq('id', id);

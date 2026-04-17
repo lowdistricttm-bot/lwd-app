@@ -17,7 +17,9 @@ import {
   Trash2,
   Info,
   Loader2,
-  Check
+  Check,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import {
@@ -33,6 +35,7 @@ const SettingsTab = () => {
   const [loading, setLoading] = useState(true);
   const [pushEnabled, setPushEnabled] = useState(true);
   const [emailEnabled, setEmailEnabled] = useState(false);
+  const [platePrivacy, setPlatePrivacy] = useState('private');
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -41,13 +44,14 @@ const SettingsTab = () => {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('push_notifications, email_notifications')
+        .select('push_notifications, email_notifications, license_plate_privacy')
         .eq('id', user.id)
         .maybeSingle();
 
       if (data) {
         setPushEnabled(data.push_notifications ?? true);
         setEmailEnabled(data.email_notifications ?? false);
+        setPlatePrivacy(data.license_plate_privacy ?? 'private');
       }
       setLoading(false);
     };
@@ -55,12 +59,13 @@ const SettingsTab = () => {
     fetchSettings();
   }, []);
 
-  const updateSetting = async (field: string, value: boolean) => {
+  const updateSetting = async (field: string, value: any) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
     if (field === 'push_notifications') setPushEnabled(value);
     if (field === 'email_notifications') setEmailEnabled(value);
+    if (field === 'license_plate_privacy') setPlatePrivacy(value);
 
     const { error } = await supabase
       .from('profiles')
@@ -69,10 +74,8 @@ const SettingsTab = () => {
 
     if (error) {
       showError(t.errors?.connection || "Errore durante il salvataggio");
-      if (field === 'push_notifications') setPushEnabled(!value);
-      if (field === 'email_notifications') setEmailEnabled(!value);
     } else {
-      showSuccess(t.garage?.active || "Impostazione salvata");
+      showSuccess(language === 'it' ? "Impostazione aggiornata" : "Setting updated");
     }
   };
 
@@ -84,6 +87,11 @@ const SettingsTab = () => {
   const languages: { code: Language; label: string }[] = [
     { code: 'it', label: 'Italiano' },
     { code: 'en', label: 'English' },
+  ];
+
+  const privacyOptions = [
+    { value: 'public', label: language === 'it' ? 'Pubblica' : 'Public', icon: Eye },
+    { value: 'private', label: language === 'it' ? 'Solo Amministratori' : 'Admins Only', icon: EyeOff },
   ];
 
   if (loading) {
@@ -133,9 +141,9 @@ const SettingsTab = () => {
         },
         { 
           icon: Shield, 
-          label: t.settings?.privacy || "Privacy Profilo", 
-          desc: language === 'it' ? "Gestisci chi può vedere il tuo garage" : "Manage who can see your garage",
-          action: <ChevronRight size={16} className="text-zinc-700" />
+          label: language === 'it' ? "Privacy Targa" : "Plate Privacy", 
+          desc: language === 'it' ? "Gestisci chi può vedere la tua targa" : "Manage who can see your license plate",
+          isPrivacy: true
         },
         { 
           icon: Trash2, 
@@ -204,6 +212,39 @@ const SettingsTab = () => {
                           >
                             {lang.label}
                             {language === lang.code && <Check size={12} />}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  );
+                }
+
+                if (item.isPrivacy) {
+                  return (
+                    <DropdownMenu key={j}>
+                      <DropdownMenuTrigger asChild>
+                        <button className="w-full flex items-center justify-between p-4 bg-zinc-900/30 border border-white/5 transition-all cursor-pointer hover:bg-zinc-900/50 text-left">
+                          {content}
+                          <div className="flex items-center gap-2">
+                            <span className="text-[8px] font-black uppercase italic text-zinc-500">
+                              {privacyOptions.find(o => o.value === platePrivacy)?.label}
+                            </span>
+                            <ChevronRight size={16} className="text-zinc-700" />
+                          </div>
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-zinc-900 border-white/10 rounded-none min-w-[200px] z-[200]">
+                        {privacyOptions.map((opt) => (
+                          <DropdownMenuItem 
+                            key={opt.value}
+                            onClick={() => updateSetting('license_plate_privacy', opt.value)}
+                            className="text-[10px] font-black uppercase tracking-widest italic focus:bg-white focus:text-black cursor-pointer flex justify-between items-center py-4"
+                          >
+                            <div className="flex items-center gap-3">
+                              <opt.icon size={14} />
+                              {opt.label}
+                            </div>
+                            {platePrivacy === opt.value && <Check size={12} />}
                           </DropdownMenuItem>
                         ))}
                       </DropdownMenuContent>
