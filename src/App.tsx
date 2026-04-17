@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import PullToRefresh from "@/components/PullToRefresh";
 import SpotifyPlayer from "@/components/SpotifyPlayer";
+import ScrollToTop from "@/components/ScrollToTop";
 import Index from "./pages/Index";
 import Bacheca from "./pages/Bacheca";
 import Discover from "./pages/Discover";
@@ -98,6 +99,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <ScrollToTop />
             <AppContent />
           </BrowserRouter>
         </TooltipProvider>
