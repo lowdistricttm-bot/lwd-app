@@ -217,7 +217,7 @@ const Profile = () => {
                 </div>
               </div>
               
-              <div className="mt-1 flex items-center gap-2 flex-wrap">
+              <div className="mt-0.5 flex items-center gap-2 flex-wrap">
                 <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.3em] italic leading-none">{t.profile.roles[userRole] || t.profile.roles.member}</p>
                 <span className="text-zinc-800 text-[8px] font-black">-</span>
                 <div className="flex items-center gap-1.5">
