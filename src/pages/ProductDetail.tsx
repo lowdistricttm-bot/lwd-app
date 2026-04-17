@@ -44,7 +44,6 @@ const ProductDetail = () => {
       size: selectedVariation?.attributes?.[0]?.option
     });
     
-    // Reset quantity after adding to cart
     setQuantity(1);
   };
 
@@ -54,7 +53,7 @@ const ProductDetail = () => {
     <div className="min-h-screen bg-black text-white pb-24">
       <Navbar />
       <div className="pt-24 px-6 max-w-7xl mx-auto">
-        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-zinc-500 hover:text-white mb-8 uppercase text-[10px] font-black tracking-widest">
+        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-zinc-500 hover:text-white mb-8 uppercase text-[10px] font-black tracking-widest transition-colors">
           <ChevronLeft size={16} /> Torna allo Shop
         </button>
 
@@ -116,7 +115,7 @@ const ProductDetail = () => {
             <Button 
               onClick={handleAddToCart}
               disabled={product.stock_status !== "instock" || (hasVariations && !selectedVariation)}
-              className="w-full bg-white/90 backdrop-blur-md hover:bg-zinc-200 text-black py-8 text-lg font-black uppercase tracking-widest rounded-none italic transition-all"
+              className="w-full bg-white/90 backdrop-blur-md hover:bg-white hover:scale-[1.02] active:scale-[0.98] text-black py-8 text-lg font-black uppercase tracking-widest rounded-none italic transition-all duration-300 shadow-xl shadow-white/5"
             >
               <ShoppingBag className="mr-2" size={20} /> 
               {product.stock_status !== "instock" ? "Esaurito" : (hasVariations && !selectedVariation) ? "Seleziona Taglia" : "Aggiungi al Carrello"}

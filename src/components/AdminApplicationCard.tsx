@@ -47,13 +47,8 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
 
   if (!app) return null;
 
-  // Recupero immagini veicolo (dal garage)
   const vehicleImages = Array.isArray(app.vehicles?.images) ? app.vehicles.images : (app.vehicles?.image_url ? [app.vehicles.image_url] : []);
-  
-  // Recupero immagini interni (caricate specificamente per la candidatura)
   const interiorImages = Array.isArray(app.interior_urls) ? app.interior_urls : [];
-  
-  // Unione di tutti i media per la galleria
   const allImages = [...vehicleImages, ...interiorImages];
   
   const votes = Array.isArray(app.application_votes) ? app.application_votes : [];
@@ -169,10 +164,10 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
                         <p className="text-sm font-black uppercase italic text-zinc-400">{app.vehicles?.suspension_type}</p>
                       </div>
                       <div className="space-y-1 col-span-2">
-                        <p className="text-[7px] text-zinc-600 font-bold uppercase">Targa Veicolo</p>
-                        <div className="flex items-center gap-2">
+                        <p className="text-[7px] text-zinc-600 font-bold uppercase">Targa Veicolo (Sempre Visibile Staff)</p>
+                        <div className="flex items-center gap-2 bg-white/5 p-2 border border-white/10">
                           <CreditCard size={14} className="text-white" />
-                          <p className="text-sm font-black uppercase italic text-white">{app.vehicles?.license_plate || 'NON INDICATA'}</p>
+                          <p className="text-sm font-black uppercase italic text-white tracking-widest">{app.vehicles?.license_plate || 'NON INDICATA'}</p>
                         </div>
                       </div>
                     </div>
@@ -188,7 +183,6 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
                     </h4>
                     
                     <div className="space-y-6">
-                      {/* Sezione Esterni (dal Garage) */}
                       <div>
                         <p className="text-[7px] font-black uppercase text-zinc-600 mb-2 tracking-widest">Esterni</p>
                         <div className="grid grid-cols-4 gap-2">
@@ -200,7 +194,6 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
                         </div>
                       </div>
 
-                      {/* Sezione Interni (dalla Candidatura) */}
                       {interiorImages.length > 0 && (
                         <div>
                           <p className="text-[7px] font-black uppercase text-zinc-600 mb-2 tracking-widest">Interni</p>
@@ -242,7 +235,7 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
                           onClick={(e) => { e.stopPropagation(); castVote.mutate({ applicationId: app.id, vote: 'approve' }); }}
                           disabled={castVote.isPending}
                           className={cn(
-                            "flex-1 rounded-none font-black uppercase italic text-[9px] tracking-widest h-10",
+                            "flex-1 rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 transition-all",
                             myVote === 'approve' ? "bg-green-600 text-white" : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
                           )}
                         >
@@ -252,7 +245,7 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
                           onClick={(e) => { e.stopPropagation(); castVote.mutate({ applicationId: app.id, vote: 'reject' }); }}
                           disabled={castVote.isPending}
                           className={cn(
-                            "flex-1 rounded-none font-black uppercase italic text-[9px] tracking-widest h-10",
+                            "flex-1 rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 transition-all",
                             myVote === 'reject' ? "bg-red-600 text-white" : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
                           )}
                         >
@@ -270,14 +263,14 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
                           <Button 
                             onClick={(e) => { e.stopPropagation(); onUpdateStatus(app.id, 'approved'); }}
                             disabled={isUpdating}
-                            className="flex-1 bg-green-600 text-white hover:bg-green-700 rounded-none font-black uppercase italic text-[10px] tracking-widest h-12"
+                            className="flex-1 bg-white/90 backdrop-blur-md text-black hover:bg-white hover:scale-[1.02] active:scale-[0.98] rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 transition-all duration-300"
                           >
                             APPROVA
                           </Button>
                           <Button 
                             onClick={(e) => { e.stopPropagation(); onUpdateStatus(app.id, 'rejected'); }}
                             disabled={isUpdating}
-                            className="flex-1 bg-red-600 text-white hover:bg-red-700 rounded-none font-black uppercase italic text-[10px] tracking-widest h-12"
+                            className="flex-1 bg-zinc-800/80 backdrop-blur-md text-white hover:bg-red-600 hover:scale-[1.02] active:scale-[0.98] rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 transition-all duration-300"
                           >
                             NEGA
                           </Button>
