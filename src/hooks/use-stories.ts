@@ -151,8 +151,6 @@ export const useStoryViews = (storyId: string | null) => {
     queryFn: async () => {
       if (!storyId) return [];
       
-      console.log(`[Debug] Recupero visualizzazioni per storia: ${storyId}`);
-      
       const { data, error } = await supabase
         .from('story_views')
         .select(`
@@ -171,7 +169,6 @@ export const useStoryViews = (storyId: string | null) => {
         throw error;
       }
       
-      console.log(`[Debug] Visualizzazioni trovate: ${data?.length || 0}`, data);
       return data;
     },
     enabled: !!storyId,
@@ -191,8 +188,7 @@ export const useStoryViews = (storyId: string | null) => {
           table: 'story_views',
           filter: `story_id=eq.${storyId}`
         },
-        (payload) => {
-          console.log("[Debug] Cambio visualizzazioni rilevato in tempo reale:", payload);
+        () => {
           queryClient.invalidateQueries({ queryKey: ['story-views', storyId] });
         }
       )

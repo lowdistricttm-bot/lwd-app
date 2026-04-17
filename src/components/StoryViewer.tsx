@@ -41,10 +41,8 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
   const currentStory = userStories?.items[currentIndex];
   const isVideo = currentStory?.image_url.match(/\.(mp4|webm|ogg|mov)$/i) || currentStory?.image_url.includes('video');
   
-  // Determiniamo se l'utente corrente è il proprietario della storia
   const isOwner = currentUserId === userStories?.user_id;
 
-  // Recuperiamo le visualizzazioni solo se siamo i proprietari
   const { data: views, isLoading: loadingViews } = useStoryViews(isOwner ? currentStory?.id : null);
 
   useEffect(() => {
@@ -57,7 +55,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
     };
   }, []);
 
-  // Registra la visualizzazione quando cambia la storia (se non siamo i proprietari)
   useEffect(() => {
     if (currentStory?.id && currentUserId && !isOwner) {
       recordView.mutate(currentStory.id);
@@ -66,11 +63,10 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
     setIsMediaLoading(true);
   }, [currentStory?.id, currentUserId, isOwner]);
 
-  // Gestione progresso automatico
   useEffect(() => {
     if (isVideo || isShareModalOpen || showViewers || !currentStory || isMediaLoading) return;
 
-    const duration = 10000; // 10 secondi per le immagini
+    const duration = 10000;
     const interval = 50; 
     const increment = (interval / duration) * 100;
 
@@ -169,13 +165,11 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[200] bg-black flex items-center justify-center overflow-hidden touch-none"
     >
-      {/* Background Blur */}
       <div className="absolute inset-0 z-0 opacity-50 blur-[100px] scale-150">
         <img src={currentStory.image_url} className="w-full h-full object-cover" alt="" />
       </div>
 
       <div className="relative w-full max-w-[500px] h-full bg-black overflow-hidden flex flex-col shadow-2xl">
-        {/* Progress Bars */}
         <div className="absolute top-[calc(1rem+env(safe-area-inset-top))] left-4 right-4 z-50 flex gap-1.5">
           {userStories.items.map((_, i) => (
             <div key={i} className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden">
@@ -189,7 +183,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           ))}
         </div>
 
-        {/* Header */}
         <div className="absolute top-[calc(2.5rem+env(safe-area-inset-top))] left-4 right-4 z-50 flex items-center justify-between">
           <button 
             onClick={handleProfileClick}
@@ -234,13 +227,11 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           </div>
         </div>
 
-        {/* Navigation Areas */}
         <div className="absolute inset-0 z-20 flex">
           <div className="w-1/3 h-full cursor-pointer" onClick={handlePrev} />
           <div className="w-2/3 h-full cursor-pointer" onClick={handleNext} />
         </div>
 
-        {/* Media Content */}
         <div className="flex-1 relative flex items-center justify-center bg-black">
           {isMediaLoading && (
             <div className="absolute inset-0 flex items-center justify-center z-10">
@@ -272,7 +263,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           )}
         </div>
 
-        {/* Footer Actions */}
         <div className="absolute bottom-0 left-0 right-0 z-50 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
           {isOwner ? (
             <div className="flex flex-col items-center gap-4">
@@ -281,10 +271,10 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
                 className="flex flex-col items-center gap-1 group"
               >
                 <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
-                  <Eye size={20} />
+                  {loadingViews ? <Loader2 size={20} className="animate-spin text-white" /> : <Eye size={20} />}
                 </div>
                 <span className="text-[10px] font-black uppercase tracking-widest text-white drop-shadow-md">
-                  {views?.length || 0} Visualizzazioni
+                  {loadingViews ? '...' : (views?.length || 0)} Visualizzazioni
                 </span>
               </button>
             </div>
@@ -330,7 +320,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           )}
         </div>
 
-        {/* Viewers Modal */}
         <AnimatePresence>
           {showViewers && (
             <>
@@ -385,7 +374,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           )}
         </AnimatePresence>
 
-        {/* Desktop Navigation */}
         <button 
           onClick={handlePrev}
           className="hidden md:flex absolute -left-20 top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-30 text-white transition-all border border-white/10"
