@@ -196,7 +196,7 @@ const Events = () => {
                             </div>
                           </div>
                         </div>
-                        <h3 className="text-2xl font-black italic uppercase tracking-tighter truncate">{event.title}</h3>
+                        <h3 className="text-lg font-black italic uppercase tracking-tight leading-tight">{event.title}</h3>
                       </div>
                       
                       <div className="flex flex-wrap gap-3">
