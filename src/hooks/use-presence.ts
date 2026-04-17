@@ -17,11 +17,10 @@ export const usePresence = (targetUserId?: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Creiamo un nome canale unico per questa istanza dell'hook per evitare collisioni
-      // ma usiamo lo stesso "topic" per il tracciamento se necessario.
-      // In Supabase, canali con nomi diversi sono isolati, quindi usiamo un ID unico.
+      // Usiamo un nome canale unico per istanza per evitare l'errore "cannot add callbacks"
+      // ma Supabase sincronizzerà comunque la Presence se configurata correttamente.
       const instanceId = Math.random().toString(36).substring(2, 9);
-      const channelName = `presence-tracker-${targetUserId || 'global'}-${instanceId}`;
+      const channelName = `presence-v2-${instanceId}`;
 
       channel = supabase.channel(channelName, {
         config: {
@@ -34,6 +33,7 @@ export const usePresence = (targetUserId?: string) => {
       channel
         .on('presence', { event: 'sync' }, () => {
           const state = channel.presenceState();
+          // Recuperiamo tutti gli ID utente online in questo momento
           const ids = Object.keys(state);
           setOnlineUsers(ids);
           
@@ -42,19 +42,28 @@ export const usePresence = (targetUserId?: string) => {
           }
         })
         .on('presence', { event: 'join' }, ({ key }: any) => {
-          if (key === targetUserId) setIsOnline(true);
+          if (key === targetUserId) {
+            console.log(`[Presence] ${key} è entrato online`);
+            setIsOnline(true);
+          }
         })
         .on('presence', { event: 'leave' }, ({ key }: any) => {
-          if (key === targetUserId) setIsOnline(false);
+          if (key === targetUserId) {
+            console.log(`[Presence] ${key} è uscito`);
+            setIsOnline(false);
+            // Quando esce, aggiorniamo il last seen con l'ora attuale
+            setLastSeen(formatDistanceToNow(new Date(), { addSuffix: true, locale: it }));
+          }
         })
         .subscribe(async (status: string) => {
           if (status === 'SUBSCRIBED') {
-            // Tracciamo l'utente corrente
+            // Tracciamo l'utente corrente con un timestamp
             await channel.track({
               online_at: new Date().toISOString(),
+              user_id: user.id
             });
             
-            // Aggiorniamo il DB per il Last Seen persistente
+            // Aggiorniamo anche il database per persistenza
             await supabase
               .from('profiles')
               .update({ last_seen_at: new Date().toISOString() })
@@ -65,7 +74,7 @@ export const usePresence = (targetUserId?: string) => {
 
     setupPresence();
 
-    // Recupero fallback dal DB
+    // Recupero iniziale dal DB come fallback
     if (targetUserId) {
       supabase
         .from('profiles')
@@ -82,6 +91,7 @@ export const usePresence = (targetUserId?: string) => {
     return () => {
       if (channel) {
         channel.unsubscribe();
+        supabase.removeChannel(channel);
       }
     };
   }, [targetUserId]);

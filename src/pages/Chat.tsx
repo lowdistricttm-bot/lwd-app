@@ -28,6 +28,8 @@ const Chat = () => {
   
   const { chatMessages, loadingChat, sendMessage, markAsRead } = useMessages(userId);
   const { reshareStory } = useStories();
+  
+  // Hook Presence: monitora specificamente l'utente con cui stiamo parlando
   const { isOnline, lastSeen } = usePresence(userId);
 
   useEffect(() => {
@@ -78,16 +80,24 @@ const Chat = () => {
                 <div className="w-full h-full flex items-center justify-center"><User size={18} className="text-zinc-600" /></div>
               )}
             </div>
-            {isOnline && (
-              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-black rounded-full" />
-            )}
+            {/* Indicatore Online Animato */}
+            <AnimatePresence>
+              {isOnline && (
+                <motion.div 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0 }}
+                  className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-black rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)]" 
+                />
+              )}
+            </AnimatePresence>
           </div>
           <div>
             <h4 className="text-sm font-black italic uppercase tracking-tight leading-none">
               {otherUserProfile?.username || 'Membro District'}
             </h4>
             <p className={cn(
-              "text-[8px] font-black uppercase tracking-widest mt-1",
+              "text-[8px] font-black uppercase tracking-widest mt-1 transition-colors duration-500",
               isOnline ? "text-green-500" : "text-zinc-500"
             )}>
               {isOnline ? 'Online Ora' : lastSeen ? `Ultimo accesso ${lastSeen}` : 'Offline'}
