@@ -8,6 +8,7 @@ import { LanguageProvider } from "@/hooks/use-translation";
 import { useProfileSync } from "@/hooks/use-profile-sync";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import PullToRefresh from "@/components/PullToRefresh";
 import Index from "./pages/Index";
 import Bacheca from "./pages/Bacheca";
 import Discover from "./pages/Discover";
@@ -59,23 +60,26 @@ const AppContent = () => {
   useProfileSync(currentUsername);
   
   return (
-    <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/bacheca" element={<Bacheca />} />
-      <Route path="/discover" element={<Discover />} />
-      <Route path="/shop" element={<Shop />} />
-      <Route path="/product/:id" element={<ProductDetail />} />
-      <Route path="/checkout" element={<Checkout />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/profile/:userId" element={<Profile />} />
-      <Route path="/post/:postId" element={<PostDetail />} />
-      <Route path="/events" element={<Events />} />
-      <Route path="/messages" element={<Messages />} />
-      <Route path="/chat/:userId" element={<Chat />} />
-      <Route path="/admin/applications" element={<AdminApplications />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <>
+      <PullToRefresh />
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/bacheca" element={<Bacheca />} />
+        <Route path="/discover" element={<Discover />} />
+        <Route path="/shop" element={<Shop />} />
+        <Route path="/product/:id" element={<ProductDetail />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/profile/:userId" element={<Profile />} />
+        <Route path="/post/:postId" element={<PostDetail />} />
+        <Route path="/events" element={<Events />} />
+        <Route path="/messages" element={<Messages />} />
+        <Route path="/chat/:userId" element={<Chat />} />
+        <Route path="/admin/applications" element={<AdminApplications />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </>
   );
 };
 

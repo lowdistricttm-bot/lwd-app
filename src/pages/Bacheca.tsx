@@ -8,16 +8,18 @@ import Footer from '@/components/Footer';
 import FeedPost from '@/components/FeedPost';
 import CreatePostModal from '@/components/CreatePostModal';
 import { useSocialFeed } from '@/hooks/use-social-feed';
-import { Loader2, Plus, AlertCircle, LogIn } from 'lucide-react';
+import { Loader2, Plus, AlertCircle, LogIn, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from '@/hooks/use-translation';
+import { cn } from '@/lib/utils';
 
 const Bacheca = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { posts, isLoading, error } = useSocialFeed();
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
@@ -34,6 +36,16 @@ const Bacheca = () => {
     }
   };
 
+  const handleManualRefresh = () => {
+    setIsRefreshing(true);
+    // Feedback aptico
+    if ('vibrate' in navigator) navigator.vibrate(10);
+    
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
+  };
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Navbar />
@@ -48,12 +60,20 @@ const Bacheca = () => {
               {t.feed.title}
             </h1>
           </div>
-          <button 
-            onClick={handleCreatePost}
-            className="w-12 h-12 bg-white text-black flex items-center justify-center hover:bg-zinc-200 transition-all shadow-lg shadow-white/5"
-          >
-            <Plus size={24} />
-          </button>
+          <div className="flex gap-2">
+            <button 
+              onClick={handleManualRefresh}
+              className="w-12 h-12 bg-zinc-900 text-white flex items-center justify-center hover:bg-zinc-800 transition-all shadow-lg border border-white/5"
+            >
+              <RefreshCw size={20} className={cn(isRefreshing && "animate-spin")} />
+            </button>
+            <button 
+              onClick={handleCreatePost}
+              className="w-12 h-12 bg-white text-black flex items-center justify-center hover:bg-zinc-200 transition-all shadow-lg shadow-white/5"
+            >
+              <Plus size={24} />
+            </button>
+          </div>
         </header>
 
         {error && (
