@@ -60,7 +60,7 @@ const Navbar = () => {
         </Link>
 
         <div className="flex-1 flex items-center justify-end gap-2">
-          {/* Notifiche a sinistra */}
+          {/* Notifiche */}
           <button 
             onClick={() => setIsNotificationsOpen(true)}
             className="p-2 text-zinc-400 hover:text-white transition-colors relative"
@@ -73,14 +73,14 @@ const Navbar = () => {
             )}
           </button>
 
-          {/* Direct a destra */}
+          {/* Direct - Badge ora Bianco per massima visibilità */}
           <Link 
             to="/messages"
             className="p-2 text-zinc-400 hover:text-white transition-colors relative"
           >
             <Send size={20} className="-rotate-12" />
             {unreadMessages > 0 && (
-              <span className="absolute top-1 right-1 w-4 h-4 bg-zinc-700 text-white text-[8px] font-black flex items-center justify-center rounded-full border-2 border-black">
+              <span className="absolute top-1 right-1 w-4 h-4 bg-white text-black text-[8px] font-black flex items-center justify-center rounded-full border-2 border-black animate-in zoom-in duration-300">
                 {unreadMessages > 9 ? '9+' : unreadMessages}
               </span>
             )}
