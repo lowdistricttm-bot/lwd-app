@@ -23,7 +23,8 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
     if (n.type === 'like' || n.type === 'comment') {
       navigate('/bacheca');
     } else if (n.type === 'application_status') {
-      navigate('/profile');
+      // Naviga al profilo attivando il tab delle selezioni
+      navigate('/profile?tab=selections');
     }
   };
 
