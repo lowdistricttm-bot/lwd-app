@@ -32,13 +32,16 @@ export const useGarage = (targetUserId?: string) => {
   const { data: vehicles, isLoading } = useQuery({
     queryKey: ['garage-vehicles', targetUserId],
     queryFn: async () => {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      // Se non abbiamo un ID target, proviamo a recuperare quello dell'utente corrente
       let uid = targetUserId;
       
       if (!uid) {
-        if (!currentUser) return [];
-        uid = currentUser.id;
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return [];
+        uid = user.id;
       }
+
+      console.log("[Garage] Caricamento veicoli per UID:", uid);
 
       const { data, error } = await supabase
         .from('vehicles')
@@ -51,19 +54,20 @@ export const useGarage = (targetUserId?: string) => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error("[Garage] Errore caricamento:", error);
+        console.error("[Garage] Errore query:", error.message);
         return [];
       }
       
-      if (!data) return [];
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       
-      return data.map((v: any) => ({
+      return (data || []).map((v: any) => ({
         ...v,
         images: Array.isArray(v.images) ? v.images : (v.image_url ? [v.image_url] : []),
         likes_count: v.vehicle_likes?.length || 0,
         is_liked: currentUser ? v.vehicle_likes?.some((l: any) => l.user_id === currentUser.id) : false
       })) as Vehicle[];
-    }
+    },
+    enabled: true // Sempre abilitato, gestiamo la mancanza di ID internamente
   });
 
   const uploadImages = async (files: File[]) => {
@@ -89,23 +93,15 @@ export const useGarage = (targetUserId?: string) => {
         .maybeSingle();
 
       if (existingLike) {
-        const { error } = await supabase
-          .from('vehicle_likes')
-          .delete()
-          .eq('id', existingLike.id);
-        if (error) throw error;
+        await supabase.from('vehicle_likes').delete().eq('id', existingLike.id);
       } else {
-        const { error } = await supabase
-          .from('vehicle_likes')
-          .insert([{ vehicle_id: vehicleId, user_id: user.id }]);
-        if (error) throw error;
+        await supabase.from('vehicle_likes').insert([{ vehicle_id: vehicleId, user_id: user.id }]);
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['garage-vehicles'] });
       queryClient.invalidateQueries({ queryKey: ['discover-vehicles'] });
-    },
-    onError: (err: any) => showError(err.message)
+    }
   });
 
   const addVehicle = useMutation({
@@ -135,7 +131,7 @@ export const useGarage = (targetUserId?: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['garage-vehicles'] });
-      showSuccess("Veicolo aggiunto al garage!");
+      showSuccess("Veicolo aggiunto!");
     },
     onError: (error: any) => showError(error.message)
   });
