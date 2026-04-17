@@ -48,7 +48,7 @@ const Stories = () => {
   const otherStories: any[] = (stories as any[])?.filter((group: any) => group.user_id !== currentUser?.id) || [];
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+    const files = Array.from(e.target.files || []) as File[];
     if (files.length === 0) return;
     if (!currentUser) {
       setIsAuthModalOpen(true);
@@ -72,7 +72,7 @@ const Stories = () => {
 
   return (
     <>
-      <div className="flex gap-4 overflow-x-auto no-scrollbar py-24 px-6 bg-transparent">
+      <div className="flex gap-4 overflow-x-auto no-scrollbar py-6 px-6 bg-transparent">
         {/* Sezione 'La tua storia' - Solo se l'utente è loggato */}
         {currentUser && (!isSubscriber || myStoriesGroup) && (
           <div className="flex flex-col items-center gap-2 shrink-0">
