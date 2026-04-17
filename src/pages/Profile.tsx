@@ -72,7 +72,6 @@ const Profile = () => {
     if (error) console.error("[Profile] Errore caricamento:", error);
     setProfile(profileData);
     
-    // Imposta il tab iniziale in base al ruolo del profilo visualizzato
     if (!activeTab) {
       const role = profileData?.role || 'subscriber';
       setActiveTab(role === 'subscriber' ? 'profile' : 'activity');
@@ -93,6 +92,26 @@ const Profile = () => {
     };
     checkUser();
   }, [navigate, userId]);
+
+  const handleShareProfile = async () => {
+    const displayName = profile?.username || 'Utente';
+    const shareData = {
+      title: `Profilo di ${displayName} | Low District`,
+      text: `Guarda il profilo di ${displayName} su Low District!`,
+      url: window.location.href
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        showSuccess(language === 'it' ? "Link profilo copiato!" : "Profile link copied!");
+      }
+    } catch (err) {
+      console.error('Errore condivisione:', err);
+    }
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'cover') => {
     let file = e.target.files?.[0];
@@ -130,26 +149,18 @@ const Profile = () => {
   const displayName = profile?.username || 'Utente';
   const userRole = profile?.role || 'subscriber';
   const roleLabel = t.profile.roles[userRole] || t.profile.roles.member;
-  
-  // Verifichiamo se il profilo che stiamo guardando è di un iscritto
   const isTargetSubscriber = userRole === 'subscriber';
 
-  // Generazione dinamica dei tab in base al ruolo del profilo visualizzato
   const tabs = [];
   if (!isTargetSubscriber) {
     tabs.push({ id: 'activity', label: t.profile.posts, icon: MessageSquare });
     tabs.push({ id: 'garage', label: t.nav.garage, icon: Car });
   }
-  
-  // Tab esclusivi per il proprio profilo
   if (isOwnProfile) {
     tabs.push({ id: 'orders', label: t.profile.orders, icon: ShoppingBag });
     tabs.push({ id: 'selections', label: t.profile.selections, icon: ClipboardCheck });
   }
-  
-  // Tab sempre visibili
   tabs.push({ id: 'profile', label: t.profile.info, icon: User });
-  
   if (isOwnProfile) {
     tabs.push({ id: 'settings', label: t.profile.settings, icon: Settings });
   }
@@ -187,10 +198,20 @@ const Profile = () => {
             <div className="mb-2">
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl md:text-4xl font-black italic uppercase tracking-tighter leading-none">{displayName}</h1>
-                {isOwnProfile && <button onClick={() => setIsUsernameNoticeOpen(true)} className="p-1.5 text-zinc-500 hover:text-white transition-colors"><Edit2 size={14} /></button>}
-                {!isOwnProfile && currentUser && !isTargetSubscriber && (
-                  <button onClick={() => navigate(`/chat/${profile.id}`)} className="p-2 bg-zinc-800 text-white hover:bg-white hover:text-black transition-all shadow-lg"><Mail size={18} /></button>
-                )}
+                <div className="flex items-center gap-2">
+                  {isOwnProfile && <button onClick={() => setIsUsernameNoticeOpen(true)} className="p-1.5 text-zinc-500 hover:text-white transition-colors"><Edit2 size={14} /></button>}
+                  
+                  {/* Pulsante Condividi - Nascosto per gli iscritti */}
+                  {!isTargetSubscriber && (
+                    <button onClick={handleShareProfile} className="p-1.5 text-zinc-500 hover:text-white transition-colors">
+                      <Share2 size={16} />
+                    </button>
+                  )}
+
+                  {!isOwnProfile && currentUser && !isTargetSubscriber && (
+                    <button onClick={() => navigate(`/chat/${profile.id}`)} className="p-2 bg-zinc-800 text-white hover:bg-white hover:text-black transition-all shadow-lg"><Mail size={18} /></button>
+                  )}
+                </div>
               </div>
               <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.3em] italic mt-1">{roleLabel}</p>
             </div>
@@ -198,7 +219,6 @@ const Profile = () => {
         </div>
 
         <div className="mt-20 px-4 md:px-12 max-w-6xl mx-auto">
-          {/* Nascondi highlights per gli iscritti */}
           {!isTargetSubscriber && targetUserId && <HighlightsBar userId={targetUserId} isOwnProfile={isOwnProfile} />}
 
           {isOwnProfile && (userRole === 'admin' || userRole === 'staff' || userRole === 'support') && (
