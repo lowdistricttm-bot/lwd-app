@@ -20,6 +20,7 @@ import Checkout from "./pages/Checkout";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import Events from "./pages/Events";
+import AdminDashboard from "./pages/AdminDashboard";
 import AdminApplications from "./pages/AdminApplications";
 import AdminUsers from "./pages/AdminUsers";
 import Messages from "./pages/Messages";
@@ -80,6 +81,7 @@ const AppContent = () => {
         <Route path="/events" element={<Events />} />
         <Route path="/messages" element={<Messages />} />
         <Route path="/chat/:userId" element={<Chat />} />
+        <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/applications" element={<AdminApplications />} />
         <Route path="/admin/users" element={<AdminUsers />} />
         <Route path="*" element={<NotFound />} />

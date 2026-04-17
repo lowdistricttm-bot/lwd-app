@@ -6,7 +6,6 @@ import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
 import AdminApplicationCard from '@/components/AdminApplicationCard';
-import EmailSettingsModal from '@/components/EmailSettingsModal';
 import { useAdmin } from '@/hooks/use-admin';
 import { 
   Loader2, 
@@ -15,17 +14,14 @@ import {
   ChevronLeft,
   Clock,
   CheckCircle2,
-  Mail,
-  Users
+  LayoutDashboard
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const AdminApplications = () => {
   const navigate = useNavigate();
-  const { isAdmin, canVote, checkingAdmin, allApplications, loadingApps, loadError, updateStatus } = useAdmin();
+  const { canVote, checkingAdmin, allApplications, loadingApps, loadError, updateStatus } = useAdmin();
   const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending');
-  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
   if (checkingAdmin) {
     return (
@@ -41,8 +37,8 @@ const AdminApplications = () => {
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center">
         <XCircle size={64} className="text-zinc-800 mb-6" />
         <h1 className="text-2xl font-black uppercase italic mb-4">Accesso Negato</h1>
-        <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-8">Non hai i permessi necessari per accedere a questa sezione.</p>
-        <Button onClick={() => navigate('/')} className="bg-white text-black rounded-none font-black uppercase italic px-8 h-12">Torna alla Home</Button>
+        <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-8">Non hai i permessi necessari.</p>
+        <button onClick={() => navigate('/')} className="bg-white text-black h-12 px-8 font-black uppercase italic">Home</button>
       </div>
     );
   }
@@ -57,38 +53,15 @@ const AdminApplications = () => {
       <Navbar />
       
       <main className="flex-1 pt-24 pb-32 px-4 md:px-6 max-w-4xl mx-auto w-full">
-        <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div>
-            <button 
-              onClick={() => navigate('/profile')}
-              className="flex items-center gap-2 text-zinc-500 hover:text-white mb-4 uppercase text-[10px] font-black tracking-widest transition-colors"
-            >
-              <ChevronLeft size={14} /> Torna al Profilo
-            </button>
-            <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Admin Control Panel</h2>
-            <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">Gestione Selezioni</h1>
-          </div>
-          
-          <div className="flex gap-3">
-            {isAdmin === true && (
-              <>
-                <Button 
-                  onClick={() => navigate('/admin/users')}
-                  variant="outline"
-                  className="border-white/10 text-zinc-400 hover:text-white hover:bg-white/5 rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 px-6"
-                >
-                  <Users size={16} className="mr-2" /> Gestione Membri
-                </Button>
-                <Button 
-                  onClick={() => setIsEmailModalOpen(true)}
-                  variant="outline"
-                  className="border-white/10 text-zinc-400 hover:text-white hover:bg-white/5 rounded-none font-black uppercase italic text-[10px] tracking-widest h-12 px-6"
-                >
-                  <Mail size={16} className="mr-2" /> Configura Email
-                </Button>
-              </>
-            )}
-          </div>
+        <div className="mb-12">
+          <button 
+            onClick={() => navigate('/admin')}
+            className="flex items-center gap-2 text-zinc-500 hover:text-white mb-4 uppercase text-[10px] font-black tracking-widest transition-colors"
+          >
+            <ChevronLeft size={14} /> Torna alla Dashboard
+          </button>
+          <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Admin Control Panel</h2>
+          <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">Selezioni</h1>
         </div>
 
         <div className="flex border border-white/5 bg-zinc-900/30 mb-8">
@@ -145,8 +118,6 @@ const AdminApplications = () => {
             )}
           </div>
         )}
-
-        {isAdmin === true && <EmailSettingsModal isOpen={isEmailModalOpen} onClose={() => setIsEmailModalOpen(false)} />}
       </main>
 
       <Footer />
