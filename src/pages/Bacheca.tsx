@@ -56,17 +56,20 @@ const Bacheca = () => {
             <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">{t.feed.subtitle}</h2>
             <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">{t.feed.title}</h1>
           </div>
-          <div className="flex gap-2">
-            <button onClick={handleManualRefresh} className="w-12 h-12 bg-zinc-900 text-white flex items-center justify-center hover:bg-zinc-800 transition-all shadow-lg border border-white/5">
-              <RefreshCw size={20} className={cn(isRefreshing && "animate-spin")} />
-            </button>
-            {/* Nascondi il tasto + se l'utente è un semplice iscritto */}
-            {!isSubscriber && (
-              <button onClick={handleCreatePost} className="w-12 h-12 bg-white text-black flex items-center justify-center hover:bg-zinc-200 transition-all shadow-lg shadow-white/5">
-                <Plus size={24} />
+          
+          {/* Mostra i controlli solo se l'utente è loggato */}
+          {user && (
+            <div className="flex gap-2">
+              <button onClick={handleManualRefresh} className="w-12 h-12 bg-zinc-900 text-white flex items-center justify-center hover:bg-zinc-800 transition-all shadow-lg border border-white/5">
+                <RefreshCw size={20} className={cn(isRefreshing && "animate-spin")} />
               </button>
-            )}
-          </div>
+              {!isSubscriber && (
+                <button onClick={handleCreatePost} className="w-12 h-12 bg-white text-black flex items-center justify-center hover:bg-zinc-200 transition-all shadow-lg shadow-white/5">
+                  <Plus size={24} />
+                </button>
+              )}
+            </div>
+          )}
         </header>
 
         {error && (
