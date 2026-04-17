@@ -193,6 +193,15 @@ const Profile = () => {
 
   const userPosts = posts?.filter(p => p.user_id === targetUserId) || [];
 
+  // Funzione per calcolare la dimensione del font in base alla lunghezza dell'username
+  const getUsernameSize = (name: string) => {
+    const len = name?.length || 0;
+    if (len > 25) return "text-sm md:text-lg";
+    if (len > 20) return "text-base md:text-xl";
+    if (len > 15) return "text-lg md:text-2xl";
+    return "text-xl md:text-3xl";
+  };
+
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent">
       <Navbar />
@@ -237,7 +246,12 @@ const Profile = () => {
             </div>
             <div className="mb-2 min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <h1 className="text-lg md:text-2xl font-black italic uppercase tracking-tighter leading-none truncate">{displayName}</h1>
+                <h1 className={cn(
+                  "font-black italic uppercase tracking-tighter leading-none truncate",
+                  getUsernameSize(displayName)
+                )}>
+                  {displayName}
+                </h1>
                 <div className="flex items-center gap-1.5 shrink-0">
                   {isOwnProfile && <button onClick={() => setIsUsernameNoticeOpen(true)} className="p-1 text-zinc-500 hover:text-white transition-colors"><Edit2 size={14} /></button>}
                   
