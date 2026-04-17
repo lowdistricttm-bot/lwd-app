@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Music, ChevronDown } from 'lucide-react';
+import { Music, ChevronDown, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const SpotifyPlayer = () => {
@@ -15,8 +15,8 @@ const SpotifyPlayer = () => {
       <motion.div
         initial={false}
         animate={{
-          width: isExpanded ? (window.innerWidth < 768 ? '300px' : '320px') : '48px',
-          height: isExpanded ? '380px' : '48px',
+          width: isExpanded ? '300px' : '48px',
+          height: isExpanded ? '152px' : '48px',
           borderRadius: isExpanded ? '12px' : '50%',
           opacity: 1
         }}
@@ -27,26 +27,18 @@ const SpotifyPlayer = () => {
         )}
         onClick={() => !isExpanded && setIsExpanded(true)}
       >
-        {/* Header (visibile solo se espanso) */}
+        {/* Pulsante di chiusura rapida (visibile solo se espanso) */}
         <AnimatePresence>
           {isExpanded && (
-            <motion.div 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="flex items-center justify-between p-3 border-b border-white/5 bg-zinc-900/50 shrink-0"
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={(e) => { e.stopPropagation(); setIsExpanded(false); }}
+              className="absolute top-2 right-2 z-10 p-1 bg-black/60 hover:bg-black rounded-full text-white/70 hover:text-white transition-all"
             >
-              <div className="flex items-center gap-2">
-                <Music size={14} className="text-zinc-400" />
-                <span className="text-[9px] font-black uppercase tracking-widest italic">District Radio</span>
-              </div>
-              <button 
-                onClick={(e) => { e.stopPropagation(); setIsExpanded(false); }}
-                className="p-1.5 hover:bg-white/5 text-zinc-500 hover:text-white transition-colors"
-              >
-                <ChevronDown size={16} />
-              </button>
-            </motion.div>
+              <X size={14} />
+            </motion.button>
           )}
         </AnimatePresence>
 
@@ -58,7 +50,7 @@ const SpotifyPlayer = () => {
           </div>
         )}
         
-        {/* Iframe Spotify - Altezza fissa a 100% del contenitore flex */}
+        {/* Iframe Spotify - Versione Compact (152px) */}
         <div className={cn(
           "flex-1 bg-black transition-opacity duration-500 overflow-hidden",
           isExpanded ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -66,8 +58,7 @@ const SpotifyPlayer = () => {
           <iframe 
             src={`https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator&theme=0`} 
             width="100%" 
-            height="100%" 
-            style={{ minHeight: isExpanded ? '330px' : '0' }}
+            height="152" 
             frameBorder="0" 
             allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
             loading="lazy"
