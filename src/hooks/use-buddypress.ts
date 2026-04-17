@@ -49,7 +49,7 @@ export const useBPSearchMembers = (search: string) => {
       if (!search || search.length < 2) return [];
       
       try {
-        // Aggiungiamo context=view e type=active per rendere la query più standard
+        // Aggiungiamo type=active e per_page per rendere la query più robusta
         const url = `${BP_API_URL}/members?search=${encodeURIComponent(search)}&per_page=20&context=view&type=active`;
         const response = await fetch(url, {
           headers: getAuthHeader()
@@ -122,15 +122,21 @@ export const useBPMember = (username?: string) => {
       if (!searchTerm) return null;
       
       try {
-        const url = `${BP_API_URL}/members?search=${encodeURIComponent(searchTerm)}&context=view`;
+        // Aggiunto type=active per evitare l'errore 400 su alcune configurazioni server
+        const url = `${BP_API_URL}/members?search=${encodeURIComponent(searchTerm)}&context=view&type=active`;
         const response = await fetch(url, {
           headers: getAuthHeader()
         });
         
-        if (!response.ok) return null;
+        if (!response.ok) {
+          console.warn(`[BuddyPress] Member fetch failed: ${response.status}`);
+          return null;
+        }
+        
         const data = await response.json();
         
         if (Array.isArray(data) && data.length > 0) {
+          // Cerchiamo la corrispondenza più precisa
           return data.find((m: any) => 
             m.user_login === username || 
             m.mention_name === username || 
