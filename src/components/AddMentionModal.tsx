@@ -31,11 +31,14 @@ const AddMentionModal = ({ isOpen, onClose, storyId, storyUrl, existingMentions 
     const searchUsers = async () => {
       setIsLoading(true);
       const { data: { user: currentUser } } = await supabase.auth.getUser();
+      
+      // Filtriamo gli iscritti (subscriber) e l'utente stesso
       const { data } = await supabase
         .from('profiles')
         .select('id, username, avatar_url')
         .ilike('username', `%${search}%`)
         .neq('id', currentUser?.id)
+        .neq('role', 'subscriber')
         .limit(10);
       
       setResults(data || []);
