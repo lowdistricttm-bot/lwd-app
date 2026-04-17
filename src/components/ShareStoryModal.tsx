@@ -25,23 +25,24 @@ const ShareStoryModal = ({ isOpen, onClose, storyUrl, authorName }: ShareStoryMo
 
   useEffect(() => {
     const performSearch = async () => {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) return;
+
+      // Filtriamo sempre gli iscritti (subscriber) perché non possono leggere i messaggi
+      let query = supabase
+        .from('profiles')
+        .select('*')
+        .neq('id', currentUser.id)
+        .neq('role', 'subscriber');
+
       if (search.length < 2) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-        
-        const { data } = await supabase
-          .from('profiles')
-          .select('*')
-          .neq('id', user.id)
-          .limit(5);
+        const { data } = await query.limit(5);
         setResults(data || []);
         return;
       }
 
       setIsLoading(true);
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
+      const { data } = await query
         .ilike('username', `%${search}%`)
         .limit(10);
       setResults(data || []);
@@ -100,9 +101,9 @@ const ShareStoryModal = ({ isOpen, onClose, storyUrl, authorName }: ShareStoryMo
               />
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-2 pr-2">
+            <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
               {isLoading ? (
-                <div className="flex justify-center py-10"><Loader2 className="animate-spin text-zinc-800" /></div>
+                <div className="flex justify-center py-10"><Loader2 className="animate-spin text-zinc-500" /></div>
               ) : (
                 results.map((user) => (
                   <div key={user.id} className="flex items-center justify-between p-3 bg-zinc-900/40 border border-white/5 rounded-2xl">

@@ -29,21 +29,21 @@ const SharePostModal = ({ isOpen, onClose, postId, postImageUrl, postContent }: 
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       if (!currentUser) return;
 
+      // Filtriamo sempre gli iscritti (subscriber) perché non possono leggere i messaggi
+      let query = supabase
+        .from('profiles')
+        .select('*')
+        .neq('id', currentUser.id)
+        .neq('role', 'subscriber');
+
       if (search.length < 2) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('*')
-          .neq('id', currentUser.id)
-          .limit(5);
+        const { data } = await query.limit(5);
         setResults(data || []);
         return;
       }
 
       setIsLoading(true);
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .neq('id', currentUser.id)
+      const { data } = await query
         .ilike('username', `%${search}%`)
         .limit(10);
       setResults(data || []);
