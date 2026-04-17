@@ -33,7 +33,7 @@ const Discover = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="min-h-screen text-white flex flex-col bg-transparent">
       <Navbar />
       
       <main className="flex-1 pt-24 pb-32 px-4 md:px-8 max-w-7xl mx-auto w-full">
@@ -87,7 +87,6 @@ const Discover = () => {
           </div>
         </header>
 
-        {/* Sezione Utenti */}
         <AnimatePresence>
           {debouncedSearch && users && users.length > 0 && (
             <motion.section 
@@ -125,7 +124,6 @@ const Discover = () => {
           )}
         </AnimatePresence>
 
-        {/* Sezione Nuovi Membri */}
         {!debouncedSearch && newMembers && newMembers.length > 0 && (
           <section className="mb-14">
             <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 flex items-center gap-2 italic mb-6">
@@ -213,7 +211,6 @@ const Discover = () => {
                           </span>
                         </div>
 
-                        {/* Like Badge */}
                         <div className="absolute bottom-4 right-4">
                           <button 
                             onClick={(e) => { e.stopPropagation(); toggleLike.mutate(vehicle.id); }}

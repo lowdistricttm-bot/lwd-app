@@ -46,7 +46,7 @@ const Bacheca = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="min-h-screen text-white flex flex-col bg-transparent">
       <Navbar />
       
       <main className="flex-1 pt-24 pb-24 px-4 md:px-6 max-w-2xl mx-auto w-full">
@@ -56,10 +56,9 @@ const Bacheca = () => {
             <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">{t.feed.title}</h1>
           </div>
           
-          {/* Mostra i controlli solo se l'utente è loggato */}
           {user && (
             <div className="flex gap-2">
-              <button onClick={handleManualRefresh} className="w-12 h-12 bg-zinc-900 text-white flex items-center justify-center hover:bg-zinc-800 transition-all shadow-lg border border-white/5">
+              <button onClick={handleManualRefresh} className="w-12 h-12 bg-zinc-900/50 text-white flex items-center justify-center hover:bg-zinc-800 transition-all shadow-lg border border-white/5">
                 <RefreshCw size={20} className={cn(isRefreshing && "animate-spin")} />
               </button>
               {!isSubscriber && (

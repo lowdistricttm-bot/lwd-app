@@ -42,7 +42,7 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="min-h-screen text-white flex flex-col bg-transparent">
       <Navbar />
       
       <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top))]">
@@ -51,8 +51,7 @@ const Index = () => {
         
         <FeaturedProducts />
 
-        {/* Sezione Navigazione Rapida - Spazio ridotto rispetto allo Shop */}
-        <section className="pb-24 pt-4 px-6 bg-black">
+        <section className="pb-24 pt-4 px-6">
           <div className="max-w-7xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
               {navigationTabs.map((item, i) => (
@@ -65,9 +64,8 @@ const Index = () => {
                 >
                   <Link 
                     to={item.href}
-                    className="group block relative bg-zinc-900/30 border border-white/5 p-8 md:p-12 hover:bg-zinc-900 hover:border-white/20 transition-all duration-500 overflow-hidden"
+                    className="group block relative bg-zinc-900/30 border border-white/5 p-8 md:p-12 hover:bg-zinc-900/50 hover:border-white/20 transition-all duration-500 overflow-hidden"
                   >
-                    {/* Background Decorativo */}
                     <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity">
                       <item.icon size={120} className="text-white" />
                     </div>
@@ -99,10 +97,7 @@ const Index = () => {
         
         <LatestActivities />
 
-        {/* Sezione District Radio - Resa trasparente per mostrare lo sfondo dinamico */}
-        <section className="py-16 px-6 bg-transparent border-y border-white/5 overflow-hidden relative">
-          <div className="absolute top-0 right-0 w-1/2 h-full bg-white/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-          
+        <section className="py-16 px-6 border-y border-white/5 overflow-hidden relative">
           <div className="max-w-7xl mx-auto relative z-10">
             <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
               <div className="flex-1 space-y-6 text-center md:text-left">
@@ -142,7 +137,6 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Banner Promozionale Finale */}
         <section className="relative py-40 px-6 overflow-hidden">
           <div className="absolute inset-0 z-0">
             <img 
