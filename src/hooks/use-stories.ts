@@ -62,7 +62,10 @@ export const useStories = () => {
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false });
 
-      if (error) return [];
+      if (error) {
+        console.error("[Stories] Errore caricamento:", error);
+        return [];
+      }
       return formatStories(data || []);
     }
   });
@@ -78,7 +81,10 @@ export const useStories = () => {
           items: []
         };
       }
-      acc[story.user_id].items.push(story);
+      acc[story.user_id].items.push({
+        ...story,
+        mentions: Array.isArray(story.mentions) ? story.mentions : []
+      });
       return acc;
     }, {});
     return Object.values(grouped);
@@ -126,13 +132,11 @@ export const useStories = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Accedi per menzionare");
 
-      // 1. Recupera menzioni attuali
       const { data: story } = await supabase.from('stories').select('mentions').eq('id', storyId).single();
       const currentMentions = Array.isArray(story?.mentions) ? story.mentions : [];
       
       if (currentMentions.includes(mentionId)) throw new Error("Utente già menzionato");
 
-      // 2. Aggiorna DB
       const { error: updateError } = await supabase
         .from('stories')
         .update({ mentions: [...currentMentions, mentionId] })
@@ -140,7 +144,6 @@ export const useStories = () => {
 
       if (updateError) throw updateError;
 
-      // 3. Invia Direct
       await supabase.from('messages').insert([{
         sender_id: user.id,
         receiver_id: mentionId,
