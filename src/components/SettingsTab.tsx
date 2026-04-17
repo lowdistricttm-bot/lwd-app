@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from './ui/button';
-import { Switch } from './ui/switch';
 import { useTranslation, Language } from '@/hooks/use-translation';
 import { 
   LogOut, 
@@ -19,7 +18,8 @@ import {
   Loader2,
   Check,
   Eye,
-  EyeOff
+  EyeOff,
+  CheckCircle2
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import {
@@ -33,8 +33,6 @@ const SettingsTab = () => {
   const navigate = useNavigate();
   const { language, setLanguage, t } = useTranslation();
   const [loading, setLoading] = useState(true);
-  const [pushEnabled, setPushEnabled] = useState(true);
-  const [emailEnabled, setEmailEnabled] = useState(false);
   const [platePrivacy, setPlatePrivacy] = useState('private');
 
   useEffect(() => {
@@ -44,13 +42,11 @@ const SettingsTab = () => {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('push_notifications, email_notifications, license_plate_privacy')
+        .select('license_plate_privacy')
         .eq('id', user.id)
         .maybeSingle();
 
       if (data) {
-        setPushEnabled(data.push_notifications ?? true);
-        setEmailEnabled(data.email_notifications ?? false);
         setPlatePrivacy(data.license_plate_privacy ?? 'private');
       }
       setLoading(false);
@@ -63,8 +59,6 @@ const SettingsTab = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    if (field === 'push_notifications') setPushEnabled(value);
-    if (field === 'email_notifications') setEmailEnabled(value);
     if (field === 'license_plate_privacy') setPlatePrivacy(value);
 
     const { error } = await supabase
@@ -102,6 +96,13 @@ const SettingsTab = () => {
     );
   }
 
+  const ActiveIndicator = () => (
+    <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1.5">
+      <CheckCircle2 size={12} className="text-white" />
+      <span className="text-[8px] font-black uppercase tracking-widest text-white italic">Sempre Attive</span>
+    </div>
+  );
+
   const settingsGroups = [
     {
       title: t.settings?.notifications || "Notifiche",
@@ -109,24 +110,14 @@ const SettingsTab = () => {
         { 
           icon: Bell, 
           label: t.settings?.notifications || "Notifiche Push", 
-          desc: language === 'it' ? "Ricevi avvisi per messaggi e like" : "Receive alerts for messages and likes",
-          action: (
-            <Switch 
-              checked={pushEnabled} 
-              onCheckedChange={(val) => updateSetting('push_notifications', val)} 
-            />
-          )
+          desc: language === 'it' ? "Avvisi in tempo reale per messaggi e like" : "Real-time alerts for messages and likes",
+          action: <ActiveIndicator />
         },
         { 
           icon: Smartphone, 
           label: t.settings?.emailNotifications || "Notifiche Email", 
-          desc: language === 'it' ? "Ricevi aggiornamenti sulle selezioni" : "Receive updates on applications",
-          action: (
-            <Switch 
-              checked={emailEnabled} 
-              onCheckedChange={(val) => updateSetting('email_notifications', val)} 
-            />
-          )
+          desc: language === 'it' ? "Aggiornamenti ufficiali sulle selezioni" : "Official updates on applications",
+          action: <ActiveIndicator />
         }
       ]
     },
