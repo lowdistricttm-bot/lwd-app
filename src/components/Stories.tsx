@@ -72,7 +72,7 @@ const Stories = () => {
 
   return (
     <>
-      <div className="flex gap-4 overflow-x-auto no-scrollbar py-6 px-6 bg-transparent border-b border-white/5">
+      <div className="flex gap-4 overflow-x-auto no-scrollbar py-6 px-6 bg-transparent">
         {/* Sezione 'La tua storia' - Solo se l'utente è loggato */}
         {currentUser && (!isSubscriber || myStoriesGroup) && (
           <div className="flex flex-col items-center gap-2 shrink-0">

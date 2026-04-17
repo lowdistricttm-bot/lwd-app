@@ -37,7 +37,7 @@ const LatestActivities = () => {
   const latestPosts = posts?.slice(0, 6) || [];
 
   return (
-    <section className="py-24 px-6 bg-transparent border-t border-white/5 overflow-hidden min-h-[400px]">
+    <section className="py-24 px-6 bg-transparent overflow-hidden min-h-[400px]">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
           <div>
