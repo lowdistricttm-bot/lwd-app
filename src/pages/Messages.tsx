@@ -104,14 +104,14 @@ const Messages = () => {
                 <div 
                   key={conv.otherId} 
                   className={cn(
-                    "relative overflow-hidden rounded-[2rem] border transition-all duration-300 group",
+                    "relative overflow-hidden rounded-[1.5rem] border transition-all duration-300 group",
                     isUnread 
                       ? "bg-white/10 backdrop-blur-2xl border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.15)]" 
                       : "bg-zinc-900/40 border-white/5 shadow-none"
                   )}
                 >
-                  <div className="absolute inset-0 bg-red-950/40 flex items-center justify-end px-8">
-                    <Trash2 size={24} strokeWidth={2} className="text-red-400/80" />
+                  <div className="absolute inset-0 bg-red-950/40 flex items-center justify-end px-6">
+                    <Trash2 size={20} strokeWidth={2} className="text-red-400/80" />
                   </div>
                   
                   <motion.div 
@@ -140,26 +140,26 @@ const Messages = () => {
                       navigate(`/chat/${conv.otherId}`);
                     }} 
                     className={cn(
-                      "relative w-full p-5 flex items-center gap-4 transition-colors z-10 cursor-pointer", 
+                      "relative w-full px-4 py-3 flex items-center gap-3 transition-colors z-10 cursor-pointer", 
                       isUnread ? "bg-transparent" : "bg-zinc-950 hover:bg-zinc-900"
                     )}
                   >
                     <div className="relative shrink-0">
-                      <div className={cn("w-14 h-14 rounded-full overflow-hidden border-2 shrink-0 bg-black/40", isUnread ? "border-white" : "border-white/10")}>
+                      <div className={cn("w-12 h-12 rounded-full overflow-hidden border-2 shrink-0 bg-black/40", isUnread ? "border-white" : "border-white/10")}>
                         {conv.otherUser?.avatar_url ? (
                           <img src={conv.otherUser.avatar_url} className="w-full h-full object-cover" alt="Avatar" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-zinc-500"><User size={24} strokeWidth={1.5} /></div>
+                          <div className="w-full h-full flex items-center justify-center text-zinc-500"><User size={20} strokeWidth={1.5} /></div>
                         )}
                       </div>
-                      {isUnread && <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-white rounded-full border-2 border-black animate-pulse shadow-[0_0_10px_rgba(255,255,255,0.5)]" />}
+                      {isUnread && <div className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-white rounded-full border-2 border-black animate-pulse shadow-[0_0_10px_rgba(255,255,255,0.5)]" />}
                     </div>
                     <div className="flex-1 text-left min-w-0 pointer-events-none">
-                      <div className="flex justify-between items-center mb-1">
+                      <div className="flex justify-between items-center mb-0.5">
                         <h4 className={cn("text-sm font-black italic uppercase tracking-tight truncate", isUnread ? "text-white" : "text-zinc-300")}>
                           {conv.otherUser?.username || 'Membro District'}
                         </h4>
-                        <span className={cn("text-[8px] font-bold uppercase", isUnread ? "text-white" : "text-zinc-500")}>
+                        <span className={cn("text-[8px] font-bold uppercase shrink-0 pl-2", isUnread ? "text-white" : "text-zinc-500")}>
                           {formatDistanceToNow(new Date(conv.lastMessage.created_at), { addSuffix: true, locale: language === 'it' ? it : enUS })}
                         </span>
                       </div>
@@ -167,7 +167,7 @@ const Messages = () => {
                         {conv.lastMessage.content}
                       </p>
                     </div>
-                    <ChevronRight size={18} strokeWidth={2} className={cn("transition-colors", isUnread ? "text-white" : "text-zinc-600 group-hover:text-white")} />
+                    <ChevronRight size={16} strokeWidth={2} className={cn("transition-colors shrink-0", isUnread ? "text-white" : "text-zinc-600 group-hover:text-white")} />
                   </motion.div>
                 </div>
               );
