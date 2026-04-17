@@ -48,18 +48,53 @@ const Login = () => {
             <div className="space-y-6">
               <div className="space-y-2">
                 <Label className="font-black uppercase text-[9px] tracking-[0.2em] text-zinc-500 ml-4">{t.auth.username}</Label>
-                <Input type="text" value={username} onChange={(e) => setUsername(e.target.value)} required className="bg-zinc-900/50 border-zinc-800 rounded-full h-14 px-6 font-bold text-xs tracking-widest focus:border-primary transition-all" />
+                <Input 
+                  type="text" 
+                  value={username} 
+                  onChange={(e) => setUsername(e.target.value)} 
+                  required 
+                  className="bg-zinc-900/50 border-zinc-800 rounded-full h-14 px-6 font-bold text-xs tracking-widest focus-visible:ring-1 focus-visible:ring-white focus-visible:border-white transition-all" 
+                />
               </div>
               <div className="space-y-2">
-                <Label className="font-black uppercase text-[9px] tracking-[0.2em] text-zinc-500 ml-4">{t.auth.password}</Label>
-                <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="bg-zinc-900/50 border-zinc-800 rounded-full h-14 px-6 font-bold text-xs tracking-widest focus:border-primary transition-all" />
+                <div className="flex items-center justify-between ml-4 mr-4">
+                  <Label className="font-black uppercase text-[9px] tracking-[0.2em] text-zinc-500">{t.auth.password}</Label>
+                  <a 
+                    href="https://www.lowdistrict.it/mio-account/lost-password/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-[9px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
+                  >
+                    {t.auth.forgot}
+                  </a>
+                </div>
+                <Input 
+                  type="password" 
+                  value={password} 
+                  onChange={(e) => setPassword(e.target.value)} 
+                  required 
+                  className="bg-zinc-900/50 border-zinc-800 rounded-full h-14 px-6 font-bold text-xs tracking-widest focus-visible:ring-1 focus-visible:ring-white focus-visible:border-white transition-all" 
+                />
               </div>
             </div>
 
-            <Button type="submit" disabled={isLoading} className="w-full bg-primary text-white hover:scale-105 rounded-full h-16 font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl shadow-primary/20">
-              {isLoading ? <Loader2 className="animate-spin" size={20} /> : <span className="flex items-center justify-center gap-2">{t.auth.login} <ArrowRight size={18} /></span>}
+            <Button type="submit" disabled={isLoading} className="w-full bg-white text-black hover:scale-105 rounded-full h-16 font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl shadow-white/10">
+              {isLoading ? <Loader2 className="animate-spin text-black" size={20} /> : <span className="flex items-center justify-center gap-2">{t.auth.login} <ArrowRight size={18} /></span>}
             </Button>
           </form>
+
+          <div className="mt-10 text-center space-y-3">
+            <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">{t.auth.notMember}</p>
+            <a 
+              href="https://www.lowdistrict.it/selection-lwdstrct/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-[10px] font-black uppercase tracking-[0.2em] italic text-white hover:text-zinc-300 transition-colors border-b border-white/20 pb-1 inline-block"
+            >
+              {t.auth.register}
+            </a>
+          </div>
+
         </motion.div>
       </main>
       <BottomNav />

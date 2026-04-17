@@ -52,7 +52,7 @@ const Bacheca = () => {
                 <RefreshCw size={20} className={cn(isRefreshing && "animate-spin")} />
               </button>
               {!isSubscriber && (
-                <button onClick={() => setIsPostModalOpen(true)} className="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center hover:scale-110 transition-all shadow-xl shadow-primary/20">
+                <button onClick={() => setIsPostModalOpen(true)} className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 transition-all shadow-xl shadow-white/20">
                   <Plus size={24} />
                 </button>
               )}
@@ -63,7 +63,7 @@ const Bacheca = () => {
         {!user && (
           <div className="mb-8 p-8 bg-white/10 backdrop-blur-md border border-white/10 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-              <AlertCircle className="text-primary shrink-0" size={32} />
+              <AlertCircle className="text-white shrink-0" size={32} />
               <div>
                 <p className="text-xs font-black uppercase tracking-widest text-white">{t.feed.private}</p>
                 <p className="text-[10px] text-zinc-400 font-bold uppercase mt-1">Accedi per partecipare alle discussioni.</p>

@@ -285,7 +285,7 @@ const Profile = () => {
                   <motion.div key="activity" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
                     <div className="flex justify-between items-center mb-4">
                       <h3 className="text-xl font-black italic uppercase">{isOwnProfile ? t.profile.myPosts : t.profile.posts}</h3>
-                      {isOwnProfile && <Button onClick={() => setIsPostModalOpen(true)} className="bg-primary text-white hover:scale-105 rounded-full text-[10px] font-black uppercase italic tracking-widest h-10 px-6 shadow-lg shadow-primary/20"><Plus size={14} className="mr-2" /> {t.feed.newPost}</Button>}
+                      {isOwnProfile && <Button onClick={() => setIsPostModalOpen(true)} className="bg-white text-black hover:scale-105 rounded-full text-[10px] font-black uppercase italic tracking-widest h-10 px-6 shadow-lg shadow-white/20"><Plus size={14} className="mr-2" /> {t.feed.newPost}</Button>}
                     </div>
                     {loadingPosts ? <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div> : userPosts.length > 0 ? <div className="grid grid-cols-3 gap-1 md:gap-4">{userPosts.map((post) => <ProfilePostGridItem key={post.id} post={post} />)}</div> : <div className="bg-zinc-900/30 border border-white/5 p-12 rounded-[2rem] text-center"><MessageSquare className="mx-auto text-zinc-800 mb-6" size={48} /><p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{isOwnProfile ? t.profile.noPosts : t.feed.noPosts}</p></div>}
                   </motion.div>
