@@ -137,14 +137,16 @@ const Events = () => {
       <Navbar />
       <main className="flex-1 pt-24 pb-32 px-6 max-w-4xl mx-auto w-full">
         <header className="mb-12 flex items-end justify-between">
-          <div>
+          <div className="min-w-0 flex-1">
             <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">{t.events.subtitle}</h2>
-            <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">{t.events.title}</h1>
+            <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-6xl font-black italic tracking-tighter uppercase whitespace-nowrap overflow-hidden text-ellipsis">
+              {t.events.title}
+            </h1>
           </div>
           {isAdmin && (
             <Button 
               onClick={() => { setEditingEvent(null); setIsAdminModalOpen(true); }}
-              className="w-12 h-12 bg-white text-black flex items-center justify-center hover:bg-zinc-200 transition-all shadow-lg"
+              className="w-12 h-12 bg-white text-black flex items-center justify-center hover:bg-zinc-200 transition-all shadow-lg ml-4 shrink-0"
             >
               <Plus size={24} />
             </Button>
