@@ -1,8 +1,8 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, ShoppingBag, X, Send, Bell } from 'lucide-react';
+import { Search, ShoppingBag, X, Send, Bell, ShieldAlert } from 'lucide-react';
 import Logo from './Logo';
 import { useCart } from '@/hooks/use-cart';
 import { useMessages } from '@/hooks/use-messages';
@@ -11,11 +11,22 @@ import { useAdmin } from '@/hooks/use-admin';
 import CartDrawer from './CartDrawer';
 import NotificationDrawer from './NotificationDrawer';
 import { Input } from './ui/input';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
   const [isCartOpen, setIsCartOpen] = React.useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false);
+  const [isRestrictedOpen, setIsRestrictedOpen] = useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
   
   const { items } = useCart();
@@ -32,6 +43,14 @@ const Navbar = () => {
       navigate(`/shop?search=${encodeURIComponent(searchQuery)}`);
       setIsSearchOpen(false);
       setSearchQuery('');
+    }
+  };
+
+  const handleDirectClick = () => {
+    if (isSubscriber) {
+      setIsRestrictedOpen(true);
+    } else {
+      navigate('/messages');
     }
   };
 
@@ -54,13 +73,18 @@ const Navbar = () => {
             {unreadNotifications > 0 && <span className="absolute top-1 right-1 w-4 h-4 bg-white text-black text-[8px] font-black flex items-center justify-center rounded-full border-2 border-black">{unreadNotifications > 9 ? '9+' : unreadNotifications}</span>}
           </button>
 
-          {/* Nascondi Direct per gli iscritti */}
-          {!isSubscriber && (
-            <Link to="/messages" className="p-2 text-zinc-400 hover:text-white transition-colors relative">
-              <Send size={20} className="-rotate-12" />
-              {unreadMessages > 0 && <span className="absolute top-1 right-1 w-4 h-4 bg-white text-black text-[8px] font-black flex items-center justify-center rounded-full border-2 border-black animate-in zoom-in duration-300">{unreadMessages > 9 ? '9+' : unreadMessages}</span>}
-            </Link>
-          )}
+          {/* Icona Direct - Sempre visibile, ma con controllo al click */}
+          <button 
+            onClick={handleDirectClick}
+            className="p-2 text-zinc-400 hover:text-white transition-colors relative"
+          >
+            <Send size={20} className="-rotate-12" />
+            {!isSubscriber && unreadMessages > 0 && (
+              <span className="absolute top-1 right-1 w-4 h-4 bg-white text-black text-[8px] font-black flex items-center justify-center rounded-full border-2 border-black animate-in zoom-in duration-300">
+                {unreadMessages > 9 ? '9+' : unreadMessages}
+              </span>
+            )}
+          </button>
         </div>
       </nav>
 
@@ -76,6 +100,35 @@ const Navbar = () => {
 
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
       <NotificationDrawer isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
+
+      {/* Pop-up Restrizione Direct per Iscritti */}
+      <AlertDialog open={isRestrictedOpen} onOpenChange={setIsRestrictedOpen}>
+        <AlertDialogContent className="bg-zinc-950 border-white/10 rounded-none">
+          <AlertDialogHeader>
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-zinc-900 border border-white/10 flex items-center justify-center rotate-45">
+                <ShieldAlert size={32} className="text-white -rotate-45" />
+              </div>
+            </div>
+            <AlertDialogTitle className="text-white font-black uppercase italic text-center">Accesso Limitato</AlertDialogTitle>
+            <AlertDialogDescription className="text-zinc-500 text-xs font-bold uppercase leading-relaxed text-center">
+              I messaggi privati sono una funzione esclusiva riservata ai membri ufficiali del District. 
+              Contatta lo staff per scoprire come elevare il tuo grado.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:flex-col gap-2">
+            <AlertDialogAction 
+              onClick={() => window.location.href = 'mailto:info@lowdistrict.it'} 
+              className="rounded-none bg-white text-black font-black uppercase italic text-[10px] w-full"
+            >
+              Contatta Staff
+            </AlertDialogAction>
+            <AlertDialogCancel className="rounded-none border-white/10 text-white font-black uppercase italic text-[10px] w-full">
+              Chiudi
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
