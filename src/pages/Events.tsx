@@ -126,7 +126,6 @@ const Events = () => {
       return startDate.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
     }
 
-    // Se stesso mese e anno: "27-28 GIUGNO 2026"
     if (startDate.getMonth() === endDate.getMonth() && startDate.getFullYear() === endDate.getFullYear()) {
       const startDay = startDate.getDate();
       const endDay = endDate.getDate();
@@ -134,7 +133,6 @@ const Events = () => {
       return `${startDay}-${endDay} ${monthYear}`;
     }
     
-    // Fallback per mesi differenti
     return `${startDate.toLocaleDateString(locale, { day: 'numeric', month: 'short' })} - ${endDate.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })}`.toUpperCase();
   };
 
@@ -181,9 +179,9 @@ const Events = () => {
                         <img src={event.image_url} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt={event.title} />
                       </div>
                     )}
-                    <div className="flex-1 p-8 flex flex-col items-center justify-center text-center gap-8">
-                      <div className="space-y-6 w-full">
-                        <div className="flex flex-col items-center gap-4">
+                    <div className="flex-1 p-8 flex flex-col items-center justify-center text-center gap-8 min-w-0">
+                      <div className="space-y-6 w-full min-w-0">
+                        <div className="flex flex-col items-center gap-4 w-full">
                           <span className={cn(
                             "text-[7px] font-black uppercase px-2 py-1 italic flex items-center gap-1.5 shrink-0",
                             existingApp?.status === 'pending' && "bg-zinc-800 text-zinc-400",
@@ -202,7 +200,7 @@ const Events = () => {
                             )}
                           </span>
                           
-                          <h3 className="text-xl md:text-2xl font-black italic uppercase tracking-tight leading-tight max-w-md">
+                          <h3 className="text-lg md:text-xl font-black italic uppercase tracking-tight truncate w-full max-w-md">
                             {event.title}
                           </h3>
 
