@@ -263,30 +263,30 @@ const Profile = () => {
                   {displayName}
                 </h1>
                 <div className="flex items-center gap-1 shrink-0">
-                  {isOwnProfile && (
+                  {!isOwnProfile && currentUser && canMessageTarget && (
                     <button 
-                      onClick={() => setIsUsernameNoticeOpen(true)} 
+                      onClick={() => navigate(`/chat/${profile.id}`)} 
                       className="p-1 text-zinc-500 hover:text-white transition-colors"
                     >
-                      <Edit2 size={14} />
+                      <Mail size={18} />
                     </button>
                   )}
-                  
+
                   {!isTargetSubscriber && (
                     <button 
                       onClick={handleShareProfile} 
                       className="p-1 text-zinc-500 hover:text-white transition-colors"
                     >
-                      <Share2 size={16} />
+                      <Share2 size={18} />
                     </button>
                   )}
 
-                  {!isOwnProfile && currentUser && canMessageTarget && (
+                  {isOwnProfile && (
                     <button 
-                      onClick={() => navigate(`/chat/${profile.id}`)} 
-                      className="p-1.5 bg-zinc-800/80 backdrop-blur-md text-white hover:bg-white hover:text-black transition-all shadow-lg"
+                      onClick={() => setIsUsernameNoticeOpen(true)} 
+                      className="p-1 text-zinc-500 hover:text-white transition-colors"
                     >
-                      <Mail size={16} />
+                      <Edit2 size={16} />
                     </button>
                   )}
                 </div>
