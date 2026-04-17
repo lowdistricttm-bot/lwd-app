@@ -5,7 +5,6 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
-import Footer from '@/components/Footer';
 import GarageTab from '@/components/GarageTab';
 import ApplicationsTab from '@/components/ApplicationsTab';
 import ProfilePostGridItem from '@/components/ProfilePostGridItem';
@@ -332,7 +331,7 @@ const Profile = () => {
 
       <CreatePostModal isOpen={isPostModalOpen} onClose={() => setIsPostModalOpen(false)} />
       <ImageLightbox images={lightboxData?.images || []} initialIndex={lightboxData?.index || 0} isOpen={!!lightboxData} onClose={() => setLightboxData(null)} />
-      <Footer /><BottomNav />
+      <BottomNav />
     </div>
   );
 };

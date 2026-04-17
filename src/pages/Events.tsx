@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
-import Footer from '@/components/Footer';
 import { useEvents, Event, useUserApplications } from '@/hooks/use-events';
 import { useGarage } from '@/hooks/use-garage';
 import { useAdmin } from '@/hooks/use-admin';
@@ -379,7 +378,7 @@ const Events = () => {
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-black uppercase italic truncate">{v.brand} {v.model}</p>
-                              <p className="text-[9px] font-bold uppercase text-zinc-500 group-hover:text-zinc-400">
+                              <p className="text-[9px] font-bold uppercase text-zinc-600 group-hover:text-zinc-400">
                                 {v.suspension_type} • {v.year}
                               </p>
                             </div>
@@ -433,7 +432,6 @@ const Events = () => {
           application={manageApp} 
         />
       </main>
-      <Footer />
       <BottomNav />
     </div>
   );

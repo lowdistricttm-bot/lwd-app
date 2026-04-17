@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
-import Footer from '@/components/Footer';
 import { useDiscover } from '@/hooks/use-discover';
 import { useGarage } from '@/hooks/use-garage';
 import { Loader2, Car, Search, LayoutGrid, StretchHorizontal, User, ChevronRight, ShieldCheck, Sparkles, Calendar, Gauge, Users, Heart } from 'lucide-react';
@@ -350,7 +349,6 @@ const Discover = () => {
         onClose={() => setLightboxData(null)} 
       />
       
-      <Footer />
       <BottomNav />
     </div>
   );

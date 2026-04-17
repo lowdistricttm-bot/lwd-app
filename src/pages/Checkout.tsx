@@ -4,7 +4,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
-import Footer from '@/components/Footer';
 import { useCart } from '@/hooks/use-cart';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -163,7 +162,7 @@ const Checkout = () => {
             </Button>
           </div>
         </main>
-        <Footer /><BottomNav />
+        <BottomNav />
       </div>
     );
   }
@@ -248,7 +247,7 @@ const Checkout = () => {
           </form>
         )}
       </main>
-      <Footer /><BottomNav />
+      <BottomNav />
     </div>
   );
 };

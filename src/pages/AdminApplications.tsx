@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
-import Footer from '@/components/Footer';
 import AdminApplicationCard from '@/components/AdminApplicationCard';
 import { useAdmin } from '@/hooks/use-admin';
 import { 
@@ -120,7 +119,6 @@ const AdminApplications = () => {
         )}
       </main>
 
-      <Footer />
       <BottomNav />
     </div>
   );
