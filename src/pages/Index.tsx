@@ -64,15 +64,15 @@ const Index = () => {
                 >
                   <Link 
                     to={item.href}
-                    className="group block relative bg-zinc-900/30 border border-white/5 p-8 md:p-12 hover:bg-zinc-900/50 hover:border-white/20 transition-all duration-500 overflow-hidden"
+                    className="group block relative bg-zinc-900/40 backdrop-blur-sm border border-white/5 p-8 md:p-12 hover:bg-zinc-800/60 hover:border-white/20 transition-all duration-500 overflow-hidden rounded-[2rem]"
                   >
                     <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity">
                       <item.icon size={120} className="text-white" />
                     </div>
 
                     <div className="relative z-10 space-y-6">
-                      <div className="w-12 h-12 bg-zinc-800 border border-white/5 flex items-center justify-center rotate-45 group-hover:bg-zinc-700 group-hover:rotate-0 transition-all duration-500">
-                        <item.icon className="text-white -rotate-45 group-hover:rotate-0 transition-transform duration-500" size={20} />
+                      <div className="w-12 h-12 bg-white/5 border border-white/10 flex items-center justify-center rounded-2xl group-hover:bg-white group-hover:text-black transition-all duration-500">
+                        <item.icon size={20} />
                       </div>
                       
                       <div>
@@ -115,14 +115,14 @@ const Index = () => {
                     href="https://open.spotify.com/playlist/49mK52uCtaHSCLY1VC9GR3" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-3 bg-[#1DB954]/90 backdrop-blur-md text-black px-6 py-3 text-[9px] font-black uppercase tracking-widest italic hover:scale-105 transition-transform"
+                    className="inline-flex items-center gap-3 bg-[#1DB954] text-black px-8 py-4 rounded-full text-[9px] font-black uppercase tracking-widest italic hover:scale-105 transition-transform shadow-lg shadow-[#1DB954]/20"
                   >
                     <Play size={14} fill="currentColor" /> Apri su Spotify
                   </a>
                 </div>
               </div>
               
-              <div className="w-full md:w-[450px] h-[152px] shadow-2xl">
+              <div className="w-full md:w-[450px] h-[152px] shadow-2xl rounded-3xl overflow-hidden">
                 <iframe 
                   src="https://open.spotify.com/embed/playlist/49mK52uCtaHSCLY1VC9GR3?utm_source=generator&theme=0" 
                   width="100%" 
@@ -130,41 +130,40 @@ const Index = () => {
                   frameBorder="0" 
                   allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
                   loading="lazy"
-                  className="rounded-xl"
                 />
               </div>
             </div>
           </div>
         </section>
 
-        <section className="relative py-12 px-6 overflow-hidden">
+        <section className="relative py-24 px-6 overflow-hidden rounded-[3rem] mx-4 mb-12">
           <div className="absolute inset-0 z-0">
             <img 
               src="https://www.lowdistrict.it/wp-content/uploads/DSC01359-1-scaled-e1751832356345.jpg" 
-              className="w-full h-full object-cover opacity-20 grayscale scale-110 blur-[3px]"
+              className="w-full h-full object-cover opacity-40 grayscale scale-105 blur-[1px]"
               alt="Background"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-black via-black/40 to-black"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80"></div>
           </div>
           
           <div className="relative z-10 max-w-5xl mx-auto text-center flex flex-col items-center">
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               className="w-full"
             >
-              <h2 className="text-[6.5vw] xs:text-2xl sm:text-4xl md:text-6xl lg:text-7xl font-black italic uppercase tracking-tighter mb-6 leading-none whitespace-nowrap">
+              <h2 className="text-[6.5vw] xs:text-2xl sm:text-4xl md:text-6xl lg:text-7xl font-black italic uppercase tracking-tighter mb-6 leading-none whitespace-nowrap drop-shadow-2xl">
                 {t.home.banner.title}
               </h2>
-              <p className="text-zinc-400 text-[2.8vw] xs:text-[10px] md:text-sm font-black uppercase tracking-[0.15em] md:tracking-[0.4em] mb-12 italic whitespace-nowrap">
+              <p className="text-white/80 text-[2.8vw] xs:text-[10px] md:text-sm font-black uppercase tracking-[0.15em] md:tracking-[0.4em] mb-12 italic whitespace-nowrap">
                 {t.home.banner.subtitle}
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md mx-auto">
-                <Link to="/events" className="w-full sm:w-auto bg-white/90 backdrop-blur-md text-black px-10 py-4 text-[10px] font-black uppercase tracking-[0.2em] italic hover:bg-white transition-all">
+                <Link to="/events" className="w-full sm:w-auto bg-white text-black px-12 py-5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] italic hover:scale-105 transition-all shadow-xl">
                   {t.home.banner.applyBtn}
                 </Link>
-                <Link to="/shop" className="w-full sm:w-auto border border-white/20 backdrop-blur-md text-white px-10 py-4 text-[10px] font-black uppercase tracking-[0.2em] italic hover:bg-white/10 transition-all">
+                <Link to="/shop" className="w-full sm:w-auto bg-white/10 backdrop-blur-md border border-white/20 text-white px-12 py-5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] italic hover:bg-white/20 transition-all">
                   {t.home.banner.shopBtn}
                 </Link>
               </div>

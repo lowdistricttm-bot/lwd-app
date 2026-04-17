@@ -14,26 +14,32 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#ffffff",
-          foreground: "#000000",
+          DEFAULT: "#007AFF", // iOS System Blue
+          foreground: "#ffffff",
         },
         secondary: {
-          DEFAULT: "#18181b",
+          DEFAULT: "#1c1c1e", // iOS Dark Secondary
           foreground: "#ffffff",
         },
         zinc: {
-          950: "#09090b",
-          900: "#18181b",
-          800: "#27272a",
-          700: "#3f3f46",
-          600: "#52525b",
-          500: "#71717a",
-          400: "#a1a1aa",
+          950: "#000000",
+          900: "#1c1c1e",
+          800: "#2c2c2e",
+          700: "#3a3a3c",
+          600: "#48484a",
+          500: "#636366",
+          400: "#8e8e93",
         }
       },
       borderRadius: {
         none: "0",
-        sm: "2px",
+        sm: "8px",
+        md: "12px",
+        lg: "16px",
+        xl: "20px",
+        "2xl": "24px",
+        "3xl": "32px",
+        full: "9999px",
       },
       fontFamily: {
         sans: ["Inter", "sans-serif"],

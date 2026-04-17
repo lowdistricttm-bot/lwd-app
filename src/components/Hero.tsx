@@ -44,12 +44,12 @@ const Hero = () => {
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link to="/shop" className="w-full sm:w-auto">
-              <Button className="bg-white/70 backdrop-blur-2xl text-black hover:bg-white hover:scale-[1.05] active:scale-[0.98] rounded-none px-12 py-8 text-sm font-black uppercase tracking-widest w-full italic transition-all duration-500 group shadow-2xl border-none">
-                {t.hero?.shopBtn} <ChevronRight className="ml-2 group-hover:translate-x-1 transition-transform" size={18} />
+              <Button className="bg-white text-black hover:scale-105 active:scale-95 rounded-full px-12 py-8 text-sm font-black uppercase tracking-widest w-full italic transition-all duration-500 shadow-2xl border-none">
+                {t.hero?.shopBtn} <ChevronRight className="ml-2" size={18} />
               </Button>
             </Link>
             <Link to="/events" className="w-full sm:w-auto">
-              <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 hover:scale-[1.05] active:scale-[0.98] rounded-none px-12 py-8 text-sm font-black uppercase tracking-widest w-full italic backdrop-blur-md transition-all duration-500">
+              <Button variant="outline" className="bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 hover:scale-105 active:scale-95 rounded-full px-12 py-8 text-sm font-black uppercase tracking-widest w-full italic transition-all duration-500">
                 <CalendarDays className="mr-2" size={16} /> {t.hero?.eventsBtn}
               </Button>
             </Link>
