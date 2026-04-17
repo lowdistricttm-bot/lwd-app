@@ -50,7 +50,12 @@ export const useGarage = (targetUserId?: string) => {
         .eq('user_id', uid)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("[Garage] Errore caricamento:", error);
+        return [];
+      }
+      
+      if (!data) return [];
       
       return data.map((v: any) => ({
         ...v,
