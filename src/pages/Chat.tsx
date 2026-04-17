@@ -71,6 +71,22 @@ const Chat = () => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [chatMessages]);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      const newFiles = [...selectedFiles, ...files].slice(0, 10);
+      setSelectedFiles(newFiles);
+      setPreviews(newFiles.map(file => URL.createObjectURL(file)));
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removeFile = (index: number) => {
+    const newFiles = selectedFiles.filter((_, i) => i !== index);
+    setSelectedFiles(newFiles);
+    setPreviews(newFiles.map(file => URL.createObjectURL(file)));
+  };
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if ((!message.trim() && selectedFiles.length === 0) || !userId) return;
@@ -123,7 +139,7 @@ const Chat = () => {
         </button>
       </nav>
 
-      <main ref={scrollRef} className="flex-1 pt-24 pb-32 px-6 overflow-y-auto space-y-6 custom-scrollbar">
+      <main ref={scrollRef} className="flex-1 pt-24 pb-[140px] px-6 overflow-y-auto space-y-6 custom-scrollbar">
         {chatMessages?.map((msg) => {
           const isMe = msg.sender_id === currentUserId;
           const isMention = msg.content.includes('Ti ha menzionato');
@@ -138,7 +154,11 @@ const Chat = () => {
               )}>
                 {msgImages.length > 0 && (
                   <div className="relative aspect-[3/4] w-64 bg-black cursor-pointer" onClick={() => setLightboxData({ images: msgImages, index: 0 })}>
-                    <img src={msgImages[0]} className="w-full h-full object-cover" />
+                    {msgImages[0].match(/\.(mp4|webm|ogg|mov)$/i) || msgImages[0].includes('video') ? (
+                      <video src={msgImages[0]} className="w-full h-full object-cover" controls />
+                    ) : (
+                      <img src={msgImages[0]} className="w-full h-full object-cover" />
+                    )}
                     {isMention && (
                       <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center p-6 text-center">
                         <AtSign size={32} strokeWidth={2} className="mb-2 text-white" />
@@ -154,12 +174,14 @@ const Chat = () => {
                     )}
                   </div>
                 )}
-                <div className="p-4">
-                  <p className="text-sm font-medium leading-relaxed">{msg.content}</p>
-                  <p className={cn("text-[7px] uppercase font-black mt-2", isMe ? "text-black/40" : "text-zinc-600")}>
-                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                </div>
+                {msg.content && (
+                  <div className="p-4">
+                    <p className="text-sm font-medium leading-relaxed">{msg.content}</p>
+                    <p className={cn("text-[7px] uppercase font-black mt-2", isMe ? "text-black/40" : "text-zinc-600")}>
+                      {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           );
@@ -167,19 +189,66 @@ const Chat = () => {
       </main>
 
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-black/80 backdrop-blur-xl border-t border-white/5 z-50 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-        <form onSubmit={handleSend} className="max-w-2xl mx-auto flex gap-3 items-center">
-          <div className="flex-1 relative">
-            <Input 
-              placeholder="Messaggio" 
-              value={message} 
-              onChange={(e) => setMessage(e.target.value)} 
-              className="bg-zinc-900/80 border-zinc-800 rounded-full h-12 px-6 font-medium text-sm focus-visible:ring-white/20" 
+        <div className="max-w-2xl mx-auto flex flex-col gap-3">
+          
+          {/* Anteprime Immagini/Video */}
+          {previews.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto no-scrollbar">
+              {previews.map((url, i) => (
+                <div key={i} className="relative w-16 h-16 shrink-0 bg-zinc-900 border border-white/10 rounded-xl overflow-hidden">
+                  {selectedFiles[i]?.type.startsWith('video/') ? (
+                    <video src={url} className="w-full h-full object-cover" />
+                  ) : (
+                    <img src={url} className="w-full h-full object-cover" alt="Preview" />
+                  )}
+                  <button 
+                    type="button" 
+                    onClick={() => removeFile(i)} 
+                    className="absolute top-1 right-1 p-1 bg-black/60 text-white rounded-full hover:bg-zinc-800 transition-colors"
+                  >
+                    <X size={10} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <form onSubmit={handleSend} className="flex gap-3 items-center">
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              className="hidden" 
+              accept="image/*,video/*" 
+              multiple 
+              onChange={handleFileChange} 
             />
-          </div>
-          <button type="submit" className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg shrink-0">
-            <Send size={20} strokeWidth={2.5} className="-rotate-12" />
-          </button>
-        </form>
+            
+            <button 
+              type="button" 
+              onClick={() => fileInputRef.current?.click()} 
+              className="w-12 h-12 bg-zinc-900 border border-white/5 text-zinc-400 rounded-full flex items-center justify-center hover:text-white transition-colors shrink-0"
+            >
+              <Camera size={20} />
+            </button>
+
+            <div className="flex-1 relative">
+              <Input 
+                placeholder="Messaggio" 
+                value={message} 
+                onChange={(e) => setMessage(e.target.value)} 
+                className="bg-zinc-900/80 border-zinc-800 rounded-full h-12 px-6 font-medium text-sm focus-visible:ring-white/20" 
+              />
+            </div>
+            
+            <button 
+              type="submit" 
+              disabled={sendMessage.isPending || (!message.trim() && selectedFiles.length === 0)} 
+              className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg shrink-0 disabled:opacity-50"
+            >
+              {sendMessage.isPending ? <Loader2 size={20} className="animate-spin text-black" /> : <Send size={20} strokeWidth={2.5} className="-rotate-12" />}
+            </button>
+          </form>
+        </div>
       </div>
 
       <ImageLightbox images={lightboxData?.images || []} initialIndex={lightboxData?.index || 0} isOpen={!!lightboxData} onClose={() => setLightboxData(null)} />
