@@ -205,13 +205,13 @@ const Events = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-zinc-900/50 border border-white/5 p-3 sm:p-4 rounded-2xl overflow-hidden">
                       <p className="text-[9px] font-black uppercase text-zinc-500 tracking-widest mb-1 truncate">{t.events.date}</p>
-                      <p className="text-[10px] sm:text-[11px] font-bold uppercase whitespace-nowrap overflow-x-auto no-scrollbar">
+                      <p className="text-xs sm:text-sm font-black uppercase whitespace-nowrap overflow-x-auto no-scrollbar">
                         {formatDateRange(viewingEvent.date, viewingEvent.end_date)}
                       </p>
                     </div>
                     <div className="bg-zinc-900/50 border border-white/5 p-3 sm:p-4 rounded-2xl overflow-hidden">
                       <p className="text-[9px] font-black uppercase text-zinc-500 tracking-widest mb-1 truncate">{t.events.location}</p>
-                      <p className="text-[10px] sm:text-[11px] font-bold uppercase whitespace-nowrap overflow-x-auto no-scrollbar">
+                      <p className="text-xs sm:text-sm font-black uppercase whitespace-nowrap overflow-x-auto no-scrollbar">
                         {viewingEvent.location}
                       </p>
                     </div>
