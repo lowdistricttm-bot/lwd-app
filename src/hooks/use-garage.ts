@@ -22,7 +22,7 @@ export interface Vehicle {
   likes_count?: number;
   is_liked?: boolean;
   profiles?: {
-    license_plate_privacy: string;
+    license_plate_privacy?: string;
   };
 }
 
@@ -32,42 +32,39 @@ export const useGarage = (targetUserId?: string) => {
   const { data: vehicles, isLoading } = useQuery({
     queryKey: ['garage-vehicles', targetUserId],
     queryFn: async () => {
-      // Se non abbiamo un ID target, proviamo a recuperare quello dell'utente corrente
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       let uid = targetUserId;
       
       if (!uid) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return [];
-        uid = user.id;
+        if (!currentUser) return [];
+        uid = currentUser.id;
       }
 
-      console.log("[Garage] Caricamento veicoli per UID:", uid);
-
+      // Query semplificata per evitare errori se la colonna privacy non esiste ancora
       const { data, error } = await supabase
         .from('vehicles')
         .select(`
           *,
-          profiles:user_id (license_plate_privacy),
+          profiles:user_id (id, username),
           vehicle_likes (user_id)
         `)
         .eq('user_id', uid)
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error("[Garage] Errore query:", error.message);
+        console.error("[Garage] Errore caricamento:", error.message);
         return [];
       }
       
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!data) return [];
       
-      return (data || []).map((v: any) => ({
+      return data.map((v: any) => ({
         ...v,
         images: Array.isArray(v.images) ? v.images : (v.image_url ? [v.image_url] : []),
         likes_count: v.vehicle_likes?.length || 0,
         is_liked: currentUser ? v.vehicle_likes?.some((l: any) => l.user_id === currentUser.id) : false
       })) as Vehicle[];
-    },
-    enabled: true // Sempre abilitato, gestiamo la mancanza di ID internamente
+    }
   });
 
   const uploadImages = async (files: File[]) => {
