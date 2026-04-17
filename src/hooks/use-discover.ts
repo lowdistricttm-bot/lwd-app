@@ -12,23 +12,21 @@ export const useDiscover = (searchQuery: string = "") => {
   const { data: vehicles, isLoading: loadingVehicles } = useQuery({
     queryKey: ['discover-vehicles', searchQuery],
     queryFn: async () => {
-      // Usiamo profiles!inner per forzare l'inner join basato sulla FK
+      // Specifichiamo la relazione 'profiles' esplicitamente
       let query = supabase
         .from('vehicles')
         .select(`
           *,
-          profiles!inner (
+          profiles:user_id (
             username, 
             avatar_url, 
             role, 
             is_admin
           )
         `)
-        .in('profiles.role', AUTHORIZED_ROLES)
         .order('created_at', { ascending: false });
 
       if (searchQuery) {
-        // Ricerca per marca o modello
         query = query.or(`brand.ilike.%${searchQuery}%,model.ilike.%${searchQuery}%`);
       } else {
         query = query.limit(40);
@@ -41,10 +39,16 @@ export const useDiscover = (searchQuery: string = "") => {
         return [];
       }
 
-      return data.map(v => ({
-        ...v,
-        images: Array.isArray(v.images) ? v.images : (v.image_url ? [v.image_url] : [])
-      })) as (Vehicle & { profiles: { username: string, avatar_url: string, role: string, is_admin: boolean } })[];
+      // Filtriamo i risultati lato client per assicurarci che il profilo esista e abbia il ruolo corretto
+      // (Questo risolve problemi di permessi RLS o join mancanti nel DB)
+      const filteredData = (data || [])
+        .filter((v: any) => v.profiles && AUTHORIZED_ROLES.includes(v.profiles.role))
+        .map((v: any) => ({
+          ...v,
+          images: Array.isArray(v.images) ? v.images : (v.image_url ? [v.image_url] : [])
+        }));
+
+      return filteredData as (Vehicle & { profiles: { username: string, avatar_url: string, role: string, is_admin: boolean } })[];
     }
   });
 
