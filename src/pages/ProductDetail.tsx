@@ -116,7 +116,7 @@ const ProductDetail = () => {
             <Button 
               onClick={handleAddToCart}
               disabled={product.stock_status !== "instock" || (hasVariations && !selectedVariation)}
-              className="w-full bg-white/90 backdrop-blur-md hover:bg-white text-black py-8 text-lg font-black uppercase tracking-widest rounded-none italic transition-all"
+              className="w-full bg-white/90 backdrop-blur-md hover:bg-zinc-200 text-black py-8 text-lg font-black uppercase tracking-widest rounded-none italic transition-all"
             >
               <ShoppingBag className="mr-2" size={20} /> 
               {product.stock_status !== "instock" ? "Esaurito" : (hasVariations && !selectedVariation) ? "Seleziona Taglia" : "Aggiungi al Carrello"}

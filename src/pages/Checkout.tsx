@@ -240,7 +240,7 @@ const Checkout = () => {
                   <span className="text-3xl font-black italic tracking-tighter">€{finalTotal.toFixed(2)}</span>
                 </div>
               </div>
-              <Button type="submit" disabled={createOrder.isPending} className="w-full bg-white/90 backdrop-blur-md text-black hover:bg-white py-8 text-lg font-black uppercase italic tracking-widest rounded-none transition-all">
+              <Button type="submit" disabled={createOrder.isPending} className="w-full bg-white/90 backdrop-blur-md text-black hover:bg-zinc-200 py-8 text-lg font-black uppercase italic tracking-widest rounded-none transition-all">
                 {createOrder.isPending ? <Loader2 className="animate-spin" /> : "Conferma Ordine"}
               </Button>
             </div>

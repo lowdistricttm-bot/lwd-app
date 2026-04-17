@@ -164,7 +164,7 @@ const EventAdminModal = ({ isOpen, onClose, event }: EventAdminModalProps) => {
                 <Button 
                   type="submit" 
                   disabled={createEvent.isPending || updateEvent.isPending}
-                  className="w-full bg-white/90 backdrop-blur-md text-black py-8 font-black uppercase italic tracking-widest rounded-none hover:bg-white transition-all"
+                  className="w-full bg-white/90 backdrop-blur-md text-black hover:bg-zinc-200 py-8 font-black uppercase italic tracking-widest rounded-none transition-all"
                 >
                   {(createEvent.isPending || updateEvent.isPending) ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> Salva Evento</>}
                 </Button>
