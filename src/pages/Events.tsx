@@ -120,6 +120,14 @@ const Events = () => {
           <div className="space-y-8">
             {events?.map((event) => {
               const existingApp = userApps?.find(app => app.event_id === event.id);
+              
+              // Determina il testo dello stato
+              const getStatusText = () => {
+                if (event.status === 'closed') return t.events.statusClosed;
+                if (event.status === 'soon') return t.events.statusSoon;
+                return t.events.statusOpen;
+              };
+
               return (
                 <motion.div key={event.id} className="bg-zinc-900/40 backdrop-blur-md border border-white/5 rounded-[2.5rem] overflow-hidden group hover:border-white/20 transition-all duration-500">
                   <div className="flex flex-col md:flex-row">
@@ -132,10 +140,13 @@ const Events = () => {
                       <div className="space-y-4 w-full">
                         <span className={cn(
                           "text-[8px] font-black uppercase px-3 py-1 italic rounded-full inline-flex items-center gap-1.5",
-                          existingApp?.status === 'pending' ? "bg-zinc-800 text-zinc-400" : existingApp?.status === 'approved' ? "bg-white text-black" : "bg-zinc-700 text-white"
+                          existingApp?.status === 'pending' ? "bg-zinc-800 text-zinc-400" : 
+                          existingApp?.status === 'approved' ? "bg-white text-black" : 
+                          existingApp?.status === 'rejected' ? "bg-zinc-700 text-white" :
+                          event.status === 'open' ? "bg-white text-black" : "bg-zinc-800 text-zinc-400"
                         )}>
                           {existingApp ? <Clock size={10} /> : <Calendar size={10} />}
-                          {existingApp ? `${t.events.manageApp.status}: ${existingApp.status.toUpperCase()}` : t.events.statusOpen}
+                          {existingApp ? `${t.events.manageApp.status}: ${existingApp.status.toUpperCase()}` : getStatusText()}
                         </span>
                         
                         <div className="w-full overflow-x-auto no-scrollbar">
@@ -177,7 +188,6 @@ const Events = () => {
                 <div className="max-w-2xl mx-auto space-y-8 pb-12">
                   <div className="flex justify-between items-start gap-4">
                     <div className="flex-1 min-w-0 overflow-x-auto no-scrollbar">
-                      {/* Titolo rimpicciolito dinamicamente per stare su un solo rigo */}
                       <h3 className="text-[clamp(16px,4.5vw,28px)] font-black italic uppercase tracking-tighter whitespace-nowrap pr-4">
                         {viewingEvent.title}
                       </h3>
@@ -192,14 +202,12 @@ const Events = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-zinc-900/50 border border-white/5 p-3 sm:p-4 rounded-2xl overflow-hidden">
                       <p className="text-[9px] font-black uppercase text-zinc-500 tracking-widest mb-1 truncate">{t.events.date}</p>
-                      {/* Data su singolo rigo */}
                       <p className="text-[10px] sm:text-[11px] font-bold uppercase whitespace-nowrap overflow-x-auto no-scrollbar">
                         {formatDateRange(viewingEvent.date, viewingEvent.end_date)}
                       </p>
                     </div>
                     <div className="bg-zinc-900/50 border border-white/5 p-3 sm:p-4 rounded-2xl overflow-hidden">
                       <p className="text-[9px] font-black uppercase text-zinc-500 tracking-widest mb-1 truncate">{t.events.location}</p>
-                      {/* Location su singolo rigo */}
                       <p className="text-[10px] sm:text-[11px] font-bold uppercase whitespace-nowrap overflow-x-auto no-scrollbar">
                         {viewingEvent.location}
                       </p>
