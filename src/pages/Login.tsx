@@ -60,7 +60,7 @@ const Login = () => {
                 <div className="flex items-center justify-between ml-4 mr-4">
                   <Label className="font-black uppercase text-[9px] tracking-[0.2em] text-zinc-500">{t.auth.password}</Label>
                   <a 
-                    href="https://www.lowdistrict.it/mio-account/lost-password/" 
+                    href="https://www.lowdistrict.it/account/lost-password/" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-[9px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
