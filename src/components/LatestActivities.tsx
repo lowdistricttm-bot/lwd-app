@@ -101,7 +101,7 @@ const LatestActivities = () => {
                   Accedi Ora <ArrowRight size={16} className="ml-2 group-hover/btn:translate-x-1 transition-transform" />
                 </Button>
                 <a 
-                  href="https://www.lowdistrict.it/my-account/" 
+                  href="https://www.lowdistrict.it/account" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="flex items-center justify-center border border-white/10 text-white hover:bg-white/5 h-14 px-10 text-[10px] font-black uppercase tracking-widest italic transition-all"
