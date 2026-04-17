@@ -194,13 +194,15 @@ const Profile = () => {
   const userPosts = posts?.filter(p => p.user_id === targetUserId) || [];
 
   // Funzione per calcolare la dimensione del font in base alla lunghezza dell'username
+  // Resa ultra-aggressiva e senza troncamento per garantire che tutto stia su una riga
   const getUsernameSize = (name: string) => {
     const len = name?.length || 0;
-    if (len > 25) return "text-[10px] md:text-lg";
-    if (len > 20) return "text-[12px] md:text-xl";
-    if (len > 15) return "text-[14px] md:text-2xl";
-    if (len > 10) return "text-[18px] md:text-3xl";
-    return "text-[22px] md:text-4xl";
+    if (len > 30) return "text-[9px] md:text-base";
+    if (len > 25) return "text-[11px] md:text-lg";
+    if (len > 20) return "text-[13px] md:text-xl";
+    if (len > 15) return "text-[16px] md:text-2xl";
+    if (len > 10) return "text-[20px] md:text-3xl";
+    return "text-[26px] md:text-4xl";
   };
 
   return (
@@ -254,9 +256,10 @@ const Profile = () => {
               </AnimatePresence>
             </div>
             <div className="mb-2 min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-nowrap w-full">
+              {/* Container Username + Pulsanti: flex-nowrap e whitespace-nowrap per forzare la riga singola senza troncamento */}
+              <div className="flex items-center gap-2 flex-nowrap w-full overflow-visible">
                 <h1 className={cn(
-                  "font-black italic uppercase tracking-tighter leading-none truncate",
+                  "font-black italic uppercase tracking-tighter leading-none whitespace-nowrap flex-shrink min-w-0",
                   getUsernameSize(displayName)
                 )}>
                   {displayName}
