@@ -20,7 +20,7 @@ const Footer = () => {
             <a href="/" className="mb-6 block">
               <Logo className="h-8" />
             </a>
-            <p className="text-gray-400 max-w-sm mb-8 font-bold uppercase italic text-[10px] tracking-widest">
+            <p className="text-gray-400 mb-8 font-bold uppercase italic text-[8px] md:text-[10px] tracking-widest whitespace-nowrap">
               Qualità, stile e passione in ogni dettaglio
             </p>
             <div className="flex gap-4">
