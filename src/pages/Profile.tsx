@@ -191,8 +191,8 @@ const Profile = () => {
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent">
       <Navbar />
-      <main className="flex-1 pb-32">
-        <div className="relative h-56 md:h-80 bg-zinc-900 group/cover">
+      <main className="flex-1 pb-32 pt-16">
+        <div className="relative aspect-[2/1] md:h-80 md:aspect-auto bg-zinc-900 group/cover">
           <div className="absolute inset-0 overflow-hidden" onClick={() => !isOwnProfile && setLightboxData({ images: [profile?.cover_url || DEFAULT_COVER], index: 0 })}>
             <img src={profile?.cover_url || DEFAULT_COVER} className="w-full h-full object-cover transition-all duration-700 hover:scale-105" alt="Cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
