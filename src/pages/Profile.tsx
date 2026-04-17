@@ -107,17 +107,20 @@ const Profile = () => {
 
   const handleShareProfile = async () => {
     const displayName = profile?.username || 'Utente';
+    // Assicuriamoci che l'URL contenga sempre l'ID dell'utente per la condivisione esterna
+    const profileUrl = `${window.location.origin}/profile/${targetUserId}`;
+    
     const shareData = {
       title: `Profilo di ${displayName} | Low District`,
       text: `Guarda il profilo di ${displayName} su Low District!`,
-      url: window.location.href
+      url: profileUrl
     };
 
     try {
       if (navigator.share) {
         await navigator.share(shareData);
       } else {
-        await navigator.clipboard.writeText(window.location.href);
+        await navigator.clipboard.writeText(profileUrl);
         showSuccess(language === 'it' ? "Link profilo copiato!" : "Profile link copied!");
       }
     } catch (err) {
@@ -263,6 +266,7 @@ const Profile = () => {
                   {displayName}
                 </h1>
                 <div className="flex items-center gap-1 shrink-0">
+                  {/* 1. Messaggio (solo se non è il proprio profilo) */}
                   {!isOwnProfile && currentUser && canMessageTarget && (
                     <button 
                       onClick={() => navigate(`/chat/${profile.id}`)} 
@@ -272,6 +276,7 @@ const Profile = () => {
                     </button>
                   )}
 
+                  {/* 2. Condividi (Sempre visibile se non è un iscritto semplice) */}
                   {!isTargetSubscriber && (
                     <button 
                       onClick={handleShareProfile} 
@@ -281,6 +286,7 @@ const Profile = () => {
                     </button>
                   )}
 
+                  {/* 3. Modifica (Solo se è il proprio profilo) */}
                   {isOwnProfile && (
                     <button 
                       onClick={() => setIsUsernameNoticeOpen(true)} 
