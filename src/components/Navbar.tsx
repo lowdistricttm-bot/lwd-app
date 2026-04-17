@@ -1,26 +1,30 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, ShoppingBag, X, Send, Bell } from 'lucide-react';
 import Logo from './Logo';
 import { useCart } from '@/hooks/use-cart';
 import { useMessages } from '@/hooks/use-messages';
 import { useNotifications } from '@/hooks/use-notifications';
+import { useAdmin } from '@/hooks/use-admin';
 import CartDrawer from './CartDrawer';
 import NotificationDrawer from './NotificationDrawer';
 import { Input } from './ui/input';
 
 const Navbar = () => {
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = React.useState(false);
+  const [isCartOpen, setIsCartOpen] = React.useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
   
   const { items } = useCart();
   const { unreadCount: unreadMessages } = useMessages();
   const { unreadCount: unreadNotifications } = useNotifications();
+  const { role } = useAdmin();
   const navigate = useNavigate();
+
+  const isSubscriber = role === 'subscriber';
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,76 +39,37 @@ const Navbar = () => {
     <>
       <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/5 h-[calc(4rem+env(safe-area-inset-top))] px-6 flex items-center justify-between">
         <div className="flex-1 flex items-center gap-2">
-          <button 
-            onClick={() => setIsSearchOpen(true)}
-            className="p-2 text-zinc-400 hover:text-white transition-colors"
-          >
-            <Search size={20} />
-          </button>
-          
-          <button 
-            onClick={() => setIsCartOpen(true)}
-            className="p-2 text-zinc-400 hover:text-white transition-colors relative"
-          >
+          <button onClick={() => setIsSearchOpen(true)} className="p-2 text-zinc-400 hover:text-white transition-colors"><Search size={20} /></button>
+          <button onClick={() => setIsCartOpen(true)} className="p-2 text-zinc-400 hover:text-white transition-colors relative">
             <ShoppingBag size={20} />
-            {items.length > 0 && (
-              <span className="absolute top-1 right-1 w-4 h-4 bg-zinc-700 text-white text-[8px] font-black flex items-center justify-center rounded-full border-2 border-black">
-                {items.length}
-              </span>
-            )}
+            {items.length > 0 && <span className="absolute top-1 right-1 w-4 h-4 bg-zinc-700 text-white text-[8px] font-black flex items-center justify-center rounded-full border-2 border-black">{items.length}</span>}
           </button>
         </div>
 
-        <Link to="/" className="hover:opacity-80 transition-opacity">
-          <Logo className="h-6 md:h-8" />
-        </Link>
+        <Link to="/" className="hover:opacity-80 transition-opacity"><Logo className="h-6 md:h-8" /></Link>
 
         <div className="flex-1 flex items-center justify-end gap-2">
-          {/* Notifiche */}
-          <button 
-            onClick={() => setIsNotificationsOpen(true)}
-            className="p-2 text-zinc-400 hover:text-white transition-colors relative"
-          >
+          <button onClick={() => setIsNotificationsOpen(true)} className="p-2 text-zinc-400 hover:text-white transition-colors relative">
             <Bell size={20} />
-            {unreadNotifications > 0 && (
-              <span className="absolute top-1 right-1 w-4 h-4 bg-white text-black text-[8px] font-black flex items-center justify-center rounded-full border-2 border-black">
-                {unreadNotifications > 9 ? '9+' : unreadNotifications}
-              </span>
-            )}
+            {unreadNotifications > 0 && <span className="absolute top-1 right-1 w-4 h-4 bg-white text-black text-[8px] font-black flex items-center justify-center rounded-full border-2 border-black">{unreadNotifications > 9 ? '9+' : unreadNotifications}</span>}
           </button>
 
-          {/* Direct - Badge ora Bianco per massima visibilità */}
-          <Link 
-            to="/messages"
-            className="p-2 text-zinc-400 hover:text-white transition-colors relative"
-          >
-            <Send size={20} className="-rotate-12" />
-            {unreadMessages > 0 && (
-              <span className="absolute top-1 right-1 w-4 h-4 bg-white text-black text-[8px] font-black flex items-center justify-center rounded-full border-2 border-black animate-in zoom-in duration-300">
-                {unreadMessages > 9 ? '9+' : unreadMessages}
-              </span>
-            )}
-          </Link>
+          {/* Nascondi Direct per gli iscritti */}
+          {!isSubscriber && (
+            <Link to="/messages" className="p-2 text-zinc-400 hover:text-white transition-colors relative">
+              <Send size={20} className="-rotate-12" />
+              {unreadMessages > 0 && <span className="absolute top-1 right-1 w-4 h-4 bg-white text-black text-[8px] font-black flex items-center justify-center rounded-full border-2 border-black animate-in zoom-in duration-300">{unreadMessages > 9 ? '9+' : unreadMessages}</span>}
+            </Link>
+          )}
         </div>
       </nav>
 
-      {/* Search Overlay */}
       {isSearchOpen && (
         <div className="fixed inset-0 z-[100] bg-black flex flex-col p-6">
-          <div className="flex justify-end mb-12">
-            <button onClick={() => setIsSearchOpen(false)} className="p-2 text-zinc-400 hover:text-white">
-              <X size={32} />
-            </button>
-          </div>
+          <div className="flex justify-end mb-12"><button onClick={() => setIsSearchOpen(false)} className="p-2 text-zinc-400 hover:text-white"><X size={32} /></button></div>
           <form onSubmit={handleSearch} className="max-w-2xl mx-auto w-full">
             <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-4 italic">Cerca nel District</h2>
-            <Input 
-              autoFocus
-              placeholder="COSA STAI CERCANDO?"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-transparent border-none text-4xl md:text-6xl font-black uppercase italic tracking-tighter p-0 h-auto focus-visible:ring-0 placeholder:text-zinc-800"
-            />
+            <Input autoFocus placeholder="COSA STAI CERCANDO?" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-transparent border-none text-4xl md:text-6xl font-black uppercase italic tracking-tighter p-0 h-auto focus-visible:ring-0 placeholder:text-zinc-800" />
           </form>
         </div>
       )}

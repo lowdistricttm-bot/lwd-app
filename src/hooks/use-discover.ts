@@ -4,7 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { Vehicle } from './use-garage';
 
-const AUTHORIZED_ROLES = ['admin', 'staff', 'support', 'member', 'subscriber'];
+// Rimosso 'subscriber' dai ruoli autorizzati a comparire in Esplora
+const AUTHORIZED_ROLES = ['admin', 'staff', 'support', 'member'];
 
 export const useDiscover = (searchQuery: string = "") => {
   const { data: vehicles, isLoading: loadingVehicles } = useQuery({
@@ -39,6 +40,7 @@ export const useDiscover = (searchQuery: string = "") => {
         return [];
       }
 
+      // Filtriamo rigorosamente per escludere i subscriber
       const filteredData = (data || [])
         .filter((v: any) => v.profiles && AUTHORIZED_ROLES.includes(v.profiles.role))
         .map((v: any) => ({
@@ -60,7 +62,7 @@ export const useDiscover = (searchQuery: string = "") => {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .in('role', AUTHORIZED_ROLES)
+        .in('role', AUTHORIZED_ROLES) // Solo membri ufficiali e staff
         .ilike('username', `%${searchQuery}%`)
         .limit(10);
 
@@ -76,7 +78,7 @@ export const useDiscover = (searchQuery: string = "") => {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .in('role', AUTHORIZED_ROLES)
+        .in('role', AUTHORIZED_ROLES) // Solo membri ufficiali e staff
         .order('updated_at', { ascending: false })
         .limit(8);
       

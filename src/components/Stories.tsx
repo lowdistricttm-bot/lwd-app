@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Plus, Loader2, User } from 'lucide-react';
 import { useStories } from '@/hooks/use-stories';
+import { useAdmin } from '@/hooks/use-admin';
 import { supabase } from "@/integrations/supabase/client";
 import StoryViewer from './StoryViewer';
 import { cn } from '@/lib/utils';
@@ -13,6 +14,7 @@ const Stories = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { stories, isLoading, uploadStory } = useStories();
+  const { role } = useAdmin();
   const [selectedUserIndex, setSelectedUserIndex] = useState<number | null>(null);
   const [isViewingSelf, setIsViewingSelf] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -30,6 +32,7 @@ const Stories = () => {
     checkUser();
   }, []);
 
+  const isSubscriber = role === 'subscriber';
   const myStoriesGroup: any = (stories as any[])?.find((group: any) => group.user_id === currentUser?.id);
   const otherStories: any[] = (stories as any[])?.filter((group: any) => group.user_id !== currentUser?.id) || [];
 
@@ -41,45 +44,51 @@ const Stories = () => {
       navigate('/login');
       return;
     }
+    if (isSubscriber) {
+      showError("Solo i membri ufficiali possono pubblicare storie.");
+      return;
+    }
     await uploadStory.mutateAsync({ files });
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
     <div className="flex gap-4 overflow-x-auto no-scrollbar py-6 px-6 bg-black border-b border-white/5">
-      <div className="flex flex-col items-center gap-2 shrink-0">
-        <div className="relative">
-          <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" multiple onChange={handleFileSelect} />
-          <button 
-            onClick={() => {
-              if (myStoriesGroup) setIsViewingSelf(true);
-              else fileInputRef.current?.click();
-            }}
-            className={cn(
-              "w-16 h-16 rounded-full border-[2.5px] flex items-center justify-center bg-zinc-900 overflow-hidden transition-all",
-              myStoriesGroup ? "border-white" : "border-zinc-800"
+      {/* Sezione 'La tua storia' - Solo se non è subscriber o se ha già storie attive */}
+      {(!isSubscriber || myStoriesGroup) && (
+        <div className="flex flex-col items-center gap-2 shrink-0">
+          <div className="relative">
+            <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" multiple onChange={handleFileSelect} />
+            <button 
+              onClick={() => {
+                if (myStoriesGroup) setIsViewingSelf(true);
+                else if (!isSubscriber) fileInputRef.current?.click();
+              }}
+              className={cn(
+                "w-16 h-16 rounded-full border-[2.5px] flex items-center justify-center bg-zinc-900 overflow-hidden transition-all",
+                myStoriesGroup ? "border-white" : "border-zinc-800"
+              )}
+            >
+              {uploadStory.isPending ? (
+                <Loader2 className="animate-spin text-zinc-400" size={20} />
+              ) : (myStoriesGroup?.avatar_url || userProfile?.avatar_url) ? (
+                <img src={myStoriesGroup?.avatar_url || userProfile?.avatar_url} className="w-full h-full object-cover" />
+              ) : (
+                <User size={24} className="text-zinc-700" />
+              )}
+            </button>
+            {!isSubscriber && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+                className="absolute bottom-0 right-0 w-5 h-5 bg-white rounded-full flex items-center justify-center border-2 border-black shadow-lg"
+              >
+                <Plus size={12} className="text-black font-bold" />
+              </button>
             )}
-          >
-            {uploadStory.isPending ? (
-              <Loader2 className="animate-spin text-zinc-400" size={20} />
-            ) : (myStoriesGroup?.avatar_url || userProfile?.avatar_url) ? (
-              <img src={myStoriesGroup?.avatar_url || userProfile?.avatar_url} className="w-full h-full object-cover" />
-            ) : (
-              <User size={24} className="text-zinc-700" />
-            )}
-          </button>
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              fileInputRef.current?.click();
-            }}
-            className="absolute bottom-0 right-0 w-5 h-5 bg-white rounded-full flex items-center justify-center border-2 border-black shadow-lg"
-          >
-            <Plus size={12} className="text-black font-bold" />
-          </button>
+          </div>
+          <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">La tua storia</span>
         </div>
-        <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">La tua storia</span>
-      </div>
+      )}
 
       {otherStories.map((userGroup: any, index: number) => (
         <button key={userGroup.user_id} onClick={() => setSelectedUserIndex(index)} className="flex flex-col items-center gap-2 shrink-0">
