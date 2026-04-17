@@ -203,7 +203,7 @@ const Events = () => {
                         <Button 
                           onClick={() => setViewingEvent(event)}
                           variant="outline"
-                          className="border-white/10 text-white hover:bg-white/10 rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 px-6"
+                          className="border-white/10 text-white hover:bg-white/10 rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 w-44"
                         >
                           <Eye size={14} className="mr-2" /> {t.events.viewEvent}
                         </Button>
@@ -211,7 +211,7 @@ const Events = () => {
                         {existingApp ? (
                           <Button 
                             onClick={() => setManageApp(existingApp)}
-                            className="bg-zinc-800 text-white hover:bg-white hover:text-black rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 px-6"
+                            className="bg-zinc-800 text-white hover:bg-white hover:text-black rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 w-44"
                           >
                             <Settings2 size={14} className="mr-2" /> {t.events.manage}
                           </Button>
@@ -220,7 +220,7 @@ const Events = () => {
                             onClick={() => handleApplyClick(event)}
                             disabled={event.status !== 'open'}
                             className={cn(
-                              "rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 px-6",
+                              "rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 w-44",
                               event.status === 'open' ? "bg-white text-black hover:bg-zinc-200" : "bg-zinc-800 text-zinc-500 cursor-not-allowed"
                             )}
                           >
