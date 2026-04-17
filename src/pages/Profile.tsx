@@ -220,7 +220,7 @@ const Profile = () => {
             </div>
             <div className="mb-2 min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <h1 className="text-xl md:text-3xl font-black italic uppercase tracking-tighter leading-none truncate">{displayName}</h1>
+                <h1 className="text-lg md:text-2xl font-black italic uppercase tracking-tighter leading-none truncate">{displayName}</h1>
                 <div className="flex items-center gap-1.5 shrink-0">
                   {isOwnProfile && <button onClick={() => setIsUsernameNoticeOpen(true)} className="p-1 text-zinc-500 hover:text-white transition-colors"><Edit2 size={14} /></button>}
                   
@@ -235,7 +235,7 @@ const Profile = () => {
                   )}
                 </div>
               </div>
-              <p className="text-zinc-500 text-[9px] font-black uppercase tracking-[0.3em] italic mt-1 truncate">{roleLabel}</p>
+              <p className="text-zinc-500 text-[7px] md:text-[8px] font-black uppercase tracking-[0.3em] italic mt-1 truncate">{roleLabel}</p>
             </div>
           </div>
         </div>
