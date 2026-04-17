@@ -17,7 +17,8 @@ import {
   ThumbsDown,
   Loader2,
   CreditCard,
-  Trash2
+  Trash2,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
@@ -46,8 +47,13 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
 
   if (!app) return null;
 
-  const vehicleImages = app.vehicles?.images || (app.vehicles?.image_url ? [app.vehicles.image_url] : []);
-  const interiorImages = app.interior_urls || [];
+  // Recupero immagini veicolo (dal garage)
+  const vehicleImages = Array.isArray(app.vehicles?.images) ? app.vehicles.images : (app.vehicles?.image_url ? [app.vehicles.image_url] : []);
+  
+  // Recupero immagini interni (caricate specificamente per la candidatura)
+  const interiorImages = Array.isArray(app.interior_urls) ? app.interior_urls : [];
+  
+  // Unione di tutti i media per la galleria
   const allImages = [...vehicleImages, ...interiorImages];
   
   const votes = Array.isArray(app.application_votes) ? app.application_votes : [];
@@ -178,14 +184,38 @@ const AdminApplicationCard = ({ app, onUpdateStatus, isUpdating }: AdminApplicat
 
                   <div className="lg:w-1/2 p-6">
                     <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-widest mb-4 flex items-center gap-2">
-                      <Camera size={12} className="text-zinc-400" /> Media Progetto
+                      <Camera size={12} className="text-zinc-400" /> Media Progetto ({allImages.length})
                     </h4>
-                    <div className="grid grid-cols-4 gap-2">
-                      {allImages.map((url: string, idx: number) => (
-                        <div key={idx} className="aspect-square bg-zinc-900 border border-white/5 overflow-hidden cursor-pointer" onClick={() => setLightboxData({ images: allImages, index: idx })}>
-                          <img src={url} className="w-full h-full object-cover" alt="Media" />
+                    
+                    <div className="space-y-6">
+                      {/* Sezione Esterni (dal Garage) */}
+                      <div>
+                        <p className="text-[7px] font-black uppercase text-zinc-600 mb-2 tracking-widest">Esterni</p>
+                        <div className="grid grid-cols-4 gap-2">
+                          {vehicleImages.map((url: string, idx: number) => (
+                            <div key={`ext-${idx}`} className="aspect-square bg-zinc-900 border border-white/5 overflow-hidden cursor-pointer group/img" onClick={() => setLightboxData({ images: allImages, index: idx })}>
+                              <img src={url} className="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-500" alt="Esterno" />
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      </div>
+
+                      {/* Sezione Interni (dalla Candidatura) */}
+                      {interiorImages.length > 0 && (
+                        <div>
+                          <p className="text-[7px] font-black uppercase text-zinc-600 mb-2 tracking-widest">Interni</p>
+                          <div className="grid grid-cols-4 gap-2">
+                            {interiorImages.map((url: string, idx: number) => (
+                              <div key={`int-${idx}`} className="aspect-square bg-zinc-900 border border-white/5 overflow-hidden cursor-pointer group/img" onClick={() => setLightboxData({ images: allImages, index: vehicleImages.length + idx })}>
+                                <img src={url} className="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-500" alt="Interno" />
+                                <div className="absolute top-1 right-1">
+                                  <ImageIcon size={10} className="text-white/40" />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
