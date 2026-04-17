@@ -230,19 +230,19 @@ const Profile = () => {
                     <Camera size={24} className="text-white" />
                   </button>
                 )}
-                
-                {/* Pallino Online Real-time */}
-                <AnimatePresence>
-                  {isOnline && (
-                    <motion.div 
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      exit={{ scale: 0 }}
-                      className="absolute bottom-1 right-1 w-5 h-5 md:w-7 md:h-7 bg-green-500 border-4 border-black rounded-full shadow-[0_0_15px_rgba(34,197,94,0.6)] z-10" 
-                    />
-                  )}
-                </AnimatePresence>
               </div>
+
+              {/* Pallino Online Real-time - Spostato fuori da overflow-hidden per sovrapporsi al bordo */}
+              <AnimatePresence>
+                {isOnline && (
+                  <motion.div 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    className="absolute bottom-1 right-1 w-5 h-5 md:w-7 md:h-7 bg-green-500 border-2 border-black rounded-full shadow-[0_0_15px_rgba(34,197,94,0.6)] z-30" 
+                  />
+                )}
+              </AnimatePresence>
             </div>
             <div className="mb-2 min-w-0 flex-1">
               <div className="flex items-center gap-2">
