@@ -16,7 +16,7 @@ const Footer = () => {
     <footer className="bg-black border-t border-white/10 pt-20 pb-20 px-6">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-20">
-          <div className="col-span-1 md:col-span-2">
+          <div className="col-span-1 md:col-span-2 flex flex-col items-center md:items-start text-center md:text-left">
             <a href="/" className="mb-6 block">
               <Logo className="h-8" />
             </a>
