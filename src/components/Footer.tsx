@@ -48,8 +48,16 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t border-white/5 py-10 flex flex-col md:flex-row justify-center items-center gap-4 text-gray-500 text-[8px] md:text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
+        <div className="border-t border-white/5 py-10 flex flex-col justify-center items-center gap-2 text-gray-500 text-[8px] md:text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
           <p>© 2026 LOW DISTRICT. ALL RIGHTS RESERVED. ©</p>
+          <a 
+            href="https://www.lowdistrict.it" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="hover:text-white transition-colors tracking-[0.3em]"
+          >
+            www.lowdistrict.it
+          </a>
         </div>
       </div>
     </footer>
