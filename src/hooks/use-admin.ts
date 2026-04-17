@@ -33,7 +33,6 @@ export const useAdmin = () => {
   const canManage = isAdmin || isStaff;
   const canVote = isAdmin || isStaff || isSupport;
 
-  // Query per le candidature (necessaria per AdminApplications.tsx)
   const { data: allApplications, isLoading: loadingApps, error: loadError } = useQuery({
     queryKey: ['admin-applications'],
     queryFn: async () => {
@@ -59,7 +58,6 @@ export const useAdmin = () => {
     enabled: canVote
   });
 
-  // Query per tutti gli utenti (Solo Admin)
   const { data: allUsers, isLoading: loadingUsers } = useQuery({
     queryKey: ['admin-all-users'],
     queryFn: async () => {
@@ -114,7 +112,8 @@ export const useAdmin = () => {
         .from('profiles')
         .update({ 
           role: newRole,
-          is_admin: newRole === 'admin'
+          is_admin: newRole === 'admin',
+          updated_at: new Date().toISOString()
         })
         .eq('id', userId);
       
@@ -125,7 +124,10 @@ export const useAdmin = () => {
       queryClient.invalidateQueries({ queryKey: ['user-role'] });
       showSuccess("Ruolo utente aggiornato!");
     },
-    onError: (error: any) => showError(error.message)
+    onError: (error: any) => {
+      console.error("[Admin] Errore update ruolo:", error);
+      showError("Errore durante il salvataggio del ruolo.");
+    }
   });
 
   const castVote = useMutation({
@@ -144,8 +146,8 @@ export const useAdmin = () => {
       const { error: votesError } = await supabase.from('application_votes').delete().eq('application_id', id);
       if (votesError) throw votesError;
       await supabase.from('notifications').delete().eq('application_id', id);
-      const { error } = await supabase.from('applications').delete().eq('id', id);
-      if (error) throw error;
+      const { error: appError } = await supabase.from('applications').delete().eq('id', id);
+      if (appError) throw appError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-applications'] });

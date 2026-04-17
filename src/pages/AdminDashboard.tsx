@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const { isAdmin, canVote, checkingAdmin, role } = useAdmin();
+  const { isAdmin, isStaff, isSupport, canVote, checkingAdmin, role } = useAdmin();
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
   if (checkingAdmin) {
@@ -47,21 +47,23 @@ const AdminDashboard = () => {
   const menuItems = [
     {
       title: "Gestione Selezioni",
-      desc: "Approva o rifiuta le candidature agli eventi",
+      desc: isAdmin || isStaff 
+        ? "Approva o rifiuta le candidature agli eventi" 
+        : "Visualizza e vota le candidature agli eventi",
       icon: ClipboardCheck,
       action: () => navigate('/admin/applications'),
       show: true
     },
     {
       title: "Gestione Membri",
-      desc: "Modifica i ruoli e i gradi degli utenti",
+      desc: "Modifica i ruoli e i gradi degli utenti del District",
       icon: Users,
       action: () => navigate('/admin/users'),
       show: isAdmin === true
     },
     {
       title: "Configurazione Email",
-      desc: "Personalizza i template delle notifiche",
+      desc: "Personalizza i template delle notifiche automatiche",
       icon: Mail,
       action: () => setIsEmailModalOpen(true),
       show: isAdmin === true
