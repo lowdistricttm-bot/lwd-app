@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -16,18 +16,28 @@ const PresenceContext = createContext<PresenceContextType | undefined>(undefined
 export const PresenceProvider = ({ children }: { children: ReactNode }): React.JSX.Element => {
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const [lastSeenMap, setLastSeenMap] = useState<Record<string, string>>({});
+  const channelRef = useRef<any>(null);
 
   useEffect(() => {
-    let channel: any;
+    const channelName = 'global-presence-v3';
 
-    const setupPresence = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+    const cleanup = async () => {
+      if (channelRef.current) {
+        console.log("[Presence] Cleanup canale esistente...");
+        await supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
+
+    const setupPresence = async (user: any) => {
       if (!user) return;
 
-      // Canale globale unico per tutti gli utenti dell'app
-      const channelName = 'global-presence-v3';
+      // Rimuoviamo eventuali canali con lo stesso nome prima di crearne uno nuovo
+      await cleanup();
 
-      channel = supabase.channel(channelName, {
+      console.log("[Presence] Avvio sottoscrizione per:", user.id);
+
+      const channel = supabase.channel(channelName, {
         config: {
           presence: {
             key: user.id,
@@ -50,43 +60,42 @@ export const PresenceProvider = ({ children }: { children: ReactNode }): React.J
             ...prev,
             [key]: formatDistanceToNow(new Date(), { addSuffix: true, locale: it })
           }));
-        })
-        .subscribe(async (status: string) => {
-          if (status === 'SUBSCRIBED') {
-            await channel.track({
-              online_at: new Date().toISOString(),
-              user_id: user.id
-            });
-            
-            // Aggiornamento DB per persistenza
-            await supabase
-              .from('profiles')
-              .update({ last_seen_at: new Date().toISOString() })
-              .eq('id', user.id);
-          }
         });
+
+      channel.subscribe(async (status: string) => {
+        if (status === 'SUBSCRIBED') {
+          await channel.track({
+            online_at: new Date().toISOString(),
+            user_id: user.id
+          });
+          
+          await supabase
+            .from('profiles')
+            .update({ last_seen_at: new Date().toISOString() })
+            .eq('id', user.id);
+        }
+      });
+
+      channelRef.current = channel;
     };
 
-    setupPresence();
+    // Gestione iniziale
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setupPresence(user);
+    });
 
-    // Listener per il cambio di stato Auth (login/logout)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN') {
-        setupPresence();
+    // Listener per cambi di stato Auth
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        setupPresence(session.user);
       } else if (event === 'SIGNED_OUT') {
-        if (channel) {
-          channel.unsubscribe();
-          supabase.removeChannel(channel);
-        }
+        cleanup();
         setOnlineUsers([]);
       }
     });
 
     return () => {
-      if (channel) {
-        channel.unsubscribe();
-        supabase.removeChannel(channel);
-      }
+      cleanup();
       subscription.unsubscribe();
     };
   }, []);
@@ -111,7 +120,6 @@ export const PresenceProvider = ({ children }: { children: ReactNode }): React.J
 export const usePresence = () => {
   const context = useContext(PresenceContext);
   if (context === undefined) {
-    // Fallback silenzioso se usato fuori dal provider (evita crash)
     return {
       onlineUsers: [],
       isUserOnline: () => false,
