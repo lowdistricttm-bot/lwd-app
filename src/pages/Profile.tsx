@@ -48,7 +48,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const { t, language } = useTranslation();
   const { canVote } = useAdmin();
-  const { isUserOnline } = usePresence();
+  const { isUserOnline, getLastSeen } = usePresence();
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   
@@ -61,11 +61,13 @@ const Profile = () => {
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isUsernameNoticeOpen, setIsUsernameNoticeOpen] = useState(false);
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
+  const [dbLastSeen, setDbLastSeen] = useState<string | null>(null);
   
   const { posts, isLoading: loadingPosts } = useSocialFeed();
   const targetUserId = userId || currentUser?.id;
   const isOwnProfile = !userId || userId === currentUser?.id;
   const isOnline = isUserOnline(targetUserId);
+  const lastSeen = getLastSeen(targetUserId) || dbLastSeen;
 
   const { data: orders, isLoading: loadingOrders, refetch: refetchOrders } = useWcUserOrders(isOwnProfile ? currentUser?.email : undefined);
 
@@ -77,6 +79,10 @@ const Profile = () => {
     const { data: profileData, error } = await supabase.from('profiles').select('*').eq('id', id).maybeSingle();
     if (error) console.error("[Profile] Errore caricamento:", error);
     setProfile(profileData);
+    
+    if (profileData?.last_seen_at) {
+      setDbLastSeen(formatDistanceToNow(new Date(profileData.last_seen_at), { addSuffix: true, locale: it }));
+    }
     
     if (!activeTab) {
       const role = profileData?.role || 'subscriber';
@@ -197,7 +203,7 @@ const Profile = () => {
             </div>
             <div className="mb-2 min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-nowrap w-full overflow-visible">
-                <h1 className="text-base md:text-2xl font-black italic uppercase tracking-tighter leading-none">{profile?.username || 'Utente'}</h1>
+                <h1 className="text-sm md:text-xl font-black italic uppercase tracking-tighter leading-none">{profile?.username || 'Utente'}</h1>
                 <div className="flex items-center gap-1 shrink-0">
                   {!isOwnProfile && currentUser && (!isTargetSubscriber || canVote) && (
                     <button onClick={() => navigate(`/chat/${profile.id}`)} className="p-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all"><Mail size={18} /></button>
@@ -208,7 +214,15 @@ const Profile = () => {
                   )}
                 </div>
               </div>
-              <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.3em] italic mt-1">{t.profile.roles[userRole] || t.profile.roles.member}</p>
+              <div className="mt-1">
+                <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.3em] italic">{t.profile.roles[userRole] || t.profile.roles.member}</p>
+                <p className={cn(
+                  "text-[7px] font-black uppercase tracking-widest mt-0.5",
+                  isOnline ? "text-green-500" : "text-zinc-600"
+                )}>
+                  {isOnline ? 'Online' : lastSeen ? `Ultimo accesso ${lastSeen}` : 'Offline'}
+                </p>
+              </div>
             </div>
           </div>
         </div>
