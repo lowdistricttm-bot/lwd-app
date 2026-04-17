@@ -194,13 +194,13 @@ const Profile = () => {
   const userPosts = posts?.filter(p => p.user_id === targetUserId) || [];
 
   // Funzione per calcolare la dimensione del font in base alla lunghezza dell'username
-  // Resa molto più aggressiva per garantire la leggibilità su mobile
+  // Resa ultra-aggressiva per evitare troncamenti su mobile
   const getUsernameSize = (name: string) => {
     const len = name?.length || 0;
-    if (len > 25) return "text-[11px] md:text-lg";
-    if (len > 20) return "text-[13px] md:text-xl";
-    if (len > 15) return "text-[16px] md:text-2xl";
-    return "text-[22px] md:text-3xl";
+    if (len > 20) return "text-[12px] md:text-xl";
+    if (len > 15) return "text-[15px] md:text-2xl";
+    if (len > 10) return "text-[18px] md:text-3xl";
+    return "text-[24px] md:text-4xl";
   };
 
   return (
@@ -221,7 +221,7 @@ const Profile = () => {
             <input type="file" ref={coverInputRef} className="hidden" accept="image/*,video/*" onChange={(e) => handleFileUpload(e, 'cover')} />
           </div>
           
-          <div className="absolute -bottom-12 left-6 flex items-end gap-4 z-20 max-w-[calc(100%-3rem)]">
+          <div className="absolute -bottom-12 left-6 right-6 flex items-end gap-4 z-20">
             <div className="relative group/avatar shrink-0">
               <input type="file" ref={avatarInputRef} className="hidden" accept="image/*,video/*" onChange={(e) => handleFileUpload(e, 'avatar')} />
               <div onClick={() => !isOwnProfile && setLightboxData({ images: [profile?.avatar_url || DEFAULT_AVATAR], index: 0 })} className="w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-white rounded-full overflow-hidden shadow-2xl flex items-center justify-center relative">
@@ -233,22 +233,22 @@ const Profile = () => {
                 )}
               </div>
 
-              {/* Pallino Online Real-time - Spostato in alto a sinistra */}
+              {/* Pallino Online Real-time - In alto a sinistra, sovrapposto al bordo */}
               <AnimatePresence>
                 {isOnline && (
                   <motion.div 
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     exit={{ scale: 0 }}
-                    className="absolute top-1 left-1 w-5 h-5 md:w-7 md:h-7 bg-green-500 border-2 border-black rounded-full shadow-[0_0_15px_rgba(34,197,94,0.6)] z-30" 
+                    className="absolute -top-1 -left-1 w-6 h-6 md:w-8 md:h-8 bg-green-500 border-2 border-black rounded-full shadow-[0_0_15px_rgba(34,197,94,0.6)] z-30" 
                   />
                 )}
               </AnimatePresence>
             </div>
             <div className="mb-2 min-w-0 flex-1">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h1 className={cn(
-                  "font-black italic uppercase tracking-tighter leading-none truncate",
+                  "font-black italic uppercase tracking-tighter leading-none",
                   getUsernameSize(displayName)
                 )}>
                   {displayName}
