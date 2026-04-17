@@ -19,7 +19,7 @@ const translations: Record<Language, any> = {
     hero: { 
       subtitle: 'CARS - CULTURE - LIFESTYLE', 
       title: 'LOW DISTRICT', 
-      desc: "PIÙ DI UNA PASSIONE, UNO STILE DI VITA.", 
+      desc: "PIÙ di una passione, uno stile di vita.", 
       shopBtn: 'ESPLORA LO SHOP', 
       eventsBtn: 'SCOPRI GLI EVENTI',
       scroll: 'SCORRI'
@@ -33,11 +33,11 @@ const translations: Record<Language, any> = {
       enterFeed: 'ENTRA NELLA BACHECA',
       values: {
         community: 'COMMUNITY',
-        communityDesc: 'Migliaia di appassionati uniti dalla stessa cultura stance.',
+        communityDesc: 'Migliaia di appassionati uniti.',
         quality: 'QUALITÀ',
-        qualityDesc: 'Merchandising selezionato e drop in edizione limitata.',
+        qualityDesc: 'Merchandising e drop in edizione limitata.',
         events: 'EVENTI',
-        eventsDesc: 'Gli eventi più esclusivi d\'Italia a portata di app.'
+        eventsDesc: 'Gli eventi più esclusivi a portata di app.'
       },
       banner: {
         title: 'THE LOW CULTURE IS HERE.',
@@ -271,11 +271,11 @@ const translations: Record<Language, any> = {
       enterFeed: 'ENTER FEED',
       values: {
         community: 'COMMUNITY',
-        communityDesc: 'Thousands of enthusiasts united by the same stance culture.',
+        communityDesc: 'Thousands of enthusiasts united.',
         quality: 'QUALITY',
-        qualityDesc: 'Selected merchandise and limited edition drops.',
+        qualityDesc: 'Merchandise and limited edition drops.',
         events: 'EVENTS',
-        eventsDesc: 'The most exclusive events in Italy at your fingertips.'
+        eventsDesc: 'The most exclusive events at your fingertips.'
       },
       banner: {
         title: 'THE LOW CULTURE IS HERE.',
