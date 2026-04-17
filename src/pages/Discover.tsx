@@ -7,6 +7,7 @@ import BottomNav from '@/components/BottomNav';
 import { useDiscover } from '@/hooks/use-discover';
 import { useGarage } from '@/hooks/use-garage';
 import { useAdmin } from '@/hooks/use-admin';
+import { usePresence } from '@/hooks/use-presence';
 import { Loader2, Car, Search, LayoutGrid, StretchHorizontal, User, ChevronRight, ShieldCheck, Sparkles, Calendar, Gauge, Users, Heart, EyeOff, CreditCard } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -18,6 +19,7 @@ const Discover = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { canVote } = useAdmin();
+  const { isUserOnline } = usePresence();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -112,8 +114,11 @@ const Discover = () => {
                     onClick={() => navigate(`/profile/${user.id}`)}
                     className="flex flex-col items-center gap-3 shrink-0 group"
                   >
-                    <div className="w-24 h-24 rounded-full p-[3px] bg-zinc-800 group-hover:bg-white transition-all duration-500">
-                      <div className="w-full h-full rounded-full border-4 border-black overflow-hidden bg-zinc-900">
+                    <div className="w-24 h-24 rounded-full p-[3px] bg-zinc-800 transition-all duration-500 group-hover:bg-zinc-700">
+                      <div className={cn(
+                        "w-full h-full rounded-full border-4 overflow-hidden bg-zinc-900 transition-colors duration-500",
+                        isUserOnline(user.id) ? "border-green-500" : "border-red-500"
+                      )}>
                         {user.avatar_url ? (
                           <img src={user.avatar_url} className="w-full h-full object-cover" alt="" />
                         ) : (
@@ -144,7 +149,10 @@ const Discover = () => {
                   onClick={() => navigate(`/profile/${member.id}`)}
                   className="flex flex-col items-center gap-3 shrink-0 group"
                 >
-                  <div className="w-16 h-16 rounded-full p-[2px] bg-zinc-900 border border-white/10 group-hover:border-white transition-all duration-500">
+                  <div className={cn(
+                    "w-16 h-16 rounded-full p-[2px] border-2 transition-all duration-500",
+                    isUserOnline(member.id) ? "border-green-500" : "border-red-500"
+                  )}>
                     <div className="w-full h-full rounded-full overflow-hidden bg-zinc-950">
                       {member.avatar_url ? (
                         <img src={member.avatar_url} className="w-full h-full object-cover" alt="" />
@@ -297,7 +305,10 @@ const Discover = () => {
                               className="flex items-center gap-3 hover:opacity-70 transition-opacity group/user text-left min-w-0"
                             >
                               {viewMode === 'list' && (
-                                <div className="w-8 h-8 bg-zinc-800 rounded-full overflow-hidden border border-white/10 group-hover/user:border-white transition-colors">
+                                <div className={cn(
+                                  "w-8 h-8 bg-zinc-800 rounded-full overflow-hidden border-[1.5px] transition-colors duration-500",
+                                  isUserOnline(vehicle.user_id) ? "border-green-500" : "border-red-500"
+                                )}>
                                   {vehicle.profiles?.avatar_url ? (
                                     <img src={vehicle.profiles.avatar_url} className="w-full h-full object-cover" alt="" />
                                   ) : (

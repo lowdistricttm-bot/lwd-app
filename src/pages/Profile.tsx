@@ -191,7 +191,15 @@ const Profile = () => {
           <div className="flex items-start gap-4 md:gap-6 -mt-12 md:-mt-16">
             {/* Avatar */}
             <div className="relative group/avatar shrink-0 z-20">
-              <div onClick={() => !isOwnProfile && setLightboxData({ images: [profile?.avatar_url || DEFAULT_AVATAR], index: 0 })} className="w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-black rounded-full overflow-hidden shadow-2xl flex items-center justify-center relative">
+              <div 
+                onClick={() => !isOwnProfile && setLightboxData({ images: [profile?.avatar_url || DEFAULT_AVATAR], index: 0 })} 
+                className={cn(
+                  "w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 rounded-full overflow-hidden flex items-center justify-center relative transition-colors duration-500",
+                  isOnline 
+                    ? "border-green-500 shadow-[0_0_30px_rgba(34,197,94,0.3)]" 
+                    : "border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.2)]"
+                )}
+              >
                 {uploadingAvatar ? <Loader2 className="animate-spin text-zinc-500" /> : (profile?.avatar_url || DEFAULT_AVATAR) ? <img src={profile?.avatar_url || DEFAULT_AVATAR} alt="Avatar" className="w-full h-full object-cover" /> : <User size={40} className="text-zinc-800" />}
                 {isOwnProfile && (
                   <button onClick={(e) => { e.stopPropagation(); avatarInputRef.current?.click(); }} className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity bg-black/40 rounded-full">
@@ -221,14 +229,16 @@ const Profile = () => {
                 <p className="text-zinc-500 text-[7px] font-black uppercase tracking-[0.2em] italic leading-none">
                   {t.profile.roles[userRole] || t.profile.roles.member}
                 </p>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1.5">
                   <div className={cn(
-                    "w-1 h-1 rounded-full",
-                    isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" : "bg-zinc-600"
+                    "w-1.5 h-1.5 rounded-full transition-colors duration-500",
+                    isOnline 
+                      ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" 
+                      : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"
                   )} />
                   <p className={cn(
-                    "text-[6px] font-black uppercase tracking-widest leading-none",
-                    isOnline ? "text-green-500" : "text-zinc-600"
+                    "text-[7px] font-black uppercase tracking-widest leading-none transition-colors duration-500",
+                    isOnline ? "text-green-500" : "text-red-500"
                   )}>
                     {isOnline ? 'Online' : lastSeen ? `Ultimo accesso ${lastSeen}` : 'Offline'}
                   </p>
