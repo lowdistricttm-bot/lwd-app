@@ -2,27 +2,25 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Music, ChevronDown, X, Play, Volume2 } from 'lucide-react';
+import { Music, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const SpotifyPlayer = () => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
   const playlistId = "49mK52uCtaHSCLY1VC9GR3";
 
-  if (!isVisible) return null;
-
   return (
-    <div className="fixed bottom-24 md:bottom-8 left-6 z-[60] pointer-events-none">
-      {/* Container del Player - Rimane sempre nel DOM per non interrompere la musica */}
+    <div className="fixed bottom-24 md:bottom-8 left-4 md:left-8 z-[60] pointer-events-none">
+      {/* Container del Player */}
       <motion.div
         initial={false}
         animate={{
-          width: isExpanded ? (window.innerWidth < 768 ? '280px' : '350px') : '48px',
-          height: isExpanded ? '450px' : '48px',
-          borderRadius: isExpanded ? '12px' : '50%',
+          width: isExpanded ? (window.innerWidth < 768 ? '280px' : '320px') : '48px',
+          height: isExpanded ? (window.innerHeight < 600 ? '350px' : '400px') : '48px',
+          borderRadius: isExpanded ? '16px' : '50%',
           opacity: 1
         }}
+        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
         className={cn(
           "pointer-events-auto bg-zinc-950 border border-white/10 shadow-2xl overflow-hidden flex flex-col",
           !isExpanded && "hover:border-white/40 transition-colors cursor-pointer"
@@ -33,9 +31,9 @@ const SpotifyPlayer = () => {
         <AnimatePresence>
           {isExpanded && (
             <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
               className="flex items-center justify-between p-3 border-b border-white/5 bg-zinc-900/50 shrink-0"
             >
               <div className="flex items-center gap-2">
@@ -72,6 +70,7 @@ const SpotifyPlayer = () => {
             frameBorder="0" 
             allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
             loading="lazy"
+            className="rounded-b-2xl"
           />
         </div>
       </motion.div>
