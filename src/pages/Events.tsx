@@ -169,11 +169,11 @@ const Events = () => {
                         <img src={event.image_url} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt={event.title} />
                       </div>
                     )}
-                    <div className="flex-1 p-6 flex flex-col justify-between gap-8">
-                      <div className="space-y-4">
-                        <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex-1 p-8 flex flex-col items-center justify-center text-center gap-8">
+                      <div className="space-y-6 w-full">
+                        <div className="flex flex-col items-center gap-4">
                           <span className={cn(
-                            "text-[7px] font-black uppercase px-1.5 py-0.5 italic flex items-center gap-1.5 shrink-0",
+                            "text-[7px] font-black uppercase px-2 py-1 italic flex items-center gap-1.5 shrink-0",
                             existingApp?.status === 'pending' && "bg-zinc-800 text-zinc-400",
                             existingApp?.status === 'approved' && "bg-white text-black",
                             !existingApp && event.status === 'open' && "bg-green-600 text-white",
@@ -189,19 +189,23 @@ const Events = () => {
                               getStatusLabel(event.status)
                             )}
                           </span>
-                          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                            <div className="flex items-center gap-1 text-[8px] font-black uppercase text-zinc-500">
-                              <MapPin size={10} className="shrink-0" /> {event.location}
+                          
+                          <h3 className="text-xl md:text-2xl font-black italic uppercase tracking-tight leading-tight max-w-md">
+                            {event.title}
+                          </h3>
+
+                          <div className="flex flex-wrap justify-center items-center gap-x-6 gap-y-2">
+                            <div className="flex items-center gap-1.5 text-[9px] font-black uppercase text-zinc-500">
+                              <MapPin size={12} className="text-white/40" /> {event.location}
                             </div>
-                            <div className="flex items-center gap-1 text-[8px] font-black uppercase text-zinc-500 shrink-0">
-                              <Calendar size={10} className="shrink-0" /> {formatEventDate(event.date, event.end_date)}
+                            <div className="flex items-center gap-1.5 text-[9px] font-black uppercase text-zinc-500">
+                              <Calendar size={12} className="text-white/40" /> {formatEventDate(event.date, event.end_date)}
                             </div>
                           </div>
                         </div>
-                        <h3 className="text-lg font-black italic uppercase tracking-tight leading-tight">{event.title}</h3>
                       </div>
                       
-                      <div className="flex flex-wrap gap-4">
+                      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
                         <button 
                           onClick={() => setViewingEvent(event)}
                           className={cn(btnBaseClass, "bg-black/40 border-white/10 text-white hover:bg-white/5")}
@@ -233,7 +237,7 @@ const Events = () => {
                         )}
 
                         {isAdmin && (
-                          <div className="flex gap-2 ml-auto">
+                          <div className="flex gap-2 justify-center">
                             <Button 
                               onClick={() => { setEditingEvent(event); setIsAdminModalOpen(true); }}
                               variant="outline"
