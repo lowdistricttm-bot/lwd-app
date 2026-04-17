@@ -325,8 +325,8 @@ const Profile = () => {
             <AlertDialogDescription className="text-zinc-500 text-xs font-bold uppercase leading-relaxed">{t.profile.usernameNoticeDesc}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-none border-white/10 text-white font-black uppercase italic text-[10px]">{t.feed.cancel}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => window.location.href = 'mailto:info@lowdistrict.it'} className="rounded-none bg-white/90 backdrop-blur-md text-black font-black uppercase italic text-[10px]">{t.profile.contactAdmin}</AlertDialogAction>
+            <AlertDialogCancel className="rounded-none border-white/10 text-white hover:bg-white/5 font-black uppercase italic text-[10px] transition-all">{t.feed.cancel}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => window.location.href = 'mailto:info@lowdistrict.it'} className="rounded-none bg-white/90 backdrop-blur-md text-black hover:bg-zinc-200 font-black uppercase italic text-[10px] transition-all">{t.profile.contactAdmin}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

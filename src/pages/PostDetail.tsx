@@ -101,7 +101,7 @@ const PostDetail = () => {
             <p className="text-[10px] text-zinc-600 mt-2 uppercase font-bold">Devi essere loggato per visualizzare questo contenuto.</p>
             <Button 
               onClick={() => navigate('/login')}
-              className="mt-8 bg-white text-black rounded-none font-black uppercase italic px-8"
+              className="mt-8 bg-white text-black hover:bg-zinc-200 rounded-none font-black uppercase italic px-8 h-12 transition-all"
             >
               Vai al Login
             </Button>

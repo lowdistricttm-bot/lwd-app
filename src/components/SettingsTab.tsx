@@ -230,7 +230,7 @@ const SettingsTab = () => {
           <Button 
             onClick={handleLogout}
             variant="outline" 
-            className="w-full border-white/10 text-zinc-400 hover:bg-white hover:text-black rounded-none font-black uppercase text-[10px] tracking-widest italic h-14"
+            className="w-full border-white/10 text-zinc-400 hover:bg-white hover:text-black rounded-none font-black uppercase text-[10px] tracking-widest italic h-14 transition-all"
           >
             <LogOut className="mr-2" size={14} /> {t.settings?.logout || "ESCI"}
           </Button>

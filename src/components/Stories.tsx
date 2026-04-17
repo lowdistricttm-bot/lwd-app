@@ -148,11 +148,11 @@ const Stories = () => {
           <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
             <AlertDialogAction 
               onClick={() => navigate('/login')} 
-              className="rounded-none bg-white text-black font-black uppercase italic text-[10px] w-full h-12"
+              className="rounded-none bg-white text-black hover:bg-zinc-200 font-black uppercase italic text-[10px] w-full h-12 transition-all"
             >
               Accedi Ora <ArrowRight size={14} className="ml-2" />
             </AlertDialogAction>
-            <AlertDialogCancel className="rounded-none border-white/10 text-white font-black uppercase italic text-[10px] w-full h-12 mt-0">
+            <AlertDialogCancel className="rounded-none border-white/10 text-white hover:bg-white/5 font-black uppercase italic text-[10px] w-full h-12 mt-0 transition-all">
               Chiudi
             </AlertDialogCancel>
           </AlertDialogFooter>

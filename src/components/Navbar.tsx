@@ -135,11 +135,11 @@ const Navbar = () => {
           <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
             <AlertDialogAction 
               onClick={() => window.open('https://www.lowdistrict.it/selection-lwdstrct/', '_blank')} 
-              className="rounded-none bg-white text-black font-black uppercase italic text-[10px] w-full"
+              className="rounded-none bg-white text-black hover:bg-zinc-200 font-black uppercase italic text-[10px] w-full h-12 transition-all"
             >
               Invia Selezione
             </AlertDialogAction>
-            <AlertDialogCancel className="rounded-none border-white/10 text-white font-black uppercase italic text-[10px] w-full mt-0">
+            <AlertDialogCancel className="rounded-none border-white/10 text-white hover:bg-white/5 font-black uppercase italic text-[10px] w-full h-12 mt-0 transition-all">
               Chiudi
             </AlertDialogCancel>
           </AlertDialogFooter>

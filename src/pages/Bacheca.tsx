@@ -90,7 +90,7 @@ const Bacheca = () => {
                 <p className="text-[9px] text-zinc-600 font-bold uppercase mt-1">Accedi per partecipare alle discussioni del District.</p>
               </div>
             </div>
-            <Button onClick={() => navigate('/login')} className="bg-white/90 backdrop-blur-md text-black hover:bg-white rounded-none text-[9px] font-black uppercase tracking-widest h-10 px-6 italic"><LogIn size={14} className="mr-2" /> {t.auth.login}</Button>
+            <Button onClick={() => navigate('/login')} className="bg-white/90 backdrop-blur-md text-black hover:bg-zinc-200 rounded-none text-[9px] font-black uppercase tracking-widest h-10 px-6 italic transition-all"><LogIn size={14} className="mr-2" /> {t.auth.login}</Button>
           </div>
         )}
 
