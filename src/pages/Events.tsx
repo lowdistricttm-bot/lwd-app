@@ -72,16 +72,32 @@ const Events = () => {
     } catch (error) {}
   };
 
-  // Funzione per formattare correttamente date singole o range di date
+  // Funzione per formattare le date stile: "27-28 GIUGNO 2026"
   const formatDateRange = (start: string, end?: string) => {
-    const startDate = new Date(start).toLocaleDateString();
+    const startDate = new Date(start);
+    const startDay = startDate.getDate();
+    const startMonth = startDate.toLocaleString(language === 'it' ? 'it-IT' : 'en-US', { month: 'long' }).toUpperCase();
+    const startYear = startDate.getFullYear();
+
     if (end) {
-      const endDate = new Date(end).toLocaleDateString();
-      if (startDate !== endDate) {
-        return `${startDate} - ${endDate}`;
+      const endDate = new Date(end);
+      const endDay = endDate.getDate();
+      const endMonth = endDate.toLocaleString(language === 'it' ? 'it-IT' : 'en-US', { month: 'long' }).toUpperCase();
+      const endYear = endDate.getFullYear();
+
+      // Verifica se i giorni sono effettivamente diversi
+      if (startDay !== endDay || startMonth !== endMonth || startYear !== endYear) {
+        if (startMonth === endMonth && startYear === endYear) {
+          return `${startDay}-${endDay} ${startMonth} ${startYear}`;
+        } else if (startYear === endYear) {
+          return `${startDay} ${startMonth} - ${endDay} ${endMonth} ${startYear}`;
+        } else {
+          return `${startDay} ${startMonth} ${startYear} - ${endDay} ${endMonth} ${endYear}`;
+        }
       }
     }
-    return startDate;
+    
+    return `${startDay} ${startMonth} ${startYear}`;
   };
 
   const btnBaseClass = "rounded-full font-black uppercase italic text-[10px] tracking-widest h-12 w-full sm:w-48 backdrop-blur-md transition-all flex items-center justify-center gap-2 border shadow-lg";
