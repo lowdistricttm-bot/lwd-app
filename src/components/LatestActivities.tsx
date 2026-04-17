@@ -13,17 +13,22 @@ import { cn } from '@/lib/utils';
 const LatestActivities = () => {
   const navigate = useNavigate();
   const { posts, isLoading } = useSocialFeed();
+  
   const [emblaRef] = useEmblaCarousel({ 
     align: 'start', 
     containScroll: 'trimSnaps',
     dragFree: true 
   });
 
+  if (isLoading) return null;
+  
   const latestPosts = posts?.slice(0, 6) || [];
+  if (latestPosts.length === 0) return null;
 
-  if (isLoading || latestPosts.length === 0) return null;
-
-  const isVideo = (url: string) => url?.match(/\.(mp4|webm|ogg|mov)$/i) || url?.includes('video');
+  const isVideo = (url: string) => {
+    if (!url) return false;
+    return url.match(/\.(mp4|webm|ogg|mov)$/i) || url.includes('video');
+  };
 
   return (
     <section className="py-24 px-6 bg-zinc-950 border-t border-white/5 overflow-hidden">
@@ -62,7 +67,6 @@ const LatestActivities = () => {
                   onClick={() => navigate(`/post/${post.id}`)}
                   className="embla__slide flex-[0_0_85%] sm:flex-[0_0_45%] lg:flex-[0_0_30%] min-w-0 bg-zinc-900/30 border border-white/5 hover:border-white/10 transition-all group"
                 >
-                  {/* Media Preview */}
                   <div className="aspect-video bg-black relative overflow-hidden">
                     {firstMedia ? (
                       <>
@@ -73,8 +77,6 @@ const LatestActivities = () => {
                             muted
                             playsInline
                             loop
-                            onMouseOver={e => (e.target as HTMLVideoElement).play()}
-                            onMouseOut={e => (e.target as HTMLVideoElement).pause()}
                           />
                         ) : (
                           <img 
