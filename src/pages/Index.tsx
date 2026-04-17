@@ -117,10 +117,10 @@ const Index = () => {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
             >
-              <h2 className="text-4xl md:text-7xl font-black italic uppercase tracking-tighter mb-8 leading-none">
+              <h2 className="text-[1.75rem] xs:text-3xl md:text-7xl font-black italic uppercase tracking-tighter mb-8 leading-tight md:leading-none">
                 {t.home.banner.title}
               </h2>
-              <p className="text-zinc-400 text-xs md:text-sm font-black uppercase tracking-[0.4em] mb-12 italic">
+              <p className="text-zinc-400 text-[10px] md:text-sm font-black uppercase tracking-[0.15em] md:tracking-[0.4em] mb-12 italic whitespace-nowrap">
                 {t.home.banner.subtitle}
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

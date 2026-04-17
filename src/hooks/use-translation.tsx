@@ -40,7 +40,7 @@ const translations: Record<Language, any> = {
         eventsDesc: 'Gli eventi più esclusivi d\'Italia a portata di app.'
       },
       banner: {
-        title: 'THE STANCE CULTURE IS HERE.',
+        title: 'THE LOW CULTURE IS HERE.',
         subtitle: 'NON RESTARE A GUARDARE. ENTRA NEL DISTRICT.',
         applyBtn: 'CANDIDATI AGLI EVENTI',
         shopBtn: 'ESPLORA LO SHOP'
@@ -278,7 +278,7 @@ const translations: Record<Language, any> = {
         eventsDesc: 'The most exclusive events in Italy at your fingertips.'
       },
       banner: {
-        title: 'THE STANCE CULTURE IS HERE.',
+        title: 'THE LOW CULTURE IS HERE.',
         subtitle: 'DON\'T JUST WATCH. JOIN THE DISTRICT.',
         applyBtn: 'APPLY TO EVENTS',
         shopBtn: 'EXPLORE SHOP'
