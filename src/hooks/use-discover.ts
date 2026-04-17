@@ -4,21 +4,25 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { Vehicle } from './use-garage';
 
+// Lista dei ruoli autorizzati a comparire nella sezione Esplora
+const AUTHORIZED_ROLES = ['admin', 'staff', 'support', 'member'];
+
 export const useDiscover = (searchQuery: string = "") => {
-  // Query per i veicoli (con filtro se presente)
+  // Query per i veicoli (filtrata per ruolo del proprietario)
   const { data: vehicles, isLoading: loadingVehicles } = useQuery({
     queryKey: ['discover-vehicles', searchQuery],
     queryFn: async () => {
+      // Usiamo !inner per forzare un inner join: se il profilo non ha il ruolo corretto, il veicolo viene escluso
       let query = supabase
         .from('vehicles')
         .select(`
           *,
-          profiles:user_id (username, avatar_url, role, is_admin)
+          profiles!inner (username, avatar_url, role, is_admin)
         `)
+        .in('profiles.role', AUTHORIZED_ROLES)
         .order('created_at', { ascending: false });
 
       if (searchQuery) {
-        // Ricerca per marca o modello
         query = query.or(`brand.ilike.%${searchQuery}%,model.ilike.%${searchQuery}%`);
       } else {
         query = query.limit(40);
@@ -34,7 +38,7 @@ export const useDiscover = (searchQuery: string = "") => {
     }
   });
 
-  // Query per gli utenti (solo se c'è una ricerca)
+  // Query per gli utenti (filtrata per ruolo)
   const { data: users, isLoading: loadingUsers } = useQuery({
     queryKey: ['discover-users', searchQuery],
     queryFn: async () => {
@@ -43,6 +47,7 @@ export const useDiscover = (searchQuery: string = "") => {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
+        .in('role', AUTHORIZED_ROLES)
         .ilike('username', `%${searchQuery}%`)
         .limit(10);
 
@@ -52,13 +57,14 @@ export const useDiscover = (searchQuery: string = "") => {
     enabled: searchQuery.length > 0
   });
 
-  // Suggerimenti: Nuovi membri (mostrati quando non si cerca)
+  // Suggerimenti: Nuovi membri verificati (mostrati quando non si cerca)
   const { data: newMembers } = useQuery({
     queryKey: ['discover-new-members'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
+        .in('role', AUTHORIZED_ROLES)
         .order('updated_at', { ascending: false })
         .limit(8);
       
