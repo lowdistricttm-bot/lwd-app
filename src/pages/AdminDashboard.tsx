@@ -82,7 +82,7 @@ const AdminDashboard = () => {
             <ChevronLeft size={14} /> Torna al Profilo
           </button>
           <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Admin Control Panel</h2>
-          <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">Dashboard</h1>
+          <h1 className="text-3xl md:text-6xl font-black italic tracking-tighter uppercase">Dashboard</h1>
           <div className="flex items-center gap-2 mt-2">
             <ShieldCheck size={14} className="text-white" />
             <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Accesso: {role?.toUpperCase()}</span>

@@ -79,7 +79,7 @@ const Messages = () => {
         <header className="mb-12 flex items-end justify-between">
           <div>
             <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">{t.messages.subtitle}</h2>
-            <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">{t.messages.title}</h1>
+            <h1 className="text-3xl md:text-6xl font-black italic tracking-tighter uppercase">{t.messages.title}</h1>
           </div>
           <button 
             onClick={() => setIsNewChatOpen(true)} 

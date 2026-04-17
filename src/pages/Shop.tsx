@@ -79,7 +79,7 @@ const Shop = () => {
               <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">
                 {searchQuery ? t.shop.results : t.shop.subtitle}
               </h2>
-              <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-6xl font-black italic tracking-tighter uppercase whitespace-nowrap overflow-hidden text-ellipsis">
+              <h1 className="text-3xl md:text-6xl font-black italic tracking-tighter uppercase whitespace-nowrap overflow-hidden text-ellipsis">
                 {searchQuery ? `"${searchQuery}"` : t.shop.title}
               </h1>
               {searchQuery && (

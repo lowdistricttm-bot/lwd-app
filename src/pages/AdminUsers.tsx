@@ -77,7 +77,7 @@ const AdminUsers = () => {
             <ChevronLeft size={14} /> Torna alla Dashboard
           </button>
           <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Admin Control Panel</h2>
-          <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">Membri</h1>
+          <h1 className="text-3xl md:text-6xl font-black italic tracking-tighter uppercase">Membri</h1>
         </div>
 
         <div className="relative mb-8">
