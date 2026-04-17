@@ -72,7 +72,6 @@ const Events = () => {
     } catch (error) {}
   };
 
-  // Funzione per formattare le date stile: "27-28 GIUGNO 2026"
   const formatDateRange = (start: string, end?: string) => {
     const startDate = new Date(start);
     const startDay = startDate.getDate();
@@ -85,7 +84,6 @@ const Events = () => {
       const endMonth = endDate.toLocaleString(language === 'it' ? 'it-IT' : 'en-US', { month: 'long' }).toUpperCase();
       const endYear = endDate.getFullYear();
 
-      // Verifica se i giorni sono effettivamente diversi
       if (startDay !== endDay || startMonth !== endMonth || startYear !== endYear) {
         if (startMonth === endMonth && startYear === endYear) {
           return `${startDay}-${endDay} ${startMonth} ${startYear}`;
@@ -179,7 +177,8 @@ const Events = () => {
                 <div className="max-w-2xl mx-auto space-y-8 pb-12">
                   <div className="flex justify-between items-start gap-4">
                     <div className="flex-1 min-w-0 overflow-x-auto no-scrollbar">
-                      <h3 className="text-2xl sm:text-3xl font-black italic uppercase tracking-tighter whitespace-nowrap pr-4">
+                      {/* Titolo rimpicciolito dinamicamente per stare su un solo rigo */}
+                      <h3 className="text-[clamp(16px,4.5vw,28px)] font-black italic uppercase tracking-tighter whitespace-nowrap pr-4">
                         {viewingEvent.title}
                       </h3>
                     </div>
@@ -191,13 +190,19 @@ const Events = () => {
                     </div>
                   )}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-zinc-900/50 border border-white/5 p-4 rounded-2xl">
-                      <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest mb-1">{t.events.date}</p>
-                      <p className="text-sm font-bold uppercase">{formatDateRange(viewingEvent.date, viewingEvent.end_date)}</p>
+                    <div className="bg-zinc-900/50 border border-white/5 p-3 sm:p-4 rounded-2xl overflow-hidden">
+                      <p className="text-[9px] font-black uppercase text-zinc-500 tracking-widest mb-1 truncate">{t.events.date}</p>
+                      {/* Data su singolo rigo */}
+                      <p className="text-[10px] sm:text-[11px] font-bold uppercase whitespace-nowrap overflow-x-auto no-scrollbar">
+                        {formatDateRange(viewingEvent.date, viewingEvent.end_date)}
+                      </p>
                     </div>
-                    <div className="bg-zinc-900/50 border border-white/5 p-4 rounded-2xl">
-                      <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest mb-1">{t.events.location}</p>
-                      <p className="text-sm font-bold uppercase">{viewingEvent.location}</p>
+                    <div className="bg-zinc-900/50 border border-white/5 p-3 sm:p-4 rounded-2xl overflow-hidden">
+                      <p className="text-[9px] font-black uppercase text-zinc-500 tracking-widest mb-1 truncate">{t.events.location}</p>
+                      {/* Location su singolo rigo */}
+                      <p className="text-[10px] sm:text-[11px] font-bold uppercase whitespace-nowrap overflow-x-auto no-scrollbar">
+                        {viewingEvent.location}
+                      </p>
                     </div>
                   </div>
                   {viewingEvent.description && (
