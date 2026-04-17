@@ -206,8 +206,8 @@ const Profile = () => {
             <input type="file" ref={coverInputRef} className="hidden" accept="image/*,video/*" onChange={(e) => handleFileUpload(e, 'cover')} />
           </div>
           
-          <div className="absolute -bottom-12 left-6 flex items-end gap-4 z-20">
-            <div className="relative group/avatar">
+          <div className="absolute -bottom-12 left-6 flex items-end gap-4 z-20 max-w-[calc(100%-3rem)]">
+            <div className="relative group/avatar shrink-0">
               <input type="file" ref={avatarInputRef} className="hidden" accept="image/*,video/*" onChange={(e) => handleFileUpload(e, 'avatar')} />
               <div onClick={() => !isOwnProfile && setLightboxData({ images: [profile?.avatar_url || DEFAULT_AVATAR], index: 0 })} className="w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-white rounded-full overflow-hidden shadow-2xl flex items-center justify-center relative">
                 {uploadingAvatar ? <Loader2 className="animate-spin text-zinc-500" /> : (profile?.avatar_url || DEFAULT_AVATAR) ? <img src={profile?.avatar_url || DEFAULT_AVATAR} alt="Avatar" className="w-full h-full object-cover" /> : <User size={40} className="text-zinc-800" />}
@@ -218,24 +218,24 @@ const Profile = () => {
                 )}
               </div>
             </div>
-            <div className="mb-2">
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl md:text-4xl font-black italic uppercase tracking-tighter leading-none">{displayName}</h1>
-                <div className="flex items-center gap-2">
-                  {isOwnProfile && <button onClick={() => setIsUsernameNoticeOpen(true)} className="p-1.5 text-zinc-500 hover:text-white transition-colors"><Edit2 size={14} /></button>}
+            <div className="mb-2 min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl md:text-3xl font-black italic uppercase tracking-tighter leading-none truncate">{displayName}</h1>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {isOwnProfile && <button onClick={() => setIsUsernameNoticeOpen(true)} className="p-1 text-zinc-500 hover:text-white transition-colors"><Edit2 size={14} /></button>}
                   
                   {!isTargetSubscriber && (
-                    <button onClick={handleShareProfile} className="p-1.5 text-zinc-500 hover:text-white transition-colors">
+                    <button onClick={handleShareProfile} className="p-1 text-zinc-500 hover:text-white transition-colors">
                       <Share2 size={16} />
                     </button>
                   )}
 
                   {!isOwnProfile && currentUser && canMessageTarget && (
-                    <button onClick={() => navigate(`/chat/${profile.id}`)} className="p-2 bg-zinc-800 text-white hover:bg-white hover:text-black transition-all shadow-lg"><Mail size={18} /></button>
+                    <button onClick={() => navigate(`/chat/${profile.id}`)} className="p-1.5 bg-zinc-800 text-white hover:bg-white hover:text-black transition-all shadow-lg"><Mail size={16} /></button>
                   )}
                 </div>
               </div>
-              <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] italic mt-1">{roleLabel}</p>
+              <p className="text-zinc-500 text-[9px] font-black uppercase tracking-[0.3em] italic mt-1 truncate">{roleLabel}</p>
             </div>
           </div>
         </div>
