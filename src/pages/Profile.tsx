@@ -189,7 +189,7 @@ const Profile = () => {
   const userPosts = posts?.filter(p => p.user_id === targetUserId) || [];
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="min-h-screen text-white flex flex-col bg-transparent">
       <Navbar />
       <main className="flex-1 pb-32">
         <div className="relative h-56 md:h-80 bg-zinc-900 group/cover">
