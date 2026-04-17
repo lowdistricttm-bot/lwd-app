@@ -16,7 +16,7 @@ const FeaturedProducts = () => {
   );
 
   return (
-    <section className="pt-24 pb-12 px-6 bg-transparent">
+    <section className="py-24 px-6 bg-transparent">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-end mb-12">
           <div>
