@@ -33,7 +33,7 @@ const translations: Record<Language, any> = {
       enterFeed: 'ENTRA NELLA BACHECA',
       values: {
         community: 'COMMUNITY',
-        communityDesc: 'Migliaia di appassionati uniti.',
+        communityDesc: 'Migliaia di appassionati uniti dalla stessa passione.',
         quality: 'QUALITÀ',
         qualityDesc: 'Merchandising e drop in edizione limitata.',
         events: 'EVENTI',
@@ -271,7 +271,7 @@ const translations: Record<Language, any> = {
       enterFeed: 'ENTER FEED',
       values: {
         community: 'COMMUNITY',
-        communityDesc: 'Thousands of enthusiasts united.',
+        communityDesc: 'Thousands of enthusiasts united by the same passion.',
         quality: 'QUALITY',
         qualityDesc: 'Merchandise and limited edition drops.',
         events: 'EVENTS',
