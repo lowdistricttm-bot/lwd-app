@@ -12,7 +12,7 @@ const Hero = () => {
   const { t } = useTranslation();
 
   return (
-    <section className="relative h-[85vh] w-full flex items-center justify-center overflow-hidden bg-black">
+    <section className="relative h-[85vh] w-full flex items-center justify-center overflow-hidden bg-transparent">
       {/* Background con overlay dinamico */}
       <div className="absolute inset-0 z-0">
         <img 

@@ -7,13 +7,13 @@ import Logo from './Logo';
 const Footer = () => {
   const socialLinks = [
     { icon: Instagram, href: "https://www.instagram.com/lwdstrct.crw/" },
-    { icon: Facebook, href: "https://www.facebook.com/lowdistrictcrew/" },
+    { icon: Facebook, href: "https://www.facebook.com/lowdistrict_crew/" },
     { icon: Youtube, href: "https://www.youtube.com/@lowdistrictcrew" },
     { icon: Music2, href: "https://www.tiktok.com/@lowdistrictcrew" }
   ];
 
   return (
-    <footer className="bg-black border-t border-white/10 pt-20 pb-20 px-6">
+    <footer className="bg-transparent border-t border-white/10 pt-20 pb-20 px-6">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-20">
           <div className="col-span-1 md:col-span-2 flex flex-col items-center md:items-start text-center md:text-left">
