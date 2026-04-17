@@ -80,7 +80,7 @@ const Events = () => {
         <header className="mb-12 flex items-end justify-between">
           <div className="min-w-0 flex-1">
             <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">{t.events.subtitle}</h2>
-            <h1 className="text-3xl md:text-6xl font-black italic tracking-tighter uppercase truncate">{t.events.title}</h1>
+            <h1 className="text-3xl md:text-6xl font-black italic uppercase tracking-tighter uppercase truncate">{t.events.title}</h1>
           </div>
           {isAdmin && (
             <Button onClick={() => { setEditingEvent(null); setIsAdminModalOpen(true); }} className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 transition-all shadow-xl ml-4 shrink-0"><Plus size={24} /></Button>
@@ -110,7 +110,7 @@ const Events = () => {
                           {existingApp ? <Clock size={10} /> : <Calendar size={10} />}
                           {existingApp ? `${t.events.manageApp.status}: ${existingApp.status.toUpperCase()}` : t.events.statusOpen}
                         </span>
-                        <h3 className="text-xl md:text-2xl font-black italic uppercase tracking-tight">{event.title}</h3>
+                        <h3 className="text-xl md:text-2xl font-black italic uppercase tracking-tight truncate">{event.title}</h3>
                         <div className="flex flex-wrap justify-center gap-6 text-[10px] font-black uppercase text-zinc-500">
                           <span className="flex items-center gap-1.5"><MapPin size={14} /> {event.location}</span>
                           <span className="flex items-center gap-1.5"><Calendar size={14} /> {new Date(event.date).toLocaleDateString()}</span>
