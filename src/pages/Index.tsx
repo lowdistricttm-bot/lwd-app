@@ -99,8 +99,8 @@ const Index = () => {
         
         <LatestActivities />
 
-        {/* Sezione District Radio */}
-        <section className="py-16 px-6 bg-zinc-950 border-y border-white/5 overflow-hidden relative">
+        {/* Sezione District Radio - Resa trasparente per mostrare lo sfondo dinamico */}
+        <section className="py-16 px-6 bg-transparent border-y border-white/5 overflow-hidden relative">
           <div className="absolute top-0 right-0 w-1/2 h-full bg-white/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
           
           <div className="max-w-7xl mx-auto relative z-10">
