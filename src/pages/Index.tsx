@@ -51,7 +51,7 @@ const Index = () => {
         
         <FeaturedProducts />
 
-        <section className="py-24 px-6">
+        <section className="py-12 px-6">
           <div className="max-w-7xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
               {navigationTabs.map((item, i) => (
@@ -97,7 +97,7 @@ const Index = () => {
         
         <LatestActivities />
 
-        <section className="py-24 px-6 overflow-hidden relative">
+        <section className="py-12 px-6 overflow-hidden relative">
           <div className="max-w-7xl mx-auto relative z-10">
             <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
               <div className="flex-1 space-y-6 text-center md:text-left">
@@ -137,7 +137,7 @@ const Index = () => {
           </div>
         </section>
 
-        <section className="relative py-24 px-6 overflow-hidden">
+        <section className="relative py-12 px-6 overflow-hidden">
           <div className="absolute inset-0 z-0">
             <img 
               src="https://www.lowdistrict.it/wp-content/uploads/DSC01359-1-scaled-e1751832356345.jpg" 
