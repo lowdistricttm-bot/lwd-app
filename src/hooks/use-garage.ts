@@ -19,6 +19,8 @@ export interface Vehicle {
   images?: string[];
   is_main: boolean;
   created_at: string;
+  likes_count?: number;
+  is_liked?: boolean;
 }
 
 export const useGarage = (targetUserId?: string) => {
@@ -27,17 +29,20 @@ export const useGarage = (targetUserId?: string) => {
   const { data: vehicles, isLoading } = useQuery({
     queryKey: ['garage-vehicles', targetUserId],
     queryFn: async () => {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       let uid = targetUserId;
       
       if (!uid) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return [];
-        uid = user.id;
+        if (!currentUser) return [];
+        uid = currentUser.id;
       }
 
       const { data, error } = await supabase
         .from('vehicles')
-        .select('*')
+        .select(`
+          *,
+          vehicle_likes (user_id)
+        `)
         .eq('user_id', uid)
         .order('created_at', { ascending: false });
 
@@ -45,7 +50,9 @@ export const useGarage = (targetUserId?: string) => {
       
       return data.map((v: any) => ({
         ...v,
-        images: Array.isArray(v.images) ? v.images : (v.image_url ? [v.image_url] : [])
+        images: Array.isArray(v.images) ? v.images : (v.image_url ? [v.image_url] : []),
+        likes_count: v.vehicle_likes?.length || 0,
+        is_liked: currentUser ? v.vehicle_likes?.some((l: any) => l.user_id === currentUser.id) : false
       })) as Vehicle[];
     }
   });
@@ -54,13 +61,43 @@ export const useGarage = (targetUserId?: string) => {
     const urls: string[] = [];
     for (let file of files) {
       file = await compressImage(file);
-      
-      // Caricamento su Cloudinary
       const publicUrl = await uploadToCloudinary(file);
       urls.push(publicUrl);
     }
     return urls;
   };
+
+  const toggleLike = useMutation({
+    mutationFn: async (vehicleId: string) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Accedi per mettere like");
+
+      const { data: existingLike } = await supabase
+        .from('vehicle_likes')
+        .select('id')
+        .eq('vehicle_id', vehicleId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existingLike) {
+        const { error } = await supabase
+          .from('vehicle_likes')
+          .delete()
+          .eq('id', existingLike.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('vehicle_likes')
+          .insert([{ vehicle_id: vehicleId, user_id: user.id }]);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['garage-vehicles'] });
+      queryClient.invalidateQueries({ queryKey: ['discover-vehicles'] });
+    },
+    onError: (err: any) => showError(err.message)
+  });
 
   const addVehicle = useMutation({
     mutationFn: async (newVehicle: Partial<Vehicle> & { files?: File[] }) => {
@@ -133,5 +170,5 @@ export const useGarage = (targetUserId?: string) => {
     }
   });
 
-  return { vehicles, isLoading, addVehicle, updateVehicle, deleteVehicle };
+  return { vehicles, isLoading, addVehicle, updateVehicle, deleteVehicle, toggleLike };
 };

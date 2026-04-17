@@ -6,7 +6,8 @@ import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
 import Footer from '@/components/Footer';
 import { useDiscover } from '@/hooks/use-discover';
-import { Loader2, Car, Search, LayoutGrid, StretchHorizontal, User, ChevronRight, ShieldCheck, Sparkles, Calendar, Gauge, Users } from 'lucide-react';
+import { useGarage } from '@/hooks/use-garage';
+import { Loader2, Car, Search, LayoutGrid, StretchHorizontal, User, ChevronRight, ShieldCheck, Sparkles, Calendar, Gauge, Users, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import ImageLightbox from '@/components/ImageLightbox';
@@ -26,8 +27,8 @@ const Discover = () => {
   }, [searchQuery]);
 
   const { vehicles, users, newMembers, isLoading } = useDiscover(debouncedSearch);
+  const { toggleLike } = useGarage();
 
-  // Helper per ottenere l'etichetta del ruolo corretta
   const getRoleLabel = (role: string) => {
     return t.profile.roles[role] || t.profile.roles.member;
   };
@@ -87,7 +88,7 @@ const Discover = () => {
           </div>
         </header>
 
-        {/* Sezione Utenti (Risultati Ricerca) */}
+        {/* Sezione Utenti */}
         <AnimatePresence>
           {debouncedSearch && users && users.length > 0 && (
             <motion.section 
@@ -206,10 +207,25 @@ const Discover = () => {
                           <div className="w-full h-full flex items-center justify-center text-zinc-800"><Car size={48} /></div>
                         )}
                         <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
-                        <div className="absolute top-4 left-4">
+                        
+                        <div className="absolute top-4 left-4 flex flex-col gap-2">
                           <span className="bg-white text-black text-[8px] font-black uppercase px-2 py-1 italic shadow-2xl">
                             {vehicle.suspension_type}
                           </span>
+                        </div>
+
+                        {/* Like Badge */}
+                        <div className="absolute bottom-4 right-4">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); toggleLike.mutate(vehicle.id); }}
+                            className={cn(
+                              "flex items-center gap-1.5 px-2 py-1 backdrop-blur-md border transition-all",
+                              vehicle.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-black/40 border-white/10 text-white hover:bg-white/20"
+                            )}
+                          >
+                            <Heart size={10} fill={vehicle.is_liked ? "currentColor" : "none"} />
+                            <span className="text-[8px] font-black">{vehicle.likes_count || 0}</span>
+                          </button>
                         </div>
                       </div>
 
@@ -248,10 +264,10 @@ const Discover = () => {
                                 </div>
                               </div>
                               <div className="space-y-1">
-                                <p className="text-[7px] font-black text-zinc-600 uppercase tracking-widest">Anno</p>
+                                <p className="text-[7px] font-black text-zinc-600 uppercase tracking-widest">Apprezzamenti</p>
                                 <div className="flex items-center gap-2 text-zinc-300">
-                                  <Calendar size={12} />
-                                  <span className="text-[10px] font-black uppercase italic">{vehicle.year || 'N/A'}</span>
+                                  <Heart size={12} className={vehicle.is_liked ? "text-red-500 fill-red-500" : ""} />
+                                  <span className="text-[10px] font-black uppercase italic">{vehicle.likes_count || 0} Like</span>
                                 </div>
                               </div>
                             </div>

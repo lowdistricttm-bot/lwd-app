@@ -7,7 +7,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import ImageLightbox from './ImageLightbox';
-import { Plus, Car, Trash2, Camera, Loader2, X, Edit3 } from 'lucide-react';
+import { Plus, Car, Trash2, Camera, Loader2, X, Edit3, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/use-translation';
@@ -18,7 +18,7 @@ interface GarageTabProps {
 }
 
 const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
-  const { vehicles, isLoading, addVehicle, updateVehicle, deleteVehicle } = useGarage(userId);
+  const { vehicles, isLoading, addVehicle, updateVehicle, deleteVehicle, toggleLike } = useGarage(userId);
   const { t } = useTranslation();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -311,6 +311,20 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
                     <button onClick={() => deleteVehicle.mutate(vehicle.id)} className="p-2 bg-black/60 text-white hover:bg-zinc-800 transition-colors"><Trash2 size={16} /></button>
                   </div>
                 )}
+                
+                {/* Like Button on Image (Floating) */}
+                <div className="absolute bottom-4 right-4 z-10">
+                   <button 
+                    onClick={(e) => { e.stopPropagation(); toggleLike.mutate(vehicle.id); }}
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-1.5 backdrop-blur-md border transition-all",
+                      vehicle.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-black/40 border-white/10 text-white hover:bg-white/20"
+                    )}
+                  >
+                    <Heart size={14} fill={vehicle.is_liked ? "currentColor" : "none"} />
+                    <span className="text-[10px] font-black">{vehicle.likes_count || 0}</span>
+                  </button>
+                </div>
               </div>
               <div className="p-6">
                 <div className="flex justify-between items-start mb-4">

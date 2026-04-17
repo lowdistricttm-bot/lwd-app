@@ -4,15 +4,14 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { Vehicle } from './use-garage';
 
-// Lista dei ruoli autorizzati a comparire nella sezione Esplora
 const AUTHORIZED_ROLES = ['admin', 'staff', 'support', 'member'];
 
 export const useDiscover = (searchQuery: string = "") => {
-  // Query per i veicoli (filtrata per ruolo del proprietario)
   const { data: vehicles, isLoading: loadingVehicles } = useQuery({
     queryKey: ['discover-vehicles', searchQuery],
     queryFn: async () => {
-      // Specifichiamo la relazione 'profiles' esplicitamente
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+
       let query = supabase
         .from('vehicles')
         .select(`
@@ -22,7 +21,8 @@ export const useDiscover = (searchQuery: string = "") => {
             avatar_url, 
             role, 
             is_admin
-          )
+          ),
+          vehicle_likes (user_id)
         `)
         .order('created_at', { ascending: false });
 
@@ -39,20 +39,19 @@ export const useDiscover = (searchQuery: string = "") => {
         return [];
       }
 
-      // Filtriamo i risultati lato client per assicurarci che il profilo esista e abbia il ruolo corretto
-      // (Questo risolve problemi di permessi RLS o join mancanti nel DB)
       const filteredData = (data || [])
         .filter((v: any) => v.profiles && AUTHORIZED_ROLES.includes(v.profiles.role))
         .map((v: any) => ({
           ...v,
-          images: Array.isArray(v.images) ? v.images : (v.image_url ? [v.image_url] : [])
+          images: Array.isArray(v.images) ? v.images : (v.image_url ? [v.image_url] : []),
+          likes_count: v.vehicle_likes?.length || 0,
+          is_liked: currentUser ? v.vehicle_likes?.some((l: any) => l.user_id === currentUser.id) : false
         }));
 
-      return filteredData as (Vehicle & { profiles: { username: string, avatar_url: string, role: string, is_admin: boolean } })[];
+      return filteredData;
     }
   });
 
-  // Query per gli utenti (filtrata per ruolo)
   const { data: users, isLoading: loadingUsers } = useQuery({
     queryKey: ['discover-users', searchQuery],
     queryFn: async () => {
@@ -71,7 +70,6 @@ export const useDiscover = (searchQuery: string = "") => {
     enabled: searchQuery.length > 0
   });
 
-  // Suggerimenti: Nuovi membri verificati (mostrati quando non si cerca)
   const { data: newMembers } = useQuery({
     queryKey: ['discover-new-members'],
     queryFn: async () => {
