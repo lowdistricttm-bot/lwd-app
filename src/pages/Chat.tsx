@@ -297,7 +297,7 @@ const Chat = () => {
                 placeholder="Messaggio" 
                 value={message} 
                 onChange={(e) => setMessage(e.target.value)} 
-                className="bg-white/5 border-white/10 rounded-full h-12 px-6 font-medium text-sm focus-visible:ring-white/20 text-white placeholder:text-zinc-500 backdrop-blur-md" 
+                className="bg-white/5 border-white/10 rounded-full h-12 px-6 font-medium text-sm focus-visible:ring-white/0 focus:ring-0 focus-visible:ring-offset-0 text-white placeholder:text-zinc-500 backdrop-blur-md" 
               />
             </div>
             
@@ -324,7 +324,7 @@ const Chat = () => {
             <AlertDialogAction onClick={handleDeleteMessage} className="rounded-full bg-white text-black font-black uppercase italic text-[10px] h-12 hover:bg-zinc-200">
               Elimina Definitivamente
             </AlertDialogAction>
-            <AlertDialogCancel className="rounded-full border-white/10 text-white bg-transparent hover:bg-white/10 font-black uppercase italic text-[10px] h-12 mt-0">
+            <AlertDialogCancel className="rounded-full border-white/10 text-white bg-transparent hover:bg-white/10 font-black uppercase italic text-[10px] h-12 mt-0 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0">
               Annulla
             </AlertDialogCancel>
           </AlertDialogFooter>
