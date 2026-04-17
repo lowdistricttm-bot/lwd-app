@@ -101,13 +101,16 @@ export const useMessages = (otherUserId?: string) => {
 
   // Listener specifico per la chat aperta o la lista conversazioni
   useEffect(() => {
+    // Creiamo un ID istanza unico per evitare conflitti di sottoscrizione
+    const instanceId = Math.random().toString(36).substring(2, 9);
+    const channelName = `messages-realtime-${otherUserId || 'list'}-${instanceId}`;
+
     const channel = supabase
-      .channel(`messages-realtime-${otherUserId || 'list'}`)
+      .channel(channelName)
       .on(
         'postgres_changes', 
         { event: '*', schema: 'public', table: 'messages' }, 
         () => {
-          // Quando succede qualcosa nella tabella messaggi, aggiorna tutto
           queryClient.invalidateQueries({ queryKey: ['conversations'] });
           queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
           if (otherUserId) {
