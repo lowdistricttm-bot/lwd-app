@@ -116,14 +116,26 @@ const Events = () => {
   const formatEventDate = (start: string, end?: string) => {
     const startDate = new Date(start);
     const locale = language === 'it' ? 'it-IT' : 'en-US';
-    if (!end) return startDate.toLocaleDateString(locale);
+    
+    if (!end) {
+      return startDate.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+    }
     
     const endDate = new Date(end);
     if (startDate.toDateString() === endDate.toDateString()) {
-      return startDate.toLocaleDateString(locale);
+      return startDate.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+    }
+
+    // Se stesso mese e anno: "27-28 GIUGNO 2026"
+    if (startDate.getMonth() === endDate.getMonth() && startDate.getFullYear() === endDate.getFullYear()) {
+      const startDay = startDate.getDate();
+      const endDay = endDate.getDate();
+      const monthYear = endDate.toLocaleDateString(locale, { month: 'long', year: 'numeric' }).toUpperCase();
+      return `${startDay}-${endDay} ${monthYear}`;
     }
     
-    return `${startDate.toLocaleDateString(locale, { day: '2-digit', month: '2-digit' })} - ${endDate.toLocaleDateString(locale)}`;
+    // Fallback per mesi differenti
+    return `${startDate.toLocaleDateString(locale, { day: 'numeric', month: 'short' })} - ${endDate.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })}`.toUpperCase();
   };
 
   const handleDeleteEvent = (id: string) => {
