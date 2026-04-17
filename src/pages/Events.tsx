@@ -202,10 +202,9 @@ const Events = () => {
                       <div className="flex flex-wrap gap-3">
                         <Button 
                           onClick={() => setViewingEvent(event)}
-                          variant="outline"
-                          className="border-white/10 text-white hover:bg-white/10 rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 w-44"
+                          className="bg-black text-white border border-white/10 hover:bg-zinc-900 rounded-none font-black uppercase italic text-[9px] tracking-widest h-10 w-44"
                         >
-                          {t.events.viewEvent} <Eye size={14} className="ml-2" />
+                          {t.events.viewEvent} <ChevronRight size={14} className="ml-2" />
                         </Button>
 
                         {existingApp ? (
