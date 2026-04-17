@@ -54,17 +54,19 @@ const Index = () => {
         <LatestActivities />
 
         {/* Sezione District Radio */}
-        <section className="py-24 px-6 bg-zinc-950 border-y border-white/5 overflow-hidden relative">
+        <section className="py-16 px-6 bg-zinc-950 border-y border-white/5 overflow-hidden relative">
           <div className="absolute top-0 right-0 w-1/2 h-full bg-white/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
           
           <div className="max-w-7xl mx-auto relative z-10">
-            <div className="flex flex-col md:flex-row items-center gap-12">
-              <div className="flex-1 space-y-8 text-center md:text-left">
+            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+              <div className="flex-1 space-y-6 text-center md:text-left">
                 <div>
                   <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">The Sound of District</h2>
-                  <h3 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase leading-none">District <br /> Radio</h3>
+                  <h3 className="text-3xl md:text-6xl font-black italic tracking-tighter uppercase leading-none whitespace-nowrap">
+                    District Radio
+                  </h3>
                 </div>
-                <p className="text-zinc-400 text-sm font-bold uppercase tracking-tight leading-relaxed max-w-md italic">
+                <p className="text-zinc-400 text-[10px] md:text-sm font-bold uppercase tracking-tight italic whitespace-nowrap">
                   Metti in play e goditi il viaggio nel District.
                 </p>
                 <div className="flex justify-center md:justify-start">
@@ -72,18 +74,18 @@ const Index = () => {
                     href="https://open.spotify.com/playlist/49mK52uCtaHSCLY1VC9GR3" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-3 bg-[#1DB954] text-black px-8 py-4 text-[10px] font-black uppercase tracking-widest italic hover:scale-105 transition-transform"
+                    className="inline-flex items-center gap-3 bg-[#1DB954] text-black px-6 py-3 text-[9px] font-black uppercase tracking-widest italic hover:scale-105 transition-transform"
                   >
-                    <Play size={16} fill="currentColor" /> Apri su Spotify
+                    <Play size={14} fill="currentColor" /> Apri su Spotify
                   </a>
                 </div>
               </div>
               
-              <div className="w-full md:w-[400px] aspect-square shadow-2xl transition-all duration-700">
+              <div className="w-full md:w-[450px] h-[152px] shadow-2xl">
                 <iframe 
                   src="https://open.spotify.com/embed/playlist/49mK52uCtaHSCLY1VC9GR3?utm_source=generator&theme=0" 
                   width="100%" 
-                  height="100%" 
+                  height="152" 
                   frameBorder="0" 
                   allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
                   loading="lazy"
