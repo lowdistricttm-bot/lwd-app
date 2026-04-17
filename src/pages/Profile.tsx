@@ -40,16 +40,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-// Placeholder standard aggiornati
 const DEFAULT_AVATAR = "https://www.lowdistrict.it/wp-content/uploads/immagine-profilo-sito-new-scaled.jpg";
 const DEFAULT_COVER = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1964&auto=format&fit=crop&sat=-100";
 
 const Profile = () => {
   const { userId } = useParams();
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { t, language } = useTranslation();
-  const { canVote } = useAdmin(); // canVote è true per Admin, Staff e Supporto
+  const { canVote } = useAdmin();
   const { isUserOnline } = usePresence();
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
@@ -106,26 +104,15 @@ const Profile = () => {
   }, [navigate, userId]);
 
   const handleShareProfile = async () => {
-    const displayName = profile?.username || 'Utente';
-    // Assicuriamoci che l'URL contenga sempre l'ID dell'utente per la condivisione esterna
     const profileUrl = `${window.location.origin}/profile/${targetUserId}`;
-    
-    const shareData = {
-      title: `Profilo di ${displayName} | Low District`,
-      text: `Guarda il profilo di ${displayName} su Low District!`,
-      url: profileUrl
-    };
-
     try {
       if (navigator.share) {
-        await navigator.share(shareData);
+        await navigator.share({ title: `Profilo di ${profile?.username}`, url: profileUrl });
       } else {
         await navigator.clipboard.writeText(profileUrl);
-        showSuccess(language === 'it' ? "Link profilo copiato!" : "Profile link copied!");
+        showSuccess(language === 'it' ? "Link copiato!" : "Link copied!");
       }
-    } catch (err) {
-      console.error('Errore condivisione:', err);
-    }
+    } catch (err) {}
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'cover') => {
@@ -144,16 +131,13 @@ const Profile = () => {
       }
 
       const publicUrl = await uploadToCloudinary(file);
-      const updateData: any = { id: currentUser.id, updated_at: new Date().toISOString() };
-      if (isAvatar) updateData.avatar_url = publicUrl; else updateData.cover_url = publicUrl;
-
-      const { error: updateError } = await supabase.from('profiles').upsert(updateData);
+      const { error: updateError } = await supabase.from('profiles').upsert({ id: currentUser.id, [isAvatar ? 'avatar_url' : 'cover_url']: publicUrl, updated_at: new Date().toISOString() });
       if (updateError) throw updateError;
 
       showSuccess(isAvatar ? "Foto profilo aggiornata!" : "Copertina aggiornata!");
       await fetchProfile(currentUser.id);
     } catch (error: any) {
-      showError("Errore: " + error.message);
+      showError(error.message);
     } finally {
       if (isAvatar) setUploadingAvatar(false); else setUploadingCover(false);
     }
@@ -161,51 +145,20 @@ const Profile = () => {
 
   if (loading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
-  const displayName = profile?.username || 'Utente';
   const userRole = profile?.role || 'subscriber';
-  const roleLabel = t.profile.roles[userRole] || t.profile.roles.member;
   const isTargetSubscriber = userRole === 'subscriber';
 
-  // Logica restrizione messaggi: solo staff può scrivere agli iscritti
-  const canMessageTarget = !isTargetSubscriber || canVote;
-
   const tabs = [];
-  if (!isTargetSubscriber) {
-    tabs.push({ id: 'activity', label: t.profile.posts, icon: MessageSquare });
-  }
-  if (isOwnProfile || !isTargetSubscriber) {
-    tabs.push({ id: 'garage', label: t.nav.garage, icon: Car });
-  }
+  if (!isTargetSubscriber) tabs.push({ id: 'activity', label: t.profile.posts, icon: MessageSquare });
+  if (isOwnProfile || !isTargetSubscriber) tabs.push({ id: 'garage', label: t.nav.garage, icon: Car });
   if (isOwnProfile) {
     tabs.push({ id: 'orders', label: t.profile.orders, icon: ShoppingBag });
     tabs.push({ id: 'selections', label: t.profile.selections, icon: ClipboardCheck });
   }
   tabs.push({ id: 'profile', label: t.profile.info, icon: User });
-  if (isOwnProfile) {
-    tabs.push({ id: 'settings', label: t.profile.settings, icon: Settings });
-  }
-
-  const gridColsClass = {
-    1: 'grid-cols-1',
-    2: 'grid-cols-2',
-    3: 'grid-cols-3',
-    4: 'grid-cols-4',
-    5: 'grid-cols-5',
-    6: 'grid-cols-6',
-  }[tabs.length] || 'grid-cols-1';
+  if (isOwnProfile) tabs.push({ id: 'settings', label: t.profile.settings, icon: Settings });
 
   const userPosts = posts?.filter(p => p.user_id === targetUserId) || [];
-
-  // Funzione per calcolare la dimensione del font in base alla lunghezza dell'username
-  const getUsernameSize = (name: string) => {
-    const len = name?.length || 0;
-    if (len > 30) return "text-[8px] md:text-sm";
-    if (len > 25) return "text-[9px] md:text-base";
-    if (len > 20) return "text-[10px] md:text-lg";
-    if (len > 15) return "text-[12px] md:text-xl";
-    if (len > 10) return "text-[14px] md:text-2xl";
-    return "text-[16px] md:text-2xl";
-  };
 
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent">
@@ -227,7 +180,6 @@ const Profile = () => {
           
           <div className="absolute -bottom-12 left-6 right-6 flex items-end gap-4 z-20">
             <div className="relative group/avatar shrink-0">
-              <input type="file" ref={avatarInputRef} className="hidden" accept="image/*,video/*" onChange={(e) => handleFileUpload(e, 'avatar')} />
               <div onClick={() => !isOwnProfile && setLightboxData({ images: [profile?.avatar_url || DEFAULT_AVATAR], index: 0 })} className="w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 border-white rounded-full overflow-hidden shadow-2xl flex items-center justify-center relative">
                 {uploadingAvatar ? <Loader2 className="animate-spin text-zinc-500" /> : (profile?.avatar_url || DEFAULT_AVATAR) ? <img src={profile?.avatar_url || DEFAULT_AVATAR} alt="Avatar" className="w-full h-full object-cover" /> : <User size={40} className="text-zinc-800" />}
                 {isOwnProfile && (
@@ -236,76 +188,27 @@ const Profile = () => {
                   </button>
                 )}
               </div>
-
-              {/* Pallino Online Real-time - Sincronizzato con il colore del testo */}
               <AnimatePresence>
                 {isOnline && (
-                  <motion.div 
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    exit={{ scale: 0 }}
-                    className="absolute top-1.5 left-1.5 w-5 h-5 md:w-7 md:h-7 rounded-full z-30 flex items-center justify-center overflow-hidden shadow-[0_0_15px_rgba(34,197,94,0.6)]"
-                  >
-                    <div className="absolute inset-0 bg-green-500" />
-                    <div className="absolute top-[15%] left-[15%] w-[35%] h-[35%] bg-white/30 rounded-full blur-[1px]" />
-                    <motion.div
-                      animate={{ opacity: [0.4, 0.8, 0.4] }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                      className="absolute inset-0 bg-white/10"
-                    />
-                  </motion.div>
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} className="absolute top-1.5 left-1.5 w-5 h-5 md:w-7 md:h-7 rounded-full z-30 bg-green-500 border-2 border-black shadow-[0_0_15px_rgba(34,197,94,0.6)]" />
                 )}
               </AnimatePresence>
+              <input type="file" ref={avatarInputRef} className="hidden" accept="image/*,video/*" onChange={(e) => handleFileUpload(e, 'avatar')} />
             </div>
             <div className="mb-2 min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-nowrap w-full overflow-visible">
-                <h1 className={cn(
-                  "font-black italic uppercase tracking-tighter leading-none whitespace-nowrap flex-shrink min-w-0",
-                  getUsernameSize(displayName)
-                )}>
-                  {displayName}
-                </h1>
+                <h1 className="text-xl md:text-3xl font-black italic uppercase tracking-tighter leading-none truncate">{profile?.username || 'Utente'}</h1>
                 <div className="flex items-center gap-1 shrink-0">
-                  {/* 1. Messaggio (solo se non è il proprio profilo) */}
-                  {!isOwnProfile && currentUser && canMessageTarget && (
-                    <button 
-                      onClick={() => navigate(`/chat/${profile.id}`)} 
-                      className="p-1 text-zinc-500 hover:text-white transition-colors"
-                    >
-                      <Mail size={18} />
-                    </button>
+                  {!isOwnProfile && currentUser && (!isTargetSubscriber || canVote) && (
+                    <button onClick={() => navigate(`/chat/${profile.id}`)} className="p-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all"><Mail size={18} /></button>
                   )}
-
-                  {/* 2. Condividi (Sempre visibile sul proprio profilo, o se il target non è un iscritto semplice) */}
-                  {(isOwnProfile || !isTargetSubscriber) && (
-                    <button 
-                      onClick={handleShareProfile} 
-                      className="p-1 text-zinc-500 hover:text-white transition-colors"
-                    >
-                      <Share2 size={18} />
-                    </button>
-                  )}
-
-                  {/* 3. Modifica (Solo se è il proprio profilo) */}
+                  <button onClick={handleShareProfile} className="p-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all"><Share2 size={18} /></button>
                   {isOwnProfile && (
-                    <button 
-                      onClick={() => setIsUsernameNoticeOpen(true)} 
-                      className="p-1 text-zinc-500 hover:text-white transition-colors"
-                    >
-                      <Edit2 size={16} />
-                    </button>
+                    <button onClick={() => setIsUsernameNoticeOpen(true)} className="p-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all"><Edit2 size={16} /></button>
                   )}
                 </div>
               </div>
-              <div className="flex flex-col gap-0.5 mt-1">
-                <p className="text-zinc-500 text-[7px] md:text-[8px] font-black uppercase tracking-[0.3em] italic truncate">{roleLabel}</p>
-                <p className={cn(
-                  "text-[6px] md:text-[7px] font-black uppercase tracking-widest transition-colors duration-500",
-                  isOnline ? "text-green-500" : "text-zinc-600"
-                )}>
-                  {isOnline ? 'Online' : profile?.last_seen_at ? `Ultimo accesso ${formatDistanceToNow(new Date(profile.last_seen_at), { addSuffix: true, locale: it })}` : 'Offline'}
-                </p>
-              </div>
+              <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.3em] italic mt-1">{t.profile.roles[userRole] || t.profile.roles.member}</p>
             </div>
           </div>
         </div>
@@ -314,90 +217,58 @@ const Profile = () => {
           {!isTargetSubscriber && targetUserId && <HighlightsBar userId={targetUserId} isOwnProfile={isOwnProfile} />}
 
           {isOwnProfile && (userRole === 'admin' || userRole === 'staff' || userRole === 'support') && (
-            <button onClick={() => navigate('/admin')} className="w-full mb-4 bg-zinc-900/40 backdrop-blur-md border border-white/5 p-1 pr-4 flex items-center justify-between group hover:bg-zinc-800 transition-all duration-500 h-12">
+            <button onClick={() => navigate('/admin')} className="w-full mb-8 bg-white/10 backdrop-blur-md border border-white/10 p-4 rounded-3xl flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-colors">
+                <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center group-hover:bg-black/10 transition-colors">
                   {userRole === 'admin' ? <ShieldCheck size={18} /> : <Users size={18} />}
                 </div>
-                <div className="text-left"><p className="text-[10px] font-black uppercase italic tracking-widest">DASHBOARD {userRole.toUpperCase()}</p></div>
+                <p className="text-xs font-black uppercase italic tracking-widest">DASHBOARD {userRole.toUpperCase()}</p>
               </div>
-              <ChevronRight size={16} className="text-zinc-500 group-hover:text-white transition-all" />
+              <ChevronRight size={20} />
             </button>
           )}
 
-          <div className={cn("grid border border-white/5 bg-zinc-900/30 backdrop-blur-md mb-6", gridColsClass)}>
+          <div className="flex bg-zinc-900/50 backdrop-blur-md rounded-full p-1 mb-8 border border-white/5 overflow-x-auto no-scrollbar">
             {tabs.map((tab) => (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={cn("flex flex-col items-center justify-center gap-2 py-4 transition-all border-b-2", activeTab === tab.id ? "border-white text-white bg-white/5" : "border-transparent text-zinc-600 hover:text-zinc-400")}>
-                <tab.icon size={18} className={activeTab === tab.id ? "text-white" : ""} />
-                <span className="text-[8px] font-black uppercase tracking-widest hidden sm:block">{tab.label}</span>
+              <button 
+                key={tab.id} 
+                onClick={() => setActiveTab(tab.id)} 
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-full transition-all duration-500 whitespace-nowrap",
+                  activeTab === tab.id ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-zinc-300"
+                )}
+              >
+                <tab.icon size={16} />
+                <span className="text-[9px] font-black uppercase tracking-widest hidden sm:block">{tab.label}</span>
               </button>
             ))}
           </div>
 
           <div className="min-h-[400px]">
             <AnimatePresence mode="wait">
-              {activeTab === 'activity' && !isTargetSubscriber && (
+              {activeTab === 'activity' && (
                 <motion.div key="activity" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-black italic uppercase">{isOwnProfile ? t.profile.myPosts : `${t.profile.posts} ${displayName}`}</h3>
-                    {isOwnProfile && <Button onClick={() => setIsPostModalOpen(true)} className="bg-white/90 backdrop-blur-md text-black hover:bg-white rounded-none text-[10px] font-black uppercase italic tracking-widest h-10 px-6"><Plus size={14} className="mr-2" /> {t.feed.newPost}</Button>}
+                    <h3 className="text-xl font-black italic uppercase">{isOwnProfile ? t.profile.myPosts : t.profile.posts}</h3>
+                    {isOwnProfile && <Button onClick={() => setIsPostModalOpen(true)} className="bg-primary text-white hover:scale-105 rounded-full text-[10px] font-black uppercase italic tracking-widest h-10 px-6 shadow-lg shadow-primary/20"><Plus size={14} className="mr-2" /> {t.feed.newPost}</Button>}
                   </div>
-                  
-                  {loadingPosts ? (
-                    <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div>
-                  ) : userPosts.length > 0 ? (
-                    <div className="grid grid-cols-3 gap-1 md:gap-4">
-                      {userPosts.map((post) => (
-                        <ProfilePostGridItem key={post.id} post={post} />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="bg-zinc-900/30 border border-white/5 p-12 text-center">
-                      <MessageSquare className="mx-auto text-zinc-800 mb-6" size={48} />
-                      <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">
-                        {isOwnProfile ? t.profile.noPosts : t.feed.noPosts}
-                      </p>
-                    </div>
-                  )}
+                  {loadingPosts ? <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div> : userPosts.length > 0 ? <div className="grid grid-cols-3 gap-1 md:gap-4">{userPosts.map((post) => <ProfilePostGridItem key={post.id} post={post} />)}</div> : <div className="bg-zinc-900/30 border border-white/5 p-12 rounded-[2rem] text-center"><MessageSquare className="mx-auto text-zinc-800 mb-6" size={48} /><p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{isOwnProfile ? t.profile.noPosts : t.feed.noPosts}</p></div>}
                 </motion.div>
               )}
-
-              {activeTab === 'orders' && isOwnProfile && (
-                <motion.div key="orders" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                  <h3 className="text-xl font-black italic uppercase mb-6">{t.profile.orders}</h3>
-                  {loadingOrders ? <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div> : orders?.length > 0 ? <div className="space-y-4">{orders.map((order: any) => (
-                    <div key={order.id} className="bg-zinc-900/50 border border-white/5 p-6 group hover:border-white/20 transition-all">
-                      <div className="flex flex-col md:flex-row justify-between gap-4">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-3"><span className="bg-white text-black text-[8px] font-black uppercase px-2 py-0.5 italic">#{order.id}</span><span className="bg-zinc-800 text-white text-[8px] font-black uppercase px-2 py-0.5 italic">{order.status.toUpperCase()}</span></div>
-                          <h4 className="text-sm font-black italic uppercase tracking-tight">{order.line_items.length} Prodotti</h4>
-                        </div>
-                        <div className="text-right flex flex-col justify-center"><p className="text-[8px] font-black uppercase text-zinc-600 tracking-widest mb-1">{t.checkout.total}</p><p className="text-2xl font-black italic tracking-tighter">€{order.total}</p></div>
-                      </div>
-                    </div>
-                  ))}</div> : <div className="bg-zinc-900/30 border border-white/5 p-12 text-center"><ShoppingBag className="mx-auto text-zinc-800 mb-6" size={48} /><p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{t.profile.noOrders}</p></div>}
-                </motion.div>
-              )}
-
-              {activeTab === 'garage' && (isOwnProfile || !isTargetSubscriber) && <motion.div key="garage" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><GarageTab userId={targetUserId} isOwnProfile={isOwnProfile} /></motion.div>}
-              {activeTab === 'selections' && isOwnProfile && <motion.div key="selections" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><ApplicationsTab /></motion.div>}
+              {activeTab === 'garage' && <motion.div key="garage" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><GarageTab userId={targetUserId} isOwnProfile={isOwnProfile} /></motion.div>}
+              {activeTab === 'orders' && <motion.div key="orders" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><h3 className="text-xl font-black italic uppercase mb-6">{t.profile.orders}</h3>{loadingOrders ? <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div> : orders?.length > 0 ? <div className="space-y-4">{orders.map((order: any) => <div key={order.id} className="bg-zinc-900/50 border border-white/5 p-6 rounded-3xl group hover:border-white/20 transition-all"><div className="flex flex-col md:flex-row justify-between gap-4"><div className="space-y-2"><div className="flex items-center gap-3"><span className="bg-white text-black text-[8px] font-black uppercase px-2 py-0.5 italic rounded-full">#{order.id}</span><span className="bg-zinc-800 text-white text-[8px] font-black uppercase px-2 py-0.5 italic rounded-full">{order.status.toUpperCase()}</span></div><h4 className="text-sm font-black italic uppercase tracking-tight">{order.line_items.length} Prodotti</h4></div><div className="text-right flex flex-col justify-center"><p className="text-[8px] font-black uppercase text-zinc-600 tracking-widest mb-1">{t.checkout.total}</p><p className="text-2xl font-black italic tracking-tighter">€{order.total}</p></div></div></div>)}</div> : <div className="bg-zinc-900/30 border border-white/5 p-12 rounded-[2rem] text-center"><ShoppingBag className="mx-auto text-zinc-800 mb-6" size={48} /><p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{t.profile.noOrders}</p></div>}</motion.div>}
+              {activeTab === 'selections' && <motion.div key="selections" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><ApplicationsTab /></motion.div>}
               {activeTab === 'profile' && <motion.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><ProfileInfoTab profile={profile} isOwnProfile={isOwnProfile} onUpdate={() => fetchProfile(targetUserId)} /></motion.div>}
-              {activeTab === 'settings' && isOwnProfile && <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><SettingsTab /></motion.div>}
+              {activeTab === 'settings' && <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><SettingsTab /></motion.div>}
             </AnimatePresence>
           </div>
         </div>
       </main>
 
       <AlertDialog open={isUsernameNoticeOpen} onOpenChange={setIsUsernameNoticeOpen}>
-        <AlertDialogContent className="bg-zinc-950 border-white/10 rounded-none">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-white font-black uppercase italic">{t.profile.usernameNoticeTitle}</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-500 text-xs font-bold uppercase leading-relaxed">{t.profile.usernameNoticeDesc}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-none border-white/10 text-white hover:bg-white/5 font-black uppercase italic text-[10px] transition-all">{t.feed.cancel}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => window.location.href = 'mailto:info@lowdistrict.it'} className="rounded-none bg-white/90 backdrop-blur-md text-black hover:bg-zinc-200 font-black uppercase italic text-[10px] transition-all">{t.profile.contactAdmin}</AlertDialogAction>
-          </AlertDialogFooter>
+        <AlertDialogContent className="bg-zinc-950 border-white/10 rounded-[2rem]">
+          <AlertDialogHeader><AlertDialogTitle className="text-white font-black uppercase italic">{t.profile.usernameNoticeTitle}</AlertDialogTitle><AlertDialogDescription className="text-zinc-500 text-xs font-bold uppercase leading-relaxed">{t.profile.usernameNoticeDesc}</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col"><AlertDialogAction onClick={() => window.location.href = 'mailto:info@lowdistrict.it'} className="rounded-full bg-white text-black hover:bg-zinc-200 font-black uppercase italic text-[10px] w-full h-12 transition-all">{t.profile.contactAdmin}</AlertDialogAction><AlertDialogCancel className="rounded-full border-white/10 text-white hover:bg-white/5 font-black uppercase italic text-[10px] w-full h-12 mt-0 transition-all">{t.feed.cancel}</AlertDialogCancel></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 

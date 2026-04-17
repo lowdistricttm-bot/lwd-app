@@ -31,14 +31,6 @@ const Bacheca = () => {
 
   const isSubscriber = role === 'subscriber';
 
-  const handleCreatePost = () => {
-    if (user) {
-      setIsPostModalOpen(true);
-    } else {
-      navigate('/login');
-    }
-  };
-
   const handleManualRefresh = () => {
     setIsRefreshing(true);
     if ('vibrate' in navigator) navigator.vibrate(10);
@@ -48,28 +40,19 @@ const Bacheca = () => {
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent">
       <Navbar />
-      
-      <main className="flex-1 pt-24 pb-24 px-4 md:px-6 max-w-2xl mx-auto w-full">
+      <main className="flex-1 pt-24 pb-32 px-4 md:px-6 max-w-2xl mx-auto w-full">
         <header className="mb-12 flex items-end justify-between">
           <div className="min-w-0 flex-1">
-            <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">
-              {t.feed.subtitle}
-            </h2>
-            <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-6xl font-black italic tracking-tighter uppercase whitespace-nowrap overflow-hidden text-ellipsis">
-              {t.feed.title}
-            </h1>
+            <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">{t.feed.subtitle}</h2>
+            <h1 className="text-3xl md:text-6xl font-black italic tracking-tighter uppercase truncate">{t.feed.title}</h1>
           </div>
-          
           {user && (
-            <div className="flex gap-2 ml-4 shrink-0">
-              <button onClick={handleManualRefresh} className="w-12 h-12 bg-zinc-900/50 backdrop-blur-md text-white flex items-center justify-center hover:bg-zinc-800 transition-all shadow-lg border border-white/5">
+            <div className="flex gap-3 ml-4 shrink-0">
+              <button onClick={handleManualRefresh} className="w-12 h-12 bg-white/10 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all shadow-lg border border-white/10">
                 <RefreshCw size={20} className={cn(isRefreshing && "animate-spin")} />
               </button>
               {!isSubscriber && (
-                <button 
-                  onClick={handleCreatePost} 
-                  className="w-12 h-12 bg-white/90 backdrop-blur-md text-black flex items-center justify-center hover:bg-white hover:scale-[1.05] active:scale-[0.95] transition-all shadow-xl shadow-white/5"
-                >
+                <button onClick={() => setIsPostModalOpen(true)} className="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center hover:scale-110 transition-all shadow-xl shadow-primary/20">
                   <Plus size={24} />
                 </button>
               )}
@@ -77,27 +60,17 @@ const Bacheca = () => {
           )}
         </header>
 
-        {error && (
-          <div className="mb-8 p-6 bg-zinc-900/20 border border-zinc-700 flex items-center gap-4">
-            <AlertCircle className="text-zinc-500" />
-            <p className="text-xs font-bold uppercase">{t.errors.connection}</p>
-          </div>
-        )}
-
         {!user && (
-          <div className="mb-8 p-6 bg-zinc-900/50 backdrop-blur-md border border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="mb-8 p-8 bg-white/10 backdrop-blur-md border border-white/10 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-              <AlertCircle className="text-zinc-500 shrink-0" size={24} />
+              <AlertCircle className="text-primary shrink-0" size={32} />
               <div>
-                <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">{t.feed.private}</p>
-                <p className="text-[9px] text-zinc-600 font-bold uppercase mt-1">Accedi per partecipare alle discussioni del District.</p>
+                <p className="text-xs font-black uppercase tracking-widest text-white">{t.feed.private}</p>
+                <p className="text-[10px] text-zinc-400 font-bold uppercase mt-1">Accedi per partecipare alle discussioni.</p>
               </div>
             </div>
-            <Button 
-              onClick={() => navigate('/login')} 
-              className="bg-white/90 backdrop-blur-md text-black hover:bg-white hover:scale-[1.02] active:scale-[0.98] rounded-none text-[9px] font-black uppercase tracking-widest h-10 px-6 italic transition-all duration-300 shadow-xl shadow-white/5"
-            >
-              <LogIn size={14} className="mr-2" /> {t.auth.login}
+            <Button onClick={() => navigate('/login')} className="bg-white text-black hover:scale-105 rounded-full text-[10px] font-black uppercase tracking-widest h-12 px-8 italic shadow-xl">
+              <LogIn size={16} className="mr-2" /> {t.auth.login}
             </Button>
           </div>
         )}
@@ -105,20 +78,18 @@ const Bacheca = () => {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Loader2 className="animate-spin text-zinc-500" size={40} />
-            <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500">{t.feed.syncing}</p>
-          </div>
-        ) : (posts?.length === 0 && user) ? (
-          <div className="text-center py-20 border border-white/5 bg-zinc-900/30 p-8">
-            <p className="text-sm font-black uppercase tracking-widest text-zinc-500">{t.feed.noPosts}</p>
-            <p className="text-[9px] text-zinc-600 mt-2 uppercase font-bold">{t.feed.noPostsDesc}</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{t.feed.syncing}</p>
           </div>
         ) : posts && posts.length > 0 ? (
-          <div className="space-y-2">
+          <div className="space-y-4">
             {posts.map((post) => <FeedPost key={post.id} post={post} />)}
           </div>
-        ) : null}
+        ) : user && (
+          <div className="text-center py-20 bg-zinc-900/30 border border-white/5 rounded-[2rem] p-8">
+            <p className="text-sm font-black uppercase tracking-widest text-zinc-500">{t.feed.noPosts}</p>
+          </div>
+        )}
       </main>
-
       <CreatePostModal isOpen={isPostModalOpen} onClose={() => setIsPostModalOpen(false)} />
       <BottomNav />
     </div>
