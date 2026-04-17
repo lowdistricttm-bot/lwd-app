@@ -19,6 +19,7 @@ export interface Post {
   };
   likes_count?: number;
   is_liked?: boolean;
+  liked_by?: { user_id: string; username: string }[];
   comments?: any[];
 }
 
@@ -36,7 +37,7 @@ export const useSocialFeed = () => {
         .select(`
           *,
           profiles:user_id (id, username, first_name, last_name, avatar_url),
-          likes (user_id),
+          likes (user_id, profiles:user_id (username)),
           comments (*, profiles:user_id (id, username, first_name, last_name, avatar_url))
         `)
         .order('created_at', { ascending: false });
@@ -49,6 +50,11 @@ export const useSocialFeed = () => {
         const likes_count = post.likes?.length || 0;
         const is_liked = user ? post.likes?.some((l: any) => l.user_id === user.id) : false;
         const username = profile?.username || 'Utente';
+        
+        const liked_by = post.likes?.map((l: any) => ({
+          user_id: l.user_id,
+          username: l.profiles?.username || 'Membro'
+        })) || [];
 
         return {
           ...post,
@@ -56,6 +62,7 @@ export const useSocialFeed = () => {
           profiles: { username, avatar_url: profile?.avatar_url },
           likes_count,
           is_liked,
+          liked_by,
           comments: post.comments?.map((c: any) => ({
             ...c,
             profiles: {
@@ -75,8 +82,6 @@ export const useSocialFeed = () => {
     } else {
       file = await compressImage(file);
     }
-
-    // Caricamento su Cloudinary invece di Supabase Storage
     return await uploadToCloudinary(file);
   };
 
@@ -229,7 +234,7 @@ export const usePost = (postId?: string) => {
         .select(`
           *,
           profiles:user_id (id, username, first_name, last_name, avatar_url),
-          likes (user_id),
+          likes (user_id, profiles:user_id (username)),
           comments (*, profiles:user_id (id, username, first_name, last_name, avatar_url))
         `)
         .eq('id', postId)
@@ -246,6 +251,11 @@ export const usePost = (postId?: string) => {
       const likes_count = post.likes?.length || 0;
       const is_liked = user ? post.likes?.some((l: any) => l.user_id === user.id) : false;
       const username = profile?.username || 'Utente';
+      
+      const liked_by = post.likes?.map((l: any) => ({
+        user_id: l.user_id,
+        username: l.profiles?.username || 'Membro'
+      })) || [];
 
       return {
         ...post,
@@ -253,6 +263,7 @@ export const usePost = (postId?: string) => {
         profiles: { username, avatar_url: profile?.avatar_url },
         likes_count,
         is_liked,
+        liked_by,
         comments: post.comments?.map((c: any) => ({
           ...c,
           profiles: {
