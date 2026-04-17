@@ -37,9 +37,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-// Placeholder standard per profili vuoti
-const DEFAULT_AVATAR = "https://www.lowdistrict.it/wp-content/uploads/cropped-ico-new-culture-2026-1.png";
-const DEFAULT_COVER = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1964&auto=format&fit=crop";
+// Placeholder standard aggiornati
+const DEFAULT_AVATAR = "https://www.lowdistrict.it/wp-content/uploads/immagine-profilo-sito-new-scaled.jpg";
+const DEFAULT_COVER = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1964&auto=format&fit=crop&sat=-100";
 
 const Profile = () => {
   const { userId } = useParams();
