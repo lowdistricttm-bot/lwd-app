@@ -35,10 +35,8 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
         navigate('/bacheca');
       }
     } else if (n.type === 'application_status') {
-      // Naviga al profilo attivando il tab delle selezioni
       navigate('/profile?tab=selections');
-    } else if (n.type === 'event_update') {
-      // Naviga alla pagina eventi aprendo automaticamente il modal dell'evento
+    } else if (n.type.startsWith('event_')) {
       navigate(`/events?view=${n.event_id}`);
     }
   };
@@ -49,25 +47,33 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
   };
 
   const getIcon = (type: string) => {
+    if (type.startsWith('event_')) return <Calendar size={14} className="text-purple-500" />;
+    
     switch (type) {
       case 'like': return <Heart size={14} className="text-red-500 fill-red-500" />;
       case 'comment': return <MessageSquare size={14} className="text-blue-500" />;
       case 'application_status': return <ClipboardCheck size={14} className="text-green-500" />;
-      case 'event_update': return <Calendar size={14} className="text-purple-500" />;
       default: return <Bell size={14} />;
     }
   };
 
   const getMessage = (n: Notification) => {
     const actorName = n.actor?.username || 'Membro District';
+    
     switch (n.type) {
       case 'like': return <><span className="font-black">{actorName}</span> ha messo like al tuo post</>;
       case 'comment': return <><span className="font-black">{actorName}</span> ha commentato il tuo post</>;
       case 'application_status': 
         const status = n.applications?.status === 'approved' ? 'APPROVATA' : 'NEGATA';
         return <>La tua candidatura per <span className="font-black">{n.applications?.events?.title}</span> è stata <span className="font-black">{status}</span></>;
+      case 'event_new':
+        return <>Disponibile un nuovo evento: <span className="font-black uppercase text-purple-400">{n.event?.title || 'Low District'}</span></>;
+      case 'event_open':
+        return <>SELEZIONI APERTE per l'evento: <span className="font-black uppercase text-green-400">{n.event?.title || 'Low District'}</span></>;
+      case 'event_closed':
+        return <>SELEZIONI CHIUSE per l'evento: <span className="font-black uppercase text-red-400">{n.event?.title || 'Low District'}</span></>;
       case 'event_update':
-        return <>Nuovo aggiornamento per l'evento: <span className="font-black">{n.event?.title || 'Low District'}</span></>;
+        return <>Aggiornamento evento: <span className="font-black uppercase">{n.event?.title || 'Low District'}</span></>;
       default: return 'Nuova notifica';
     }
   };
