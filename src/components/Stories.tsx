@@ -56,7 +56,6 @@ const Stories = () => {
     return () => clearTimeout(timer);
   }, [searchQuery, currentUser]);
 
-  // Separiamo la propria storia dalle altre con casting per evitare errori TS
   const myStoriesGroup: any = (stories as any[])?.find((group: any) => group.user_id === currentUser?.id);
   const otherStories: any[] = (stories as any[])?.filter((group: any) => group.user_id !== currentUser?.id) || [];
 
@@ -97,7 +96,6 @@ const Stories = () => {
 
   return (
     <div className="flex gap-4 overflow-x-auto no-scrollbar py-6 px-6 bg-black border-b border-white/5">
-      {/* La tua storia (Sempre primo) */}
       <div className="flex flex-col items-center gap-2 shrink-0">
         <div className="relative">
           <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" multiple onChange={handleFileSelect} />
@@ -132,7 +130,6 @@ const Stories = () => {
         <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">La tua storia</span>
       </div>
 
-      {/* Storie degli altri utenti */}
       {otherStories.map((userGroup: any, index: number) => (
         <button key={userGroup.user_id} onClick={() => setSelectedUserIndex(index)} className="flex flex-col items-center gap-2 shrink-0">
           <div className="w-16 h-16 rounded-full p-[2.5px] bg-gradient-to-tr from-zinc-700 via-zinc-400 to-white">
@@ -200,12 +197,10 @@ const Stories = () => {
         )}
       </AnimatePresence>
 
-      {/* Viewer per le storie degli altri */}
       {selectedUserIndex !== null && (
         <StoryViewer allStories={otherStories} initialUserIndex={selectedUserIndex} onClose={() => setSelectedUserIndex(null)} />
       )}
 
-      {/* Viewer per la propria storia */}
       {isViewingSelf && myStoriesGroup && (
         <StoryViewer allStories={[myStoriesGroup]} initialUserIndex={0} onClose={() => setIsViewingSelf(false)} />
       )}
