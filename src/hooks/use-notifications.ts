@@ -86,14 +86,19 @@ export const useNotifications = () => {
         .on(
           'postgres_changes',
           {
-            event: 'INSERT',
+            event: '*', // Ascoltiamo TUTTI gli eventi (INSERT, UPDATE, DELETE)
             schema: 'public',
             table: 'notifications',
             filter: `user_id=eq.${user.id}`
           },
-          () => {
+          (payload) => {
+            // Aggiorniamo la lista delle notifiche all'istante
             queryClient.invalidateQueries({ queryKey: ['notifications'] });
-            playNotificationSound();
+            
+            // Facciamo suonare la notifica solo se ne è arrivata una nuova
+            if (payload.eventType === 'INSERT') {
+              playNotificationSound();
+            }
           }
         )
         .subscribe();
@@ -140,12 +145,16 @@ export const useNotifications = () => {
 
   const deleteNotification = useMutation({
     mutationFn: async (notificationId: string) => {
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from('notifications')
         .delete()
-        .eq('id', notificationId);
+        .eq('id', notificationId)
+        .select(); // Assicuriamoci che la riga sia stata effettivamente cancellata
       
       if (error) throw error;
+      if (!data || data.length === 0) {
+        throw new Error("Impossibile eliminare la notifica. I permessi potrebbero non essere ancora attivi.");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
