@@ -55,7 +55,7 @@ const Index = () => {
                 </div>
               </div>
               
-              <div className="w-full md:w-[400px] aspect-square bg-zinc-900 border border-white/10 p-1 shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-700">
+              <div className="w-full md:w-[400px] aspect-square shadow-2xl transition-all duration-700">
                 <iframe 
                   src="https://open.spotify.com/embed/playlist/49mK52uCtaHSCLY1VC9GR3?utm_source=generator&theme=0" 
                   width="100%" 
@@ -63,6 +63,7 @@ const Index = () => {
                   frameBorder="0" 
                   allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
                   loading="lazy"
+                  className="rounded-xl"
                 />
               </div>
             </div>
