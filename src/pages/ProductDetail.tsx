@@ -74,12 +74,12 @@ const ProductDetail = () => {
 
           {/* Info Prodotto */}
           <div className="flex flex-col space-y-10">
-            <div className="flex flex-col items-center space-y-2">
+            <div className="flex flex-col items-center">
               <h1 
-                className="text-xs md:text-sm font-black tracking-[0.3em] uppercase italic leading-tight text-center text-zinc-500" 
+                className="text-[10px] font-black tracking-[0.4em] uppercase italic text-zinc-500 mb-2 text-center" 
                 dangerouslySetInnerHTML={{ __html: product.name }} 
               />
-              <p className="text-5xl md:text-7xl font-black tracking-tighter text-white italic text-center">
+              <p className="text-3xl md:text-4xl font-black tracking-tight text-white italic text-center">
                 €{selectedVariation ? selectedVariation.price : product.price}
               </p>
             </div>
