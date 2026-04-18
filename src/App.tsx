@@ -83,32 +83,35 @@ const AppContent = () => {
   useProfileSync(currentUsername);
   
   return (
-    <SwipeNavigation>
-      <BackgroundDecoration />
-      <PullToRefresh />
-      <SpotifyPlayer />
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/bacheca" element={<Bacheca />} />
-        <Route path="/discover" element={<Discover />} />
-        <Route path="/shop" element={<Shop />} />
-        <Route path="/product/:id" element={<ProductDetail />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/profile/:userId" element={<Profile />} />
-        <Route path="/post/:postId" element={<PostDetail />} />
-        <Route path="/events" element={<Events />} />
-        <Route path="/messages" element={<Messages />} />
-        <Route path="/chat/:userId" element={<Chat />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/applications" element={<AdminApplications />} />
-        <Route path="/admin/users" element={<AdminUsers />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-      {/* La BottomNav è ora globale e fissa, fuori dal sistema delle rotte */}
+    <>
+      <SwipeNavigation>
+        <BackgroundDecoration />
+        <PullToRefresh />
+        <SpotifyPlayer />
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/bacheca" element={<Bacheca />} />
+          <Route path="/discover" element={<Discover />} />
+          <Route path="/shop" element={<Shop />} />
+          <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/:userId" element={<Profile />} />
+          <Route path="/post/:postId" element={<PostDetail />} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/messages" element={<Messages />} />
+          <Route path="/chat/:userId" element={<Chat />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/applications" element={<AdminApplications />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </SwipeNavigation>
+      
+      {/* La BottomNav è ora l'ultimo elemento assoluto del DOM per evitare interferenze */}
       <BottomNav />
-    </SwipeNavigation>
+    </>
   );
 };
 
