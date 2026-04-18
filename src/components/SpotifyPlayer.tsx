@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Music, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -11,16 +11,14 @@ const SpotifyPlayer = () => {
   const playlistId = "49mK52uCtaHSCLY1VC9GR3";
   const controllerRef = useRef<any>(null);
   
-  const CLOSED_X = -280; // Regolato per nascondere esattamente il widget
+  const CLOSED_X = -280;
 
   useEffect(() => {
-    // Carichiamo lo script delle Spotify IFrame API
     const script = document.createElement('script');
     script.src = "https://open.spotify.com/embed-podcast/iframe-api/v1";
     script.async = true;
     document.body.appendChild(script);
 
-    // Casting a any per evitare l'errore TS2339 su window
     (window as any).onSpotifyIframeApiReady = (IFrameAPI: any) => {
       const element = document.getElementById('spotify-embed');
       const options = {
@@ -32,11 +30,8 @@ const SpotifyPlayer = () => {
       
       IFrameAPI.createController(element, options, (EmbedController: any) => {
         controllerRef.current = EmbedController;
-        
-        // Ascoltiamo gli aggiornamenti della riproduzione
         EmbedController.on('playback_update', (e: any) => {
           const { isPaused, duration } = e.data;
-          // Se non è in pausa e la durata è maggiore di 0, sta suonando
           setIsPlaying(!isPaused && duration > 0);
         });
       });
@@ -57,7 +52,7 @@ const SpotifyPlayer = () => {
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
         className="pointer-events-auto flex items-center"
       >
-        {/* Corpo del Player - Completamente trasparente */}
+        {/* Corpo del Player */}
         <div className="w-[280px] h-[152px] bg-transparent overflow-hidden">
           <div id="spotify-embed"></div>
         </div>
@@ -67,14 +62,38 @@ const SpotifyPlayer = () => {
           onClick={() => setIsOpen(!isOpen)}
           className={cn(
             "w-6 h-10 flex items-center justify-center cursor-pointer rounded-r-md border-y border-r border-white/10 shadow-xl transition-all duration-500",
-            isOpen || isPlaying ? "bg-white text-black" : "bg-zinc-900/80 backdrop-blur-md text-white hover:bg-zinc-800"
+            (isOpen || isPlaying) ? "bg-white text-black" : "bg-zinc-900/80 backdrop-blur-md text-white hover:bg-zinc-800"
           )}
         >
-          {isPlaying ? (
-            <Play size={10} fill="currentColor" className="shrink-0 animate-pulse" />
-          ) : (
-            <Music size={12} className="shrink-0" />
-          )}
+          <AnimatePresence mode="wait">
+            {isPlaying ? (
+              <motion.div
+                key="play-icon"
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ 
+                  opacity: [1, 0.3, 1],
+                  scale: 1 
+                }}
+                exit={{ opacity: 0, scale: 0.5 }}
+                transition={{ 
+                  opacity: { repeat: Infinity, duration: 1.5, ease: "easeInOut" },
+                  scale: { duration: 0.2 }
+                }}
+              >
+                <Play size={10} fill="currentColor" className="shrink-0" />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="music-icon"
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.5 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Music size={12} className="shrink-0" />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </motion.div>
     </div>
