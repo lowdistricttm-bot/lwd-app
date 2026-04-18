@@ -9,10 +9,11 @@ const SpotifyPlayer = () => {
   const [isOpen, setIsOpen] = useState(false);
   const playlistId = "49mK52uCtaHSCLY1VC9GR3";
   
-  const CLOSED_X = -280;
+  // Aumentato leggermente il valore negativo per far aderire meglio il pulsante al bordo
+  const CLOSED_X = -284;
 
   return (
-    <div className="fixed bottom-32 left-0 z-[100] pointer-events-none">
+    <div className="fixed bottom-28 left-0 z-[100] pointer-events-none">
       <motion.div
         animate={{ x: isOpen ? 0 : CLOSED_X }}
         initial={{ x: CLOSED_X }}
