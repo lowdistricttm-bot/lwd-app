@@ -9,6 +9,7 @@ import { useProfileSync } from "@/hooks/use-profile-sync";
 import { PresenceProvider } from "@/hooks/use-presence";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { unlockAudio } from "@/utils/sound";
 import PullToRefresh from "@/components/PullToRefresh";
 import SpotifyPlayer from "@/components/SpotifyPlayer";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -47,6 +48,17 @@ const AppContent = () => {
   const [currentUsername, setCurrentUsername] = useState<string | undefined>();
 
   useEffect(() => {
+    // Sblocco audio per mobile al primo tocco dell'utente
+    const handleFirstInteraction = () => {
+      unlockAudio();
+      // Rimuoviamo i listener dopo la prima interazione
+      window.removeEventListener('click', handleFirstInteraction);
+      window.removeEventListener('touchstart', handleFirstInteraction);
+    };
+
+    window.addEventListener('click', handleFirstInteraction);
+    window.addEventListener('touchstart', handleFirstInteraction);
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         const username = session.user.user_metadata?.username;
@@ -61,6 +73,11 @@ const AppContent = () => {
           });
       }
     });
+
+    return () => {
+      window.removeEventListener('click', handleFirstInteraction);
+      window.removeEventListener('touchstart', handleFirstInteraction);
+    };
   }, []);
 
   useProfileSync(currentUsername);
