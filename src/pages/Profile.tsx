@@ -416,6 +416,8 @@ const Profile = () => {
                       <div className="space-y-3">
                         {orders.map((order: any) => {
                           const tracking = getTrackingInfo(order);
+                          const totalItems = order.line_items.reduce((acc: number, item: any) => acc + item.quantity, 0);
+                          
                           return (
                             <div 
                               key={order.id} 
@@ -433,7 +435,7 @@ const Profile = () => {
                                       {translateOrderStatus(order.status)}
                                     </span>
                                   </div>
-                                  <h4 className="text-xs font-black italic uppercase tracking-tight">{order.line_items.length} Prodotti</h4>
+                                  <h4 className="text-xs font-black italic uppercase tracking-tight">{totalItems} {totalItems === 1 ? 'Prodotto' : 'Prodotti'}</h4>
                                   <p className="text-[8px] text-zinc-500 font-bold uppercase">Effettuato il {new Date(order.date_created).toLocaleDateString('it-IT')}</p>
                                 </div>
                                 <div className="text-right flex flex-col justify-center">
