@@ -11,32 +11,27 @@ const SpotifyPlayer = () => {
   const playlistId = "49mK52uCtaHSCLY1VC9GR3";
   const controllerRef = useRef<any>(null);
   
-  const CLOSED_X = -280; // Regolato per nascondere esattamente il widget
+  const CLOSED_X = -280;
 
   useEffect(() => {
-    // Carichiamo lo script delle Spotify IFrame API
     const script = document.createElement('script');
     script.src = "https://open.spotify.com/embed-podcast/iframe-api/v1";
     script.async = true;
     document.body.appendChild(script);
 
-    // Casting a any per evitare l'errore TS2339 su window
     (window as any).onSpotifyIframeApiReady = (IFrameAPI: any) => {
       const element = document.getElementById('spotify-embed');
       const options = {
         uri: `spotify:playlist:${playlistId}`,
         width: '100%',
         height: '152',
-        theme: '0'
+        theme: 'dark' // Cambiato da '0' a 'dark'
       };
       
       IFrameAPI.createController(element, options, (EmbedController: any) => {
         controllerRef.current = EmbedController;
-        
-        // Ascoltiamo gli aggiornamenti della riproduzione
         EmbedController.on('playback_update', (e: any) => {
           const { isPaused, duration } = e.data;
-          // Se non è in pausa e la durata è maggiore di 0, sta suonando
           setIsPlaying(!isPaused && duration > 0);
         });
       });
@@ -57,9 +52,12 @@ const SpotifyPlayer = () => {
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
         className="pointer-events-auto flex items-center"
       >
-        {/* Corpo del Player - Completamente trasparente */}
+        {/* Corpo del Player - Filtro grayscale applicato */}
         <div className="w-[280px] h-[152px] bg-transparent overflow-hidden">
-          <div id="spotify-embed"></div>
+          <div 
+            id="spotify-embed" 
+            className="grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-700"
+          ></div>
         </div>
 
         {/* Linguetta cliccabile */}
