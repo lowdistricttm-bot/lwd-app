@@ -429,8 +429,11 @@ const Profile = () => {
                                   <div className="flex items-center gap-2">
                                     <span className="bg-white text-black text-[7px] font-black uppercase px-1.5 py-0.5 italic rounded-full">#{order.id}</span>
                                     <span className={cn(
-                                      "text-[7px] font-black uppercase px-1.5 py-0.5 italic rounded-full",
-                                      order.status === 'completed' ? "bg-green-600 text-white" : "bg-zinc-800 text-white"
+                                      "text-[7px] font-black uppercase px-1.5 py-0.5 italic rounded-full text-white",
+                                      order.status === 'completed' && "bg-green-600",
+                                      order.status === 'pending' && "bg-blue-600",
+                                      order.status === 'on-hold' && "bg-orange-500",
+                                      !['completed', 'pending', 'on-hold'].includes(order.status) && "bg-zinc-800"
                                     )}>
                                       {translateOrderStatus(order.status)}
                                     </span>

@@ -61,8 +61,11 @@ const OrderDetailModal = ({ isOpen, onClose, order }: OrderDetailModalProps) => 
                   <div className="flex items-center gap-3 mb-2">
                     <span className="bg-white text-black text-[10px] font-black uppercase px-2 py-1 italic rounded-lg">ORDINE #{order.id}</span>
                     <span className={cn(
-                      "text-[10px] font-black uppercase px-2 py-1 italic rounded-lg",
-                      order.status === 'completed' ? "bg-green-600 text-white" : "bg-zinc-800 text-zinc-400"
+                      "text-[10px] font-black uppercase px-2 py-1 italic rounded-lg text-white",
+                      order.status === 'completed' && "bg-green-600",
+                      order.status === 'pending' && "bg-blue-600",
+                      order.status === 'on-hold' && "bg-orange-500",
+                      !['completed', 'pending', 'on-hold'].includes(order.status) && "bg-zinc-800"
                     )}>
                       {translateStatus(order.status)}
                     </span>
