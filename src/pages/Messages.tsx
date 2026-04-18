@@ -75,7 +75,7 @@ const Messages = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="min-h-screen text-white flex flex-col bg-transparent">
       <Navbar />
       <main className="flex-1 pt-24 pb-32 px-6 max-w-2xl mx-auto w-full">
         <header className="mb-12 flex items-end justify-between">
@@ -138,7 +138,7 @@ const Messages = () => {
                       "relative w-full px-4 py-3 flex items-center gap-4 transition-colors z-10 cursor-pointer rounded-[1.5rem] border", 
                       isUnread 
                         ? "bg-zinc-800 border-white/20" 
-                        : "bg-zinc-950 border-white/5 hover:bg-zinc-900"
+                        : "bg-zinc-950/40 backdrop-blur-md border-white/5 hover:bg-zinc-900/60"
                     )}
                   >
                     <div className="relative shrink-0">
