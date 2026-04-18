@@ -78,7 +78,7 @@ const Messages = () => {
     <div className="min-h-screen text-white flex flex-col bg-transparent">
       <Navbar />
       <main className="flex-1 pt-24 pb-32 px-6 max-w-2xl mx-auto w-full">
-        <header className="mb-12 flex items-end justify-between">
+        <header className="mb-10 flex items-end justify-between">
           <div>
             <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">{t.messages.subtitle}</h2>
             <h1 className="text-3xl md:text-6xl font-black italic tracking-tighter uppercase">{t.messages.title}</h1>
@@ -96,17 +96,17 @@ const Messages = () => {
         ) : conversations?.length === 0 ? (
           <div className="text-center py-20 bg-zinc-900/20 border border-white/5 rounded-[2rem]"><MessageSquare className="mx-auto text-zinc-800 mb-6" size={48} strokeWidth={1.5} /><p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{t.messages.noConvs}</p></div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-1">
             {conversations?.map((conv: any) => {
               const isUnread = !conv.lastMessage.is_read && conv.lastMessage.receiver_id === currentUserId;
               
               return (
                 <div 
                   key={conv.otherId} 
-                  className="relative rounded-[1.5rem] bg-zinc-900 overflow-hidden"
+                  className="relative overflow-hidden group"
                 >
-                  <div className="absolute inset-0 flex items-center justify-end px-6">
-                    <Trash2 size={20} strokeWidth={2} className="text-red-500" />
+                  <div className="absolute inset-0 flex items-center justify-end px-6 bg-red-600">
+                    <Trash2 size={20} strokeWidth={2} className="text-white" />
                   </div>
                   
                   <motion.div 
@@ -122,7 +122,7 @@ const Messages = () => {
                         isDragging.current = false;
                       }, 150);
                       
-                      if (info.offset.x < -50) {
+                      if (info.offset.x < -60) {
                         setDeleteTarget(conv.otherId); 
                       }
                     }} 
@@ -135,36 +135,40 @@ const Messages = () => {
                       navigate(`/chat/${conv.otherId}`);
                     }} 
                     className={cn(
-                      "relative w-full px-4 py-3 flex items-center gap-4 transition-colors z-10 cursor-pointer rounded-[1.5rem] border", 
+                      "relative w-full px-4 py-5 flex items-center gap-4 transition-colors z-10 cursor-pointer border-b border-white/5", 
                       isUnread 
-                        ? "bg-zinc-800 border-white/20" 
-                        : "bg-zinc-950/40 backdrop-blur-md border-white/5 hover:bg-zinc-900/60"
+                        ? "bg-white/5" 
+                        : "bg-transparent hover:bg-white/[0.02]"
                     )}
                   >
                     <div className="relative shrink-0">
-                      <div className={cn("w-12 h-12 rounded-full overflow-hidden border-2 shrink-0 bg-black/40", isUnread ? "border-white" : "border-white/10")}>
+                      <div className={cn("w-14 h-14 rounded-full overflow-hidden border-2 shrink-0 bg-zinc-900", isUnread ? "border-blue-500" : "border-white/10")}>
                         {conv.otherUser?.avatar_url ? (
                           <img src={conv.otherUser.avatar_url} className="w-full h-full object-cover" alt="Avatar" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-zinc-500"><User size={20} strokeWidth={1.5} /></div>
+                          <div className="w-full h-full flex items-center justify-center text-zinc-600"><User size={24} strokeWidth={1.5} /></div>
                         )}
                       </div>
-                      {isUnread && <div className="absolute -top-0.5 -left-0.5 w-3.5 h-3.5 bg-white rounded-full border-2 border-black animate-pulse shadow-[0_0_10px_rgba(255,255,255,0.5)]" />}
+                      {isUnread && (
+                        <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-blue-500 rounded-full border-2 border-black shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+                      )}
                     </div>
+                    
                     <div className="flex-1 text-left min-w-0 pointer-events-none">
-                      <div className="flex justify-between items-center mb-0.5">
-                        <h4 className={cn("text-xs font-black italic uppercase tracking-tight truncate", isUnread ? "text-white" : "text-zinc-300")}>
+                      <div className="flex justify-between items-center mb-1">
+                        <h4 className={cn("text-sm font-black italic uppercase tracking-tight truncate", isUnread ? "text-white" : "text-zinc-300")}>
                           {conv.otherUser?.username || 'Membro District'}
                         </h4>
-                        <span className={cn("text-[8px] font-bold uppercase shrink-0 pl-2", isUnread ? "text-white" : "text-zinc-500")}>
+                        <span className={cn("text-[9px] font-bold uppercase shrink-0 pl-2", isUnread ? "text-blue-400" : "text-zinc-600")}>
                           {formatDistanceToNow(new Date(conv.lastMessage.created_at), { addSuffix: true, locale: language === 'it' ? it : enUS })}
                         </span>
                       </div>
-                      <p className={cn("text-xs truncate font-medium", isUnread ? "text-white font-bold" : "text-zinc-500")}>
+                      <p className={cn("text-xs truncate leading-relaxed", isUnread ? "text-zinc-200 font-bold" : "text-zinc-500 font-medium")}>
                         {conv.lastMessage.content}
                       </p>
                     </div>
-                    <ChevronRight size={16} strokeWidth={2} className={cn("transition-colors shrink-0", isUnread ? "text-white" : "text-zinc-600")} />
+                    
+                    <ChevronRight size={16} strokeWidth={2.5} className={cn("transition-colors shrink-0", isUnread ? "text-blue-500" : "text-zinc-800")} />
                   </motion.div>
                 </div>
               );
@@ -174,16 +178,18 @@ const Messages = () => {
       </main>
 
       <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
-        <AlertDialogContent className="bg-black/60 backdrop-blur-2xl border-white/10 rounded-[2rem]">
+        <AlertDialogContent className="bg-zinc-950 border-white/10 rounded-[2rem]">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white font-black uppercase italic">{t.messages.deleteConv}</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-400 text-xs font-bold uppercase">{t.messages.deleteConvDesc}</AlertDialogDescription>
+            <AlertDialogDescription className="text-zinc-500 text-xs font-bold uppercase leading-relaxed">
+              {t.messages.deleteConvDesc}
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex flex-col gap-2">
-            <AlertDialogAction onClick={handleDelete} className="rounded-full bg-white text-black font-black uppercase italic text-[10px] h-12 hover:bg-zinc-200 focus-visible:ring-0 focus-visible:ring-offset-0">
-              Elimina
+            <AlertDialogAction onClick={handleDelete} className="rounded-full bg-red-600 text-white font-black uppercase italic text-[10px] h-12 hover:bg-red-700">
+              Elimina Conversazione
             </AlertDialogAction>
-            <AlertDialogCancel className="rounded-full border-white/10 text-white bg-transparent hover:bg-white/10 font-black uppercase italic text-[10px] h-12 mt-0 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0">
+            <AlertDialogCancel className="rounded-full border-white/10 text-white bg-transparent hover:bg-white/5 font-black uppercase italic text-[10px] h-12 mt-0">
               Annulla
             </AlertDialogCancel>
           </AlertDialogFooter>
