@@ -142,15 +142,17 @@ export const useStories = () => {
       const { data: story } = await supabase.from('stories').select('mentions').eq('id', storyId).single();
       const currentMentions = Array.isArray(story?.mentions) ? story.mentions : [];
       
-      if (currentMentions.includes(mentionId)) throw new Error("Utente già menzionato");
+      // Se l'utente non è ancora nell'array delle menzioni, lo aggiungiamo
+      if (!currentMentions.includes(mentionId)) {
+        const { error: updateError } = await supabase
+          .from('stories')
+          .update({ mentions: [...currentMentions, mentionId] })
+          .eq('id', storyId);
 
-      const { error: updateError } = await supabase
-        .from('stories')
-        .update({ mentions: [...currentMentions, mentionId] })
-        .eq('id', storyId);
+        if (updateError) throw updateError;
+      }
 
-      if (updateError) throw updateError;
-
+      // Inviamo comunque il messaggio Direct (notifica) anche se già menzionato
       await supabase.from('messages').insert([{
         sender_id: user.id,
         receiver_id: mentionId,
@@ -203,7 +205,7 @@ export const useStories = () => {
           reshared_from_profile_id: originalAuthorId
         }]);
 
-      if (error) throw new Error(error.message);
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['active-stories'] });
