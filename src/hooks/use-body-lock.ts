@@ -3,73 +3,62 @@
 import { useEffect } from 'react';
 
 /**
- * Hook per bloccare lo scroll del body e gestire il riposizionamento dei layout mobile
- * quando la tastiera viene chiusa.
+ * Hook per bloccare lo scroll del body in modo definitivo su mobile
+ * e gestire il riposizionamento dei layout.
  */
 export const useBodyLock = (isOpen: boolean) => {
   useEffect(() => {
     if (!isOpen) return;
 
-    // Salviamo lo stile originale
-    const originalOverflow = document.body.style.overflow;
-    const originalPaddingRight = document.body.style.paddingRight;
-    const originalPosition = document.body.style.position;
-    const originalWidth = document.body.style.width;
+    // Salviamo la posizione attuale dello scroll
+    const scrollY = window.scrollY;
+    
+    // Salviamo gli stili originali per ripristinarli
+    const originalStyle = {
+      overflow: document.body.style.overflow,
+      position: document.body.style.position,
+      top: document.body.style.top,
+      width: document.body.style.width,
+      height: document.body.style.height
+    };
 
-    // Calcoliamo la larghezza della scrollbar per evitare il "salto" del layout
-    const scrollBarGap = window.innerWidth - document.documentElement.clientWidth;
-
-    // Blocchiamo il body
-    document.body.style.overflow = 'hidden';
+    // BLOCCO TOTALE: Usiamo position fixed per "congelare" il body nella posizione attuale
+    // Questo impedisce lo scroll su iOS Safari al 100%
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
     document.body.style.width = '100%';
-    if (scrollBarGap > 0) {
-      document.body.style.paddingRight = `${scrollBarGap}px`;
-    }
+    document.body.style.height = '100%';
+    document.body.style.overflow = 'hidden';
 
-    // FIX TASTIERA MOBILE: Quando un input perde il focus (tastiera chiusa),
-    // forziamo il browser a ricalcolare il layout e riattaccare i modal al bordo inferiore.
+    // FIX TASTIERA MOBILE: Forza il ricalcolo del layout alla chiusura
     const handleFocusOut = (e: FocusEvent) => {
       const target = e.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
-        // Piccolo delay per permettere alla tastiera di iniziare la chiusura
         setTimeout(() => {
+          // Forza il browser a ricalcolare le dimensioni del viewport
           window.scrollTo(0, window.scrollY);
-          // Forza un ricalcolo del viewport per gli elementi fixed
           document.documentElement.style.height = '100.1%';
           setTimeout(() => {
             document.documentElement.style.height = '100%';
           }, 10);
-        }, 50);
+        }, 100);
       }
     };
 
     window.addEventListener('focusout', handleFocusOut);
 
-    // Rendiamo il contenuto principale non interagibile
-    const root = document.getElementById('root');
-    if (root) {
-      root.style.pointerEvents = 'none';
-      root.style.userSelect = 'none';
-      root.setAttribute('aria-hidden', 'true');
-      root.style.transition = 'transform 0.3s ease, filter 0.3s ease';
-      root.style.filter = 'brightness(0.5) blur(2px)';
-    }
-
     return () => {
       window.removeEventListener('focusout', handleFocusOut);
       
-      // Ripristiniamo tutto alla chiusura
-      document.body.style.overflow = originalOverflow;
-      document.body.style.paddingRight = originalPaddingRight;
-      document.body.style.position = originalPosition;
-      document.body.style.width = originalWidth;
+      // RIPRISTINO: Rimuoviamo il blocco fixed e torniamo alla posizione originale
+      document.body.style.position = originalStyle.position;
+      document.body.style.top = originalStyle.top;
+      document.body.style.width = originalStyle.width;
+      document.body.style.height = originalStyle.height;
+      document.body.style.overflow = originalStyle.overflow;
 
-      if (root) {
-        root.style.pointerEvents = 'auto';
-        root.style.userSelect = 'auto';
-        root.removeAttribute('aria-hidden');
-        root.style.filter = '';
-      }
+      // Riportiamo l'utente dove si trovava prima dell'apertura del modal
+      window.scrollTo(0, scrollY);
     };
   }, [isOpen]);
 };
