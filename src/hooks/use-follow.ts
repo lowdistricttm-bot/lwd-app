@@ -48,41 +48,22 @@ export const useFollow = (targetUserId?: string) => {
 
   const toggleFollow = useMutation({
     mutationFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Accedi per seguire altri membri");
-      if (user.id === targetUserId) throw new Error("Non puoi seguire te stesso");
+      if (!targetUserId) return;
 
-      // Eseguiamo un controllo fresco sul DB per evitare race conditions
-      const { data: existing } = await supabase
-        .from('followers')
-        .select('*')
-        .eq('follower_id', user.id)
-        .eq('following_id', targetUserId)
-        .maybeSingle();
+      // Utilizziamo la funzione RPC atomica creata nel database
+      const { data, error } = await supabase.rpc('toggle_follow', { 
+        target_id: targetUserId 
+      });
 
-      if (existing) {
-        // Se esiste già, lo rimuoviamo (Unfollow)
-        const { error } = await supabase
-          .from('followers')
-          .delete()
-          .eq('follower_id', user.id)
-          .eq('following_id', targetUserId);
-        if (error) throw error;
-      } else {
-        // Se non esiste, lo aggiungiamo (Follow)
-        const { error } = await supabase
-          .from('followers')
-          .insert([{ follower_id: user.id, following_id: targetUserId }]);
-        
-        // Se riceviamo un errore di chiave duplicata (23505), lo ignoriamo 
-        // perché significa che l'utente risulta già seguito (obiettivo raggiunto)
-        if (error && error.code !== '23505') throw error;
-      }
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
+      // Invalida le cache per aggiornare l'interfaccia
       queryClient.invalidateQueries({ queryKey: ['is-following', targetUserId] });
       queryClient.invalidateQueries({ queryKey: ['follow-counts', targetUserId] });
       queryClient.invalidateQueries({ queryKey: ['discover-new-members'] });
+      queryClient.invalidateQueries({ queryKey: ['follow-list'] });
     },
     onError: (err: any) => showError(err.message)
   });
