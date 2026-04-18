@@ -23,6 +23,8 @@ body {
   @apply bg-black text-white antialiased;
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
+  /* Impedisce il pull-to-refresh nativo del browser che va in conflitto con quello dell'app */
+  overscroll-behavior-y: contain;
 }
 
 /* Tipografia Low District - Manteniamo il carattere ma ammorbidiamo le forme */
