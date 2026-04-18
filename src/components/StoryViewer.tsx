@@ -7,6 +7,7 @@ import { X, ChevronLeft, ChevronRight, Trash2, Loader2, Volume2, VolumeX, Send, 
 import { useStories, useStoryViews } from '@/hooks/use-stories';
 import { useMessages } from '@/hooks/use-messages';
 import { useAdmin } from '@/hooks/use-admin';
+import { useBodyLock } from '@/hooks/use-body-lock';
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from './ui/input';
 import { showSuccess, showError } from '@/utils/toast';
@@ -44,6 +45,9 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
   const { deleteStory, recordView } = useStories();
   const { sendMessage } = useMessages();
   
+  // Utilizziamo il nuovo hook per bloccare il background
+  useBodyLock(true);
+
   const userStories = allStories[userIndex];
   const currentStory = userStories?.items[currentIndex];
   const isVideo = currentStory?.image_url.match(/\.(mp4|webm|ogg|mov)$/i) || currentStory?.image_url.includes('video');
@@ -57,17 +61,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
     supabase.auth.getUser().then(({ data: { user } }) => {
       setCurrentUserId(user?.id || null);
     });
-    
-    // Bulletproof Scroll Lock
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
-    document.body.style.touchAction = 'none';
-    
-    return () => {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    };
   }, []);
 
   useEffect(() => {

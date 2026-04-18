@@ -6,6 +6,7 @@ import { X, Send, Loader2, Camera, Trash2, Plus } from 'lucide-react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { useSocialFeed } from '@/hooks/use-social-feed';
+import { useBodyLock } from '@/hooks/use-body-lock';
 import { showError } from '@/utils/toast';
 
 const CreatePostModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
@@ -16,23 +17,8 @@ const CreatePostModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
   
   const { createPost } = useSocialFeed();
 
-  // Scroll Lock Logic - Bulletproof for Mobile
-  useEffect(() => {
-    if (isOpen) {
-      document.documentElement.style.overflow = 'hidden';
-      document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
-    } else {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    }
-    return () => {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    };
-  }, [isOpen]);
+  // Utilizziamo il nuovo hook per bloccare il background
+  useBodyLock(isOpen);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -81,7 +67,7 @@ const CreatePostModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
             animate={{ y: 0 }} 
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[1001] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 pb-15 rounded-t-[2.5rem] max-h-[92vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            className="fixed inset-x-0 bottom-0 z-[1001] bg-zinc-950 border-t border-white/10 p-6 pb-15 rounded-t-[2.5rem] max-h-[92dvh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.8)]"
             style={{ 
               touchAction: 'pan-y',
               overscrollBehavior: 'contain'

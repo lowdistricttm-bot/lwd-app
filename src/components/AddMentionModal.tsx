@@ -6,6 +6,7 @@ import { X, Search, User, Loader2, AtSign, Check, Plus } from 'lucide-react';
 import { Input } from './ui/input';
 import { supabase } from "@/integrations/supabase/client";
 import { useStories } from '@/hooks/use-stories';
+import { useBodyLock } from '@/hooks/use-body-lock';
 import { cn } from '@/lib/utils';
 
 interface AddMentionModalProps {
@@ -22,23 +23,8 @@ const AddMentionModal = ({ isOpen, onClose, storyId, storyUrl, existingMentions 
   const [isLoading, setIsLoading] = useState(false);
   const { addMention } = useStories();
 
-  // Scroll Lock Logic - Bulletproof for Mobile
-  useEffect(() => {
-    if (isOpen) {
-      document.documentElement.style.overflow = 'hidden';
-      document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
-    } else {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    }
-    return () => {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    };
-  }, [isOpen]);
+  // Utilizziamo il nuovo hook per bloccare il background
+  useBodyLock(isOpen);
 
   useEffect(() => {
     if (search.length < 2) {
@@ -76,12 +62,12 @@ const AddMentionModal = ({ isOpen, onClose, storyId, storyUrl, existingMentions 
         <>
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={onClose} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[500] touch-none" 
+            onClick={onClose} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] touch-none" 
           />
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[501] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[60%] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            className="fixed inset-x-0 bottom-0 z-[1001] bg-zinc-950 border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[90dvh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.8)]"
             style={{ 
               touchAction: 'pan-y',
               overscrollBehavior: 'contain'
@@ -103,11 +89,11 @@ const AddMentionModal = ({ isOpen, onClose, storyId, storyUrl, existingMentions 
                 placeholder="CERCA USERNAME..." 
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="bg-black/40 border-white/10 rounded-full h-12 pl-12 text-[10px] font-black uppercase tracking-widest"
+                className="bg-white/5 border-white/10 rounded-full h-12 pl-12 text-[10px] font-black uppercase tracking-widest focus-visible:ring-white/20"
               />
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar pb-[calc(4rem+env(safe-area-inset-bottom))]">
+            <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar pb-[calc(2rem+env(safe-area-inset-bottom))]">
               {isLoading ? (
                 <div className="flex justify-center py-10"><Loader2 className="animate-spin text-zinc-500" /></div>
               ) : results.length > 0 ? (
