@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
-import BottomNav from '@/components/BottomNav';
 import { useEvents, Event, useUserApplications } from '@/hooks/use-events';
 import { useGarage } from '@/hooks/use-garage';
 import { useAdmin } from '@/hooks/use-admin';
@@ -458,7 +457,6 @@ const Events = () => {
         <EventAdminModal isOpen={isAdminModalOpen} onClose={() => setIsAdminModalOpen(false)} event={editingEvent} />
         <ManageApplicationModal isOpen={!!manageApp} onClose={() => setManageApp(null)} application={manageApp} />
       </main>
-      <BottomNav />
     </div>
   );
 };

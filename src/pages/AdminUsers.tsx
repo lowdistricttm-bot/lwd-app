@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
-import BottomNav from '@/components/BottomNav';
 import { useAdmin, UserRole } from '@/hooks/use-admin';
 import { 
   Loader2, 
@@ -154,8 +153,6 @@ const AdminUsers = () => {
           </div>
         )}
       </main>
-
-      <BottomNav />
     </div>
   );
 };

@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
-import BottomNav from '@/components/BottomNav';
 import { useMessages } from '@/hooks/use-messages';
 import { useAdmin } from '@/hooks/use-admin';
 import { User, MessageSquare, ChevronRight, Loader2, Plus, Trash2, ShieldAlert } from 'lucide-react';
@@ -69,7 +68,6 @@ const Messages = () => {
           <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-8">I messaggi privati sono riservati ai membri ufficiali del District.</p>
           <button onClick={() => navigate('/')} className="bg-white text-black h-12 px-8 rounded-full font-black uppercase italic hover:bg-zinc-200 transition-all">Torna alla Home</button>
         </main>
-        <BottomNav />
       </div>
     );
   }
@@ -191,7 +189,6 @@ const Messages = () => {
       </AlertDialog>
 
       <NewChatModal isOpen={isNewChatOpen} onClose={() => setIsNewChatOpen(false)} />
-      <BottomNav />
     </div>
   );
 };

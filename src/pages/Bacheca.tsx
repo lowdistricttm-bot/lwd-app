@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
-import BottomNav from '@/components/BottomNav';
 import FeedPost from '@/components/FeedPost';
 import CreatePostModal from '@/components/CreatePostModal';
 import { useSocialFeed } from '@/hooks/use-social-feed';
@@ -91,7 +90,6 @@ const Bacheca = () => {
         )}
       </main>
       <CreatePostModal isOpen={isPostModalOpen} onClose={() => setIsPostModalOpen(false)} />
-      <BottomNav />
     </div>
   );
 };

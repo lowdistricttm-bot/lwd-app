@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
-import BottomNav from '@/components/BottomNav';
 import { ChevronLeft, Loader2, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -118,14 +117,14 @@ const ProductDetail = () => {
               <div className="flex items-center bg-white/5 backdrop-blur-md border border-white/10 rounded-full w-fit overflow-hidden h-12 shadow-xl">
                 <button 
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-12 h-full flex items-center justify-center text-zinc-500 hover:text-white hover:bg-white/10 transition-all"
+                  className="w-12 h-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 transition-all"
                 >
                   <Minus size={16} />
                 </button>
                 <span className="w-12 text-center text-[10px] font-black italic">{quantity}</span>
                 <button 
                   onClick={() => setQuantity(quantity + 1)}
-                  className="w-12 h-full flex items-center justify-center text-zinc-500 hover:text-white hover:bg-white/10 transition-all"
+                  className="w-12 h-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 transition-all"
                 >
                   <Plus size={16} />
                 </button>
@@ -150,8 +149,6 @@ const ProductDetail = () => {
           </div>
         </div>
       </main>
-
-      <BottomNav />
     </div>
   );
 };

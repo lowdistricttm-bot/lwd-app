@@ -3,7 +3,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Navbar from '@/components/Navbar';
-import BottomNav from '@/components/BottomNav';
 import Hero from '@/components/Hero';
 import Footer from '@/components/Footer';
 import Stories from '@/components/Stories';
@@ -174,7 +173,6 @@ const Index = () => {
       </main>
       
       <Footer />
-      <BottomNav />
       <PWAInstallPrompt />
     </div>
   );

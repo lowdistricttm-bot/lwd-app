@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
-import BottomNav from '@/components/BottomNav';
 import { useDiscover } from '@/hooks/use-discover';
 import { useGarage } from '@/hooks/use-garage';
 import { useAdmin } from '@/hooks/use-admin';
@@ -372,8 +371,6 @@ const Discover = () => {
         isOpen={!!lightboxData} 
         onClose={() => setLightboxData(null)} 
       />
-      
-      <BottomNav />
     </div>
   );
 };

@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
-import BottomNav from '@/components/BottomNav';
 import FeedPost from '@/components/FeedPost';
 import { usePost } from '@/hooks/use-social-feed';
 import { Loader2, ChevronLeft, Lock, LogIn, ArrowRight } from 'lucide-react';
@@ -64,7 +63,6 @@ const PostDetail = () => {
             </div>
           </motion.div>
         </main>
-        <BottomNav />
       </div>
     );
   }
@@ -110,8 +108,6 @@ const PostDetail = () => {
           <FeedPost post={post} />
         )}
       </main>
-
-      <BottomNav />
     </div>
   );
 };

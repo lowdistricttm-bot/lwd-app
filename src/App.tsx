@@ -15,6 +15,7 @@ import SpotifyPlayer from "@/components/SpotifyPlayer";
 import ScrollToTop from "@/components/ScrollToTop";
 import BackgroundDecoration from "@/components/BackgroundDecoration";
 import SwipeNavigation from "@/components/SwipeNavigation";
+import BottomNav from "@/components/BottomNav";
 import Index from "./pages/Index";
 import Bacheca from "./pages/Bacheca";
 import Discover from "./pages/Discover";
@@ -49,10 +50,8 @@ const AppContent = () => {
   const [currentUsername, setCurrentUsername] = useState<string | undefined>();
 
   useEffect(() => {
-    // Sblocco audio per mobile al primo tocco dell'utente
     const handleFirstInteraction = () => {
       unlockAudio();
-      // Rimuoviamo i listener dopo la prima interazione
       window.removeEventListener('click', handleFirstInteraction);
       window.removeEventListener('touchstart', handleFirstInteraction);
     };
@@ -107,6 +106,8 @@ const AppContent = () => {
         <Route path="/admin/users" element={<AdminUsers />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      {/* La BottomNav è ora globale e fissa, fuori dal sistema delle rotte */}
+      <BottomNav />
     </SwipeNavigation>
   );
 };

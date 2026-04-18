@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
-import BottomNav from '@/components/BottomNav';
 import AdminApplicationCard from '@/components/AdminApplicationCard';
 import { useAdmin } from '@/hooks/use-admin';
 import { 
@@ -12,8 +11,7 @@ import {
   AlertTriangle,
   ChevronLeft,
   Clock,
-  CheckCircle2,
-  LayoutDashboard
+  CheckCircle2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -118,8 +116,6 @@ const AdminApplications = () => {
           </div>
         )}
       </main>
-
-      <BottomNav />
     </div>
   );
 };

@@ -3,7 +3,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
-import BottomNav from '@/components/BottomNav';
 import { useWcProducts, useWcCategories } from '@/hooks/use-woocommerce';
 import { Loader2, Filter, X, Search as SearchIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -287,8 +286,6 @@ const Shop = () => {
           </div>
         )}
       </main>
-
-      <BottomNav />
     </div>
   );
 };

@@ -4,7 +4,6 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from '@/components/Navbar';
-import BottomNav from '@/components/BottomNav';
 import GarageTab from '@/components/GarageTab';
 import ApplicationsTab from '@/components/ApplicationsTab';
 import ProfilePostGridItem from '@/components/ProfilePostGridItem';
@@ -531,8 +530,6 @@ const Profile = () => {
           type={followModal.type} 
         />
       )}
-      
-      <BottomNav />
     </div>
   );
 };

@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
-import BottomNav from '@/components/BottomNav';
 import { useCart } from '@/hooks/use-cart';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -179,7 +178,6 @@ const Checkout = () => {
             </div>
           </motion.div>
         </main>
-        <BottomNav />
       </div>
     );
   }
@@ -264,7 +262,6 @@ const Checkout = () => {
           </form>
         )}
       </main>
-      <BottomNav />
     </div>
   );
 };
