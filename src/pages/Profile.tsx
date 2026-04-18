@@ -22,7 +22,7 @@ import { useFollow } from '@/hooks/use-follow';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { 
-  User, Settings, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Share2, Edit2
+  User, Settings, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Share2, Edit2, Truck, ExternalLink
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -175,6 +175,29 @@ const Profile = () => {
       'checkout-draft': 'Bozza'
     };
     return (map[status] || status).toUpperCase();
+  };
+
+  const getTrackingInfo = (order: any) => {
+    // Cerca nei metadati per il plugin WooCommerce Shipment Tracking (ufficiale)
+    const trackingMeta = order.meta_data?.find((m: any) => m.key === '_wc_shipment_tracking_items');
+    if (trackingMeta && Array.isArray(trackingMeta.value) && trackingMeta.value.length > 0) {
+      const item = trackingMeta.value[0];
+      return {
+        number: item.tracking_number,
+        provider: item.tracking_provider,
+        url: item.custom_tracking_link || item.tracking_link
+      };
+    }
+    
+    // Fallback per altri plugin comuni o inserimento manuale
+    const simpleNumber = order.meta_data?.find((m: any) => m.key === '_tracking_number' || m.key === 'tracking_number')?.value;
+    const simpleProvider = order.meta_data?.find((m: any) => m.key === '_tracking_provider' || m.key === 'tracking_provider')?.value;
+    
+    if (simpleNumber) {
+      return { number: simpleNumber, provider: simpleProvider };
+    }
+
+    return null;
   };
 
   if (loading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
@@ -375,29 +398,57 @@ const Profile = () => {
                       <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div>
                     ) : orders?.length > 0 ? (
                       <div className="space-y-3">
-                        {orders.map((order: any) => (
-                          <div key={order.id} className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 p-5 rounded-2xl group hover:border-white/20 transition-all shadow-xl">
-                            <div className="flex flex-col md:flex-row justify-between gap-3">
-                              <div className="space-y-1.5">
-                                <div className="flex items-center gap-2">
-                                  <span className="bg-white text-black text-[7px] font-black uppercase px-1.5 py-0.5 italic rounded-full">#{order.id}</span>
-                                  <span className={cn(
-                                    "text-[7px] font-black uppercase px-1.5 py-0.5 italic rounded-full",
-                                    order.status === 'completed' ? "bg-white text-black" : "bg-zinc-800 text-white"
-                                  )}>
-                                    {translateOrderStatus(order.status)}
-                                  </span>
+                        {orders.map((order: any) => {
+                          const tracking = getTrackingInfo(order);
+                          return (
+                            <div key={order.id} className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 p-5 rounded-2xl group hover:border-white/20 transition-all shadow-xl">
+                              <div className="flex flex-col md:flex-row justify-between gap-3">
+                                <div className="space-y-1.5">
+                                  <div className="flex items-center gap-2">
+                                    <span className="bg-white text-black text-[7px] font-black uppercase px-1.5 py-0.5 italic rounded-full">#{order.id}</span>
+                                    <span className={cn(
+                                      "text-[7px] font-black uppercase px-1.5 py-0.5 italic rounded-full",
+                                      order.status === 'completed' ? "bg-white text-black" : "bg-zinc-800 text-white"
+                                    )}>
+                                      {translateOrderStatus(order.status)}
+                                    </span>
+                                  </div>
+                                  <h4 className="text-xs font-black italic uppercase tracking-tight">{order.line_items.length} Prodotti</h4>
+                                  <p className="text-[8px] text-zinc-500 font-bold uppercase">Effettuato il {new Date(order.date_created).toLocaleDateString('it-IT')}</p>
                                 </div>
-                                <h4 className="text-xs font-black italic uppercase tracking-tight">{order.line_items.length} Prodotti</h4>
-                                <p className="text-[8px] text-zinc-500 font-bold uppercase">Effettuato il {new Date(order.date_created).toLocaleDateString('it-IT')}</p>
+                                <div className="text-right flex flex-col justify-center">
+                                  <p className="text-[7px] font-black uppercase text-zinc-600 tracking-widest mb-0.5">{t.checkout.total}</p>
+                                  <p className="text-xl font-black italic tracking-tighter">{order.total} €</p>
+                                </div>
                               </div>
-                              <div className="text-right flex flex-col justify-center">
-                                <p className="text-[7px] font-black uppercase text-zinc-600 tracking-widest mb-0.5">{t.checkout.total}</p>
-                                <p className="text-xl font-black italic tracking-tighter">{order.total} €</p>
-                              </div>
+
+                              {/* Sezione Tracking */}
+                              {tracking && (
+                                <div className="mt-4 p-4 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-500">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center text-white">
+                                      <Truck size={16} />
+                                    </div>
+                                    <div>
+                                      <p className="text-[7px] font-black uppercase text-zinc-500 tracking-widest">Tracking {tracking.provider || 'Spedizione'}</p>
+                                      <p className="text-[10px] font-black uppercase italic text-white tracking-tight">{tracking.number}</p>
+                                    </div>
+                                  </div>
+                                  {tracking.url && (
+                                    <a 
+                                      href={tracking.url} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer" 
+                                      className="flex items-center gap-1.5 bg-white text-black px-3 py-1.5 rounded-full text-[8px] font-black uppercase italic hover:bg-zinc-200 transition-all shadow-lg"
+                                    >
+                                      Segui <ExternalLink size={10} />
+                                    </a>
+                                  )}
+                                </div>
+                              )}
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     ) : (
                       <div className="bg-zinc-900/30 border border-white/5 p-10 rounded-[2rem] text-center">
