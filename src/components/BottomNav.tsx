@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Home, ShoppingBag, MessageSquare, User, Calendar, Compass } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -8,6 +8,13 @@ import { motion } from 'framer-motion';
 
 const BottomNav = () => {
   const location = useLocation();
+  const [isIOS, setIsIOS] = useState(false);
+  
+  useEffect(() => {
+    // Rilevamento semplice iOS
+    const checkIOS = /iPhone|iPad|iPod/.test(window.navigator.userAgent);
+    setIsIOS(checkIOS);
+  }, []);
   
   // Nascondiamo la barra nelle pagine di chat dove c'è l'input dei messaggi
   if (location.pathname.startsWith('/chat/')) return null;
@@ -29,12 +36,14 @@ const BottomNav = () => {
     }
   };
 
+  // Altezza dinamica: 20px su iOS, 40px altrove
+  const navHeight = isIOS ? '20px' : '40px';
+
   return (
     <div 
       className="fixed bottom-0 left-0 right-0 z-[999] bg-black/95 backdrop-blur-3xl border-t border-white/10 select-none"
       style={{ 
-        // Altezza ridotta a 40px
-        height: '40px',
+        height: navHeight,
         paddingBottom: '0',
         transform: 'translateZ(0)',
         WebkitTransform: 'translateZ(0)',
@@ -45,7 +54,10 @@ const BottomNav = () => {
     >
       <div className="absolute inset-0 bg-black -z-10" />
 
-      <div className="relative flex items-center justify-around h-[40px] px-2 max-w-lg mx-auto">
+      <div 
+        className="relative flex items-center justify-around px-2 max-w-lg mx-auto"
+        style={{ height: navHeight }}
+      >
         {items.map((item, i) => {
           const isActive = activeIndex === i;
           return (
@@ -61,7 +73,7 @@ const BottomNav = () => {
               {isActive && (
                 <motion.div
                   layoutId="nav-glow"
-                  className="absolute w-8 h-8 bg-white/5 rounded-full z-0 blur-md"
+                  className="absolute w-6 h-6 bg-white/5 rounded-full z-0 blur-md"
                   transition={{
                     type: "spring",
                     stiffness: 400,
@@ -79,7 +91,7 @@ const BottomNav = () => {
                 transition={{ type: "spring", stiffness: 500, damping: 25 }}
               >
                 <item.icon 
-                  size={18} 
+                  size={isIOS ? 14 : 18} 
                   strokeWidth={isActive ? 2.5 : 2} 
                 />
               </motion.div>
