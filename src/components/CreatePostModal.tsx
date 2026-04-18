@@ -21,16 +21,14 @@ const CreatePostModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
     if (isOpen) {
       document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
+      // Rimosso touchAction: none dal body per permettere lo scroll interno al modal
     } else {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
-      document.body.style.touchAction = '';
     }
     return () => {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
-      document.body.style.touchAction = '';
     };
   }, [isOpen]);
 
@@ -82,7 +80,10 @@ const CreatePostModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed inset-x-0 bottom-0 z-[1001] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 pb-15 rounded-t-[2.5rem] max-h-[92vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
-            style={{ touchAction: 'pan-y' }}
+            style={{ 
+              touchAction: 'pan-y',
+              overscrollBehavior: 'contain' // Blocca la propagazione dello scroll
+            }}
           >
             <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
 
@@ -94,7 +95,7 @@ const CreatePostModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
               <button onClick={onClose} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors"><X size={20} /></button>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex-1 flex flex-col space-y-6 overflow-y-auto no-scrollbar">
+            <form onSubmit={handleSubmit} className="flex-1 flex flex-col space-y-6 overflow-y-auto no-scrollbar" style={{ overscrollBehavior: 'contain' }}>
               <Textarea 
                 placeholder="Cosa succede nel District?"
                 value={content}
