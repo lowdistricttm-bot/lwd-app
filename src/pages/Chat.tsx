@@ -41,6 +41,7 @@ const Chat = () => {
   const [dbLastSeen, setDbLastSeen] = useState<string | null>(null);
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
   const [deleteMessageTarget, setDeleteMessageTarget] = useState<string | null>(null);
+  const [isIOS, setIsIOS] = useState(false);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -54,6 +55,9 @@ const Chat = () => {
   const lastSeen = getLastSeen(userId) || dbLastSeen;
 
   useEffect(() => {
+    const checkIOS = /iPhone|iPad|iPod/.test(window.navigator.userAgent);
+    setIsIOS(checkIOS);
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) navigate('/login');
       else { setCurrentUserId(session.user.id); }
@@ -124,6 +128,8 @@ const Chat = () => {
 
   if (loadingChat) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
+  const navHeight = isIOS ? '50px' : '44px';
+
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent">
       {/* Header Uniformato alla Navbar (h-16) */}
@@ -155,7 +161,7 @@ const Chat = () => {
                 )} />
                 <p className={cn(
                   "text-[8px] font-black uppercase tracking-widest transition-colors duration-500 truncate",
-                  isOnline ? "text-green-500" : "text-zinc-500"
+                  isOnline ? 'Online' : lastSeen ? `Accesso ${lastSeen}` : 'Offline'
                 )}>
                   {isOnline ? 'Online' : lastSeen ? `Accesso ${lastSeen}` : 'Offline'}
                 </p>
@@ -165,7 +171,7 @@ const Chat = () => {
         </div>
       </nav>
 
-      <main ref={scrollRef} className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] pb-[140px] px-6 overflow-y-auto space-y-6 custom-scrollbar overflow-x-hidden">
+      <main ref={scrollRef} className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] pb-[100px] px-6 overflow-y-auto space-y-6 custom-scrollbar overflow-x-hidden">
         {chatMessages?.map((msg) => {
           const isMe = msg.sender_id === currentUserId;
           const isMention = msg.content.includes('Ti ha menzionato');
@@ -179,7 +185,6 @@ const Chat = () => {
             const match = msg.content.match(/\[POST_ID:(.*?)\]/);
             if (match) {
               sharedPostId = match[1];
-              // Forza il testo pulito richiesto dall'utente
               displayContent = "Ti ha inviato un post";
             }
           }
@@ -292,13 +297,21 @@ const Chat = () => {
         })}
       </main>
 
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-black/60 backdrop-blur-2xl border-t border-white/10 z-50 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-        <div className="max-w-2xl mx-auto flex flex-col gap-3">
-          
+      {/* Barra di Input Uniformata */}
+      <div 
+        className="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-3xl border-t border-white/10 z-50"
+        style={{ 
+          height: navHeight,
+          paddingBottom: '0px',
+          marginBottom: '0px'
+        }}
+      >
+        <div className="max-w-2xl mx-auto h-full relative">
+          {/* Previews (sopra la barra) */}
           {previews.length > 0 && (
-            <div className="flex gap-2 overflow-x-auto no-scrollbar">
+            <div className="absolute bottom-full left-0 right-0 p-4 flex gap-2 overflow-x-auto no-scrollbar bg-black/40 backdrop-blur-md border-t border-white/5">
               {previews.map((url, i) => (
-                <div key={i} className="relative w-16 h-16 shrink-0 bg-zinc-900 border border-white/10 rounded-xl overflow-hidden backdrop-blur-md">
+                <div key={i} className="relative w-16 h-16 shrink-0 bg-zinc-900 border border-white/10 rounded-xl overflow-hidden">
                   {selectedFiles[i]?.type.startsWith('video/') ? (
                     <video src={url} className="w-full h-full object-cover" />
                   ) : (
@@ -307,7 +320,7 @@ const Chat = () => {
                   <button 
                     type="button" 
                     onClick={() => removeFile(i)} 
-                    className="absolute top-1 right-1 p-1 bg-black/60 text-white rounded-full hover:bg-white/20 transition-colors backdrop-blur-md"
+                    className="absolute top-1 right-1 p-1 bg-black/60 text-white rounded-full hover:bg-white/20 transition-colors"
                   >
                     <X size={10} />
                   </button>
@@ -316,7 +329,13 @@ const Chat = () => {
             </div>
           )}
 
-          <form onSubmit={handleSend} className="flex gap-3 items-center">
+          <form 
+            onSubmit={handleSend} 
+            className={cn(
+              "h-full px-4 flex items-center gap-3",
+              isIOS ? "items-end pb-0" : "items-center"
+            )}
+          >
             <input 
               type="file" 
               ref={fileInputRef} 
@@ -329,26 +348,39 @@ const Chat = () => {
             <button 
               type="button" 
               onClick={() => fileInputRef.current?.click()} 
-              className="w-12 h-12 bg-white/5 border border-white/10 text-zinc-400 rounded-full flex items-center justify-center hover:text-white hover:bg-white/10 transition-all shrink-0 backdrop-blur-md"
+              className={cn(
+                "text-zinc-400 hover:text-white transition-all shrink-0",
+                isIOS ? "h-[50px] w-8 flex items-center justify-center" : "w-8 h-8"
+              )}
             >
-              <Camera size={20} />
+              <Camera size={isIOS ? 20 : 22} />
             </button>
 
-            <div className="flex-1 relative">
+            <div className="flex-1 relative flex items-center h-full">
               <Input 
                 placeholder="Messaggio" 
                 value={message} 
                 onChange={(e) => setMessage(e.target.value)} 
-                className="bg-white/5 border-white/10 rounded-full h-12 px-6 font-medium text-sm focus-visible:ring-white/0 focus:ring-0 focus-visible:ring-offset-0 text-white placeholder:text-zinc-500 backdrop-blur-md" 
+                className={cn(
+                  "bg-white/5 border-white/10 rounded-full px-4 font-medium text-xs focus-visible:ring-0 text-white placeholder:text-zinc-600",
+                  isIOS ? "h-8 mb-1.5" : "h-9"
+                )} 
               />
             </div>
             
             <button 
               type="submit" 
               disabled={sendMessage.isPending || (!message.trim() && selectedFiles.length === 0)} 
-              className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-xl shrink-0 disabled:opacity-50"
+              className={cn(
+                "text-white transition-all shrink-0 disabled:opacity-30",
+                isIOS ? "h-[50px] w-8 flex items-center justify-center" : "w-8 h-8"
+              )}
             >
-              {sendMessage.isPending ? <Loader2 size={20} className="animate-spin text-black" /> : <Send size={20} strokeWidth={2.5} className="-rotate-12" />}
+              {sendMessage.isPending ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <Send size={isIOS ? 18 : 20} strokeWidth={2.5} className="-rotate-12" />
+              )}
             </button>
           </form>
         </div>
