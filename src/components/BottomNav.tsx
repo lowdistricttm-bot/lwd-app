@@ -48,29 +48,28 @@ const BottomNav = () => {
       <motion.div 
         ref={containerRef}
         onPan={handlePan}
-        className="relative flex items-center h-16 px-2"
+        className="relative flex items-center h-20 px-2"
       >
-        {/* Indicatore Liquido */}
+        {/* Indicatore Liquido Professionale (Glow soffuso) */}
         <AnimatePresence>
           {activeIndex !== -1 && (
             <motion.div
-              layoutId="active-pill"
-              className="absolute h-10 bg-white/10 rounded-xl z-0"
+              layoutId="active-glow"
+              className="absolute w-12 h-12 bg-white/15 rounded-full z-0 blur-2xl"
               initial={false}
               transition={{
                 type: "spring",
-                stiffness: 400,
-                damping: 35
+                stiffness: 350,
+                damping: 30
               }}
               style={{
-                width: `calc(${100 / items.length}% - 12px)`,
-                left: `calc(${(activeIndex * 100) / items.length}% + 6px)`,
+                left: `calc(${(activeIndex * 100) / items.length}% + (100% / ${items.length} / 2) - 24px)`,
               }}
             />
           )}
         </AnimatePresence>
 
-        {/* Icone */}
+        {/* Icone senza titoli */}
         {items.map((item, i) => {
           const isActive = activeIndex === i;
           return (
@@ -78,19 +77,19 @@ const BottomNav = () => {
               key={i} 
               to={item.href}
               className={cn(
-                "flex-1 flex flex-col items-center justify-center h-full relative z-10 transition-colors duration-300",
-                isActive ? "text-white" : "text-zinc-500"
+                "flex-1 flex flex-col items-center justify-center h-full relative z-10 transition-all duration-500",
+                isActive ? "text-white" : "text-zinc-600 hover:text-zinc-400"
               )}
             >
               <item.icon 
-                size={20} 
+                size={24} 
                 strokeWidth={isActive ? 2.5 : 2} 
-                className="transition-transform duration-300"
-                style={{ transform: isActive ? 'scale(1.1)' : 'scale(1)' }}
+                className="transition-all duration-500"
+                style={{ 
+                  transform: isActive ? 'scale(1.15)' : 'scale(1)',
+                  filter: isActive ? 'drop-shadow(0 0 8px rgba(255,255,255,0.3))' : 'none'
+                }}
               />
-              <span className="text-[7px] font-black uppercase tracking-widest mt-1">
-                {item.label}
-              </span>
             </Link>
           );
         })}
