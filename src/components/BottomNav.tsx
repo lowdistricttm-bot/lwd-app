@@ -36,8 +36,8 @@ const BottomNav = () => {
     }
   };
 
-  // Altezza ultra-ridotta: 16px su iOS, 40px altrove
-  const navHeight = isIOS ? '16px' : '40px';
+  // Altezza adattata per icone da 20px: 22px su iOS, 40px altrove
+  const navHeight = isIOS ? '22px' : '40px';
 
   return (
     <div 
@@ -55,7 +55,10 @@ const BottomNav = () => {
       <div className="absolute inset-0 bg-black -z-10" />
 
       <div 
-        className="relative flex items-center justify-around px-2 max-w-lg mx-auto"
+        className={cn(
+          "relative flex items-center justify-around px-2 mx-auto",
+          isIOS ? "max-w-[260px]" : "max-w-lg" // Contenitore più stretto su iOS per ridurre lo spazio tra icone
+        )}
         style={{ height: navHeight }}
       >
         {items.map((item, i) => {
@@ -69,7 +72,6 @@ const BottomNav = () => {
                 isActive ? "text-white" : "text-zinc-600 hover:text-zinc-400"
               )}
               style={{ 
-                // Padding superiore specifico per iOS per centrare l'icona rispetto al bordo
                 paddingTop: isIOS ? '1px' : '0px' 
               }}
               onClick={() => triggerHaptic(12)}
@@ -95,7 +97,7 @@ const BottomNav = () => {
                 transition={{ type: "spring", stiffness: 500, damping: 25 }}
               >
                 <item.icon 
-                  size={isIOS ? 12 : 18} 
+                  size={isIOS ? 20 : 18} // Icone a 20px su iOS
                   strokeWidth={isActive ? 2.5 : 2} 
                 />
               </motion.div>
