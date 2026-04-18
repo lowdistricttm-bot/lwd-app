@@ -280,7 +280,7 @@ const Shop = () => {
                     )}
                   </div>
                   <h3 className="text-xs font-black uppercase italic tracking-tight mb-1 group-hover:text-zinc-400 transition-colors" dangerouslySetInnerHTML={{ __html: product.name }} />
-                  <p className="text-sm font-black tracking-tighter">€{product.price}</p>
+                  <p className="text-sm font-black tracking-tighter">{product.price} €</p>
                 </Link>
               </motion.div>
             ))}

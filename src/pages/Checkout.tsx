@@ -13,6 +13,7 @@ import { useWcCreateOrder, useWcShippingMethods } from '@/hooks/use-woocommerce'
 import { supabase } from "@/integrations/supabase/client";
 import { showError, showSuccess } from '@/utils/toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 
 const WhatsAppIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -143,23 +144,31 @@ const Checkout = () => {
 
   if (isFinished) {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col">
+      <div className="min-h-screen bg-transparent text-white flex flex-col">
         <Navbar />
         <main className="flex-1 flex flex-col items-center justify-center px-6 py-20 text-center max-w-2xl mx-auto">
-          <CheckCircle2 size={80} className="text-white mb-8" />
-          <h1 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter mb-4">Ordine Ricevuto</h1>
-          <p className="text-zinc-500 text-sm font-bold uppercase tracking-widest mb-12">
-            Il tuo ordine #{orderId} è stato registrato nel District. <br />
-            Riceverai una mail di conferma a breve.
-          </p>
-          <div className="w-full space-y-4">
-            <Button onClick={handleWhatsAppGarage} className="w-full bg-[#25D366]/90 backdrop-blur-md hover:bg-[#128C7E] hover:scale-[1.05] active:scale-[0.98] text-white py-8 text-lg font-black uppercase italic tracking-widest rounded-none transition-all shadow-lg shadow-[#25D366]/10">
-              <WhatsAppIcon className="mr-3 w-6 h-6" /> Paga su WhatsApp
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/')} className="w-full border-white/10 text-zinc-500 hover:bg-white/5 hover:text-white py-8 text-sm font-black uppercase tracking-widest rounded-none italic transition-all">
-              Torna alla Home <ArrowRight className="ml-2" size={16} />
-            </Button>
-          </div>
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="flex flex-col items-center"
+          >
+            <div className="w-24 h-24 bg-white/10 backdrop-blur-xl border border-white/20 rounded-full flex items-center justify-center mb-8 shadow-2xl">
+              <CheckCircle2 size={48} className="text-white" />
+            </div>
+            <h1 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter mb-4">Ordine Ricevuto</h1>
+            <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.3em] mb-12 italic">
+              Il tuo ordine #{orderId} è stato registrato nel District. <br />
+              Riceverai una mail di conferma a breve.
+            </p>
+            <div className="w-full space-y-4">
+              <Button onClick={handleWhatsAppGarage} className="w-full bg-[#25D366]/90 backdrop-blur-md hover:bg-[#128C7E] hover:scale-[1.05] active:scale-[0.98] text-white py-8 text-lg font-black uppercase italic tracking-widest rounded-full transition-all shadow-lg shadow-[#25D366]/10 border-none">
+                <WhatsAppIcon className="mr-3 w-6 h-6" /> Paga su WhatsApp
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/')} className="w-full border-white/10 text-zinc-500 hover:bg-white/5 hover:text-white py-8 text-[10px] font-black uppercase tracking-widest rounded-full italic transition-all">
+                Torna alla Home <ArrowRight className="ml-2" size={16} />
+              </Button>
+            </div>
+          </motion.div>
         </main>
         <BottomNav />
       </div>
@@ -167,79 +176,79 @@ const Checkout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="min-h-screen bg-transparent text-white flex flex-col">
       <Navbar />
       <main className="flex-1 pt-24 pb-32 px-6 max-w-4xl mx-auto w-full">
-        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-zinc-500 hover:text-white mb-8 uppercase text-[10px] font-black tracking-widest transition-colors">
-          <ChevronLeft size={16} /> Torna al Carrello
+        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-zinc-500 hover:text-white mb-8 uppercase text-[9px] font-black tracking-widest transition-colors">
+          <ChevronLeft size={14} /> Torna al Carrello
         </button>
         <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase mb-12">Checkout</h1>
         
         {loadingShipping ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Loader2 className="animate-spin text-zinc-500" size={40} />
-            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Sincronizzazione tariffe...</p>
+            <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Sincronizzazione tariffe...</p>
           </div>
         ) : (
           <form onSubmit={handleCheckout} className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             <div className="space-y-8">
-              <div className="bg-zinc-900/50 border border-white/5 p-8 space-y-6">
-                <h3 className="text-xs font-black uppercase tracking-widest text-zinc-400 italic">Dati di Spedizione</h3>
+              <div className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 p-8 space-y-6 rounded-[2.5rem] shadow-2xl">
+                <h3 className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 italic">Dati di Spedizione</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-zinc-500">Nome *</Label>
-                    <Input required value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
+                    <Label className="text-[8px] font-black uppercase text-zinc-600 ml-4">Nome *</Label>
+                    <Input required value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} className="bg-black/40 border-white/5 rounded-full h-12 px-6 text-xs font-bold" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-zinc-500">Cognome *</Label>
-                    <Input required value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
+                    <Label className="text-[8px] font-black uppercase text-zinc-600 ml-4">Cognome *</Label>
+                    <Input required value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} className="bg-black/40 border-white/5 rounded-full h-12 px-6 text-xs font-bold" />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-zinc-500">Email *</Label>
-                  <Input required type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
+                  <Label className="text-[8px] font-black uppercase text-zinc-600 ml-4">Email *</Label>
+                  <Input required type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="bg-black/40 border-white/5 rounded-full h-12 px-6 text-xs font-bold" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-zinc-500">Telefono *</Label>
-                  <Input required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
+                  <Label className="text-[8px] font-black uppercase text-zinc-600 ml-4">Telefono *</Label>
+                  <Input required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="bg-black/40 border-white/5 rounded-full h-12 px-6 text-xs font-bold" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-zinc-500">Indirizzo *</Label>
-                  <Input required value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
+                  <Label className="text-[8px] font-black uppercase text-zinc-600 ml-4">Indirizzo *</Label>
+                  <Input required value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className="bg-black/40 border-white/5 rounded-full h-12 px-6 text-xs font-bold" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-zinc-500">Città *</Label>
-                    <Input required value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
+                    <Label className="text-[8px] font-black uppercase text-zinc-600 ml-4">Città *</Label>
+                    <Input required value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} className="bg-black/40 border-white/5 rounded-full h-12 px-6 text-xs font-bold" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-zinc-500">CAP *</Label>
-                    <Input required value={formData.postcode} onChange={(e) => setFormData({...formData, postcode: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
+                    <Label className="text-[8px] font-black uppercase text-zinc-600 ml-4">CAP *</Label>
+                    <Input required value={formData.postcode} onChange={(e) => setFormData({...formData, postcode: e.target.value})} className="bg-black/40 border-white/5 rounded-full h-12 px-6 text-xs font-bold" />
                   </div>
                 </div>
               </div>
             </div>
             <div className="space-y-6">
-              <div className="bg-zinc-900/50 border border-white/5 p-8">
-                <h3 className="text-xs font-black uppercase tracking-widest text-zinc-400 italic mb-6">Riepilogo Ordine</h3>
-                <div className="space-y-4 mb-8">
+              <div className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 p-8 rounded-[2.5rem] shadow-2xl">
+                <h3 className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 italic mb-8">Riepilogo Ordine</h3>
+                <div className="space-y-5 mb-8">
                   {items.map((item) => (
-                    <div key={`${item.id}-${item.variationId}`} className="flex justify-between text-sm">
-                      <span className="text-zinc-400">{item.name} x{item.quantity}</span>
-                      <span className="font-black">€{(item.price * item.quantity).toFixed(2)}</span>
+                    <div key={`${item.id}-${item.variationId}`} className="flex justify-between text-xs">
+                      <span className="text-zinc-400 font-bold uppercase tracking-widest">{item.name} x{item.quantity}</span>
+                      <span className="font-black italic">{(item.price * item.quantity).toFixed(2)} €</span>
                     </div>
                   ))}
-                  <div className="flex justify-between text-sm border-t border-white/5 pt-4">
-                    <span className="text-zinc-400">{shippingInfo.title}</span>
-                    <span className="font-black">{shippingInfo.fee === 0 ? "GRATIS" : `€${shippingInfo.fee.toFixed(2)}`}</span>
+                  <div className="flex justify-between text-xs border-t border-white/5 pt-5">
+                    <span className="text-zinc-500 font-bold uppercase tracking-widest">{shippingInfo.title}</span>
+                    <span className="font-black italic">{shippingInfo.fee === 0 ? "GRATIS" : `${shippingInfo.fee.toFixed(2)} €`}</span>
                   </div>
                 </div>
                 <div className="border-t border-white/5 pt-6 flex justify-between items-end">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Totale</span>
-                  <span className="text-3xl font-black italic tracking-tighter">€{finalTotal.toFixed(2)}</span>
+                  <span className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500">Totale</span>
+                  <span className="text-3xl font-black italic tracking-tighter">{finalTotal.toFixed(2)} €</span>
                 </div>
               </div>
-              <Button type="submit" disabled={createOrder.isPending} className="w-full bg-white/70 backdrop-blur-2xl text-black hover:bg-white hover:scale-[1.05] active:scale-[0.98] py-8 text-lg font-black uppercase italic tracking-widest rounded-none transition-all duration-500 shadow-2xl border-none">
+              <Button type="submit" disabled={createOrder.isPending} className="w-full bg-white text-black hover:bg-zinc-200 hover:scale-[1.02] active:scale-[0.98] py-8 text-sm font-black uppercase italic tracking-widest rounded-full transition-all duration-500 shadow-2xl border-none">
                 {createOrder.isPending ? <Loader2 className="animate-spin" /> : "Conferma Ordine"}
               </Button>
             </div>

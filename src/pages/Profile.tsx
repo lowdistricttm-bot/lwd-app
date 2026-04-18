@@ -357,7 +357,7 @@ const Profile = () => {
                     ) : orders?.length > 0 ? (
                       <div className="space-y-3">
                         {orders.map((order: any) => (
-                          <div key={order.id} className="bg-zinc-900/50 border border-white/5 p-5 rounded-2xl group hover:border-white/20 transition-all">
+                          <div key={order.id} className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 p-5 rounded-2xl group hover:border-white/20 transition-all shadow-xl">
                             <div className="flex flex-col md:flex-row justify-between gap-3">
                               <div className="space-y-1.5">
                                 <div className="flex items-center gap-2">
@@ -368,7 +368,7 @@ const Profile = () => {
                               </div>
                               <div className="text-right flex flex-col justify-center">
                                 <p className="text-[7px] font-black uppercase text-zinc-600 tracking-widest mb-0.5">{t.checkout.total}</p>
-                                <p className="text-xl font-black italic tracking-tighter">€{order.total}</p>
+                                <p className="text-xl font-black italic tracking-tighter">{order.total} €</p>
                               </div>
                             </div>
                           </div>

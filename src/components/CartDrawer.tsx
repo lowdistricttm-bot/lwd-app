@@ -83,7 +83,7 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                         </div>
                         
                         <div className="flex items-center gap-4">
-                          <p className="text-sm font-black tracking-tighter">€{(item.price * item.quantity).toFixed(2)}</p>
+                          <p className="text-sm font-black tracking-tighter">{(item.price * item.quantity).toFixed(2)} €</p>
                           <button 
                             onClick={() => removeFromCart(item.id, item.variationId)}
                             className="text-zinc-600 hover:text-red-500 transition-colors p-2"
@@ -102,7 +102,7 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
               <div className="p-6 border-t border-white/5 bg-black/40 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
                 <div className="flex justify-between items-end mb-6">
                   <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Totale Parziale</span>
-                  <span className="text-2xl font-black tracking-tighter italic">€{total.toFixed(2)}</span>
+                  <span className="text-2xl font-black tracking-tighter italic">{total.toFixed(2)} €</span>
                 </div>
                 <Button 
                   onClick={handleCheckout}

@@ -80,7 +80,7 @@ const ProductDetail = () => {
                 dangerouslySetInnerHTML={{ __html: product.name }} 
               />
               <p className="text-3xl md:text-4xl font-black tracking-tight text-white italic text-center">
-                €{selectedVariation ? selectedVariation.price : product.price}
+                {selectedVariation ? selectedVariation.price : product.price} €
               </p>
             </div>
             
