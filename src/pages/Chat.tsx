@@ -133,7 +133,7 @@ const Chat = () => {
           onClick={() => navigate(`/profile/${userId}`)}
           className="flex items-center gap-3 hover:opacity-70 transition-opacity text-left"
         >
-          <div className="w-10 h-10 bg-black/40 rounded-full overflow-hidden border border-white/10">
+          <div className="w-10 h-10 bg-zinc-900 rounded-full overflow-hidden border border-white/10">
             {otherUserProfile?.avatar_url ? (
               <img src={otherUserProfile.avatar_url} className="w-full h-full object-cover" />
             ) : (
@@ -171,7 +171,7 @@ const Chat = () => {
               <div className="relative max-w-[85%] w-fit">
                 
                 <div className={cn(
-                  "absolute inset-0 flex items-center justify-end px-5 rounded-[2rem]",
+                  "absolute inset-0 flex items-center justify-end px-5 rounded-2xl",
                   isMe ? "bg-zinc-900/40" : "bg-zinc-900/60 border border-white/5"
                 )}>
                   <Trash2 size={18} strokeWidth={2} className="text-red-500" />
@@ -194,9 +194,11 @@ const Chat = () => {
                     }
                   }}
                   className={cn(
-                    "relative z-10 shadow-2xl overflow-hidden rounded-[2rem]", 
-                    isMe ? "bg-white text-black rounded-tr-none" : "bg-black/60 backdrop-blur-2xl rounded-tl-none border border-white/10",
-                    isMention && "border-white/30 bg-black/80 backdrop-blur-2xl"
+                    "relative z-10 shadow-2xl overflow-hidden rounded-2xl", 
+                    isMe 
+                      ? "bg-blue-600 text-white rounded-tr-sm" 
+                      : "bg-zinc-800 text-white rounded-tl-sm border border-white/5",
+                    isMention && "border-white/20 bg-zinc-900 backdrop-blur-2xl"
                   )}
                 >
                   {msgImages.length > 0 && (
@@ -217,9 +219,9 @@ const Chat = () => {
                         <img src={msgImages[0]} className="w-full h-full object-cover" />
                       )}
                       {isMention && (
-                        <div className="absolute inset-0 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+                        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center">
                           <AtSign size={32} strokeWidth={2} className="mb-2 text-white drop-shadow-lg" />
-                          <p className="text-[10px] font-black uppercase tracking-widest mb-4 drop-shadow-lg">Sei stato menzionato!</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest mb-4 text-white drop-shadow-lg">Sei stato menzionato!</p>
                           <button 
                             onClick={(e) => { 
                               e.stopPropagation(); 
@@ -235,9 +237,9 @@ const Chat = () => {
                     </div>
                   )}
                   {msg.content && (
-                    <div className="p-4">
+                    <div className={cn("p-4", isMention && "bg-black/40")}>
                       <p className="text-sm font-medium leading-relaxed">{msg.content}</p>
-                      <p className={cn("text-[7px] uppercase font-black mt-2", isMe ? "text-black/40" : "text-zinc-500")}>
+                      <p className={cn("text-[7px] uppercase font-black mt-2", isMe ? "text-white/50" : "text-zinc-500")}>
                         {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
@@ -255,7 +257,7 @@ const Chat = () => {
           {previews.length > 0 && (
             <div className="flex gap-2 overflow-x-auto no-scrollbar">
               {previews.map((url, i) => (
-                <div key={i} className="relative w-16 h-16 shrink-0 bg-black/40 border border-white/10 rounded-xl overflow-hidden backdrop-blur-md">
+                <div key={i} className="relative w-16 h-16 shrink-0 bg-zinc-900 border border-white/10 rounded-xl overflow-hidden backdrop-blur-md">
                   {selectedFiles[i]?.type.startsWith('video/') ? (
                     <video src={url} className="w-full h-full object-cover" />
                   ) : (
@@ -286,7 +288,7 @@ const Chat = () => {
             <button 
               type="button" 
               onClick={() => fileInputRef.current?.click()} 
-              className="w-12 h-12 bg-white/5 border border-white/10 text-zinc-400 rounded-full flex items-center justify-center hover:text-white hover:bg-white/10 transition-colors shrink-0 backdrop-blur-md"
+              className="w-12 h-12 bg-white/5 border border-white/10 text-zinc-400 rounded-full flex items-center justify-center hover:text-white hover:bg-white/10 transition-all shrink-0 backdrop-blur-md"
             >
               <Camera size={20} />
             </button>
