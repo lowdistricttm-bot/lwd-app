@@ -202,11 +202,14 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[2000] bg-black flex items-center justify-center overflow-hidden touch-none"
     >
+      {/* Background Blur */}
       <div className="absolute inset-0 z-0 opacity-50 blur-[100px] scale-150">
         <img src={currentStory.image_url} className="w-full h-full object-cover" alt="" />
       </div>
 
-      <div className="relative w-full max-w-[500px] h-full bg-black overflow-hidden flex flex-col shadow-2xl">
+      {/* Main Container - Full Screen */}
+      <div className="relative w-full h-[100dvh] bg-black overflow-hidden flex flex-col shadow-2xl">
+        
         {/* Progress Bars */}
         <div className="absolute top-[calc(1rem+env(safe-area-inset-top))] left-4 right-4 z-50 flex gap-1.5">
           {userStories.items.map((_, i) => (
@@ -275,7 +278,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           <div className="w-2/3 h-full cursor-pointer" onClick={handleNext} />
         </div>
 
-        {/* Media Content */}
+        {/* Media Content - Optimized for Full Screen */}
         <div className="flex-1 relative flex items-center justify-center bg-black">
           {isMediaLoading && (
             <div className="absolute inset-0 flex items-center justify-center z-10">
@@ -307,8 +310,8 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           )}
         </div>
 
-        {/* Footer Controls - Attached to bottom */}
-        <div className="absolute bottom-0 left-0 right-0 z-50 p-4 pb-[calc(0.5rem+env(safe-area-inset-bottom))] bg-gradient-to-t from-black/90 via-black/40 to-transparent">
+        {/* Footer Controls - Attached to bottom with safe area */}
+        <div className="absolute bottom-0 left-0 right-0 z-50 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-gradient-to-t from-black/90 via-black/40 to-transparent">
           {isOwner && !isHighlight ? (
             <div className="flex items-center justify-around py-2 border-t border-white/10">
               <button onClick={() => setShowViewers(true)} className="flex flex-col items-center gap-1 group">
@@ -409,7 +412,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-zinc-800 rounded-full overflow-hidden border border-white/10 group-hover:border-white transition-colors">
                             {view.profiles?.avatar_url ? (
-                              <img src={view.profiles.avatar_url} className="w-full h-full object-cover" />
+                              <img src={view.profiles.avatar_url} className="w-full h-full object-cover" alt="" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-zinc-700"><User size={20} /></div>
                             )}
@@ -433,15 +436,15 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
         {/* Desktop Navigation Buttons */}
         <button 
           onClick={handlePrev}
-          className="hidden md:flex absolute -left-20 top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-30 text-white transition-all border border-white/10"
+          className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-30 text-white transition-all border border-white/10"
         >
-          <ChevronLeft size={32} />
+          <ChevronLeft size={28} />
         </button>
         <button 
           onClick={handleNext}
-          className="hidden md:flex absolute -right-20 top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-30 text-white transition-all border border-white/10"
+          className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-30 text-white transition-all border border-white/10"
         >
-          <ChevronRight size={32} />
+          <ChevronRight size={28} />
         </button>
       </div>
 
