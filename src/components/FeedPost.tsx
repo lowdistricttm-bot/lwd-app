@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, MessageSquare, User, MoreHorizontal, Send, Loader2, CornerDownRight, Trash2, Edit3, Camera, X, Share2 } from 'lucide-react';
+import { Heart, MessageSquare, User, MoreHorizontal, Send, Loader2, CornerDownRight, Trash2, Camera, X, Share2, Play } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Post, useSocialFeed } from '@/hooks/use-social-feed';
@@ -47,49 +47,56 @@ const CommentItem = ({
   const username = comment.profiles?.username || 'Membro';
 
   return (
-    <div className={cn("space-y-4", level > 0 ? "ml-6 md:ml-10" : "")}>
+    <div className={cn("space-y-3", level > 0 ? "ml-8 md:ml-12" : "")}>
       <div className="flex gap-3">
-        {level > 0 && <CornerDownRight size={14} className="text-zinc-800 mt-2 shrink-0" />}
-        <div className={cn("bg-zinc-800 shrink-0 overflow-hidden", level > 0 ? "w-6 h-6" : "w-8 h-8")}>
-          {comment.profiles?.avatar_url && <img src={comment.profiles.avatar_url} className="w-full h-full object-cover" />}
+        <div className={cn(
+          "bg-zinc-800 shrink-0 overflow-hidden rounded-full border border-white/10", 
+          level > 0 ? "w-6 h-6" : "w-8 h-8"
+        )}>
+          {comment.profiles?.avatar_url ? (
+            <img src={comment.profiles.avatar_url} className="w-full h-full object-cover" alt="" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-zinc-600"><User size={level > 0 ? 10 : 14} /></div>
+          )}
         </div>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <div className={cn(
-            "bg-zinc-900/80 p-3 rounded-2xl rounded-tl-none relative group/comment",
-            level > 0 ? "bg-zinc-900/40 border border-white/5" : ""
+            "p-3 rounded-2xl rounded-tl-none relative group/comment transition-all",
+            level > 0 ? "bg-white/5 border border-white/5" : "bg-zinc-900/50 border border-white/5"
           )}>
-            <p className="text-[9px] font-black uppercase italic text-zinc-400 mb-1">{username}</p>
-            <p className="text-xs text-zinc-200">{comment.content}</p>
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-[9px] font-black uppercase italic text-zinc-400 tracking-widest">{username}</p>
+              {currentUserId === comment.user_id && (
+                <button 
+                  onClick={() => onDelete(comment.id)}
+                  className="opacity-0 group-hover/comment:opacity-100 text-zinc-600 hover:text-red-500 transition-all"
+                >
+                  <Trash2 size={10} />
+                </button>
+              )}
+            </div>
+            <p className="text-xs text-zinc-200 leading-relaxed">{comment.content}</p>
             
             {comment.image_url && (
               <div 
-                className="mt-2 max-w-[200px] aspect-square bg-zinc-950 overflow-hidden cursor-pointer border border-white/5"
+                className="mt-2 max-w-[180px] aspect-square bg-black rounded-xl overflow-hidden cursor-pointer border border-white/10"
                 onClick={() => !isVideo(comment.image_url) && onImageClick(comment.image_url)}
               >
                 {isVideo(comment.image_url) ? (
                   <video src={comment.image_url} className="w-full h-full object-cover" controls />
                 ) : (
-                  <img src={comment.image_url} className="w-full h-full object-cover" alt="Comment attachment" />
+                  <img src={comment.image_url} className="w-full h-full object-cover" alt="" />
                 )}
               </div>
             )}
-
-            {currentUserId === comment.user_id && (
-              <button 
-                onClick={() => onDelete(comment.id)}
-                className="absolute top-2 right-2 opacity-0 group-hover/comment:opacity-100 text-zinc-600 hover:text-white transition-all"
-              >
-                <Trash2 size={level > 0 ? 10 : 12} />
-              </button>
-            )}
           </div>
-          <div className="flex items-center gap-4 mt-1 ml-1">
-            <span className="text-[9px] text-zinc-600 font-bold uppercase">
+          <div className="flex items-center gap-4 mt-1.5 ml-1">
+            <span className="text-[8px] text-zinc-600 font-bold uppercase tracking-tighter">
               {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: it })}
             </span>
             <button 
               onClick={() => onReply(comment.id, username)}
-              className="text-[9px] font-black uppercase text-zinc-500 hover:text-white transition-colors"
+              className="text-[8px] font-black uppercase text-zinc-500 hover:text-white transition-colors tracking-widest"
             >
               Rispondi
             </button>
@@ -98,7 +105,7 @@ const CommentItem = ({
       </div>
 
       {replies.length > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {replies.map(reply => (
             <CommentItem 
               key={reply.id} 
@@ -220,35 +227,56 @@ const FeedPost = ({ post }: { post: Post }) => {
 
   return (
     <>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-zinc-900/40 border border-white/5 mb-6 overflow-hidden group">
-        <div className="p-4 flex items-center justify-between">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        className="bg-zinc-900/30 backdrop-blur-xl border border-white/5 mb-8 overflow-hidden group rounded-[2.5rem] shadow-2xl"
+      >
+        {/* Header */}
+        <div className="p-5 flex items-center justify-between">
           <Link to={`/profile/${post.user_id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div className="w-10 h-10 bg-zinc-800 border border-white/10 overflow-hidden">
-              {post.profiles?.avatar_url && <img src={post.profiles.avatar_url} alt="Avatar" className="w-full h-full object-cover" />}
+            <div className="w-11 h-11 bg-zinc-800 border border-white/10 overflow-hidden rounded-full">
+              {post.profiles?.avatar_url ? (
+                <img src={post.profiles.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-zinc-600"><User size={20} /></div>
+              )}
             </div>
             <div>
-              <h4 className="text-[9px] font-black uppercase italic tracking-widest text-zinc-300">{post.profiles?.username}</h4>
-              <p className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest">
+              <h4 className="text-[10px] font-black uppercase italic tracking-widest text-white">{post.profiles?.username}</h4>
+              <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-tighter">
                 {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: it })}
               </p>
             </div>
           </Link>
           {isAuthor && (
             <DropdownMenu>
-              <DropdownMenuTrigger asChild><button className="text-zinc-600 hover:text-white p-2"><MoreHorizontal size={18} /></button></DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-zinc-900 border-white/10 rounded-none">
-                <DropdownMenuItem onClick={() => deletePost.mutate(post.id)} className="text-[9px] font-black uppercase tracking-widest italic text-zinc-400 focus:bg-zinc-800 focus:text-white cursor-pointer"><Trash2 size={14} className="mr-2" /> Elimina</DropdownMenuItem>
+              <DropdownMenuTrigger asChild>
+                <button className="text-zinc-600 hover:text-white p-2 bg-white/5 rounded-full transition-colors">
+                  <MoreHorizontal size={18} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-zinc-900 border-white/10 rounded-2xl p-2">
+                <DropdownMenuItem onClick={() => deletePost.mutate(post.id)} className="text-[9px] font-black uppercase tracking-widest italic text-red-400 focus:bg-red-500/10 focus:text-red-400 cursor-pointer rounded-xl py-3 px-4">
+                  <Trash2 size={14} className="mr-2" /> Elimina Post
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
         </div>
 
-        <div className="px-4 pb-4"><p className="text-sm text-zinc-300 leading-relaxed font-medium">{post.content}</p></div>
+        {/* Content */}
+        <div className="px-6 pb-5">
+          <p className="text-sm text-zinc-200 leading-relaxed font-medium italic">
+            {post.content}
+          </p>
+        </div>
 
+        {/* Media Grid */}
         {images.length > 0 && (
           <div 
             className={cn(
-              "grid gap-0.5 bg-black border-y border-white/5 relative",
+              "grid gap-1 bg-black/20 relative mx-4 rounded-[1.5rem] overflow-hidden border border-white/5",
               images.length === 1 ? "grid-cols-1" : "grid-cols-2"
             )}
             onDoubleClick={handleLike}
@@ -266,7 +294,12 @@ const FeedPost = ({ post }: { post: Post }) => {
                 {isVideo(url) ? (
                   <video src={url} className="w-full h-full object-cover" controls />
                 ) : (
-                  <img src={url} className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" alt="" />
+                  <img src={url} className="w-full h-full object-cover hover:scale-105 transition-transform duration-1000" alt="" />
+                )}
+                {isVideo(url) && (
+                  <div className="absolute top-3 right-3 p-1.5 bg-black/40 backdrop-blur-md rounded-full text-white/80">
+                    <Play size={12} fill="currentColor" />
+                  </div>
                 )}
               </div>
             ))}
@@ -279,133 +312,192 @@ const FeedPost = ({ post }: { post: Post }) => {
                   exit={{ scale: 2, opacity: 0 }}
                   className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
                 >
-                  <Heart size={80} className="text-white fill-white drop-shadow-2xl" />
+                  <Heart size={100} className="text-white fill-white drop-shadow-[0_0_30px_rgba(255,255,255,0.5)]" />
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
         )}
 
-        <div className="p-4 flex flex-col gap-4 border-t border-white/5">
+        {/* Actions & Likes */}
+        <div className="p-5 flex flex-col gap-5">
           {likedBy.length > 0 && (
-            <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[9px] font-bold uppercase tracking-widest text-zinc-500">
-              <span className="text-zinc-600 italic">Piace a:</span>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[9px] font-bold uppercase tracking-widest text-zinc-500 px-1">
+              <div className="flex -space-x-2 mr-1">
+                {likedBy.slice(0, 3).map((liker, i) => (
+                  <div key={i} className="w-4 h-4 rounded-full border border-black bg-zinc-800 overflow-hidden">
+                    <User size={8} className="m-auto h-full" />
+                  </div>
+                ))}
+              </div>
+              <span className="text-zinc-600 italic">Piace a</span>
               
-              {likedBy.length <= 3 ? (
+              {likedBy.length <= 2 ? (
                 likedBy.map((liker, idx) => (
                   <React.Fragment key={liker.user_id}>
-                    <Link 
-                      to={`/profile/${liker.user_id}`}
-                      className="text-zinc-300 hover:text-white transition-colors italic"
-                    >
-                      {liker.username}
-                    </Link>
+                    <Link to={`/profile/${liker.user_id}`} className="text-zinc-300 hover:text-white transition-colors italic">{liker.username}</Link>
                     {idx < likedBy.length - 1 && <span className="text-zinc-800">•</span>}
                   </React.Fragment>
                 ))
               ) : (
                 <>
-                  <Link 
-                    to={`/profile/${likedBy[0].user_id}`}
-                    className="text-zinc-300 hover:text-white transition-colors italic"
-                  >
-                    {likedBy[0].username}
-                  </Link>
+                  <Link to={`/profile/${likedBy[0].user_id}`} className="text-zinc-300 hover:text-white transition-colors italic">{likedBy[0].username}</Link>
                   <span className="text-zinc-800">•</span>
-                  <button 
-                    onClick={() => setIsLikesModalOpen(true)}
-                    className="text-zinc-300 hover:text-white transition-colors italic"
-                  >
-                    e altri {likedBy.length - 1} utenti
+                  <button onClick={() => setIsLikesModalOpen(true)} className="text-zinc-300 hover:text-white transition-colors italic">
+                    e altri {likedBy.length - 1}
                   </button>
                 </>
               )}
             </div>
           )}
 
-          <div className="flex items-center gap-6">
-            <button onClick={handleLike} className={cn("flex items-center gap-2 transition-all", post.is_liked ? "text-white" : "text-zinc-500 hover:text-white")}>
-              <Heart size={18} fill={post.is_liked ? "currentColor" : "none"} />
-              <span className="text-[9px] font-black uppercase">{post.likes_count || 0}</span>
+          <div className="flex items-center gap-6 px-1">
+            <button 
+              onClick={handleLike} 
+              className={cn(
+                "flex items-center gap-2.5 transition-all group", 
+                post.is_liked ? "text-white" : "text-zinc-500 hover:text-white"
+              )}
+            >
+              <div className={cn(
+                "p-2 rounded-full transition-colors",
+                post.is_liked ? "bg-red-500/10" : "bg-white/5 group-hover:bg-white/10"
+              )}>
+                <Heart size={20} fill={post.is_liked ? "currentColor" : "none"} className={cn(post.is_liked && "text-red-500")} />
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest">{post.likes_count || 0}</span>
             </button>
-            <button onClick={() => setShowComments(!showComments)} className={cn("flex items-center gap-2 transition-colors", showComments ? "text-white" : "text-zinc-500 hover:text-white")}>
-              <MessageSquare size={18} />
-              <span className="text-[9px] font-black uppercase">{post.comments?.length || 0}</span>
+
+            <button 
+              onClick={() => setShowComments(!showComments)} 
+              className={cn(
+                "flex items-center gap-2.5 transition-colors group", 
+                showComments ? "text-white" : "text-zinc-500 hover:text-white"
+              )}
+            >
+              <div className={cn(
+                "p-2 rounded-full transition-colors",
+                showComments ? "bg-blue-500/10" : "bg-white/5 group-hover:bg-white/10"
+              )}>
+                <MessageSquare size={20} className={cn(showComments && "text-blue-400")} />
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest">{post.comments?.length || 0}</span>
             </button>
             
             <button 
               onClick={handleShareClick} 
-              className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors"
+              className="flex items-center gap-2.5 text-zinc-500 hover:text-white transition-colors group"
             >
-              <Send size={18} className="-rotate-12" />
-              <span className="text-[9px] font-black uppercase hidden sm:inline">Invia</span>
+              <div className="p-2 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors">
+                <Send size={20} className="-rotate-12" />
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">Invia</span>
             </button>
 
-            <button onClick={handleNativeShare} className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors ml-auto">
-              <Share2 size={18} />
-              <span className="text-[9px] font-black uppercase hidden sm:inline">{t.feed.share}</span>
+            <button 
+              onClick={handleNativeShare} 
+              className="flex items-center gap-2.5 text-zinc-500 hover:text-white transition-colors ml-auto group"
+            >
+              <div className="p-2 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors">
+                <Share2 size={20} />
+              </div>
             </button>
           </div>
         </div>
 
+        {/* Comments Section */}
         <AnimatePresence>
           {showComments && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="border-t border-white/5 bg-black/20 overflow-hidden">
-              <div className="p-4 space-y-6">
-                {mainComments.map((comment: any) => (
-                  <CommentItem 
-                    key={comment.id} 
-                    comment={comment} 
-                    allComments={post.comments || []} 
-                    onReply={(id, name) => {
-                      if (!currentUserId) {
-                        showError(language === 'it' ? "Accedi per rispondere" : "Login to reply");
-                        navigate('/login');
-                        return;
-                      }
-                      setReplyingTo({ id, name });
-                    }}
-                    onDelete={(id) => deleteComment.mutate(id)}
-                    currentUserId={currentUserId}
-                    onImageClick={(url) => setLightboxData({ images: [url], index: 0 })}
-                  />
-                ))}
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }} 
+              animate={{ height: 'auto', opacity: 1 }} 
+              exit={{ height: 0, opacity: 0 }} 
+              className="border-t border-white/5 bg-black/40 overflow-hidden"
+            >
+              <div className="p-5 space-y-6">
+                {mainComments.length > 0 ? (
+                  <div className="space-y-6 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                    {mainComments.map((comment: any) => (
+                      <CommentItem 
+                        key={comment.id} 
+                        comment={comment} 
+                        allComments={post.comments || []} 
+                        onReply={(id, name) => {
+                          if (!currentUserId) {
+                            showError(language === 'it' ? "Accedi per rispondere" : "Login to reply");
+                            navigate('/login');
+                            return;
+                          }
+                          setReplyingTo({ id, name });
+                        }}
+                        onDelete={(id) => deleteComment.mutate(id)}
+                        currentUserId={currentUserId}
+                        onImageClick={(url) => setLightboxData({ images: [url], index: 0 })}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 opacity-30">
+                    <MessageSquare size={32} className="mx-auto mb-2" />
+                    <p className="text-[9px] font-black uppercase tracking-widest">Nessun commento. Sii il primo!</p>
+                  </div>
+                )}
 
-                <div className="pt-4 border-t border-white/5">
+                {/* Comment Input */}
+                <div className="pt-5 border-t border-white/5">
                   {!currentUserId ? (
-                    <div className="text-center py-4">
-                      <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-2">Accedi per partecipare alla discussione</p>
-                      <Button onClick={() => navigate('/login')} className="bg-white text-black rounded-none text-[9px] font-black uppercase italic h-8 px-4">Accedi</Button>
+                    <div className="text-center py-4 bg-white/5 rounded-2xl border border-white/5">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-3">Accedi per partecipare alla discussione</p>
+                      <Button onClick={() => navigate('/login')} className="bg-white text-black rounded-full text-[9px] font-black uppercase italic h-9 px-6 shadow-xl">Accedi</Button>
                     </div>
                   ) : (
-                    <>
+                    <div className="space-y-4">
                       {replyingTo && (
-                        <div className="flex items-center justify-between mb-2 px-2">
-                          <p className="text-[9px] font-black uppercase text-zinc-400 italic">Risposta a {replyingTo.name}</p>
-                          <button onClick={() => setReplyingTo(null)} className="text-[9px] text-zinc-600 hover:text-white uppercase font-bold">Annulla</button>
+                        <div className="flex items-center justify-between bg-white/5 px-4 py-2 rounded-full border border-white/10 animate-in slide-in-from-bottom-2">
+                          <p className="text-[9px] font-black uppercase text-zinc-400 italic flex items-center gap-2">
+                            <CornerDownRight size={10} /> Risposta a {replyingTo.name}
+                          </p>
+                          <button onClick={() => setReplyingTo(null)} className="text-[9px] text-zinc-500 hover:text-white uppercase font-black">Annulla</button>
                         </div>
                       )}
                       
                       {commentPreview && (
-                        <div className="relative w-20 h-20 mb-4 bg-zinc-900 border border-white/10 overflow-hidden">
+                        <div className="relative w-24 h-24 mb-2 bg-zinc-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl animate-in zoom-in-95">
                           {commentFile?.type.startsWith('video/') ? (
                             <video src={commentPreview} className="w-full h-full object-cover" />
                           ) : (
                             <img src={commentPreview} className="w-full h-full object-cover" alt="" />
                           )}
-                          <button onClick={() => { setCommentFile(null); setCommentPreview(null); }} className="absolute top-1 right-1 p-1 bg-black/60 text-white rounded-full"><X size={10} /></button>
+                          <button onClick={() => { setCommentFile(null); setCommentPreview(null); }} className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 text-white rounded-full hover:bg-red-500 transition-colors"><X size={12} /></button>
                         </div>
                       )}
 
-                      <form onSubmit={handleAddComment} className="flex gap-2 items-center">
+                      <form onSubmit={handleAddComment} className="flex gap-3 items-center">
                         <input type="file" ref={commentFileInputRef} className="hidden" accept="image/*,video/*" onChange={handleCommentFileChange} />
-                        <button type="button" onClick={() => commentFileInputRef.current?.click()} className="w-10 h-10 bg-zinc-900 text-zinc-500 flex items-center justify-center hover:text-white transition-all shrink-0"><Camera size={16} /></button>
-                        <Input placeholder="Scrivi un commento..." value={commentText} onChange={(e) => setCommentText(e.target.value)} className="bg-zinc-900 border-zinc-800 rounded-none h-10 text-xs font-bold uppercase tracking-widest" />
-                        <button type="submit" disabled={addComment.isPending} className="w-10 h-10 bg-zinc-700 flex items-center justify-center hover:bg-white hover:text-black transition-all shrink-0">
-                          {addComment.isPending ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} />}
+                        <button 
+                          type="button" 
+                          onClick={() => commentFileInputRef.current?.click()} 
+                          className="w-11 h-11 bg-white/5 border border-white/10 text-zinc-400 flex items-center justify-center rounded-full hover:text-white hover:bg-white/10 transition-all shrink-0"
+                        >
+                          <Camera size={18} />
+                        </button>
+                        <div className="flex-1 relative">
+                          <Input 
+                            placeholder="Scrivi un commento..." 
+                            value={commentText} 
+                            onChange={(e) => setCommentText(e.target.value)} 
+                            className="bg-white/5 border-white/10 rounded-full h-11 px-5 text-xs font-bold uppercase tracking-widest focus-visible:ring-white/20 placeholder:text-zinc-600" 
+                          />
+                        </div>
+                        <button 
+                          type="submit" 
+                          disabled={addComment.isPending || (!commentText.trim() && !commentFile)} 
+                          className="w-11 h-11 bg-white text-black flex items-center justify-center rounded-full hover:scale-105 active:scale-95 transition-all shrink-0 shadow-xl disabled:opacity-50"
+                        >
+                          {addComment.isPending ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} strokeWidth={2.5} className="-rotate-12" />}
                         </button>
                       </form>
-                    </>
+                    </div>
                   )}
                 </div>
               </div>
