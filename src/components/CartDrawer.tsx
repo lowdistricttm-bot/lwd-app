@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { X, ShoppingBag, Trash2, Plus, Minus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/hooks/use-cart';
@@ -16,6 +16,21 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
   const { items, removeFromCart, updateQuantity, total } = useCart();
   const navigate = useNavigate();
 
+  // Scroll Lock Logic
+  useEffect(() => {
+    if (isOpen) {
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   const handleCheckout = () => {
     onClose();
     navigate('/checkout');
@@ -30,7 +45,7 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[100]"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100]"
           />
           <motion.div
             initial={{ x: '100%' }}
@@ -38,6 +53,7 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-black/60 backdrop-blur-2xl border-l border-white/10 z-[101] flex flex-col shadow-2xl pt-[env(safe-area-inset-top)]"
+            style={{ overscrollBehavior: 'contain' }}
           >
             <div className="p-6 border-b border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-3">

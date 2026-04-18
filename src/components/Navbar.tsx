@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, ShoppingBag, X, Send, Bell, ShieldAlert } from 'lucide-react';
 import Logo from './Logo';
@@ -36,6 +36,21 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   const isSubscriber = role === 'subscriber';
+
+  // Scroll Lock for Search Overlay
+  useEffect(() => {
+    if (isSearchOpen) {
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    };
+  }, [isSearchOpen]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

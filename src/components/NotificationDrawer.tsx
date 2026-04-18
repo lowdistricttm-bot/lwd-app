@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Bell, Heart, MessageSquare, ClipboardCheck, User, Loader2, Trash2, Calendar, Car, UserPlus } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/use-notifications';
@@ -17,6 +17,21 @@ interface NotificationDrawerProps {
 const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
   const navigate = useNavigate();
   const { notifications, isLoading, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
+
+  // Scroll Lock Logic
+  useEffect(() => {
+    if (isOpen) {
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
   const handleNotificationClick = async (n: Notification) => {
     if (!n.is_read) {
@@ -85,7 +100,7 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[100]"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100]"
           />
           <motion.div
             initial={{ x: '100%' }}
@@ -93,6 +108,7 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-black/60 backdrop-blur-2xl border-l border-white/10 z-[101] flex flex-col shadow-2xl pt-[env(safe-area-inset-top)]"
+            style={{ overscrollBehavior: 'contain' }}
           >
             <div className="p-6 border-b border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-3">

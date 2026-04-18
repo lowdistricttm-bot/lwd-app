@@ -44,6 +44,21 @@ const Events = () => {
 
   const viewEventId = searchParams.get('view');
 
+  // Scroll Lock for Inline Modals
+  useEffect(() => {
+    if (viewingEvent || selectedEvent) {
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    };
+  }, [viewingEvent, selectedEvent]);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
@@ -200,16 +215,17 @@ const Events = () => {
         )}
 
         <AnimatePresence>
-          {/* Modal Visualizza Evento - RESTYLED BASED ON SCREENSHOT */}
+          {/* Modal Visualizza Evento */}
           {viewingEvent && (
             <>
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setViewingEvent(null)} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150]" />
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setViewingEvent(null)} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150]" />
               <motion.div 
                 initial={{ y: '100%' }} 
                 animate={{ y: 0 }} 
                 exit={{ y: '100%' }} 
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                 className="fixed inset-x-0 bottom-0 z-[151] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 pb-12 rounded-t-[2.5rem] max-h-[90vh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+                style={{ overscrollBehavior: 'contain' }}
               >
                 <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
                 
@@ -270,13 +286,14 @@ const Events = () => {
           {/* Modal Invia Selezione / Apply */}
           {selectedEvent && (
             <>
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedEvent(null)} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150]" />
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedEvent(null)} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150]" />
               <motion.div 
                 initial={{ y: '100%' }} 
                 animate={{ y: 0 }} 
                 exit={{ y: '100%' }} 
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                 className="fixed inset-x-0 bottom-0 z-[151] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 pb-12 rounded-t-[2.5rem] max-h-[90vh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+                style={{ overscrollBehavior: 'contain' }}
               >
                 <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
                 
