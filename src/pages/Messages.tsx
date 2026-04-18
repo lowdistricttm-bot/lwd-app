@@ -103,10 +103,10 @@ const Messages = () => {
               return (
                 <div 
                   key={conv.otherId} 
-                  className="relative rounded-[1.5rem] bg-red-950 overflow-hidden"
+                  className="relative rounded-[1.5rem] bg-zinc-900 overflow-hidden"
                 >
                   <div className="absolute inset-0 flex items-center justify-end px-6">
-                    <Trash2 size={20} strokeWidth={2} className="text-red-400" />
+                    <Trash2 size={20} strokeWidth={2} className="text-red-500" />
                   </div>
                   
                   <motion.div 

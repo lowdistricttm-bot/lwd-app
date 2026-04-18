@@ -172,9 +172,9 @@ const Chat = () => {
                 
                 <div className={cn(
                   "absolute inset-0 flex items-center justify-end px-5 rounded-[2rem]",
-                  isMe ? "bg-red-950/40" : "bg-red-950/60 border border-white/5"
+                  isMe ? "bg-zinc-900/40" : "bg-zinc-900/60 border border-white/5"
                 )}>
-                  <Trash2 size={18} strokeWidth={2} className="text-red-400/80" />
+                  <Trash2 size={18} strokeWidth={2} className="text-red-500" />
                 </div>
 
                 <motion.div
