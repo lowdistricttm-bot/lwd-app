@@ -128,8 +128,7 @@ const Chat = () => {
 
   if (loadingChat) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
-  // Altezza aumentata a 60px per iOS e 54px per altri
-  const navHeight = isIOS ? '60px' : '54px';
+  const navHeight = isIOS ? '50px' : '44px';
 
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent">
@@ -172,7 +171,7 @@ const Chat = () => {
         </div>
       </nav>
 
-      <main ref={scrollRef} className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] pb-[120px] px-6 overflow-y-auto space-y-6 custom-scrollbar overflow-x-hidden">
+      <main ref={scrollRef} className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] pb-[100px] px-6 overflow-y-auto space-y-6 custom-scrollbar overflow-x-hidden">
         {chatMessages?.map((msg) => {
           const isMe = msg.sender_id === currentUserId;
           const isMention = msg.content.includes('Ti ha menzionato');
@@ -298,7 +297,7 @@ const Chat = () => {
         })}
       </main>
 
-      {/* Barra di Input Uniformata - Altezza 60px */}
+      {/* Barra di Input Uniformata */}
       <div 
         className="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-3xl border-t border-white/10 z-50"
         style={{ 
@@ -351,10 +350,10 @@ const Chat = () => {
               onClick={() => fileInputRef.current?.click()} 
               className={cn(
                 "text-zinc-400 hover:text-white transition-all shrink-0",
-                isIOS ? "h-[60px] w-8 flex items-center justify-center" : "w-8 h-8"
+                isIOS ? "h-[50px] w-8 flex items-center justify-center" : "w-8 h-8"
               )}
             >
-              <Camera size={isIOS ? 22 : 22} />
+              <Camera size={isIOS ? 20 : 22} />
             </button>
 
             <div className="flex-1 relative flex items-center h-full">
@@ -364,7 +363,7 @@ const Chat = () => {
                 onChange={(e) => setMessage(e.target.value)} 
                 className={cn(
                   "bg-white/5 border-white/10 rounded-full px-4 font-medium text-xs focus-visible:ring-0 text-white placeholder:text-zinc-600",
-                  isIOS ? "h-9 mb-2" : "h-9"
+                  isIOS ? "h-8 mb-1.5" : "h-9"
                 )} 
               />
             </div>
@@ -374,13 +373,13 @@ const Chat = () => {
               disabled={sendMessage.isPending || (!message.trim() && selectedFiles.length === 0)} 
               className={cn(
                 "text-white transition-all shrink-0 disabled:opacity-30",
-                isIOS ? "h-[60px] w-8 flex items-center justify-center" : "w-8 h-8"
+                isIOS ? "h-[50px] w-8 flex items-center justify-center" : "w-8 h-8"
               )}
             >
               {sendMessage.isPending ? (
                 <Loader2 size={18} className="animate-spin" />
               ) : (
-                <Send size={isIOS ? 20 : 20} strokeWidth={2.5} className="-rotate-12" />
+                <Send size={isIOS ? 18 : 20} strokeWidth={2.5} className="-rotate-12" />
               )}
             </button>
           </form>
