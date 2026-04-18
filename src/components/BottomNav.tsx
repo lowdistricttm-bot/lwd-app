@@ -11,12 +11,10 @@ const BottomNav = () => {
   const [isIOS, setIsIOS] = useState(false);
   
   useEffect(() => {
-    // Rilevamento semplice iOS
     const checkIOS = /iPhone|iPad|iPod/.test(window.navigator.userAgent);
     setIsIOS(checkIOS);
   }, []);
   
-  // Nascondiamo la barra nelle pagine di chat dove c'è l'input dei messaggi
   if (location.pathname.startsWith('/chat/')) return null;
 
   const items = [
@@ -36,30 +34,19 @@ const BottomNav = () => {
     }
   };
 
-  // Altezza adattata per icone da 20px: 22px su iOS, 40px altrove
-  const navHeight = isIOS ? '22px' : '40px';
-
   return (
     <div 
-      className="fixed bottom-0 left-0 right-0 z-[999] bg-black/95 backdrop-blur-3xl border-t border-white/10 select-none"
+      className="fixed bottom-0 left-0 right-0 z-[999] bg-black border-t border-white/10 select-none"
       style={{ 
-        height: navHeight,
-        paddingBottom: '0px',
-        transform: 'translateZ(0)',
-        WebkitTransform: 'translateZ(0)',
-        willChange: 'transform',
+        // Altezza standard iOS con gestione safe area
+        height: isIOS ? 'calc(50px + env(safe-area-inset-bottom))' : '60px',
+        paddingBottom: 'env(safe-area-inset-bottom)',
         WebkitUserSelect: 'none',
         touchAction: 'none'
       }}
     >
-      <div className="absolute inset-0 bg-black -z-10" />
-
       <div 
-        className={cn(
-          "relative flex items-center justify-around px-2 mx-auto",
-          isIOS ? "max-w-[260px]" : "max-w-lg" // Contenitore più stretto su iOS per ridurre lo spazio tra icone
-        )}
-        style={{ height: navHeight }}
+        className="relative flex items-center justify-around h-[50px] w-full max-w-2xl mx-auto px-2"
       >
         {items.map((item, i) => {
           const isActive = activeIndex === i;
@@ -68,37 +55,20 @@ const BottomNav = () => {
               key={i} 
               to={item.href}
               className={cn(
-                "flex-1 flex flex-col items-center justify-center h-full relative z-10 transition-all duration-300",
-                isActive ? "text-white" : "text-zinc-600 hover:text-zinc-400"
+                "flex-1 flex flex-col items-center justify-center h-full relative z-10 transition-colors duration-300",
+                isActive ? "text-white" : "text-zinc-600"
               )}
-              style={{ 
-                paddingTop: isIOS ? '1px' : '0px' 
-              }}
-              onClick={() => triggerHaptic(12)}
+              onClick={() => triggerHaptic(10)}
             >
-              {isActive && (
-                <motion.div
-                  layoutId="nav-glow"
-                  className="absolute w-4 h-4 bg-white/5 rounded-full z-0 blur-md"
-                  transition={{
-                    type: "spring",
-                    stiffness: 400,
-                    damping: 30
-                  }}
-                />
-              )}
-
               <motion.div
                 animate={{ 
-                  scale: isActive ? 1.1 : 1,
-                  filter: isActive ? 'drop-shadow(0 0 8px rgba(255,255,255,0.3))' : 'none'
+                  scale: isActive ? 1.05 : 1,
                 }}
-                whileTap={{ scale: 0.9 }}
-                transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
               >
                 <item.icon 
-                  size={isIOS ? 20 : 18} // Icone a 20px su iOS
-                  strokeWidth={isActive ? 2.5 : 2} 
+                  size={22} 
+                  strokeWidth={isActive ? 2.2 : 1.8} 
                 />
               </motion.div>
             </Link>
