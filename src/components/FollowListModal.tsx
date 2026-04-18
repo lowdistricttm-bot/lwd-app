@@ -20,7 +20,7 @@ const FollowListModal = ({ isOpen, onClose, userId, username, type }: FollowList
   const navigate = useNavigate();
   const { data: list, isLoading } = useFollowList(userId, type);
 
-  // Blocco background
+  // Blocco dello scroll e del background quando il modal è aperto
   useBodyLock(isOpen);
 
   const title = type === 'followers' ? 'Follower' : 'Seguiti';
@@ -48,6 +48,7 @@ const FollowListModal = ({ isOpen, onClose, userId, username, type }: FollowList
             }}
           >
             <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
+            
             <div className="flex justify-between items-center mb-8">
               <div>
                 <h3 className="text-2xl font-black italic uppercase tracking-tighter">{title}</h3>
@@ -55,17 +56,43 @@ const FollowListModal = ({ isOpen, onClose, userId, username, type }: FollowList
               </div>
               <button onClick={onClose} className="p-2 text-zinc-400 hover:text-white transition-colors"><X size={20} /></button>
             </div>
+
             <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar pb-[calc(4rem+env(safe-area-inset-bottom))]">
               {isLoading ? (
                 <div className="flex justify-center py-20"><Loader2 className="animate-spin text-zinc-500" /></div>
               ) : list?.length === 0 ? (
-                <div className="text-center py-20 opacity-20"><Users size={48} className="mx-auto mb-4" /><p className="text-[10px] font-black uppercase tracking-widest">Nessun utente in questa lista</p></div>
+                <div className="text-center py-20 opacity-20">
+                  <Users size={48} className="mx-auto mb-4" />
+                  <p className="text-[10px] font-black uppercase tracking-widest">Nessun utente in questa lista</p>
+                </div>
               ) : (
                 list?.map((user: any) => (
-                  <button key={user.id} onClick={() => { onClose(); navigate(`/profile/${user.id}`); }} className="w-full flex items-center justify-between p-4 bg-white/5 backdrop-blur-md border border-white/5 rounded-[1.5rem] hover:bg-white/10 transition-all group">
+                  <button 
+                    key={user.id} 
+                    onClick={() => { 
+                      onClose(); 
+                      navigate(`/profile/${user.id}`); 
+                    }} 
+                    className="w-full flex items-center justify-between p-4 bg-white/5 backdrop-blur-md border border-white/5 rounded-[1.5rem] hover:bg-white/10 transition-all group"
+                  >
                     <div className="flex items-center gap-4 min-w-0">
-                      <div className="w-12 h-12 bg-black/40 rounded-full overflow-hidden border border-white/10 group-hover:border-white transition-colors shrink-0">{user.avatar_url ? <img src={user.avatar_url} className="w-full h-full object-cover" alt={user.username} /> : <div className="w-full h-full flex items-center justify-center text-zinc-600"><User size={20} /></div>}</div>
-                      <div className="text-left min-w-0"><span className="text-sm font-black italic uppercase text-white group-hover:text-white transition-colors truncate block">{user.username}</span><p className="text-[8px] text-zinc-500 font-bold uppercase tracking-widest">{user.role === 'subscriber' ? 'Iscritto' : 'Membro Ufficiale'}</p></div>
+                      <div className="w-12 h-12 bg-black/40 rounded-full overflow-hidden border border-white/10 group-hover:border-white transition-colors shrink-0">
+                        {user.avatar_url ? (
+                          <img src={user.avatar_url} className="w-full h-full object-cover" alt={user.username} />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-zinc-600">
+                            <User size={20} />
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-left min-w-0">
+                        <span className="text-sm font-black italic uppercase text-white group-hover:text-white transition-colors truncate block">
+                          {user.username}
+                        </span>
+                        <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-widest">
+                          {user.role === 'subscriber' ? 'Iscritto' : 'Membro Ufficiale'}
+                        </p>
+                      </div>
                     </div>
                     <ChevronRight size={18} className="text-zinc-700 group-hover:text-white transition-all translate-x-[-4px] group-hover:translate-x-0" />
                   </button>
