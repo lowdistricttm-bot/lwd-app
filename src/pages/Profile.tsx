@@ -165,7 +165,7 @@ const Profile = () => {
 
   const translateOrderStatus = (status: string) => {
     const map: Record<string, string> = {
-      'pending': 'In attesa',
+      'pending': 'In attesa di pagamento',
       'processing': 'In lavorazione',
       'on-hold': 'In sospeso',
       'completed': 'Completato',
