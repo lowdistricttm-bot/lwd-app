@@ -89,66 +89,58 @@ const LatestActivities = () => {
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.05 }}
                     onClick={() => navigate(`/post/${post.id}`)}
-                    className="embla__slide flex-[0_0_75%] sm:flex-[0_0_45%] md:flex-[0_0_32%] min-w-0 bg-zinc-900/30 backdrop-blur-xl border border-white/5 hover:border-white/10 transition-all group flex flex-col rounded-[2rem] shadow-2xl"
+                    className="embla__slide flex-[0_0_85%] sm:flex-[0_0_45%] md:flex-[0_0_32%] min-w-0 bg-zinc-900/40 backdrop-blur-xl border border-white/5 hover:border-white/10 transition-all group flex flex-col rounded-[2.5rem] shadow-2xl"
                   >
                     {/* Header Post */}
-                    <div className="p-4 pb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-zinc-800 rounded-full overflow-hidden border border-white/10 shrink-0">
-                          {post.profiles?.avatar_url ? (
-                            <img src={post.profiles.avatar_url} className="w-full h-full object-cover" alt="" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-zinc-700"><User size={16} /></div>
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-[10px] font-black uppercase italic tracking-widest truncate text-white">
-                            {post.profiles?.username || 'Membro'}
-                          </p>
-                        </div>
+                    <div className="p-5 flex items-center gap-3">
+                      <div className="w-10 h-10 bg-zinc-800 rounded-full overflow-hidden border border-white/10 shrink-0">
+                        {post.profiles?.avatar_url ? (
+                          <img src={post.profiles.avatar_url} className="w-full h-full object-cover" alt="" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-zinc-700"><User size={18} /></div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-black uppercase italic tracking-widest truncate text-white">
+                          {post.profiles?.username || 'Membro'}
+                        </p>
                       </div>
                     </div>
 
-                    {/* Media Preview */}
-                    <div className="aspect-video bg-black relative overflow-hidden mx-3 rounded-2xl border border-white/5">
-                      {firstMedia ? (
-                        <>
-                          {mediaIsVideo ? (
-                            <video src={firstMedia} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" muted playsInline loop />
-                          ) : (
-                            <img src={firstMedia} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-1000" alt="" />
-                          )}
-                          {mediaIsVideo && (
-                            <div className="absolute top-2 right-2 p-1 bg-black/40 backdrop-blur-md rounded-full text-white/60">
-                              <Play size={10} fill="currentColor" />
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-zinc-950">
-                          <MessageSquare size={24} className="text-zinc-800" />
-                        </div>
-                      )}
+                    {/* Media Preview - Ingrandito e Quadrato */}
+                    <div className="px-4">
+                      <div className="aspect-square bg-black relative overflow-hidden rounded-[2rem] border border-white/5">
+                        {firstMedia ? (
+                          <>
+                            {mediaIsVideo ? (
+                              <video src={firstMedia} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" muted playsInline loop />
+                            ) : (
+                              <img src={firstMedia} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all duration-1000" alt="" />
+                            )}
+                            {mediaIsVideo && (
+                              <div className="absolute top-3 right-3 p-1.5 bg-black/40 backdrop-blur-md rounded-full text-white/60">
+                                <Play size={12} fill="currentColor" />
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-zinc-950">
+                            <MessageSquare size={32} className="text-zinc-800" />
+                          </div>
+                        )}
+                      </div>
                     </div>
 
-                    {/* Footer Post */}
-                    <div className="p-4 flex-1 flex flex-col">
-                      {post.content ? (
-                        <p className="text-[10px] text-zinc-400 line-clamp-1 mb-4 italic font-medium">
-                          "{post.content}"
-                        </p>
-                      ) : (
-                        <div className="mb-4 h-4" />
-                      )}
-                      
-                      <div className="flex items-center gap-4 pt-3 border-t border-white/5 mt-auto">
-                        <div className="flex items-center gap-1.5 text-zinc-500">
-                          <Heart size={14} className={cn(post.is_liked && "text-red-500 fill-red-500")} />
-                          <span className="text-[10px] font-black">{post.likes_count || 0}</span>
+                    {/* Footer Post - Separatore e Stats */}
+                    <div className="p-5 pt-4">
+                      <div className="flex items-center gap-5 pt-4 border-t border-white/5">
+                        <div className="flex items-center gap-2 text-zinc-500">
+                          <Heart size={16} className={cn(post.is_liked ? "text-red-500 fill-red-500" : "text-zinc-600")} />
+                          <span className="text-[11px] font-black">{post.likes_count || 0}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-zinc-500">
-                          <MessageSquare size={14} className="text-blue-400" />
-                          <span className="text-[10px] font-black">{post.comments?.length || 0}</span>
+                        <div className="flex items-center gap-2 text-zinc-500">
+                          <MessageSquare size={16} className="text-blue-400" />
+                          <span className="text-[11px] font-black">{post.comments?.length || 0}</span>
                         </div>
                       </div>
                     </div>
