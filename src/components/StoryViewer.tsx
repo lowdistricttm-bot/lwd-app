@@ -200,13 +200,13 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[1000] bg-black flex items-center justify-center overflow-hidden touch-none"
+      className="fixed inset-0 z-[2000] bg-black flex items-center justify-center overflow-hidden touch-none"
     >
       <div className="absolute inset-0 z-0 opacity-50 blur-[100px] scale-150">
         <img src={currentStory.image_url} className="w-full h-full object-cover" alt="" />
       </div>
 
-      <div className="relative w-full max-w-[500px] h-[100dvh] bg-black overflow-hidden flex flex-col shadow-2xl">
+      <div className="relative w-full max-w-[500px] h-full bg-black overflow-hidden flex flex-col shadow-2xl">
         {/* Progress Bars */}
         <div className="absolute top-[calc(1rem+env(safe-area-inset-top))] left-4 right-4 z-50 flex gap-1.5">
           {userStories.items.map((_, i) => (
@@ -307,8 +307,8 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           )}
         </div>
 
-        {/* Footer Controls */}
-        <div className="absolute bottom-0 left-0 right-0 z-50 p-6 pb-[calc(2rem+env(safe-area-inset-bottom))] bg-gradient-to-t from-black/90 via-black/40 to-transparent">
+        {/* Footer Controls - Centered and above safe area */}
+        <div className="absolute bottom-0 left-0 right-0 z-50 p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] bg-gradient-to-t from-black/90 via-black/40 to-transparent">
           {isOwner && !isHighlight ? (
             <div className="flex items-center justify-around py-4 border-t border-white/10">
               <button onClick={() => setShowViewers(true)} className="flex flex-col items-center gap-1 group">
