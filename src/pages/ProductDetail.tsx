@@ -57,9 +57,9 @@ const ProductDetail = () => {
       <main className="pt-24 px-6 max-w-4xl mx-auto">
         <button 
           onClick={() => navigate(-1)} 
-          className="flex items-center gap-2 text-zinc-500 hover:text-white mb-8 uppercase text-[10px] font-black tracking-widest transition-colors"
+          className="flex items-center gap-2 text-zinc-500 hover:text-white mb-8 uppercase text-[9px] font-black tracking-widest transition-colors"
         >
-          <ChevronLeft size={16} /> Torna allo Shop
+          <ChevronLeft size={14} /> Torna allo Shop
         </button>
 
         <div className="flex flex-col gap-12">
@@ -84,13 +84,13 @@ const ProductDetail = () => {
               </p>
             </div>
             
-            <div className="text-zinc-400 leading-relaxed text-base font-medium italic prose prose-invert max-w-none" 
+            <div className="text-zinc-400 leading-relaxed text-sm font-medium italic prose prose-invert max-w-none" 
                  dangerouslySetInnerHTML={{ __html: product.short_description || product.description }} />
 
             {/* Varianti / Taglie */}
             {hasVariations && (
               <div className="space-y-5">
-                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 italic ml-2">Seleziona Taglia</p>
+                <p className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 italic ml-2">Seleziona Taglia</p>
                 <div className="flex flex-wrap gap-3">
                   {variations.map((v: any) => (
                     <button
@@ -98,7 +98,7 @@ const ProductDetail = () => {
                       onClick={() => setSelectedVariation(v)}
                       disabled={v.stock_status !== 'instock'}
                       className={cn(
-                        "min-w-[70px] h-14 border rounded-full flex items-center justify-center text-[11px] font-black uppercase transition-all duration-500 shadow-lg",
+                        "min-w-[64px] h-12 border rounded-full flex items-center justify-center text-[9px] font-black uppercase tracking-widest transition-all duration-500 shadow-lg",
                         selectedVariation?.id === v.id 
                           ? "border-white bg-white text-black scale-105" 
                           : "border-white/10 bg-white/5 backdrop-blur-md text-zinc-500 hover:border-white/30 hover:text-white",
@@ -114,20 +114,20 @@ const ProductDetail = () => {
 
             {/* Quantità */}
             <div className="space-y-5">
-              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 italic ml-2">Quantità</p>
-              <div className="flex items-center bg-white/5 backdrop-blur-md border border-white/10 rounded-full w-fit overflow-hidden h-14 shadow-xl">
+              <p className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 italic ml-2">Quantità</p>
+              <div className="flex items-center bg-white/5 backdrop-blur-md border border-white/10 rounded-full w-fit overflow-hidden h-12 shadow-xl">
                 <button 
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-14 h-full flex items-center justify-center text-zinc-500 hover:text-white hover:bg-white/10 transition-all"
+                  className="w-12 h-full flex items-center justify-center text-zinc-500 hover:text-white hover:bg-white/10 transition-all"
                 >
-                  <Minus size={18} />
+                  <Minus size={16} />
                 </button>
-                <span className="w-14 text-center text-sm font-black italic">{quantity}</span>
+                <span className="w-12 text-center text-[10px] font-black italic">{quantity}</span>
                 <button 
                   onClick={() => setQuantity(quantity + 1)}
-                  className="w-14 h-full flex items-center justify-center text-zinc-500 hover:text-white hover:bg-white/10 transition-all"
+                  className="w-12 h-full flex items-center justify-center text-zinc-500 hover:text-white hover:bg-white/10 transition-all"
                 >
-                  <Plus size={18} />
+                  <Plus size={16} />
                 </button>
               </div>
             </div>
@@ -137,12 +137,12 @@ const ProductDetail = () => {
               <Button 
                 onClick={handleAddToCart}
                 disabled={product.stock_status !== "instock" || (hasVariations && !selectedVariation)}
-                className="w-full bg-white text-black hover:bg-zinc-200 h-20 rounded-full flex items-center justify-center gap-4 transition-all duration-500 shadow-2xl group border-none"
+                className="w-full bg-white text-black hover:bg-zinc-200 h-16 rounded-full flex items-center justify-center gap-3 transition-all duration-500 shadow-2xl group border-none"
               >
-                <div className="p-2.5 bg-black/5 rounded-full group-hover:bg-black/10 transition-colors">
-                  <ShoppingCart size={22} className="text-black" />
+                <div className="p-2 bg-black/5 rounded-full group-hover:bg-black/10 transition-colors">
+                  <ShoppingCart size={18} className="text-black" />
                 </div>
-                <span className="text-lg md:text-xl font-black uppercase italic tracking-widest">
+                <span className="text-[10px] font-black uppercase italic tracking-[0.2em]">
                   {product.stock_status !== "instock" ? "Esaurito" : (hasVariations && !selectedVariation) ? "Seleziona Taglia" : "Aggiungi al Carrello"}
                 </span>
               </Button>
