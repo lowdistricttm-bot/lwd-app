@@ -15,6 +15,7 @@ import SettingsTab from '@/components/SettingsTab';
 import HighlightsBar from '@/components/HighlightsBar';
 import FollowButton from '@/components/FollowButton';
 import FollowListModal from '@/components/FollowListModal';
+import OrderDetailModal from '@/components/OrderDetailModal';
 import { useSocialFeed } from '@/hooks/use-social-feed';
 import { useAdmin } from '@/hooks/use-admin';
 import { usePresence } from '@/hooks/use-presence';
@@ -66,6 +67,7 @@ const Profile = () => {
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
   const [dbLastSeen, setDbLastSeen] = useState<string | null>(null);
   const [followModal, setFollowModal] = useState<{ type: 'followers' | 'following', isOpen: boolean } | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
   
   const { posts, isLoading: loadingPosts } = useSocialFeed();
   const targetUserId = userId || currentUser?.id;
@@ -415,7 +417,11 @@ const Profile = () => {
                         {orders.map((order: any) => {
                           const tracking = getTrackingInfo(order);
                           return (
-                            <div key={order.id} className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 p-5 rounded-2xl group hover:border-white/20 transition-all shadow-xl">
+                            <div 
+                              key={order.id} 
+                              onClick={() => setSelectedOrder(order)}
+                              className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 p-5 rounded-2xl group hover:border-white/20 transition-all shadow-xl cursor-pointer"
+                            >
                               <div className="flex flex-col md:flex-row justify-between gap-3">
                                 <div className="space-y-1.5">
                                   <div className="flex items-center gap-2">
@@ -450,6 +456,7 @@ const Profile = () => {
                                           href={tracking.url} 
                                           target="_blank" 
                                           rel="noopener noreferrer"
+                                          onClick={(e) => e.stopPropagation()}
                                           className="text-[10px] font-black uppercase italic text-white tracking-tight hover:text-zinc-300 transition-colors flex items-center gap-1"
                                         >
                                           {tracking.number} <ExternalLink size={8} className="opacity-50" />
@@ -464,6 +471,7 @@ const Profile = () => {
                                       href={tracking.url} 
                                       target="_blank" 
                                       rel="noopener noreferrer" 
+                                      onClick={(e) => e.stopPropagation()}
                                       className="flex items-center gap-1.5 bg-white text-black px-3 py-1.5 rounded-full text-[8px] font-black uppercase italic hover:bg-zinc-200 transition-all shadow-lg"
                                     >
                                       Segui <ExternalLink size={10} />
@@ -507,6 +515,7 @@ const Profile = () => {
 
       <CreatePostModal isOpen={isPostModalOpen} onClose={() => setIsPostModalOpen(false)} />
       <ImageLightbox images={lightboxData?.images || []} initialIndex={lightboxData?.index || 0} isOpen={!!lightboxData} onClose={() => setLightboxData(null)} />
+      <OrderDetailModal isOpen={!!selectedOrder} onClose={() => setSelectedOrder(null)} order={selectedOrder} />
       
       {followModal && (
         <FollowListModal 
