@@ -17,16 +17,13 @@ const OrderDetailModal = ({ isOpen, onClose, order }: OrderDetailModalProps) => 
     if (isOpen) {
       document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
     } else {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
-      document.body.style.touchAction = '';
     }
     return () => {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
-      document.body.style.touchAction = '';
     };
   }, [isOpen]);
 
@@ -70,10 +67,13 @@ const OrderDetailModal = ({ isOpen, onClose, order }: OrderDetailModalProps) => 
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[201] bg-zinc-950 border-t border-white/10 p-6 pb-15 rounded-t-[2.5rem] max-h-[90vh] overflow-y-auto custom-scrollbar"
-            style={{ touchAction: 'pan-y' }}
+            className="fixed inset-x-0 bottom-0 z-[201] bg-zinc-950 border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[90vh] overflow-y-auto custom-scrollbar"
+            style={{ 
+              touchAction: 'pan-y',
+              overscrollBehavior: 'contain'
+            }}
           >
-            <div className="max-w-2xl mx-auto space-y-8">
+            <div className="max-w-2xl mx-auto space-y-8 pb-[calc(4rem+env(safe-area-inset-bottom))]">
               {/* Header */}
               <div className="flex justify-between items-start">
                 <div>

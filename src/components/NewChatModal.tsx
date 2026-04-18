@@ -99,7 +99,7 @@ const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[151] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 pb-15 rounded-t-[2rem] max-h-[85vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            className="fixed inset-x-0 bottom-0 z-[151] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 rounded-t-[2rem] max-h-[85vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
             style={{ 
               touchAction: 'pan-y',
               overscrollBehavior: 'contain'
@@ -126,7 +126,7 @@ const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
               />
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar" style={{ overscrollBehavior: 'contain' }}>
+            <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar pb-[calc(4rem+env(safe-area-inset-bottom))]" style={{ overscrollBehavior: 'contain' }}>
               {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4">
                   <Loader2 className="animate-spin text-zinc-400" size={32} />

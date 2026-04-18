@@ -38,16 +38,13 @@ const EventAdminModal = ({ isOpen, onClose, event }: EventAdminModalProps) => {
     if (isOpen) {
       document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
     } else {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
-      document.body.style.touchAction = '';
     }
     return () => {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
-      document.body.style.touchAction = '';
     };
   }, [isOpen]);
 
@@ -122,12 +119,15 @@ const EventAdminModal = ({ isOpen, onClose, event }: EventAdminModalProps) => {
             animate={{ y: 0 }} 
             exit={{ y: '100%' }} 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[201] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 pb-15 rounded-t-[2.5rem] max-h-[90vh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
-            style={{ touchAction: 'pan-y' }}
+            className="fixed inset-x-0 bottom-0 z-[201] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[90vh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            style={{ 
+              touchAction: 'pan-y',
+              overscrollBehavior: 'contain'
+            }}
           >
             <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
             
-            <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-10">
+            <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-10 pb-[calc(4rem+env(safe-area-inset-bottom))]">
               <div className="flex justify-between items-center">
                 <div>
                   <h2 className="text-2xl font-black italic uppercase tracking-tighter">

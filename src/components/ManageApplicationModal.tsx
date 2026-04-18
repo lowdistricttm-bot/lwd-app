@@ -16,21 +16,18 @@ interface ManageApplicationModalProps {
 const ManageApplicationModal = ({ isOpen, onClose, application }: ManageApplicationModalProps) => {
   const { cancelApplication } = useEvents();
 
-  // Scroll Lock Logic
+  // Scroll Lock Logic - Bulletproof for Mobile
   useEffect(() => {
     if (isOpen) {
       document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
     } else {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
-      document.body.style.touchAction = '';
     }
     return () => {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
-      document.body.style.touchAction = '';
     };
   }, [isOpen]);
 
@@ -56,10 +53,14 @@ const ManageApplicationModal = ({ isOpen, onClose, application }: ManageApplicat
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/90 backdrop-blur-md z-[150]" />
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} 
-            className="fixed inset-x-0 bottom-0 z-[151] bg-zinc-950 border-t border-white/10 p-8 rounded-t-[2rem] max-h-[85vh] overflow-y-auto pb-15"
-            style={{ touchAction: 'pan-y' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed inset-x-0 bottom-0 z-[151] bg-zinc-950 border-t border-white/10 p-8 rounded-t-[2rem] max-h-[85vh] overflow-y-auto"
+            style={{ 
+              touchAction: 'pan-y',
+              overscrollBehavior: 'contain'
+            }}
           >
-            <div className="max-w-2xl mx-auto space-y-8">
+            <div className="max-w-2xl mx-auto space-y-8 pb-[calc(4rem+env(safe-area-inset-bottom))]">
               <div className="flex justify-between items-start">
                 <div>
                   <span className={cn(

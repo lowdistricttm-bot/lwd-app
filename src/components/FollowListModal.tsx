@@ -24,16 +24,13 @@ const FollowListModal = ({ isOpen, onClose, userId, username, type }: FollowList
     if (isOpen) {
       document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
     } else {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
-      document.body.style.touchAction = '';
     }
     return () => {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
-      document.body.style.touchAction = '';
     };
   }, [isOpen]);
 
@@ -47,8 +44,11 @@ const FollowListModal = ({ isOpen, onClose, userId, username, type }: FollowList
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[1001] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 pb-15 rounded-t-[2.5rem] max-h-[85vh] flex flex-col shadow-2xl"
-            style={{ touchAction: 'pan-y' }}
+            className="fixed inset-x-0 bottom-0 z-[1001] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[85vh] flex flex-col shadow-2xl"
+            style={{ 
+              touchAction: 'pan-y',
+              overscrollBehavior: 'contain'
+            }}
           >
             <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
             <div className="flex justify-between items-center mb-8">
@@ -58,7 +58,7 @@ const FollowListModal = ({ isOpen, onClose, userId, username, type }: FollowList
               </div>
               <button onClick={onClose} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors"><X size={20} /></button>
             </div>
-            <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar pb-24">
+            <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar pb-[calc(4rem+env(safe-area-inset-bottom))]">
               {isLoading ? (
                 <div className="flex justify-center py-20"><Loader2 className="animate-spin text-zinc-500" /></div>
               ) : list?.length === 0 ? (

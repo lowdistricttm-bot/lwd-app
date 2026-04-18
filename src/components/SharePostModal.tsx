@@ -90,7 +90,7 @@ const SharePostModal = ({ isOpen, onClose, postId, postImageUrl, postContent }: 
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[1001] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 pb-15 rounded-t-[2.5rem] max-h-[85vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            className="fixed inset-x-0 bottom-0 z-[1001] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[85vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
             style={{ 
               touchAction: 'pan-y',
               overscrollBehavior: 'contain'
@@ -108,7 +108,7 @@ const SharePostModal = ({ isOpen, onClose, postId, postImageUrl, postContent }: 
               <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
               <Input placeholder="CERCA MEMBRI..." value={search} onChange={(e) => setSearch(e.target.value)} className="bg-white/5 border-white/10 rounded-full h-14 pl-12 font-black uppercase text-xs tracking-widest focus-visible:ring-white/20 placeholder:text-zinc-600 backdrop-blur-md text-white" />
             </div>
-            <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar pb-24" style={{ overscrollBehavior: 'contain' }}>
+            <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar pb-[calc(4rem+env(safe-area-inset-bottom))]" style={{ overscrollBehavior: 'contain' }}>
               {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4"><Loader2 className="animate-spin text-zinc-500" size={32} /><p className="text-[8px] font-black uppercase tracking-widest text-zinc-600">Ricerca...</p></div>
               ) : results.length > 0 ? (

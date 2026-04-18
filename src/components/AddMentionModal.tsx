@@ -27,16 +27,13 @@ const AddMentionModal = ({ isOpen, onClose, storyId, storyUrl, existingMentions 
     if (isOpen) {
       document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
     } else {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
-      document.body.style.touchAction = '';
     }
     return () => {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
-      document.body.style.touchAction = '';
     };
   }, [isOpen]);
 
@@ -81,8 +78,11 @@ const AddMentionModal = ({ isOpen, onClose, storyId, storyUrl, existingMentions 
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="absolute inset-x-0 bottom-0 z-[501] bg-zinc-950 border-t border-white/10 p-6 pb-15 rounded-t-[2rem] max-h-[60%] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
-            style={{ touchAction: 'pan-y' }}
+            className="absolute inset-x-0 bottom-0 z-[501] bg-zinc-950 border-t border-white/10 p-6 rounded-t-[2rem] max-h-[60%] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            style={{ 
+              touchAction: 'pan-y',
+              overscrollBehavior: 'contain'
+            }}
           >
             <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
             
@@ -104,7 +104,7 @@ const AddMentionModal = ({ isOpen, onClose, storyId, storyUrl, existingMentions 
               />
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar pb-[calc(4rem+env(safe-area-inset-bottom))]">
               {isLoading ? (
                 <div className="flex justify-center py-10"><Loader2 className="animate-spin text-zinc-500" /></div>
               ) : results.length > 0 ? (

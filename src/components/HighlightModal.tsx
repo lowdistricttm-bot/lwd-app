@@ -25,16 +25,13 @@ const HighlightModal = ({ isOpen, onClose, story, userId }: HighlightModalProps)
     if (isOpen) {
       document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
     } else {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
-      document.body.style.touchAction = '';
     }
     return () => {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
-      document.body.style.touchAction = '';
     };
   }, [isOpen]);
 
@@ -64,8 +61,11 @@ const HighlightModal = ({ isOpen, onClose, story, userId }: HighlightModalProps)
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="absolute inset-x-0 bottom-0 z-[401] bg-zinc-950 border-t border-white/10 p-6 pb-15 rounded-t-[2rem] max-h-[60vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
-            style={{ touchAction: 'pan-y' }}
+            className="absolute inset-x-0 bottom-0 z-[401] bg-zinc-950 border-t border-white/10 p-6 rounded-t-[2rem] max-h-[60vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            style={{ 
+              touchAction: 'pan-y',
+              overscrollBehavior: 'contain'
+            }}
           >
             <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
             
@@ -74,7 +74,7 @@ const HighlightModal = ({ isOpen, onClose, story, userId }: HighlightModalProps)
               <button onClick={onClose} className="p-2 text-zinc-500"><X size={24} /></button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar pb-[calc(4rem+env(safe-area-inset-bottom))]">
               {isCreating ? (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
                   <div className="flex justify-center">
