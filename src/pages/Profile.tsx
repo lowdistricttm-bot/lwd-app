@@ -220,10 +220,10 @@ const Profile = () => {
             </div>
 
             {/* Text Info */}
-            <div className="pt-12 md:pt-16 flex-1 min-w-0 flex flex-col gap-3">
+            <div className="pt-12 md:pt-16 flex-1 min-w-0 flex flex-col">
               {/* Nome Utente e Pulsanti Piccoli */}
-              <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-xl md:text-3xl font-black italic uppercase tracking-tighter leading-none truncate max-w-[200px] md:max-w-md">
+              <div className="flex items-center gap-3 flex-wrap mb-4">
+                <h1 className="text-xl md:text-3xl font-black italic uppercase tracking-tighter leading-none">
                   {profile?.username || 'Utente'}
                 </h1>
                 
@@ -253,13 +253,8 @@ const Profile = () => {
                 </div>
               </div>
 
-              {/* Pulsante Follow (Primario) */}
-              {!isOwnProfile && currentUser && (!isTargetSubscriber || canVote) && (
-                <FollowButton userId={targetUserId} className="w-full sm:w-48 h-10" />
-              )}
-              
               {/* Ruolo e Stato Online */}
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
                 <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.2em] italic leading-none">
                   {t.profile.roles[userRole] || t.profile.roles.member}
                 </p>
@@ -278,7 +273,7 @@ const Profile = () => {
               </div>
 
               {/* Follow Stats */}
-              <div className="flex gap-6 mt-1">
+              <div className="flex gap-6 mb-6">
                 <button 
                   onClick={() => setFollowModal({ type: 'followers', isOpen: true })}
                   className="flex flex-col items-start group"
@@ -298,6 +293,11 @@ const Profile = () => {
                   <span className="text-[7px] font-black uppercase tracking-widest text-zinc-500">{t.profile.posts}</span>
                 </div>
               </div>
+
+              {/* Pulsante Follow (Primario) */}
+              {!isOwnProfile && currentUser && (!isTargetSubscriber || canVote) && (
+                <FollowButton userId={targetUserId} className="w-full sm:w-48 h-10 mb-4" />
+              )}
             </div>
           </div>
 
