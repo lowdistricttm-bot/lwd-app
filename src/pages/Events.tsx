@@ -44,9 +44,9 @@ const Events = () => {
 
   const viewEventId = searchParams.get('view');
 
-  // Scroll Lock for Inline Modals
+  // Scroll Lock Logic - Bulletproof for Mobile
   useEffect(() => {
-    if (viewingEvent || selectedEvent) {
+    if (viewingEvent || selectedEvent || manageApp || isAdminModalOpen) {
       document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
       document.body.style.touchAction = 'none';
@@ -60,7 +60,7 @@ const Events = () => {
       document.body.style.overflow = '';
       document.body.style.touchAction = '';
     };
-  }, [viewingEvent, selectedEvent]);
+  }, [viewingEvent, selectedEvent, manageApp, isAdminModalOpen]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -276,7 +276,7 @@ const Events = () => {
                   )}
 
                   {isAdmin && (
-                    <div className="pt-6 flex gap-4">
+                    <div className="pt-6 pb-10 flex gap-4">
                       <Button onClick={() => { setEditingEvent(viewingEvent); setViewingEvent(null); setIsAdminModalOpen(true); }} className="flex-1 bg-white text-black font-black uppercase italic rounded-full h-14 shadow-xl"><Edit3 size={16} className="mr-2" /> Modifica</Button>
                       <Button onClick={() => { if(confirm("Eliminare evento?")) { deleteEvent.mutate(viewingEvent.id); setViewingEvent(null); } }} variant="destructive" className="flex-1 font-black uppercase italic rounded-full h-14 shadow-xl"><Trash2 size={16} className="mr-2" /> Elimina</Button>
                     </div>
@@ -459,7 +459,7 @@ const Events = () => {
                   <Button 
                     type="submit" 
                     disabled={applyToEvent.isPending || interiorFiles.length < 3 || !formData.vehicleId} 
-                    className="w-full bg-white text-black hover:bg-zinc-200 hover:scale-[1.02] active:scale-[0.98] h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl shadow-white/10 mt-4"
+                    className="w-full bg-white text-black hover:bg-zinc-200 hover:scale-[1.02] active:scale-[0.98] h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl shadow-white/10 mt-4 mb-10"
                   >
                     {applyToEvent.isPending ? <Loader2 className="animate-spin" /> : t.events.form.submit}
                   </Button>

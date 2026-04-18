@@ -37,18 +37,21 @@ const Navbar = () => {
 
   const isSubscriber = role === 'subscriber';
 
-  // Scroll Lock for Search Overlay
+  // Scroll Lock Logic - Bulletproof for Mobile
   useEffect(() => {
     if (isSearchOpen) {
       document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
     } else {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     }
     return () => {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     };
   }, [isSearchOpen]);
 
@@ -117,7 +120,7 @@ const Navbar = () => {
       </nav>
 
       {isSearchOpen && (
-        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-2xl flex flex-col p-6 pt-[calc(2rem+env(safe-area-inset-top))]">
+        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-2xl flex flex-col p-6 pt-[calc(2rem+env(safe-area-inset-top))] touch-none">
           <div className="flex justify-end mb-12">
             <button onClick={() => setIsSearchOpen(false)} className="p-3 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-all">
               <X size={28} />
