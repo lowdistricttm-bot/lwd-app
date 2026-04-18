@@ -27,9 +27,13 @@ const BottomNav = () => {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[100] bg-black/80 backdrop-blur-2xl border-t border-white/5 pb-[env(safe-area-inset-bottom)]">
-      <div className="relative flex items-center h-10 md:h-14 px-2">
-        {/* Icone */}
+    <div className="fixed bottom-0 left-0 right-0 z-[100] bg-black/90 backdrop-blur-2xl border-t border-white/10">
+      {/* 
+          Altezza impostata a 64px (4rem) + safe area. 
+          Il padding-bottom bilancia lo spazio occupato dalla barra di sistema iOS, 
+          centrando visivamente le icone nella parte superiore della barra.
+      */}
+      <div className="relative flex items-center justify-around h-[calc(4rem+env(safe-area-inset-bottom))] px-2 pb-[env(safe-area-inset-bottom)]">
         {items.map((item, i) => {
           const isActive = activeIndex === i;
           return (
@@ -37,16 +41,16 @@ const BottomNav = () => {
               key={i} 
               to={item.href}
               className={cn(
-                "flex-1 flex flex-col items-center justify-center h-full relative z-10 transition-all duration-300",
-                isActive ? "text-white" : "text-zinc-600 hover:text-zinc-400"
+                "flex-1 flex flex-col items-center justify-center h-16 relative z-10 transition-all duration-300",
+                isActive ? "text-white" : "text-zinc-500 hover:text-zinc-400"
               )}
               onClick={() => triggerHaptic(15)}
             >
-              {/* Indicatore Glow Reattivo - Ridimensionato per la barra più sottile */}
+              {/* Indicatore Glow Reattivo - Proporzionato alle nuove icone */}
               {isActive && (
                 <motion.div
                   layoutId="nav-glow"
-                  className="absolute w-8 h-8 bg-white/10 rounded-full z-0 blur-xl"
+                  className="absolute w-12 h-12 bg-white/10 rounded-full z-0 blur-xl"
                   transition={{
                     type: "spring",
                     stiffness: 400,
@@ -57,14 +61,14 @@ const BottomNav = () => {
 
               <motion.div
                 animate={{ 
-                  scale: isActive ? 1.1 : 1,
-                  filter: isActive ? 'drop-shadow(0 0 8px rgba(255,255,255,0.4))' : 'none'
+                  scale: isActive ? 1.15 : 1,
+                  filter: isActive ? 'drop-shadow(0 0 12px rgba(255,255,255,0.5))' : 'none'
                 }}
                 whileTap={{ scale: 0.9 }}
                 transition={{ type: "spring", stiffness: 500, damping: 25 }}
               >
                 <item.icon 
-                  size={18} 
+                  size={24} // Icone ingrandite per una migliore usabilità
                   strokeWidth={isActive ? 2.5 : 2} 
                 />
               </motion.div>
