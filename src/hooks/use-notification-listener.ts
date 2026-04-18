@@ -15,14 +15,11 @@ export const useNotificationListener = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Pulizia eventuale canale precedente
       if (channel) supabase.removeChannel(channel);
 
-      const instanceId = Math.random().toString(36).substring(2, 9);
-
-      // Listener per i MESSAGGI DIRETTI
+      // Listener per i MESSAGGI DIRETTI (Solo per SUONO e CONTEGGIO GLOBALE)
       channel = supabase
-        .channel(`global-messaging-${user.id}-${instanceId}`)
+        .channel(`global-messaging-${user.id}`)
         .on(
           'postgres_changes',
           {
@@ -31,32 +28,24 @@ export const useNotificationListener = () => {
             table: 'messages',
             filter: `receiver_id=eq.${user.id}`
           },
-          (payload) => {
-            console.log("[Direct] Nuovo messaggio ricevuto:", payload.new.id);
-            
-            // Riproduce il suono iOS e la vibrazione
+          () => {
+            // 1. Riproduce il suono
             playNotificationSound();
             
-            // Aggiorna i dati in tutta l'app
+            // 2. Invalida i conteggi globali (Navbar)
             queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
             queryClient.invalidateQueries({ queryKey: ['conversations'] });
+            // Invalida tutte le chat attive
             queryClient.invalidateQueries({ queryKey: ['chat'] });
           }
         )
-        .subscribe((status) => {
-          if (status === 'SUBSCRIBED') {
-            console.log("[Direct] Listener messaggi attivo per l'utente:", user.id);
-          }
-        });
+        .subscribe();
     };
 
     startListening();
 
-    // Gestione cambi di sessione (Login/Logout)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN') {
-        startListening();
-      }
+      if (event === 'SIGNED_IN') startListening();
       if (event === 'SIGNED_OUT') {
         if (channel) supabase.removeChannel(channel);
         queryClient.clear();
