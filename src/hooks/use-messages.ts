@@ -56,7 +56,7 @@ export const useMessages = (otherUserId?: string) => {
 
       return Array.from(groups.values());
     },
-    staleTime: 0 // Forza il refresh immediato su invalidazione
+    staleTime: 0
   });
 
   // 2. Conteggio Messaggi non letti
@@ -105,15 +105,15 @@ export const useMessages = (otherUserId?: string) => {
     staleTime: 0
   });
 
-  // 4. Listener Realtime Unificato
+  // 4. Listener Realtime Unificato con ID univoco per evitare l'errore "callbacks after subscribe"
   useEffect(() => {
+    const instanceId = Math.random().toString(36).substring(2, 9);
     const channel = supabase
-      .channel('messages-realtime-sync')
+      .channel(`messages-sync-${instanceId}`)
       .on(
         'postgres_changes', 
         { event: '*', schema: 'public', table: 'messages' }, 
         () => {
-          // Invalida tutto istantaneamente
           queryClient.invalidateQueries({ queryKey: ['conversations'] });
           queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
           if (otherUserId) {
