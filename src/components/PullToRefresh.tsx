@@ -7,9 +7,8 @@ import { RefreshCw } from 'lucide-react';
 const PullToRefresh = () => {
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const controls = useAnimation();
   
-  const THRESHOLD = 100; // Distanza necessaria per attivare il refresh
+  const THRESHOLD = 75; // Soglia ridotta per essere più rapida
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
     if (window.scrollY > 0) return;
@@ -20,13 +19,13 @@ const PullToRefresh = () => {
       const distance = currentY - startY;
       
       if (distance > 0 && window.scrollY === 0) {
-        // Applichiamo una resistenza al trascinamento
-        const resistance = 0.4;
-        const cappedDistance = Math.min(distance * resistance, THRESHOLD + 20);
-        setPullDistance(cappedDistance);
+        // Più reattivo (meno fatica nel trascinare)
+        const resistance = 0.7;
+        const pull = distance * resistance;
+        setPullDistance(pull);
         
         // Impedisce lo scroll nativo mentre trasciniamo
-        if (distance > 10) {
+        if (distance > 5) {
           if (moveEvent.cancelable) moveEvent.preventDefault();
         }
       }
@@ -50,10 +49,8 @@ const PullToRefresh = () => {
     setIsRefreshing(true);
     setPullDistance(THRESHOLD);
     
-    // Feedback aptico se supportato
     if ('vibrate' in navigator) navigator.vibrate(10);
 
-    // Eseguiamo il reload della pagina per aggiornare tutto (asset, stato, cache)
     setTimeout(() => {
       window.location.reload();
     }, 800);

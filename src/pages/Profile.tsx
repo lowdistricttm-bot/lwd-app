@@ -74,7 +74,12 @@ const Profile = () => {
   const lastSeen = getLastSeen(targetUserId) || dbLastSeen;
 
   const { counts, loadingCounts } = useFollow(targetUserId);
-  const { data: orders, isLoading: loadingOrders, refetch: refetchOrders } = useWcUserOrders(isOwnProfile ? currentUser?.email : undefined);
+  
+  // Passiamo sia l'email che il wp_id per trovare tutti gli ordini (app + sito)
+  const { data: orders, isLoading: loadingOrders, refetch: refetchOrders } = useWcUserOrders(
+    isOwnProfile ? currentUser?.email : undefined,
+    isOwnProfile ? profile?.wp_id : undefined
+  );
 
   useEffect(() => {
     if (activeTab === 'orders') refetchOrders();
@@ -299,7 +304,7 @@ const Profile = () => {
                 <FollowButton userId={targetUserId} className="w-full sm:w-64 h-12 mb-6" />
               )}
 
-              {/* Dashboard Admin Bar - Spostata qui per essere ancora più in alto */}
+              {/* Dashboard Admin Bar */}
               {isOwnProfile && (userRole === 'admin' || userRole === 'staff' || userRole === 'support') && (
                 <button 
                   onClick={() => navigate('/admin')} 
@@ -365,6 +370,7 @@ const Profile = () => {
                                   <span className="bg-zinc-800 text-white text-[7px] font-black uppercase px-1.5 py-0.5 italic rounded-full">{order.status.toUpperCase()}</span>
                                 </div>
                                 <h4 className="text-xs font-black italic uppercase tracking-tight">{order.line_items.length} Prodotti</h4>
+                                <p className="text-[8px] text-zinc-500 font-bold uppercase">Effettuato il {new Date(order.date_created).toLocaleDateString('it-IT')}</p>
                               </div>
                               <div className="text-right flex flex-col justify-center">
                                 <p className="text-[7px] font-black uppercase text-zinc-600 tracking-widest mb-0.5">{t.checkout.total}</p>

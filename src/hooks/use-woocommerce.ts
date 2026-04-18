@@ -70,43 +70,52 @@ export const useWcVariations = (productId?: number) => {
   });
 };
 
-export const useWcUserOrders = (email?: string) => {
+export const useWcUserOrders = (email?: string, wpId?: string) => {
   return useQuery({
-    queryKey: ['wc-orders', email],
+    queryKey: ['wc-orders', email, wpId],
     queryFn: async () => {
-      if (!email) return [];
+      if (!email && !wpId) return [];
       
       try {
-        const customerResponse = await fetch(`${WC_URL}/customers?email=${encodeURIComponent(email)}`, {
-          headers: getWcAuthHeader()
-        });
-        
-        const customers = await customerResponse.json();
-        const customerId = customers[0]?.id;
+        const ordersMap = new Map();
 
-        let url = `${WC_URL}/orders?per_page=50`;
-        if (customerId) {
-          url += `&customer=${customerId}`;
-        } else {
-          url += `&search=${encodeURIComponent(email)}`;
+        // 1. Ricerca per ID Cliente (Ordini fatti dall'app o account collegati)
+        if (wpId) {
+          const idResponse = await fetch(`${WC_URL}/orders?customer=${wpId}&per_page=50`, {
+            headers: getWcAuthHeader()
+          });
+          if (idResponse.ok) {
+            const idOrders = await idResponse.json();
+            idOrders.forEach((o: any) => ordersMap.set(o.id, o));
+          }
         }
 
-        const ordersResponse = await fetch(url, {
-          headers: getWcAuthHeader()
-        });
-        
-        if (!ordersResponse.ok) return [];
-        const orders = await ordersResponse.json();
-        
-        return orders.filter((order: any) => 
-          order.billing.email.toLowerCase() === email.toLowerCase()
+        // 2. Ricerca per Email (Ordini fatti dal sito web)
+        if (email) {
+          const emailResponse = await fetch(`${WC_URL}/orders?search=${encodeURIComponent(email)}&per_page=50`, {
+            headers: getWcAuthHeader()
+          });
+          if (emailResponse.ok) {
+            const emailOrders = await emailResponse.json();
+            emailOrders.forEach((o: any) => {
+              // Verifichiamo che l'email corrisponda effettivamente (la ricerca search è ampia)
+              if (o.billing.email.toLowerCase() === email.toLowerCase()) {
+                ordersMap.set(o.id, o);
+              }
+            });
+          }
+        }
+
+        // Convertiamo la mappa in array e ordiniamo per data decrescente
+        return Array.from(ordersMap.values()).sort((a, b) => 
+          new Date(b.date_created).getTime() - new Date(a.date_created).getTime()
         );
       } catch (err) {
         console.error("Errore recupero ordini:", err);
         return [];
       }
     },
-    enabled: !!email,
+    enabled: !!email || !!wpId,
     staleTime: 0
   });
 };
@@ -132,15 +141,12 @@ export const useWcShippingMethods = () => {
   return useQuery({
     queryKey: ['wc-shipping-methods'],
     queryFn: async () => {
-      // Recuperiamo le zone di spedizione
       const zonesResponse = await fetch(`${WC_URL}/shipping/zones`, {
         headers: getWcAuthHeader()
       });
       if (!zonesResponse.ok) throw new Error('Errore caricamento zone di spedizione');
       const zones = await zonesResponse.json();
 
-      // Per semplicità, prendiamo i metodi della prima zona (solitamente Italia o Resto del mondo)
-      // In un'app reale si filtrerebbe per la zona corrispondente all'indirizzo dell'utente
       const zoneId = zones[0]?.id || 0;
       const methodsResponse = await fetch(`${WC_URL}/shipping/zones/${zoneId}/methods`, {
         headers: getWcAuthHeader()

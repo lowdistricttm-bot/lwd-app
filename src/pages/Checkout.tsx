@@ -31,6 +31,7 @@ const Checkout = () => {
   const [isFinished, setIsFinished] = useState(false);
   const [orderId, setOrderId] = useState<number | null>(null);
   const [user, setUser] = useState<any>(null);
+  const [userWpId, setUserWpId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '', phone: '', address: '', city: '', postcode: '',
@@ -60,32 +61,36 @@ const Checkout = () => {
   const finalTotal = total + shippingInfo.fee;
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    const loadUserData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUser(user);
         setFormData(prev => ({
           ...prev,
           firstName: user.user_metadata?.first_name || '',
           lastName: user.user_metadata?.last_name || '',
+          email: user.email || ''
         }));
+
+        // Recuperiamo il wp_id dal profilo per collegare l'ordine
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('wp_id')
+          .eq('id', user.id)
+          .maybeSingle();
+        
+        if (profile?.wp_id) {
+          setUserWpId(profile.wp_id);
+        }
       }
-    });
+    };
+    loadUserData();
   }, []);
 
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
-      const CK = "ck_3d72f4e97f4b104d76bcf2f156d7f47b0e92af9b"; 
-      const CS = "cs_dfc8bfa35e29acf49067f1af13a98734142d2533";
-      const auth = btoa(`${CK}:${CS}`);
-      
-      const customerResp = await fetch(`https://www.lowdistrict.it/wp-json/wc/v3/customers?email=${encodeURIComponent(formData.email)}`, {
-        headers: { 'Authorization': `Basic ${auth}` }
-      });
-      const customers = await customerResp.json();
-      const customerId = customers[0]?.id || 0;
-
       const lineItems = items.map(item => ({
         product_id: item.id,
         variation_id: item.variationId,
@@ -96,6 +101,7 @@ const Checkout = () => {
         payment_method: "cod",
         payment_method_title: "Pagamento su WhatsApp",
         set_paid: false,
+        customer_id: userWpId ? parseInt(userWpId) : 0, // Collega l'ordine all'account corretto
         billing: {
           first_name: formData.firstName,
           last_name: formData.lastName,
@@ -122,7 +128,10 @@ const Checkout = () => {
             total: shippingInfo.fee.toString()
           }
         ],
-        customer_id: customerId
+        meta_data: [
+          { key: '_supabase_user_id', value: user?.id || '' },
+          { key: '_created_via', value: 'Low District App' }
+        ]
       };
 
       const order = await createOrder.mutateAsync(orderPayload);
