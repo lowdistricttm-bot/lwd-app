@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, User, ChevronRight, Loader2, Users } from 'lucide-react';
 import { useFollowList } from '@/hooks/use-follow';
@@ -18,6 +18,17 @@ interface FollowListModalProps {
 const FollowListModal = ({ isOpen, onClose, userId, username, type }: FollowListModalProps) => {
   const navigate = useNavigate();
   const { data: list, isLoading } = useFollowList(userId, type);
+
+  // Blocca lo scorrimento della pagina sottostante quando il modal è aperto
+  useEffect(() => {
+    if (isOpen) {
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalStyle;
+      };
+    }
+  }, [isOpen]);
 
   const title = type === 'followers' ? 'Follower' : 'Seguiti';
 
@@ -46,7 +57,8 @@ const FollowListModal = ({ isOpen, onClose, userId, username, type }: FollowList
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar pb-20">
+            {/* Padding inferiore impostato a 60px (corrispondente a pb-15 in scala 4px) */}
+            <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar pb-[60px]">
               {isLoading ? (
                 <div className="flex justify-center py-20"><Loader2 className="animate-spin text-zinc-500" /></div>
               ) : list?.length === 0 ? (
