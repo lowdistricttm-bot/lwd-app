@@ -303,8 +303,6 @@ const Profile = () => {
 
           {/* Content Tabs */}
           <div className="mt-10">
-            {!isTargetSubscriber && targetUserId && <HighlightsBar userId={targetUserId} isOwnProfile={isOwnProfile} />}
-
             {isOwnProfile && (userRole === 'admin' || userRole === 'staff' || userRole === 'support') && (
               <button onClick={() => navigate('/admin')} className="w-full mb-6 bg-white/10 backdrop-blur-md border border-white/10 p-3.5 rounded-2xl flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500">
                 <div className="flex items-center gap-3">
@@ -316,6 +314,8 @@ const Profile = () => {
                 <ChevronRight size={18} />
               </button>
             )}
+
+            {!isTargetSubscriber && targetUserId && <HighlightsBar userId={targetUserId} isOwnProfile={isOwnProfile} />}
 
             <div className="flex bg-zinc-900/50 backdrop-blur-md rounded-full p-1 mb-6 border border-white/5 overflow-x-auto no-scrollbar">
               {tabs.map((tab) => (
