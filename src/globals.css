@@ -21,45 +21,32 @@
 
 /* Regola universale definitiva per nascondere le scrollbar */
 *, *::before, *::after {
-  scrollbar-width: none !important; /* Firefox */
-  -ms-overflow-style: none !important; /* IE ed Edge */
-}
-
-*::-webkit-scrollbar {
-  display: none !important; /* Chrome, Safari e Opera */
-  width: 0 !important;
-  height: 0 !important;
-}
-
-/* Target specifico per Modal, Drawer e Popover (Radix/Shadcn) */
-[role="dialog"], 
-[role="menu"], 
-[data-radix-popper-content-wrapper],
-.fixed,
-.absolute {
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
 }
 
-[role="dialog"]::-webkit-scrollbar,
-[role="menu"]::-webkit-scrollbar {
+*::-webkit-scrollbar {
   display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 html, body {
   width: 100%;
+  height: 100%;
+  /* Fondamentale per iOS: impedisce alla pagina di 'ballare' */
   overflow-x: hidden;
-  overscroll-behavior-y: auto;
+  overscroll-behavior-y: none;
   -webkit-overflow-scrolling: touch;
   background-color: #000;
-  scrollbar-width: none !important;
 }
 
 body {
   @apply bg-black text-white antialiased;
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
-  min-height: 100vh;
+  /* Usiamo dvh per adattarsi alla tastiera */
+  min-height: 100dvh;
 }
 
 /* Tipografia Low District */
@@ -71,10 +58,6 @@ h1, h2, h3, h4, h5, h6 {
   @apply bg-zinc-900/60 backdrop-blur-xl border border-white/10;
 }
 
-.glass-button {
-  @apply bg-white/10 backdrop-blur-md border border-white/10 hover:bg-white/20 transition-all duration-300;
-}
-
 @keyframes marquee {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
@@ -84,7 +67,6 @@ h1, h2, h3, h4, h5, h6 {
   animation: marquee 25s linear infinite;
 }
 
-/* Utility extra */
 .no-scrollbar {
   -ms-overflow-style: none !important;
   scrollbar-width: none !important;
