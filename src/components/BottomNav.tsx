@@ -38,6 +38,7 @@ const BottomNav = () => {
     <div 
       className="fixed bottom-0 left-0 right-0 z-[999] bg-black border-t border-white/10 select-none"
       style={{ 
+        // Altezza standard iOS con gestione safe area
         height: isIOS ? 'calc(50px + env(safe-area-inset-bottom))' : '60px',
         paddingBottom: 'env(safe-area-inset-bottom)',
         WebkitUserSelect: 'none',
@@ -45,10 +46,7 @@ const BottomNav = () => {
       }}
     >
       <div 
-        className={cn(
-          "relative flex items-center justify-around h-[50px] mx-auto px-2",
-          isIOS ? "max-w-[280px]" : "max-w-2xl" // Ridotto a 280px per avvicinare le icone su iOS
-        )}
+        className="relative flex items-center justify-around h-[50px] w-full max-w-2xl mx-auto px-2"
       >
         {items.map((item, i) => {
           const isActive = activeIndex === i;
