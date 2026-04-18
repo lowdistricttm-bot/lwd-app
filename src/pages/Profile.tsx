@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
@@ -13,13 +13,16 @@ import ImageLightbox from '@/components/ImageLightbox';
 import ProfileInfoTab from '@/components/ProfileInfoTab';
 import SettingsTab from '@/components/SettingsTab';
 import HighlightsBar from '@/components/HighlightsBar';
+import FollowButton from '@/components/FollowButton';
+import FollowListModal from '@/components/FollowListModal';
 import { useSocialFeed } from '@/hooks/use-social-feed';
 import { useAdmin } from '@/hooks/use-admin';
 import { usePresence } from '@/hooks/use-presence';
+import { useFollow } from '@/hooks/use-follow';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { 
-  User, Settings, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Share2, Edit2, LogIn, AlertCircle, Users
+  User, Settings, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Share2, Edit2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -62,6 +65,7 @@ const Profile = () => {
   const [isUsernameNoticeOpen, setIsUsernameNoticeOpen] = useState(false);
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
   const [dbLastSeen, setDbLastSeen] = useState<string | null>(null);
+  const [followModal, setFollowModal] = useState<{ type: 'followers' | 'following', isOpen: boolean } | null>(null);
   
   const { posts, isLoading: loadingPosts } = useSocialFeed();
   const targetUserId = userId || currentUser?.id;
@@ -69,6 +73,7 @@ const Profile = () => {
   const isOnline = isUserOnline(targetUserId);
   const lastSeen = getLastSeen(targetUserId) || dbLastSeen;
 
+  const { counts, loadingCounts } = useFollow(targetUserId);
   const { data: orders, isLoading: loadingOrders, refetch: refetchOrders } = useWcUserOrders(isOwnProfile ? currentUser?.email : undefined);
 
   useEffect(() => {
@@ -137,7 +142,11 @@ const Profile = () => {
       }
 
       const publicUrl = await uploadToCloudinary(file);
-      const { error: updateError } = await supabase.from('profiles').upsert({ id: currentUser.id, [isAvatar ? 'avatar_url' : 'cover_url']: publicUrl, updated_at: new Date().toISOString() });
+      const { error: updateError } = await supabase.from('profiles').upsert({ 
+        id: currentUser.id, 
+        [isAvatar ? 'avatar_url' : 'cover_url']: publicUrl, 
+        updated_at: new Date().toISOString() 
+      });
       if (updateError) throw updateError;
 
       showSuccess(isAvatar ? "Foto profilo aggiornata!" : "Copertina aggiornata!");
@@ -186,7 +195,7 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Profile Info Section (Aligned to Cover Edge) */}
+        {/* Profile Info Section */}
         <div className="px-6 md:px-12 max-w-6xl mx-auto relative">
           <div className="flex items-start gap-4 md:gap-6 -mt-12 md:-mt-16">
             {/* Avatar */}
@@ -210,13 +219,16 @@ const Profile = () => {
               <input type="file" ref={avatarInputRef} className="hidden" accept="image/*,video/*" onChange={(e) => handleFileUpload(e, 'avatar')} />
             </div>
 
-            {/* Text Info - Pulled up to align with cover line */}
+            {/* Text Info */}
             <div className="pt-12 md:pt-16 flex-1 min-w-0">
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-sm md:text-xl font-black italic uppercase tracking-tighter leading-none">{profile?.username || 'Utente'}</h1>
                 <div className="flex items-center gap-1.5 shrink-0">
                   {!isOwnProfile && currentUser && (!isTargetSubscriber || canVote) && (
-                    <button onClick={() => navigate(`/chat/${profile.id}`)} className="p-1.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all"><Mail size={14} /></button>
+                    <>
+                      <FollowButton userId={targetUserId} />
+                      <button onClick={() => navigate(`/chat/${profile.id}`)} className="p-1.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all"><Mail size={14} /></button>
+                    </>
                   )}
                   <button onClick={handleShareProfile} className="p-1.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all"><Share2 size={14} /></button>
                   {isOwnProfile && (
@@ -232,16 +244,36 @@ const Profile = () => {
                 <div className="flex items-center gap-1.5">
                   <div className={cn(
                     "w-1.5 h-1.5 rounded-full transition-colors duration-500",
-                    isOnline 
-                      ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" 
-                      : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"
+                    isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"
                   )} />
                   <p className={cn(
                     "text-[7px] font-black uppercase tracking-widest leading-none transition-colors duration-500",
-                    isOnline ? "text-green-500" : "text-red-500"
+                    isOnline ? "text-green-500" : "text-zinc-500"
                   )}>
                     {isOnline ? 'Online' : lastSeen ? `Ultimo accesso ${lastSeen}` : 'Offline'}
                   </p>
+                </div>
+              </div>
+
+              {/* Follow Stats */}
+              <div className="flex gap-6 mt-4">
+                <button 
+                  onClick={() => setFollowModal({ type: 'followers', isOpen: true })}
+                  className="flex flex-col items-start group"
+                >
+                  <span className="text-xs font-black italic tracking-tighter">{loadingCounts ? '...' : counts?.followers}</span>
+                  <span className="text-[7px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white transition-colors">{t.profile.followers}</span>
+                </button>
+                <button 
+                  onClick={() => setFollowModal({ type: 'following', isOpen: true })}
+                  className="flex flex-col items-start group"
+                >
+                  <span className="text-xs font-black italic tracking-tighter">{loadingCounts ? '...' : counts?.following}</span>
+                  <span className="text-[7px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white transition-colors">{t.profile.following}</span>
+                </button>
+                <div className="flex flex-col items-start">
+                  <span className="text-xs font-black italic tracking-tighter">{userPosts.length}</span>
+                  <span className="text-[7px] font-black uppercase tracking-widest text-zinc-500">{t.profile.posts}</span>
                 </div>
               </div>
             </div>
@@ -255,7 +287,7 @@ const Profile = () => {
               <button onClick={() => navigate('/admin')} className="w-full mb-8 bg-white/10 backdrop-blur-md border border-white/10 p-4 rounded-3xl flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center group-hover:bg-black/10 transition-colors">
-                    {userRole === 'admin' ? <ShieldCheck size={18} /> : <Users size={18} />}
+                    <ShieldCheck size={18} />
                   </div>
                   <p className="text-xs font-black uppercase italic tracking-widest">DASHBOARD {userRole.toUpperCase()}</p>
                 </div>
@@ -291,7 +323,39 @@ const Profile = () => {
                   </motion.div>
                 )}
                 {activeTab === 'garage' && <motion.div key="garage" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><GarageTab userId={targetUserId} isOwnProfile={isOwnProfile} /></motion.div>}
-                {activeTab === 'orders' && <motion.div key="orders" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><h3 className="text-xl font-black italic uppercase mb-6">{t.profile.orders}</h3>{loadingOrders ? <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div> : orders?.length > 0 ? <div className="space-y-4">{orders.map((order: any) => <div key={order.id} className="bg-zinc-900/50 border border-white/5 p-6 rounded-3xl group hover:border-white/20 transition-all"><div className="flex flex-col md:flex-row justify-between gap-4"><div className="space-y-2"><div className="flex items-center gap-3"><span className="bg-white text-black text-[8px] font-black uppercase px-2 py-0.5 italic rounded-full">#{order.id}</span><span className="bg-zinc-800 text-white text-[8px] font-black uppercase px-2 py-0.5 italic rounded-full">{order.status.toUpperCase()}</span></div><h4 className="text-sm font-black italic uppercase tracking-tight">{order.line_items.length} Prodotti</h4></div><div className="text-right flex flex-col justify-center"><p className="text-[8px] font-black uppercase text-zinc-600 tracking-widest mb-1">{t.checkout.total}</p><p className="text-2xl font-black italic tracking-tighter">€{order.total}</p></div></div></div>)}</div> : <div className="bg-zinc-900/30 border border-white/5 p-12 rounded-[2rem] text-center"><ShoppingBag className="mx-auto text-zinc-800 mb-6" size={48} /><p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{t.profile.noOrders}</p></div>}</motion.div>}
+                {activeTab === 'orders' && (
+                  <motion.div key="orders" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                    <h3 className="text-xl font-black italic uppercase mb-6">{t.profile.orders}</h3>
+                    {loadingOrders ? (
+                      <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div>
+                    ) : orders?.length > 0 ? (
+                      <div className="space-y-4">
+                        {orders.map((order: any) => (
+                          <div key={order.id} className="bg-zinc-900/50 border border-white/5 p-6 rounded-3xl group hover:border-white/20 transition-all">
+                            <div className="flex flex-col md:flex-row justify-between gap-4">
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-3">
+                                  <span className="bg-white text-black text-[8px] font-black uppercase px-2 py-0.5 italic rounded-full">#{order.id}</span>
+                                  <span className="bg-zinc-800 text-white text-[8px] font-black uppercase px-2 py-0.5 italic rounded-full">{order.status.toUpperCase()}</span>
+                                </div>
+                                <h4 className="text-sm font-black italic uppercase tracking-tight">{order.line_items.length} Prodotti</h4>
+                              </div>
+                              <div className="text-right flex flex-col justify-center">
+                                <p className="text-[8px] font-black uppercase text-zinc-600 tracking-widest mb-1">{t.checkout.total}</p>
+                                <p className="text-2xl font-black italic tracking-tighter">€{order.total}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="bg-zinc-900/30 border border-white/5 p-12 rounded-[2rem] text-center">
+                        <ShoppingBag className="mx-auto text-zinc-800 mb-6" size={48} />
+                        <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{t.profile.noOrders}</p>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
                 {activeTab === 'selections' && <motion.div key="selections" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><ApplicationsTab /></motion.div>}
                 {activeTab === 'profile' && <motion.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><ProfileInfoTab profile={profile} isOwnProfile={isOwnProfile} onUpdate={() => fetchProfile(targetUserId)} /></motion.div>}
                 {activeTab === 'settings' && <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><SettingsTab /></motion.div>}
@@ -303,13 +367,30 @@ const Profile = () => {
 
       <AlertDialog open={isUsernameNoticeOpen} onOpenChange={setIsUsernameNoticeOpen}>
         <AlertDialogContent className="bg-zinc-950 border-white/10 rounded-[2rem]">
-          <AlertDialogHeader><AlertDialogTitle className="text-white font-black uppercase italic">{t.profile.usernameNoticeTitle}</AlertDialogTitle><AlertDialogDescription className="text-zinc-500 text-xs font-bold uppercase leading-relaxed">{t.profile.usernameNoticeDesc}</AlertDialogDescription></AlertDialogHeader>
-          <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col"><AlertDialogAction onClick={() => window.location.href = 'mailto:info@lowdistrict.it'} className="rounded-full bg-white text-black hover:bg-zinc-200 font-black uppercase italic text-[10px] w-full h-12 transition-all">{t.profile.contactAdmin}</AlertDialogAction><AlertDialogCancel className="rounded-full border-white/10 text-white hover:bg-white/5 font-black uppercase italic text-[10px] w-full h-12 mt-0 transition-all">{t.feed.cancel}</AlertDialogCancel></AlertDialogFooter>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white font-black uppercase italic">{t.profile.usernameNoticeTitle}</AlertDialogTitle>
+            <AlertDialogDescription className="text-zinc-500 text-xs font-bold uppercase leading-relaxed">{t.profile.usernameNoticeDesc}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
+            <AlertDialogAction onClick={() => window.location.href = 'mailto:info@lowdistrict.it'} className="rounded-full bg-white text-black hover:bg-zinc-200 font-black uppercase italic text-[10px] w-full h-12 transition-all">{t.profile.contactAdmin}</AlertDialogAction>
+            <AlertDialogCancel className="rounded-full border-white/10 text-white hover:bg-white/5 font-black uppercase italic text-[10px] w-full h-12 mt-0 transition-all">{t.feed.cancel}</AlertDialogCancel>
+          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       <CreatePostModal isOpen={isPostModalOpen} onClose={() => setIsPostModalOpen(false)} />
       <ImageLightbox images={lightboxData?.images || []} initialIndex={lightboxData?.index || 0} isOpen={!!lightboxData} onClose={() => setLightboxData(null)} />
+      
+      {followModal && (
+        <FollowListModal 
+          isOpen={followModal.isOpen} 
+          onClose={() => setFollowModal(null)} 
+          userId={targetUserId} 
+          username={profile?.username || 'Utente'} 
+          type={followModal.type} 
+        />
+      )}
+      
       <BottomNav />
     </div>
   );
