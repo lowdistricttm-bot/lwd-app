@@ -17,8 +17,11 @@ export const useNotificationListener = () => {
 
       if (channel) supabase.removeChannel(channel);
 
+      // Aggiungiamo un ID casuale per evitare conflitti durante i re-render
+      const instanceId = Math.random().toString(36).substring(2, 9);
+
       channel = supabase
-        .channel(`global-msg-events-${user.id}`)
+        .channel(`global-msg-events-${user.id}-${instanceId}`)
         .on(
           'postgres_changes',
           {
@@ -44,23 +47,12 @@ export const useNotificationListener = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN') {
         console.log("[Auth] Utente loggato, reset cache e avvio listener...");
-        
-        // 1. Avvia il listener realtime per i messaggi
         startListening();
-        
-        // 2. Invalida TUTTE le query (Bacheca, Messaggi, Ordini, etc.) 
-        // per forzare il ricaricamento dei dati ora che l'utente è autenticato
         queryClient.invalidateQueries();
-        
-        // 3. Forza il refetch immediato delle query vitali
-        queryClient.refetchQueries({ queryKey: ['social-posts'] });
-        queryClient.refetchQueries({ queryKey: ['conversations'] });
-        queryClient.refetchQueries({ queryKey: ['user-role'] });
       }
       
       if (event === 'SIGNED_OUT') {
         if (channel) supabase.removeChannel(channel);
-        // Pulisce i dati privati al logout
         queryClient.clear();
       }
     });

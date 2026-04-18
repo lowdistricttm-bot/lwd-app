@@ -79,8 +79,11 @@ export const useNotifications = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Aggiungiamo un ID casuale per evitare l'errore "callbacks after subscribe"
+      const instanceId = Math.random().toString(36).substring(2, 9);
+      
       channel = supabase
-        .channel(`notifications-realtime-${user.id}`)
+        .channel(`notifications-realtime-${user.id}-${instanceId}`)
         .on(
           'postgres_changes',
           {
@@ -100,7 +103,9 @@ export const useNotifications = () => {
     setupSubscription();
 
     return () => {
-      if (channel) supabase.removeChannel(channel);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, [queryClient]);
 
