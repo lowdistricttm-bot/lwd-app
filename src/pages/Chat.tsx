@@ -126,44 +126,46 @@ const Chat = () => {
 
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent">
-      {/* Header Ingrandito e Ottimizzato */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-2xl border-b border-white/10 h-24 px-4 flex items-center gap-2 pt-[env(safe-area-inset-top)]">
-        <button onClick={() => navigate(-1)} className="p-3 text-zinc-400 hover:text-white shrink-0">
-          <ChevronLeft size={28} strokeWidth={2.5} />
-        </button>
-        
-        <button 
-          onClick={() => navigate(`/profile/${userId}`)}
-          className="flex items-center gap-4 hover:opacity-70 transition-opacity text-left flex-1 min-w-0"
-        >
-          <div className="w-12 h-12 bg-zinc-900 rounded-full overflow-hidden border border-white/10 shrink-0">
-            {otherUserProfile?.avatar_url ? (
-              <img src={otherUserProfile.avatar_url} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center"><User size={22} strokeWidth={1.5} className="text-zinc-600" /></div>
-            )}
-          </div>
-          <div className="min-w-0">
-            <h4 className="text-base font-black italic uppercase tracking-tight leading-none truncate">
-              {otherUserProfile?.username || 'Membro District'}
-            </h4>
-            <div className="flex items-center gap-2 mt-1.5">
-              <div className={cn(
-                "w-2 h-2 rounded-full shrink-0",
-                isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-zinc-700"
-              )} />
-              <p className={cn(
-                "text-[9px] font-black uppercase tracking-widest transition-colors duration-500 truncate",
-                isOnline ? "text-green-500" : "text-zinc-500"
-              )}>
-                {isOnline ? 'Online' : lastSeen ? `Ultimo accesso ${lastSeen}` : 'Offline'}
-              </p>
+      {/* Header Uniformato alla Navbar (h-16) */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-2xl border-b border-white/10 pt-[env(safe-area-inset-top)]">
+        <div className="h-16 px-4 flex items-center gap-2">
+          <button onClick={() => navigate(-1)} className="p-2 text-zinc-400 hover:text-white shrink-0">
+            <ChevronLeft size={24} strokeWidth={2.5} />
+          </button>
+          
+          <button 
+            onClick={() => navigate(`/profile/${userId}`)}
+            className="flex items-center gap-3 hover:opacity-70 transition-opacity text-left flex-1 min-w-0"
+          >
+            <div className="w-10 h-10 bg-zinc-900 rounded-full overflow-hidden border border-white/10 shrink-0">
+              {otherUserProfile?.avatar_url ? (
+                <img src={otherUserProfile.avatar_url} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center"><User size={18} strokeWidth={1.5} className="text-zinc-600" /></div>
+              )}
             </div>
-          </div>
-        </button>
+            <div className="min-w-0">
+              <h4 className="text-sm font-black italic uppercase tracking-tight leading-none truncate">
+                {otherUserProfile?.username || 'Membro District'}
+              </h4>
+              <div className="flex items-center gap-1.5 mt-1">
+                <div className={cn(
+                  "w-1.5 h-1.5 rounded-full shrink-0",
+                  isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-zinc-700"
+                )} />
+                <p className={cn(
+                  "text-[8px] font-black uppercase tracking-widest transition-colors duration-500 truncate",
+                  isOnline ? "text-green-500" : "text-zinc-500"
+                )}>
+                  {isOnline ? 'Online' : lastSeen ? `Accesso ${lastSeen}` : 'Offline'}
+                </p>
+              </div>
+            </div>
+          </button>
+        </div>
       </nav>
 
-      <main ref={scrollRef} className="flex-1 pt-[calc(6rem+env(safe-area-inset-top)+1rem)] pb-[140px] px-6 overflow-y-auto space-y-6 custom-scrollbar overflow-x-hidden">
+      <main ref={scrollRef} className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] pb-[140px] px-6 overflow-y-auto space-y-6 custom-scrollbar overflow-x-hidden">
         {chatMessages?.map((msg) => {
           const isMe = msg.sender_id === currentUserId;
           const isMention = msg.content.includes('Ti ha menzionato');
