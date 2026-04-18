@@ -47,7 +47,6 @@ const FeaturedProducts = () => {
                   />
                 </div>
                 <h4 className="text-[10px] font-black uppercase italic tracking-tight mb-1 group-hover:text-zinc-400 transition-colors truncate" dangerouslySetInnerHTML={{ __html: product.name }} />
-                <p className="text-sm font-black tracking-tighter">€{product.price}</p>
               </Link>
             </motion.div>
           ))}
