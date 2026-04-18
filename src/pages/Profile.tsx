@@ -296,25 +296,29 @@ const Profile = () => {
 
               {/* Pulsante Follow (Primario) - Centered */}
               {!isOwnProfile && currentUser && (!isTargetSubscriber || canVote) && (
-                <FollowButton userId={targetUserId} className="w-full sm:w-64 h-12 mb-4" />
+                <FollowButton userId={targetUserId} className="w-full sm:w-64 h-12 mb-6" />
+              )}
+
+              {/* Dashboard Admin Bar - Spostata qui per essere ancora più in alto */}
+              {isOwnProfile && (userRole === 'admin' || userRole === 'staff' || userRole === 'support') && (
+                <button 
+                  onClick={() => navigate('/admin')} 
+                  className="w-full mb-8 bg-white/10 backdrop-blur-md border border-white/10 p-3.5 rounded-2xl flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500 shadow-xl"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center group-hover:bg-black/10 transition-colors">
+                      <ShieldCheck size={16} />
+                    </div>
+                    <p className="text-[10px] font-black uppercase italic tracking-widest">DASHBOARD {userRole.toUpperCase()}</p>
+                  </div>
+                  <ChevronRight size={18} />
+                </button>
               )}
             </div>
           </div>
 
           {/* Content Tabs */}
-          <div className="mt-10">
-            {isOwnProfile && (userRole === 'admin' || userRole === 'staff' || userRole === 'support') && (
-              <button onClick={() => navigate('/admin')} className="w-full mb-6 bg-white/10 backdrop-blur-md border border-white/10 p-3.5 rounded-2xl flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center group-hover:bg-black/10 transition-colors">
-                    <ShieldCheck size={16} />
-                  </div>
-                  <p className="text-[10px] font-black uppercase italic tracking-widest">DASHBOARD {userRole.toUpperCase()}</p>
-                </div>
-                <ChevronRight size={18} />
-              </button>
-            )}
-
+          <div className="mt-4">
             {!isTargetSubscriber && targetUserId && <HighlightsBar userId={targetUserId} isOwnProfile={isOwnProfile} />}
 
             <div className="flex bg-zinc-900/50 backdrop-blur-md rounded-full p-1 mb-6 border border-white/5 overflow-x-auto no-scrollbar">
