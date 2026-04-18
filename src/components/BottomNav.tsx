@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Home, ShoppingBag, MessageSquare, User, Calendar, Compass } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -8,13 +8,8 @@ import { motion } from 'framer-motion';
 
 const BottomNav = () => {
   const location = useLocation();
-  const [isIOS, setIsIOS] = useState(false);
   
-  useEffect(() => {
-    const checkIOS = /iPhone|iPad|iPod/.test(window.navigator.userAgent);
-    setIsIOS(checkIOS);
-  }, []);
-  
+  // Nascondi la nav nelle chat per lasciare spazio alla tastiera
   if (location.pathname.startsWith('/chat/')) return null;
 
   const items = [
@@ -34,24 +29,18 @@ const BottomNav = () => {
     }
   };
 
-  // Altezza riportata a 22px per iOS come richiesto
-  const navHeight = isIOS ? '22px' : '44px';
-
   return (
     <div 
       className="fixed bottom-0 left-0 right-0 z-[999] bg-black border-t border-white/10 select-none"
       style={{ 
-        height: navHeight,
-        paddingBottom: '0px',
+        // Altezza dinamica: 60px di barra + lo spazio della "home bar" di iOS
+        height: 'calc(60px + env(safe-area-inset-bottom))',
         WebkitUserSelect: 'none',
         touchAction: 'none'
       }}
     >
       <div 
-        className={cn(
-          "relative flex items-center justify-around h-full w-full max-w-2xl mx-auto px-2",
-          isIOS ? "pt-[1px]" : "pt-0" // Padding superiore minimo per compensare il bordo e centrare l'icona
-        )}
+        className="flex items-center justify-around w-full h-[60px] max-w-2xl mx-auto px-2"
       >
         {items.map((item, i) => {
           const isActive = activeIndex === i;
@@ -67,19 +56,21 @@ const BottomNav = () => {
             >
               <motion.div
                 animate={{ 
-                  scale: isActive ? 1.05 : 1,
+                  scale: isActive ? 1.1 : 1,
                 }}
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
               >
                 <item.icon 
-                  size={isIOS ? 20 : 22} 
-                  strokeWidth={isActive ? 2.2 : 1.8} 
+                  size={24} 
+                  strokeWidth={isActive ? 2.5 : 2} 
                 />
               </motion.div>
             </Link>
           );
         })}
       </div>
+      {/* Spazio di riempimento per la safe area inferiore */}
+      <div style={{ height: 'env(safe-area-inset-bottom)' }} />
     </div>
   );
 };
