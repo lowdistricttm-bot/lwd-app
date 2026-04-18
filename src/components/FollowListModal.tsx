@@ -27,12 +27,12 @@ const FollowListModal = ({ isOpen, onClose, userId, username, type }: FollowList
         <>
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={onClose} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[400]" 
+            onClick={onClose} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000]" 
           />
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[401] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 pb-12 rounded-t-[2.5rem] max-h-[70vh] flex flex-col shadow-2xl"
+            className="fixed inset-x-0 bottom-0 z-[1001] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 pb-12 rounded-t-[2.5rem] max-h-[85vh] flex flex-col shadow-2xl"
           >
             <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
 
@@ -46,7 +46,7 @@ const FollowListModal = ({ isOpen, onClose, userId, username, type }: FollowList
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar pb-20">
               {isLoading ? (
                 <div className="flex justify-center py-20"><Loader2 className="animate-spin text-zinc-500" /></div>
               ) : list?.length === 0 ? (
