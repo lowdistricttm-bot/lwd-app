@@ -2,9 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from 'react';
 import { showSuccess, showError } from '@/utils/toast';
-import { compressImage, validateVideo } from '@/utils/media';
 import { uploadToCloudinary } from '@/utils/cloudinary';
 
 export interface Message {
@@ -23,6 +21,7 @@ export interface Message {
 export const useMessages = (otherUserId?: string) => {
   const queryClient = useQueryClient();
 
+  // Query per la lista delle conversazioni
   const { data: conversations, isLoading: loadingConvs } = useQuery({
     queryKey: ['conversations'],
     queryFn: async () => {
@@ -55,9 +54,10 @@ export const useMessages = (otherUserId?: string) => {
 
       return Array.from(groups.values());
     },
-    staleTime: 0 // Forza il refresh ad ogni invalidazione
+    staleTime: 0
   });
 
+  // Query per il conteggio messaggi non letti (Badge Navbar)
   const { data: unreadCount = 0 } = useQuery({
     queryKey: ['unread-messages-count'],
     queryFn: async () => {
@@ -72,9 +72,10 @@ export const useMessages = (otherUserId?: string) => {
       return count || 0;
     },
     staleTime: 0,
-    refetchInterval: 30000 // Backup fetch ogni 30 secondi su mobile
+    refetchInterval: 15000 // Backup ogni 15 secondi
   });
 
+  // Query per i messaggi di una singola chat
   const { data: chatMessages, isLoading: loadingChat } = useQuery({
     queryKey: ['chat', otherUserId],
     queryFn: async () => {
@@ -103,30 +104,6 @@ export const useMessages = (otherUserId?: string) => {
     staleTime: 0
   });
 
-  useEffect(() => {
-    const instanceId = Math.random().toString(36).substring(2, 9);
-    const channelName = `messages-realtime-${otherUserId || 'list'}-${instanceId}`;
-
-    const channel = supabase
-      .channel(channelName)
-      .on(
-        'postgres_changes', 
-        { event: '*', schema: 'public', table: 'messages' }, 
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['conversations'] });
-          queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
-          if (otherUserId) {
-            queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [otherUserId, queryClient]);
-
   const sendMessage = useMutation({
     mutationFn: async ({ receiverId, content, files, imageUrl }: { receiverId: string, content: string, files?: File[], imageUrl?: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -138,12 +115,8 @@ export const useMessages = (otherUserId?: string) => {
         imageUrls = [imageUrl];
       } else if (files && files.length > 0) {
         for (const file of files) {
-          const formData = new FormData();
-          formData.append('file', file);
-          formData.append('upload_preset', 'ml_default');
-          const res = await fetch('https://api.cloudinary.com/v1_1/dcogakkza/upload', { method: 'POST', body: formData });
-          const data = await res.json();
-          imageUrls.push(data.secure_url);
+          const url = await uploadToCloudinary(file);
+          imageUrls.push(url);
         }
       }
 
@@ -189,13 +162,11 @@ export const useMessages = (otherUserId?: string) => {
       
       if (error) throw error;
     },
-    onSuccess: (_, otherId) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      queryClient.invalidateQueries({ queryKey: ['chat', otherId] });
       queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
-      showSuccess("Conversazione eliminata definitivamente");
-    },
-    onError: (err: any) => showError("Errore durante la pulizia del database")
+      showSuccess("Conversazione eliminata");
+    }
   });
 
   const deleteMessage = useMutation({

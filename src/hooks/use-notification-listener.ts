@@ -15,41 +15,53 @@ export const useNotificationListener = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Pulizia canale precedente se esistente
       if (channel) supabase.removeChannel(channel);
 
       const instanceId = Math.random().toString(36).substring(2, 9);
 
+      // Ascoltiamo TUTTI i cambiamenti alla tabella messages che riguardano l'utente
+      // sia come mittente che come ricevitore per tenere tutto sincronizzato
       channel = supabase
-        .channel(`global-msg-events-${user.id}-${instanceId}`)
+        .channel(`global-messaging-${user.id}-${instanceId}`)
         .on(
           'postgres_changes',
           {
-            event: 'INSERT',
+            event: '*', // Ascolta INSERT, UPDATE, DELETE
             schema: 'public',
-            table: 'messages',
-            filter: `receiver_id=eq.${user.id}`
+            table: 'messages'
           },
-          () => {
-            playNotificationSound();
-            // Invalida immediatamente le query per aggiornare UI e badge
+          (payload) => {
+            const isNewIncomingMessage = payload.eventType === 'INSERT' && payload.new.receiver_id === user.id;
+            
+            if (isNewIncomingMessage) {
+              playNotificationSound();
+            }
+
+            // Invalida TUTTE le query legate ai messaggi per un aggiornamento istantaneo della UI
+            console.log("[Realtime] Messaggio ricevuto/aggiornato, rinfresco UI...");
+            
+            // Aggiorna il badge nella Navbar
             queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
+            
+            // Aggiorna la lista delle conversazioni (Messages.tsx)
             queryClient.invalidateQueries({ queryKey: ['conversations'] });
+            
+            // Aggiorna la chat specifica se aperta (Chat.tsx)
             queryClient.invalidateQueries({ queryKey: ['chat'] });
           }
         )
         .subscribe((status) => {
           if (status === 'SUBSCRIBED') {
-            console.log("[Realtime] Sottoscritto con successo ai messaggi");
+            console.log("[Realtime] Sincronizzazione messaggi attiva");
           }
         });
     };
 
-    // Gestione del ritorno in primo piano (fondamentale per iOS)
+    // Gestione del ritorno in primo piano (fondamentale per iOS/PWA)
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        console.log("[App] Ripristino visibilità: refresh dati...");
         queryClient.invalidateQueries();
-        // Re-inizializza il listener se necessario
         startListening();
       }
     };
@@ -61,9 +73,7 @@ export const useNotificationListener = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN') {
         startListening();
-        queryClient.invalidateQueries();
       }
-      
       if (event === 'SIGNED_OUT') {
         if (channel) supabase.removeChannel(channel);
         queryClient.clear();
