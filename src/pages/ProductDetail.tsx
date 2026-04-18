@@ -74,9 +74,9 @@ const ProductDetail = () => {
 
           {/* Info Prodotto */}
           <div className="flex flex-col space-y-10">
-            <div className="space-y-3 min-w-0">
+            <div className="space-y-3">
               <h1 
-                className="text-2xl md:text-5xl font-black tracking-tighter uppercase italic leading-none truncate" 
+                className="text-3xl md:text-5xl font-black tracking-tighter uppercase italic leading-[0.9]" 
                 dangerouslySetInnerHTML={{ __html: product.name }} 
               />
               <p className="text-2xl font-black tracking-tighter text-white/90 italic">
