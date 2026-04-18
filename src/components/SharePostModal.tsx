@@ -81,14 +81,14 @@ const SharePostModal = ({ isOpen, onClose, postId, postImageUrl, postContent }: 
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }} 
             onClick={onClose} 
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[300]" 
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[1000]" 
           />
           <motion.div 
             initial={{ y: '100%' }} 
             animate={{ y: 0 }} 
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[301] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 pb-12 rounded-t-[2.5rem] max-h-[80vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            className="fixed inset-x-0 bottom-0 z-[1001] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 pb-12 rounded-t-[2.5rem] max-h-[80vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
           >
             <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
             
@@ -112,7 +112,7 @@ const SharePostModal = ({ isOpen, onClose, postId, postImageUrl, postContent }: 
               />
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar pb-24">
               {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4">
                   <Loader2 className="animate-spin text-zinc-500" size={32} />
@@ -126,7 +126,7 @@ const SharePostModal = ({ isOpen, onClose, postId, postImageUrl, postContent }: 
                         {user.avatar_url ? (
                           <img src={user.avatar_url} className="w-full h-full object-cover" alt="" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-zinc-600"><User size={20} /></div>
+                          <div className="w-full h-full flex items-center justify-center text-zinc-500"><User size={20} /></div>
                         )}
                       </div>
                       <div className="min-w-0">
