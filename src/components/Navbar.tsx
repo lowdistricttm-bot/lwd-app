@@ -92,7 +92,7 @@ const Navbar = () => {
             >
               <Send size={20} className="-rotate-12" />
               {!isSubscriber && unreadMessages > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-blue-500 text-white text-[8px] font-black flex items-center justify-center rounded-full border-2 border-black animate-in zoom-in duration-300 shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-white text-black text-[8px] font-black flex items-center justify-center rounded-full border-2 border-black animate-in zoom-in duration-300">
                   {unreadMessages > 9 ? '9+' : unreadMessages}
                 </span>
               )}
