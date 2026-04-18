@@ -103,7 +103,7 @@ const Index = () => {
               <div className="flex-1 space-y-6 text-center md:text-left">
                 <div>
                   <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">The Sound of District</h2>
-                  <h3 className="text-3xl md:text-6xl font-black italic tracking-tighter uppercase leading-none whitespace-nowrap overflow-hidden text-ellipsis">
+                  <h3 className="text-[clamp(24px,8vw,60px)] font-black italic uppercase tracking-tighter leading-none whitespace-nowrap overflow-hidden text-ellipsis">
                     District Radio
                   </h3>
                 </div>
