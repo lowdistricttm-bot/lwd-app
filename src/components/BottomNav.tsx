@@ -48,14 +48,14 @@ const BottomNav = () => {
       <motion.div 
         ref={containerRef}
         onPan={handlePan}
-        className="relative flex items-center h-20 px-2"
+        className="relative flex items-center h-14 md:h-16 px-2"
       >
         {/* Indicatore Liquido Professionale (Glow soffuso) */}
         <AnimatePresence>
           {activeIndex !== -1 && (
             <motion.div
               layoutId="active-glow"
-              className="absolute w-12 h-12 bg-white/15 rounded-full z-0 blur-2xl"
+              className="absolute w-10 h-10 bg-white/10 rounded-full z-0 blur-xl"
               initial={false}
               transition={{
                 type: "spring",
@@ -63,7 +63,7 @@ const BottomNav = () => {
                 damping: 30
               }}
               style={{
-                left: `calc(${(activeIndex * 100) / items.length}% + (100% / ${items.length} / 2) - 24px)`,
+                left: `calc(${(activeIndex * 100) / items.length}% + (100% / ${items.length} / 2) - 20px)`,
               }}
             />
           )}
@@ -82,11 +82,11 @@ const BottomNav = () => {
               )}
             >
               <item.icon 
-                size={24} 
+                size={22} 
                 strokeWidth={isActive ? 2.5 : 2} 
                 className="transition-all duration-500"
                 style={{ 
-                  transform: isActive ? 'scale(1.15)' : 'scale(1)',
+                  transform: isActive ? 'scale(1.1)' : 'scale(1)',
                   filter: isActive ? 'drop-shadow(0 0 8px rgba(255,255,255,0.3))' : 'none'
                 }}
               />
