@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Bell, Heart, MessageSquare, ClipboardCheck, User, Loader2, Trash2, Calendar, Car } from 'lucide-react';
+import { X, Bell, Heart, MessageSquare, ClipboardCheck, User, Loader2, Trash2, Calendar, Car, UserPlus } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/use-notifications';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -33,6 +33,8 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
       navigate('/profile?tab=selections');
     } else if (n.type.startsWith('event_')) {
       navigate(`/events?view=${n.event_id}`);
+    } else if (n.type === 'follow') {
+      navigate(`/profile/${n.actor_id}`);
     }
   };
 
@@ -48,6 +50,7 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
       case 'vehicle_like': return <Car size={14} className="text-red-500" />;
       case 'comment': return <MessageSquare size={14} className="text-blue-500" />;
       case 'application_status': return <ClipboardCheck size={14} className="text-green-500" />;
+      case 'follow': return <UserPlus size={14} className="text-indigo-500" />;
       default: return <Bell size={14} />;
     }
   };
@@ -67,6 +70,8 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
         return <>SELEZIONI APERTE per l'evento: <span className="font-black uppercase text-green-400">{n.event?.title || 'Low District'}</span></>;
       case 'event_closed':
         return <>SELEZIONI CHIUSE per l'evento: <span className="font-black uppercase text-red-400">{n.event?.title || 'Low District'}</span></>;
+      case 'follow':
+        return <><span className="font-black">{actorName}</span> ha iniziato a seguirti</>;
       default: return 'Nuova notifica';
     }
   };

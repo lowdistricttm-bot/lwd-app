@@ -9,7 +9,7 @@ export interface Notification {
   id: string;
   user_id: string;
   actor_id: string;
-  type: 'like' | 'comment' | 'vehicle_like' | 'application_status' | 'event_update' | 'event_new' | 'event_open' | 'event_closed';
+  type: 'like' | 'comment' | 'vehicle_like' | 'application_status' | 'event_update' | 'event_new' | 'event_open' | 'event_closed' | 'follow';
   post_id?: string;
   application_id?: string;
   event_id?: string;
