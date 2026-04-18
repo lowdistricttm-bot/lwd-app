@@ -128,8 +128,8 @@ const Chat = () => {
 
   if (loadingChat) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
-  // Altezza aumentata a 60px per iOS e 54px per altri
-  const navHeight = isIOS ? '60px' : '54px';
+  // Altezza standardizzata a 50px per iOS per matchare la BottomNav
+  const navHeight = isIOS ? '50px' : '44px';
 
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent">
@@ -298,7 +298,7 @@ const Chat = () => {
         })}
       </main>
 
-      {/* Barra di Input Uniformata - Altezza 60px */}
+      {/* Barra di Input Uniformata - Altezza 50px e icone a filo inferiore */}
       <div 
         className="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-3xl border-t border-white/10 z-50"
         style={{ 
@@ -333,8 +333,8 @@ const Chat = () => {
           <form 
             onSubmit={handleSend} 
             className={cn(
-              "h-full px-4 flex items-center gap-3",
-              isIOS ? "items-end pb-0" : "items-center"
+              "h-full px-4 flex items-end pb-0 gap-3",
+              !isIOS && "items-center"
             )}
           >
             <input 
@@ -351,20 +351,20 @@ const Chat = () => {
               onClick={() => fileInputRef.current?.click()} 
               className={cn(
                 "text-zinc-400 hover:text-white transition-all shrink-0",
-                isIOS ? "h-[60px] w-8 flex items-center justify-center" : "w-8 h-8"
+                isIOS ? "h-[50px] w-8 flex items-center justify-center" : "w-8 h-8"
               )}
             >
-              <Camera size={isIOS ? 22 : 22} />
+              <Camera size={20} />
             </button>
 
-            <div className="flex-1 relative flex items-center h-full">
+            <div className="flex-1 relative flex items-end h-full">
               <Input 
                 placeholder="Messaggio" 
                 value={message} 
                 onChange={(e) => setMessage(e.target.value)} 
                 className={cn(
                   "bg-white/5 border-white/10 rounded-full px-4 font-medium text-xs focus-visible:ring-0 text-white placeholder:text-zinc-600",
-                  isIOS ? "h-9 mb-2" : "h-9"
+                  isIOS ? "h-8 mb-2" : "h-9"
                 )} 
               />
             </div>
@@ -374,13 +374,13 @@ const Chat = () => {
               disabled={sendMessage.isPending || (!message.trim() && selectedFiles.length === 0)} 
               className={cn(
                 "text-white transition-all shrink-0 disabled:opacity-30",
-                isIOS ? "h-[60px] w-8 flex items-center justify-center" : "w-8 h-8"
+                isIOS ? "h-[50px] w-8 flex items-center justify-center" : "w-8 h-8"
               )}
             >
               {sendMessage.isPending ? (
                 <Loader2 size={18} className="animate-spin" />
               ) : (
-                <Send size={isIOS ? 20 : 20} strokeWidth={2.5} className="-rotate-12" />
+                <Send size={18} strokeWidth={2.5} className="-rotate-12" />
               )}
             </button>
           </form>

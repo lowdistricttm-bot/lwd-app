@@ -333,29 +333,29 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           )}>
             {isOwner && !isHighlight ? (
               <div className="flex items-center justify-around w-full">
-                <button onClick={() => setShowViewers(true)} className="flex flex-col items-center gap-0.5 group">
+                <button onClick={() => setShowViewers(true)} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-center" : "")}>
                   <Eye size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-white transition-colors" />
                   <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Attività</span>
                 </button>
                 
-                <button onClick={() => setIsMentionModalOpen(true)} className="flex flex-col items-center gap-0.5 group">
+                <button onClick={() => setIsMentionModalOpen(true)} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-center" : "")}>
                   <AtSign size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-white transition-colors" />
                   <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Menziona</span>
                 </button>
 
-                <button onClick={() => setIsHighlightModalOpen(true)} className="flex flex-col items-center gap-0.5 group">
+                <button onClick={() => setIsHighlightModalOpen(true)} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-center" : "")}>
                   <Star size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-white transition-colors" />
                   <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Evidenza</span>
                 </button>
 
-                <button onClick={handleDelete} className="flex flex-col items-center gap-0.5 group">
-                  <Trash2 size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-red-500 transition-colors" />
+                <button onClick={handleDelete} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-center" : "")}>
+                  <Trash2 size={18} className="text-zinc-400 group-hover:text-red-500 transition-colors" />
                   <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-red-500">Elimina</span>
                 </button>
               </div>
             ) : !isHighlight && (
               <div className="flex items-center gap-3 w-full">
-                <form onSubmit={handleReply} className="flex-1 flex gap-2">
+                <form onSubmit={handleReply} className={cn("flex-1 flex gap-2", isIOS ? "mb-2" : "")}>
                   <Input 
                     placeholder={`Rispondi a ${userStories.username}...`}
                     value={replyText}
@@ -374,7 +374,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
                   )}
                 </form>
                 
-                <div className="flex items-center gap-2">
+                <div className={cn("flex items-center gap-2", isIOS ? "h-[50px] items-center" : "")}>
                   <button 
                     onClick={handleLike}
                     className={cn(
