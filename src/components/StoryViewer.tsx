@@ -307,10 +307,10 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           )}
         </div>
 
-        {/* Footer Controls - Centered and above safe area */}
-        <div className="absolute bottom-0 left-0 right-0 z-50 p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] bg-gradient-to-t from-black/90 via-black/40 to-transparent">
+        {/* Footer Controls - Attached to bottom */}
+        <div className="absolute bottom-0 left-0 right-0 z-50 p-4 pb-[calc(0.5rem+env(safe-area-inset-bottom))] bg-gradient-to-t from-black/90 via-black/40 to-transparent">
           {isOwner && !isHighlight ? (
-            <div className="flex items-center justify-around py-4 border-t border-white/10">
+            <div className="flex items-center justify-around py-2 border-t border-white/10">
               <button onClick={() => setShowViewers(true)} className="flex flex-col items-center gap-1 group">
                 <Eye size={20} className="text-white group-hover:scale-110 transition-transform" />
                 <span className="text-[8px] font-black uppercase tracking-widest text-white">Attività</span>
@@ -332,7 +332,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
               </button>
             </div>
           ) : !isHighlight && (
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <form onSubmit={handleReply} className="flex-1 flex gap-2">
                 <Input 
                   placeholder={`Rispondi a ${userStories.username}...`}
@@ -340,14 +340,14 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
                   onChange={(e) => setReplyText(e.target.value)}
                   onFocus={() => videoRef.current?.pause()}
                   onBlur={() => videoRef.current?.play()}
-                  className="bg-white/10 border-white/20 rounded-full h-12 px-6 text-xs font-bold uppercase tracking-widest text-white placeholder:text-white/40 focus-visible:ring-white/30 backdrop-blur-md"
+                  className="bg-white/10 border-white/20 rounded-full h-11 px-5 text-xs font-bold uppercase tracking-widest text-white placeholder:text-white/40 focus-visible:ring-white/30 backdrop-blur-md"
                 />
                 {replyText.trim() && (
                   <button 
                     type="submit"
-                    className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 transition-transform shrink-0"
+                    className="w-11 h-11 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 transition-transform shrink-0"
                   >
-                    <Send size={18} />
+                    <Send size={16} />
                   </button>
                 )}
               </form>
@@ -356,17 +356,17 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
                 <button 
                   onClick={handleLike}
                   className={cn(
-                    "w-12 h-12 rounded-full flex items-center justify-center transition-all backdrop-blur-md border border-white/10",
+                    "w-11 h-11 rounded-full flex items-center justify-center transition-all backdrop-blur-md border border-white/10",
                     isLiked ? "bg-red-500 border-red-500 text-white" : "bg-white/10 text-white hover:bg-white/20"
                   )}
                 >
-                  <Heart size={20} fill={isLiked ? "currentColor" : "none"} />
+                  <Heart size={18} fill={isLiked ? "currentColor" : "none"} />
                 </button>
                 <button 
                   onClick={handleShareClick}
-                  className="w-12 h-12 bg-white/10 border border-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all backdrop-blur-md"
+                  className="w-11 h-11 bg-white/10 border border-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all backdrop-blur-md"
                 >
-                  <Send size={20} className="-rotate-12" />
+                  <Send size={18} className="-rotate-12" />
                 </button>
               </div>
             </div>
