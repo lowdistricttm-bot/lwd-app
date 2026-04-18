@@ -430,7 +430,7 @@ const Profile = () => {
                                     <span className="bg-white text-black text-[7px] font-black uppercase px-1.5 py-0.5 italic rounded-full">#{order.id}</span>
                                     <span className={cn(
                                       "text-[7px] font-black uppercase px-1.5 py-0.5 italic rounded-full",
-                                      order.status === 'completed' ? "bg-white text-black" : "bg-zinc-800 text-white"
+                                      order.status === 'completed' ? "bg-green-600 text-white" : "bg-zinc-800 text-white"
                                     )}>
                                       {translateOrderStatus(order.status)}
                                     </span>
