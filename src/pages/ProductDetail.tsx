@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
-import { ChevronLeft, ShoppingBag, Loader2, Plus, Minus, ShoppingCart } from 'lucide-react';
+import { ChevronLeft, Loader2, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useWcProduct, useWcVariations } from '@/hooks/use-woocommerce';
@@ -23,13 +23,13 @@ const ProductDetail = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <Loader2 className="animate-spin text-zinc-500" size={40} />
       </div>
     );
   }
 
-  if (!product) return <div className="min-h-screen bg-black flex items-center justify-center">Prodotto non trovato</div>;
+  if (!product) return <div className="min-h-screen bg-transparent flex items-center justify-center">Prodotto non trovato</div>;
 
   const handleAddToCart = () => {
     const priceToUse = selectedVariation ? selectedVariation.price : product.price;
@@ -51,35 +51,35 @@ const ProductDetail = () => {
   const hasVariations = product.type === 'variable' && variations && variations.length > 0;
 
   return (
-    <div className="min-h-screen bg-black text-white pb-32">
+    <div className="min-h-screen bg-transparent text-white pb-32">
       <Navbar />
       
       <main className="pt-24 px-6 max-w-4xl mx-auto">
         <button 
           onClick={() => navigate(-1)} 
-          className="flex items-center gap-2 text-zinc-600 hover:text-white mb-8 uppercase text-[10px] font-black tracking-widest transition-colors"
+          className="flex items-center gap-2 text-zinc-500 hover:text-white mb-8 uppercase text-[10px] font-black tracking-widest transition-colors"
         >
           <ChevronLeft size={16} /> Torna allo Shop
         </button>
 
-        <div className="flex flex-col gap-10">
+        <div className="flex flex-col gap-12">
           {/* Immagine Prodotto */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="aspect-[4/5] bg-zinc-900 rounded-[2.5rem] overflow-hidden border border-white/5 shadow-2xl"
+            className="aspect-[4/5] bg-zinc-900/40 backdrop-blur-md rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl"
           >
             <img src={product.images[0]?.src} alt={product.name} className="w-full h-full object-cover" />
           </motion.div>
 
           {/* Info Prodotto */}
-          <div className="flex flex-col space-y-8">
-            <div className="space-y-2">
+          <div className="flex flex-col space-y-10">
+            <div className="space-y-3">
               <h1 
                 className="text-4xl md:text-6xl font-black tracking-tighter uppercase italic leading-none" 
                 dangerouslySetInnerHTML={{ __html: product.name }} 
               />
-              <p className="text-3xl font-black tracking-tighter text-white">
+              <p className="text-3xl font-black tracking-tighter text-white/90 italic">
                 €{selectedVariation ? selectedVariation.price : product.price}
               </p>
             </div>
@@ -89,8 +89,8 @@ const ProductDetail = () => {
 
             {/* Varianti / Taglie */}
             {hasVariations && (
-              <div className="space-y-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 italic">Seleziona Taglia</p>
+              <div className="space-y-5">
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 italic ml-2">Seleziona Taglia</p>
                 <div className="flex flex-wrap gap-3">
                   {variations.map((v: any) => (
                     <button
@@ -98,10 +98,10 @@ const ProductDetail = () => {
                       onClick={() => setSelectedVariation(v)}
                       disabled={v.stock_status !== 'instock'}
                       className={cn(
-                        "min-w-[64px] h-14 border rounded-2xl flex items-center justify-center text-xs font-black uppercase transition-all duration-300",
+                        "min-w-[70px] h-14 border rounded-full flex items-center justify-center text-[11px] font-black uppercase transition-all duration-500 shadow-lg",
                         selectedVariation?.id === v.id 
-                          ? "border-white bg-white text-black shadow-xl" 
-                          : "border-white/10 bg-zinc-900/50 text-zinc-500 hover:border-white/30",
+                          ? "border-white bg-white text-black scale-105" 
+                          : "border-white/10 bg-white/5 backdrop-blur-md text-zinc-500 hover:border-white/30 hover:text-white",
                         v.stock_status !== 'instock' && "opacity-20 cursor-not-allowed line-through"
                       )}
                     >
@@ -113,19 +113,19 @@ const ProductDetail = () => {
             )}
 
             {/* Quantità */}
-            <div className="space-y-4">
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 italic">Quantità</p>
-              <div className="flex items-center bg-zinc-900/50 border border-white/5 rounded-2xl w-fit overflow-hidden h-14">
+            <div className="space-y-5">
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 italic ml-2">Quantità</p>
+              <div className="flex items-center bg-white/5 backdrop-blur-md border border-white/10 rounded-full w-fit overflow-hidden h-14 shadow-xl">
                 <button 
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-14 h-full flex items-center justify-center text-zinc-500 hover:text-white hover:bg-white/5 transition-all"
+                  className="w-14 h-full flex items-center justify-center text-zinc-500 hover:text-white hover:bg-white/10 transition-all"
                 >
                   <Minus size={18} />
                 </button>
                 <span className="w-14 text-center text-sm font-black italic">{quantity}</span>
                 <button 
                   onClick={() => setQuantity(quantity + 1)}
-                  className="w-14 h-full flex items-center justify-center text-zinc-500 hover:text-white hover:bg-white/5 transition-all"
+                  className="w-14 h-full flex items-center justify-center text-zinc-500 hover:text-white hover:bg-white/10 transition-all"
                 >
                   <Plus size={18} />
                 </button>
@@ -133,14 +133,14 @@ const ProductDetail = () => {
             </div>
 
             {/* Tasto Acquisto */}
-            <div className="pt-4">
+            <div className="pt-6">
               <Button 
                 onClick={handleAddToCart}
                 disabled={product.stock_status !== "instock" || (hasVariations && !selectedVariation)}
-                className="w-full bg-zinc-200 hover:bg-white text-black h-20 rounded-none flex items-center justify-center gap-4 transition-all duration-500 shadow-2xl group"
+                className="w-full bg-white text-black hover:bg-zinc-200 h-20 rounded-full flex items-center justify-center gap-4 transition-all duration-500 shadow-2xl group border-none"
               >
-                <div className="p-2 bg-black/5 rounded-lg group-hover:bg-black/10 transition-colors">
-                  <ShoppingCart size={20} className="text-black" />
+                <div className="p-2.5 bg-black/5 rounded-full group-hover:bg-black/10 transition-colors">
+                  <ShoppingCart size={22} className="text-black" />
                 </div>
                 <span className="text-lg md:text-xl font-black uppercase italic tracking-widest">
                   {product.stock_status !== "instock" ? "Esaurito" : (hasVariations && !selectedVariation) ? "Seleziona Taglia" : "Aggiungi al Carrello"}
