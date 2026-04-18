@@ -36,15 +36,15 @@ const BottomNav = () => {
     }
   };
 
-  // Altezza dinamica: 20px su iOS, 40px altrove
-  const navHeight = isIOS ? '20px' : '40px';
+  // Altezza ultra-ridotta: 16px su iOS, 40px altrove
+  const navHeight = isIOS ? '16px' : '40px';
 
   return (
     <div 
       className="fixed bottom-0 left-0 right-0 z-[999] bg-black/95 backdrop-blur-3xl border-t border-white/10 select-none"
       style={{ 
         height: navHeight,
-        paddingBottom: '0',
+        paddingBottom: '0px', // Padding inferiore azzerato
         transform: 'translateZ(0)',
         WebkitTransform: 'translateZ(0)',
         willChange: 'transform',
@@ -73,7 +73,7 @@ const BottomNav = () => {
               {isActive && (
                 <motion.div
                   layoutId="nav-glow"
-                  className="absolute w-6 h-6 bg-white/5 rounded-full z-0 blur-md"
+                  className="absolute w-4 h-4 bg-white/5 rounded-full z-0 blur-md"
                   transition={{
                     type: "spring",
                     stiffness: 400,
@@ -91,7 +91,7 @@ const BottomNav = () => {
                 transition={{ type: "spring", stiffness: 500, damping: 25 }}
               >
                 <item.icon 
-                  size={isIOS ? 14 : 18} 
+                  size={isIOS ? 12 : 18} 
                   strokeWidth={isActive ? 2.5 : 2} 
                 />
               </motion.div>
