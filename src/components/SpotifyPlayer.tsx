@@ -1,16 +1,53 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Music } from 'lucide-react';
+import { Music, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const SpotifyPlayer = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const playlistId = "49mK52uCtaHSCLY1VC9GR3";
+  const controllerRef = useRef<any>(null);
   
-  // Aumentato leggermente il valore negativo per far aderire meglio il pulsante al bordo
   const CLOSED_X = -284;
+
+  useEffect(() => {
+    // Carichiamo lo script delle Spotify IFrame API
+    const script = document.createElement('script');
+    script.src = "https://open.spotify.com/embed-podcast/iframe-api/v1";
+    script.async = true;
+    document.body.appendChild(script);
+
+    // Casting a any per evitare l'errore TS2339 su window
+    (window as any).onSpotifyIframeApiReady = (IFrameAPI: any) => {
+      const element = document.getElementById('spotify-embed');
+      const options = {
+        uri: `spotify:playlist:${playlistId}`,
+        width: '100%',
+        height: '152',
+        theme: '0'
+      };
+      
+      IFrameAPI.createController(element, options, (EmbedController: any) => {
+        controllerRef.current = EmbedController;
+        
+        // Ascoltiamo gli aggiornamenti della riproduzione
+        EmbedController.on('playback_update', (e: any) => {
+          const { isPaused, duration } = e.data;
+          // Se non è in pausa e la durata è maggiore di 0, sta suonando
+          setIsPlaying(!isPaused && duration > 0);
+        });
+      });
+    };
+
+    return () => {
+      if (script.parentNode) {
+        document.body.removeChild(script);
+      }
+    };
+  }, [playlistId]);
 
   return (
     <div className="fixed bottom-28 left-0 z-[100] pointer-events-none">
@@ -22,14 +59,7 @@ const SpotifyPlayer = () => {
       >
         {/* Corpo del Player */}
         <div className="w-[280px] h-[152px] bg-black border-y border-r border-white/10 shadow-2xl overflow-hidden">
-          <iframe 
-            src={`https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator&theme=0`} 
-            width="100%" 
-            height="152" 
-            frameBorder="0" 
-            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
-            loading="lazy"
-          />
+          <div id="spotify-embed"></div>
         </div>
 
         {/* Linguetta cliccabile */}
@@ -37,10 +67,14 @@ const SpotifyPlayer = () => {
           onClick={() => setIsOpen(!isOpen)}
           className={cn(
             "w-6 h-10 flex items-center justify-center cursor-pointer rounded-r-md border-y border-r border-white/10 shadow-xl transition-all duration-500",
-            isOpen ? "bg-white text-black" : "bg-zinc-900/80 backdrop-blur-md text-white hover:bg-zinc-800"
+            isOpen || isPlaying ? "bg-white text-black" : "bg-zinc-900/80 backdrop-blur-md text-white hover:bg-zinc-800"
           )}
         >
-          <Music size={12} className={cn("shrink-0", isOpen && "animate-pulse")} />
+          {isPlaying ? (
+            <Play size={10} fill="currentColor" className="shrink-0 animate-pulse" />
+          ) : (
+            <Music size={12} className="shrink-0" />
+          )}
         </div>
       </motion.div>
     </div>
