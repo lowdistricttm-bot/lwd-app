@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Bell, Heart, MessageSquare, ClipboardCheck, User, Loader2, Trash2, Calendar } from 'lucide-react';
+import { X, Bell, Heart, MessageSquare, ClipboardCheck, User, Loader2, Trash2, Calendar, Car } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/use-notifications';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -23,12 +23,12 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
       markAsRead.mutate(n.id);
     }
     onClose();
+    
     if (n.type === 'like' || n.type === 'comment') {
-      if (n.post_id) {
-        navigate(`/post/${n.post_id}`);
-      } else {
-        navigate('/bacheca');
-      }
+      if (n.post_id) navigate(`/post/${n.post_id}`);
+      else navigate('/bacheca');
+    } else if (n.type === 'vehicle_like') {
+      navigate(`/profile/${n.user_id}?tab=garage`);
     } else if (n.type === 'application_status') {
       navigate('/profile?tab=selections');
     } else if (n.type.startsWith('event_')) {
@@ -45,6 +45,7 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
     if (type.startsWith('event_')) return <Calendar size={14} className="text-purple-500" />;
     switch (type) {
       case 'like': return <Heart size={14} className="text-red-500 fill-red-500" />;
+      case 'vehicle_like': return <Car size={14} className="text-red-500" />;
       case 'comment': return <MessageSquare size={14} className="text-blue-500" />;
       case 'application_status': return <ClipboardCheck size={14} className="text-green-500" />;
       default: return <Bell size={14} />;
@@ -56,6 +57,7 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
     switch (n.type) {
       case 'like': return <><span className="font-black">{actorName}</span> ha messo like al tuo post</>;
       case 'comment': return <><span className="font-black">{actorName}</span> ha commentato il tuo post</>;
+      case 'vehicle_like': return <><span className="font-black">{actorName}</span> ha apprezzato il tuo veicolo <span className="font-black">{n.vehicles?.brand}</span></>;
       case 'application_status': 
         const status = n.applications?.status === 'approved' ? 'APPROVATA' : 'NEGATA';
         return <>La tua candidatura per <span className="font-black">{n.applications?.events?.title}</span> è stata <span className="font-black">{status}</span></>;
@@ -65,8 +67,6 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
         return <>SELEZIONI APERTE per l'evento: <span className="font-black uppercase text-green-400">{n.event?.title || 'Low District'}</span></>;
       case 'event_closed':
         return <>SELEZIONI CHIUSE per l'evento: <span className="font-black uppercase text-red-400">{n.event?.title || 'Low District'}</span></>;
-      case 'event_update':
-        return <>Aggiornamento evento: <span className="font-black uppercase">{n.event?.title || 'Low District'}</span></>;
       default: return 'Nuova notifica';
     }
   };
@@ -156,15 +156,12 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
                       {!n.is_read && <div className="w-1.5 h-1.5 bg-white rounded-full mt-2 shrink-0 animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
                     </button>
 
-                    {n.type !== 'application_status' && (
-                      <button
-                        onClick={(e) => handleDelete(e, n.id)}
-                        disabled={deleteNotification.isPending}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-black/40 rounded-full text-zinc-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
-                      >
-                        {deleteNotification.isPending ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
-                      </button>
-                    )}
+                    <button
+                      onClick={(e) => handleDelete(e, n.id)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-black/40 rounded-full text-zinc-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                    >
+                      <Trash2 size={12} />
+                    </button>
                   </div>
                 ))
               )}
