@@ -17,7 +17,6 @@ export const useNotificationListener = () => {
 
       if (channel) supabase.removeChannel(channel);
 
-      // Aggiungiamo un ID casuale per evitare conflitti durante i re-render
       const instanceId = Math.random().toString(36).substring(2, 9);
 
       channel = supabase
@@ -32,21 +31,35 @@ export const useNotificationListener = () => {
           },
           () => {
             playNotificationSound();
-            // Ricarica contatori e liste messaggi
+            // Invalida immediatamente le query per aggiornare UI e badge
             queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
             queryClient.invalidateQueries({ queryKey: ['conversations'] });
             queryClient.invalidateQueries({ queryKey: ['chat'] });
           }
         )
-        .subscribe();
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            console.log("[Realtime] Sottoscritto con successo ai messaggi");
+          }
+        });
+    };
+
+    // Gestione del ritorno in primo piano (fondamentale per iOS)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log("[App] Ripristino visibilità: refresh dati...");
+        queryClient.invalidateQueries();
+        // Re-inizializza il listener se necessario
+        startListening();
+      }
     };
 
     startListening();
+    window.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleVisibilityChange);
 
-    // Gestione transizioni di stato Auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN') {
-        console.log("[Auth] Utente loggato, reset cache e avvio listener...");
         startListening();
         queryClient.invalidateQueries();
       }
@@ -60,6 +73,8 @@ export const useNotificationListener = () => {
     return () => {
       if (channel) supabase.removeChannel(channel);
       subscription.unsubscribe();
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleVisibilityChange);
     };
   }, [queryClient]);
 };

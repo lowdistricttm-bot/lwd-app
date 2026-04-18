@@ -64,7 +64,8 @@ export const useNotifications = () => {
         return [];
       }
       return data as Notification[];
-    }
+    },
+    staleTime: 0 // Assicura refresh immediato su invalidazione
   });
 
   const unreadCount = notifications?.filter(n => !n.is_read).length || 0;
@@ -89,9 +90,7 @@ export const useNotifications = () => {
             filter: `user_id=eq.${user.id}`
           },
           () => {
-            // Invalida la cache per forzare il ricaricamento
             queryClient.invalidateQueries({ queryKey: ['notifications'] });
-            // Riproduce il suono e il feedback aptico
             playNotificationSound();
           }
         )

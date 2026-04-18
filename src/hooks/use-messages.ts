@@ -54,7 +54,8 @@ export const useMessages = (otherUserId?: string) => {
       });
 
       return Array.from(groups.values());
-    }
+    },
+    staleTime: 0 // Forza il refresh ad ogni invalidazione
   });
 
   const { data: unreadCount = 0 } = useQuery({
@@ -69,7 +70,9 @@ export const useMessages = (otherUserId?: string) => {
         .eq('is_read', false);
       if (error) return 0;
       return count || 0;
-    }
+    },
+    staleTime: 0,
+    refetchInterval: 30000 // Backup fetch ogni 30 secondi su mobile
   });
 
   const { data: chatMessages, isLoading: loadingChat } = useQuery({
@@ -96,7 +99,8 @@ export const useMessages = (otherUserId?: string) => {
         images: Array.isArray(msg.images) ? msg.images : (msg.image_url ? [msg.image_url] : [])
       })) as Message[];
     },
-    enabled: !!otherUserId
+    enabled: !!otherUserId,
+    staleTime: 0
   });
 
   useEffect(() => {
@@ -178,7 +182,6 @@ export const useMessages = (otherUserId?: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Elimina fisicamente tutti i messaggi tra i due utenti dal database
       const { error } = await supabase
         .from('messages')
         .delete()
@@ -187,7 +190,6 @@ export const useMessages = (otherUserId?: string) => {
       if (error) throw error;
     },
     onSuccess: (_, otherId) => {
-      // Pulisce la cache per far sparire la conversazione e i messaggi
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
       queryClient.invalidateQueries({ queryKey: ['chat', otherId] });
       queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
