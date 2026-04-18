@@ -195,18 +195,18 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Profile Info Section */}
+        {/* Profile Info Section - Riorganizzato per matchare lo screenshot */}
         <div className="px-6 md:px-12 max-w-6xl mx-auto relative">
-          <div className="flex items-start gap-4 md:gap-6 -mt-12 md:-mt-16">
+          <div className="flex items-start gap-6 md:gap-10 -mt-12 md:-mt-16">
             {/* Avatar */}
             <div className="relative group/avatar shrink-0 z-20">
               <div 
                 onClick={() => !isOwnProfile && setLightboxData({ images: [profile?.avatar_url || DEFAULT_AVATAR], index: 0 })} 
                 className={cn(
-                  "w-24 h-24 md:w-32 md:h-32 bg-zinc-900 border-4 rounded-full overflow-hidden flex items-center justify-center relative transition-colors duration-500",
+                  "w-28 h-28 md:w-40 md:h-40 bg-zinc-900 border-[5px] rounded-full overflow-hidden flex items-center justify-center relative transition-all duration-500",
                   isOnline 
-                    ? "border-green-500 shadow-[0_0_30px_rgba(34,197,94,0.3)]" 
-                    : "border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.2)]"
+                    ? "border-green-500 shadow-[0_0_30px_rgba(34,197,94,0.4)]" 
+                    : "border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.3)]"
                 )}
               >
                 {uploadingAvatar ? <Loader2 className="animate-spin text-zinc-500" /> : (profile?.avatar_url || DEFAULT_AVATAR) ? <img src={profile?.avatar_url || DEFAULT_AVATAR} alt="Avatar" className="w-full h-full object-cover" /> : <User size={40} className="text-zinc-800" />}
@@ -219,35 +219,59 @@ const Profile = () => {
               <input type="file" ref={avatarInputRef} className="hidden" accept="image/*,video/*" onChange={(e) => handleFileUpload(e, 'avatar')} />
             </div>
 
-            {/* Text Info */}
-            <div className="pt-12 md:pt-16 flex-1 min-w-0">
-              <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-sm md:text-xl font-black italic uppercase tracking-tighter leading-none">{profile?.username || 'Utente'}</h1>
-                <div className="flex items-center gap-1.5 shrink-0">
+            {/* Text Info - Layout Stacked */}
+            <div className="pt-14 md:pt-20 flex-1 min-w-0 flex flex-col gap-5">
+              {/* Nome Utente */}
+              <div className="flex items-center justify-between">
+                <h1 className="text-2xl md:text-4xl font-black italic uppercase tracking-tighter leading-none truncate">
+                  {profile?.username || 'Utente'}
+                </h1>
+              </div>
+
+              {/* Pulsanti Azione */}
+              <div className="flex items-center gap-3">
+                {!isOwnProfile && currentUser && (!isTargetSubscriber || canVote) && (
+                  <FollowButton userId={targetUserId} className="flex-1" />
+                )}
+                
+                <div className="flex items-center gap-2">
                   {!isOwnProfile && currentUser && (!isTargetSubscriber || canVote) && (
-                    <>
-                      <FollowButton userId={targetUserId} />
-                      <button onClick={() => navigate(`/chat/${profile.id}`)} className="p-1.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all"><Mail size={14} /></button>
-                    </>
+                    <button 
+                      onClick={() => navigate(`/chat/${profile.id}`)} 
+                      className="w-14 h-14 bg-white/5 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all flex items-center justify-center border border-white/10 shadow-xl"
+                    >
+                      <Mail size={22} />
+                    </button>
                   )}
-                  <button onClick={handleShareProfile} className="p-1.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all"><Share2 size={14} /></button>
+                  <button 
+                    onClick={handleShareProfile} 
+                    className="w-14 h-14 bg-white/5 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all flex items-center justify-center border border-white/10 shadow-xl"
+                  >
+                    <Share2 size={22} />
+                  </button>
                   {isOwnProfile && (
-                    <button onClick={() => setIsUsernameNoticeOpen(true)} className="p-1.5 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all"><Edit2 size={12} /></button>
+                    <button 
+                      onClick={() => setIsUsernameNoticeOpen(true)} 
+                      className="w-14 h-14 bg-white/5 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all flex items-center justify-center border border-white/10 shadow-xl"
+                    >
+                      <Edit2 size={20} />
+                    </button>
                   )}
                 </div>
               </div>
               
-              <div className="mt-0 flex items-center gap-3">
-                <p className="text-zinc-500 text-[7px] font-black uppercase tracking-[0.2em] italic leading-none">
+              {/* Ruolo e Stato Online */}
+              <div className="flex items-center gap-6">
+                <p className="text-zinc-500 text-[9px] font-black uppercase tracking-[0.3em] italic leading-none">
                   {t.profile.roles[userRole] || t.profile.roles.member}
                 </p>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   <div className={cn(
-                    "w-1.5 h-1.5 rounded-full transition-colors duration-500",
-                    isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"
+                    "w-2 h-2 rounded-full transition-colors duration-500",
+                    isOnline ? "bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.8)]" : "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]"
                   )} />
                   <p className={cn(
-                    "text-[7px] font-black uppercase tracking-widest leading-none transition-colors duration-500",
+                    "text-[9px] font-black uppercase tracking-widest leading-none transition-colors duration-500",
                     isOnline ? "text-green-500" : "text-zinc-500"
                   )}>
                     {isOnline ? 'Online' : lastSeen ? `Ultimo accesso ${lastSeen}` : 'Offline'}
@@ -255,25 +279,25 @@ const Profile = () => {
                 </div>
               </div>
 
-              {/* Follow Stats */}
-              <div className="flex gap-6 mt-4">
+              {/* Follow Stats - Allineate a sinistra */}
+              <div className="flex gap-10 mt-2">
                 <button 
                   onClick={() => setFollowModal({ type: 'followers', isOpen: true })}
                   className="flex flex-col items-start group"
                 >
-                  <span className="text-xs font-black italic tracking-tighter">{loadingCounts ? '...' : counts?.followers}</span>
-                  <span className="text-[7px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white transition-colors">{t.profile.followers}</span>
+                  <span className="text-lg font-black italic tracking-tighter leading-none mb-1">{loadingCounts ? '...' : counts?.followers}</span>
+                  <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white transition-colors">{t.profile.followers}</span>
                 </button>
                 <button 
                   onClick={() => setFollowModal({ type: 'following', isOpen: true })}
                   className="flex flex-col items-start group"
                 >
-                  <span className="text-xs font-black italic tracking-tighter">{loadingCounts ? '...' : counts?.following}</span>
-                  <span className="text-[7px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white transition-colors">{t.profile.following}</span>
+                  <span className="text-lg font-black italic tracking-tighter leading-none mb-1">{loadingCounts ? '...' : counts?.following}</span>
+                  <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white transition-colors">{t.profile.following}</span>
                 </button>
                 <div className="flex flex-col items-start">
-                  <span className="text-xs font-black italic tracking-tighter">{userPosts.length}</span>
-                  <span className="text-[7px] font-black uppercase tracking-widest text-zinc-500">{t.profile.posts}</span>
+                  <span className="text-lg font-black italic tracking-tighter leading-none mb-1">{userPosts.length}</span>
+                  <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">{t.profile.posts}</span>
                 </div>
               </div>
             </div>

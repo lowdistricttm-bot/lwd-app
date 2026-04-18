@@ -14,26 +14,26 @@ interface FollowButtonProps {
 const FollowButton = ({ userId, className }: FollowButtonProps) => {
   const { isFollowing, checkingFollow, toggleFollow } = useFollow(userId);
 
-  if (checkingFollow) return <div className="w-24 h-10 bg-white/5 animate-pulse rounded-full" />;
+  if (checkingFollow) return <div className="flex-1 h-14 bg-white/5 animate-pulse rounded-full" />;
 
   return (
     <Button
       onClick={() => toggleFollow.mutate()}
       disabled={toggleFollow.isPending}
       className={cn(
-        "rounded-full font-black uppercase italic text-[10px] tracking-widest h-10 px-6 transition-all duration-500 shadow-xl",
+        "rounded-full font-black uppercase italic text-xs tracking-[0.2em] h-14 px-10 transition-all duration-500 shadow-2xl",
         isFollowing 
           ? "bg-zinc-800 text-white border border-white/10 hover:bg-red-600 hover:border-red-600" 
-          : "bg-white text-black hover:bg-zinc-200",
+          : "bg-white text-black hover:bg-zinc-200 hover:scale-[1.02] active:scale-[0.98]",
         className
       )}
     >
       {toggleFollow.isPending ? (
-        <Loader2 className="animate-spin" size={14} />
+        <Loader2 className="animate-spin" size={18} />
       ) : isFollowing ? (
-        <><UserMinus size={14} className="mr-2" /> Segui già</>
+        <><UserMinus size={18} className="mr-3" /> Segui già</>
       ) : (
-        <><UserPlus size={14} className="mr-2" /> Segui</>
+        <><UserPlus size={18} className="mr-3" /> Segui</>
       )}
     </Button>
   );
