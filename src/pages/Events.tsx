@@ -200,55 +200,66 @@ const Events = () => {
         )}
 
         <AnimatePresence>
-          {/* Modal Visualizza Evento */}
+          {/* Modal Visualizza Evento - RESTYLED BASED ON SCREENSHOT */}
           {viewingEvent && (
             <>
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setViewingEvent(null)} className="fixed inset-0 bg-black/90 backdrop-blur-md z-[150]" />
-              <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed inset-x-0 bottom-0 z-[151] bg-zinc-950 border-t border-white/10 p-8 rounded-t-[2rem] max-h-[85vh] overflow-y-auto">
-                <div className="max-w-2xl mx-auto space-y-8 pb-12">
-                  <div className="flex justify-between items-start gap-4">
-                    <div className="flex-1 min-w-0 overflow-x-auto no-scrollbar">
-                      <h3 className="text-[clamp(16px,4.5vw,28px)] font-black italic uppercase tracking-tighter whitespace-nowrap pr-4">
-                        {viewingEvent.title}
-                      </h3>
-                    </div>
-                    <button onClick={() => setViewingEvent(null)} className="p-2 text-zinc-500 hover:text-white shrink-0"><X size={24} /></button>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setViewingEvent(null)} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150]" />
+              <motion.div 
+                initial={{ y: '100%' }} 
+                animate={{ y: 0 }} 
+                exit={{ y: '100%' }} 
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="fixed inset-x-0 bottom-0 z-[151] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 pb-12 rounded-t-[2.5rem] max-h-[90vh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+              >
+                <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
+                
+                <div className="max-w-2xl mx-auto space-y-10">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-2xl font-black italic uppercase tracking-tighter leading-none">
+                      {viewingEvent.title}
+                    </h3>
+                    <button onClick={() => setViewingEvent(null)} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors"><X size={24} /></button>
                   </div>
+
                   {viewingEvent.image_url && (
-                    <div className="aspect-video bg-zinc-900 rounded-2xl overflow-hidden border border-white/5">
+                    <div className="aspect-video bg-zinc-950 rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl">
                       <img src={viewingEvent.image_url} className="w-full h-full object-cover" alt={viewingEvent.title} />
                     </div>
                   )}
+
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-zinc-900/50 border border-white/5 p-3 sm:p-4 rounded-2xl overflow-hidden">
-                      <p className="text-[9px] font-black uppercase text-zinc-500 tracking-widest mb-1 truncate">{t.events.date}</p>
-                      <p className="text-sm sm:text-base font-black uppercase whitespace-nowrap overflow-x-auto no-scrollbar">
+                    <div className="bg-white/5 border border-white/10 p-6 rounded-[2rem] backdrop-blur-md">
+                      <p className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.3em] italic mb-2">{t.events.date}</p>
+                      <p className="text-sm font-black uppercase italic text-white tracking-tight">
                         {formatDateRange(viewingEvent.date, viewingEvent.end_date)}
                       </p>
                     </div>
-                    <div className="bg-zinc-900/50 border border-white/5 p-3 sm:p-4 rounded-2xl overflow-hidden">
-                      <p className="text-[9px] font-black uppercase text-zinc-500 tracking-widest mb-1 truncate">{t.events.location}</p>
-                      <p className="text-sm sm:text-base font-black uppercase whitespace-nowrap overflow-x-auto no-scrollbar">
+                    <div className="bg-white/5 border border-white/10 p-6 rounded-[2rem] backdrop-blur-md">
+                      <p className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.3em] italic mb-2">{t.events.location}</p>
+                      <p className="text-sm font-black uppercase italic text-white tracking-tight">
                         {viewingEvent.location}
                       </p>
                     </div>
                   </div>
+
                   {viewingEvent.description && (
-                    <div className="space-y-2">
-                      <h4 className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">{t.events.description}</h4>
-                      <p className="text-sm text-zinc-300 leading-relaxed italic">{viewingEvent.description}</p>
+                    <div className="space-y-3 px-2">
+                      <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.4em] italic">{t.events.description}</h4>
+                      <p className="text-sm font-black uppercase italic text-white leading-relaxed tracking-tight">{viewingEvent.description}</p>
                     </div>
                   )}
+
                   {viewingEvent.program && (
-                    <div className="space-y-2">
-                      <h4 className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">{t.events.program}</h4>
-                      <p className="text-sm text-zinc-300 leading-relaxed italic whitespace-pre-wrap">{viewingEvent.program}</p>
+                    <div className="space-y-3 px-2">
+                      <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.4em] italic">{t.events.program}</h4>
+                      <p className="text-sm font-black uppercase italic text-white leading-relaxed tracking-tight whitespace-pre-wrap">{viewingEvent.program}</p>
                     </div>
                   )}
+
                   {isAdmin && (
                     <div className="pt-6 flex gap-4">
-                      <Button onClick={() => { setEditingEvent(viewingEvent); setViewingEvent(null); setIsAdminModalOpen(true); }} className="flex-1 bg-white text-black font-black uppercase italic rounded-full h-12"><Edit3 size={14} className="mr-2" /> Modifica</Button>
-                      <Button onClick={() => { if(confirm("Eliminare evento?")) { deleteEvent.mutate(viewingEvent.id); setViewingEvent(null); } }} variant="destructive" className="flex-1 font-black uppercase italic rounded-full h-12"><Trash2 size={14} className="mr-2" /> Elimina</Button>
+                      <Button onClick={() => { setEditingEvent(viewingEvent); setViewingEvent(null); setIsAdminModalOpen(true); }} className="flex-1 bg-white text-black font-black uppercase italic rounded-full h-14 shadow-xl"><Edit3 size={16} className="mr-2" /> Modifica</Button>
+                      <Button onClick={() => { if(confirm("Eliminare evento?")) { deleteEvent.mutate(viewingEvent.id); setViewingEvent(null); } }} variant="destructive" className="flex-1 font-black uppercase italic rounded-full h-14 shadow-xl"><Trash2 size={16} className="mr-2" /> Elimina</Button>
                     </div>
                   )}
                 </div>
@@ -256,7 +267,7 @@ const Events = () => {
             </>
           )}
 
-          {/* Modal Invia Selezione / Apply - RESTYLED */}
+          {/* Modal Invia Selezione / Apply */}
           {selectedEvent && (
             <>
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedEvent(null)} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150]" />
