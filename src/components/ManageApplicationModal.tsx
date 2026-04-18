@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Clock, CheckCircle2, XCircle, Car, MapPin, Calendar, Trash2, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
@@ -15,6 +15,24 @@ interface ManageApplicationModalProps {
 
 const ManageApplicationModal = ({ isOpen, onClose, application }: ManageApplicationModalProps) => {
   const { cancelApplication } = useEvents();
+
+  // Scroll Lock Logic
+  useEffect(() => {
+    if (isOpen) {
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [isOpen]);
 
   if (!application) return null;
 
@@ -36,7 +54,11 @@ const ManageApplicationModal = ({ isOpen, onClose, application }: ManageApplicat
       {isOpen && (
         <>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/90 backdrop-blur-md z-[150]" />
-          <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed inset-x-0 bottom-0 z-[151] bg-zinc-950 border-t border-white/10 p-8 rounded-t-[2rem] max-h-[85vh] overflow-y-auto">
+          <motion.div 
+            initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} 
+            className="fixed inset-x-0 bottom-0 z-[151] bg-zinc-950 border-t border-white/10 p-8 rounded-t-[2rem] max-h-[85vh] overflow-y-auto"
+            style={{ touchAction: 'pan-y' }}
+          >
             <div className="max-w-2xl mx-auto space-y-8 pb-12">
               <div className="flex justify-between items-start">
                 <div>
@@ -104,7 +126,6 @@ const ManageApplicationModal = ({ isOpen, onClose, application }: ManageApplicat
                     </p>
                   </div>
 
-                  {/* L'utente può annullare solo se in attesa o rifiutata */}
                   {canUserCancel && (
                     <Button 
                       onClick={handleCancel}

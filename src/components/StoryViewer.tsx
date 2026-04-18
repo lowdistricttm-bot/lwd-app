@@ -58,11 +58,15 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
       setCurrentUserId(user?.id || null);
     });
     
-    const originalStyle = window.getComputedStyle(document.body).overflow;
+    // Bulletproof Scroll Lock
+    document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
     
     return () => {
-      document.body.style.overflow = originalStyle;
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     };
   }, []);
 
@@ -394,6 +398,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
                 initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                 className="absolute inset-x-0 bottom-0 z-[61] bg-zinc-950 border-t border-white/10 rounded-t-[2rem] max-h-[60%] flex flex-col pb-[env(safe-area-inset-bottom)] md:pb-8"
+                style={{ touchAction: 'pan-y' }}
               >
                 <div className="p-6 border-b border-white/5 flex items-center justify-between">
                   <h3 className="text-lg font-black italic uppercase tracking-tighter">Visualizzazioni</h3>
@@ -439,7 +444,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
         </AnimatePresence>
       </div>
 
-      {/* Desktop Navigation Buttons - Posizionati ai lati del pannello */}
+      {/* Desktop Navigation Buttons */}
       <button 
         onClick={handlePrev}
         className="hidden md:flex fixed left-[calc(50%-320px)] top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-[10000] text-white transition-all border border-white/10 backdrop-blur-md shadow-2xl"

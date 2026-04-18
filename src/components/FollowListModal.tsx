@@ -22,11 +22,19 @@ const FollowListModal = ({ isOpen, onClose, userId, username, type }: FollowList
   // Scroll Lock Logic
   useEffect(() => {
     if (isOpen) {
+      document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
     } else {
-      document.body.style.overflow = 'unset';
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     }
-    return () => { document.body.style.overflow = 'unset'; };
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
   }, [isOpen]);
 
   const title = type === 'followers' ? 'Follower' : 'Seguiti';
@@ -40,6 +48,7 @@ const FollowListModal = ({ isOpen, onClose, userId, username, type }: FollowList
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed inset-x-0 bottom-0 z-[1001] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 pb-12 rounded-t-[2.5rem] max-h-[85vh] flex flex-col shadow-2xl"
+            style={{ touchAction: 'pan-y' }}
           >
             <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
             <div className="flex justify-between items-center mb-8">

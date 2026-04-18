@@ -22,6 +22,24 @@ const AddMentionModal = ({ isOpen, onClose, storyId, storyUrl, existingMentions 
   const [isLoading, setIsLoading] = useState(false);
   const { addMention } = useStories();
 
+  // Scroll Lock Logic
+  useEffect(() => {
+    if (isOpen) {
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [isOpen]);
+
   useEffect(() => {
     if (search.length < 2) {
       setResults([]);
@@ -64,7 +82,8 @@ const AddMentionModal = ({ isOpen, onClose, storyId, storyUrl, existingMentions 
           />
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-            className="fixed inset-x-0 bottom-0 z-[501] bg-zinc-950 border-t border-white/10 p-6 pb-12 rounded-t-[2rem] max-h-[60vh] flex flex-col"
+            className="fixed inset-x-0 bottom-0 z-[501] bg-zinc-950 border-t border-white/10 p-6 pb-12 rounded-t-[2.5rem] max-h-[60vh] flex flex-col"
+            style={{ touchAction: 'pan-y' }}
           >
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-2">

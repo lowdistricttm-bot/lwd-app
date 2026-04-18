@@ -16,14 +16,22 @@ const CreatePostModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
   
   const { createPost } = useSocialFeed();
 
-  // Scroll Lock Logic
+  // Scroll Lock Logic - Bulletproof for Mobile
   useEffect(() => {
     if (isOpen) {
+      document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
     } else {
-      document.body.style.overflow = 'unset';
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     }
-    return () => { document.body.style.overflow = 'unset'; };
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
   }, [isOpen]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,6 +82,7 @@ const CreatePostModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed inset-x-0 bottom-0 z-[1001] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 pb-12 rounded-t-[2.5rem] max-h-[92vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            style={{ touchAction: 'pan-y' }} // Permette lo scroll interno al modal
           >
             <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
 

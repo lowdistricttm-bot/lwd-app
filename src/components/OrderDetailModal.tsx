@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Package, MapPin, CreditCard, Truck, ExternalLink, ShoppingBag, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -12,6 +12,24 @@ interface OrderDetailModalProps {
 }
 
 const OrderDetailModal = ({ isOpen, onClose, order }: OrderDetailModalProps) => {
+  // Scroll Lock Logic
+  useEffect(() => {
+    if (isOpen) {
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [isOpen]);
+
   if (!order) return null;
 
   const translateStatus = (status: string) => {
@@ -53,6 +71,7 @@ const OrderDetailModal = ({ isOpen, onClose, order }: OrderDetailModalProps) => 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed inset-x-0 bottom-0 z-[201] bg-zinc-950 border-t border-white/10 p-6 pb-12 rounded-t-[2.5rem] max-h-[90vh] overflow-y-auto custom-scrollbar"
+            style={{ touchAction: 'pan-y' }}
           >
             <div className="max-w-2xl mx-auto space-y-8">
               {/* Header */}
