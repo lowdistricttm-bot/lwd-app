@@ -6,7 +6,7 @@
   :root {
     --background: 0 0% 0%;
     --foreground: 0 0% 100%;
-    --primary: 211 100% 50%; /* iOS Blue */
+    --primary: 211 100% 50%;
     --primary-foreground: 0 0% 100%;
     --card: 0 0% 7%;
     --card-foreground: 0 0% 100%;
@@ -19,20 +19,25 @@
   }
 }
 
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+  /* Impedisce il rimbalzo elastico che può far sembrare la barra staccata */
+  overscroll-behavior-y: none;
+}
+
 body {
   @apply bg-black text-white antialiased;
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
-  /* Impedisce il pull-to-refresh nativo del browser che va in conflitto con quello dell'app */
-  overscroll-behavior-y: contain;
 }
 
-/* Tipografia Low District - Manteniamo il carattere ma ammorbidiamo le forme */
+/* Tipografia Low District */
 h1, h2, h3, h4, h5, h6 {
   @apply font-black uppercase italic tracking-tighter;
 }
 
-/* Effetto Glassmorphism iOS */
 .glass-panel {
   @apply bg-zinc-900/60 backdrop-blur-xl border border-white/10;
 }

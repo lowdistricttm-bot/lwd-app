@@ -27,12 +27,14 @@ const BottomNav = () => {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[100] bg-black/90 backdrop-blur-2xl border-t border-white/10">
-      {/* 
-          Altezza ridotta a 3.5rem (56px) + safe area. 
-          Il padding-bottom ridotto assicura che le icone non siano troppo distanti dal bordo.
-      */}
-      <div className="relative flex items-center justify-around h-[calc(3.5rem+env(safe-area-inset-bottom))] px-2 pb-[calc(env(safe-area-inset-bottom)*0.8)]">
+    <div 
+      className="fixed bottom-0 left-0 right-0 z-[999] bg-black/90 backdrop-blur-2xl border-t border-white/10"
+      style={{ 
+        transform: 'translateZ(0)', // Forza il rendering su un layer separato per evitare movimenti durante lo scroll
+        WebkitTransform: 'translateZ(0)'
+      }}
+    >
+      <div className="relative flex items-center justify-around h-[calc(3.5rem+env(safe-area-inset-bottom))] px-2 pb-[env(safe-area-inset-bottom)]">
         {items.map((item, i) => {
           const isActive = activeIndex === i;
           return (
@@ -45,7 +47,6 @@ const BottomNav = () => {
               )}
               onClick={() => triggerHaptic(15)}
             >
-              {/* Indicatore Glow Reattivo */}
               {isActive && (
                 <motion.div
                   layoutId="nav-glow"
