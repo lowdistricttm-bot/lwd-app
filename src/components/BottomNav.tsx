@@ -34,21 +34,24 @@ const BottomNav = () => {
     }
   };
 
-  // Altezza ultra-ridotta come richiesto: 22px su iOS, 40px altrove
-  const navHeight = isIOS ? '22px' : '40px';
+  // Altezza leggermente aumentata a 34px per permettere il centraggio con spazio sopra
+  const navHeight = isIOS ? '34px' : '44px';
 
   return (
     <div 
       className="fixed bottom-0 left-0 right-0 z-[999] bg-black border-t border-white/10 select-none"
       style={{ 
         height: navHeight,
-        paddingBottom: '0px', // Rimosso padding safe area
+        paddingBottom: '0px',
         WebkitUserSelect: 'none',
         touchAction: 'none'
       }}
     >
       <div 
-        className="relative flex items-center justify-around h-full w-full max-w-2xl mx-auto px-2"
+        className={cn(
+          "relative flex items-center justify-around h-full w-full max-w-2xl mx-auto px-2",
+          isIOS ? "pt-2" : "pt-0" // Aggiunto spazio sopra per far "scendere" le icone al centro
+        )}
       >
         {items.map((item, i) => {
           const isActive = activeIndex === i;
@@ -69,7 +72,7 @@ const BottomNav = () => {
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
               >
                 <item.icon 
-                  size={isIOS ? 20 : 22} // Leggero aggiustamento per l'altezza ridotta
+                  size={isIOS ? 20 : 22} 
                   strokeWidth={isActive ? 2.2 : 1.8} 
                 />
               </motion.div>
