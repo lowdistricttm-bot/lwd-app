@@ -14,14 +14,21 @@
     <meta name="apple-mobile-web-app-title" content="Low District">
     
     <!-- Icone Ufficiali Low District Culture 2026 -->
-    <link rel="icon" type="image/png" href="https://www.lowdistrict.it/wp-content/uploads/cropped-ico-new-culture-2026-1.png" sizes="32x32">
-    <link rel="icon" type="image/png" href="https://www.lowdistrict.it/wp-content/uploads/cropped-ico-new-culture-2026-1.png" sizes="192x192">
-    <link rel="apple-touch-icon" href="https://www.lowdistrict.it/wp-content/uploads/cropped-ico-new-culture-2026-1.png">
+    <!-- Aggiunta versione ?v=2 per forzare il refresh della cache su iOS -->
+    <link rel="icon" type="image/png" href="https://www.lowdistrict.it/wp-content/uploads/cropped-ico-new-culture-2026-1.png?v=2" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://www.lowdistrict.it/wp-content/uploads/cropped-ico-new-culture-2026-1.png?v=2" sizes="192x192">
+    <link rel="apple-touch-icon" href="https://www.lowdistrict.it/wp-content/uploads/cropped-ico-new-culture-2026-1.png?v=2">
     
     <!-- Prevenzione zoom su input e stili globali critici -->
     <style>
       input, select, textarea { font-size: 16px !important; }
-      body { background-color: #000; margin: 0; padding: 0; }
+      body { 
+        background-color: #000; 
+        margin: 0; 
+        padding: 0; 
+        /* Forza il colore di sfondo per evitare flash bianchi durante il caricamento */
+        -webkit-tap-highlight-color: transparent;
+      }
       #root { min-height: 100vh; }
     </style>
   </head>
