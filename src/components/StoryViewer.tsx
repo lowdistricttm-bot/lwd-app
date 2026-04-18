@@ -397,9 +397,10 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
               <motion.div 
                 initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="absolute inset-x-0 bottom-0 z-[61] bg-zinc-950 border-t border-white/10 rounded-t-[2rem] max-h-[60%] flex flex-col pb-[env(safe-area-inset-bottom)] md:pb-8"
+                className="absolute inset-x-0 bottom-0 z-[61] bg-zinc-950 border-t border-white/10 rounded-t-[2rem] max-h-[60%] flex flex-col pb-24 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
                 style={{ touchAction: 'pan-y' }}
               >
+                <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
                 <div className="p-6 border-b border-white/5 flex items-center justify-between">
                   <h3 className="text-lg font-black italic uppercase tracking-tighter">Visualizzazioni</h3>
                   <button onClick={() => setShowViewers(false)} className="p-2 text-zinc-500"><X size={24} /></button>

@@ -50,7 +50,6 @@ const AddMentionModal = ({ isOpen, onClose, storyId, storyUrl, existingMentions 
       setIsLoading(true);
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       
-      // Filtriamo gli iscritti (subscriber) e l'utente stesso
       const { data } = await supabase
         .from('profiles')
         .select('id, username, avatar_url')
@@ -69,7 +68,6 @@ const AddMentionModal = ({ isOpen, onClose, storyId, storyUrl, existingMentions 
 
   const handleAdd = async (user: any) => {
     await addMention.mutateAsync({ storyId, mentionId: user.id, storyUrl });
-    // Non chiudiamo per permettere menzioni multiple
   };
 
   return (
@@ -78,13 +76,16 @@ const AddMentionModal = ({ isOpen, onClose, storyId, storyUrl, existingMentions 
         <>
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={onClose} className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[500]" 
+            onClick={onClose} className="absolute inset-0 bg-black/80 backdrop-blur-sm z-[500]" 
           />
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-            className="fixed inset-x-0 bottom-0 z-[501] bg-zinc-950 border-t border-white/10 p-6 pb-24 rounded-t-[2.5rem] max-h-[60vh] flex flex-col"
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="absolute inset-x-0 bottom-0 z-[501] bg-zinc-950 border-t border-white/10 p-6 pb-24 rounded-t-[2rem] max-h-[60%] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
             style={{ touchAction: 'pan-y' }}
           >
+            <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
+            
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-2">
                 <AtSign size={20} className="text-white" />
@@ -96,7 +97,6 @@ const AddMentionModal = ({ isOpen, onClose, storyId, storyUrl, existingMentions 
             <div className="relative mb-6">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
               <Input 
-                autoFocus
                 placeholder="CERCA USERNAME..." 
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
