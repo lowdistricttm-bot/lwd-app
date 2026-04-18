@@ -12,18 +12,21 @@ interface OrderDetailModalProps {
 }
 
 const OrderDetailModal = ({ isOpen, onClose, order }: OrderDetailModalProps) => {
-  // Scroll Lock Logic
+  // Scroll Lock Logic - Bulletproof for Mobile
   useEffect(() => {
     if (isOpen) {
       document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
     } else {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     }
     return () => {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     };
   }, [isOpen]);
 
@@ -62,7 +65,7 @@ const OrderDetailModal = ({ isOpen, onClose, order }: OrderDetailModalProps) => 
         <>
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={onClose} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[200]" 
+            onClick={onClose} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[200] touch-none" 
           />
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}

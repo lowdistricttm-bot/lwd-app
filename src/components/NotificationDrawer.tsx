@@ -18,18 +18,21 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
   const navigate = useNavigate();
   const { notifications, isLoading, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
 
-  // Scroll Lock Logic
+  // Scroll Lock Logic - Bulletproof for Mobile
   useEffect(() => {
     if (isOpen) {
       document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
     } else {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     }
     return () => {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     };
   }, [isOpen]);
 
@@ -100,7 +103,7 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100]"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] touch-none"
           />
           <motion.div
             initial={{ x: '100%' }}
@@ -108,7 +111,10 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-black/60 backdrop-blur-2xl border-l border-white/10 z-[101] flex flex-col shadow-2xl pt-[env(safe-area-inset-top)]"
-            style={{ overscrollBehavior: 'contain' }}
+            style={{ 
+              touchAction: 'pan-y',
+              overscrollBehavior: 'contain' 
+            }}
           >
             <div className="p-6 border-b border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-3">

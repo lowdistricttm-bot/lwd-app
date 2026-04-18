@@ -21,13 +21,16 @@ const ManageApplicationModal = ({ isOpen, onClose, application }: ManageApplicat
     if (isOpen) {
       document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
     } else {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     }
     return () => {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     };
   }, [isOpen]);
 
@@ -50,7 +53,13 @@ const ManageApplicationModal = ({ isOpen, onClose, application }: ManageApplicat
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150]" />
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            onClick={onClose} 
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150] touch-none" 
+          />
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}

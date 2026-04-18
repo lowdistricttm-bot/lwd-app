@@ -23,18 +23,21 @@ const EmailSettingsModal = ({ isOpen, onClose }: EmailSettingsModalProps) => {
   const [saving, setSaving] = useState(false);
   const [templates, setTemplates] = useState<any[]>([]);
 
-  // Scroll Lock Logic
+  // Scroll Lock Logic - Bulletproof for Mobile
   useEffect(() => {
     if (isOpen) {
       document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
     } else {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     }
     return () => {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     };
   }, [isOpen]);
 
@@ -80,7 +83,7 @@ const EmailSettingsModal = ({ isOpen, onClose }: EmailSettingsModalProps) => {
   if (!isAdmin && isOpen) {
     return (
       <AnimatePresence>
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[250]" />
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[250] touch-none" />
         <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed inset-x-0 bottom-0 z-[251] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-8 rounded-t-[2rem] flex flex-col items-center justify-center py-20">
           <ShieldAlert size={48} className="text-zinc-800 mb-4" />
           <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Accesso riservato agli amministratori</p>
@@ -94,7 +97,7 @@ const EmailSettingsModal = ({ isOpen, onClose }: EmailSettingsModalProps) => {
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[250]" />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[250] touch-none" />
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}

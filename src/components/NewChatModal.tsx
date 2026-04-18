@@ -22,18 +22,21 @@ const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  // Scroll Lock Logic
+  // Scroll Lock Logic - Bulletproof for Mobile
   useEffect(() => {
     if (isOpen) {
       document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
     } else {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     }
     return () => {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     };
   }, [isOpen]);
 
@@ -92,7 +95,7 @@ const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150]"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150] touch-none"
           />
           <motion.div 
             initial={{ y: '100%' }}
