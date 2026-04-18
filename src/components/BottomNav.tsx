@@ -30,9 +30,10 @@ const BottomNav = () => {
     <div 
       className="fixed bottom-0 left-0 right-0 z-[999] bg-black/80 backdrop-blur-2xl border-t border-white/5"
       style={{ 
-        height: '30px',
+        height: '35px',
         transform: 'translateZ(0)', 
-        WebkitTransform: 'translateZ(0)'
+        WebkitTransform: 'translateZ(0)',
+        paddingBottom: 'env(safe-area-inset-bottom)'
       }}
     >
       <div className="relative flex items-center justify-around h-full px-2">
@@ -51,7 +52,7 @@ const BottomNav = () => {
               {isActive && (
                 <motion.div
                   layoutId="nav-glow"
-                  className="absolute w-6 h-6 bg-white/5 rounded-full z-0 blur-lg"
+                  className="absolute w-8 h-8 bg-white/5 rounded-full z-0 blur-md"
                   transition={{
                     type: "spring",
                     stiffness: 400,
@@ -69,7 +70,7 @@ const BottomNav = () => {
                 transition={{ type: "spring", stiffness: 500, damping: 25 }}
               >
                 <item.icon 
-                  size={16} 
+                  size={18} 
                   strokeWidth={isActive ? 2.5 : 2} 
                 />
               </motion.div>
