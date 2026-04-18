@@ -33,8 +33,8 @@ const BottomNav = () => {
     <div 
       className="fixed bottom-0 left-0 right-0 z-[999] bg-black/95 backdrop-blur-3xl border-t border-white/10 select-none"
       style={{ 
-        // Altezza ridotta al minimo assoluto (44px) ignorando le safe area
-        height: '44px',
+        // Altezza ridotta a 40px
+        height: '40px',
         paddingBottom: '0',
         transform: 'translateZ(0)',
         WebkitTransform: 'translateZ(0)',
@@ -45,7 +45,7 @@ const BottomNav = () => {
     >
       <div className="absolute inset-0 bg-black -z-10" />
 
-      <div className="relative flex items-center justify-around h-[44px] px-2 max-w-lg mx-auto">
+      <div className="relative flex items-center justify-around h-[40px] px-2 max-w-lg mx-auto">
         {items.map((item, i) => {
           const isActive = activeIndex === i;
           return (
