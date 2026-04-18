@@ -190,10 +190,11 @@ const Profile = () => {
       };
     }
 
-    // 2. YITH WooCommerce Order & Shipment Tracking (Supporto specifico richiesto)
-    const yithCode = meta.find((m: any) => m.key === 'ywto_tracking_code')?.value;
-    const yithCarrier = meta.find((m: any) => m.key === 'ywto_carrier_name')?.value;
-    const yithUrl = meta.find((m: any) => m.key === 'ywto_tracking_url')?.value;
+    // 2. YITH WooCommerce Order & Shipment Tracking (Supporto esteso chiavi)
+    // Cerchiamo sia con che senza underscore iniziale
+    const yithCode = meta.find((m: any) => m.key === '_ywto_tracking_code' || m.key === 'ywto_tracking_code')?.value;
+    const yithCarrier = meta.find((m: any) => m.key === '_ywto_carrier_name' || m.key === 'ywto_carrier_name')?.value;
+    const yithUrl = meta.find((m: any) => m.key === '_ywto_tracking_url' || m.key === 'ywto_tracking_url')?.value;
 
     if (yithCode) {
       return {
