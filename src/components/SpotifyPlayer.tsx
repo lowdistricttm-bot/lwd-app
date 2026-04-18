@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { motion, useMotionValue, useAnimation } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Music } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -10,38 +10,13 @@ const SpotifyPlayer = () => {
   const playlistId = "49mK52uCtaHSCLY1VC9GR3";
   
   const CLOSED_X = -280;
-  const x = useMotionValue(CLOSED_X); 
-  const controls = useAnimation();
-
-  const handleDragEnd = (_: any, info: any) => {
-    if (info.point.x > 100 || info.offset.x > 50) {
-      openPlayer();
-    } else {
-      closePlayer();
-    }
-  };
-
-  const openPlayer = () => {
-    setIsOpen(true);
-    controls.start({ x: 0 });
-  };
-
-  const closePlayer = () => {
-    setIsOpen(false);
-    controls.start({ x: CLOSED_X });
-  };
 
   return (
     <div className="fixed bottom-32 left-0 z-[100] pointer-events-none">
       <motion.div
-        drag="x"
-        dragConstraints={{ left: CLOSED_X, right: 0 }}
-        dragElastic={0.05}
-        dragMomentum={false}
-        onDragEnd={handleDragEnd}
-        animate={controls}
+        animate={{ x: isOpen ? 0 : CLOSED_X }}
         initial={{ x: CLOSED_X }}
-        style={{ x }}
+        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
         className="pointer-events-auto flex items-center"
       >
         {/* Corpo del Player */}
@@ -56,9 +31,9 @@ const SpotifyPlayer = () => {
           />
         </div>
 
-        {/* Linguetta con centratura perfetta */}
+        {/* Linguetta cliccabile */}
         <div 
-          onClick={() => isOpen ? closePlayer() : openPlayer()}
+          onClick={() => setIsOpen(!isOpen)}
           className={cn(
             "w-6 h-10 flex items-center justify-center cursor-pointer rounded-r-md border-y border-r border-white/10 shadow-xl transition-all duration-500",
             isOpen ? "bg-white text-black" : "bg-zinc-900/80 backdrop-blur-md text-white hover:bg-zinc-800"
