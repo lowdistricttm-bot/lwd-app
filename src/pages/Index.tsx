@@ -154,10 +154,10 @@ const Index = () => {
               viewport={{ once: true }}
               className="w-full"
             >
-              <h2 className="text-[6.5vw] xs:text-2xl sm:text-4xl md:text-6xl lg:text-7xl font-black italic uppercase tracking-tighter mb-6 leading-none whitespace-nowrap drop-shadow-2xl">
+              <h2 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black italic uppercase tracking-tighter mb-6 leading-tight drop-shadow-2xl">
                 {t.home.banner.title}
               </h2>
-              <p className="text-white/80 text-[2.8vw] xs:text-[10px] md:text-sm font-black uppercase tracking-[0.15em] md:tracking-[0.4em] mb-12 italic whitespace-nowrap">
+              <p className="text-white/80 text-[10px] md:text-sm font-black uppercase tracking-[0.15em] md:tracking-[0.4em] mb-12 italic leading-relaxed max-w-md mx-auto">
                 {t.home.banner.subtitle}
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md mx-auto">
