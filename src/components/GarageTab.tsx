@@ -8,7 +8,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import ImageLightbox from './ImageLightbox';
-import { Plus, Car, Trash2, Camera, Loader2, X, Edit3, Heart } from 'lucide-react';
+import { Plus, Car, Trash2, Camera, Loader2, X, Edit3, Heart, Gauge } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/use-translation';
@@ -147,37 +147,37 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-zinc-900/50 backdrop-blur-xl border border-white/10 p-6 rounded-3xl mb-8"
+            className="bg-white/5 backdrop-blur-2xl border border-white/10 p-8 rounded-[2.5rem] mb-8 shadow-2xl"
           >
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-zinc-500 ml-2">{t.garage?.brand || "Marca"}</Label>
-                  <Input required value={formData.brand} onChange={e => setFormData({...formData, brand: e.target.value})} className="bg-black/40 border-zinc-800 rounded-2xl h-12 text-sm" />
+                  <Label className="text-[10px] font-black uppercase text-zinc-500 ml-4">{t.garage?.brand || "Marca"}</Label>
+                  <Input required value={formData.brand} onChange={e => setFormData({...formData, brand: e.target.value})} className="bg-black/40 border-white/5 rounded-full h-14 px-6 text-sm font-bold" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-zinc-500 ml-2">{t.garage?.model || "Modello"}</Label>
-                  <Input required value={formData.model} onChange={e => setFormData({...formData, model: e.target.value})} className="bg-black/40 border-zinc-800 rounded-2xl h-12 text-sm" />
+                  <Label className="text-[10px] font-black uppercase text-zinc-500 ml-4">{t.garage?.model || "Modello"}</Label>
+                  <Input required value={formData.model} onChange={e => setFormData({...formData, model: e.target.value})} className="bg-black/40 border-white/5 rounded-full h-14 px-6 text-sm font-bold" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-zinc-500 ml-2">{t.garage?.year || "Anno"}</Label>
-                  <Input value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} className="bg-black/40 border-zinc-800 rounded-2xl h-12 text-sm" />
+                  <Label className="text-[10px] font-black uppercase text-zinc-500 ml-4">{t.garage?.year || "Anno"}</Label>
+                  <Input value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} className="bg-black/40 border-white/5 rounded-full h-14 px-6 text-sm font-bold" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-zinc-500 ml-2">Targa</Label>
-                  <Input value={formData.license_plate} onChange={e => setFormData({...formData, license_plate: e.target.value})} className="bg-black/40 border-zinc-800 rounded-2xl h-12 text-sm" />
+                  <Label className="text-[10px] font-black uppercase text-zinc-500 ml-4">Targa</Label>
+                  <Input value={formData.license_plate} onChange={e => setFormData({...formData, license_plate: e.target.value})} className="bg-black/40 border-white/5 rounded-full h-14 px-6 text-sm font-bold" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-zinc-500 ml-2">{t.garage?.suspension || "Assetto"}</Label>
-                  <div className="grid grid-cols-2 gap-2 bg-black/40 p-1 rounded-2xl border border-zinc-800">
+                  <Label className="text-[10px] font-black uppercase text-zinc-500 ml-4">{t.garage?.suspension || "Assetto"}</Label>
+                  <div className="grid grid-cols-2 gap-2 bg-black/40 p-1.5 rounded-full border border-white/5">
                     {['STATIC', 'AIR'].map((type) => (
-                      <button key={type} type="button" onClick={() => setFormData({...formData, suspension_type: type})} className={cn("h-10 rounded-xl font-black uppercase italic text-[10px] tracking-widest transition-all", formData.suspension_type === type ? "bg-white text-black shadow-lg" : "text-zinc-500 hover:text-zinc-300")}>{type}</button>
+                      <button key={type} type="button" onClick={() => setFormData({...formData, suspension_type: type})} className={cn("h-11 rounded-full font-black uppercase italic text-[10px] tracking-widest transition-all duration-500", formData.suspension_type === type ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-zinc-300")}>{type}</button>
                     ))}
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-zinc-500 ml-2">Foto Veicolo (Max 6)</Label>
-                  <div onClick={() => fileInputRef.current?.click()} className="h-12 border border-dashed border-zinc-800 rounded-2xl flex items-center justify-center cursor-pointer hover:border-white transition-colors bg-black/40">
+                  <Label className="text-[10px] font-black uppercase text-zinc-500 ml-4">Foto Veicolo (Max 6)</Label>
+                  <div onClick={() => fileInputRef.current?.click()} className="h-14 border border-dashed border-white/10 rounded-full flex items-center justify-center cursor-pointer hover:border-white/30 transition-colors bg-black/40">
                     <Camera size={18} strokeWidth={2} className="text-zinc-600 mr-2" />
                     <span className="text-[10px] font-black uppercase text-zinc-500">{existingImages.length + selectedFiles.length}/6 Foto</span>
                   </div>
@@ -186,25 +186,25 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-zinc-500 ml-2">Descrizione Progetto</Label>
-                <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="bg-black/40 border-zinc-800 rounded-2xl min-h-[100px] text-sm" />
+                <Label className="text-[10px] font-black uppercase text-zinc-500 ml-4">Descrizione Progetto</Label>
+                <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="bg-black/40 border-white/5 rounded-[1.5rem] min-h-[120px] p-6 text-sm italic" />
               </div>
 
               <div className="flex gap-4">
-                <Button type="submit" disabled={addVehicle.isPending || updateVehicle.isPending} className="flex-1 bg-white text-black hover:bg-zinc-200 rounded-full h-12 font-black uppercase italic tracking-widest transition-all">
+                <Button type="submit" disabled={addVehicle.isPending || updateVehicle.isPending} className="flex-1 bg-white text-black hover:bg-zinc-200 rounded-full h-14 font-black uppercase italic tracking-widest transition-all shadow-xl">
                   {(addVehicle.isPending || updateVehicle.isPending) ? <Loader2 className="animate-spin" /> : editingId ? 'Aggiorna' : 'Salva'}
                 </Button>
-                <Button type="button" onClick={handleCloseForm} variant="outline" className="flex-1 border-zinc-800 rounded-full h-12 font-black uppercase italic tracking-widest text-zinc-500">Annulla</Button>
+                <Button type="button" onClick={handleCloseForm} variant="outline" className="flex-1 border-white/10 rounded-full h-14 font-black uppercase italic tracking-widest text-zinc-500 hover:bg-white/5">Annulla</Button>
               </div>
             </form>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {vehicles?.length === 0 ? (
-          <div className="col-span-full bg-zinc-900/30 border border-white/5 p-12 rounded-3xl text-center">
-            <Car className="mx-auto text-zinc-800 mb-6" size={48} strokeWidth={1.5} />
+          <div className="col-span-full bg-white/5 backdrop-blur-xl border border-white/5 p-16 rounded-[2.5rem] text-center">
+            <Car className="mx-auto text-zinc-800 mb-6" size={64} strokeWidth={1} />
             <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{t.garage?.empty || "Nessun veicolo nel garage."}</p>
           </div>
         ) : (
@@ -213,12 +213,12 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
             const canSeePlate = isOwnProfile || canVote || isPublic;
 
             return (
-              <motion.div key={vehicle.id} layout className="bg-zinc-900/50 backdrop-blur-sm border border-white/5 rounded-3xl overflow-hidden group">
+              <motion.div key={vehicle.id} layout className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] overflow-hidden group hover:border-white/20 transition-all duration-500 shadow-2xl">
                 <div className="aspect-video bg-zinc-950 relative overflow-hidden">
                   {vehicle.images && vehicle.images.length > 0 ? (
                     <div className="flex h-full overflow-x-auto no-scrollbar snap-x snap-mandatory">
                       {vehicle.images.map((img, idx) => (
-                        <img key={idx} src={img} onClick={() => setLightboxData({ images: vehicle.images || [], index: idx })} className="w-full h-full object-cover shrink-0 snap-center cursor-pointer" alt={`${vehicle.model} ${idx + 1}`} />
+                        <img key={idx} src={img} onClick={() => setLightboxData({ images: vehicle.images || [], index: idx })} className="w-full h-full object-cover shrink-0 snap-center cursor-pointer opacity-80 group-hover:opacity-100 transition-opacity duration-700" alt={`${vehicle.model} ${idx + 1}`} />
                       ))}
                     </div>
                   ) : (
@@ -226,34 +226,47 @@ const GarageTab = ({ userId, isOwnProfile = true }: GarageTabProps) => {
                   )}
                   
                   {isOwnProfile && (
-                    <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all z-10">
-                      <button onClick={() => handleEdit(vehicle)} className="p-2.5 bg-black/60 backdrop-blur-md text-white hover:bg-white hover:text-black rounded-full transition-colors"><Edit3 size={16} strokeWidth={2} /></button>
-                      <button onClick={() => { if(confirm("Eliminare questo veicolo?")) deleteVehicle.mutate(vehicle.id); }} className="p-2.5 bg-black/60 backdrop-blur-md text-white hover:bg-red-600 rounded-full transition-colors"><Trash2 size={16} strokeWidth={2} /></button>
+                    <div className="absolute top-5 right-5 flex gap-3 opacity-0 group-hover:opacity-100 transition-all z-10">
+                      <button onClick={() => handleEdit(vehicle)} className="p-3 bg-black/60 backdrop-blur-md text-white hover:bg-white hover:text-black rounded-full transition-all shadow-xl"><Edit3 size={18} strokeWidth={2} /></button>
+                      <button onClick={() => { if(confirm("Eliminare questo veicolo?")) deleteVehicle.mutate(vehicle.id); }} className="p-3 bg-black/60 backdrop-blur-md text-white hover:bg-red-600 rounded-full transition-all shadow-xl"><Trash2 size={18} strokeWidth={2} /></button>
                     </div>
                   )}
                   
-                  <div className="absolute bottom-4 right-4 z-10">
-                     <button onClick={(e) => { e.stopPropagation(); toggleLike.mutate(vehicle.id); }} className={cn("flex items-center gap-2 px-4 py-2 backdrop-blur-md border rounded-full transition-all", vehicle.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-black/40 border-white/10 text-white hover:bg-white/20")}>
-                      <Heart size={14} strokeWidth={2.5} fill={vehicle.is_liked ? "currentColor" : "none"} />
+                  <div className="absolute bottom-5 right-5 z-10">
+                     <button onClick={(e) => { e.stopPropagation(); toggleLike.mutate(vehicle.id); }} className={cn("flex items-center gap-2 px-5 py-2.5 backdrop-blur-md border rounded-full transition-all shadow-xl", vehicle.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-black/40 border-white/10 text-white hover:bg-white/20")}>
+                      <Heart size={16} strokeWidth={2.5} fill={vehicle.is_liked ? "currentColor" : "none"} />
                       <span className="text-[10px] font-black">{vehicle.likes_count || 0}</span>
                     </button>
                   </div>
+
+                  <div className="absolute top-5 left-5 z-10">
+                    <span className="bg-white/90 backdrop-blur-md text-black text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full shadow-2xl">
+                      {vehicle.suspension_type}
+                    </span>
+                  </div>
                 </div>
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-4">
+                <div className="p-8">
+                  <div className="flex justify-between items-start mb-6">
                     <div>
-                      <h4 className="text-xl font-black italic uppercase tracking-tighter">{vehicle.brand} {vehicle.model}</h4>
-                      <p className="text-zinc-500 text-[9px] font-black uppercase tracking-widest italic">{vehicle.year}</p>
+                      <h4 className="text-2xl font-black italic uppercase tracking-tighter leading-none mb-1">{vehicle.brand}</h4>
+                      <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest italic">{vehicle.model} • {vehicle.year}</p>
                     </div>
                     {vehicle.license_plate && canSeePlate && (
-                      <div className="px-3 py-1 text-[9px] font-black tracking-widest border rounded-lg flex items-center gap-2 bg-white text-black border-black">
+                      <div className="px-4 py-1.5 text-[10px] font-black tracking-widest border rounded-xl flex items-center gap-2 bg-white text-black border-black shadow-lg">
                         {vehicle.license_plate}
                       </div>
                     )}
                   </div>
-                  <div className="space-y-2">
-                    <p className="text-[10px] font-bold uppercase text-zinc-400"><span className="text-zinc-600">{t.garage?.suspension || "Assetto"}:</span> {vehicle.suspension_type}</p>
-                    {vehicle.description && <p className="text-xs text-zinc-500 line-clamp-2 italic leading-relaxed">{vehicle.description}</p>}
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 text-zinc-400">
+                      <Gauge size={14} className="text-zinc-600" />
+                      <p className="text-[10px] font-bold uppercase tracking-widest">Assetto: <span className="text-white italic">{vehicle.suspension_type}</span></p>
+                    </div>
+                    {vehicle.description && (
+                      <p className="text-sm text-zinc-500 leading-relaxed italic border-t border-white/5 pt-4">
+                        {vehicle.description}
+                      </p>
+                    )}
                   </div>
                 </div>
               </motion.div>

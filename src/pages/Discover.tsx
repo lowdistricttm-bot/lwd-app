@@ -8,7 +8,7 @@ import { useDiscover } from '@/hooks/use-discover';
 import { useGarage } from '@/hooks/use-garage';
 import { useAdmin } from '@/hooks/use-admin';
 import { usePresence } from '@/hooks/use-presence';
-import { Loader2, Car, Search, LayoutGrid, StretchHorizontal, User, ChevronRight, ShieldCheck, Sparkles, Calendar, Gauge, Users, Heart, EyeOff, CreditCard } from 'lucide-react';
+import { Loader2, Car, Search, LayoutGrid, StretchHorizontal, User, ChevronRight, ShieldCheck, Sparkles, Users, Heart, Gauge } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import ImageLightbox from '@/components/ImageLightbox';
@@ -60,23 +60,23 @@ const Discover = () => {
             
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
               <div className="relative flex-1 sm:w-80">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" size={18} />
+                <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={18} />
                 <input 
                   type="text"
                   placeholder="CERCA AUTO O MEMBRI..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-zinc-900/50 border border-white/5 rounded-none h-14 pl-12 text-[11px] font-black uppercase tracking-widest focus:border-white/20 focus:bg-zinc-900 transition-all placeholder:text-zinc-700"
+                  className="w-full bg-white/5 backdrop-blur-2xl border border-white/10 rounded-full h-14 pl-14 text-[11px] font-black uppercase tracking-widest focus:border-white/20 focus:bg-white/10 transition-all placeholder:text-zinc-700"
                 />
-                {isLoading && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 animate-spin text-zinc-600" size={16} />}
+                {isLoading && <Loader2 className="absolute right-5 top-1/2 -translate-y-1/2 animate-spin text-zinc-600" size={16} />}
               </div>
 
-              <div className="flex border border-white/10 bg-zinc-900/50 p-1 h-14">
+              <div className="flex bg-white/5 backdrop-blur-2xl border border-white/10 rounded-full p-1 h-14">
                 <button 
                   onClick={() => setViewMode('grid')}
                   className={cn(
-                    "flex-1 sm:w-14 flex items-center justify-center gap-2 px-4 transition-all", 
-                    viewMode === 'grid' ? "bg-white text-black" : "text-zinc-500 hover:text-white"
+                    "flex-1 sm:w-14 flex items-center justify-center gap-2 px-4 rounded-full transition-all duration-500", 
+                    viewMode === 'grid' ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-white"
                   )}
                 >
                   <LayoutGrid size={18} />
@@ -85,8 +85,8 @@ const Discover = () => {
                 <button 
                   onClick={() => setViewMode('list')}
                   className={cn(
-                    "flex-1 sm:w-14 flex items-center justify-center gap-2 px-4 transition-all", 
-                    viewMode === 'list' ? "bg-white text-black" : "text-zinc-500 hover:text-white"
+                    "flex-1 sm:w-14 flex items-center justify-center gap-2 px-4 rounded-full transition-all duration-500", 
+                    viewMode === 'list' ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-white"
                   )}
                 >
                   <StretchHorizontal size={18} />
@@ -114,11 +114,11 @@ const Discover = () => {
                     onClick={() => navigate(`/profile/${user.id}`)}
                     className="flex flex-col items-center gap-3 shrink-0 group"
                   >
-                    <div className="w-24 h-24 rounded-full p-[3px] bg-zinc-800 transition-all duration-500 group-hover:bg-zinc-700">
-                      <div className={cn(
-                        "w-full h-full rounded-full border-4 overflow-hidden bg-zinc-900 transition-colors duration-500",
-                        isUserOnline(user.id) ? "border-green-500" : "border-red-500"
-                      )}>
+                    <div className={cn(
+                      "w-24 h-24 rounded-full p-[3px] border-2 transition-all duration-500",
+                      isUserOnline(user.id) ? "border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.3)]" : "border-white/10"
+                    )}>
+                      <div className="w-full h-full rounded-full overflow-hidden bg-zinc-900">
                         {user.avatar_url ? (
                           <img src={user.avatar_url} className="w-full h-full object-cover" alt="" />
                         ) : (
@@ -127,7 +127,7 @@ const Discover = () => {
                       </div>
                     </div>
                     <div className="text-center">
-                      <p className="text-[11px] font-black uppercase italic truncate w-28">{user.username}</p>
+                      <p className="text-[11px] font-black uppercase italic truncate w-28 group-hover:text-white transition-colors">{user.username}</p>
                       {user.is_admin && <p className="text-[7px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">Staff</p>}
                     </div>
                   </button>
@@ -151,7 +151,7 @@ const Discover = () => {
                 >
                   <div className={cn(
                     "w-16 h-16 rounded-full p-[2px] border-2 transition-all duration-500",
-                    isUserOnline(member.id) ? "border-green-500" : "border-red-500"
+                    isUserOnline(member.id) ? "border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]" : "border-white/10"
                   )}>
                     <div className="w-full h-full rounded-full overflow-hidden bg-zinc-950">
                       {member.avatar_url ? (
@@ -202,95 +202,94 @@ const Discover = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.05 }}
                       className={cn(
-                        "bg-zinc-900/30 border border-white/5 overflow-hidden group hover:border-white/20 transition-all duration-500",
-                        viewMode === 'list' && "flex flex-col md:flex-row items-stretch md:h-48"
+                        "bg-white/5 backdrop-blur-2xl border border-white/10 overflow-hidden group hover:border-white/20 transition-all duration-500 rounded-[2.5rem]",
+                        viewMode === 'list' && "flex flex-col md:flex-row items-stretch md:h-56"
                       )}
                     >
                       <div 
                         className={cn(
                           "bg-zinc-950 relative overflow-hidden cursor-pointer shrink-0",
-                          viewMode === 'grid' ? "aspect-[4/5]" : "aspect-video md:w-72"
+                          viewMode === 'grid' ? "aspect-[4/5]" : "aspect-video md:w-80"
                         )}
                         onClick={() => setLightboxData({ images: vehicle.images || [], index: 0 })}
                       >
                         {vehicle.images?.[0] ? (
                           <img 
                             src={vehicle.images[0]} 
-                            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
+                            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-1000 group-hover:scale-110" 
                             alt={vehicle.model} 
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-zinc-800"><Car size={48} /></div>
                         )}
-                        <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
                         
-                        <div className="absolute top-4 left-4">
-                          <span className="bg-white text-black text-[8px] font-black uppercase px-2 py-1 italic shadow-2xl">
+                        <div className="absolute top-5 left-5">
+                          <span className="bg-white/90 backdrop-blur-md text-black text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full shadow-2xl">
                             {vehicle.suspension_type}
                           </span>
                         </div>
 
-                        <div className="absolute bottom-4 right-4">
+                        <div className="absolute bottom-5 right-5">
                           <button 
                             onClick={(e) => { e.stopPropagation(); toggleLike.mutate(vehicle.id); }}
                             className={cn(
-                              "flex items-center gap-1.5 px-2 py-1 backdrop-blur-md border transition-all",
+                              "flex items-center gap-2 px-3 py-1.5 backdrop-blur-md border rounded-full transition-all",
                               vehicle.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-black/40 border-white/10 text-white hover:bg-white/20"
                             )}
                           >
-                            <Heart size={10} fill={vehicle.is_liked ? "currentColor" : "none"} />
-                            <span className="text-[8px] font-black">{vehicle.likes_count || 0}</span>
+                            <Heart size={12} fill={vehicle.is_liked ? "currentColor" : "none"} />
+                            <span className="text-[9px] font-black">{vehicle.likes_count || 0}</span>
                           </button>
                         </div>
                       </div>
 
-                      <div className="p-4 md:p-6 flex flex-col justify-between flex-1 min-w-0">
+                      <div className="p-6 md:p-8 flex flex-col justify-between flex-1 min-w-0">
                         <div className={cn(
-                          "flex flex-col gap-4",
+                          "flex flex-col gap-6",
                           viewMode === 'list' && "md:flex-row md:items-center md:justify-between h-full"
                         )}>
                           <div className="min-w-0 flex-1">
-                            <div className="flex items-baseline gap-2 mb-1 overflow-hidden">
-                              <h4 className="text-sm md:text-xl font-black italic uppercase tracking-tight truncate leading-none">
+                            <div className="flex items-baseline gap-3 mb-2 overflow-hidden">
+                              <h4 className="text-lg md:text-2xl font-black italic uppercase tracking-tight truncate leading-none">
                                 {vehicle.brand}
                               </h4>
-                              <span className="text-[9px] md:text-xs font-black uppercase text-zinc-500 italic truncate">
+                              <span className="text-[10px] md:text-xs font-black uppercase text-zinc-500 italic truncate">
                                 {vehicle.model}
                               </span>
                             </div>
                             
-                            <div className="flex items-center gap-3">
-                              <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest">
+                            <div className="flex items-center gap-4">
+                              <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
                                 {vehicle.year || 'N/A'}
                               </p>
                               {vehicle.license_plate && canSeePlate && (
-                                <span className="text-[7px] font-black uppercase px-1.5 py-0.5 italic flex items-center gap-1 text-zinc-400">
+                                <span className="text-[8px] font-black uppercase px-2 py-1 italic flex items-center gap-2 bg-white text-black rounded-lg">
                                   {vehicle.license_plate}
                                 </span>
                               )}
                             </div>
                             
                             {viewMode === 'list' && vehicle.description && (
-                              <p className="text-[11px] text-zinc-500 italic line-clamp-2 mt-3 leading-relaxed hidden md:block">
+                              <p className="text-xs text-zinc-500 italic line-clamp-2 mt-4 leading-relaxed hidden md:block">
                                 {vehicle.description}
                               </p>
                             )}
                           </div>
 
                           {viewMode === 'list' && (
-                            <div className="hidden md:flex items-center gap-12 px-8 border-x border-white/5">
-                              <div className="space-y-1">
-                                <p className="text-[7px] font-black text-zinc-600 uppercase tracking-widest">Assetto</p>
+                            <div className="hidden md:flex items-center gap-12 px-10 border-x border-white/5">
+                              <div className="space-y-1.5">
+                                <p className="text-[8px] font-black text-zinc-600 uppercase tracking-widest">Assetto</p>
                                 <div className="flex items-center gap-2 text-zinc-300">
-                                  <Gauge size={12} />
-                                  <span className="text-[9px] font-black uppercase italic">{vehicle.suspension_type}</span>
+                                  <Gauge size={14} />
+                                  <span className="text-[10px] font-black uppercase italic">{vehicle.suspension_type}</span>
                                 </div>
                               </div>
-                              <div className="space-y-1">
-                                <p className="text-[7px] font-black text-zinc-600 uppercase tracking-widest">Apprezzamenti</p>
+                              <div className="space-y-1.5">
+                                <p className="text-[8px] font-black text-zinc-600 uppercase tracking-widest">Apprezzamenti</p>
                                 <div className="flex items-center gap-2 text-zinc-300">
-                                  <Heart size={12} className={vehicle.is_liked ? "text-red-500 fill-red-500" : ""} />
-                                  <span className="text-[9px] font-black uppercase italic">{vehicle.likes_count || 0} Like</span>
+                                  <Heart size={14} className={vehicle.is_liked ? "text-red-500 fill-red-500" : ""} />
+                                  <span className="text-[10px] font-black uppercase italic">{vehicle.likes_count || 0} Like</span>
                                 </div>
                               </div>
                             </div>
@@ -298,42 +297,38 @@ const Discover = () => {
 
                           <div className={cn(
                             "flex items-center justify-between",
-                            viewMode === 'list' && "md:w-64 md:pl-8"
+                            viewMode === 'list' && "md:w-72 md:pl-10"
                           )}>
                             <button 
                               onClick={() => navigate(`/profile/${vehicle.user_id}`)}
-                              className="flex items-center gap-3 hover:opacity-70 transition-opacity group/user text-left min-w-0"
+                              className="flex items-center gap-4 hover:opacity-70 transition-opacity group/user text-left min-w-0"
                             >
-                              {viewMode === 'list' && (
-                                <div className={cn(
-                                  "w-8 h-8 bg-zinc-800 rounded-full overflow-hidden border-[1.5px] transition-colors duration-500",
-                                  isUserOnline(vehicle.user_id) ? "border-green-500" : "border-red-500"
-                                )}>
-                                  {vehicle.profiles?.avatar_url ? (
-                                    <img src={vehicle.profiles.avatar_url} className="w-full h-full object-cover" alt="" />
-                                  ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-zinc-600"><User size={14} /></div>
-                                  )}
-                                </div>
-                              )}
-                              <div className="flex items-center gap-2 overflow-hidden">
-                                <div className="flex items-center gap-1 min-w-0">
-                                  <span className="text-[9px] font-black uppercase italic text-zinc-300 group-hover/user:text-white transition-colors truncate">
+                              <div className={cn(
+                                "w-10 h-10 bg-zinc-800 rounded-full overflow-hidden border-2 transition-all duration-500",
+                                isUserOnline(vehicle.user_id) ? "border-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]" : "border-white/10"
+                              )}>
+                                {vehicle.profiles?.avatar_url ? (
+                                  <img src={vehicle.profiles.avatar_url} className="w-full h-full object-cover" alt="" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-zinc-600"><User size={18} /></div>
+                                )}
+                              </div>
+                              <div className="flex flex-col overflow-hidden">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <span className="text-[10px] font-black uppercase italic text-zinc-300 group-hover/user:text-white transition-colors truncate">
                                     {vehicle.profiles?.username}
                                   </span>
-                                  {vehicle.profiles?.is_admin && <ShieldCheck size={8} className="text-white shrink-0" />}
+                                  {vehicle.profiles?.is_admin && <ShieldCheck size={10} className="text-white shrink-0" />}
                                 </div>
-                                {viewMode === 'list' && (
-                                  <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest shrink-0">
-                                    • {roleLabel}
-                                  </span>
-                                )}
+                                <span className="text-[8px] font-bold text-zinc-600 uppercase tracking-widest truncate">
+                                  {roleLabel}
+                                </span>
                               </div>
                             </button>
 
                             <button 
                               onClick={() => navigate(`/profile/${vehicle.user_id}?tab=garage`)}
-                              className="md:hidden p-2 text-zinc-500 hover:text-white transition-colors"
+                              className="md:hidden p-2 text-zinc-500 hover:text-white transition-colors bg-white/5 rounded-full"
                             >
                               <ChevronRight size={20} />
                             </button>
@@ -341,23 +336,23 @@ const Discover = () => {
                         </div>
                         
                         {viewMode === 'grid' && (
-                          <div className="mt-4 pt-3 border-t border-white/5 flex justify-end">
+                          <div className="mt-6 pt-4 border-t border-white/5 flex justify-end">
                             <button 
                               onClick={() => navigate(`/profile/${vehicle.user_id}?tab=garage`)}
                               className="group flex items-center gap-2 text-[9px] font-black uppercase italic text-zinc-500 hover:text-white transition-all"
                             >
-                              Vedi Progetto <ChevronRight size={12} className="group-hover:translate-x-1 transition-transform" />
+                              Vedi Progetto <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
                             </button>
                           </div>
                         )}
 
                         {viewMode === 'list' && (
-                          <div className="hidden md:block ml-6">
+                          <div className="hidden md:block ml-8">
                             <button 
                               onClick={() => navigate(`/profile/${vehicle.user_id}?tab=garage`)}
-                              className="h-10 px-6 bg-white/90 backdrop-blur-md text-black hover:bg-white transition-all text-[9px] font-black uppercase italic tracking-widest flex items-center gap-2"
+                              className="h-12 px-8 bg-white text-black hover:bg-zinc-200 transition-all text-[10px] font-black uppercase italic tracking-widest flex items-center gap-3 rounded-full shadow-xl"
                             >
-                              Vedi Progetto <ChevronRight size={14} />
+                              Vedi Progetto <ChevronRight size={16} />
                             </button>
                           </div>
                         )}
