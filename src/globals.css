@@ -20,17 +20,18 @@
 }
 
 html, body {
-  height: 100%;
   width: 100%;
   overflow-x: hidden;
-  /* Impedisce il rimbalzo elastico che può far sembrare la barra staccata */
-  overscroll-behavior-y: none;
+  /* Permettiamo il comportamento nativo per evitare blocchi a fondo pagina */
+  overscroll-behavior-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 body {
   @apply bg-black text-white antialiased;
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
 }
 
 /* Tipografia Low District */

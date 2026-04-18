@@ -6,18 +6,18 @@ import { useNavigate, useLocation } from 'react-router-dom';
 const SwipeNavigation = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const touchStart = useRef<{ x: number; y: number; time: number } | null>(null);
   
-  // Soglie per il rilevamento dello swipe
-  const SWIPE_THRESHOLD = 60;
-  const EDGE_THRESHOLD = 40; // Per il "back" stile iOS (partenza dal bordo)
-  const ANGLE_THRESHOLD = 30; // Impedisce lo swipe se il movimento è troppo verticale
+  const SWIPE_THRESHOLD = 70;
+  const EDGE_THRESHOLD = 30; 
+  const HORIZONTAL_RATIO = 2.0; // Il movimento deve essere almeno 2 volte più orizzontale che verticale
 
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
       touchStart.current = {
         x: e.touches[0].clientX,
-        y: e.touches[0].clientY
+        y: e.touches[0].clientY,
+        time: Date.now()
       };
     };
 
@@ -26,31 +26,35 @@ const SwipeNavigation = ({ children }: { children: React.ReactNode }) => {
 
       const touchEnd = {
         x: e.changedTouches[0].clientX,
-        y: e.changedTouches[0].clientY
+        y: e.changedTouches[0].clientY,
+        time: Date.now()
       };
 
       const deltaX = touchEnd.x - touchStart.current.x;
       const deltaY = touchEnd.y - touchStart.current.y;
+      const duration = touchEnd.time - touchStart.current.time;
 
-      // Verifichiamo che il movimento sia prevalentemente orizzontale
-      if (Math.abs(deltaX) > Math.abs(deltaY) * 1.5 && Math.abs(deltaX) > SWIPE_THRESHOLD) {
+      // Ignoriamo swipe troppo lenti o prevalentemente verticali
+      if (duration > 500) return; 
+      
+      if (Math.abs(deltaX) > Math.abs(deltaY) * HORIZONTAL_RATIO && Math.abs(deltaX) > SWIPE_THRESHOLD) {
         
-        // Verifichiamo se l'utente sta interagendo con un elemento che ha lo scroll orizzontale
         const target = e.target as HTMLElement;
-        const isSlider = target.closest('.no-scrollbar, .embla, [data-no-swipe="true"]');
+        const isSlider = target.closest('.no-scrollbar, .embla, [data-no-swipe="true"], input, textarea');
         
         if (!isSlider) {
           if (deltaX > 0) {
-            // Swipe da Sinistra a Destra -> INDIETRO
-            // Spesso limitato alla partenza dal bordo per evitare conflitti
-            if (touchStart.current.x < EDGE_THRESHOLD || Math.abs(deltaX) > 100) {
+            // Swipe da Sinistra a Destra -> INDIETRO (solo se parte dal bordo o è molto deciso)
+            if (touchStart.current.x < EDGE_THRESHOLD || Math.abs(deltaX) > 120) {
               if ('vibrate' in navigator) navigator.vibrate(5);
               navigate(-1);
             }
           } else {
             // Swipe da Destra a Sinistra -> AVANTI
-            if ('vibrate' in navigator) navigator.vibrate(5);
-            navigate(1);
+            if (Math.abs(deltaX) > 120) {
+              if ('vibrate' in navigator) navigator.vibrate(5);
+              navigate(1);
+            }
           }
         }
       }
