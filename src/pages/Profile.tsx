@@ -222,7 +222,7 @@ const Profile = () => {
             {/* Text Info */}
             <div className="pt-12 md:pt-16 flex-1 min-w-0 flex flex-col">
               {/* Nome Utente e Pulsanti Piccoli */}
-              <div className="flex items-center gap-3 flex-wrap mb-4">
+              <div className="flex items-center gap-3 flex-wrap mb-1">
                 <h1 className="text-xl md:text-3xl font-black italic uppercase tracking-tighter leading-none">
                   {profile?.username || 'Utente'}
                 </h1>
@@ -254,7 +254,7 @@ const Profile = () => {
               </div>
 
               {/* Ruolo e Stato Online */}
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-4">
                 <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.2em] italic leading-none">
                   {t.profile.roles[userRole] || t.profile.roles.member}
                 </p>
@@ -265,7 +265,7 @@ const Profile = () => {
                   )} />
                   <p className={cn(
                     "text-[8px] font-black uppercase tracking-widest leading-none",
-                    isOnline ? "text-green-500" : "text-zinc-500"
+                    isOnline ? 'Online' : lastSeen ? `Accesso ${lastSeen}` : 'Offline'
                   )}>
                     {isOnline ? 'Online' : lastSeen ? `Accesso ${lastSeen}` : 'Offline'}
                   </p>
