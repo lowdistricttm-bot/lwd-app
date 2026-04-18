@@ -37,7 +37,7 @@ const BottomNav = () => {
       {/* Linea di separazione superiore precisa e sottile */}
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-white/10 z-20" />
 
-      <div className="relative flex items-center justify-around h-[35px] px-2">
+      <div className="relative flex items-center justify-around h-[35px] px-2 pt-[2px]">
         {items.map((item, i) => {
           const isActive = activeIndex === i;
           return (
