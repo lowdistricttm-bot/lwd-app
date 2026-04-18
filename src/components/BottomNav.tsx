@@ -30,11 +30,11 @@ const BottomNav = () => {
     <div 
       className="fixed bottom-0 left-0 right-0 z-[999] bg-black/90 backdrop-blur-2xl border-t border-white/10"
       style={{ 
-        transform: 'translateZ(0)', // Forza il rendering su un layer separato per evitare movimenti durante lo scroll
+        transform: 'translateZ(0)', 
         WebkitTransform: 'translateZ(0)'
       }}
     >
-      <div className="relative flex items-center justify-around h-[calc(3.5rem+env(safe-area-inset-bottom))] px-2 pb-[env(safe-area-inset-bottom)]">
+      <div className="relative flex items-center justify-around h-[calc(50px+env(safe-area-inset-bottom))] px-2 pb-[env(safe-area-inset-bottom)]">
         {items.map((item, i) => {
           const isActive = activeIndex === i;
           return (
@@ -42,7 +42,7 @@ const BottomNav = () => {
               key={i} 
               to={item.href}
               className={cn(
-                "flex-1 flex flex-col items-center justify-center h-14 relative z-10 transition-all duration-300",
+                "flex-1 flex flex-col items-center justify-center h-[50px] relative z-10 transition-all duration-300",
                 isActive ? "text-white" : "text-zinc-500 hover:text-zinc-400"
               )}
               onClick={() => triggerHaptic(15)}
@@ -50,7 +50,7 @@ const BottomNav = () => {
               {isActive && (
                 <motion.div
                   layoutId="nav-glow"
-                  className="absolute w-10 h-10 bg-white/10 rounded-full z-0 blur-xl"
+                  className="absolute w-8 h-8 bg-white/10 rounded-full z-0 blur-xl"
                   transition={{
                     type: "spring",
                     stiffness: 400,
@@ -68,7 +68,7 @@ const BottomNav = () => {
                 transition={{ type: "spring", stiffness: 500, damping: 25 }}
               >
                 <item.icon 
-                  size={22} 
+                  size={20} 
                   strokeWidth={isActive ? 2.5 : 2} 
                 />
               </motion.div>
