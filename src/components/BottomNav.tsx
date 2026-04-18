@@ -34,8 +34,8 @@ const BottomNav = () => {
     }
   };
 
-  // Altezza fissa 35px per iOS
-  const navHeight = isIOS ? '35px' : '44px';
+  // Altezza aumentata a 45px per iOS come richiesto
+  const navHeight = isIOS ? '45px' : '44px';
 
   return (
     <div 
@@ -59,7 +59,7 @@ const BottomNav = () => {
               to={item.href}
               className={cn(
                 "flex-1 flex flex-col items-center h-full relative z-10 transition-colors duration-300",
-                // justify-end e pb-0 per incollare le icone al bordo inferiore assoluto
+                // justify-end e pb-0 mantengono le icone incollate al bordo inferiore
                 isIOS ? "justify-end pb-0" : "justify-center",
                 isActive ? "text-white" : "text-zinc-600"
               )}
@@ -70,6 +70,7 @@ const BottomNav = () => {
                   scale: isActive ? 1.05 : 1,
                 }}
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                className={cn(isIOS ? "mb-1" : "")} // Piccolo margine opzionale per non toccare fisicamente il pixel 0 se necessario, ma qui seguiamo "posizione più bassa possibile"
               >
                 <item.icon 
                   size={isIOS ? 20 : 22} 
