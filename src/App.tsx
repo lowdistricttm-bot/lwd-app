@@ -14,6 +14,7 @@ import PullToRefresh from "@/components/PullToRefresh";
 import SpotifyPlayer from "@/components/SpotifyPlayer";
 import ScrollToTop from "@/components/ScrollToTop";
 import BackgroundDecoration from "@/components/BackgroundDecoration";
+import SwipeNavigation from "@/components/SwipeNavigation";
 import Index from "./pages/Index";
 import Bacheca from "./pages/Bacheca";
 import Discover from "./pages/Discover";
@@ -83,7 +84,7 @@ const AppContent = () => {
   useProfileSync(currentUsername);
   
   return (
-    <>
+    <SwipeNavigation>
       <BackgroundDecoration />
       <PullToRefresh />
       <SpotifyPlayer />
@@ -106,7 +107,7 @@ const AppContent = () => {
         <Route path="/admin/users" element={<AdminUsers />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
-    </>
+    </SwipeNavigation>
   );
 };
 
