@@ -39,6 +39,9 @@ html, body {
   overscroll-behavior-y: none;
   -webkit-overflow-scrolling: touch;
   background-color: #000;
+  /* Forza l'app a ignorare i padding di sistema sul fondo */
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
 }
 
 body {

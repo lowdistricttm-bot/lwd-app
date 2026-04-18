@@ -311,12 +311,12 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           )}
         </div>
 
-        {/* Footer Controls - Ancorati alla Safe Zone inferiore */}
+        {/* Footer Controls - Senza Safe Area Bottom */}
         <div 
           className="absolute bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-3xl border-t border-white/10"
           style={{ 
-            paddingBottom: 'env(safe-area-inset-bottom)',
-            minHeight: 'calc(65px + env(safe-area-inset-bottom))'
+            paddingBottom: '0px',
+            minHeight: '65px'
           }}
         >
           <div className="h-[65px] px-4 flex items-center justify-center">

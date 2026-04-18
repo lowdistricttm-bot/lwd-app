@@ -34,7 +34,7 @@ const BottomNav = () => {
     }
   };
 
-  // Altezza riportata a 22px per iOS come richiesto
+  // Altezza fissa 22px per iOS, ignorando totalmente la home bar
   const navHeight = isIOS ? '22px' : '44px';
 
   return (
@@ -42,16 +42,14 @@ const BottomNav = () => {
       className="fixed bottom-0 left-0 right-0 z-[999] bg-black border-t border-white/10 select-none"
       style={{ 
         height: navHeight,
-        paddingBottom: '0px',
+        paddingBottom: '0px', // Forza 0 padding sul fondo
+        marginBottom: '0px',
         WebkitUserSelect: 'none',
         touchAction: 'none'
       }}
     >
       <div 
-        className={cn(
-          "relative flex items-center justify-around h-full w-full max-w-2xl mx-auto px-2",
-          isIOS ? "pt-[1px]" : "pt-0" // Padding superiore minimo per compensare il bordo e centrare l'icona
-        )}
+        className="relative flex items-center justify-around h-full w-full max-w-2xl mx-auto px-2"
       >
         {items.map((item, i) => {
           const isActive = activeIndex === i;
