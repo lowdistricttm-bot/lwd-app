@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSocialFeed } from '@/hooks/use-social-feed';
-import { MessageSquare, User, Heart, Play, Lock, Loader2 } from 'lucide-react';
+import { MessageSquare, User, Heart, Play, Lock, Loader2, Quote } from 'lucide-react';
 import { motion } from 'framer-motion';
 import useEmblaCarousel from 'embla-carousel-react';
 import { cn } from '@/lib/utils';
@@ -124,8 +124,11 @@ const LatestActivities = () => {
                             )}
                           </>
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-zinc-950">
-                            <MessageSquare size={32} className="text-zinc-800" />
+                          <div className="w-full h-full flex items-center justify-center bg-zinc-950 p-8 relative overflow-hidden">
+                            <Quote className="absolute -right-4 -bottom-4 text-white/5 w-32 h-32 rotate-12" />
+                            <p className="text-xs md:text-sm font-black uppercase italic text-zinc-400 text-center line-clamp-6 tracking-tight leading-tight relative z-10">
+                              "{post.content}"
+                            </p>
                           </div>
                         )}
                       </div>
