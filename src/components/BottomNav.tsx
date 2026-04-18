@@ -33,10 +33,9 @@ const BottomNav = () => {
     <div 
       className="fixed bottom-0 left-0 right-0 z-[999] bg-black/95 backdrop-blur-3xl border-t border-white/10 select-none"
       style={{ 
-        // Usiamo env(safe-area-inset-bottom) per iPhone con notch
-        height: 'calc(60px + env(safe-area-inset-bottom))',
-        paddingBottom: 'env(safe-area-inset-bottom)',
-        // Forza il rendering sulla GPU per evitare scatti durante lo scroll su iOS
+        // Ridotto l'altezza base da 60px a 50px e dimezzato l'impatto del safe area
+        height: 'calc(50px + (env(safe-area-inset-bottom) * 0.5))',
+        paddingBottom: 'calc(env(safe-area-inset-bottom) * 0.3)',
         transform: 'translateZ(0)',
         WebkitTransform: 'translateZ(0)',
         willChange: 'transform',
@@ -44,10 +43,9 @@ const BottomNav = () => {
         touchAction: 'none'
       }}
     >
-      {/* Sfondo nero solido per coprire eventuali buchi durante il rimbalzo dello scroll */}
       <div className="absolute inset-0 bg-black -z-10" />
 
-      <div className="relative flex items-center justify-around h-[60px] px-2 max-w-lg mx-auto">
+      <div className="relative flex items-center justify-around h-[50px] px-2 max-w-lg mx-auto">
         {items.map((item, i) => {
           const isActive = activeIndex === i;
           return (
@@ -63,7 +61,7 @@ const BottomNav = () => {
               {isActive && (
                 <motion.div
                   layoutId="nav-glow"
-                  className="absolute w-10 h-10 bg-white/5 rounded-full z-0 blur-md"
+                  className="absolute w-8 h-8 bg-white/5 rounded-full z-0 blur-md"
                   transition={{
                     type: "spring",
                     stiffness: 400,
@@ -81,7 +79,7 @@ const BottomNav = () => {
                 transition={{ type: "spring", stiffness: 500, damping: 25 }}
               >
                 <item.icon 
-                  size={22} 
+                  size={20} 
                   strokeWidth={isActive ? 2.5 : 2} 
                 />
               </motion.div>
