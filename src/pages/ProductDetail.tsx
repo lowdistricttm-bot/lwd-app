@@ -74,24 +74,24 @@ const ProductDetail = () => {
 
           {/* Info Prodotto */}
           <div className="flex flex-col space-y-10">
-            <div className="space-y-3">
+            <div className="flex flex-col items-center space-y-2">
               <h1 
-                className="text-3xl md:text-5xl font-black tracking-tighter uppercase italic leading-[0.9]" 
+                className="text-xs md:text-sm font-black tracking-[0.3em] uppercase italic leading-tight text-center text-zinc-500" 
                 dangerouslySetInnerHTML={{ __html: product.name }} 
               />
-              <p className="text-2xl font-black tracking-tighter text-white/90 italic">
+              <p className="text-5xl md:text-7xl font-black tracking-tighter text-white italic text-center">
                 €{selectedVariation ? selectedVariation.price : product.price}
               </p>
             </div>
             
-            <div className="text-zinc-400 leading-relaxed text-sm font-medium italic prose prose-invert max-w-none" 
+            <div className="text-zinc-400 leading-relaxed text-sm font-medium italic prose prose-invert max-w-none text-center" 
                  dangerouslySetInnerHTML={{ __html: product.short_description || product.description }} />
 
             {/* Varianti / Taglie */}
             {hasVariations && (
-              <div className="space-y-5">
-                <p className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 italic ml-2">Seleziona Taglia</p>
-                <div className="flex flex-wrap gap-3">
+              <div className="space-y-5 flex flex-col items-center">
+                <p className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 italic">Seleziona Taglia</p>
+                <div className="flex flex-wrap justify-center gap-3">
                   {variations.map((v: any) => (
                     <button
                       key={v.id}
@@ -113,8 +113,8 @@ const ProductDetail = () => {
             )}
 
             {/* Quantità */}
-            <div className="space-y-5">
-              <p className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 italic ml-2">Quantità</p>
+            <div className="space-y-5 flex flex-col items-center">
+              <p className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 italic">Quantità</p>
               <div className="flex items-center bg-white/5 backdrop-blur-md border border-white/10 rounded-full w-fit overflow-hidden h-12 shadow-xl">
                 <button 
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
