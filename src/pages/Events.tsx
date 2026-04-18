@@ -120,11 +120,11 @@ const Events = () => {
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent">
       <Navbar />
-      <main className="flex-1 pt-24 pb-32 px-6 max-w-4xl mx-auto w-full">
+      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-6 max-w-4xl mx-auto w-full">
         <header className="mb-12 flex items-end justify-between">
           <div className="min-w-0 flex-1">
             <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">{t.events.subtitle}</h2>
-            <h1 className="text-3xl md:text-6xl font-black italic uppercase tracking-tighter truncate">{t.events.title}</h1>
+            <h1 className="text-3xl md:text-6xl font-black italic tracking-tighter uppercase truncate">{t.events.title}</h1>
           </div>
           {isAdmin && (
             <Button onClick={() => { setEditingEvent(null); setIsAdminModalOpen(true); }} className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 transition-all shadow-xl ml-4 shrink-0"><Plus size={24} /></Button>
@@ -360,7 +360,7 @@ const Events = () => {
                             const newFiles = [...interiorFiles]; newFiles.splice(i, 1);
                             const newPreviews = [...interiorPreviews]; newPreviews.splice(i, 1);
                             setInteriorFiles(newFiles); setInteriorPreviews(newPreviews);
-                          }} className="absolute top-1 right-1 p-1 bg-black/60 rounded-full hover:bg-zinc-800"><X size={10} /></button>
+                          }} className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 rounded-full hover:bg-zinc-800"><X size={10} /></button>
                         </div>
                       ))}
                       {interiorFiles.length < 6 && (

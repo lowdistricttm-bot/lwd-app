@@ -163,7 +163,7 @@ const Chat = () => {
         </button>
       </nav>
 
-      <main ref={scrollRef} className="flex-1 pt-28 pb-[140px] px-6 overflow-y-auto space-y-6 custom-scrollbar overflow-x-hidden">
+      <main ref={scrollRef} className="flex-1 pt-[calc(6rem+env(safe-area-inset-top)+1rem)] pb-[140px] px-6 overflow-y-auto space-y-6 custom-scrollbar overflow-x-hidden">
         {chatMessages?.map((msg) => {
           const isMe = msg.sender_id === currentUserId;
           const isMention = msg.content.includes('Ti ha menzionato');

@@ -77,7 +77,7 @@ const Messages = () => {
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent">
       <Navbar />
-      <main className="flex-1 pt-24 pb-32 px-6 max-w-2xl mx-auto w-full">
+      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-6 max-w-2xl mx-auto w-full">
         <header className="mb-12 flex items-end justify-between">
           <div>
             <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">{t.messages.subtitle}</h2>

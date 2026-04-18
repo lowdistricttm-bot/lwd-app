@@ -46,7 +46,7 @@ const Discover = () => {
     <div className="min-h-screen text-white flex flex-col bg-transparent">
       <Navbar />
       
-      <main className="flex-1 pt-24 pb-32 px-4 md:px-8 max-w-7xl mx-auto w-full">
+      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-4 md:px-8 max-w-7xl mx-auto w-full">
         <header className="mb-10">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-8">
             <div className="min-w-0 flex-1">
