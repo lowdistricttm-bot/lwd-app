@@ -19,14 +19,31 @@
   }
 }
 
-/* Nasconde le barre di scorrimento globalmente per TUTTI gli elementi */
-* {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE ed Edge */
+/* Regola universale definitiva per nascondere le scrollbar */
+*, *::before, *::after {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE ed Edge */
 }
 
 *::-webkit-scrollbar {
-  display: none; /* Chrome, Safari e Opera */
+  display: none !important; /* Chrome, Safari e Opera */
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Target specifico per Modal, Drawer e Popover (Radix/Shadcn) */
+[role="dialog"], 
+[role="menu"], 
+[data-radix-popper-content-wrapper],
+.fixed,
+.absolute {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+[role="dialog"]::-webkit-scrollbar,
+[role="menu"]::-webkit-scrollbar {
+  display: none !important;
 }
 
 html, body {
@@ -35,6 +52,7 @@ html, body {
   overscroll-behavior-y: auto;
   -webkit-overflow-scrolling: touch;
   background-color: #000;
+  scrollbar-width: none !important;
 }
 
 body {
@@ -66,7 +84,11 @@ h1, h2, h3, h4, h5, h6 {
   animation: marquee 25s linear infinite;
 }
 
-/* Utility per scrollbar (già coperta dal selettore universale sopra, ma mantenuta per compatibilità) */
+/* Utility extra */
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
 .no-scrollbar::-webkit-scrollbar {
-  display: none;
+  display: none !important;
 }
