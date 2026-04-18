@@ -100,10 +100,10 @@ const EmailSettingsModal = ({ isOpen, onClose }: EmailSettingsModalProps) => {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/90 backdrop-blur-md z-[250]" />
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} 
-            className="fixed inset-x-0 bottom-0 z-[251] bg-zinc-950 border-t border-white/10 p-8 rounded-t-[2rem] max-h-[90vh] overflow-y-auto"
+            className="fixed inset-x-0 bottom-0 z-[251] bg-zinc-950 border-t border-white/10 p-8 rounded-t-[2rem] max-h-[90vh] overflow-y-auto pb-24"
             style={{ touchAction: 'pan-y' }}
           >
-            <div className="max-w-3xl mx-auto space-y-10 pb-12">
+            <div className="max-w-3xl mx-auto space-y-10">
               <div className="flex justify-between items-center">
                 <div>
                   <h2 className="text-2xl font-black italic uppercase tracking-tighter">Configurazione Email</h2>

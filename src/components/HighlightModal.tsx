@@ -63,7 +63,7 @@ const HighlightModal = ({ isOpen, onClose, story, userId }: HighlightModalProps)
           />
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-            className="fixed inset-x-0 bottom-0 z-[401] bg-zinc-950 border-t border-white/10 p-6 pb-12 rounded-t-[2rem] max-h-[60vh] flex flex-col"
+            className="fixed inset-x-0 bottom-0 z-[401] bg-zinc-950 border-t border-white/10 p-6 pb-24 rounded-t-[2rem] max-h-[60vh] flex flex-col"
             style={{ touchAction: 'pan-y' }}
           >
             <div className="flex justify-between items-center mb-8">

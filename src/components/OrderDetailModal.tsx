@@ -70,7 +70,7 @@ const OrderDetailModal = ({ isOpen, onClose, order }: OrderDetailModalProps) => 
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[201] bg-zinc-950 border-t border-white/10 p-6 pb-12 rounded-t-[2.5rem] max-h-[90vh] overflow-y-auto custom-scrollbar"
+            className="fixed inset-x-0 bottom-0 z-[201] bg-zinc-950 border-t border-white/10 p-6 pb-24 rounded-t-[2.5rem] max-h-[90vh] overflow-y-auto custom-scrollbar"
             style={{ touchAction: 'pan-y' }}
           >
             <div className="max-w-2xl mx-auto space-y-8">

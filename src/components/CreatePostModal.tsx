@@ -81,8 +81,8 @@ const CreatePostModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
             animate={{ y: 0 }} 
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[1001] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 pb-12 rounded-t-[2.5rem] max-h-[92vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
-            style={{ touchAction: 'pan-y' }} // Permette lo scroll interno al modal
+            className="fixed inset-x-0 bottom-0 z-[1001] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 pb-24 rounded-t-[2.5rem] max-h-[92vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            style={{ touchAction: 'pan-y' }}
           >
             <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
 
@@ -94,7 +94,7 @@ const CreatePostModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
               <button onClick={onClose} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors"><X size={20} /></button>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex-1 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-24">
+            <form onSubmit={handleSubmit} className="flex-1 flex flex-col space-y-6 overflow-y-auto no-scrollbar">
               <Textarea 
                 placeholder="Cosa succede nel District?"
                 value={content}
