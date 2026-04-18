@@ -44,7 +44,7 @@ const BottomNav = () => {
       className="fixed bottom-0 left-0 right-0 z-[999] bg-black/95 backdrop-blur-3xl border-t border-white/10 select-none"
       style={{ 
         height: navHeight,
-        paddingBottom: '0px', // Padding inferiore azzerato
+        paddingBottom: '0px',
         transform: 'translateZ(0)',
         WebkitTransform: 'translateZ(0)',
         willChange: 'transform',
@@ -68,6 +68,10 @@ const BottomNav = () => {
                 "flex-1 flex flex-col items-center justify-center h-full relative z-10 transition-all duration-300",
                 isActive ? "text-white" : "text-zinc-600 hover:text-zinc-400"
               )}
+              style={{ 
+                // Padding superiore specifico per iOS per centrare l'icona rispetto al bordo
+                paddingTop: isIOS ? '1px' : '0px' 
+              }}
               onClick={() => triggerHaptic(12)}
             >
               {isActive && (
