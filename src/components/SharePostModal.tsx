@@ -70,9 +70,13 @@ const SharePostModal = ({ isOpen, onClose, postId, postImageUrl, postContent }: 
   const handleShare = async (targetUser: any) => {
     setSendingTo(targetUser.id);
     try {
-      const postUrl = `${window.location.origin}/post/${postId}`;
-      const messageContent = `Ti ha inviato un post: "${postContent.substring(0, 50)}${postContent.length > 50 ? '...' : ''}"\n\nVisualizza post: ${postUrl}`;
-      await sendMessage.mutateAsync({ receiverId: targetUser.id, content: messageContent, imageUrl: postImageUrl });
+      // Inviamo un messaggio con un tag speciale per identificare il post condiviso
+      const messageContent = `Ti ha inviato un post [POST_ID:${postId}]`;
+      await sendMessage.mutateAsync({ 
+        receiverId: targetUser.id, 
+        content: messageContent, 
+        imageUrl: postImageUrl 
+      });
       showSuccess(`Inviato a ${targetUser.username}`);
     } catch (err) {
       console.error(err);

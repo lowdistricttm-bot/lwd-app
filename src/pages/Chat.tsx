@@ -7,7 +7,7 @@ import { useMessages } from '@/hooks/use-messages';
 import { useStories } from '@/hooks/use-stories';
 import { usePresence } from '@/hooks/use-presence';
 import { useAdmin } from '@/hooks/use-admin';
-import { ChevronLeft, Send, User, Loader2, Mail, Trash2, Camera, X, Plus, Play, AtSign, RefreshCw } from 'lucide-react';
+import { ChevronLeft, Send, User, Loader2, Mail, Trash2, Camera, X, Plus, Play, AtSign, RefreshCw, LayoutGrid, ArrowRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
@@ -169,7 +169,19 @@ const Chat = () => {
         {chatMessages?.map((msg) => {
           const isMe = msg.sender_id === currentUserId;
           const isMention = msg.content.includes('Ti ha menzionato');
+          const isSharedPost = msg.content.includes('Ti ha inviato un post');
           const msgImages = msg.images || [];
+
+          let displayContent = msg.content;
+          let sharedPostId = null;
+
+          if (isSharedPost) {
+            const match = msg.content.match(/\[POST_ID:(.*?)\]/);
+            if (match) {
+              sharedPostId = match[1];
+              displayContent = msg.content.replace(/\[POST_ID:.*?\]/, '').trim();
+            }
+          }
 
           return (
             <div key={msg.id} className={cn("flex w-full", isMe ? "justify-end" : "justify-start")}>
@@ -203,7 +215,7 @@ const Chat = () => {
                     isMe 
                       ? "bg-zinc-800 text-white rounded-tr-sm border border-white/5" 
                       : "bg-zinc-200 text-black rounded-tl-sm",
-                    isMention && "border-white/20 bg-zinc-900 backdrop-blur-2xl"
+                    (isMention || isSharedPost) && "border-white/20 bg-zinc-900 backdrop-blur-2xl"
                   )}
                 >
                   {msgImages.length > 0 && (
@@ -215,7 +227,11 @@ const Chat = () => {
                           e.stopPropagation();
                           return;
                         }
-                        setLightboxData({ images: msgImages, index: 0 });
+                        if (isSharedPost && sharedPostId) {
+                          navigate(`/post/${sharedPostId}`);
+                        } else {
+                          setLightboxData({ images: msgImages, index: 0 });
+                        }
                       }}
                     >
                       {msgImages[0].match(/\.(mp4|webm|ogg|mov)$/i) || msgImages[0].includes('video') ? (
@@ -223,6 +239,7 @@ const Chat = () => {
                       ) : (
                         <img src={msgImages[0]} className="w-full h-full object-cover" />
                       )}
+                      
                       {isMention && (
                         <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
                           <AtSign size={36} strokeWidth={2.5} className="mb-3 text-white drop-shadow-2xl" />
@@ -239,13 +256,29 @@ const Chat = () => {
                           </button>
                         </div>
                       )}
+
+                      {isSharedPost && (
+                        <div className="absolute inset-0 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+                          <LayoutGrid size={36} strokeWidth={2.5} className="mb-3 text-white drop-shadow-2xl" />
+                          <p className="text-[11px] font-black uppercase tracking-[0.2em] mb-5 text-white drop-shadow-2xl italic">Nuovo Post Inviato</p>
+                          <button 
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              if(!isDragging.current && sharedPostId) navigate(`/post/${sharedPostId}`); 
+                            }}
+                            className="bg-white text-black px-8 py-3 rounded-full text-[10px] font-black uppercase italic flex items-center gap-2 hover:scale-105 transition-all shadow-2xl"
+                          >
+                            Visualizza <ArrowRight size={14} strokeWidth={2.5} />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
-                  {msg.content && (
-                    <div className={cn("p-4", isMention && "bg-black/60 border-t border-white/10")}>
-                      <p className={cn("text-sm font-medium leading-relaxed", isMention && "text-white")}>{msg.content}</p>
+                  {displayContent && (
+                    <div className={cn("p-4", (isMention || isSharedPost) && "bg-black/60 border-t border-white/10")}>
+                      <p className={cn("text-sm font-medium leading-relaxed", (isMention || isSharedPost) && "text-white")}>{displayContent}</p>
                       <div className="flex items-center justify-between mt-2.5">
-                        <p className={cn("text-[7px] uppercase font-black tracking-widest", isMe ? "text-white/40" : "text-black/40", isMention && "text-white/40")}>
+                        <p className={cn("text-[7px] uppercase font-black tracking-widest", isMe ? "text-white/40" : "text-black/40", (isMention || isSharedPost) && "text-white/40")}>
                           {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
