@@ -75,7 +75,6 @@ const Profile = () => {
 
   const { counts, loadingCounts } = useFollow(targetUserId);
   
-  // Passiamo sia l'email che il wp_id per trovare tutti gli ordini (app + sito)
   const { data: orders, isLoading: loadingOrders, refetch: refetchOrders } = useWcUserOrders(
     isOwnProfile ? currentUser?.email : undefined,
     isOwnProfile ? profile?.wp_id : undefined
@@ -178,20 +177,35 @@ const Profile = () => {
   };
 
   const getTrackingInfo = (order: any) => {
-    // Cerca nei metadati per il plugin WooCommerce Shipment Tracking (ufficiale)
-    const trackingMeta = order.meta_data?.find((m: any) => m.key === '_wc_shipment_tracking_items');
-    if (trackingMeta && Array.isArray(trackingMeta.value) && trackingMeta.value.length > 0) {
-      const item = trackingMeta.value[0];
+    const meta = order.meta_data || [];
+
+    // 1. Plugin Ufficiale WooCommerce Shipment Tracking
+    const official = meta.find((m: any) => m.key === '_wc_shipment_tracking_items');
+    if (official && Array.isArray(official.value) && official.value.length > 0) {
+      const item = official.value[0];
       return {
         number: item.tracking_number,
         provider: item.tracking_provider,
         url: item.custom_tracking_link || item.tracking_link
       };
     }
+
+    // 2. YITH WooCommerce Order & Shipment Tracking (Supporto specifico richiesto)
+    const yithCode = meta.find((m: any) => m.key === 'ywto_tracking_code')?.value;
+    const yithCarrier = meta.find((m: any) => m.key === 'ywto_carrier_name')?.value;
+    const yithUrl = meta.find((m: any) => m.key === 'ywto_tracking_url')?.value;
+
+    if (yithCode) {
+      return {
+        number: yithCode,
+        provider: yithCarrier,
+        url: yithUrl
+      };
+    }
     
-    // Fallback per altri plugin comuni o inserimento manuale
-    const simpleNumber = order.meta_data?.find((m: any) => m.key === '_tracking_number' || m.key === 'tracking_number')?.value;
-    const simpleProvider = order.meta_data?.find((m: any) => m.key === '_tracking_provider' || m.key === 'tracking_provider')?.value;
+    // 3. Fallback per altri plugin comuni o inserimento manuale
+    const simpleNumber = meta.find((m: any) => m.key === '_tracking_number' || m.key === 'tracking_number')?.value;
+    const simpleProvider = meta.find((m: any) => m.key === '_tracking_provider' || m.key === 'tracking_provider')?.value;
     
     if (simpleNumber) {
       return { number: simpleNumber, provider: simpleProvider };
