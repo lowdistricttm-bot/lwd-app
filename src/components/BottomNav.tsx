@@ -34,8 +34,8 @@ const BottomNav = () => {
     }
   };
 
-  // Altezza leggermente aumentata a 34px per permettere il centraggio con spazio sopra
-  const navHeight = isIOS ? '34px' : '44px';
+  // Altezza riportata a 22px per iOS come richiesto
+  const navHeight = isIOS ? '22px' : '44px';
 
   return (
     <div 
@@ -50,7 +50,7 @@ const BottomNav = () => {
       <div 
         className={cn(
           "relative flex items-center justify-around h-full w-full max-w-2xl mx-auto px-2",
-          isIOS ? "pt-2" : "pt-0" // Aggiunto spazio sopra per far "scendere" le icone al centro
+          isIOS ? "pt-[1px]" : "pt-0" // Padding superiore minimo per compensare il bordo e centrare l'icona
         )}
       >
         {items.map((item, i) => {
