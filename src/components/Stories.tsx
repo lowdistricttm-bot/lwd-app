@@ -111,7 +111,7 @@ const Stories = () => {
                 </button>
               )}
             </div>
-            <span className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] italic">La tua storia</span>
+            <span className="text-zinc-500 text-[8px] font-black uppercase tracking-widest italic">La tua storia</span>
           </div>
         )}
 
