@@ -28,13 +28,14 @@ const BottomNav = () => {
 
   return (
     <div 
-      className="fixed bottom-0 left-0 right-0 z-[999] bg-black/90 backdrop-blur-2xl border-t border-white/10"
+      className="fixed bottom-0 left-0 right-0 z-[999] bg-black/80 backdrop-blur-2xl border-t border-white/5"
       style={{ 
         transform: 'translateZ(0)', 
-        WebkitTransform: 'translateZ(0)'
+        WebkitTransform: 'translateZ(0)',
+        paddingBottom: 'env(safe-area-inset-bottom)'
       }}
     >
-      <div className="relative flex items-center justify-around h-[calc(50px+env(safe-area-inset-bottom))] px-2">
+      <div className="relative flex items-center justify-around h-14 px-2">
         {items.map((item, i) => {
           const isActive = activeIndex === i;
           return (
@@ -42,15 +43,15 @@ const BottomNav = () => {
               key={i} 
               to={item.href}
               className={cn(
-                "flex-1 flex flex-col items-center justify-center h-full relative z-10 transition-all duration-300 pb-[env(safe-area-inset-bottom)]",
-                isActive ? "text-white" : "text-zinc-500 hover:text-zinc-400"
+                "flex-1 flex flex-col items-center justify-center h-full relative z-10 transition-all duration-300",
+                isActive ? "text-white" : "text-zinc-600 hover:text-zinc-400"
               )}
-              onClick={() => triggerHaptic(15)}
+              onClick={() => triggerHaptic(12)}
             >
               {isActive && (
                 <motion.div
                   layoutId="nav-glow"
-                  className="absolute w-8 h-8 bg-white/10 rounded-full z-0 blur-xl"
+                  className="absolute w-10 h-10 bg-white/5 rounded-full z-0 blur-xl"
                   transition={{
                     type: "spring",
                     stiffness: 400,
@@ -62,7 +63,7 @@ const BottomNav = () => {
               <motion.div
                 animate={{ 
                   scale: isActive ? 1.1 : 1,
-                  filter: isActive ? 'drop-shadow(0 0 10px rgba(255,255,255,0.4))' : 'none'
+                  filter: isActive ? 'drop-shadow(0 0 8px rgba(255,255,255,0.3))' : 'none'
                 }}
                 whileTap={{ scale: 0.9 }}
                 transition={{ type: "spring", stiffness: 500, damping: 25 }}
