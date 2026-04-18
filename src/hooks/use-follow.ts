@@ -52,7 +52,16 @@ export const useFollow = (targetUserId?: string) => {
       if (!user) throw new Error("Accedi per seguire altri membri");
       if (user.id === targetUserId) throw new Error("Non puoi seguire te stesso");
 
-      if (isFollowing) {
+      // Eseguiamo un controllo fresco sul DB per evitare race conditions
+      const { data: existing } = await supabase
+        .from('followers')
+        .select('*')
+        .eq('follower_id', user.id)
+        .eq('following_id', targetUserId)
+        .maybeSingle();
+
+      if (existing) {
+        // Se esiste già, lo rimuoviamo (Unfollow)
         const { error } = await supabase
           .from('followers')
           .delete()
@@ -60,10 +69,14 @@ export const useFollow = (targetUserId?: string) => {
           .eq('following_id', targetUserId);
         if (error) throw error;
       } else {
+        // Se non esiste, lo aggiungiamo (Follow)
         const { error } = await supabase
           .from('followers')
           .insert([{ follower_id: user.id, following_id: targetUserId }]);
-        if (error) throw error;
+        
+        // Se riceviamo un errore di chiave duplicata (23505), lo ignoriamo 
+        // perché significa che l'utente risulta già seguito (obiettivo raggiunto)
+        if (error && error.code !== '23505') throw error;
       }
     },
     onSuccess: () => {
