@@ -8,6 +8,7 @@ import { useCart } from '@/hooks/use-cart';
 import { useMessages } from '@/hooks/use-messages';
 import { useNotifications } from '@/hooks/use-notifications';
 import { useAdmin } from '@/hooks/use-admin';
+import { useBodyLock } from '@/hooks/use-body-lock';
 import CartDrawer from './CartDrawer';
 import NotificationDrawer from './NotificationDrawer';
 import { Input } from './ui/input';
@@ -37,23 +38,8 @@ const Navbar = () => {
 
   const isSubscriber = role === 'subscriber';
 
-  // Scroll Lock Logic - Bulletproof for Mobile
-  useEffect(() => {
-    if (isSearchOpen) {
-      document.documentElement.style.overflow = 'hidden';
-      document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
-    } else {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    }
-    return () => {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    };
-  }, [isSearchOpen]);
+  // Blocco background per la ricerca
+  useBodyLock(isSearchOpen);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,7 +114,7 @@ const Navbar = () => {
           </div>
           <form onSubmit={handleSearch} className="max-w-2xl mx-auto w-full">
             <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-4 italic">Cerca nel District</h2>
-            <Input autoFocus placeholder="COSA STAI CERCANDO?" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-transparent border-none text-4xl md:text-6xl font-black uppercase italic tracking-tighter p-0 h-auto focus-visible:ring-0 placeholder:text-zinc-900" />
+            <Input placeholder="COSA STAI CERCANDO?" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-transparent border-none text-4xl md:text-6xl font-black uppercase italic tracking-tighter p-0 h-auto focus-visible:ring-0 placeholder:text-zinc-900" />
           </form>
         </div>
       )}

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Loader2, Check } from 'lucide-react';
 import { useHighlights } from '@/hooks/use-highlights';
+import { useBodyLock } from '@/hooks/use-body-lock';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
@@ -20,23 +21,8 @@ const HighlightModal = ({ isOpen, onClose, story, userId }: HighlightModalProps)
   const [isCreating, setIsCreating] = useState(false);
   const [newTitle, setNewTitle] = useState('');
 
-  // Scroll Lock Logic - Bulletproof for Mobile
-  useEffect(() => {
-    if (isOpen) {
-      document.documentElement.style.overflow = 'hidden';
-      document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
-    } else {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    }
-    return () => {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    };
-  }, [isOpen]);
+  // Blocco background
+  useBodyLock(isOpen);
 
   const handleCreate = async () => {
     if (!newTitle.trim()) return;
@@ -69,7 +55,7 @@ const HighlightModal = ({ isOpen, onClose, story, userId }: HighlightModalProps)
             animate={{ y: 0 }} 
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[401] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-5 pb-10 rounded-t-[2.5rem] max-h-[60vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            className="fixed inset-x-0 bottom-0 z-[401] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-5 pb-10 rounded-t-[2.5rem] max-h-[60dvh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
             style={{ 
               touchAction: 'pan-y',
               overscrollBehavior: 'contain'
@@ -91,7 +77,6 @@ const HighlightModal = ({ isOpen, onClose, story, userId }: HighlightModalProps)
                     </div>
                   </div>
                   <Input 
-                    autoFocus
                     placeholder="NOME RACCOLTA" 
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value.toUpperCase())}

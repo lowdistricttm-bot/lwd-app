@@ -6,6 +6,7 @@ import { X, Clock, CheckCircle2, XCircle, Car, MapPin, Calendar, Trash2, Loader2
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 import { useEvents } from '@/hooks/use-events';
+import { useBodyLock } from '@/hooks/use-body-lock';
 
 interface ManageApplicationModalProps {
   isOpen: boolean;
@@ -16,23 +17,8 @@ interface ManageApplicationModalProps {
 const ManageApplicationModal = ({ isOpen, onClose, application }: ManageApplicationModalProps) => {
   const { cancelApplication } = useEvents();
 
-  // Scroll Lock Logic - Bulletproof for Mobile
-  useEffect(() => {
-    if (isOpen) {
-      document.documentElement.style.overflow = 'hidden';
-      document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
-    } else {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    }
-    return () => {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    };
-  }, [isOpen]);
+  // Blocco background
+  useBodyLock(isOpen);
 
   if (!application) return null;
 
@@ -63,7 +49,7 @@ const ManageApplicationModal = ({ isOpen, onClose, application }: ManageApplicat
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[151] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[85vh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            className="fixed inset-x-0 bottom-0 z-[151] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[85dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
             style={{ 
               touchAction: 'pan-y',
               overscrollBehavior: 'contain'

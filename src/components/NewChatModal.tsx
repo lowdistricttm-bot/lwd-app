@@ -23,7 +23,7 @@ const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  // Utilizziamo il nuovo hook per bloccare il background
+  // Blocco background
   useBodyLock(isOpen);
 
   useEffect(() => {
@@ -107,7 +107,6 @@ const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
             <div className="relative mb-8">
               <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
               <Input 
-                autoFocus
                 placeholder="CERCA USERNAME..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}

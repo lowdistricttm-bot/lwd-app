@@ -17,7 +17,7 @@ const CreatePostModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
   
   const { createPost } = useSocialFeed();
 
-  // Utilizziamo il nuovo hook per bloccare il background
+  // Blocco background
   useBodyLock(isOpen);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

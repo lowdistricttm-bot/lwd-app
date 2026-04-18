@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, User, ChevronRight, Loader2, Users } from 'lucide-react';
 import { useFollowList } from '@/hooks/use-follow';
+import { useBodyLock } from '@/hooks/use-body-lock';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -19,23 +20,8 @@ const FollowListModal = ({ isOpen, onClose, userId, username, type }: FollowList
   const navigate = useNavigate();
   const { data: list, isLoading } = useFollowList(userId, type);
 
-  // Scroll Lock Logic - Bulletproof for Mobile
-  useEffect(() => {
-    if (isOpen) {
-      document.documentElement.style.overflow = 'hidden';
-      document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
-    } else {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    }
-    return () => {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    };
-  }, [isOpen]);
+  // Blocco background
+  useBodyLock(isOpen);
 
   const title = type === 'followers' ? 'Follower' : 'Seguiti';
 
@@ -55,7 +41,7 @@ const FollowListModal = ({ isOpen, onClose, userId, username, type }: FollowList
             animate={{ y: 0 }} 
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[1001] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[85vh] flex flex-col shadow-2xl"
+            className="fixed inset-x-0 bottom-0 z-[1001] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[85dvh] flex flex-col shadow-2xl"
             style={{ 
               touchAction: 'pan-y',
               overscrollBehavior: 'contain'

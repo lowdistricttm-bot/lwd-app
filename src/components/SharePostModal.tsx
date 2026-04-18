@@ -6,6 +6,7 @@ import { X, Search, User, Send, Loader2, ShieldCheck } from 'lucide-react';
 import { Input } from './ui/input';
 import { supabase } from "@/integrations/supabase/client";
 import { useMessages } from '@/hooks/use-messages';
+import { useBodyLock } from '@/hooks/use-body-lock';
 import { showSuccess } from '@/utils/toast';
 import { cn } from '@/lib/utils';
 
@@ -24,23 +25,8 @@ const SharePostModal = ({ isOpen, onClose, postId, postImageUrl, postContent }: 
   const [sendingTo, setSendingTo] = useState<string | null>(null);
   const { sendMessage } = useMessages();
 
-  // Scroll Lock Logic - Bulletproof for Mobile
-  useEffect(() => {
-    if (isOpen) {
-      document.documentElement.style.overflow = 'hidden';
-      document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
-    } else {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    }
-    return () => {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    };
-  }, [isOpen]);
+  // Blocco background
+  useBodyLock(isOpen);
 
   useEffect(() => {
     const performSearch = async () => {
@@ -92,7 +78,7 @@ const SharePostModal = ({ isOpen, onClose, postId, postImageUrl, postContent }: 
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[1001] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[85vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            className="fixed inset-x-0 bottom-0 z-[1001] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[85dvh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
             style={{ 
               touchAction: 'pan-y',
               overscrollBehavior: 'contain'

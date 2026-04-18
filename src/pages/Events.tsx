@@ -7,6 +7,7 @@ import BottomNav from '@/components/BottomNav';
 import { useEvents, Event, useUserApplications } from '@/hooks/use-events';
 import { useGarage } from '@/hooks/use-garage';
 import { useAdmin } from '@/hooks/use-admin';
+import { useBodyLock } from '@/hooks/use-body-lock';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -44,23 +45,8 @@ const Events = () => {
 
   const viewEventId = searchParams.get('view');
 
-  // Scroll Lock Logic - Bulletproof for Mobile
-  useEffect(() => {
-    if (viewingEvent || selectedEvent || manageApp || isAdminModalOpen) {
-      document.documentElement.style.overflow = 'hidden';
-      document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
-    } else {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    }
-    return () => {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    };
-  }, [viewingEvent, selectedEvent, manageApp, isAdminModalOpen]);
+  // Blocco background per i vari stati modal
+  useBodyLock(!!viewingEvent || !!selectedEvent || !!manageApp || isAdminModalOpen);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -227,7 +213,7 @@ const Events = () => {
                 animate={{ y: 0 }} 
                 exit={{ y: '100%' }} 
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="fixed inset-x-0 bottom-0 z-[151] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 pb-12 rounded-t-[2.5rem] max-h-[90vh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+                className="fixed inset-x-0 bottom-0 z-[151] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 pb-12 rounded-t-[2.5rem] max-h-[90dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
                 style={{ overscrollBehavior: 'contain' }}
               >
                 <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
@@ -295,7 +281,7 @@ const Events = () => {
                 animate={{ y: 0 }} 
                 exit={{ y: '100%' }} 
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="fixed inset-x-0 bottom-0 z-[151] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 pb-12 rounded-t-[2.5rem] max-h-[90vh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+                className="fixed inset-x-0 bottom-0 z-[151] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 pb-12 rounded-t-[2.5rem] max-h-[90dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
                 style={{ overscrollBehavior: 'contain' }}
               >
                 <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />

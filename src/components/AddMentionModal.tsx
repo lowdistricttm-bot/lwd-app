@@ -23,7 +23,7 @@ const AddMentionModal = ({ isOpen, onClose, storyId, storyUrl, existingMentions 
   const [isLoading, setIsLoading] = useState(false);
   const { addMention } = useStories();
 
-  // Utilizziamo il nuovo hook per bloccare il background
+  // Blocco background
   useBodyLock(isOpen);
 
   useEffect(() => {
