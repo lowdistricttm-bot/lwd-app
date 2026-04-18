@@ -126,32 +126,35 @@ const Chat = () => {
 
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent">
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-black/60 backdrop-blur-2xl border-b border-white/10 h-20 px-6 flex items-center gap-4 pt-[env(safe-area-inset-top)]">
-        <button onClick={() => navigate(-1)} className="p-2 text-zinc-400 hover:text-white"><ChevronLeft size={24} strokeWidth={2.5} /></button>
+      {/* Header Ingrandito e Ottimizzato */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-2xl border-b border-white/10 h-24 px-4 flex items-center gap-2 pt-[env(safe-area-inset-top)]">
+        <button onClick={() => navigate(-1)} className="p-3 text-zinc-400 hover:text-white shrink-0">
+          <ChevronLeft size={28} strokeWidth={2.5} />
+        </button>
         
         <button 
           onClick={() => navigate(`/profile/${userId}`)}
-          className="flex items-center gap-3 hover:opacity-70 transition-opacity text-left"
+          className="flex items-center gap-4 hover:opacity-70 transition-opacity text-left flex-1 min-w-0"
         >
-          <div className="w-10 h-10 bg-zinc-900 rounded-full overflow-hidden border border-white/10">
+          <div className="w-12 h-12 bg-zinc-900 rounded-full overflow-hidden border border-white/10 shrink-0">
             {otherUserProfile?.avatar_url ? (
               <img src={otherUserProfile.avatar_url} className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center"><User size={18} strokeWidth={1.5} className="text-zinc-600" /></div>
+              <div className="w-full h-full flex items-center justify-center"><User size={22} strokeWidth={1.5} className="text-zinc-600" /></div>
             )}
           </div>
-          <div>
-            <h4 className="text-sm font-black italic uppercase tracking-tight leading-none">
+          <div className="min-w-0">
+            <h4 className="text-base font-black italic uppercase tracking-tight leading-none truncate">
               {otherUserProfile?.username || 'Membro District'}
             </h4>
-            <div className="flex items-center gap-1.5 mt-1">
+            <div className="flex items-center gap-2 mt-1.5">
               <div className={cn(
-                "w-1.5 h-1.5 rounded-full",
-                isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" : "bg-zinc-600"
+                "w-2 h-2 rounded-full shrink-0",
+                isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-zinc-700"
               )} />
               <p className={cn(
-                "text-[8px] font-black uppercase tracking-widest transition-colors duration-500",
-                isOnline ? "text-green-500" : "text-zinc-400"
+                "text-[9px] font-black uppercase tracking-widest transition-colors duration-500 truncate",
+                isOnline ? "text-green-500" : "text-zinc-500"
               )}>
                 {isOnline ? 'Online' : lastSeen ? `Ultimo accesso ${lastSeen}` : 'Offline'}
               </p>
@@ -160,7 +163,7 @@ const Chat = () => {
         </button>
       </nav>
 
-      <main ref={scrollRef} className="flex-1 pt-24 pb-[140px] px-6 overflow-y-auto space-y-6 custom-scrollbar overflow-x-hidden">
+      <main ref={scrollRef} className="flex-1 pt-28 pb-[140px] px-6 overflow-y-auto space-y-6 custom-scrollbar overflow-x-hidden">
         {chatMessages?.map((msg) => {
           const isMe = msg.sender_id === currentUserId;
           const isMention = msg.content.includes('Ti ha menzionato');
@@ -196,8 +199,8 @@ const Chat = () => {
                   className={cn(
                     "relative z-10 shadow-2xl overflow-hidden rounded-2xl", 
                     isMe 
-                      ? "bg-blue-600 text-white rounded-tr-sm" 
-                      : "bg-zinc-800 text-white rounded-tl-sm border border-white/5",
+                      ? "bg-zinc-800 text-white rounded-tr-sm border border-white/5" 
+                      : "bg-zinc-200 text-black rounded-tl-sm",
                     isMention && "border-white/20 bg-zinc-900 backdrop-blur-2xl"
                   )}
                 >
@@ -219,29 +222,31 @@ const Chat = () => {
                         <img src={msgImages[0]} className="w-full h-full object-cover" />
                       )}
                       {isMention && (
-                        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center">
-                          <AtSign size={32} strokeWidth={2} className="mb-2 text-white drop-shadow-lg" />
-                          <p className="text-[10px] font-black uppercase tracking-widest mb-4 text-white drop-shadow-lg">Sei stato menzionato!</p>
+                        <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+                          <AtSign size={36} strokeWidth={2.5} className="mb-3 text-white drop-shadow-2xl" />
+                          <p className="text-[11px] font-black uppercase tracking-[0.2em] mb-5 text-white drop-shadow-2xl italic">Sei stato menzionato!</p>
                           <button 
                             onClick={(e) => { 
                               e.stopPropagation(); 
                               if(!isDragging.current) handleReshare(msgImages[0], msg.sender_id); 
                             }}
                             disabled={reshareStory.isPending}
-                            className="bg-white text-black px-6 py-2.5 rounded-full text-[9px] font-black uppercase italic flex items-center gap-2 hover:scale-105 transition-all shadow-xl"
+                            className="bg-white text-black px-8 py-3 rounded-full text-[10px] font-black uppercase italic flex items-center gap-2 hover:scale-105 transition-all shadow-2xl"
                           >
-                            {reshareStory.isPending ? <Loader2 size={12} className="animate-spin" /> : <><RefreshCw size={12} strokeWidth={2.5} /> Aggiungi</>}
+                            {reshareStory.isPending ? <Loader2 size={14} className="animate-spin" /> : <><RefreshCw size={14} strokeWidth={2.5} /> Aggiungi</>}
                           </button>
                         </div>
                       )}
                     </div>
                   )}
                   {msg.content && (
-                    <div className={cn("p-4", isMention && "bg-black/40")}>
-                      <p className="text-sm font-medium leading-relaxed">{msg.content}</p>
-                      <p className={cn("text-[7px] uppercase font-black mt-2", isMe ? "text-white/50" : "text-zinc-500")}>
-                        {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
+                    <div className={cn("p-4", isMention && "bg-black/60 border-t border-white/10")}>
+                      <p className={cn("text-sm font-medium leading-relaxed", isMention && "text-white")}>{msg.content}</p>
+                      <div className="flex items-center justify-between mt-2.5">
+                        <p className={cn("text-[7px] uppercase font-black tracking-widest", isMe ? "text-white/40" : "text-black/40", isMention && "text-white/40")}>
+                          {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
                     </div>
                   )}
                 </motion.div>
