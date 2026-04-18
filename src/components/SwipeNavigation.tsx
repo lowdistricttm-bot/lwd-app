@@ -10,7 +10,7 @@ const SwipeNavigation = ({ children }: { children: React.ReactNode }) => {
   
   const SWIPE_THRESHOLD = 70;
   const EDGE_THRESHOLD = 30; 
-  const HORIZONTAL_RATIO = 2.0; // Il movimento deve essere almeno 2 volte più orizzontale che verticale
+  const HORIZONTAL_RATIO = 2.0;
 
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
@@ -34,23 +34,21 @@ const SwipeNavigation = ({ children }: { children: React.ReactNode }) => {
       const deltaY = touchEnd.y - touchStart.current.y;
       const duration = touchEnd.time - touchStart.current.time;
 
-      // Ignoriamo swipe troppo lenti o prevalentemente verticali
       if (duration > 500) return; 
       
       if (Math.abs(deltaX) > Math.abs(deltaY) * HORIZONTAL_RATIO && Math.abs(deltaX) > SWIPE_THRESHOLD) {
         
         const target = e.target as HTMLElement;
-        const isSlider = target.closest('.no-scrollbar, .embla, [data-no-swipe="true"], input, textarea');
+        // Aggiunto controllo per evitare swipe navigation se siamo dentro il visualizzatore storie
+        const isRestricted = target.closest('.no-scrollbar, .embla, [data-no-swipe="true"], input, textarea, [role="dialog"]');
         
-        if (!isSlider) {
+        if (!isRestricted) {
           if (deltaX > 0) {
-            // Swipe da Sinistra a Destra -> INDIETRO (solo se parte dal bordo o è molto deciso)
             if (touchStart.current.x < EDGE_THRESHOLD || Math.abs(deltaX) > 120) {
               if ('vibrate' in navigator) navigator.vibrate(5);
               navigate(-1);
             }
           } else {
-            // Swipe da Destra a Sinistra -> AVANTI
             if (Math.abs(deltaX) > 120) {
               if ('vibrate' in navigator) navigator.vibrate(5);
               navigate(1);

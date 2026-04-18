@@ -14,7 +14,12 @@ const PullToRefresh = () => {
   const MAX_PULL = 150; 
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
-    // Attiviamo il pull solo se siamo esattamente in cima
+    // Disattiviamo se il body ha overflow hidden (storie o modal aperti)
+    if (document.body.style.overflow === 'hidden') {
+      isPulling.current = false;
+      return;
+    }
+
     if (window.scrollY <= 5) {
       startY.current = e.touches[0].pageY;
       isPulling.current = true;
@@ -29,19 +34,16 @@ const PullToRefresh = () => {
     const currentY = e.touches[0].pageY;
     const diff = currentY - startY.current;
 
-    // Se stiamo tirando verso il basso
     if (diff > 0) {
       const resistance = 0.4;
       const distance = Math.min(diff * resistance, MAX_PULL);
       
       setPullDistance(distance);
 
-      // Blocchiamo lo scroll nativo solo se stiamo effettivamente tirando per il refresh
       if (distance > 10 && e.cancelable) {
         e.preventDefault();
       }
     } else {
-      // Se l'utente scorre verso l'alto, lasciamo fare al browser
       isPulling.current = false;
       setPullDistance(0);
     }
@@ -72,9 +74,7 @@ const PullToRefresh = () => {
   };
 
   useEffect(() => {
-    // Usiamo passive: true per lo start per non impattare le performance
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
-    // touchmove DEVE essere passive: false per poter chiamare preventDefault() quando serve
     window.addEventListener('touchmove', handleTouchMove, { passive: false });
     window.addEventListener('touchend', handleTouchEnd);
 
