@@ -28,7 +28,7 @@ const BottomNav = () => {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-[100] bg-black/80 backdrop-blur-2xl border-t border-white/5 pb-[env(safe-area-inset-bottom)]">
-      <div className="relative flex items-center h-12 md:h-16 px-2">
+      <div className="relative flex items-center h-10 md:h-14 px-2">
         {/* Icone */}
         {items.map((item, i) => {
           const isActive = activeIndex === i;
@@ -42,11 +42,11 @@ const BottomNav = () => {
               )}
               onClick={() => triggerHaptic(15)}
             >
-              {/* Indicatore Glow Reattivo */}
+              {/* Indicatore Glow Reattivo - Ridimensionato per la barra più sottile */}
               {isActive && (
                 <motion.div
                   layoutId="nav-glow"
-                  className="absolute w-10 h-10 bg-white/10 rounded-full z-0 blur-xl"
+                  className="absolute w-8 h-8 bg-white/10 rounded-full z-0 blur-xl"
                   transition={{
                     type: "spring",
                     stiffness: 400,
@@ -57,14 +57,14 @@ const BottomNav = () => {
 
               <motion.div
                 animate={{ 
-                  scale: isActive ? 1.15 : 1,
-                  filter: isActive ? 'drop-shadow(0 0 8px rgba(255,255,255,0.5))' : 'none'
+                  scale: isActive ? 1.1 : 1,
+                  filter: isActive ? 'drop-shadow(0 0 8px rgba(255,255,255,0.4))' : 'none'
                 }}
                 whileTap={{ scale: 0.9 }}
                 transition={{ type: "spring", stiffness: 500, damping: 25 }}
               >
                 <item.icon 
-                  size={20} 
+                  size={18} 
                   strokeWidth={isActive ? 2.5 : 2} 
                 />
               </motion.div>
