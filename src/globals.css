@@ -22,9 +22,19 @@
 html, body {
   width: 100%;
   overflow-x: hidden;
-  /* Permettiamo il comportamento nativo per evitare blocchi a fondo pagina */
   overscroll-behavior-y: auto;
   -webkit-overflow-scrolling: touch;
+  
+  /* Nasconde la barra su Firefox */
+  scrollbar-width: none;
+  /* Nasconde la barra su IE ed Edge */
+  -ms-overflow-style: none;
+}
+
+/* Nasconde la barra su Chrome, Safari e Opera */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
 }
 
 body {
@@ -45,15 +55,6 @@ h1, h2, h3, h4, h5, h6 {
 
 .glass-button {
   @apply bg-white/10 backdrop-blur-md border border-white/10 hover:bg-white/20 transition-all duration-300;
-}
-
-/* --- CUSTOM SCROLLBAR --- */
-::-webkit-scrollbar {
-  width: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-  @apply bg-zinc-700 rounded-full;
 }
 
 @keyframes marquee {
