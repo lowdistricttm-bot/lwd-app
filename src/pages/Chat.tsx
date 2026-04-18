@@ -179,7 +179,8 @@ const Chat = () => {
             const match = msg.content.match(/\[POST_ID:(.*?)\]/);
             if (match) {
               sharedPostId = match[1];
-              displayContent = msg.content.replace(/\[POST_ID:.*?\]/, '').trim();
+              // Forza il testo pulito richiesto dall'utente
+              displayContent = "Ti ha inviato un post";
             }
           }
 
