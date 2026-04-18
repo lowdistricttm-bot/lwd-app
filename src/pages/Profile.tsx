@@ -180,14 +180,14 @@ const Profile = () => {
       <Navbar />
       <main className="flex-1 pb-32 pt-16">
         {/* Cover Section */}
-        <div className="relative aspect-[2/1] md:h-80 md:aspect-auto bg-zinc-900 group/cover">
+        <div className="relative aspect-[2.5/1] md:h-64 md:aspect-auto bg-zinc-900 group/cover">
           <div className="absolute inset-0 overflow-hidden" onClick={() => !isOwnProfile && setLightboxData({ images: [profile?.cover_url || DEFAULT_COVER], index: 0 })}>
             <img src={profile?.cover_url || DEFAULT_COVER} className="w-full h-full object-cover transition-all duration-700 hover:scale-105" alt="Cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
             {isOwnProfile && (
               <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/cover:opacity-100 transition-opacity flex flex-col items-center justify-center z-30">
-                <button onClick={(e) => { e.stopPropagation(); coverInputRef.current?.click(); }} className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-all shadow-xl">
-                  <Camera size={24} />
+                <button onClick={(e) => { e.stopPropagation(); coverInputRef.current?.click(); }} className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-all shadow-xl">
+                  <Camera size={20} />
                 </button>
               </div>
             )}
@@ -195,187 +195,185 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Profile Info Section - Riorganizzato per matchare lo screenshot */}
-        <div className="px-6 md:px-12 max-w-6xl mx-auto relative">
-          <div className="flex items-start gap-6 md:gap-10 -mt-12 md:-mt-16">
+        {/* Profile Info Section */}
+        <div className="px-5 md:px-12 max-w-6xl mx-auto relative">
+          <div className="flex items-start gap-4 md:gap-8 -mt-10 md:-mt-14">
             {/* Avatar */}
             <div className="relative group/avatar shrink-0 z-20">
               <div 
                 onClick={() => !isOwnProfile && setLightboxData({ images: [profile?.avatar_url || DEFAULT_AVATAR], index: 0 })} 
                 className={cn(
-                  "w-28 h-28 md:w-40 md:h-40 bg-zinc-900 border-[5px] rounded-full overflow-hidden flex items-center justify-center relative transition-all duration-500",
+                  "w-24 h-24 md:w-36 md:h-36 bg-zinc-900 border-[4px] rounded-full overflow-hidden flex items-center justify-center relative transition-all duration-500",
                   isOnline 
-                    ? "border-green-500 shadow-[0_0_30px_rgba(34,197,94,0.4)]" 
-                    : "border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.3)]"
+                    ? "border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.3)]" 
+                    : "border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.2)]"
                 )}
               >
-                {uploadingAvatar ? <Loader2 className="animate-spin text-zinc-500" /> : (profile?.avatar_url || DEFAULT_AVATAR) ? <img src={profile?.avatar_url || DEFAULT_AVATAR} alt="Avatar" className="w-full h-full object-cover" /> : <User size={40} className="text-zinc-800" />}
+                {uploadingAvatar ? <Loader2 className="animate-spin text-zinc-500" /> : (profile?.avatar_url || DEFAULT_AVATAR) ? <img src={profile?.avatar_url || DEFAULT_AVATAR} alt="Avatar" className="w-full h-full object-cover" /> : <User size={32} className="text-zinc-800" />}
                 {isOwnProfile && (
                   <button onClick={(e) => { e.stopPropagation(); avatarInputRef.current?.click(); }} className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity bg-black/40 rounded-full">
-                    <Camera size={24} className="text-white" />
+                    <Camera size={20} className="text-white" />
                   </button>
                 )}
               </div>
               <input type="file" ref={avatarInputRef} className="hidden" accept="image/*,video/*" onChange={(e) => handleFileUpload(e, 'avatar')} />
             </div>
 
-            {/* Text Info - Layout Stacked */}
-            <div className="pt-14 md:pt-20 flex-1 min-w-0 flex flex-col gap-5">
+            {/* Text Info */}
+            <div className="pt-12 md:pt-16 flex-1 min-w-0 flex flex-col gap-4">
               {/* Nome Utente */}
-              <div className="flex items-center justify-between">
-                <h1 className="text-2xl md:text-4xl font-black italic uppercase tracking-tighter leading-none truncate">
-                  {profile?.username || 'Utente'}
-                </h1>
-              </div>
+              <h1 className="text-xl md:text-3xl font-black italic uppercase tracking-tighter leading-none truncate">
+                {profile?.username || 'Utente'}
+              </h1>
 
               {/* Pulsanti Azione */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 {!isOwnProfile && currentUser && (!isTargetSubscriber || canVote) && (
-                  <FollowButton userId={targetUserId} className="flex-1" />
+                  <FollowButton userId={targetUserId} className="flex-1 h-11" />
                 )}
                 
                 <div className="flex items-center gap-2">
                   {!isOwnProfile && currentUser && (!isTargetSubscriber || canVote) && (
                     <button 
                       onClick={() => navigate(`/chat/${profile.id}`)} 
-                      className="w-14 h-14 bg-white/5 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all flex items-center justify-center border border-white/10 shadow-xl"
+                      className="w-11 h-11 bg-white/5 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all flex items-center justify-center border border-white/10 shadow-xl"
                     >
-                      <Mail size={22} />
+                      <Mail size={18} />
                     </button>
                   )}
                   <button 
                     onClick={handleShareProfile} 
-                    className="w-14 h-14 bg-white/5 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all flex items-center justify-center border border-white/10 shadow-xl"
+                    className="w-11 h-11 bg-white/5 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all flex items-center justify-center border border-white/10 shadow-xl"
                   >
-                    <Share2 size={22} />
+                    <Share2 size={18} />
                   </button>
                   {isOwnProfile && (
                     <button 
                       onClick={() => setIsUsernameNoticeOpen(true)} 
-                      className="w-14 h-14 bg-white/5 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all flex items-center justify-center border border-white/10 shadow-xl"
+                      className="w-11 h-11 bg-white/5 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all flex items-center justify-center border border-white/10 shadow-xl"
                     >
-                      <Edit2 size={20} />
+                      <Edit2 size={16} />
                     </button>
                   )}
                 </div>
               </div>
               
               {/* Ruolo e Stato Online */}
-              <div className="flex items-center gap-6">
-                <p className="text-zinc-500 text-[9px] font-black uppercase tracking-[0.3em] italic leading-none">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.2em] italic leading-none">
                   {t.profile.roles[userRole] || t.profile.roles.member}
                 </p>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   <div className={cn(
-                    "w-2 h-2 rounded-full transition-colors duration-500",
-                    isOnline ? "bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.8)]" : "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]"
+                    "w-1.5 h-1.5 rounded-full",
+                    isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500"
                   )} />
                   <p className={cn(
-                    "text-[9px] font-black uppercase tracking-widest leading-none transition-colors duration-500",
+                    "text-[8px] font-black uppercase tracking-widest leading-none",
                     isOnline ? "text-green-500" : "text-zinc-500"
                   )}>
-                    {isOnline ? 'Online' : lastSeen ? `Ultimo accesso ${lastSeen}` : 'Offline'}
+                    {isOnline ? 'Online' : lastSeen ? `Accesso ${lastSeen}` : 'Offline'}
                   </p>
                 </div>
               </div>
 
-              {/* Follow Stats - Allineate a sinistra */}
-              <div className="flex gap-10 mt-2">
+              {/* Follow Stats */}
+              <div className="flex gap-6 mt-1">
                 <button 
                   onClick={() => setFollowModal({ type: 'followers', isOpen: true })}
                   className="flex flex-col items-start group"
                 >
-                  <span className="text-lg font-black italic tracking-tighter leading-none mb-1">{loadingCounts ? '...' : counts?.followers}</span>
-                  <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white transition-colors">{t.profile.followers}</span>
+                  <span className="text-base font-black italic tracking-tighter leading-none mb-0.5">{loadingCounts ? '...' : counts?.followers}</span>
+                  <span className="text-[7px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white transition-colors">{t.profile.followers}</span>
                 </button>
                 <button 
                   onClick={() => setFollowModal({ type: 'following', isOpen: true })}
                   className="flex flex-col items-start group"
                 >
-                  <span className="text-lg font-black italic tracking-tighter leading-none mb-1">{loadingCounts ? '...' : counts?.following}</span>
-                  <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white transition-colors">{t.profile.following}</span>
+                  <span className="text-base font-black italic tracking-tighter leading-none mb-0.5">{loadingCounts ? '...' : counts?.following}</span>
+                  <span className="text-[7px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white transition-colors">{t.profile.following}</span>
                 </button>
                 <div className="flex flex-col items-start">
-                  <span className="text-lg font-black italic tracking-tighter leading-none mb-1">{userPosts.length}</span>
-                  <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">{t.profile.posts}</span>
+                  <span className="text-base font-black italic tracking-tighter leading-none mb-0.5">{userPosts.length}</span>
+                  <span className="text-[7px] font-black uppercase tracking-widest text-zinc-500">{t.profile.posts}</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Content Tabs */}
-          <div className="mt-12">
+          <div className="mt-10">
             {!isTargetSubscriber && targetUserId && <HighlightsBar userId={targetUserId} isOwnProfile={isOwnProfile} />}
 
             {isOwnProfile && (userRole === 'admin' || userRole === 'staff' || userRole === 'support') && (
-              <button onClick={() => navigate('/admin')} className="w-full mb-8 bg-white/10 backdrop-blur-md border border-white/10 p-4 rounded-3xl flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center group-hover:bg-black/10 transition-colors">
-                    <ShieldCheck size={18} />
+              <button onClick={() => navigate('/admin')} className="w-full mb-6 bg-white/10 backdrop-blur-md border border-white/10 p-3.5 rounded-2xl flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center group-hover:bg-black/10 transition-colors">
+                    <ShieldCheck size={16} />
                   </div>
-                  <p className="text-xs font-black uppercase italic tracking-widest">DASHBOARD {userRole.toUpperCase()}</p>
+                  <p className="text-[10px] font-black uppercase italic tracking-widest">DASHBOARD {userRole.toUpperCase()}</p>
                 </div>
-                <ChevronRight size={20} />
+                <ChevronRight size={18} />
               </button>
             )}
 
-            <div className="flex bg-zinc-900/50 backdrop-blur-md rounded-full p-1 mb-8 border border-white/5 overflow-x-auto no-scrollbar">
+            <div className="flex bg-zinc-900/50 backdrop-blur-md rounded-full p-1 mb-6 border border-white/5 overflow-x-auto no-scrollbar">
               {tabs.map((tab) => (
                 <button 
                   key={tab.id} 
                   onClick={() => setActiveTab(tab.id)} 
                   className={cn(
-                    "flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-full transition-all duration-500 whitespace-nowrap",
+                    "flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-full transition-all duration-500 whitespace-nowrap",
                     activeTab === tab.id ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-zinc-300"
                   )}
                 >
-                  <tab.icon size={16} />
-                  <span className="text-[9px] font-black uppercase tracking-widest hidden sm:block">{tab.label}</span>
+                  <tab.icon size={14} />
+                  <span className="text-[8px] font-black uppercase tracking-widest hidden sm:block">{tab.label}</span>
                 </button>
               ))}
             </div>
 
-            <div className="min-h-[400px]">
+            <div className="min-h-[300px]">
               <AnimatePresence mode="wait">
                 {activeTab === 'activity' && (
                   <motion.div key="activity" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-xl font-black italic uppercase">{isOwnProfile ? t.profile.myPosts : t.profile.posts}</h3>
-                      {isOwnProfile && <Button onClick={() => setIsPostModalOpen(true)} className="bg-white text-black hover:scale-105 rounded-full text-[10px] font-black uppercase italic tracking-widest h-10 px-6 shadow-lg shadow-white/20"><Plus size={14} className="mr-2" /> {t.feed.newPost}</Button>}
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="text-lg font-black italic uppercase">{isOwnProfile ? t.profile.myPosts : t.profile.posts}</h3>
+                      {isOwnProfile && <Button onClick={() => setIsPostModalOpen(true)} className="bg-white text-black hover:scale-105 rounded-full text-[9px] font-black uppercase italic tracking-widest h-9 px-5 shadow-lg shadow-white/20"><Plus size={12} className="mr-2" /> {t.feed.newPost}</Button>}
                     </div>
-                    {loadingPosts ? <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div> : userPosts.length > 0 ? <div className="grid grid-cols-3 gap-1 md:gap-4">{userPosts.map((post) => <ProfilePostGridItem key={post.id} post={post} />)}</div> : <div className="bg-zinc-900/30 border border-white/5 p-12 rounded-[2rem] text-center"><MessageSquare className="mx-auto text-zinc-800 mb-6" size={48} /><p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{isOwnProfile ? t.profile.noPosts : t.feed.noPosts}</p></div>}
+                    {loadingPosts ? <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div> : userPosts.length > 0 ? <div className="grid grid-cols-3 gap-1 md:gap-4">{userPosts.map((post) => <ProfilePostGridItem key={post.id} post={post} />)}</div> : <div className="bg-zinc-900/30 border border-white/5 p-10 rounded-[2rem] text-center"><MessageSquare className="mx-auto text-zinc-800 mb-4" size={40} /><p className="text-zinc-500 text-[9px] font-bold uppercase tracking-widest">{isOwnProfile ? t.profile.noPosts : t.feed.noPosts}</p></div>}
                   </motion.div>
                 )}
                 {activeTab === 'garage' && <motion.div key="garage" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><GarageTab userId={targetUserId} isOwnProfile={isOwnProfile} /></motion.div>}
                 {activeTab === 'orders' && (
                   <motion.div key="orders" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                    <h3 className="text-xl font-black italic uppercase mb-6">{t.profile.orders}</h3>
+                    <h3 className="text-lg font-black italic uppercase mb-4">{t.profile.orders}</h3>
                     {loadingOrders ? (
                       <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div>
                     ) : orders?.length > 0 ? (
-                      <div className="space-y-4">
+                      <div className="space-y-3">
                         {orders.map((order: any) => (
-                          <div key={order.id} className="bg-zinc-900/50 border border-white/5 p-6 rounded-3xl group hover:border-white/20 transition-all">
-                            <div className="flex flex-col md:flex-row justify-between gap-4">
-                              <div className="space-y-2">
-                                <div className="flex items-center gap-3">
-                                  <span className="bg-white text-black text-[8px] font-black uppercase px-2 py-0.5 italic rounded-full">#{order.id}</span>
-                                  <span className="bg-zinc-800 text-white text-[8px] font-black uppercase px-2 py-0.5 italic rounded-full">{order.status.toUpperCase()}</span>
+                          <div key={order.id} className="bg-zinc-900/50 border border-white/5 p-5 rounded-2xl group hover:border-white/20 transition-all">
+                            <div className="flex flex-col md:flex-row justify-between gap-3">
+                              <div className="space-y-1.5">
+                                <div className="flex items-center gap-2">
+                                  <span className="bg-white text-black text-[7px] font-black uppercase px-1.5 py-0.5 italic rounded-full">#{order.id}</span>
+                                  <span className="bg-zinc-800 text-white text-[7px] font-black uppercase px-1.5 py-0.5 italic rounded-full">{order.status.toUpperCase()}</span>
                                 </div>
-                                <h4 className="text-sm font-black italic uppercase tracking-tight">{order.line_items.length} Prodotti</h4>
+                                <h4 className="text-xs font-black italic uppercase tracking-tight">{order.line_items.length} Prodotti</h4>
                               </div>
                               <div className="text-right flex flex-col justify-center">
-                                <p className="text-[8px] font-black uppercase text-zinc-600 tracking-widest mb-1">{t.checkout.total}</p>
-                                <p className="text-2xl font-black italic tracking-tighter">€{order.total}</p>
+                                <p className="text-[7px] font-black uppercase text-zinc-600 tracking-widest mb-0.5">{t.checkout.total}</p>
+                                <p className="text-xl font-black italic tracking-tighter">€{order.total}</p>
                               </div>
                             </div>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <div className="bg-zinc-900/30 border border-white/5 p-12 rounded-[2rem] text-center">
-                        <ShoppingBag className="mx-auto text-zinc-800 mb-6" size={48} />
-                        <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{t.profile.noOrders}</p>
+                      <div className="bg-zinc-900/30 border border-white/5 p-10 rounded-[2rem] text-center">
+                        <ShoppingBag className="mx-auto text-zinc-800 mb-4" size={40} />
+                        <p className="text-zinc-500 text-[9px] font-bold uppercase tracking-widest">{t.profile.noOrders}</p>
                       </div>
                     )}
                   </motion.div>
