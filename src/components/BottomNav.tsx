@@ -34,22 +34,24 @@ const BottomNav = () => {
     }
   };
 
-  // Altezza fissa 22px per iOS, ignorando totalmente la home bar
-  const navHeight = isIOS ? '22px' : '44px';
+  // Altezza che include la safe area ma posiziona le icone in basso
+  // 50px è l'altezza standard, env(...) aggiunge lo spazio della barra iOS
+  const navHeight = isIOS ? 'calc(50px + env(safe-area-inset-bottom))' : '60px';
 
   return (
     <div 
-      className="fixed bottom-0 left-0 right-0 z-[999] bg-black border-t border-white/10 select-none"
+      className="fixed bottom-0 left-0 right-0 z-[999] bg-black/90 backdrop-blur-xl border-t border-white/5 select-none"
       style={{ 
         height: navHeight,
-        paddingBottom: '0px', // Forza 0 padding sul fondo
-        marginBottom: '0px',
         WebkitUserSelect: 'none',
         touchAction: 'none'
       }}
     >
       <div 
-        className="relative flex items-center justify-around h-full w-full max-w-2xl mx-auto px-2"
+        className={cn(
+          "relative flex justify-around w-full max-w-2xl mx-auto px-2 h-full",
+          isIOS ? "items-end pb-[env(safe-area-inset-bottom)]" : "items-center"
+        )}
       >
         {items.map((item, i) => {
           const isActive = activeIndex === i;
@@ -58,22 +60,31 @@ const BottomNav = () => {
               key={i} 
               to={item.href}
               className={cn(
-                "flex-1 flex flex-col items-center justify-center h-full relative z-10 transition-colors duration-300",
+                "flex-1 flex flex-col items-center justify-center relative z-10 transition-colors duration-300",
+                isIOS ? "h-[50px]" : "h-full",
                 isActive ? "text-white" : "text-zinc-600"
               )}
               onClick={() => triggerHaptic(10)}
             >
               <motion.div
                 animate={{ 
-                  scale: isActive ? 1.05 : 1,
+                  scale: isActive ? 1.1 : 1,
+                  y: isActive ? -2 : 0
                 }}
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
               >
                 <item.icon 
-                  size={isIOS ? 20 : 22} 
-                  strokeWidth={isActive ? 2.2 : 1.8} 
+                  size={22} 
+                  strokeWidth={isActive ? 2.5 : 2} 
                 />
               </motion.div>
+              {/* Puntino indicatore opzionale per feedback visivo vicino alla barra */}
+              {isActive && (
+                <motion.div 
+                  layoutId="activeTab"
+                  className="absolute bottom-1 w-1 h-1 bg-white rounded-full"
+                />
+              )}
             </Link>
           );
         })}
