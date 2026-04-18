@@ -154,7 +154,7 @@ const Index = () => {
               viewport={{ once: true }}
               className="w-full"
             >
-              <h2 className="text-[clamp(22px,7vw,72px)] font-black italic uppercase tracking-tighter mb-6 leading-tight drop-shadow-2xl whitespace-nowrap">
+              <h2 className="text-[clamp(18px,6vw,72px)] font-black italic uppercase tracking-tighter mb-6 leading-tight drop-shadow-2xl whitespace-nowrap">
                 {t.home.banner.title}
               </h2>
               <p className="text-white/80 text-[clamp(8px,2.4vw,14px)] font-black uppercase tracking-tight md:tracking-[0.4em] mb-12 italic leading-relaxed whitespace-nowrap">
