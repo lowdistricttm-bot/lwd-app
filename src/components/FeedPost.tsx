@@ -325,8 +325,12 @@ const FeedPost = ({ post }: { post: Post }) => {
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[9px] font-bold uppercase tracking-widest text-zinc-500 px-1">
               <div className="flex -space-x-2 mr-1">
                 {likedBy.slice(0, 3).map((liker, i) => (
-                  <div key={i} className="w-4 h-4 rounded-full border border-black bg-zinc-800 overflow-hidden">
-                    <User size={8} className="m-auto h-full" />
+                  <div key={i} className="w-5 h-5 rounded-full border-2 border-black bg-zinc-800 overflow-hidden">
+                    {liker.avatar_url ? (
+                      <img src={liker.avatar_url} className="w-full h-full object-cover" alt="" />
+                    ) : (
+                      <User size={8} className="m-auto h-full" />
+                    )}
                   </div>
                 ))}
               </div>

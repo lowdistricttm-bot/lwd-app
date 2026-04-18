@@ -20,7 +20,7 @@ export interface Post {
   };
   likes_count?: number;
   is_liked?: boolean;
-  liked_by?: { user_id: string; username: string }[];
+  liked_by?: { user_id: string; username: string; avatar_url?: string }[];
   comments?: any[];
 }
 
@@ -38,7 +38,7 @@ export const useSocialFeed = () => {
         .select(`
           *,
           profiles:user_id (id, username, first_name, last_name, avatar_url),
-          likes (user_id, profiles:user_id (username)),
+          likes (user_id, profiles:user_id (username, avatar_url)),
           comments (*, profiles:user_id (id, username, first_name, last_name, avatar_url))
         `)
         .order('created_at', { ascending: false });
@@ -58,7 +58,8 @@ export const useSocialFeed = () => {
         
         const liked_by = post.likes?.map((l: any) => ({
           user_id: l.user_id,
-          username: l.profiles?.username || 'Membro'
+          username: l.profiles?.username || 'Membro',
+          avatar_url: l.profiles?.avatar_url
         })) || [];
 
         return {
@@ -82,7 +83,6 @@ export const useSocialFeed = () => {
 
   // --- REALTIME LISTENER ---
   useEffect(() => {
-    // Generiamo un ID unico per il canale per evitare conflitti tra istanze
     const channelId = `feed-${Math.random().toString(36).substring(2, 9)}`;
     
     const channel = supabase
@@ -270,7 +270,7 @@ export const usePost = (postId?: string) => {
         .select(`
           *,
           profiles:user_id (id, username, first_name, last_name, avatar_url),
-          likes (user_id, profiles:user_id (username)),
+          likes (user_id, profiles:user_id (username, avatar_url)),
           comments (*, profiles:user_id (id, username, first_name, last_name, avatar_url))
         `)
         .eq('id', postId)
@@ -290,7 +290,8 @@ export const usePost = (postId?: string) => {
       
       const liked_by = post.likes?.map((l: any) => ({
         user_id: l.user_id,
-        username: l.profiles?.username || 'Membro'
+        username: l.profiles?.username || 'Membro',
+        avatar_url: l.profiles?.avatar_url
       })) || [];
 
       return {
