@@ -34,7 +34,7 @@ const BottomNav = () => {
     }
   };
 
-  // Altezza fissa 35px per iOS, ignorando totalmente la home bar
+  // Altezza fissa 35px per iOS
   const navHeight = isIOS ? '35px' : '44px';
 
   return (
@@ -42,7 +42,7 @@ const BottomNav = () => {
       className="fixed bottom-0 left-0 right-0 z-[999] bg-black border-t border-white/10 select-none"
       style={{ 
         height: navHeight,
-        paddingBottom: '0px', // Forza 0 padding sul fondo
+        paddingBottom: '0px',
         marginBottom: '0px',
         WebkitUserSelect: 'none',
         touchAction: 'none'
@@ -58,7 +58,9 @@ const BottomNav = () => {
               key={i} 
               to={item.href}
               className={cn(
-                "flex-1 flex flex-col items-center justify-center h-full relative z-10 transition-colors duration-300",
+                "flex-1 flex flex-col items-center h-full relative z-10 transition-colors duration-300",
+                // Su iOS usiamo justify-end e un padding minimo per spingere le icone al limite inferiore
+                isIOS ? "justify-end pb-[3px]" : "justify-center",
                 isActive ? "text-white" : "text-zinc-600"
               )}
               onClick={() => triggerHaptic(10)}
