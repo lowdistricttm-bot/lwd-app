@@ -55,10 +55,7 @@ const BottomNav = () => {
       <div className="absolute inset-0 bg-black -z-10" />
 
       <div 
-        className={cn(
-          "relative flex items-center px-2 mx-auto",
-          isIOS ? "justify-center gap-6 max-w-[320px]" : "justify-around max-w-lg"
-        )}
+        className="relative flex items-center justify-around px-2 max-w-lg mx-auto"
         style={{ height: navHeight }}
       >
         {items.map((item, i) => {
@@ -68,11 +65,11 @@ const BottomNav = () => {
               key={i} 
               to={item.href}
               className={cn(
-                "flex flex-col items-center justify-center h-full relative z-10 transition-all duration-300",
-                isIOS ? "w-8" : "flex-1",
+                "flex-1 flex flex-col items-center justify-center h-full relative z-10 transition-all duration-300",
                 isActive ? "text-white" : "text-zinc-600 hover:text-zinc-400"
               )}
               style={{ 
+                // Padding superiore specifico per iOS per centrare l'icona rispetto al bordo
                 paddingTop: isIOS ? '1px' : '0px' 
               }}
               onClick={() => triggerHaptic(12)}
@@ -98,7 +95,7 @@ const BottomNav = () => {
                 transition={{ type: "spring", stiffness: 500, damping: 25 }}
               >
                 <item.icon 
-                  size={isIOS ? 14 : 18} 
+                  size={isIOS ? 12 : 18} 
                   strokeWidth={isActive ? 2.5 : 2} 
                 />
               </motion.div>
