@@ -39,20 +39,19 @@ const FeaturedProducts = () => {
               className="group"
             >
               <Link to={`/product/${product.id}`}>
-                <div className="aspect-[4/5] bg-[#e5e5e5] overflow-hidden relative mb-4">
+                <div className="aspect-[4/5] bg-[#e5e5e5] overflow-hidden relative rounded-2xl md:rounded-[2rem] transition-all duration-500 group-hover:shadow-2xl group-hover:shadow-white/5">
                   <img 
                     src={product.images[0]?.src} 
                     alt={product.name} 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   />
                 </div>
-                <h4 className="text-[10px] font-black uppercase italic tracking-tight mb-1 group-hover:text-zinc-400 transition-colors truncate" dangerouslySetInnerHTML={{ __html: product.name }} />
               </Link>
             </motion.div>
           ))}
         </div>
 
-        <Link to="/shop" className="flex items-center justify-center gap-3 text-[11px] font-black uppercase tracking-[0.3em] text-white border border-white/10 py-6 mt-12 italic hover:bg-white/5 transition-all">
+        <Link to="/shop" className="flex items-center justify-center gap-3 text-[11px] font-black uppercase tracking-[0.3em] text-white border border-white/10 py-6 mt-12 italic hover:bg-white/5 transition-all rounded-2xl">
           Esplora lo Shop <ArrowRight size={16} />
         </Link>
       </div>
