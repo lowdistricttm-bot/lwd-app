@@ -34,8 +34,8 @@ const BottomNav = () => {
     }
   };
 
-  // Altezza aumentata a 45px per iOS come richiesto
-  const navHeight = isIOS ? '45px' : '44px';
+  // Altezza aumentata a 50px per iOS come richiesto
+  const navHeight = isIOS ? '50px' : '44px';
 
   return (
     <div 
@@ -70,7 +70,7 @@ const BottomNav = () => {
                   scale: isActive ? 1.05 : 1,
                 }}
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                className={cn(isIOS ? "mb-1" : "")} // Piccolo margine opzionale per non toccare fisicamente il pixel 0 se necessario, ma qui seguiamo "posizione più bassa possibile"
+                className="" // Rimosso mb-1 per incollare le icone al bordo
               >
                 <item.icon 
                   size={isIOS ? 20 : 22} 
