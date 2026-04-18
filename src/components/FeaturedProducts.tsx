@@ -3,7 +3,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useWcProducts } from '@/hooks/use-woocommerce';
-import { Loader2, ArrowRight, ShoppingBag } from 'lucide-react';
+import { Loader2, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const FeaturedProducts = () => {
@@ -39,18 +39,12 @@ const FeaturedProducts = () => {
               className="group"
             >
               <Link to={`/product/${product.id}`}>
-                <div className="aspect-[4/5] bg-zinc-900 overflow-hidden relative mb-4">
+                <div className="aspect-[4/5] bg-[#e5e5e5] overflow-hidden relative mb-4">
                   <img 
                     src={product.images[0]?.src} 
                     alt={product.name} 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   />
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
-                  <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
-                    <div className="w-10 h-10 bg-white text-black flex items-center justify-center">
-                      <ShoppingBag size={18} />
-                    </div>
-                  </div>
                 </div>
                 <h4 className="text-[10px] font-black uppercase italic tracking-tight mb-1 group-hover:text-zinc-400 transition-colors truncate" dangerouslySetInnerHTML={{ __html: product.name }} />
                 <p className="text-sm font-black tracking-tighter">€{product.price}</p>
@@ -59,8 +53,8 @@ const FeaturedProducts = () => {
           ))}
         </div>
 
-        <Link to="/shop" className="md:hidden flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-white border border-white/10 py-4 mt-12 italic">
-          Esplora lo Shop <ArrowRight size={14} />
+        <Link to="/shop" className="flex items-center justify-center gap-3 text-[11px] font-black uppercase tracking-[0.3em] text-white border border-white/10 py-6 mt-12 italic hover:bg-white/5 transition-all">
+          Esplora lo Shop <ArrowRight size={16} />
         </Link>
       </div>
     </section>
