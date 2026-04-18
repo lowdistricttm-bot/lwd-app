@@ -45,7 +45,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
   const { deleteStory, recordView } = useStories();
   const { sendMessage } = useMessages();
   
-  // Utilizziamo il nuovo hook per bloccare il background
   useBodyLock(true);
 
   const userStories = allStories[userIndex];
@@ -201,7 +200,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[9999] bg-black/95 flex items-center justify-center overflow-hidden touch-none"
+      className="fixed inset-0 z-[9999] bg-black flex items-center justify-center overflow-hidden touch-none"
       style={{ height: '100dvh', width: '100vw' }}
     >
       {/* Background Blur - Solo Desktop */}
@@ -312,70 +311,78 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           )}
         </div>
 
-        {/* Footer Controls */}
-        <div className="absolute bottom-0 left-0 right-0 z-50 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:pb-8 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
-          {isOwner && !isHighlight ? (
-            <div className="flex items-center justify-around py-2 border-t border-white/10">
-              <button onClick={() => setShowViewers(true)} className="flex flex-col items-center gap-1 group">
-                <Eye size={20} className="text-white group-hover:scale-110 transition-transform" />
-                <span className="text-[8px] font-black uppercase tracking-widest text-white">Attività</span>
-              </button>
-              
-              <button onClick={() => setIsMentionModalOpen(true)} className="flex flex-col items-center gap-1 group">
-                <AtSign size={20} className="text-white group-hover:scale-110 transition-transform" />
-                <span className="text-[8px] font-black uppercase tracking-widest text-white">Menziona</span>
-              </button>
-
-              <button onClick={() => setIsHighlightModalOpen(true)} className="flex flex-col items-center gap-1 group">
-                <Star size={20} className="text-white group-hover:scale-110 transition-transform" />
-                <span className="text-[8px] font-black uppercase tracking-widest text-white">Evidenza</span>
-              </button>
-
-              <button onClick={handleDelete} className="flex flex-col items-center gap-1 group">
-                <Trash2 size={20} className="text-white group-hover:text-red-500 transition-colors" />
-                <span className="text-[8px] font-black uppercase tracking-widest text-white">Elimina</span>
-              </button>
-            </div>
-          ) : !isHighlight && (
-            <div className="flex items-center gap-3">
-              <form onSubmit={handleReply} className="flex-1 flex gap-2">
-                <Input 
-                  placeholder={`Rispondi a ${userStories.username}...`}
-                  value={replyText}
-                  onChange={(e) => setReplyText(e.target.value)}
-                  onFocus={() => videoRef.current?.pause()}
-                  onBlur={() => videoRef.current?.play()}
-                  className="bg-white/10 border-white/20 rounded-full h-11 px-5 text-xs font-bold uppercase tracking-widest text-white placeholder:text-white/40 focus-visible:ring-white/30 backdrop-blur-md"
-                />
-                {replyText.trim() && (
-                  <button 
-                    type="submit"
-                    className="w-11 h-11 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 transition-transform shrink-0"
-                  >
-                    <Send size={16} />
-                  </button>
-                )}
-              </form>
-              
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={handleLike}
-                  className={cn(
-                    "w-11 h-11 rounded-full flex items-center justify-center transition-all backdrop-blur-md border border-white/10",
-                    isLiked ? "bg-red-500 border-red-500 text-white" : "bg-white/10 text-white hover:bg-white/20"
-                  )}
-                >
-                  <Heart size={18} fill={isLiked ? "currentColor" : "none"} />
+        {/* Footer Controls - Ancorati alla Safe Zone inferiore */}
+        <div 
+          className="absolute bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-3xl border-t border-white/10"
+          style={{ 
+            paddingBottom: 'env(safe-area-inset-bottom)',
+            minHeight: 'calc(65px + env(safe-area-inset-bottom))'
+          }}
+        >
+          <div className="h-[65px] px-4 flex items-center justify-center">
+            {isOwner && !isHighlight ? (
+              <div className="flex items-center justify-around w-full max-w-md">
+                <button onClick={() => setShowViewers(true)} className="flex flex-col items-center gap-1 group">
+                  <Eye size={20} className="text-zinc-400 group-hover:text-white transition-colors" />
+                  <span className="text-[7px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Attività</span>
                 </button>
-                <button 
-                  onClick={handleShareClick}
-                  className="w-11 h-11 bg-white/10 border border-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all backdrop-blur-md"
-                >
-                  <Send size={18} className="-rotate-12" />
+                
+                <button onClick={() => setIsMentionModalOpen(true)} className="flex flex-col items-center gap-1 group">
+                  <AtSign size={20} className="text-zinc-400 group-hover:text-white transition-colors" />
+                  <span className="text-[7px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Menziona</span>
+                </button>
+
+                <button onClick={() => setIsHighlightModalOpen(true)} className="flex flex-col items-center gap-1 group">
+                  <Star size={20} className="text-zinc-400 group-hover:text-white transition-colors" />
+                  <span className="text-[7px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Evidenza</span>
+                </button>
+
+                <button onClick={handleDelete} className="flex flex-col items-center gap-1 group">
+                  <Trash2 size={20} className="text-zinc-400 group-hover:text-red-500 transition-colors" />
+                  <span className="text-[7px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-red-500">Elimina</span>
                 </button>
               </div>
-            </div>
-          )}
+            ) : !isHighlight && (
+              <div className="flex items-center gap-3 w-full max-w-md">
+                <form onSubmit={handleReply} className="flex-1 flex gap-2">
+                  <Input 
+                    placeholder={`Rispondi a ${userStories.username}...`}
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    onFocus={() => videoRef.current?.pause()}
+                    onBlur={() => videoRef.current?.play()}
+                    className="bg-white/5 border-white/10 rounded-full h-11 px-5 text-xs font-bold uppercase tracking-widest text-white placeholder:text-zinc-600 focus-visible:ring-white/20"
+                  />
+                  {replyText.trim() && (
+                    <button 
+                      type="submit"
+                      className="w-11 h-11 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 transition-transform shrink-0 shadow-xl"
+                    >
+                      <Send size={16} />
+                    </button>
+                  )}
+                </form>
+                
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={handleLike}
+                    className={cn(
+                      "w-11 h-11 rounded-full flex items-center justify-center transition-all border",
+                      isLiked ? "bg-red-500 border-red-500 text-white" : "bg-white/5 border-white/10 text-zinc-400 hover:text-white hover:bg-white/10"
+                    )}
+                  >
+                    <Heart size={18} fill={isLiked ? "currentColor" : "none"} />
+                  </button>
+                  <button 
+                    onClick={handleShareClick}
+                    className="w-11 h-11 bg-white/5 border border-white/10 text-zinc-400 rounded-full flex items-center justify-center hover:text-white hover:bg-white/10 transition-all"
+                  >
+                    <Send size={18} className="-rotate-12" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Viewers Modal Overlay */}
