@@ -195,11 +195,11 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Profile Info Section */}
+        {/* Profile Info Section - Centered Layout */}
         <div className="px-5 md:px-12 max-w-6xl mx-auto relative">
-          <div className="flex items-start gap-4 md:gap-8 -mt-10 md:-mt-14">
+          <div className="flex flex-col items-center text-center -mt-12 md:-mt-16">
             {/* Avatar */}
-            <div className="relative group/avatar shrink-0 z-20">
+            <div className="relative group/avatar z-20 mb-6">
               <div 
                 onClick={() => !isOwnProfile && setLightboxData({ images: [profile?.avatar_url || DEFAULT_AVATAR], index: 0 })} 
                 className={cn(
@@ -220,10 +220,10 @@ const Profile = () => {
             </div>
 
             {/* Text Info */}
-            <div className="pt-12 md:pt-16 flex-1 min-w-0 flex flex-col">
+            <div className="flex flex-col items-center w-full max-w-xl">
               {/* Nome Utente e Pulsanti Piccoli */}
-              <div className="flex items-center gap-3 flex-wrap mb-1">
-                <h1 className="text-xl md:text-3xl font-black italic uppercase tracking-tighter leading-none">
+              <div className="flex items-center justify-center gap-3 flex-wrap mb-2">
+                <h1 className="text-2xl md:text-4xl font-black italic uppercase tracking-tighter leading-none">
                   {profile?.username || 'Utente'}
                 </h1>
                 
@@ -254,7 +254,7 @@ const Profile = () => {
               </div>
 
               {/* Ruolo e Stato Online */}
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-4">
+              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mb-6">
                 <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.2em] italic leading-none">
                   {t.profile.roles[userRole] || t.profile.roles.member}
                 </p>
@@ -272,31 +272,31 @@ const Profile = () => {
                 </div>
               </div>
 
-              {/* Follow Stats */}
-              <div className="flex gap-6 mb-6">
+              {/* Follow Stats - Centered */}
+              <div className="flex justify-center gap-8 md:gap-12 mb-8">
                 <button 
                   onClick={() => setFollowModal({ type: 'followers', isOpen: true })}
-                  className="flex flex-col items-start group"
+                  className="flex flex-col items-center group"
                 >
-                  <span className="text-base font-black italic tracking-tighter leading-none mb-0.5">{loadingCounts ? '...' : counts?.followers}</span>
-                  <span className="text-[7px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white transition-colors">{t.profile.followers}</span>
+                  <span className="text-xl font-black italic tracking-tighter leading-none mb-1">{loadingCounts ? '...' : counts?.followers}</span>
+                  <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white transition-colors">{t.profile.followers}</span>
                 </button>
                 <button 
                   onClick={() => setFollowModal({ type: 'following', isOpen: true })}
-                  className="flex flex-col items-start group"
+                  className="flex flex-col items-center group"
                 >
-                  <span className="text-base font-black italic tracking-tighter leading-none mb-0.5">{loadingCounts ? '...' : counts?.following}</span>
-                  <span className="text-[7px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white transition-colors">{t.profile.following}</span>
+                  <span className="text-xl font-black italic tracking-tighter leading-none mb-1">{loadingCounts ? '...' : counts?.following}</span>
+                  <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white transition-colors">{t.profile.following}</span>
                 </button>
-                <div className="flex flex-col items-start">
-                  <span className="text-base font-black italic tracking-tighter leading-none mb-0.5">{userPosts.length}</span>
-                  <span className="text-[7px] font-black uppercase tracking-widest text-zinc-500">{t.profile.posts}</span>
+                <div className="flex flex-col items-center">
+                  <span className="text-xl font-black italic tracking-tighter leading-none mb-1">{userPosts.length}</span>
+                  <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">{t.profile.posts}</span>
                 </div>
               </div>
 
-              {/* Pulsante Follow (Primario) */}
+              {/* Pulsante Follow (Primario) - Centered */}
               {!isOwnProfile && currentUser && (!isTargetSubscriber || canVote) && (
-                <FollowButton userId={targetUserId} className="w-full sm:w-48 h-10 mb-4" />
+                <FollowButton userId={targetUserId} className="w-full sm:w-64 h-12 mb-4" />
               )}
             </div>
           </div>
