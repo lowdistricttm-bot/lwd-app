@@ -59,8 +59,8 @@ const BottomNav = () => {
               to={item.href}
               className={cn(
                 "flex-1 flex flex-col items-center h-full relative z-10 transition-colors duration-300",
-                // Su iOS usiamo justify-end e un padding minimo per spingere le icone al limite inferiore
-                isIOS ? "justify-end pb-[3px]" : "justify-center",
+                // justify-end e pb-0 per incollare le icone al bordo inferiore assoluto
+                isIOS ? "justify-end pb-0" : "justify-center",
                 isActive ? "text-white" : "text-zinc-600"
               )}
               onClick={() => triggerHaptic(10)}
