@@ -58,7 +58,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
       setCurrentUserId(user?.id || null);
     });
     
-    // Blocca lo scroll del body quando le storie sono aperte
     const originalStyle = window.getComputedStyle(document.body).overflow;
     document.body.style.overflow = 'hidden';
     
@@ -200,25 +199,24 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
 
   const roleLabel = isHighlight ? 'RACCOLTA' : (t.profile.roles[userStories.role] || t.profile.roles.member);
 
-  // Renderizziamo il componente tramite Portal per uscire da ogni stacking context
   return createPortal(
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[9999] bg-black flex items-center justify-center overflow-hidden touch-none"
+      className="fixed inset-0 z-[9999] bg-black/95 flex items-center justify-center overflow-hidden touch-none"
       style={{ height: '100dvh', width: '100vw' }}
     >
-      {/* Background Blur */}
-      <div className="absolute inset-0 z-0 opacity-50 blur-[100px] scale-150">
+      {/* Background Blur - Solo Desktop */}
+      <div className="absolute inset-0 z-0 opacity-40 blur-[100px] scale-150 hidden md:block">
         <img src={currentStory.image_url} className="w-full h-full object-cover" alt="" />
       </div>
 
-      {/* Main Container - Full Screen */}
-      <div className="relative w-full h-full bg-black overflow-hidden flex flex-col shadow-2xl">
+      {/* Main Container - Responsive */}
+      <div className="relative w-full h-full md:h-[85vh] md:w-[420px] md:aspect-[9/16] bg-black md:rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl md:border md:border-white/10">
         
         {/* Progress Bars */}
-        <div className="absolute top-[calc(1rem+env(safe-area-inset-top))] left-4 right-4 z-50 flex gap-1.5">
+        <div className="absolute top-[calc(1rem+env(safe-area-inset-top))] md:top-6 left-4 right-4 z-50 flex gap-1.5">
           {userStories.items.map((_, i) => (
             <div key={i} className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden">
               <div 
@@ -232,7 +230,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
         </div>
 
         {/* Header */}
-        <div className="absolute top-[calc(2.5rem+env(safe-area-inset-top))] left-4 right-4 z-50 flex items-center justify-between">
+        <div className="absolute top-[calc(2.5rem+env(safe-area-inset-top))] md:top-12 left-4 right-4 z-50 flex items-center justify-between">
           <button 
             onClick={handleProfileClick}
             className="flex items-center gap-3 group text-left"
@@ -269,7 +267,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
 
         {/* Badge Ricondivisa */}
         {currentStory.reshared_from && (
-          <div className="absolute top-[calc(6.5rem+env(safe-area-inset-top))] left-4 z-50 animate-in fade-in slide-in-from-left-4 duration-500">
+          <div className="absolute top-[calc(6.5rem+env(safe-area-inset-top))] md:top-28 left-4 z-50 animate-in fade-in slide-in-from-left-4 duration-500">
             <div className="bg-black/40 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-full flex items-center gap-2">
               <RefreshCw size={10} className="text-white/60" />
               <span className="text-[9px] font-black uppercase italic tracking-widest text-white">
@@ -285,7 +283,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           <div className="w-2/3 h-full cursor-pointer" onClick={handleNext} />
         </div>
 
-        {/* Media Content - Optimized for Full Screen */}
+        {/* Media Content */}
         <div className="flex-1 relative flex items-center justify-center bg-black">
           {isMediaLoading && (
             <div className="absolute inset-0 flex items-center justify-center z-10">
@@ -317,8 +315,8 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           )}
         </div>
 
-        {/* Footer Controls - Attached to bottom with safe area */}
-        <div className="absolute bottom-0 left-0 right-0 z-50 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-gradient-to-t from-black/90 via-black/40 to-transparent">
+        {/* Footer Controls */}
+        <div className="absolute bottom-0 left-0 right-0 z-50 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:pb-8 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
           {isOwner && !isHighlight ? (
             <div className="flex items-center justify-around py-2 border-t border-white/10">
               <button onClick={() => setShowViewers(true)} className="flex flex-col items-center gap-1 group">
@@ -395,7 +393,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
               <motion.div 
                 initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="absolute inset-x-0 bottom-0 z-[61] bg-zinc-950 border-t border-white/10 rounded-t-[2rem] max-h-[60%] flex flex-col pb-[env(safe-area-inset-bottom)]"
+                className="absolute inset-x-0 bottom-0 z-[61] bg-zinc-950 border-t border-white/10 rounded-t-[2rem] max-h-[60%] flex flex-col pb-[env(safe-area-inset-bottom)] md:pb-8"
               >
                 <div className="p-6 border-b border-white/5 flex items-center justify-between">
                   <h3 className="text-lg font-black italic uppercase tracking-tighter">Visualizzazioni</h3>
@@ -439,21 +437,21 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
             </>
           )}
         </AnimatePresence>
-
-        {/* Desktop Navigation Buttons */}
-        <button 
-          onClick={handlePrev}
-          className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-30 text-white transition-all border border-white/10"
-        >
-          <ChevronLeft size={28} />
-        </button>
-        <button 
-          onClick={handleNext}
-          className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-30 text-white transition-all border border-white/10"
-        >
-          <ChevronRight size={28} />
-        </button>
       </div>
+
+      {/* Desktop Navigation Buttons - Posizionati ai lati del pannello */}
+      <button 
+        onClick={handlePrev}
+        className="hidden md:flex fixed left-[calc(50%-320px)] top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-[10000] text-white transition-all border border-white/10 backdrop-blur-md shadow-2xl"
+      >
+        <ChevronLeft size={32} />
+      </button>
+      <button 
+        onClick={handleNext}
+        className="hidden md:flex fixed right-[calc(50%-320px)] top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-[10000] text-white transition-all border border-white/10 backdrop-blur-md shadow-2xl"
+      >
+        <ChevronRight size={32} />
+      </button>
 
       <ShareStoryModal 
         isOpen={isShareModalOpen} 
