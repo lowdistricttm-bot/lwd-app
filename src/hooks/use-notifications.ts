@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from 'react';
 import { playNotificationSound } from '@/utils/sound';
-import { showSuccess, showError } from '@/utils/toast';
 
 export interface Notification {
   id: string;
@@ -46,27 +45,26 @@ export const useNotifications = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
 
-      try {
-        const { data, error } = await supabase
-          .from('notifications')
-          .select(`
-            *,
-            actor:actor_id (username, avatar_url),
-            posts:post_id (content),
-            applications:application_id (status, events:event_id (title)),
-            event:event_id (title),
-            vehicles:vehicle_id (brand, model)
-          `)
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(30);
+      // Usiamo una sintassi di join esplicita per evitare problemi di cache dello schema
+      const { data, error } = await supabase
+        .from('notifications')
+        .select(`
+          *,
+          actor:actor_id (username, avatar_url),
+          posts:post_id (content),
+          applications:application_id (status, events:event_id (title)),
+          event:event_id (title),
+          vehicles:vehicle_id (brand, model)
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(30);
 
-        if (error) throw error;
-        return data as Notification[];
-      } catch (err) {
-        console.error("[Notifications] Errore query:", err);
+      if (error) {
+        console.error("[Notifications] Errore query:", error);
         return [];
       }
+      return data as Notification[];
     }
   });
 
@@ -79,7 +77,6 @@ export const useNotifications = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Aggiungiamo un ID casuale per evitare l'errore "callbacks after subscribe"
       const instanceId = Math.random().toString(36).substring(2, 9);
       
       channel = supabase
@@ -103,9 +100,7 @@ export const useNotifications = () => {
     setupSubscription();
 
     return () => {
-      if (channel) {
-        supabase.removeChannel(channel);
-      }
+      if (channel) supabase.removeChannel(channel);
     };
   }, [queryClient]);
 
