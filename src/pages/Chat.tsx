@@ -54,6 +54,16 @@ const Chat = () => {
   const isOnline = isUserOnline(userId);
   const lastSeen = getLastSeen(userId) || dbLastSeen;
 
+  // Funzione per lo scroll automatico verso il basso
+  const scrollToBottom = (behavior: ScrollBehavior = 'auto') => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior
+      });
+    }
+  };
+
   useEffect(() => {
     const checkIOS = /iPhone|iPad|iPod/.test(window.navigator.userAgent);
     setIsIOS(checkIOS);
@@ -85,8 +95,15 @@ const Chat = () => {
     }
   }, [userId, navigate, canVote]);
 
+  // Effetto per lo scroll all'apertura e all'aggiornamento dei messaggi
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (chatMessages && chatMessages.length > 0) {
+      // Usiamo un piccolo timeout per assicurarci che il DOM sia stato renderizzato
+      const timer = setTimeout(() => {
+        scrollToBottom(chatMessages.length <= 20 ? 'auto' : 'smooth');
+      }, 100);
+      return () => clearTimeout(timer);
+    }
   }, [chatMessages]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -112,6 +129,8 @@ const Chat = () => {
     setMessage('');
     setSelectedFiles([]);
     setPreviews([]);
+    // Scroll immediato dopo l'invio
+    setTimeout(() => scrollToBottom('smooth'), 100);
   };
 
   const handleReshare = async (url: string, originalAuthorId: string) => {
@@ -128,12 +147,10 @@ const Chat = () => {
 
   if (loadingChat) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
-  // Altezza standardizzata a 50px per iOS per matchare la BottomNav
   const navHeight = isIOS ? '50px' : '44px';
 
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent">
-      {/* Header Uniformato alla Navbar (h-16) */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-2xl border-b border-white/10 pt-[env(safe-area-inset-top)]">
         <div className="h-16 px-4 flex items-center gap-2">
           <button onClick={() => navigate(-1)} className="p-2 text-zinc-400 hover:text-white shrink-0">
@@ -298,7 +315,6 @@ const Chat = () => {
         })}
       </main>
 
-      {/* Barra di Input Uniformata - Altezza 50px e icone a filo inferiore */}
       <div 
         className="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-3xl border-t border-white/10 z-50"
         style={{ 
@@ -308,7 +324,6 @@ const Chat = () => {
         }}
       >
         <div className="max-w-2xl mx-auto h-full relative">
-          {/* Previews (sopra la barra) */}
           {previews.length > 0 && (
             <div className="absolute bottom-full left-0 right-0 p-4 flex gap-2 overflow-x-auto no-scrollbar bg-black/40 backdrop-blur-md border-t border-white/5">
               {previews.map((url, i) => (
