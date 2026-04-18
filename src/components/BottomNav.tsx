@@ -30,7 +30,7 @@ const BottomNav = () => {
     <div 
       className="fixed bottom-0 left-0 right-0 z-[999] bg-black/80 backdrop-blur-2xl border-t border-white/5"
       style={{ 
-        height: '40px',
+        height: '30px',
         transform: 'translateZ(0)', 
         WebkitTransform: 'translateZ(0)'
       }}
@@ -51,7 +51,7 @@ const BottomNav = () => {
               {isActive && (
                 <motion.div
                   layoutId="nav-glow"
-                  className="absolute w-8 h-8 bg-white/5 rounded-full z-0 blur-xl"
+                  className="absolute w-6 h-6 bg-white/5 rounded-full z-0 blur-lg"
                   transition={{
                     type: "spring",
                     stiffness: 400,
@@ -69,7 +69,7 @@ const BottomNav = () => {
                 transition={{ type: "spring", stiffness: 500, damping: 25 }}
               >
                 <item.icon 
-                  size={18} 
+                  size={16} 
                   strokeWidth={isActive ? 2.5 : 2} 
                 />
               </motion.div>
