@@ -24,13 +24,16 @@ const FollowListModal = ({ isOpen, onClose, userId, username, type }: FollowList
     if (isOpen) {
       document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
     } else {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     }
     return () => {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     };
   }, [isOpen]);
 
@@ -40,7 +43,7 @@ const FollowListModal = ({ isOpen, onClose, userId, username, type }: FollowList
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000]" />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] touch-none" />
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
@@ -56,7 +59,7 @@ const FollowListModal = ({ isOpen, onClose, userId, username, type }: FollowList
                 <h3 className="text-2xl font-black italic uppercase tracking-tighter">{title}</h3>
                 <p className="text-[8px] text-zinc-400 font-black uppercase tracking-widest mt-1">Community di @{username}</p>
               </div>
-              <button onClick={onClose} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors"><X size={20} /></button>
+              <button onClick={onClose} className="p-2 text-zinc-400 hover:text-white transition-colors"><X size={20} /></button>
             </div>
             <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar pb-[calc(4rem+env(safe-area-inset-bottom))]">
               {isLoading ? (

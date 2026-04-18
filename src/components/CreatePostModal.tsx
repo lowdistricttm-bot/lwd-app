@@ -21,14 +21,16 @@ const CreatePostModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
     if (isOpen) {
       document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
-      // Rimosso touchAction: none dal body per permettere lo scroll interno al modal
+      document.body.style.touchAction = 'none'; // Blocca lo scroll touch al centro
     } else {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     }
     return () => {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     };
   }, [isOpen]);
 
@@ -72,7 +74,7 @@ const CreatePostModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }} 
             onClick={onClose} 
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000]" 
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] touch-none" 
           />
           <motion.div 
             initial={{ y: '100%' }} 
@@ -82,7 +84,7 @@ const CreatePostModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
             className="fixed inset-x-0 bottom-0 z-[1001] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 pb-15 rounded-t-[2.5rem] max-h-[92vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
             style={{ 
               touchAction: 'pan-y',
-              overscrollBehavior: 'contain' // Blocca la propagazione dello scroll
+              overscrollBehavior: 'contain'
             }}
           >
             <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />

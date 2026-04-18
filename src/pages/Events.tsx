@@ -49,13 +49,16 @@ const Events = () => {
     if (viewingEvent || selectedEvent) {
       document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
     } else {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     }
     return () => {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     };
   }, [viewingEvent, selectedEvent]);
 
@@ -218,7 +221,7 @@ const Events = () => {
           {/* Modal Visualizza Evento */}
           {viewingEvent && (
             <>
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setViewingEvent(null)} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150]" />
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setViewingEvent(null)} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150] touch-none" />
               <motion.div 
                 initial={{ y: '100%' }} 
                 animate={{ y: 0 }} 
@@ -229,7 +232,7 @@ const Events = () => {
               >
                 <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
                 
-                <div className="max-w-2xl mx-auto space-y-10">
+                <div className="max-w-2xl mx-auto space-y-10 pb-10">
                   <div className="flex justify-between items-center">
                     <h3 className="text-2xl font-black italic uppercase tracking-tighter leading-none">
                       {viewingEvent.title}
@@ -286,7 +289,7 @@ const Events = () => {
           {/* Modal Invia Selezione / Apply */}
           {selectedEvent && (
             <>
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedEvent(null)} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150]" />
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedEvent(null)} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150] touch-none" />
               <motion.div 
                 initial={{ y: '100%' }} 
                 animate={{ y: 0 }} 
@@ -305,7 +308,7 @@ const Events = () => {
                   <button onClick={() => setSelectedEvent(null)} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors"><X size={24} /></button>
                 </div>
 
-                <form onSubmit={handleApply} className="max-w-2xl mx-auto space-y-10">
+                <form onSubmit={handleApply} className="max-w-2xl mx-auto space-y-10 pb-10">
                   {/* Sezione Dati Personali */}
                   <div className="space-y-6">
                     <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.4em] italic ml-4">Dati Candidato</h4>

@@ -56,12 +56,12 @@ const HighlightModal = ({ isOpen, onClose, story, userId }: HighlightModalProps)
         <>
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={onClose} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[400]" 
+            onClick={onClose} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[400] touch-none" 
           />
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[401] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[60vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            className="fixed inset-x-0 bottom-0 z-[401] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-5 pb-10 rounded-t-[2.5rem] max-h-[60vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
             style={{ 
               touchAction: 'pan-y',
               overscrollBehavior: 'contain'
@@ -69,12 +69,12 @@ const HighlightModal = ({ isOpen, onClose, story, userId }: HighlightModalProps)
           >
             <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
             
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-black italic uppercase tracking-tighter">Metti in evidenza</h3>
               <button onClick={onClose} className="p-2 text-zinc-500 hover:text-white bg-white/5 rounded-full transition-colors"><X size={24} /></button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar pb-[calc(4rem+env(safe-area-inset-bottom))]">
+            <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
               {isCreating ? (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
                   <div className="flex justify-center">
