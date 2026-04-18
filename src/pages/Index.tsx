@@ -154,12 +154,12 @@ const Index = () => {
               viewport={{ once: true }}
               className="w-full"
             >
-              <p className="text-white/80 text-[clamp(7px,2.2vw,14px)] font-black uppercase tracking-tight md:tracking-[0.4em] mb-4 italic leading-relaxed whitespace-nowrap">
-                {t.home.banner.subtitle}
-              </p>
-              <h2 className="text-[clamp(15px,5.5vw,72px)] font-black italic uppercase tracking-tighter mb-12 leading-tight drop-shadow-2xl whitespace-nowrap">
+              <h2 className="text-[clamp(15px,5.5vw,72px)] font-black italic uppercase tracking-tighter mb-6 leading-tight drop-shadow-2xl whitespace-nowrap">
                 {t.home.banner.title}
               </h2>
+              <p className="text-white/80 text-[clamp(7px,2.2vw,14px)] font-black uppercase tracking-tight md:tracking-[0.4em] mb-12 italic leading-relaxed whitespace-nowrap">
+                {t.home.banner.subtitle}
+              </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md mx-auto">
                 <Link to="/events" className="w-full sm:w-auto bg-white text-black px-12 py-5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] italic hover:scale-105 transition-all shadow-xl">
                   {t.home.banner.applyBtn}
