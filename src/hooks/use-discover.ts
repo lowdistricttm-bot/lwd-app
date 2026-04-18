@@ -21,7 +21,8 @@ export const useDiscover = (searchQuery: string = "") => {
             username, 
             avatar_url, 
             role, 
-            is_admin
+            is_admin,
+            license_plate_privacy
           ),
           vehicle_likes (user_id)
         `)

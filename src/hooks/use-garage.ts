@@ -40,12 +40,11 @@ export const useGarage = (targetUserId?: string) => {
         uid = currentUser.id;
       }
 
-      // Query semplificata per evitare errori se la colonna privacy non esiste ancora
       const { data, error } = await supabase
         .from('vehicles')
         .select(`
           *,
-          profiles:user_id (id, username),
+          profiles:user_id (id, username, license_plate_privacy),
           vehicle_likes (user_id)
         `)
         .eq('user_id', uid)
