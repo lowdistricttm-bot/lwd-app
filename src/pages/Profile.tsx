@@ -191,7 +191,6 @@ const Profile = () => {
     }
 
     // 2. YITH WooCommerce Order & Shipment Tracking (Supporto esteso chiavi)
-    // Cerchiamo sia con che senza underscore iniziale
     const yithCode = meta.find((m: any) => m.key === '_ywto_tracking_code' || m.key === 'ywto_tracking_code')?.value;
     const yithCarrier = meta.find((m: any) => m.key === '_ywto_carrier_name' || m.key === 'ywto_carrier_name')?.value;
     const yithUrl = meta.find((m: any) => m.key === '_ywto_tracking_url' || m.key === 'ywto_tracking_url')?.value;
@@ -446,7 +445,18 @@ const Profile = () => {
                                     </div>
                                     <div>
                                       <p className="text-[7px] font-black uppercase text-zinc-500 tracking-widest">Tracking {tracking.provider || 'Spedizione'}</p>
-                                      <p className="text-[10px] font-black uppercase italic text-white tracking-tight">{tracking.number}</p>
+                                      {tracking.url ? (
+                                        <a 
+                                          href={tracking.url} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          className="text-[10px] font-black uppercase italic text-white tracking-tight hover:text-zinc-300 transition-colors flex items-center gap-1"
+                                        >
+                                          {tracking.number} <ExternalLink size={8} className="opacity-50" />
+                                        </a>
+                                      ) : (
+                                        <p className="text-[10px] font-black uppercase italic text-white tracking-tight">{tracking.number}</p>
+                                      )}
                                     </div>
                                   </div>
                                   {tracking.url && (
