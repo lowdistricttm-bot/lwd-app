@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Car, Loader2, ChevronRight, X, MapPin, Camera, Trash2, Settings2, Calendar, Plus, Edit3, Clock, Lock, CheckCircle2 } from 'lucide-react';
+import { Car, Loader2, ChevronRight, X, MapPin, Camera, Trash2, Settings2, Calendar, Plus, Edit3, Clock, Lock, CheckCircle2, User as UserIcon, Mail, Phone, Instagram, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
@@ -22,7 +22,7 @@ import { useTranslation } from '@/hooks/use-translation';
 
 const Events = () => {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams, searchParamsSetter] = useSearchParams();
   const { t, language } = useTranslation();
   const interiorInputRef = useRef<HTMLInputElement>(null);
   
@@ -42,30 +42,32 @@ const Events = () => {
   const { data: userApps, isLoading: appsLoading, refetch: refetchApps } = useUserApplications();
   const { isAdmin } = useAdmin();
 
-  // Verifica se è stato richiesto di aprire un evento specifico (es. dalla notifica)
   const viewEventId = searchParams.get('view');
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setUser(session.user);
-        setFormData(prev => ({ ...prev, fullName: session.user.user_metadata?.full_name || '', email: session.user.email || '' }));
+        setFormData(prev => ({ 
+          ...prev, 
+          fullName: session.user.user_metadata?.full_name || '', 
+          email: session.user.email || '' 
+        }));
       }
     });
   }, []);
 
-  // Gestisce l'apertura automatica del modal se arriviamo dal link di una notifica
   useEffect(() => {
     if (viewEventId && events && events.length > 0) {
       const ev = events.find(e => e.id === viewEventId);
       if (ev) {
         setViewingEvent(ev);
-        // Pulisce l'URL per non riaprire in loop
-        searchParams.delete('view');
-        setSearchParams(searchParams, { replace: true });
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete('view');
+        searchParamsSetter(newParams, { replace: true });
       }
     }
-  }, [viewEventId, events, searchParams, setSearchParams]);
+  }, [viewEventId, events, searchParams, searchParamsSetter]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -137,8 +139,6 @@ const Events = () => {
           <div className="space-y-8">
             {events?.map((event) => {
               const existingApp = userApps?.find(app => app.event_id === event.id);
-              
-              // Determina il testo dello stato
               const getStatusText = () => {
                 if (event.status === 'closed') return t.events.statusClosed;
                 if (event.status === 'soon') return t.events.statusSoon;
@@ -256,123 +256,180 @@ const Events = () => {
             </>
           )}
 
-          {/* Modal Invia Selezione / Apply */}
+          {/* Modal Invia Selezione / Apply - RESTYLED */}
           {selectedEvent && (
             <>
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedEvent(null)} className="fixed inset-0 bg-black/90 backdrop-blur-md z-[150]" />
-              <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed inset-x-0 bottom-0 z-[151] bg-zinc-950 border-t border-white/10 p-8 rounded-t-[2rem] max-h-[85vh] overflow-y-auto">
-                <div className="flex justify-between items-center mb-8">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedEvent(null)} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150]" />
+              <motion.div 
+                initial={{ y: '100%' }} 
+                animate={{ y: 0 }} 
+                exit={{ y: '100%' }} 
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="fixed inset-x-0 bottom-0 z-[151] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 pb-12 rounded-t-[2.5rem] max-h-[90vh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+              >
+                <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
+                
+                <div className="flex justify-between items-center mb-10">
                   <div>
                     <h3 className="text-2xl font-black italic uppercase tracking-tighter">{t.events.apply}</h3>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{selectedEvent.title}</p>
+                    <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 mt-1">{selectedEvent.title}</p>
                   </div>
-                  <button onClick={() => setSelectedEvent(null)} className="p-2 text-zinc-500 hover:text-white"><X size={24} /></button>
+                  <button onClick={() => setSelectedEvent(null)} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors"><X size={24} /></button>
                 </div>
 
-                <form onSubmit={handleApply} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-zinc-500">{t.events.form.name}</Label>
-                      <Input required value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
+                <form onSubmit={handleApply} className="max-w-2xl mx-auto space-y-10">
+                  {/* Sezione Dati Personali */}
+                  <div className="space-y-6">
+                    <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.4em] italic ml-4">Dati Candidato</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest ml-4">{t.events.form.name}</Label>
+                        <div className="relative">
+                          <UserIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
+                          <Input required value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} className="bg-white/5 border-white/10 rounded-full h-14 pl-12 font-bold text-xs tracking-widest focus-visible:ring-white/20" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest ml-4">{t.events.form.email}</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
+                          <Input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="bg-white/5 border-white/10 rounded-full h-14 pl-12 font-bold text-xs tracking-widest focus-visible:ring-white/20" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest ml-4">{t.events.form.phone}</Label>
+                        <div className="relative">
+                          <Phone className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
+                          <Input required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="bg-white/5 border-white/10 rounded-full h-14 pl-12 font-bold text-xs tracking-widest focus-visible:ring-white/20" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest ml-4">{t.events.form.city}</Label>
+                        <div className="relative">
+                          <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
+                          <Input required value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} className="bg-white/5 border-white/10 rounded-full h-14 pl-12 font-bold text-xs tracking-widest focus-visible:ring-white/20" />
+                        </div>
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest ml-4">{t.events.form.instagram}</Label>
+                        <div className="relative">
+                          <Instagram className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
+                          <Input required value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})} placeholder="@username" className="bg-white/5 border-white/10 rounded-full h-14 pl-12 font-bold text-xs tracking-widest focus-visible:ring-white/20" />
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-zinc-500">{t.events.form.email}</Label>
-                      <Input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
+                  </div>
+
+                  {/* Sezione Veicolo */}
+                  <div className="space-y-6">
+                    <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.4em] italic ml-4">{t.events.form.selectVehicle}</h4>
+                    {vehicles?.length === 0 ? (
+                      <div className="bg-white/5 border border-white/10 p-8 rounded-[2rem] text-center">
+                        <Car size={32} className="mx-auto text-zinc-800 mb-4" />
+                        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Devi prima aggiungere un veicolo nel tuo Garage.</p>
+                        <Button onClick={() => navigate('/profile?tab=garage')} className="mt-6 bg-white text-black rounded-full h-10 px-6 text-[9px] font-black uppercase italic">Vai al Garage</Button>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        {vehicles?.map(v => {
+                          const isSelected = formData.vehicleId === v.id;
+                          const image = v.images?.[0] || v.image_url;
+                          return (
+                            <div 
+                              key={v.id}
+                              onClick={() => setFormData({...formData, vehicleId: v.id})}
+                              className={cn(
+                                "relative rounded-[1.5rem] overflow-hidden cursor-pointer border-2 transition-all duration-500 group",
+                                isSelected ? "border-white shadow-[0_0_20px_rgba(255,255,255,0.2)]" : "border-white/5 hover:border-white/20 bg-zinc-900/50"
+                              )}
+                            >
+                              <div className="aspect-video relative bg-zinc-950">
+                                {image ? (
+                                  <img src={image} className={cn("w-full h-full object-cover transition-all duration-700", isSelected ? "opacity-100 scale-110" : "opacity-40 grayscale group-hover:grayscale-0")} alt="" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <Car size={24} className={cn("transition-colors", isSelected ? "text-white" : "text-zinc-800")} />
+                                  </div>
+                                )}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                                
+                                <div className="absolute bottom-3 left-3 right-3">
+                                  <p className={cn("text-[10px] font-black italic uppercase truncate transition-colors", isSelected ? "text-white" : "text-zinc-500")}>{v.brand}</p>
+                                  <p className="text-[8px] text-zinc-600 font-bold uppercase truncate">{v.model}</p>
+                                </div>
+                                
+                                {isSelected && (
+                                  <div className="absolute top-2 right-2 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-xl animate-in zoom-in duration-300">
+                                    <CheckCircle2 size={14} className="text-black" />
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Sezione Modifiche */}
+                  <div className="space-y-4">
+                    <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest ml-4">Modifiche Principali</Label>
+                    <div className="bg-white/5 border border-white/10 rounded-[2rem] p-6">
+                      <Textarea 
+                        value={formData.modifications} 
+                        onChange={e => setFormData({...formData, modifications: e.target.value})} 
+                        placeholder="Descrivi brevemente le modifiche apportate al progetto..." 
+                        className="bg-transparent border-none focus-visible:ring-0 p-0 min-h-[120px] text-sm italic text-white placeholder:text-zinc-800 resize-none" 
+                      />
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-zinc-500">{t.events.form.phone}</Label>
-                      <Input required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-zinc-500">{t.events.form.city}</Label>
-                      <Input required value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} className="bg-transparent border-zinc-800 rounded-none h-12" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase text-zinc-500">{t.events.form.instagram}</Label>
-                      <Input required value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})} placeholder="@username" className="bg-transparent border-zinc-800 rounded-none h-12" />
+                  </div>
+
+                  {/* Sezione Foto Interni */}
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between px-4">
+                      <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest">{t.events.form.interiorPhotos}</Label>
+                      <span className={cn("text-[9px] font-black uppercase italic", interiorFiles.length >= 3 ? "text-green-500" : "text-zinc-600")}>
+                        {interiorFiles.length}/6 {interiorFiles.length < 3 && "(Minimo 3)"}
+                      </span>
                     </div>
                     
-                    <div className="space-y-3 md:col-span-2 pt-2">
-                      <Label className="text-[10px] font-black uppercase text-zinc-500">{t.events.form.selectVehicle}</Label>
-                      {vehicles?.length === 0 ? (
-                        <div className="bg-zinc-900/30 border border-white/5 p-6 rounded-xl text-center">
-                          <Car size={24} className="mx-auto text-zinc-600 mb-2" />
-                          <p className="text-[10px] text-red-500 italic font-bold">Devi prima aggiungere un veicolo nel tuo Garage.</p>
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                          {vehicles?.map(v => {
-                            const isSelected = formData.vehicleId === v.id;
-                            const image = v.images?.[0] || v.image_url;
-                            return (
-                              <div 
-                                key={v.id}
-                                onClick={() => setFormData({...formData, vehicleId: v.id})}
-                                className={cn(
-                                  "relative rounded-xl overflow-hidden cursor-pointer border-2 transition-all duration-300",
-                                  isSelected ? "border-white" : "border-transparent hover:border-white/30 bg-zinc-900/50"
-                                )}
-                              >
-                                <div className="aspect-video relative bg-zinc-950">
-                                  {image ? (
-                                    <img src={image} className={cn("w-full h-full object-cover transition-opacity", isSelected ? "opacity-100" : "opacity-60")} alt="" />
-                                  ) : (
-                                    <div className="w-full h-full flex items-center justify-center">
-                                      <Car size={24} className={cn("transition-colors", isSelected ? "text-white" : "text-zinc-700")} />
-                                    </div>
-                                  )}
-                                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                                  
-                                  <div className="absolute bottom-2 left-2 right-2">
-                                    <p className={cn("text-[10px] font-black italic uppercase truncate transition-colors", isSelected ? "text-white" : "text-zinc-300")}>{v.brand}</p>
-                                    <p className="text-[8px] text-zinc-500 font-bold uppercase truncate">{v.model}</p>
-                                  </div>
-                                  
-                                  {isSelected && (
-                                    <div className="absolute top-2 right-2 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-lg">
-                                      <CheckCircle2 size={12} className="text-black" />
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-zinc-500">Modifiche Principali</Label>
-                    <Textarea value={formData.modifications} onChange={e => setFormData({...formData, modifications: e.target.value})} placeholder="Descrivi brevemente le modifiche..." className="bg-transparent border-zinc-800 rounded-none min-h-[80px]" />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase text-zinc-500 flex items-center justify-between">
-                      <span>{t.events.form.interiorPhotos}</span>
-                      <span>{interiorFiles.length}/6</span>
-                    </Label>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-3">
                       {interiorPreviews.map((url, i) => (
-                        <div key={i} className="relative w-20 h-20 bg-zinc-900 border border-white/10 rounded-xl overflow-hidden">
+                        <div key={i} className="relative w-24 h-24 bg-zinc-900 border border-white/10 rounded-2xl overflow-hidden shadow-xl animate-in zoom-in duration-300">
                           <img src={url} className="w-full h-full object-cover" alt="Interior preview" />
                           <button type="button" onClick={() => {
                             const newFiles = [...interiorFiles]; newFiles.splice(i, 1);
                             const newPreviews = [...interiorPreviews]; newPreviews.splice(i, 1);
                             setInteriorFiles(newFiles); setInteriorPreviews(newPreviews);
-                          }} className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 rounded-full hover:bg-zinc-800"><X size={10} /></button>
+                          }} className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 text-white rounded-full hover:bg-red-600 transition-colors"><X size={12} /></button>
                         </div>
                       ))}
                       {interiorFiles.length < 6 && (
-                        <button type="button" onClick={() => interiorInputRef.current?.click()} className="w-20 h-20 border border-dashed border-zinc-800 rounded-xl flex flex-col items-center justify-center hover:border-white transition-colors">
-                          <Camera size={16} className="text-zinc-600 mb-1" />
+                        <button 
+                          type="button" 
+                          onClick={() => interiorInputRef.current?.click()} 
+                          className="w-24 h-24 bg-white/5 border-2 border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center hover:border-white/30 hover:bg-white/10 transition-all group"
+                        >
+                          <Camera size={20} className="text-zinc-600 group-hover:text-white transition-colors mb-1" />
+                          <span className="text-[7px] font-black uppercase text-zinc-600 group-hover:text-white">Aggiungi</span>
                         </button>
                       )}
                       <input type="file" ref={interiorInputRef} className="hidden" accept="image/*" multiple onChange={handleFileChange} />
                     </div>
+                    
+                    <div className="flex items-center gap-3 bg-white/5 p-4 rounded-2xl border border-white/5">
+                      <Info size={14} className="text-zinc-500 shrink-0" />
+                      <p className="text-[8px] font-bold uppercase text-zinc-500 leading-relaxed">
+                        Carica foto chiare degli interni per aumentare le possibilità di selezione. Sono richieste almeno 3 foto.
+                      </p>
+                    </div>
                   </div>
 
-                  <Button type="submit" disabled={applyToEvent.isPending || interiorFiles.length < 3 || !formData.vehicleId} className="w-full bg-white text-black hover:bg-zinc-200 h-14 rounded-full font-black uppercase italic tracking-widest transition-all mt-4">
+                  <Button 
+                    type="submit" 
+                    disabled={applyToEvent.isPending || interiorFiles.length < 3 || !formData.vehicleId} 
+                    className="w-full bg-white text-black hover:bg-zinc-200 hover:scale-[1.02] active:scale-[0.98] h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl shadow-white/10 mt-4"
+                  >
                     {applyToEvent.isPending ? <Loader2 className="animate-spin" /> : t.events.form.submit}
                   </Button>
                 </form>
