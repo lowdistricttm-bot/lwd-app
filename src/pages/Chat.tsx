@@ -125,7 +125,7 @@ const Chat = () => {
   if (loadingChat) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="min-h-screen text-white flex flex-col bg-transparent">
       <nav className="fixed top-0 left-0 right-0 z-50 bg-black/60 backdrop-blur-2xl border-b border-white/10 h-20 px-6 flex items-center gap-4 pt-[env(safe-area-inset-top)]">
         <button onClick={() => navigate(-1)} className="p-2 text-zinc-400 hover:text-white"><ChevronLeft size={24} strokeWidth={2.5} /></button>
         
@@ -170,7 +170,6 @@ const Chat = () => {
             <div key={msg.id} className={cn("flex w-full", isMe ? "justify-end" : "justify-start")}>
               <div className="relative max-w-[85%] w-fit">
                 
-                {/* Sfondo cestino della stessa dimensione esatta della bolla */}
                 <div className={cn(
                   "absolute inset-0 flex items-center justify-end px-5 rounded-[2rem]",
                   isMe ? "bg-red-950/40" : "bg-red-950/60 border border-white/5"
