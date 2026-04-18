@@ -163,6 +163,20 @@ const Profile = () => {
     }
   };
 
+  const translateOrderStatus = (status: string) => {
+    const map: Record<string, string> = {
+      'pending': 'In attesa',
+      'processing': 'In lavorazione',
+      'on-hold': 'In sospeso',
+      'completed': 'Completato',
+      'cancelled': 'Annullato',
+      'refunded': 'Rimborsato',
+      'failed': 'Fallito',
+      'checkout-draft': 'Bozza'
+    };
+    return (map[status] || status).toUpperCase();
+  };
+
   if (loading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
   const userRole = profile?.role || 'subscriber';
@@ -367,7 +381,12 @@ const Profile = () => {
                               <div className="space-y-1.5">
                                 <div className="flex items-center gap-2">
                                   <span className="bg-white text-black text-[7px] font-black uppercase px-1.5 py-0.5 italic rounded-full">#{order.id}</span>
-                                  <span className="bg-zinc-800 text-white text-[7px] font-black uppercase px-1.5 py-0.5 italic rounded-full">{order.status.toUpperCase()}</span>
+                                  <span className={cn(
+                                    "text-[7px] font-black uppercase px-1.5 py-0.5 italic rounded-full",
+                                    order.status === 'completed' ? "bg-white text-black" : "bg-zinc-800 text-white"
+                                  )}>
+                                    {translateOrderStatus(order.status)}
+                                  </span>
                                 </div>
                                 <h4 className="text-xs font-black italic uppercase tracking-tight">{order.line_items.length} Prodotti</h4>
                                 <p className="text-[8px] text-zinc-500 font-bold uppercase">Effettuato il {new Date(order.date_created).toLocaleDateString('it-IT')}</p>
