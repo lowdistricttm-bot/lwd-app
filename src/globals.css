@@ -19,22 +19,22 @@
   }
 }
 
+/* Nasconde le barre di scorrimento globalmente per TUTTI gli elementi */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE ed Edge */
+}
+
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari e Opera */
+}
+
 html, body {
   width: 100%;
   overflow-x: hidden;
   overscroll-behavior-y: auto;
   -webkit-overflow-scrolling: touch;
-  
-  /* Nasconde la barra su Firefox */
-  scrollbar-width: none;
-  /* Nasconde la barra su IE ed Edge */
-  -ms-overflow-style: none;
-}
-
-/* Nasconde la barra su Chrome, Safari e Opera */
-html::-webkit-scrollbar,
-body::-webkit-scrollbar {
-  display: none;
+  background-color: #000;
 }
 
 body {
@@ -66,6 +66,7 @@ h1, h2, h3, h4, h5, h6 {
   animation: marquee 25s linear infinite;
 }
 
+/* Utility per scrollbar (già coperta dal selettore universale sopra, ma mantenuta per compatibilità) */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
