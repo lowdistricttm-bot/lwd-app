@@ -57,8 +57,8 @@ const SpotifyPlayer = () => {
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
         className="pointer-events-auto flex items-center"
       >
-        {/* Corpo del Player */}
-        <div className="w-[280px] h-[152px] bg-black border-y border-r border-white/10 shadow-2xl overflow-hidden">
+        {/* Corpo del Player - Sfondo grigio zinc-900 con blur */}
+        <div className="w-[280px] h-[152px] bg-zinc-900/90 backdrop-blur-xl border-y border-r border-white/10 shadow-2xl overflow-hidden">
           <div id="spotify-embed"></div>
         </div>
 
