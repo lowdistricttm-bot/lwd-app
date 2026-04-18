@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, Trash2, Loader2, Volume2, VolumeX, Send, Heart, Eye, User, Star, AtSign, RefreshCw } from 'lucide-react';
 import { useStories, useStoryViews } from '@/hooks/use-stories';
@@ -56,9 +57,13 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
     supabase.auth.getUser().then(({ data: { user } }) => {
       setCurrentUserId(user?.id || null);
     });
+    
+    // Blocca lo scroll del body quando le storie sono aperte
+    const originalStyle = window.getComputedStyle(document.body).overflow;
     document.body.style.overflow = 'hidden';
+    
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = originalStyle;
     };
   }, []);
 
@@ -195,12 +200,14 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
 
   const roleLabel = isHighlight ? 'RACCOLTA' : (t.profile.roles[userStories.role] || t.profile.roles.member);
 
-  return (
+  // Renderizziamo il componente tramite Portal per uscire da ogni stacking context
+  return createPortal(
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[2000] bg-black flex items-center justify-center overflow-hidden touch-none"
+      className="fixed inset-0 z-[9999] bg-black flex items-center justify-center overflow-hidden touch-none"
+      style={{ height: '100dvh', width: '100vw' }}
     >
       {/* Background Blur */}
       <div className="absolute inset-0 z-0 opacity-50 blur-[100px] scale-150">
@@ -208,7 +215,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
       </div>
 
       {/* Main Container - Full Screen */}
-      <div className="relative w-full h-[100dvh] bg-black overflow-hidden flex flex-col shadow-2xl">
+      <div className="relative w-full h-full bg-black overflow-hidden flex flex-col shadow-2xl">
         
         {/* Progress Bars */}
         <div className="absolute top-[calc(1rem+env(safe-area-inset-top))] left-4 right-4 z-50 flex gap-1.5">
@@ -473,7 +480,8 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           existingMentions={currentStory.mentions || []}
         />
       )}
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 };
 
