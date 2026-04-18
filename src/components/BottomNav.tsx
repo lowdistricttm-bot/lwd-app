@@ -33,9 +33,9 @@ const BottomNav = () => {
     <div 
       className="fixed bottom-0 left-0 right-0 z-[999] bg-black/95 backdrop-blur-3xl border-t border-white/10 select-none"
       style={{ 
-        // Ridotto l'altezza base da 60px a 50px e dimezzato l'impatto del safe area
-        height: 'calc(50px + (env(safe-area-inset-bottom) * 0.5))',
-        paddingBottom: 'calc(env(safe-area-inset-bottom) * 0.3)',
+        // Altezza ridotta a 48px e impatto safe area minimizzato per un look ultra-sottile
+        height: 'calc(48px + (env(safe-area-inset-bottom) * 0.4))',
+        paddingBottom: 'calc(env(safe-area-inset-bottom) * 0.2)',
         transform: 'translateZ(0)',
         WebkitTransform: 'translateZ(0)',
         willChange: 'transform',
@@ -45,7 +45,7 @@ const BottomNav = () => {
     >
       <div className="absolute inset-0 bg-black -z-10" />
 
-      <div className="relative flex items-center justify-around h-[50px] px-2 max-w-lg mx-auto">
+      <div className="relative flex items-center justify-around h-[48px] px-2 max-w-lg mx-auto">
         {items.map((item, i) => {
           const isActive = activeIndex === i;
           return (
@@ -79,7 +79,7 @@ const BottomNav = () => {
                 transition={{ type: "spring", stiffness: 500, damping: 25 }}
               >
                 <item.icon 
-                  size={20} 
+                  size={19} 
                   strokeWidth={isActive ? 2.5 : 2} 
                 />
               </motion.div>
