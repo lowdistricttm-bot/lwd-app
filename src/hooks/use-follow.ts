@@ -50,16 +50,20 @@ export const useFollow = (targetUserId?: string) => {
     mutationFn: async () => {
       if (!targetUserId) return;
 
-      // Utilizziamo la funzione RPC atomica creata nel database
       const { data, error } = await supabase.rpc('toggle_follow', { 
         target_id: targetUserId 
       });
 
-      if (error) throw error;
+      if (error) {
+        // Se l'errore riguarda il vincolo di integrità, diamo un messaggio più chiaro
+        if (error.code === '23503') {
+          throw new Error("Impossibile completare l'azione: profilo non sincronizzato.");
+        }
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
-      // Invalida le cache per aggiornare l'interfaccia
       queryClient.invalidateQueries({ queryKey: ['is-following', targetUserId] });
       queryClient.invalidateQueries({ queryKey: ['follow-counts', targetUserId] });
       queryClient.invalidateQueries({ queryKey: ['discover-new-members'] });
