@@ -73,12 +73,12 @@ const AddMentionModal = ({ isOpen, onClose, storyId, storyUrl, existingMentions 
         <>
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={onClose} className="absolute inset-0 bg-black/80 backdrop-blur-sm z-[500]" 
+            onClick={onClose} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[500]" 
           />
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="absolute inset-x-0 bottom-0 z-[501] bg-zinc-950 border-t border-white/10 p-6 rounded-t-[2rem] max-h-[60%] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            className="fixed inset-x-0 bottom-0 z-[501] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[60%] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
             style={{ 
               touchAction: 'pan-y',
               overscrollBehavior: 'contain'
@@ -91,16 +91,16 @@ const AddMentionModal = ({ isOpen, onClose, storyId, storyUrl, existingMentions 
                 <AtSign size={20} className="text-white" />
                 <h3 className="text-lg font-black italic uppercase tracking-tighter">Menziona Membri</h3>
               </div>
-              <button onClick={onClose} className="p-2 text-zinc-500"><X size={24} /></button>
+              <button onClick={onClose} className="p-2 text-zinc-500 hover:text-white bg-white/5 rounded-full transition-colors"><X size={24} /></button>
             </div>
 
             <div className="relative mb-6">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
+              <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
               <Input 
                 placeholder="CERCA USERNAME..." 
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="bg-zinc-900 border-zinc-800 rounded-none h-12 pl-12 text-[10px] font-black uppercase tracking-widest"
+                className="bg-black/40 border-white/10 rounded-full h-12 pl-12 text-[10px] font-black uppercase tracking-widest"
               />
             </div>
 
@@ -116,8 +116,8 @@ const AddMentionModal = ({ isOpen, onClose, storyId, storyUrl, existingMentions 
                       onClick={() => !isAlreadyMentioned && handleAdd(user)}
                       disabled={isAlreadyMentioned || addMention.isPending}
                       className={cn(
-                        "w-full flex items-center justify-between p-3 border transition-all group",
-                        isAlreadyMentioned ? "bg-zinc-900/20 border-transparent opacity-50" : "bg-zinc-900/40 border-white/5 hover:bg-zinc-900"
+                        "w-full flex items-center justify-between p-3 border transition-all group rounded-2xl",
+                        isAlreadyMentioned ? "bg-white/5 border-transparent opacity-50" : "bg-white/5 border-white/5 hover:bg-white/10"
                       )}
                     >
                       <div className="flex items-center gap-3">

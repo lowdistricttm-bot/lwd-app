@@ -56,12 +56,12 @@ const HighlightModal = ({ isOpen, onClose, story, userId }: HighlightModalProps)
         <>
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={onClose} className="absolute inset-0 bg-black/80 backdrop-blur-sm z-[400]" 
+            onClick={onClose} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[400]" 
           />
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="absolute inset-x-0 bottom-0 z-[401] bg-zinc-950 border-t border-white/10 p-6 rounded-t-[2rem] max-h-[60vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            className="fixed inset-x-0 bottom-0 z-[401] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[60vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
             style={{ 
               touchAction: 'pan-y',
               overscrollBehavior: 'contain'
@@ -71,7 +71,7 @@ const HighlightModal = ({ isOpen, onClose, story, userId }: HighlightModalProps)
             
             <div className="flex justify-between items-center mb-8">
               <h3 className="text-lg font-black italic uppercase tracking-tighter">Metti in evidenza</h3>
-              <button onClick={onClose} className="p-2 text-zinc-500"><X size={24} /></button>
+              <button onClick={onClose} className="p-2 text-zinc-500 hover:text-white bg-white/5 rounded-full transition-colors"><X size={24} /></button>
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar pb-[calc(4rem+env(safe-area-inset-bottom))]">
@@ -87,11 +87,11 @@ const HighlightModal = ({ isOpen, onClose, story, userId }: HighlightModalProps)
                     placeholder="NOME RACCOLTA" 
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value.toUpperCase())}
-                    className="bg-zinc-900 border-zinc-800 rounded-none h-14 text-center font-black uppercase tracking-widest"
+                    className="bg-black/40 border-white/10 rounded-full h-14 text-center font-black uppercase tracking-widest"
                   />
                   <div className="flex gap-3">
-                    <Button onClick={() => setIsCreating(false)} variant="outline" className="flex-1 border-white/10 rounded-none h-12 font-black uppercase italic">Annulla</Button>
-                    <Button onClick={handleCreate} disabled={createHighlight.isPending} className="flex-1 bg-white text-black rounded-none h-12 font-black uppercase italic">
+                    <Button onClick={() => setIsCreating(false)} variant="outline" className="flex-1 border-white/10 rounded-full h-12 font-black uppercase italic">Annulla</Button>
+                    <Button onClick={handleCreate} disabled={createHighlight.isPending} className="flex-1 bg-white text-black rounded-full h-12 font-black uppercase italic">
                       {createHighlight.isPending ? <Loader2 className="animate-spin" /> : 'Aggiungi'}
                     </Button>
                   </div>

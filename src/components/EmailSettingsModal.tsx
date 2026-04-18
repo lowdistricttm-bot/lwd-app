@@ -80,11 +80,11 @@ const EmailSettingsModal = ({ isOpen, onClose }: EmailSettingsModalProps) => {
   if (!isAdmin && isOpen) {
     return (
       <AnimatePresence>
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/90 backdrop-blur-md z-[250]" />
-        <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed inset-x-0 bottom-0 z-[251] bg-zinc-950 border-t border-white/10 p-8 rounded-t-[2rem] flex flex-col items-center justify-center py-20">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[250]" />
+        <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed inset-x-0 bottom-0 z-[251] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-8 rounded-t-[2rem] flex flex-col items-center justify-center py-20">
           <ShieldAlert size={48} className="text-zinc-800 mb-4" />
           <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Accesso riservato agli amministratori</p>
-          <Button onClick={onClose} className="mt-6 bg-white/90 backdrop-blur-md text-black hover:bg-white hover:scale-[1.02] active:scale-[0.98] rounded-none font-black uppercase italic px-8 h-12 transition-all duration-300 shadow-xl shadow-white/5">Chiudi</Button>
+          <Button onClick={onClose} className="mt-6 bg-white text-black hover:bg-zinc-200 rounded-full font-black uppercase italic px-8 h-12 transition-all shadow-xl">Chiudi</Button>
         </motion.div>
       </AnimatePresence>
     );
@@ -94,25 +94,28 @@ const EmailSettingsModal = ({ isOpen, onClose }: EmailSettingsModalProps) => {
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/90 backdrop-blur-md z-[250]" />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[250]" />
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} 
-            className="fixed inset-x-0 bottom-0 z-[251] bg-zinc-950 border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[90vh] overflow-y-auto"
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed inset-x-0 bottom-0 z-[251] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[90vh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
             style={{ 
               touchAction: 'pan-y',
               overscrollBehavior: 'contain'
             }}
           >
+            <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
+            
             <div className="max-w-3xl mx-auto space-y-10 pb-[calc(4rem+env(safe-area-inset-bottom))]">
               <div className="flex justify-between items-center">
                 <div>
                   <h2 className="text-2xl font-black italic uppercase tracking-tighter">Configurazione Email</h2>
                   <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mt-1">Personalizza i messaggi automatici per gli utenti</p>
                 </div>
-                <button onClick={onClose} className="p-2 text-zinc-500 hover:text-white"><X size={24} /></button>
+                <button onClick={onClose} className="p-2 text-zinc-500 hover:text-white bg-white/5 rounded-full transition-colors"><X size={24} /></button>
               </div>
 
-              <div className="bg-white/5 border border-white/10 p-4 rounded-lg">
+              <div className="bg-white/5 border border-white/10 p-4 rounded-2xl">
                 <div className="flex items-center gap-2 mb-2">
                   <Info size={14} className="text-white" />
                   <span className="text-[10px] font-black uppercase tracking-widest text-white">Guida ai Segnaposto</span>
@@ -129,7 +132,7 @@ const EmailSettingsModal = ({ isOpen, onClose }: EmailSettingsModalProps) => {
               ) : (
                 <div className="space-y-12">
                   {templates.map((template) => (
-                    <div key={template.id} className="space-y-6 p-6 border border-white/5 bg-black/20">
+                    <div key={template.id} className="space-y-6 p-6 border border-white/5 bg-black/20 rounded-[2rem]">
                       <div className="flex items-center gap-3 mb-2">
                         <div className={cn(
                           "w-2 h-2 rounded-full",
@@ -141,27 +144,27 @@ const EmailSettingsModal = ({ isOpen, onClose }: EmailSettingsModalProps) => {
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-zinc-500">Oggetto Email</Label>
+                        <Label className="text-[10px] font-black uppercase text-zinc-500 ml-4">Oggetto Email</Label>
                         <Input 
                           value={template.subject} 
                           onChange={e => updateLocalTemplate(template.type, 'subject', e.target.value)}
-                          className="bg-transparent border-zinc-800 rounded-none h-12 text-sm font-bold"
+                          className="bg-black/40 border-white/10 rounded-full h-12 px-6 text-sm font-bold"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-zinc-500">Corpo del Messaggio</Label>
+                        <Label className="text-[10px] font-black uppercase text-zinc-500 ml-4">Corpo del Messaggio</Label>
                         <Textarea 
                           value={template.body} 
                           onChange={e => updateLocalTemplate(template.type, 'body', e.target.value)}
-                          className="bg-transparent border-zinc-800 rounded-none min-h-[200px] text-sm leading-relaxed"
+                          className="bg-black/40 border-white/10 rounded-[1.5rem] min-h-[200px] text-sm leading-relaxed p-6"
                         />
                       </div>
 
                       <Button 
                         onClick={() => handleSave(template.type)}
                         disabled={saving}
-                        className="w-full bg-white/90 backdrop-blur-md text-black hover:bg-white hover:scale-[1.02] active:scale-[0.98] rounded-none h-12 font-black uppercase italic tracking-wider text-[10px] transition-all duration-300 shadow-xl shadow-white/5"
+                        className="w-full bg-white text-black hover:bg-zinc-200 rounded-full h-14 font-black uppercase italic tracking-wider text-[10px] transition-all shadow-xl"
                       >
                         {saving ? <Loader2 className="animate-spin" size={14} /> : <><Save size={14} className="mr-2" /> Salva Template {template.type === 'approval' ? 'Approvazione' : 'Rifiuto'}</>}
                       </Button>

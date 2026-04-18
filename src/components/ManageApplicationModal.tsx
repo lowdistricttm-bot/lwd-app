@@ -50,16 +50,18 @@ const ManageApplicationModal = ({ isOpen, onClose, application }: ManageApplicat
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/90 backdrop-blur-md z-[150]" />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150]" />
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[151] bg-zinc-950 border-t border-white/10 p-8 rounded-t-[2rem] max-h-[85vh] overflow-y-auto"
+            className="fixed inset-x-0 bottom-0 z-[151] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[85vh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
             style={{ 
               touchAction: 'pan-y',
               overscrollBehavior: 'contain'
             }}
           >
+            <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
+            
             <div className="max-w-2xl mx-auto space-y-8 pb-[calc(4rem+env(safe-area-inset-bottom))]">
               <div className="flex justify-between items-start">
                 <div>
@@ -76,12 +78,12 @@ const ManageApplicationModal = ({ isOpen, onClose, application }: ManageApplicat
                   </span>
                   <h3 className="text-3xl font-black italic uppercase tracking-tighter">{application.events?.title}</h3>
                 </div>
-                <button onClick={onClose} className="p-2 text-zinc-500 hover:text-white"><X size={24} /></button>
+                <button onClick={onClose} className="p-2 text-zinc-500 hover:text-white bg-white/5 rounded-full transition-colors"><X size={24} /></button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-6">
-                  <div className="bg-zinc-900/50 border border-white/5 p-6 space-y-4">
+                  <div className="bg-white/5 border border-white/5 p-6 space-y-4 rounded-[1.5rem]">
                     <h4 className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Dettagli Evento</h4>
                     <div className="space-y-3">
                       <div className="flex items-center gap-3 text-zinc-300">
@@ -97,10 +99,10 @@ const ManageApplicationModal = ({ isOpen, onClose, application }: ManageApplicat
                     </div>
                   </div>
 
-                  <div className="bg-zinc-900/50 border border-white/5 p-6 space-y-4">
+                  <div className="bg-white/5 border border-white/5 p-6 space-y-4 rounded-[1.5rem]">
                     <h4 className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Veicolo Candidato</h4>
                     <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 bg-zinc-800 border border-white/10 overflow-hidden shrink-0">
+                      <div className="w-16 h-16 bg-zinc-800 border border-white/10 overflow-hidden shrink-0 rounded-xl">
                         {application.vehicles?.image_url ? (
                           <img src={application.vehicles.image_url} className="w-full h-full object-cover" alt="Veicolo" />
                         ) : (
@@ -116,7 +118,7 @@ const ManageApplicationModal = ({ isOpen, onClose, application }: ManageApplicat
                 </div>
 
                 <div className="space-y-6">
-                  <div className="bg-zinc-900/50 border border-white/5 p-6 space-y-4">
+                  <div className="bg-white/5 border border-white/5 p-6 space-y-4 rounded-[1.5rem]">
                     <h4 className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Note Candidatura</h4>
                     <p className="text-xs text-zinc-400 leading-relaxed italic">
                       {application.status === 'pending' 
@@ -132,18 +134,10 @@ const ManageApplicationModal = ({ isOpen, onClose, application }: ManageApplicat
                       onClick={handleCancel}
                       disabled={cancelApplication.isPending}
                       variant="outline"
-                      className="w-full border-zinc-800 text-zinc-500 hover:bg-red-600 hover:text-white hover:border-red-600 rounded-none font-black uppercase italic text-[10px] tracking-widest h-14 transition-all"
+                      className="w-full border-white/10 text-zinc-500 hover:bg-red-600 hover:text-white hover:border-red-600 rounded-full font-black uppercase italic text-[10px] tracking-widest h-14 transition-all"
                     >
                       {cancelApplication.isPending ? <Loader2 className="animate-spin" /> : <><Trash2 size={14} className="mr-2" /> {application.status === 'rejected' ? 'Rimuovi e Riprova' : 'Annulla Candidatura'}</>}
                     </Button>
-                  )}
-                  
-                  {application.status === 'approved' && (
-                    <div className="p-4 bg-white/5 border border-white/10 text-center">
-                      <p className="text-[9px] font-black uppercase text-zinc-500 italic">
-                        Candidatura approvata. Contatta lo staff per modifiche.
-                      </p>
-                    </div>
                   )}
                 </div>
               </div>
