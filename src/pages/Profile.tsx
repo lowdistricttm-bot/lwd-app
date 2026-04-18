@@ -220,43 +220,43 @@ const Profile = () => {
             </div>
 
             {/* Text Info */}
-            <div className="pt-12 md:pt-16 flex-1 min-w-0 flex flex-col gap-4">
-              {/* Nome Utente */}
-              <h1 className="text-xl md:text-3xl font-black italic uppercase tracking-tighter leading-none truncate">
-                {profile?.username || 'Utente'}
-              </h1>
-
-              {/* Pulsanti Azione */}
-              <div className="flex items-center gap-2">
-                {!isOwnProfile && currentUser && (!isTargetSubscriber || canVote) && (
-                  <FollowButton userId={targetUserId} className="flex-1 h-11" />
-                )}
+            <div className="pt-12 md:pt-16 flex-1 min-w-0 flex flex-col gap-3">
+              {/* Nome Utente e Pulsanti Piccoli */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-xl md:text-3xl font-black italic uppercase tracking-tighter leading-none truncate max-w-[200px] md:max-w-md">
+                  {profile?.username || 'Utente'}
+                </h1>
                 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   {!isOwnProfile && currentUser && (!isTargetSubscriber || canVote) && (
                     <button 
                       onClick={() => navigate(`/chat/${profile.id}`)} 
-                      className="w-11 h-11 bg-white/5 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all flex items-center justify-center border border-white/10 shadow-xl"
+                      className="w-7 h-7 bg-white/5 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all flex items-center justify-center border border-white/10 shadow-lg"
                     >
-                      <Mail size={18} />
+                      <Mail size={14} />
                     </button>
                   )}
                   <button 
                     onClick={handleShareProfile} 
-                    className="w-11 h-11 bg-white/5 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all flex items-center justify-center border border-white/10 shadow-xl"
+                    className="w-7 h-7 bg-white/5 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all flex items-center justify-center border border-white/10 shadow-lg"
                   >
-                    <Share2 size={18} />
+                    <Share2 size={14} />
                   </button>
                   {isOwnProfile && (
                     <button 
                       onClick={() => setIsUsernameNoticeOpen(true)} 
-                      className="w-11 h-11 bg-white/5 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all flex items-center justify-center border border-white/10 shadow-xl"
+                      className="w-7 h-7 bg-white/5 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all flex items-center justify-center border border-white/10 shadow-lg"
                     >
-                      <Edit2 size={16} />
+                      <Edit2 size={12} />
                     </button>
                   )}
                 </div>
               </div>
+
+              {/* Pulsante Follow (Primario) */}
+              {!isOwnProfile && currentUser && (!isTargetSubscriber || canVote) && (
+                <FollowButton userId={targetUserId} className="w-full sm:w-48 h-10" />
+              )}
               
               {/* Ruolo e Stato Online */}
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
