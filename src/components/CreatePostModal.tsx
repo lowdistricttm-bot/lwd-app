@@ -91,7 +91,6 @@ const CreatePostModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 className="min-h-[120px] bg-transparent border-none text-lg p-0 focus-visible:ring-0 placeholder:text-zinc-800 resize-none font-medium italic text-white"
-                autoFocus
               />
 
               {previews.length > 0 && (
