@@ -99,7 +99,6 @@ export const useMessages = (otherUserId?: string) => {
     enabled: !!otherUserId
   });
 
-  // Listener specifico per la chat aperta o la lista conversazioni
   useEffect(() => {
     const instanceId = Math.random().toString(36).substring(2, 9);
     const channelName = `messages-realtime-${otherUserId || 'list'}-${instanceId}`;
@@ -178,13 +177,23 @@ export const useMessages = (otherUserId?: string) => {
     mutationFn: async (otherId: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { error } = await supabase.from('messages').delete().or(`and(sender_id.eq.${user.id},receiver_id.eq.${otherId}),and(sender_id.eq.${otherId},receiver_id.eq.${user.id})`);
+
+      // Elimina fisicamente tutti i messaggi tra i due utenti dal database
+      const { error } = await supabase
+        .from('messages')
+        .delete()
+        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${otherId}),and(sender_id.eq.${otherId},receiver_id.eq.${user.id})`);
+      
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, otherId) => {
+      // Pulisce la cache per far sparire la conversazione e i messaggi
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      showSuccess("Conversazione eliminata");
-    }
+      queryClient.invalidateQueries({ queryKey: ['chat', otherId] });
+      queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
+      showSuccess("Conversazione eliminata definitivamente");
+    },
+    onError: (err: any) => showError("Errore durante la pulizia del database")
   });
 
   const deleteMessage = useMutation({
