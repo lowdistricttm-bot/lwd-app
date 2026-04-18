@@ -23,7 +23,6 @@ export interface Message {
 export const useMessages = (otherUserId?: string) => {
   const queryClient = useQueryClient();
 
-  // 1. Lista Conversazioni
   const { data: conversations, isLoading: loadingConvs } = useQuery({
     queryKey: ['conversations'],
     queryFn: async () => {
@@ -55,11 +54,9 @@ export const useMessages = (otherUserId?: string) => {
       });
 
       return Array.from(groups.values());
-    },
-    staleTime: 0 // Forza il refresh immediato su invalidazione
+    }
   });
 
-  // 2. Conteggio Messaggi non letti
   const { data: unreadCount = 0 } = useQuery({
     queryKey: ['unread-messages-count'],
     queryFn: async () => {
@@ -72,11 +69,9 @@ export const useMessages = (otherUserId?: string) => {
         .eq('is_read', false);
       if (error) return 0;
       return count || 0;
-    },
-    staleTime: 0
+    }
   });
 
-  // 3. Messaggi della Chat singola
   const { data: chatMessages, isLoading: loadingChat } = useQuery({
     queryKey: ['chat', otherUserId],
     queryFn: async () => {
@@ -101,19 +96,20 @@ export const useMessages = (otherUserId?: string) => {
         images: Array.isArray(msg.images) ? msg.images : (msg.image_url ? [msg.image_url] : [])
       })) as Message[];
     },
-    enabled: !!otherUserId,
-    staleTime: 0
+    enabled: !!otherUserId
   });
 
-  // 4. Listener Realtime Unificato
+  // Listener specifico per la chat aperta o la lista conversazioni
   useEffect(() => {
+    const instanceId = Math.random().toString(36).substring(2, 9);
+    const channelName = `messages-realtime-${otherUserId || 'list'}-${instanceId}`;
+
     const channel = supabase
-      .channel('messages-realtime-sync')
+      .channel(channelName)
       .on(
         'postgres_changes', 
         { event: '*', schema: 'public', table: 'messages' }, 
         () => {
-          // Invalida tutto istantaneamente
           queryClient.invalidateQueries({ queryKey: ['conversations'] });
           queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
           if (otherUserId) {
