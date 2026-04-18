@@ -34,7 +34,7 @@ const BottomNav = () => {
         WebkitTransform: 'translateZ(0)'
       }}
     >
-      <div className="relative flex items-center justify-around h-[calc(50px+env(safe-area-inset-bottom))] px-2 pb-[env(safe-area-inset-bottom)]">
+      <div className="relative flex items-center justify-around h-[calc(44px+env(safe-area-inset-bottom))] px-2 pb-[env(safe-area-inset-bottom)]">
         {items.map((item, i) => {
           const isActive = activeIndex === i;
           return (
@@ -42,7 +42,7 @@ const BottomNav = () => {
               key={i} 
               to={item.href}
               className={cn(
-                "flex-1 flex flex-col items-center justify-center h-[50px] relative z-10 transition-all duration-300",
+                "flex-1 flex flex-col items-center justify-center h-[44px] relative z-10 transition-all duration-300",
                 isActive ? "text-white" : "text-zinc-500 hover:text-zinc-400"
               )}
               onClick={() => triggerHaptic(15)}
@@ -68,7 +68,7 @@ const BottomNav = () => {
                 transition={{ type: "spring", stiffness: 500, damping: 25 }}
               >
                 <item.icon 
-                  size={20} 
+                  size={18} 
                   strokeWidth={isActive ? 2.5 : 2} 
                 />
               </motion.div>

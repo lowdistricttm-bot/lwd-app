@@ -200,13 +200,14 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[200] bg-black flex items-center justify-center overflow-hidden touch-none"
+      className="fixed inset-0 z-[1000] bg-black flex items-center justify-center overflow-hidden touch-none"
     >
       <div className="absolute inset-0 z-0 opacity-50 blur-[100px] scale-150">
         <img src={currentStory.image_url} className="w-full h-full object-cover" alt="" />
       </div>
 
-      <div className="relative w-full max-w-[500px] h-full bg-black overflow-hidden flex flex-col shadow-2xl">
+      <div className="relative w-full max-w-[500px] h-[100dvh] bg-black overflow-hidden flex flex-col shadow-2xl">
+        {/* Progress Bars */}
         <div className="absolute top-[calc(1rem+env(safe-area-inset-top))] left-4 right-4 z-50 flex gap-1.5">
           {userStories.items.map((_, i) => (
             <div key={i} className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden">
@@ -220,6 +221,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           ))}
         </div>
 
+        {/* Header */}
         <div className="absolute top-[calc(2.5rem+env(safe-area-inset-top))] left-4 right-4 z-50 flex items-center justify-between">
           <button 
             onClick={handleProfileClick}
@@ -255,9 +257,9 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           </div>
         </div>
 
-        {/* Badge Ricondivisa da */}
+        {/* Badge Ricondivisa */}
         {currentStory.reshared_from && (
-          <div className="absolute top-[calc(6rem+env(safe-area-inset-top))] left-4 z-50 animate-in fade-in slide-in-from-left-4 duration-500">
+          <div className="absolute top-[calc(6.5rem+env(safe-area-inset-top))] left-4 z-50 animate-in fade-in slide-in-from-left-4 duration-500">
             <div className="bg-black/40 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-full flex items-center gap-2">
               <RefreshCw size={10} className="text-white/60" />
               <span className="text-[9px] font-black uppercase italic tracking-widest text-white">
@@ -267,11 +269,13 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           </div>
         )}
 
+        {/* Navigation Areas */}
         <div className="absolute inset-0 z-20 flex">
           <div className="w-1/3 h-full cursor-pointer" onClick={handlePrev} />
           <div className="w-2/3 h-full cursor-pointer" onClick={handleNext} />
         </div>
 
+        {/* Media Content */}
         <div className="flex-1 relative flex items-center justify-center bg-black">
           {isMediaLoading && (
             <div className="absolute inset-0 flex items-center justify-center z-10">
@@ -303,7 +307,8 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           )}
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 z-50 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
+        {/* Footer Controls */}
+        <div className="absolute bottom-0 left-0 right-0 z-50 p-6 pb-[calc(2rem+env(safe-area-inset-bottom))] bg-gradient-to-t from-black/90 via-black/40 to-transparent">
           {isOwner && !isHighlight ? (
             <div className="flex items-center justify-around py-4 border-t border-white/10">
               <button onClick={() => setShowViewers(true)} className="flex flex-col items-center gap-1 group">
@@ -368,6 +373,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           )}
         </div>
 
+        {/* Viewers Modal Overlay */}
         <AnimatePresence>
           {showViewers && (
             <>
@@ -379,7 +385,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
               <motion.div 
                 initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="absolute inset-x-0 bottom-0 z-[61] bg-zinc-950 border-t border-white/10 rounded-t-[2rem] max-h-[60%] flex flex-col"
+                className="absolute inset-x-0 bottom-0 z-[61] bg-zinc-950 border-t border-white/10 rounded-t-[2rem] max-h-[60%] flex flex-col pb-[env(safe-area-inset-bottom)]"
               >
                 <div className="p-6 border-b border-white/5 flex items-center justify-between">
                   <h3 className="text-lg font-black italic uppercase tracking-tighter">Visualizzazioni</h3>
@@ -424,6 +430,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           )}
         </AnimatePresence>
 
+        {/* Desktop Navigation Buttons */}
         <button 
           onClick={handlePrev}
           className="hidden md:flex absolute -left-20 top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-30 text-white transition-all border border-white/10"
