@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { Home, ShoppingBag, MessageSquare, User, Calendar, Compass } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const BottomNav = () => {
   const location = useLocation();
@@ -22,14 +22,12 @@ const BottomNav = () => {
 
   const activeIndex = items.findIndex(item => item.href === location.pathname);
 
-  // Gestione della vibrazione per feedback "liquido"
   const triggerHaptic = () => {
     if ('vibrate' in navigator) {
       navigator.vibrate(10);
     }
   };
 
-  // Funzione per gestire lo scorrimento (Pan) sulla barra
   const handlePan = (event: any, info: any) => {
     if (!containerRef.current) return;
     
@@ -37,42 +35,36 @@ const BottomNav = () => {
     const x = info.point.x - rect.left;
     const width = rect.width;
     
-    // Calcola l'indice in base alla posizione del dito
     const newIndex = Math.max(0, Math.min(items.length - 1, Math.floor((x / width) * items.length)));
     
-    if (newIndex !== activeIndex) {
+    if (newIndex !== activeIndex && activeIndex !== -1) {
       triggerHaptic();
       navigate(items[newIndex].href);
     }
   };
 
   return (
-    <div className="fixed bottom-6 left-0 right-0 z-[100] flex justify-center px-6 pointer-events-none">
+    <div className="fixed bottom-0 left-0 right-0 z-[100] bg-black/80 backdrop-blur-2xl border-t border-white/5 pb-[env(safe-area-inset-bottom)]">
       <motion.div 
         ref={containerRef}
         onPan={handlePan}
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: 'spring', damping: 20, stiffness: 100, delay: 0.2 }}
-        className="pointer-events-auto relative flex items-center bg-zinc-900/60 backdrop-blur-3xl border border-white/10 p-1.5 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] max-w-md w-full"
+        className="relative flex items-center h-16 px-2"
       >
-        {/* Indicatore Liquido (Sfondo Mobile) */}
+        {/* Indicatore Liquido */}
         <AnimatePresence>
           {activeIndex !== -1 && (
             <motion.div
-              layoutId="liquid-pill"
-              className="absolute h-[calc(100%-12px)] bg-white rounded-full z-0 shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+              layoutId="active-pill"
+              className="absolute h-10 bg-white/10 rounded-xl z-0"
               initial={false}
               transition={{
                 type: "spring",
                 stiffness: 400,
-                damping: 35,
-                mass: 1
+                damping: 35
               }}
               style={{
-                width: `${100 / items.length}%`,
-                left: `${(activeIndex * 100) / items.length}%`,
-                margin: '6px 0'
+                width: `calc(${100 / items.length}% - 12px)`,
+                left: `calc(${(activeIndex * 100) / items.length}% + 6px)`,
               }}
             />
           )}
@@ -86,29 +78,17 @@ const BottomNav = () => {
               key={i} 
               to={item.href}
               className={cn(
-                "flex-1 flex flex-col items-center justify-center py-3 relative z-10 transition-all duration-500",
-                isActive ? "text-black" : "text-zinc-500"
+                "flex-1 flex flex-col items-center justify-center h-full relative z-10 transition-colors duration-300",
+                isActive ? "text-white" : "text-zinc-500"
               )}
             >
-              <motion.div
-                animate={{ 
-                  scale: isActive ? 1.1 : 1,
-                  y: isActive ? -2 : 0
-                }}
-                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-              >
-                <item.icon 
-                  size={22} 
-                  strokeWidth={isActive ? 2.5 : 2} 
-                  className="transition-colors duration-300"
-                />
-              </motion.div>
-              
-              {/* Label opzionale per accessibilità o stile (nascosta su mobile piccolo) */}
-              <span className={cn(
-                "text-[7px] font-black uppercase tracking-widest mt-1 transition-all duration-500 overflow-hidden",
-                isActive ? "h-auto opacity-100" : "h-0 opacity-0"
-              )}>
+              <item.icon 
+                size={20} 
+                strokeWidth={isActive ? 2.5 : 2} 
+                className="transition-transform duration-300"
+                style={{ transform: isActive ? 'scale(1.1)' : 'scale(1)' }}
+              />
+              <span className="text-[7px] font-black uppercase tracking-widest mt-1">
                 {item.label}
               </span>
             </Link>
