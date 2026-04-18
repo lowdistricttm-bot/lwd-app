@@ -11,7 +11,7 @@ const SpotifyPlayer = () => {
   const playlistId = "49mK52uCtaHSCLY1VC9GR3";
   const controllerRef = useRef<any>(null);
   
-  const CLOSED_X = -284;
+  const CLOSED_X = -280; // Regolato per nascondere esattamente il widget
 
   useEffect(() => {
     // Carichiamo lo script delle Spotify IFrame API
@@ -57,8 +57,8 @@ const SpotifyPlayer = () => {
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
         className="pointer-events-auto flex items-center"
       >
-        {/* Corpo del Player - Sfondo grigio zinc-900 con blur */}
-        <div className="w-[280px] h-[152px] bg-zinc-900/90 backdrop-blur-xl border-y border-r border-white/10 shadow-2xl overflow-hidden">
+        {/* Corpo del Player - Completamente trasparente */}
+        <div className="w-[280px] h-[152px] bg-transparent overflow-hidden">
           <div id="spotify-embed"></div>
         </div>
 
