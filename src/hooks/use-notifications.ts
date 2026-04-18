@@ -45,7 +45,6 @@ export const useNotifications = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
 
-      // Usiamo una sintassi di join esplicita per evitare problemi di cache dello schema
       const { data, error } = await supabase
         .from('notifications')
         .select(`
@@ -90,7 +89,9 @@ export const useNotifications = () => {
             filter: `user_id=eq.${user.id}`
           },
           () => {
+            // Invalida la cache per forzare il ricaricamento
             queryClient.invalidateQueries({ queryKey: ['notifications'] });
+            // Riproduce il suono e il feedback aptico
             playNotificationSound();
           }
         )
