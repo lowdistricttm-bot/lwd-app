@@ -54,20 +54,25 @@ export const useFollow = (targetUserId?: string) => {
         target_id: targetUserId 
       });
 
-      if (error) {
-        // Se l'errore riguarda il vincolo di integrità, diamo un messaggio più chiaro
-        if (error.code === '23503') {
-          throw new Error("Impossibile completare l'azione: profilo non sincronizzato.");
-        }
-        throw error;
-      }
+      if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Invalidiamo le query per il target (chi riceve il follow)
       queryClient.invalidateQueries({ queryKey: ['is-following', targetUserId] });
       queryClient.invalidateQueries({ queryKey: ['follow-counts', targetUserId] });
+      queryClient.invalidateQueries({ queryKey: ['follow-list', targetUserId] });
+      
+      // Invalidiamo le query per l'utente corrente (chi mette il follow)
+      if (user) {
+        queryClient.invalidateQueries({ queryKey: ['follow-counts', user.id] });
+        queryClient.invalidateQueries({ queryKey: ['follow-list', user.id] });
+      }
+
+      // Aggiorniamo anche le liste globali
       queryClient.invalidateQueries({ queryKey: ['discover-new-members'] });
-      queryClient.invalidateQueries({ queryKey: ['follow-list'] });
     },
     onError: (err: any) => showError(err.message)
   });
@@ -79,24 +84,34 @@ export const useFollowList = (userId: string, type: 'followers' | 'following') =
   return useQuery({
     queryKey: ['follow-list', userId, type],
     queryFn: async () => {
-      const column = type === 'followers' ? 'following_id' : 'follower_id';
-      const selectColumn = type === 'followers' ? 'follower:follower_id' : 'following:following_id';
+      // Se cerchiamo i FOLLOWER di X, cerchiamo chi segue X (following_id = X)
+      // Se cerchiamo i SEGUITI di X, cerchiamo chi X segue (follower_id = X)
+      const isFollowers = type === 'followers';
+      const filterColumn = isFollowers ? 'following_id' : 'follower_id';
+      const joinColumn = isFollowers ? 'follower_id' : 'following_id';
 
       const { data, error } = await supabase
         .from('followers')
         .select(`
-          ${selectColumn} (
+          profile:${joinColumn} (
             id,
             username,
             avatar_url,
             role
           )
         `)
-        .eq(column, userId);
+        .eq(filterColumn, userId);
 
-      if (error) throw error;
-      return data.map((item: any) => type === 'followers' ? item.follower : item.following);
+      if (error) {
+        console.error("[FollowList] Errore:", error);
+        throw error;
+      }
+
+      return (data || [])
+        .map((item: any) => item.profile)
+        .filter(Boolean);
     },
-    enabled: !!userId
+    enabled: !!userId,
+    staleTime: 0 // Forza il ricaricamento quando il modal si apre
   });
 };
