@@ -34,8 +34,8 @@ const BottomNav = () => {
     }
   };
 
-  // Altezza fissa 22px per iOS, ignorando totalmente la home bar
-  const navHeight = isIOS ? '22px' : '44px';
+  // Altezza fissa 35px per iOS, ignorando totalmente la home bar
+  const navHeight = isIOS ? '35px' : '44px';
 
   return (
     <div 
