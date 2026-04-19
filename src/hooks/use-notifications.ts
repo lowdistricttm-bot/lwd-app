@@ -9,14 +9,13 @@ export interface Notification {
   id: string;
   user_id: string;
   actor_id: string;
-  type: 'like' | 'comment' | 'vehicle_like' | 'application_status' | 'event_update' | 'event_new' | 'event_open' | 'event_closed' | 'follow' | 'admin_announcement';
+  type: 'like' | 'comment' | 'vehicle_like' | 'application_status' | 'event_update' | 'event_new' | 'event_open' | 'event_closed' | 'follow';
   post_id?: string;
   application_id?: string;
   event_id?: string;
   vehicle_id?: string;
   is_read: boolean;
   created_at: string;
-  content?: string;
   actor?: {
     username: string;
     avatar_url: string;
