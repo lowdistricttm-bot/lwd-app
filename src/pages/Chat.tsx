@@ -128,8 +128,8 @@ const Chat = () => {
 
   if (loadingChat) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
-  // Altezza standardizzata per la barra di input
-  const inputBarHeight = isIOS ? '70px' : '64px';
+  // Altezza uniformata alla BottomNav (50px iOS / 44px altri)
+  const inputBarHeight = isIOS ? '50px' : '44px';
 
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent">
@@ -172,7 +172,7 @@ const Chat = () => {
         </div>
       </nav>
 
-      <main ref={scrollRef} className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] pb-[120px] px-6 overflow-y-auto space-y-6 custom-scrollbar overflow-x-hidden">
+      <main ref={scrollRef} className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] pb-[80px] px-6 overflow-y-auto space-y-6 custom-scrollbar overflow-x-hidden">
         {chatMessages?.map((msg) => {
           const isMe = msg.sender_id === currentUserId;
           const isMention = msg.content.includes('Ti ha menzionato');
@@ -298,12 +298,13 @@ const Chat = () => {
         })}
       </main>
 
-      {/* Barra di Input Uniformata - Stile iOS con icone circolari */}
+      {/* Barra di Input Uniformata alla BottomNav */}
       <div 
-        className="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-3xl border-t border-white/10 z-50"
+        className="fixed bottom-0 left-0 right-0 bg-black border-t border-white/10 z-50"
         style={{ 
           height: inputBarHeight,
-          paddingBottom: isIOS ? 'env(safe-area-inset-bottom)' : '0px'
+          paddingBottom: '0px',
+          marginBottom: '0px'
         }}
       >
         <div className="max-w-2xl mx-auto h-full relative">
@@ -331,7 +332,10 @@ const Chat = () => {
 
           <form 
             onSubmit={handleSend} 
-            className="h-full px-4 flex items-center gap-3"
+            className={cn(
+              "h-full px-4 flex items-center gap-3",
+              isIOS ? "justify-end pb-0" : "justify-center"
+            )}
           >
             <input 
               type="file" 
@@ -345,9 +349,9 @@ const Chat = () => {
             <button 
               type="button" 
               onClick={() => fileInputRef.current?.click()} 
-              className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/20 transition-all shrink-0"
+              className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/20 transition-all shrink-0"
             >
-              <Camera size={20} />
+              <Camera size={16} />
             </button>
 
             <div className="flex-1">
@@ -355,7 +359,7 @@ const Chat = () => {
                 placeholder="Messaggio" 
                 value={message} 
                 onChange={(e) => setMessage(e.target.value)} 
-                className="bg-white/5 border-white/10 rounded-full h-10 px-4 font-medium text-xs focus-visible:ring-0 text-white placeholder:text-zinc-600" 
+                className="bg-white/5 border-white/10 rounded-full h-8 px-4 font-medium text-[11px] focus-visible:ring-0 text-white placeholder:text-zinc-600" 
               />
             </div>
             
@@ -363,14 +367,14 @@ const Chat = () => {
               type="submit" 
               disabled={sendMessage.isPending || (!message.trim() && selectedFiles.length === 0)} 
               className={cn(
-                "w-10 h-10 rounded-full flex items-center justify-center transition-all shrink-0 disabled:opacity-30 shadow-lg",
+                "w-8 h-8 rounded-full flex items-center justify-center transition-all shrink-0 disabled:opacity-30 shadow-lg",
                 (message.trim() || selectedFiles.length > 0) ? "bg-white text-black" : "bg-white/10 text-zinc-500"
               )}
             >
               {sendMessage.isPending ? (
-                <Loader2 size={18} className="animate-spin" />
+                <Loader2 size={14} className="animate-spin" />
               ) : (
-                <Send size={18} strokeWidth={2.5} className="-rotate-12" />
+                <Send size={14} strokeWidth={2.5} className="-rotate-12" />
               )}
             </button>
           </form>
