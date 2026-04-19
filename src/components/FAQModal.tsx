@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { 
   HelpCircle, Car, Calendar, Shield, User, 
-  Camera, MessageSquare, ShieldCheck, Search, ShoppingBag, X
+  Camera, MessageSquare, ShieldCheck, Search, ShoppingBag, X, Settings, ClipboardCheck, Bell
 } from 'lucide-react';
 import { useTranslation } from '@/hooks/use-translation';
 import { useAdmin } from '@/hooks/use-admin';
@@ -19,34 +19,103 @@ const FAQModal = ({ isOpen, onClose }: FAQModalProps) => {
   const { language } = useTranslation();
   const { isAdmin, isStaff, isSupport } = useAdmin();
 
-  const publicFaqs = [
+  const adminFaqs = [
     {
-      category: language === 'it' ? "ESPLORA & DISCOVER" : "EXPLORE & DISCOVER",
-      icon: Search,
+      category: language === 'it' ? "PANNELLO AMMINISTRAZIONE" : "ADMIN PANEL",
+      icon: ShieldCheck,
       items: [
         {
-          q: language === 'it' ? "A cosa serve la sezione Esplora?" : "What is the Explore section for?",
+          q: language === 'it' ? "Come gestisco i ruoli dei membri?" : "How do I manage member roles?",
           a: language === 'it' 
-            ? "È il motore di ricerca del District. Qui puoi trovare nuovi membri, vedere chi è online e scoprire i progetti stance più interessanti della community. Usa la barra di ricerca per trovare amici o profili specifici."
-            : "It's the District's search engine. Here you can find new members, see who's online, and discover the community's most interesting stance projects. Use the search bar to find friends or specific profiles."
+            ? "Dalla Dashboard Admin, vai su 'Gestione Membri'. Qui puoi cercare qualsiasi utente e cambiare il suo grado (es. da Iscritto a Membro Ufficiale o Staff). I ruoli Admin sono protetti e gestiti via database."
+            : "From the Admin Dashboard, go to 'Member Management'. Here you can search for any user and change their rank (e.g., from Subscriber to Official Member or Staff). Admin roles are protected and managed via database."
+        },
+        {
+          q: language === 'it' ? "Configurazione Email Automatiche" : "Automatic Email Configuration",
+          a: language === 'it'
+            ? "In 'Configurazione Email' puoi personalizzare l'oggetto e il corpo dei messaggi che gli utenti ricevono quando la loro candidatura viene approvata o rifiutata. Usa i segnaposto come {{user_name}} per rendere i messaggi dinamici."
+            : "In 'Email Configuration' you can customize the subject and body of messages users receive when their application is approved or rejected. Use placeholders like {{user_name}} to make messages dynamic."
         }
       ]
-    },
+    }
+  ];
+
+  const staffFaqs = [
+    {
+      category: language === 'it' ? "PANNELLO STAFF" : "STAFF PANEL",
+      icon: Shield,
+      items: [
+        {
+          q: language === 'it' ? "Come approvo o rifiuto una candidatura?" : "How do I approve or reject an application?",
+          a: language === 'it'
+            ? "Nella sezione 'Gestione Selezioni', espandi la scheda di un utente per vedere i dettagli del veicolo e le foto. Usa i tasti 'Approva' o 'Nega' per inviare la decisione definitiva. L'utente riceverà istantaneamente una notifica e una email."
+            : "In the 'Manage Applications' section, expand a user's card to see vehicle details and photos. Use the 'Approve' or 'Reject' buttons to send the final decision. The user will instantly receive a notification and an email."
+        },
+        {
+          q: language === 'it' ? "Invio Notifiche Globali" : "Sending Global Notifications",
+          a: language === 'it'
+            ? "Usa il 'Centro Notifiche' per inviare annunci importanti a tutta la community o avvisi mirati a singoli utenti. Puoi scegliere tra diversi livelli di urgenza (Info, Avviso, Importante)."
+            : "Use the 'Notification Center' to send important announcements to the entire community or targeted alerts to individual users. You can choose between different urgency levels (Info, Warning, Important)."
+        }
+      ]
+    }
+  ];
+
+  const supportFaqs = [
+    {
+      category: language === 'it' ? "PANNELLO SUPPORTO" : "SUPPORT PANEL",
+      icon: MessageSquare,
+      items: [
+        {
+          q: language === 'it' ? "Come funziona il sistema di voto?" : "How does the voting system work?",
+          a: language === 'it'
+            ? "Come membro del Supporto, il tuo compito è aiutare lo Staff nella selezione. Nella Dashboard puoi votare 'SI' o 'NO' sui progetti candidati. Il tuo voto non è definitivo ma serve come indicazione per gli Admin/Staff."
+            : "As a Support member, your job is to help the Staff in the selection. In the Dashboard, you can vote 'YES' or 'NO' on candidate projects. Your vote is not final but serves as a guide for Admins/Staff."
+        }
+      ]
+    }
+  ];
+
+  const publicFaqs = [
     {
       category: language === 'it' ? "EVENTI & SELEZIONI" : "EVENTS & SELECTIONS",
       icon: Calendar,
       items: [
         {
-          q: language === 'it' ? "Come ricevo l'esito della selezione?" : "How do I get the selection result?",
+          q: language === 'it' ? "Dove vedo le mie candidature inviate?" : "Where can I see my sent applications?",
           a: language === 'it'
-            ? "Riceverai una notifica push direttamente nell'app e, contemporaneamente, una email ufficiale di conferma o rifiuto. Potrai sempre monitorare lo stato in tempo reale nella tab 'Le mie selezioni' del tuo profilo."
-            : "You will receive a push notification directly in the app and, at the same time, an official confirmation or rejection email. You can always monitor the status in real-time in the 'My Selections' tab of your profile."
+            ? "Puoi monitorare lo stato di tutte le tue candidature direttamente dal tuo Profilo Personale, nella tab 'Le mie selezioni' (icona della cartella). Lì vedrai se la tua richiesta è in attesa, approvata o negata."
+            : "You can monitor the status of all your applications directly from your Personal Profile, in the 'My Selections' tab (folder icon). There you will see if your request is pending, approved, or rejected."
         },
         {
-          q: language === 'it' ? "Candidatura rapida tramite Garage" : "Quick application via Garage",
+          q: language === 'it' ? "Come ricevo l'esito della selezione?" : "How do I get the selection result?",
           a: language === 'it'
-            ? "Per candidarti velocemente, assicurati di avere l'auto nel tuo Garage. Durante l'iscrizione all'evento, potrai richiamare tutti i dati del veicolo con un click, rendendo il processo immediato."
-            : "To apply quickly, make sure you have your car in your Garage. During event registration, you can pull up all vehicle data with one click, making the process immediate."
+            ? "Riceverai una notifica push direttamente nell'app e una email ufficiale. Assicurati di avere le notifiche attive nelle impostazioni del tuo profilo."
+            : "You will receive a push notification directly in the app and an official email. Make sure you have notifications enabled in your profile settings."
+        }
+      ]
+    },
+    {
+      category: language === 'it' ? "IMPOSTAZIONI & ACCOUNT" : "SETTINGS & ACCOUNT",
+      icon: Settings,
+      items: [
+        {
+          q: language === 'it' ? "Come cambio la lingua dell'app?" : "How do I change the app language?",
+          a: language === 'it' 
+            ? "Vai nella tab 'Impostazioni' del tuo profilo e cerca la voce 'Lingua App'. Puoi scegliere tra Italiano e Inglese; l'intera interfaccia e i contenuti si adatteranno istantaneamente."
+            : "Go to the 'Settings' tab of your profile and look for 'App Language'. You can choose between Italian and English; the entire interface and content will adapt instantly."
+        },
+        {
+          q: language === 'it' ? "Privacy della Targa" : "License Plate Privacy",
+          a: language === 'it'
+            ? "Nelle Impostazioni puoi decidere chi può vedere la targa dei tuoi veicoli nel Garage. Se impostata su 'Solo Amministratori', la targa sarà visibile solo allo staff durante le selezioni per gli eventi."
+            : "In Settings, you can decide who can see your vehicle's license plate in the Garage. If set to 'Admins Only', the plate will only be visible to staff during event selections."
+        },
+        {
+          q: language === 'it' ? "Gestione Notifiche" : "Notification Management",
+          a: language === 'it'
+            ? "Puoi verificare lo stato delle notifiche Push ed Email nella sezione Impostazioni. Queste sono fondamentali per ricevere aggiornamenti sui tuoi ordini e sulle selezioni agli eventi."
+            : "You can check the status of Push and Email notifications in the Settings section. These are essential for receiving updates on your orders and event selections."
         }
       ]
     },
@@ -57,14 +126,8 @@ const FAQModal = ({ isOpen, onClose }: FAQModalProps) => {
         {
           q: language === 'it' ? "Come funzionano le Stories?" : "How do Stories work?",
           a: language === 'it' 
-            ? "Le Stories durano 24 ore e sono visibili in cima alla Home. Puoi caricare foto o video dei tuoi momenti nel District. Dopo 24 ore spariranno, ma potrai salvarle nei tuoi 'Highlights' sul profilo."
-            : "Stories last 24 hours and are visible at the top of the Home. You can upload photos or videos of your moments in the District. They disappear after 24h, but you can save them to your 'Highlights' on your profile."
-        },
-        {
-          q: language === 'it' ? "Chi può vedere i miei post?" : "Who can see my posts?",
-          a: language === 'it'
-            ? "Tutti i membri registrati del District possono vedere, commentare e mettere like ai tuoi post nella Bacheca."
-            : "All registered District members can see, comment, and like your posts in the Feed."
+            ? "Le Stories durano 24 ore e sono visibili in cima alla Home. Puoi caricare foto o video. Dopo 24 ore spariranno, ma potrai salvarle nei tuoi 'Highlights' sul profilo."
+            : "Stories last 24 hours and are visible at the top of the Home. You can upload photos or videos. They disappear after 24h, but you can save them to your 'Highlights' on your profile."
         }
       ]
     },
@@ -79,55 +142,8 @@ const FAQModal = ({ isOpen, onClose }: FAQModalProps) => {
             : "The Garage is your business card. It's essential for joining events: staff will evaluate your project based on the photos and info entered here."
         }
       ]
-    },
-    {
-      category: language === 'it' ? "SHOP & ORDINI" : "SHOP & ORDERS",
-      icon: ShoppingBag,
-      items: [
-        {
-          q: language === 'it' ? "Dove trovo i miei acquisti?" : "Where can I find my purchases?",
-          a: language === 'it'
-            ? "Nella sezione 'I miei ordini' del tuo profilo puoi vedere lo storico degli acquisti, lo stato del pagamento e il tracking della spedizione."
-            : "In the 'My Orders' section of your profile, you can see your purchase history, payment status, and shipping tracking."
-        }
-      ]
     }
   ];
-
-  const staffFaqs = [];
-  if (isAdmin || isStaff || isSupport) {
-    const staffItems = [];
-    staffItems.push({
-      q: language === 'it' ? "Come gestisco le Selezioni?" : "How do I manage Applications?",
-      a: language === 'it'
-        ? "Nella Dashboard, vai su 'Gestione Selezioni'. Se sei Admin o Staff puoi approvare/rifiutare (l'utente riceverà App + Email), se sei Support puoi votare per aiutare nella scelta."
-        : "In the Dashboard, go to 'Manage Applications'. If you are Admin or Staff you can approve/reject (user gets App + Email), if you are Support you can vote to help the selection."
-    });
-
-    if (isAdmin || isStaff) {
-      staffItems.push({
-        q: language === 'it' ? "Come invio una Notifica Globale?" : "How do I send a Global Notification?",
-        a: language === 'it'
-          ? "Usa il 'Centro Notifiche' nella Dashboard per inviare annunci che appariranno a tutta la community o a utenti singoli."
-          : "Use the 'Notification Center' in the Dashboard to send announcements to the entire community or individual users."
-      });
-    }
-
-    if (isAdmin) {
-      staffItems.push({
-        q: language === 'it' ? "Come cambio il ruolo di un utente?" : "How do I change a user's role?",
-        a: language === 'it'
-          ? "In 'Gestione Membri' puoi assegnare ruoli come Staff o Support. I ruoli Admin sono gestiti solo via database per sicurezza."
-          : "In 'Member Management' you can assign roles like Staff or Support. Admin roles are managed via database only for security."
-      });
-    }
-
-    staffFaqs.push({
-      category: language === 'it' ? "PANNELLO STAFF" : "STAFF PANEL",
-      icon: ShieldCheck,
-      items: staffItems
-    });
-  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -147,15 +163,16 @@ const FAQModal = ({ isOpen, onClose }: FAQModalProps) => {
         </div>
 
         <div className="p-8 pt-4 space-y-10">
-          {staffFaqs.map((cat, idx) => (
-            <div key={idx} className="space-y-4">
+          {/* Pannello Admin */}
+          {isAdmin && adminFaqs.map((cat, idx) => (
+            <div key={`admin-${idx}`} className="space-y-4">
               <div className="flex items-center gap-2 px-2">
                 <cat.icon size={14} className="text-red-500" />
                 <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-red-500 italic">{cat.category}</h3>
               </div>
               <Accordion type="single" collapsible className="space-y-2">
                 {cat.items.map((item, i) => (
-                  <AccordionItem key={i} value={`staff-${i}`} className="border border-red-500/20 bg-red-500/5 rounded-2xl px-6 overflow-hidden">
+                  <AccordionItem key={i} value={`admin-item-${i}`} className="border border-red-500/20 bg-red-500/5 rounded-2xl px-6 overflow-hidden">
                     <AccordionTrigger className="hover:no-underline py-4 text-[11px] font-black uppercase italic text-left">
                       {item.q}
                     </AccordionTrigger>
@@ -168,8 +185,53 @@ const FAQModal = ({ isOpen, onClose }: FAQModalProps) => {
             </div>
           ))}
 
+          {/* Pannello Staff */}
+          {isStaff && staffFaqs.map((cat, idx) => (
+            <div key={`staff-${idx}`} className="space-y-4">
+              <div className="flex items-center gap-2 px-2">
+                <cat.icon size={14} className="text-orange-500" />
+                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-500 italic">{cat.category}</h3>
+              </div>
+              <Accordion type="single" collapsible className="space-y-2">
+                {cat.items.map((item, i) => (
+                  <AccordionItem key={i} value={`staff-item-${i}`} className="border border-orange-500/20 bg-orange-500/5 rounded-2xl px-6 overflow-hidden">
+                    <AccordionTrigger className="hover:no-underline py-4 text-[11px] font-black uppercase italic text-left">
+                      {item.q}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-zinc-400 text-[10px] font-medium leading-relaxed pb-4">
+                      {item.a}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </div>
+          ))}
+
+          {/* Pannello Support */}
+          {isSupport && supportFaqs.map((cat, idx) => (
+            <div key={`support-${idx}`} className="space-y-4">
+              <div className="flex items-center gap-2 px-2">
+                <cat.icon size={14} className="text-blue-400" />
+                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-400 italic">{cat.category}</h3>
+              </div>
+              <Accordion type="single" collapsible className="space-y-2">
+                {cat.items.map((item, i) => (
+                  <AccordionItem key={i} value={`support-item-${i}`} className="border border-blue-400/20 bg-blue-400/5 rounded-2xl px-6 overflow-hidden">
+                    <AccordionTrigger className="hover:no-underline py-4 text-[11px] font-black uppercase italic text-left">
+                      {item.q}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-zinc-400 text-[10px] font-medium leading-relaxed pb-4">
+                      {item.a}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </div>
+          ))}
+
+          {/* FAQ Pubbliche */}
           {publicFaqs.map((cat, idx) => (
-            <div key={idx} className="space-y-4">
+            <div key={`pub-${idx}`} className="space-y-4">
               <div className="flex items-center gap-2 px-2">
                 <cat.icon size={14} className="text-zinc-500" />
                 <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 italic">{cat.category}</h3>
