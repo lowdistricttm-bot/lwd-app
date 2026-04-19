@@ -13,19 +13,24 @@ export const useWpAuth = () => {
   const loginWithWp = async (usernameOrEmail: string, password: string) => {
     setIsLoading(true);
     try {
-      // 1. PROVA LOGIN DIRETTO (Se la password è già corretta su Supabase)
-      const { data: initialAuth, error: initialError } = await supabase.auth.signInWithPassword({
-        email: usernameOrEmail,
-        password: password,
-      });
+      const isEmail = usernameOrEmail.includes('@');
+      let finalEmail = usernameOrEmail;
 
-      if (!initialError) {
-        await updateProfile(initialAuth.user, usernameOrEmail);
-        return { success: true };
+      // 1. Se è un'email, proviamo il login DIRETTO (veloce)
+      if (isEmail) {
+        const { data: initialAuth, error: initialError } = await supabase.auth.signInWithPassword({
+          email: usernameOrEmail,
+          password: password,
+        });
+
+        if (!initialError) {
+          await updateProfile(initialAuth.user, usernameOrEmail);
+          return { success: true };
+        }
       }
 
-      // 2. SE FALLISCE, AVVIA SINCRONIZZAZIONE (Password cambiata o nuovo utente)
-      console.log("[Auth] Login diretto fallito, sincronizzo con WordPress...");
+      // 2. Se è uno username o se il login diretto è fallito (password cambiata)
+      console.log("[Auth] Avvio sincronizzazione con WordPress...");
       
       const response = await fetch('https://cxjqbxhhslxqpkfcwqhr.supabase.co/functions/v1/sync-wp-auth', {
         method: 'POST',
@@ -39,7 +44,7 @@ export const useWpAuth = () => {
       const syncData = await response.json();
       if (!response.ok) throw new Error(syncData.error || "Credenziali non valide");
 
-      // 3. RIPROVA IL LOGIN DOPO LA SINCRONIZZAZIONE
+      // 3. Login finale con l'email ottenuta
       const { data: finalAuth, error: finalError } = await supabase.auth.signInWithPassword({
         email: syncData.email,
         password: password,
@@ -57,7 +62,6 @@ export const useWpAuth = () => {
     }
   };
 
-  // Funzione interna per non ripetere il codice di aggiornamento profilo
   const updateProfile = async (user: any, inputName: string) => {
     const { data: existingProfile } = await supabase
       .from('profiles')

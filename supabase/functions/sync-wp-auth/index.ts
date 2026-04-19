@@ -33,22 +33,38 @@ serve(async (req) => {
       })
     }
 
-    // 2. Identificazione Email
-    // Proviamo a prenderla dalla risposta di WP, altrimenti se l'input era un'email usiamo quella
+    // 2. Estrazione Email (Cerchiamo ovunque nella risposta di WP)
     const data = wpData.data || wpData;
-    let email = data.user_email || data.email || (data.user ? data.user.user_email : null);
+    const userObj = data.user || data;
     
-    if (!email && username.includes('@')) {
+    let email = userObj.user_email || userObj.email || userObj.user_login;
+    
+    // Se l'input dell'utente era già un'email, usiamo quella come fallback sicuro
+    if ((!email || !email.includes('@')) && username.includes('@')) {
       email = username;
     }
 
-    if (!email) {
-      // Se non abbiamo l'email e l'utente ha usato uno username, dobbiamo dare errore
-      // perché Supabase richiede l'email per l'account.
-      throw new Error("Inserisci la tua EMAIL invece dello username per sincronizzare il cambio password.");
+    // Se ancora non abbiamo l'email (perché l'utente ha usato lo username), 
+    // dobbiamo recuperarla usando il token JWT appena ottenuto
+    if (!email || !email.includes('@')) {
+      const jwt = data.jwt || data.token;
+      if (jwt) {
+        console.log("[sync-wp-auth] Email non trovata, provo recupero via /me...");
+        const meRes = await fetch("https://www.lowdistrict.it/wp-json/wp/v2/users/me", {
+          headers: { 'Authorization': `Bearer ${jwt}` }
+        });
+        if (meRes.ok) {
+          const meData = await meRes.json();
+          email = meData.email;
+        }
+      }
     }
 
-    // 3. Sincronizzazione su Supabase (Admin Mode)
+    if (!email || !email.includes('@')) {
+      throw new Error("Impossibile determinare l'email associata a questo account. Prova ad accedere usando l'email invece dello username.");
+    }
+
+    // 3. Sincronizzazione su Supabase
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -58,7 +74,7 @@ serve(async (req) => {
     const existingUser = users.find(u => u.email?.toLowerCase() === email.toLowerCase())
 
     if (existingUser) {
-      console.log(`[sync-wp-auth] Allineamento password per: ${email}`);
+      console.log(`[sync-wp-auth] Sincronizzazione password per: ${email}`);
       await supabaseAdmin.auth.admin.updateUserById(existingUser.id, { 
         password: password, 
         email_confirm: true 
@@ -69,7 +85,7 @@ serve(async (req) => {
         email,
         password,
         email_confirm: true,
-        user_metadata: { username: username.split('@')[0] }
+        user_metadata: { username: username.includes('@') ? username.split('@')[0] : username }
       })
     }
 
