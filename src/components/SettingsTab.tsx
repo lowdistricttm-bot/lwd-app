@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from './ui/button';
 import { useTranslation, Language } from '@/hooks/use-translation';
+import FAQModal from './FAQModal';
 import { 
   LogOut, 
   Bell, 
@@ -35,6 +36,7 @@ const SettingsTab = () => {
   const { language, setLanguage, t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [platePrivacy, setPlatePrivacy] = useState('private');
+  const [isFAQOpen, setIsFAQOpen] = useState(false);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -140,6 +142,13 @@ const SettingsTab = () => {
           desc: language === 'it' ? "Gestisci visibilità" : "Manage visibility",
           isPrivacy: true,
           iconBg: "bg-green-600"
+        },
+        { 
+          icon: HelpCircle, 
+          label: t.settings?.support || "Centro Assistenza", 
+          desc: language === 'it' ? "FAQ e Supporto Staff" : "FAQ and Staff Support",
+          onClick: () => setIsFAQOpen(true),
+          iconBg: "bg-amber-500"
         },
         { 
           icon: Trash2, 
@@ -271,6 +280,8 @@ const SettingsTab = () => {
           </Button>
         </div>
       </div>
+
+      <FAQModal isOpen={isFAQOpen} onClose={() => setIsFAQOpen(false)} />
     </div>
   );
 };
