@@ -327,10 +327,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
             marginBottom: '0px'
           }}
         >
-          <div className={cn(
-            "h-full px-4 flex w-full max-w-md mx-auto",
-            isIOS ? "items-end pb-0" : "items-center"
-          )}>
+          <div className="h-full px-4 flex w-full max-w-md mx-auto items-center">
             {isOwner && !isHighlight ? (
               <div className="flex items-center justify-around w-full">
                 <button onClick={() => setShowViewers(true)} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-center" : "")}>
@@ -355,7 +352,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
               </div>
             ) : !isHighlight && (
               <div className="flex items-center gap-3 w-full">
-                <form onSubmit={handleReply} className={cn("flex-1 flex gap-2", isIOS ? "mb-2" : "")}>
+                <form onSubmit={handleReply} className="flex-1 flex gap-2">
                   <Input 
                     placeholder={`Rispondi a ${userStories.username}...`}
                     value={replyText}
@@ -374,7 +371,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
                   )}
                 </form>
                 
-                <div className={cn("flex items-center gap-2", isIOS ? "h-[50px] items-center" : "")}>
+                <div className="flex items-center gap-2">
                   <button 
                     onClick={handleLike}
                     className={cn(
