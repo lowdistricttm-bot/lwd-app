@@ -128,8 +128,8 @@ const Chat = () => {
 
   if (loadingChat) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
-  // Altezza standardizzata a 50px per iOS per matchare la BottomNav
-  const navHeight = isIOS ? '50px' : '44px';
+  // Altezza standardizzata per la barra di input
+  const inputBarHeight = isIOS ? '70px' : '64px';
 
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent">
@@ -298,13 +298,12 @@ const Chat = () => {
         })}
       </main>
 
-      {/* Barra di Input Uniformata - Altezza 50px e icone a filo inferiore */}
+      {/* Barra di Input Uniformata - Stile iOS con icone circolari */}
       <div 
         className="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-3xl border-t border-white/10 z-50"
         style={{ 
-          height: navHeight,
-          paddingBottom: '0px',
-          marginBottom: '0px'
+          height: inputBarHeight,
+          paddingBottom: isIOS ? 'env(safe-area-inset-bottom)' : '0px'
         }}
       >
         <div className="max-w-2xl mx-auto h-full relative">
@@ -332,10 +331,7 @@ const Chat = () => {
 
           <form 
             onSubmit={handleSend} 
-            className={cn(
-              "h-full px-4 flex items-end pb-0 gap-3",
-              !isIOS && "items-center"
-            )}
+            className="h-full px-4 flex items-center gap-3"
           >
             <input 
               type="file" 
@@ -349,23 +345,17 @@ const Chat = () => {
             <button 
               type="button" 
               onClick={() => fileInputRef.current?.click()} 
-              className={cn(
-                "text-zinc-400 hover:text-white transition-all shrink-0",
-                isIOS ? "h-[50px] w-8 flex items-center justify-center" : "w-8 h-8"
-              )}
+              className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/20 transition-all shrink-0"
             >
               <Camera size={20} />
             </button>
 
-            <div className="flex-1 relative flex items-end h-full">
+            <div className="flex-1">
               <Input 
                 placeholder="Messaggio" 
                 value={message} 
                 onChange={(e) => setMessage(e.target.value)} 
-                className={cn(
-                  "bg-white/5 border-white/10 rounded-full px-4 font-medium text-xs focus-visible:ring-0 text-white placeholder:text-zinc-600",
-                  isIOS ? "h-8 mb-2" : "h-9"
-                )} 
+                className="bg-white/5 border-white/10 rounded-full h-10 px-4 font-medium text-xs focus-visible:ring-0 text-white placeholder:text-zinc-600" 
               />
             </div>
             
@@ -373,8 +363,8 @@ const Chat = () => {
               type="submit" 
               disabled={sendMessage.isPending || (!message.trim() && selectedFiles.length === 0)} 
               className={cn(
-                "text-white transition-all shrink-0 disabled:opacity-30",
-                isIOS ? "h-[50px] w-8 flex items-center justify-center" : "w-8 h-8"
+                "w-10 h-10 rounded-full flex items-center justify-center transition-all shrink-0 disabled:opacity-30 shadow-lg",
+                (message.trim() || selectedFiles.length > 0) ? "bg-white text-black" : "bg-white/10 text-zinc-500"
               )}
             >
               {sendMessage.isPending ? (
