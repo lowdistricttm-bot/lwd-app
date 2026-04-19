@@ -13,19 +13,26 @@ export const useWpAuth = () => {
   const loginWithWp = async (usernameOrEmail: string, password: string) => {
     setIsLoading(true);
     try {
-      // 1. TENTATIVO DI LOGIN DIRETTO (Veloce, come prima)
-      // Se l'utente ha la password corretta, entra subito.
-      let emailForLogin = usernameOrEmail;
-      
-      // Se è uno username, dobbiamo prima capire l'email (ma proviamo comunque se è già un'email)
-      let { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: usernameOrEmail,
-        password: password,
-      });
+      let authData = null;
+      let finalEmail = usernameOrEmail;
 
-      // 2. SE IL LOGIN FALLISCE (Password cambiata o utente nuovo)
-      if (authError) {
-        console.log("[Auth] Login diretto fallito, avvio sincronizzazione...");
+      // 1. Se l'utente inserisce un'email, proviamo il login DIRETTO (veloce)
+      const isEmail = usernameOrEmail.includes('@');
+      
+      if (isEmail) {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: usernameOrEmail,
+          password: password,
+        });
+        
+        if (!error) {
+          authData = data;
+        }
+      }
+
+      // 2. Se il login diretto fallisce (password cambiata) o se è stato usato uno username
+      if (!authData) {
+        console.log("[Auth] Login diretto non possibile o fallito, avvio sincronizzazione...");
         
         const response = await fetch('https://cxjqbxhhslxqpkfcwqhr.supabase.co/functions/v1/sync-wp-auth', {
           method: 'POST',
@@ -39,7 +46,7 @@ export const useWpAuth = () => {
         const syncData = await response.json();
         if (!response.ok) throw new Error(syncData.error || "Credenziali non valide");
 
-        // 3. RIPROVA IL LOGIN DOPO LA SINCRONIZZAZIONE
+        // 3. Riprova il login con l'email reale ottenuta dalla sincronizzazione
         const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
           email: syncData.email,
           password: password,
@@ -47,10 +54,10 @@ export const useWpAuth = () => {
 
         if (retryError) throw retryError;
         authData = retryData;
-        emailForLogin = syncData.email;
+        finalEmail = syncData.email;
       }
 
-      // 4. AGGIORNAMENTO PROFILO
+      // 4. Aggiornamento Profilo
       if (authData?.user) {
         const { data: existingProfile } = await supabase
           .from('profiles')
@@ -60,7 +67,7 @@ export const useWpAuth = () => {
 
         await supabase.from('profiles').upsert({
           id: authData.user.id,
-          username: existingProfile?.username || (usernameOrEmail.includes('@') ? usernameOrEmail.split('@')[0] : usernameOrEmail),
+          username: existingProfile?.username || (isEmail ? usernameOrEmail.split('@')[0] : usernameOrEmail),
           avatar_url: existingProfile?.avatar_url || DEFAULT_AVATAR,
           cover_url: existingProfile?.cover_url || DEFAULT_COVER,
           updated_at: new Date().toISOString()
