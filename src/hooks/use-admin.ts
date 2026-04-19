@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { showError, showSuccess } from '@/utils/toast';
 
 export type UserRole = 'admin' | 'staff' | 'support' | 'member' | 'subscriber';
+export type AdminNotificationType = 'admin_info' | 'admin_warning' | 'admin_important';
 
 export const useAdmin = () => {
   const queryClient = useQueryClient();
@@ -158,7 +159,7 @@ export const useAdmin = () => {
   });
 
   const sendAdminNotification = useMutation({
-    mutationFn: async ({ targetUserId, content }: { targetUserId: string | 'all', content: string }) => {
+    mutationFn: async ({ targetUserId, content, type }: { targetUserId: string | 'all', content: string, type: AdminNotificationType }) => {
       const { data: { user: adminUser } } = await supabase.auth.getUser();
       if (!adminUser) throw new Error("Non autenticato");
 
@@ -169,7 +170,7 @@ export const useAdmin = () => {
         const notifications = profiles.map(p => ({
           user_id: p.id,
           actor_id: adminUser.id,
-          type: 'admin_announcement',
+          type: type,
           content: content,
           is_read: false
         }));
@@ -180,7 +181,7 @@ export const useAdmin = () => {
         const { error } = await supabase.from('notifications').insert({
           user_id: targetUserId,
           actor_id: adminUser.id,
-          type: 'admin_announcement',
+          type: type,
           content: content,
           is_read: false
         });

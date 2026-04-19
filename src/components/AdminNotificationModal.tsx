@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Bell, Users, User, Loader2, Send, Search, ShieldAlert } from 'lucide-react';
+import { X, Bell, Users, User, Loader2, Send, Search, ShieldAlert, Megaphone, AlertTriangle, Zap } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import { useAdmin } from '@/hooks/use-admin';
+import { useAdmin, AdminNotificationType } from '@/hooks/use-admin';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { cn } from '@/lib/utils';
 
@@ -19,6 +19,7 @@ interface AdminNotificationModalProps {
 const AdminNotificationModal = ({ isOpen, onClose }: AdminNotificationModalProps) => {
   const { allUsers, loadingUsers, sendAdminNotification } = useAdmin();
   const [target, setTarget] = useState<'all' | string>('all');
+  const [notifType, setNotifType] = useState<AdminNotificationType>('admin_info');
   const [message, setMessage] = useState('');
   const [search, setSearch] = useState('');
 
@@ -35,12 +36,19 @@ const AdminNotificationModal = ({ isOpen, onClose }: AdminNotificationModalProps
 
     await sendAdminNotification.mutateAsync({
       targetUserId: target,
-      content: message
+      content: message,
+      type: notifType
     });
     
     setMessage('');
     onClose();
   };
+
+  const typeOptions: { id: AdminNotificationType, label: string, icon: any, color: string }[] = [
+    { id: 'admin_info', label: 'Annuncio', icon: Megaphone, color: 'text-blue-400' },
+    { id: 'admin_warning', label: 'Avviso', icon: AlertTriangle, color: 'text-orange-400' },
+    { id: 'admin_important', label: 'Importante', icon: Zap, color: 'text-red-500' }
+  ];
 
   return (
     <AnimatePresence>
@@ -73,6 +81,28 @@ const AdminNotificationModal = ({ isOpen, onClose }: AdminNotificationModalProps
               </div>
 
               <div className="space-y-6">
+                {/* Tipo Notifica */}
+                <div className="space-y-3">
+                  <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest ml-4">Genere Notifica</Label>
+                  <div className="grid grid-cols-3 gap-2 bg-zinc-900/50 p-1 rounded-full border border-white/5">
+                    {typeOptions.map((opt) => (
+                      <button 
+                        key={opt.id}
+                        type="button"
+                        onClick={() => setNotifType(opt.id)}
+                        className={cn(
+                          "flex items-center justify-center gap-2 py-3 rounded-full text-[9px] font-black uppercase italic transition-all",
+                          notifType === opt.id ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-zinc-300"
+                        )}
+                      >
+                        <opt.icon size={14} className={cn(notifType === opt.id ? "text-black" : opt.color)} />
+                        <span className="hidden sm:inline">{opt.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Destinatario */}
                 <div className="space-y-3">
                   <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest ml-4">Destinatario</Label>
                   <div className="flex bg-zinc-900/50 p-1 rounded-full border border-white/5">

@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Bell, Heart, MessageSquare, ClipboardCheck, User, Loader2, Trash2, Calendar, Car, UserPlus, ShieldCheck } from 'lucide-react';
+import { X, Bell, Heart, MessageSquare, ClipboardCheck, User, Loader2, Trash2, Calendar, Car, UserPlus, ShieldCheck, Megaphone, AlertTriangle, Zap } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/use-notifications';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { formatDistanceToNow } from 'date-fns';
@@ -39,8 +39,6 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
       navigate(`/events?view=${n.event_id}`);
     } else if (n.type === 'follow') {
       navigate(`/profile/${n.actor_id}`);
-    } else if (n.type === 'admin_announcement') {
-      // Gli annunci admin non hanno una destinazione specifica, rimangono nel drawer
     }
   };
 
@@ -57,7 +55,9 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
       case 'comment': return <MessageSquare size={14} className="text-blue-500" />;
       case 'application_status': return <ClipboardCheck size={14} className="text-green-500" />;
       case 'follow': return <UserPlus size={14} className="text-indigo-500" />;
-      case 'admin_announcement': return <ShieldCheck size={14} className="text-white" />;
+      case 'admin_info': return <Megaphone size={14} className="text-blue-400" />;
+      case 'admin_warning': return <AlertTriangle size={14} className="text-orange-400" />;
+      case 'admin_important': return <Zap size={14} className="text-red-500" />;
       default: return <Bell size={14} />;
     }
   };
@@ -79,8 +79,12 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
         return <>SELEZIONI CHIUSE per l'evento: <span className="font-black uppercase text-red-400">{n.event?.title || 'Low District'}</span></>;
       case 'follow':
         return <><span className="font-black">{actorName}</span> ha iniziato a seguirti</>;
-      case 'admin_announcement':
-        return <><span className="font-black text-white uppercase">COMUNICAZIONE:</span> {n.content}</>;
+      case 'admin_info':
+        return <><span className="font-black text-blue-400 uppercase">ANNUNCIO:</span> {n.content}</>;
+      case 'admin_warning':
+        return <><span className="font-black text-orange-400 uppercase">AVVISO:</span> {n.content}</>;
+      case 'admin_important':
+        return <><span className="font-black text-red-500 uppercase">IMPORTANTE:</span> {n.content}</>;
       default: return 'Nuova notifica';
     }
   };
@@ -136,54 +140,57 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
                   <p className="text-[10px] font-black uppercase tracking-widest">Nessuna notifica</p>
                 </div>
               ) : (
-                notifications?.map((n) => (
-                  <div key={n.id} className="relative group">
-                    <button
-                      onClick={() => handleNotificationClick(n)}
-                      className={cn(
-                        "w-full p-4 flex gap-4 text-left transition-all border border-transparent rounded-2xl",
-                        !n.is_read ? "bg-white/10 border-white/10" : "bg-black/20 hover:bg-white/5",
-                        n.type === 'admin_announcement' && "border-white/20 bg-white/5"
-                      )}
-                    >
-                      <div className="relative shrink-0">
-                        <div className={cn(
-                          "w-10 h-10 bg-black/40 rounded-full overflow-hidden border",
-                          !n.is_read ? "border-white/40" : "border-white/10"
-                        )}>
-                          {n.actor?.avatar_url ? (
-                            <img src={n.actor.avatar_url} className="w-full h-full object-cover" alt="" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-zinc-600"><User size={16} /></div>
-                          )}
+                notifications?.map((n) => {
+                  const isAdminType = n.type.startsWith('admin_');
+                  return (
+                    <div key={n.id} className="relative group">
+                      <button
+                        onClick={() => handleNotificationClick(n)}
+                        className={cn(
+                          "w-full p-4 flex gap-4 text-left transition-all border border-transparent rounded-2xl",
+                          !n.is_read ? "bg-white/10 border-white/10" : "bg-black/20 hover:bg-white/5",
+                          isAdminType && "border-white/20 bg-white/5"
+                        )}
+                      >
+                        <div className="relative shrink-0">
+                          <div className={cn(
+                            "w-10 h-10 bg-black/40 rounded-full overflow-hidden border",
+                            !n.is_read ? "border-white/40" : "border-white/10"
+                          )}>
+                            {n.actor?.avatar_url ? (
+                              <img src={n.actor.avatar_url} className="w-full h-full object-cover" alt="" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-zinc-600"><User size={16} /></div>
+                            )}
+                          </div>
+                          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-zinc-900 border border-white/10 rounded-full flex items-center justify-center">
+                            {getIcon(n.type)}
+                          </div>
                         </div>
-                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-zinc-900 border border-white/10 rounded-full flex items-center justify-center">
-                          {getIcon(n.type)}
+                        <div className="flex-1 min-w-0 pr-8">
+                          <p className={cn(
+                            "text-[11px] leading-tight mb-1",
+                            !n.is_read ? "text-white font-medium" : "text-zinc-400"
+                          )}>
+                            {getMessage(n)}
+                          </p>
+                          <p className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">
+                            {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: it })}
+                          &nbsp;•&nbsp;{isAdminType ? 'Ufficiale' : 'Attività'}
+                          </p>
                         </div>
-                      </div>
-                      <div className="flex-1 min-w-0 pr-8">
-                        <p className={cn(
-                          "text-[11px] leading-tight mb-1",
-                          !n.is_read ? "text-white font-medium" : "text-zinc-400"
-                        )}>
-                          {getMessage(n)}
-                        </p>
-                        <p className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">
-                          {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: it })}
-                        &nbsp;•&nbsp;{n.type === 'admin_announcement' ? 'Ufficiale' : 'Attività'}
-                        </p>
-                      </div>
-                      {!n.is_read && <div className="w-1.5 h-1.5 bg-white rounded-full mt-2 shrink-0 animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
-                    </button>
+                        {!n.is_read && <div className="w-1.5 h-1.5 bg-white rounded-full mt-2 shrink-0 animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
+                      </button>
 
-                    <button
-                      onClick={(e) => handleDelete(e, n.id)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-black/40 rounded-full text-zinc-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
-                    >
-                      <Trash2 size={12} />
-                    </button>
-                  </div>
-                ))
+                      <button
+                        onClick={(e) => handleDelete(e, n.id)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-black/40 rounded-full text-zinc-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  );
+                })
               )}
             </div>
           </motion.div>
