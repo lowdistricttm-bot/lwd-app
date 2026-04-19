@@ -323,8 +323,9 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           )}
         </div>
 
-        {/* Footer Controls - Allineato con BottomNav */}
+        {/* Footer Controls - Ottimizzato con Key univoca per reattività istantanea */}
         <div 
+          key={`footer-${userStories.user_id}-${isOwner}`}
           className="absolute bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-3xl border-t border-white/10"
           style={{ 
             height: footerHeight,
@@ -333,11 +334,10 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           }}
         >
           <div className="h-full px-4 flex w-full max-w-md mx-auto items-center">
-            {/* Aspettiamo che l'auth sia caricata per evitare flicker */}
             {!isAuthLoading && (
               <>
                 {isOwner && !isHighlight ? (
-                  <div className="flex items-center justify-around w-full">
+                  <div className="flex items-center justify-around w-full animate-in fade-in duration-300">
                     <button onClick={() => setShowViewers(true)} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-end pb-1" : "h-full justify-center")}>
                       <Eye size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-white transition-colors" />
                       <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Attività</span>
@@ -359,7 +359,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
                     </button>
                   </div>
                 ) : !isHighlight && (
-                  <div className={cn("flex items-center gap-3 w-full h-full", isIOS ? "justify-end pb-1" : "justify-center")}>
+                  <div className={cn("flex items-center gap-3 w-full h-full animate-in fade-in duration-300", isIOS ? "justify-end pb-1" : "justify-center")}>
                     <form onSubmit={handleReply} className="flex-1 flex gap-2">
                       <Input 
                         placeholder={`Rispondi a ${userStories.username}...`}
