@@ -4,24 +4,9 @@ import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from '@/utils/toast';
 
-const WP_AUTH_URL = "https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth";
-
-// Placeholder predefiniti aggiornati
+// Placeholder predefiniti
 const DEFAULT_AVATAR = "https://www.lowdistrict.it/wp-content/uploads/immagine-profilo-sito-new-scaled.jpg";
 const DEFAULT_COVER = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1964&auto=format&fit=crop&sat=-100";
-
-const decodeJwt = (token: string) => {
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-    return JSON.parse(jsonPayload);
-  } catch (e) {
-    return null;
-  }
-};
 
 export const useWpAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -29,54 +14,35 @@ export const useWpAuth = () => {
   const loginWithWp = async (usernameOrEmail: string, password: string) => {
     setIsLoading(true);
     try {
-      // 1. Autenticazione su WordPress
-      const response = await fetch(WP_AUTH_URL, {
+      // 1. Chiamata alla Edge Function per sincronizzare le password
+      // Usiamo l'URL completo come richiesto dalle linee guida per le Edge Functions
+      const response = await fetch('https://cxjqbxhhslxqpkfcwqhr.supabase.co/functions/v1/sync-wp-auth', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4anFieGhoc2x4cXBrZmN3cWhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMDQyMjcsImV4cCI6MjA5MTU4MDIyN30.O6UODSJpjjgcffUR8l4FDB5B28Qn1BdfQ3Cf2nprD88"
+        },
         body: JSON.stringify({ username: usernameOrEmail, password }),
       });
 
-      const rawData = await response.json();
-      if (!response.ok) throw new Error(rawData.message || "Credenziali non valide.");
+      const syncData = await response.json();
 
-      const data = rawData.data || rawData;
-      const jwt = data.jwt;
-      const decoded = decodeJwt(jwt);
-      
-      const wpId = decoded?.id?.toString() || data.user_id?.toString();
-      const realEmail = decoded?.email || data.user_email || data.email;
-      const wpUsername = decoded?.username || data.user_login || usernameOrEmail;
+      if (!response.ok) {
+        throw new Error(syncData.error || "Errore durante la sincronizzazione dell'account.");
+      }
 
-      if (!realEmail || !wpId) throw new Error("Dati incompleti da WordPress.");
+      const realEmail = syncData.email;
+      const wpId = syncData.wp_id;
 
-      localStorage.setItem('wp-jwt', jwt);
-
-      // 2. Login su Supabase
-      let { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      // 2. Ora che la password è sincronizzata, eseguiamo il login standard su Supabase
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: realEmail,
         password: password,
       });
 
-      // 3. Se l'utente non esiste (perché abbiamo resettato il DB), lo creiamo
-      if (authError && (authError.status === 400 || authError.status === 422)) {
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email: realEmail,
-          password: password,
-          options: { data: { username: wpUsername } }
-        });
-        
-        if (!signUpError) {
-          const retry = await supabase.auth.signInWithPassword({ email: realEmail, password: password });
-          authData = retry.data;
-          authError = retry.error;
-        } else {
-          throw signUpError;
-        }
-      }
-
       if (authError) throw authError;
 
-      // 4. Creazione/Aggiornamento Profilo con Placeholder se nuovi
+      // 3. Creazione/Aggiornamento Profilo Pubblico
       if (authData?.user) {
         // Verifichiamo se il profilo esiste già per non sovrascrivere foto esistenti
         const { data: existingProfile } = await supabase
@@ -87,7 +53,7 @@ export const useWpAuth = () => {
 
         await supabase.from('profiles').upsert({
           id: authData.user.id,
-          username: wpUsername,
+          username: usernameOrEmail.includes('@') ? (existingProfile as any)?.username || usernameOrEmail.split('@')[0] : usernameOrEmail,
           wp_id: wpId,
           avatar_url: existingProfile?.avatar_url || DEFAULT_AVATAR,
           cover_url: existingProfile?.cover_url || DEFAULT_COVER,
