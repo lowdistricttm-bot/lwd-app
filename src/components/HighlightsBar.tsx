@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useHighlights } from '@/hooks/use-highlights';
-import { Loader2, MoreVertical, Edit2, Trash2, X, Check } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { Loader2, Edit2, Trash2, X, Check } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
 import { supabase } from "@/integrations/supabase/client";
 import StoryViewer from './StoryViewer';
 import { Input } from './ui/input';
@@ -52,13 +52,13 @@ const HighlightsBar = ({ userId, isOwnProfile }: HighlightsBarProps) => {
 
   const formattedHighlights = highlights?.map(h => ({
     user_id: h.user_id,
-    highlight_id: h.id, // Passiamo l'ID della raccolta per permettere la rimozione singola
+    highlight_id: h.id,
     username: h.title,
     avatar_url: h.cover_url,
     role: 'highlight',
     items: h.highlight_items?.map((item: any) => ({
       ...item.stories,
-      highlight_item_id: item.id // ID della relazione per rimozione
+      highlight_item_id: item.id
     })).filter(Boolean) || []
   })).filter(h => h.items.length > 0) || [];
 
@@ -73,33 +73,35 @@ const HighlightsBar = ({ userId, isOwnProfile }: HighlightsBarProps) => {
       <div className="flex gap-6 overflow-x-auto no-scrollbar">
         {highlights?.map((h, idx) => (
           <div key={h.id} className="flex flex-col items-center gap-2 shrink-0 group relative">
-            <button 
-              onClick={() => setSelectedHighlightIndex(idx)}
-              className="relative"
-            >
-              <div className="w-16 h-16 rounded-full p-[2px] border border-white/10 group-hover:border-white transition-all duration-500">
+            <div className="relative">
+              {/* Main trigger area */}
+              <div 
+                onClick={() => setSelectedHighlightIndex(idx)}
+                className="w-16 h-16 rounded-full p-[2px] border border-white/10 group-hover:border-white transition-all duration-500 cursor-pointer"
+              >
                 <div className="w-full h-full rounded-full overflow-hidden bg-zinc-900">
                   <img src={h.cover_url} className="w-full h-full object-cover" alt={h.title} />
                 </div>
               </div>
               
+              {/* Admin actions - now siblings of the trigger, not children */}
               {isOwnProfile && !editingId && (
-                <div className="absolute -top-1 -right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute -top-1 -right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                   <button 
                     onClick={(e) => handleStartEdit(e, h)}
-                    className="w-6 h-6 bg-white text-black rounded-full flex items-center justify-center shadow-xl"
+                    className="w-6 h-6 bg-white text-black rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-transform"
                   >
                     <Edit2 size={10} />
                   </button>
                   <button 
                     onClick={(e) => handleDelete(e, h.id)}
-                    className="w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center shadow-xl"
+                    className="w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-transform"
                   >
                     <Trash2 size={10} />
                   </button>
                 </div>
               )}
-            </button>
+            </div>
 
             {editingId === h.id ? (
               <div className="flex items-center gap-1 animate-in fade-in zoom-in-95">
