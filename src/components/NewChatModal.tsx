@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from 'react-router-dom';
 import { useAdmin } from '@/hooks/use-admin';
 import { useBodyLock } from '@/hooks/use-body-lock';
+import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
 
 interface NewChatModalProps {
@@ -17,6 +18,7 @@ interface NewChatModalProps {
 
 const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { canVote } = useAdmin();
   const [search, setSearch] = useState('');
   const [results, setResults] = useState<any[]>([]);
@@ -70,6 +72,10 @@ const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
   const handleStartChat = (user: any) => {
     onClose();
     navigate(`/chat/${user.id}`);
+  };
+
+  const getRoleLabel = (role: string) => {
+    return t.profile.roles[role] || t.profile.roles.member;
   };
 
   return (
@@ -146,7 +152,7 @@ const NewChatModal = ({ isOpen, onClose }: NewChatModalProps) => {
                           {user.is_admin && <ShieldCheck size={12} className="text-white" />}
                         </div>
                         <p className="text-[8px] text-zinc-400 font-bold uppercase tracking-widest">
-                          {user.role === 'subscriber' ? 'Iscritto' : 'Membro Ufficiale'}
+                          {getRoleLabel(user.role)}
                         </p>
                       </div>
                       <div className="flex items-center gap-2 text-zinc-600 group-hover:text-white transition-colors">
