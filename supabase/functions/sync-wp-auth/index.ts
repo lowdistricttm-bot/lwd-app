@@ -33,35 +33,34 @@ serve(async (req) => {
       })
     }
 
-    // 2. Estrazione Email (Cerchiamo ovunque nella risposta di WP)
+    // 2. Estrazione Email
+    let email = null;
     const data = wpData.data || wpData;
-    const userObj = data.user || data;
-    
-    let email = userObj.user_email || userObj.email || userObj.user_login;
-    
-    // Se l'input dell'utente era già un'email, usiamo quella come fallback sicuro
-    if ((!email || !email.includes('@')) && username.includes('@')) {
-      email = username;
-    }
+    const jwt = data.jwt || data.token;
 
-    // Se ancora non abbiamo l'email (perché l'utente ha usato lo username), 
-    // dobbiamo recuperarla usando il token JWT appena ottenuto
-    if (!email || !email.includes('@')) {
-      const jwt = data.jwt || data.token;
-      if (jwt) {
-        console.log("[sync-wp-auth] Email non trovata, provo recupero via /me...");
-        const meRes = await fetch("https://www.lowdistrict.it/wp-json/wp/v2/users/me", {
-          headers: { 'Authorization': `Bearer ${jwt}` }
-        });
-        if (meRes.ok) {
-          const meData = await meRes.json();
-          email = meData.email;
-        }
+    // Prova 1: Cerca nei campi comuni della risposta
+    email = data.user_email || data.email || (data.user ? (data.user.user_email || data.user.email) : null);
+
+    // Prova 2: Se abbiamo un JWT, proviamo a decodificarlo (l'email è spesso nel payload)
+    if (!email && jwt) {
+      try {
+        const base64Url = jwt.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const payload = JSON.parse(atob(base64));
+        email = payload.email || payload.user_email || (payload.user ? payload.user.email : null);
+        console.log("[sync-wp-auth] Email estratta da JWT:", email);
+      } catch (e) {
+        console.error("[sync-wp-auth] Errore decodifica JWT:", e.message);
       }
     }
 
-    if (!email || !email.includes('@')) {
-      throw new Error("Impossibile determinare l'email associata a questo account. Prova ad accedere usando l'email invece dello username.");
+    // Prova 3: Se l'input dell'utente era già un'email, usiamo quella
+    if (!email && username.includes('@')) {
+      email = username;
+    }
+
+    if (!email) {
+      throw new Error("Impossibile trovare l'email associata. Per favore, effettua il primo accesso usando l'EMAIL invece dello username.");
     }
 
     // 3. Sincronizzazione su Supabase
@@ -74,7 +73,7 @@ serve(async (req) => {
     const existingUser = users.find(u => u.email?.toLowerCase() === email.toLowerCase())
 
     if (existingUser) {
-      console.log(`[sync-wp-auth] Sincronizzazione password per: ${email}`);
+      console.log(`[sync-wp-auth] Aggiornamento password per: ${email}`);
       await supabaseAdmin.auth.admin.updateUserById(existingUser.id, { 
         password: password, 
         email_confirm: true 

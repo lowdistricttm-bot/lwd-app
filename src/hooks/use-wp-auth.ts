@@ -14,8 +14,7 @@ export const useWpAuth = () => {
     setIsLoading(true);
     try {
       const isEmail = usernameOrEmail.includes('@');
-      let finalEmail = usernameOrEmail;
-
+      
       // 1. Se è un'email, proviamo il login DIRETTO (veloce)
       if (isEmail) {
         const { data: initialAuth, error: initialError } = await supabase.auth.signInWithPassword({
@@ -29,7 +28,7 @@ export const useWpAuth = () => {
         }
       }
 
-      // 2. Se è uno username o se il login diretto è fallito (password cambiata)
+      // 2. Se è uno username o se il login diretto è fallito
       console.log("[Auth] Avvio sincronizzazione con WordPress...");
       
       const response = await fetch('https://cxjqbxhhslxqpkfcwqhr.supabase.co/functions/v1/sync-wp-auth', {
