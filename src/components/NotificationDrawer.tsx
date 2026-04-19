@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Bell, Heart, MessageSquare, ClipboardCheck, User, Loader2, Trash2, Calendar, Car, UserPlus } from 'lucide-react';
+import { X, Bell, Heart, MessageSquare, ClipboardCheck, User, Loader2, Trash2, Calendar, Car, UserPlus, ShieldAlert } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/use-notifications';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { formatDistanceToNow } from 'date-fns';
@@ -26,6 +26,13 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
     if (!n.is_read) {
       markAsRead.mutate(n.id);
     }
+    
+    // Se è un annuncio admin, non navighiamo altrove, chiudiamo solo il drawer
+    if (n.type === 'admin_announcement') {
+      onClose();
+      return;
+    }
+
     onClose();
     
     if (n.type === 'like' || n.type === 'comment') {
@@ -50,6 +57,7 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
   const getIcon = (type: string) => {
     if (type.startsWith('event_')) return <Calendar size={14} className="text-purple-500" />;
     switch (type) {
+      case 'admin_announcement': return <ShieldAlert size={14} className="text-white" />;
       case 'like': return <Heart size={14} className="text-red-500 fill-red-500" />;
       case 'vehicle_like': return <Car size={14} className="text-red-500" />;
       case 'comment': return <MessageSquare size={14} className="text-blue-500" />;
@@ -61,6 +69,11 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
 
   const getMessage = (n: Notification) => {
     const actorName = n.actor?.username || 'Membro District';
+    
+    if (n.type === 'admin_announcement') {
+      return <><span className="font-black text-white uppercase italic">AVVISO STAFF:</span> {n.content}</>;
+    }
+
     switch (n.type) {
       case 'like': return <><span className="font-black">{actorName}</span> ha messo like al tuo post</>;
       case 'comment': return <><span className="font-black">{actorName}</span> ha commentato il tuo post</>;
@@ -137,7 +150,8 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
                       onClick={() => handleNotificationClick(n)}
                       className={cn(
                         "w-full p-4 flex gap-4 text-left transition-all border border-transparent rounded-2xl",
-                        !n.is_read ? "bg-white/10 border-white/10" : "bg-black/20 hover:bg-white/5"
+                        !n.is_read ? "bg-white/10 border-white/10" : "bg-black/20 hover:bg-white/5",
+                        n.type === 'admin_announcement' && !n.is_read && "border-white/30 bg-white/15 shadow-[0_0_20px_rgba(255,255,255,0.05)]"
                       )}
                     >
                       <div className="relative shrink-0">
@@ -151,7 +165,10 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
                             <div className="w-full h-full flex items-center justify-center text-zinc-600"><User size={16} /></div>
                           )}
                         </div>
-                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-zinc-900 border border-white/10 rounded-full flex items-center justify-center">
+                        <div className={cn(
+                          "absolute -bottom-1 -right-1 w-5 h-5 border border-white/10 rounded-full flex items-center justify-center",
+                          n.type === 'admin_announcement' ? "bg-white text-black" : "bg-zinc-900"
+                        )}>
                           {getIcon(n.type)}
                         </div>
                       </div>

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import EmailSettingsModal from '@/components/EmailSettingsModal';
+import AdminNotificationModal from '@/components/AdminNotificationModal';
 import { useAdmin } from '@/hooks/use-admin';
 import { 
   Loader2, 
@@ -13,7 +14,8 @@ import {
   Users,
   Mail,
   ShieldCheck,
-  ChevronRight
+  ChevronRight,
+  Bell
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -21,6 +23,7 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { isAdmin, isStaff, isSupport, canVote, checkingAdmin, role } = useAdmin();
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [isNotifModalOpen, setIsNotifModalOpen] = useState(false);
 
   if (checkingAdmin) {
     return (
@@ -51,6 +54,13 @@ const AdminDashboard = () => {
       icon: ClipboardCheck,
       action: () => navigate('/admin/applications'),
       show: true
+    },
+    {
+      title: "Centro Notifiche",
+      desc: "Invia messaggi diretti o annunci a tutta la community",
+      icon: Bell,
+      action: () => setIsNotifModalOpen(true),
+      show: isAdmin === true
     },
     {
       title: "Gestione Membri",
@@ -110,7 +120,12 @@ const AdminDashboard = () => {
         </div>
       </main>
 
-      {isAdmin === true && <EmailSettingsModal isOpen={isEmailModalOpen} onClose={() => setIsEmailModalOpen(false)} />}
+      {isAdmin === true && (
+        <>
+          <EmailSettingsModal isOpen={isEmailModalOpen} onClose={() => setIsEmailModalOpen(false)} />
+          <AdminNotificationModal isOpen={isNotifModalOpen} onClose={() => setIsNotifModalOpen(false)} />
+        </>
+      )}
     </div>
   );
 };
