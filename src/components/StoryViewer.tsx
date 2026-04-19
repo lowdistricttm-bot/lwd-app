@@ -8,6 +8,7 @@ import { useStories, useStoryViews } from '@/hooks/use-stories';
 import { useMessages } from '@/hooks/use-messages';
 import { useAdmin } from '@/hooks/use-admin';
 import { useBodyLock } from '@/hooks/use-body-lock';
+import { supabase } from "@/integrations/supabase/client";
 import { Input } from './ui/input';
 import { showSuccess, showError } from '@/utils/toast';
 import ShareStoryModal from './ShareStoryModal';
@@ -21,7 +22,7 @@ interface StoryViewerProps {
   allStories: any[];
   initialUserIndex: number;
   onClose: () => void;
-  currentUserId: string | null; // Passato dal genitore per evitare caricamenti asincroni e flickering
+  currentUserId: string | null;
 }
 
 const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: StoryViewerProps) => {
@@ -32,8 +33,8 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   
-  const [isMuted, setIsMuted] = useState(true);
-  const [showMuteHint, setShowMuteHint] = useState(true);
+  // Audio attivo di default come richiesto
+  const [isMuted, setIsMuted] = useState(false);
   
   const [replyText, setReplyText] = useState('');
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -59,25 +60,19 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   const currentStory = userStories?.items[currentIndex];
   const isVideo = currentStory?.image_url.match(/\.(mp4|webm|ogg|mov)$/i) || currentStory?.image_url.includes('video');
   
-  // Calcolo immediato della proprietà
   const isOwner = currentUserId !== null && currentUserId === userStories?.user_id;
   const isHighlight = userStories?.role === 'highlight';
 
   const { data: views } = useStoryViews(isOwner ? currentStory?.id : null);
 
+  // Reset stati al cambio storia
   useEffect(() => {
     setProgress(0);
     setIsMediaLoading(true);
     setIsLiked(false);
-    if (isMuted && isVideo) {
-      setShowMuteHint(true);
-      const timer = setTimeout(() => setShowMuteHint(false), 3000);
-      return () => clearTimeout(timer);
-    } else {
-      setShowMuteHint(false);
-    }
-  }, [currentStory?.id, userIndex, isVideo, isMuted]);
+  }, [currentStory?.id, userIndex]);
 
+  // Registrazione visualizzazione
   useEffect(() => {
     if (currentStory?.id && currentUserId && !isOwner && !isHighlight) {
       recordView.mutate(currentStory.id);
@@ -105,6 +100,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
     }
   }, [currentIndex, userIndex, allStories]);
 
+  // Gestione progresso per immagini (10 secondi)
   useEffect(() => {
     if (isVideo || isShareModalOpen || isHighlightModalOpen || isMentionModalOpen || showViewers || !currentStory || isMediaLoading) return;
 
@@ -128,6 +124,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
     }
   }, [progress, isVideo, handleNext]);
 
+  // Sincronizzazione barra progresso con il tempo reale del video
   const handleVideoTimeUpdate = () => {
     if (videoRef.current && !isShareModalOpen && !isHighlightModalOpen && !isMentionModalOpen && !showViewers) {
       const p = (videoRef.current.currentTime / videoRef.current.duration) * 100;
@@ -138,7 +135,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   const toggleMute = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setIsMuted(!isMuted);
-    setShowMuteHint(false);
   };
 
   const handleLike = async () => {
@@ -220,6 +216,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
       <div className="relative w-full h-full md:h-[85vh] md:w-[420px] md:aspect-[9/16] bg-black md:rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl md:border md:border-white/10">
         
+        {/* Progress Bars */}
         <div className="absolute top-[calc(1rem+env(safe-area-inset-top))] md:top-6 left-4 right-4 z-50 flex gap-1.5">
           {userStories.items.map((_, i) => (
             <div key={i} className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden">
@@ -231,6 +228,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           ))}
         </div>
 
+        {/* Header */}
         <div className="absolute top-[calc(2.5rem+env(safe-area-inset-top))] md:top-12 left-4 right-4 z-50 flex items-center justify-between">
           <button onClick={handleProfileClick} className="flex items-center gap-3 group text-left">
             <div className="w-10 h-10 rounded-full border-2 border-white/20 overflow-hidden bg-zinc-800 group-hover:border-white transition-all">
@@ -252,6 +250,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </div>
         </div>
 
+        {/* Reshare Badge */}
         {currentStory.reshared_from && (
           <div className="absolute top-[calc(6.5rem+env(safe-area-inset-top))] md:top-28 left-4 z-50">
             <div className="bg-black/40 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-full flex items-center gap-2">
@@ -261,42 +260,55 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </div>
         )}
 
+        {/* Tap Areas */}
         <div className="absolute inset-0 z-20 flex">
           <div className="w-1/3 h-full cursor-pointer" onClick={handlePrev} />
           <div className="w-2/3 h-full cursor-pointer" onClick={handleNext} />
         </div>
 
+        {/* Media Container */}
         <div className="flex-1 relative flex items-center justify-center bg-black">
           {isMediaLoading && (
             <div className="absolute inset-0 flex items-center justify-center z-10">
               <Loader2 className="animate-spin text-white/20" size={40} />
             </div>
           )}
-
-          <AnimatePresence>
-            {isVideo && isMuted && showMuteHint && !isMediaLoading && (
-              <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="absolute z-30 bg-black/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 flex items-center gap-2 pointer-events-none">
-                <VolumeX size={14} className="text-white" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-white">Tocca per l'audio</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
           
           {isVideo ? (
-            <video ref={videoRef} key={currentStory.id} src={currentStory.image_url} className="w-full h-full object-contain" autoPlay playsInline muted={isMuted} onLoadedData={() => setIsMediaLoading(false)} onTimeUpdate={handleVideoTimeUpdate} onEnded={handleNext} onError={() => { setIsMediaLoading(false); handleNext(); }} />
+            <video 
+              ref={videoRef} 
+              key={currentStory.id} 
+              src={currentStory.image_url} 
+              className="w-full h-full object-contain" 
+              autoPlay 
+              playsInline 
+              muted={isMuted} 
+              onCanPlay={() => setIsMediaLoading(false)}
+              onWaiting={() => setIsMediaLoading(true)}
+              onPlaying={() => setIsMediaLoading(false)}
+              onTimeUpdate={handleVideoTimeUpdate} 
+              onEnded={handleNext} 
+              onError={() => { setIsMediaLoading(false); handleNext(); }} 
+            />
           ) : (
-            <img key={currentStory.id} src={currentStory.image_url} className="w-full h-full object-contain" alt="Story" onLoad={() => setIsMediaLoading(false)} onError={() => { setIsMediaLoading(false); handleNext(); }} />
+            <img 
+              key={currentStory.id} 
+              src={currentStory.image_url} 
+              className="w-full h-full object-contain" 
+              alt="Story" 
+              onLoad={() => setIsMediaLoading(false)} 
+              onError={() => { setIsMediaLoading(false); handleNext(); }} 
+            />
           )}
         </div>
 
-        {/* Footer Controls - Logica di visualizzazione istantanea basata su isOwner */}
+        {/* Footer */}
         <div 
           className="absolute bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-3xl border-t border-white/10"
           style={{ height: footerHeight, paddingBottom: '0px', marginBottom: '0px' }}
         >
           <div className="h-full px-4 flex w-full max-w-md mx-auto items-center">
             {isOwner && !isHighlight ? (
-              /* BARRA PROPRIETARIO: Solo se isOwner è TRUE */
               <div className="flex items-center justify-around w-full">
                 <button onClick={() => setShowViewers(true)} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-end pb-1" : "h-full justify-center")}>
                   <Eye size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-white transition-colors" />
@@ -315,8 +327,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                   <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-red-500">Elimina</span>
                 </button>
               </div>
-            ) : (!isOwner && !isHighlight) ? (
-              /* BARRA VISUALIZZATORE: Solo se isOwner è esplicitamente FALSE */
+            ) : !isHighlight && (
               <div className={cn("flex items-center gap-3 w-full h-full", isIOS ? "justify-end pb-1" : "justify-center")}>
                 <form onSubmit={handleReply} className="flex-1 flex gap-2">
                   <Input placeholder={`Rispondi a ${userStories.username}...`} value={replyText} onChange={(e) => setReplyText(e.target.value)} onFocus={() => videoRef.current?.pause()} onBlur={() => videoRef.current?.play()} className="bg-white/5 border-white/10 rounded-full h-8 px-4 text-[10px] font-bold uppercase tracking-widest text-white placeholder:text-zinc-600 focus-visible:ring-white/20" />
@@ -327,10 +338,11 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                   <button onClick={handleShareClick} className="w-8 h-8 bg-white/5 border border-white/10 text-zinc-400 rounded-full flex items-center justify-center hover:text-white hover:bg-white/10 transition-all"><Send size={14} className="-rotate-12" /></button>
                 </div>
               </div>
-            ) : null}
+            )}
           </div>
         </div>
 
+        {/* Viewers Modal */}
         <AnimatePresence>
           {showViewers && (
             <>
@@ -362,6 +374,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
         </AnimatePresence>
       </div>
 
+      {/* Desktop Navigation */}
       <button onClick={handlePrev} className="hidden md:flex fixed left-[calc(50%-320px)] top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-[10000] text-white transition-all border border-white/10 backdrop-blur-md shadow-2xl"><ChevronLeft size={32} /></button>
       <button onClick={handleNext} className="hidden md:flex fixed right-[calc(50%-320px)] top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-[10000] text-white transition-all border border-white/10 backdrop-blur-md shadow-2xl"><ChevronRight size={32} /></button>
 
