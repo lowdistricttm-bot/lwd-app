@@ -33,7 +33,8 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
   const [progress, setProgress] = useState(0);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [isMuted, setIsMuted] = useState(false);
+  // Impostato a true di default per garantire l'autoplay su iOS/Mobile
+  const [isMuted, setIsMuted] = useState(true);
   const [replyText, setReplyText] = useState('');
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isHighlightModalOpen, setIsHighlightModalOpen] = useState(false);
@@ -73,9 +74,9 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
     setProgress(0);
     setIsMediaLoading(true);
     setIsLiked(false);
-  }, [currentStory?.id]);
+  }, [currentStory?.id, userIndex]);
 
-  // Registrazione visualizzazione (solo se non owner e non highlight)
+  // Registrazione visualizzazione
   useEffect(() => {
     if (currentStory?.id && currentUserId && !isOwner && !isHighlight) {
       recordView.mutate(currentStory.id);
@@ -103,23 +104,29 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
     }
   }, [currentIndex, userIndex, allStories]);
 
+  // Timer per le immagini
   useEffect(() => {
     if (isVideo || isShareModalOpen || isHighlightModalOpen || isMentionModalOpen || showViewers || !currentStory || isMediaLoading) return;
 
-    const duration = 10000;
+    const duration = 10000; // 10 secondi per le immagini
     const interval = 50; 
     const increment = (interval / duration) * 100;
 
     const timer = setInterval(() => {
       setProgress((prev) => {
         const next = prev + increment;
-        return next >= 100 ? 100 : next;
+        if (next >= 100) {
+          clearInterval(timer);
+          return 100;
+        }
+        return next;
       });
     }, interval);
 
     return () => clearInterval(timer);
   }, [userIndex, currentIndex, isVideo, isShareModalOpen, isHighlightModalOpen, isMentionModalOpen, showViewers, currentStory, isMediaLoading]);
 
+  // Trigger cambio storia automatica per immagini
   useEffect(() => {
     if (progress >= 100 && !isVideo) {
       handleNext();
@@ -311,6 +318,10 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
               onLoadedData={() => setIsMediaLoading(false)}
               onTimeUpdate={handleVideoTimeUpdate}
               onEnded={handleNext}
+              onError={() => {
+                setIsMediaLoading(false);
+                handleNext();
+              }}
             />
           ) : (
             <img 
@@ -319,11 +330,15 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
               className="w-full h-full object-contain" 
               alt="Story" 
               onLoad={() => setIsMediaLoading(false)}
+              onError={() => {
+                setIsMediaLoading(false);
+                handleNext();
+              }}
             />
           )}
         </div>
 
-        {/* Footer Controls - Ottimizzato con Key univoca per reattività istantanea */}
+        {/* Footer Controls */}
         <div 
           key={`footer-${userStories.user_id}-${isOwner}`}
           className="absolute bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-3xl border-t border-white/10"
