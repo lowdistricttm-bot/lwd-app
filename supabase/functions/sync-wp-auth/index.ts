@@ -14,9 +14,9 @@ serve(async (req) => {
 
   try {
     const { username, password } = await req.json()
-    console.log(`[sync-wp-auth] Inizio sincronizzazione per: ${username}`);
+    console.log(`[sync-wp-auth] Verifica credenziali per: ${username}`);
 
-    // 1. Autenticazione su WordPress per ottenere il JWT
+    // 1. Autenticazione su WordPress
     const wpRes = await fetch("https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth", {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -27,74 +27,59 @@ serve(async (req) => {
     
     if (!wpRes.ok) {
       console.error("[sync-wp-auth] WP Auth fallita:", wpData);
-      return new Response(JSON.stringify({ error: wpData.message || "Credenziali WordPress non valide" }), {
+      return new Response(JSON.stringify({ error: wpData.message || "Credenziali non valide su WordPress" }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 401,
       })
     }
 
-    // Estraiamo il token JWT
-    const jwt = wpData.jwt || wpData.data?.jwt;
-    if (!jwt) {
-      throw new Error("Token JWT non ricevuto da WordPress");
+    // 2. Identificazione Email
+    // Proviamo a prenderla dalla risposta di WP, altrimenti se l'input era un'email usiamo quella
+    const data = wpData.data || wpData;
+    let email = data.user_email || data.email || (data.user ? data.user.user_email : null);
+    
+    if (!email && username.includes('@')) {
+      email = username;
     }
-
-    // 2. Recupero dati utente completi (Email) usando il JWT appena ottenuto
-    console.log("[sync-wp-auth] Recupero dettagli utente tramite /users/me...");
-    const meRes = await fetch("https://www.lowdistrict.it/wp-json/wp/v2/users/me", {
-      headers: { 'Authorization': `Bearer ${jwt}` }
-    });
-
-    if (!meRes.ok) {
-      throw new Error("Impossibile recuperare i dettagli del profilo da WordPress");
-    }
-
-    const meData = await meRes.ok ? await meRes.json() : null;
-    const email = meData?.email;
-    const wpId = meData?.id?.toString();
 
     if (!email) {
-      console.error("[sync-wp-auth] Email non trovata nei dati /me:", meData);
-      throw new Error("L'account WordPress non ha un'email valida associata");
+      // Se non abbiamo l'email e l'utente ha usato uno username, dobbiamo dare errore
+      // perché Supabase richiede l'email per l'account.
+      throw new Error("Inserisci la tua EMAIL invece dello username per sincronizzare il cambio password.");
     }
 
-    // 3. Inizializza Supabase Admin per sincronizzare
+    // 3. Sincronizzazione su Supabase (Admin Mode)
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 4. Sincronizzazione password e utente
-    const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers()
-    if (listError) throw listError
-
+    const { data: { users } } = await supabaseAdmin.auth.admin.listUsers()
     const existingUser = users.find(u => u.email?.toLowerCase() === email.toLowerCase())
 
     if (existingUser) {
-      console.log(`[sync-wp-auth] Aggiornamento password per utente esistente: ${email}`);
-      const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-        existingUser.id,
-        { password: password, email_confirm: true }
-      )
-      if (updateError) throw updateError
+      console.log(`[sync-wp-auth] Allineamento password per: ${email}`);
+      await supabaseAdmin.auth.admin.updateUserById(existingUser.id, { 
+        password: password, 
+        email_confirm: true 
+      })
     } else {
-      console.log(`[sync-wp-auth] Creazione nuovo utente Supabase: ${email}`);
-      const { error: createError } = await supabaseAdmin.auth.admin.createUser({
+      console.log(`[sync-wp-auth] Creazione nuovo utente: ${email}`);
+      await supabaseAdmin.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
-        user_metadata: { username: username }
+        user_metadata: { username: username.split('@')[0] }
       })
-      if (createError) throw createError
     }
 
-    return new Response(JSON.stringify({ success: true, email, wp_id: wpId }), {
+    return new Response(JSON.stringify({ success: true, email }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
 
   } catch (error: any) {
-    console.error("[sync-wp-auth] Errore critico:", error.message);
+    console.error("[sync-wp-auth] Errore:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
