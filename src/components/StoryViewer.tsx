@@ -32,6 +32,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [replyText, setReplyText] = useState('');
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -51,6 +52,11 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
   useEffect(() => {
     const checkIOS = /iPhone|iPad|iPod/.test(window.navigator.userAgent);
     setIsIOS(checkIOS);
+
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setCurrentUserId(user?.id || null);
+      setIsAuthLoading(false);
+    });
   }, []);
 
   const userStories = allStories[userIndex];
@@ -62,20 +68,19 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
 
   const { data: views, isLoading: loadingViews } = useStoryViews(isOwner ? currentStory?.id : null);
 
+  // Reset stato al cambio storia
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setCurrentUserId(user?.id || null);
-    });
-  }, []);
+    setProgress(0);
+    setIsMediaLoading(true);
+    setIsLiked(false);
+  }, [currentStory?.id]);
 
+  // Registrazione visualizzazione (solo se non owner e non highlight)
   useEffect(() => {
     if (currentStory?.id && currentUserId && !isOwner && !isHighlight) {
       recordView.mutate(currentStory.id);
     }
-    setProgress(0);
-    setIsMediaLoading(true);
-    setIsLiked(false);
-  }, [currentStory?.id, currentUserId, isOwner, isHighlight]);
+  }, [currentStory?.id, currentUserId, isOwner, isHighlight, recordView]);
 
   const handleNext = useCallback(() => {
     if (currentIndex < allStories[userIndex].items.length - 1) {
@@ -328,67 +333,72 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
           }}
         >
           <div className="h-full px-4 flex w-full max-w-md mx-auto items-center">
-            {isOwner && !isHighlight ? (
-              <div className="flex items-center justify-around w-full">
-                <button onClick={() => setShowViewers(true)} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-end pb-1" : "h-full justify-center")}>
-                  <Eye size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-white transition-colors" />
-                  <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Attività</span>
-                </button>
-                
-                <button onClick={() => setIsMentionModalOpen(true)} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-end pb-1" : "h-full justify-center")}>
-                  <AtSign size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-white transition-colors" />
-                  <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Menziona</span>
-                </button>
-
-                <button onClick={() => setIsHighlightModalOpen(true)} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-end pb-1" : "h-full justify-center")}>
-                  <Star size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-white transition-colors" />
-                  <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Evidenza</span>
-                </button>
-
-                <button onClick={handleDelete} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-end pb-1" : "h-full justify-center")}>
-                  <Trash2 size={18} className="text-zinc-400 group-hover:text-red-500 transition-colors" />
-                  <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-red-500">Elimina</span>
-                </button>
-              </div>
-            ) : !isHighlight && (
-              <div className={cn("flex items-center gap-3 w-full h-full", isIOS ? "justify-end pb-1" : "justify-center")}>
-                <form onSubmit={handleReply} className="flex-1 flex gap-2">
-                  <Input 
-                    placeholder={`Rispondi a ${userStories.username}...`}
-                    value={replyText}
-                    onChange={(e) => setReplyText(e.target.value)}
-                    onFocus={() => videoRef.current?.pause()}
-                    onBlur={() => videoRef.current?.play()}
-                    className="bg-white/5 border-white/10 rounded-full h-8 px-4 text-[10px] font-bold uppercase tracking-widest text-white placeholder:text-zinc-600 focus-visible:ring-white/20"
-                  />
-                  {replyText.trim() && (
-                    <button 
-                      type="submit"
-                      className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 transition-transform shrink-0 shadow-xl"
-                    >
-                      <Send size={12} />
+            {/* Aspettiamo che l'auth sia caricata per evitare flicker */}
+            {!isAuthLoading && (
+              <>
+                {isOwner && !isHighlight ? (
+                  <div className="flex items-center justify-around w-full">
+                    <button onClick={() => setShowViewers(true)} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-end pb-1" : "h-full justify-center")}>
+                      <Eye size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-white transition-colors" />
+                      <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Attività</span>
                     </button>
-                  )}
-                </form>
-                
-                <div className="flex items-center gap-2">
-                  <button 
-                    onClick={handleLike}
-                    className={cn(
-                      "w-8 h-8 rounded-full flex items-center justify-center transition-all border",
-                      isLiked ? "bg-red-500 border-red-500 text-white" : "bg-white/5 border-white/10 text-zinc-400 hover:text-white hover:bg-white/10"
-                    )}
-                  >
-                    <Heart size={14} fill={isLiked ? "currentColor" : "none"} />
-                  </button>
-                  <button 
-                    onClick={handleShareClick}
-                    className="w-8 h-8 bg-white/5 border border-white/10 text-zinc-400 rounded-full flex items-center justify-center hover:text-white hover:bg-white/10 transition-all"
-                  >
-                    <Send size={14} className="-rotate-12" />
-                  </button>
-                </div>
-              </div>
+                    
+                    <button onClick={() => setIsMentionModalOpen(true)} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-end pb-1" : "h-full justify-center")}>
+                      <AtSign size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-white transition-colors" />
+                      <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Menziona</span>
+                    </button>
+
+                    <button onClick={() => setIsHighlightModalOpen(true)} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-end pb-1" : "h-full justify-center")}>
+                      <Star size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-white transition-colors" />
+                      <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Evidenza</span>
+                    </button>
+
+                    <button onClick={handleDelete} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-end pb-1" : "h-full justify-center")}>
+                      <Trash2 size={18} className="text-zinc-400 group-hover:text-red-500 transition-colors" />
+                      <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-red-500">Elimina</span>
+                    </button>
+                  </div>
+                ) : !isHighlight && (
+                  <div className={cn("flex items-center gap-3 w-full h-full", isIOS ? "justify-end pb-1" : "justify-center")}>
+                    <form onSubmit={handleReply} className="flex-1 flex gap-2">
+                      <Input 
+                        placeholder={`Rispondi a ${userStories.username}...`}
+                        value={replyText}
+                        onChange={(e) => setReplyText(e.target.value)}
+                        onFocus={() => videoRef.current?.pause()}
+                        onBlur={() => videoRef.current?.play()}
+                        className="bg-white/5 border-white/10 rounded-full h-8 px-4 text-[10px] font-bold uppercase tracking-widest text-white placeholder:text-zinc-600 focus-visible:ring-white/20"
+                      />
+                      {replyText.trim() && (
+                        <button 
+                          type="submit"
+                          className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 transition-transform shrink-0 shadow-xl"
+                        >
+                          <Send size={12} />
+                        </button>
+                      )}
+                    </form>
+                    
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={handleLike}
+                        className={cn(
+                          "w-8 h-8 rounded-full flex items-center justify-center transition-all border",
+                          isLiked ? "bg-red-500 border-red-500 text-white" : "bg-white/5 border-white/10 text-zinc-400 hover:text-white hover:bg-white/10"
+                        )}
+                      >
+                        <Heart size={14} fill={isLiked ? "currentColor" : "none"} />
+                      </button>
+                      <button 
+                        onClick={handleShareClick}
+                        className="w-8 h-8 bg-white/5 border border-white/10 text-zinc-400 rounded-full flex items-center justify-center hover:text-white hover:bg-white/10 transition-all"
+                      >
+                        <Send size={14} className="-rotate-12" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
