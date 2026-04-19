@@ -11,25 +11,29 @@ export const useWpAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const loginWithWp = async (usernameOrEmail: string, password: string) => {
+    // Pulizia input
+    const cleanUsername = usernameOrEmail.trim();
+    const cleanPassword = password; // Non facciamo il trim della password perché gli spazi potrebbero farne parte
+
     setIsLoading(true);
     try {
-      const isEmail = usernameOrEmail.includes('@');
+      const isEmail = cleanUsername.includes('@');
       
-      // 1. Se è un'email, proviamo il login DIRETTO (veloce)
+      // 1. Se è un'email, proviamo il login DIRETTO su Supabase (molto più veloce)
       if (isEmail) {
         const { data: initialAuth, error: initialError } = await supabase.auth.signInWithPassword({
-          email: usernameOrEmail,
-          password: password,
+          email: cleanUsername,
+          password: cleanPassword,
         });
 
         if (!initialError) {
-          await updateProfile(initialAuth.user, usernameOrEmail);
+          await updateProfile(initialAuth.user, cleanUsername);
           return { success: true };
         }
       }
 
-      // 2. Se è uno username o se il login diretto è fallito
-      console.log("[Auth] Avvio sincronizzazione con WordPress...");
+      // 2. Se è uno username o se il login diretto è fallito (es. password cambiata su WP)
+      console.log("[Auth] Sincronizzazione con WordPress in corso...");
       
       const response = await fetch('https://cxjqbxhhslxqpkfcwqhr.supabase.co/functions/v1/sync-wp-auth', {
         method: 'POST',
@@ -37,20 +41,20 @@ export const useWpAuth = () => {
           'Content-Type': 'application/json',
           'apikey': "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4anFieGhoc2x4cXBrZmN3cWhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMDQyMjcsImV4cCI6MjA5MTU4MDIyN30.O6UODSJpjjgcffUR8l4FDB5B28Qn1BdfQ3Cf2nprD88"
         },
-        body: JSON.stringify({ username: usernameOrEmail, password }),
+        body: JSON.stringify({ username: cleanUsername, password: cleanPassword }),
       });
 
       const syncData = await response.json();
       if (!response.ok) throw new Error(syncData.error || "Credenziali non valide");
 
-      // 3. Login finale con l'email ottenuta
+      // 3. Login finale su Supabase con l'email ottenuta dalla sincronizzazione
       const { data: finalAuth, error: finalError } = await supabase.auth.signInWithPassword({
         email: syncData.email,
-        password: password,
+        password: cleanPassword,
       });
 
       if (finalError) throw finalError;
-      await updateProfile(finalAuth.user, usernameOrEmail);
+      await updateProfile(finalAuth.user, cleanUsername);
 
       return { success: true };
     } catch (error: any) {
@@ -68,6 +72,7 @@ export const useWpAuth = () => {
       .eq('id', user.id)
       .maybeSingle();
 
+    // Aggiorniamo il profilo locale assicurandoci di non sovrascrivere dati esistenti se non necessario
     await supabase.from('profiles').upsert({
       id: user.id,
       username: existingProfile?.username || (inputName.includes('@') ? inputName.split('@')[0] : inputName),
