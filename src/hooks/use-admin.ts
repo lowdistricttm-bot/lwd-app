@@ -69,7 +69,7 @@ export const useAdmin = () => {
       if (error) throw error;
       return data;
     },
-    enabled: isAdmin
+    enabled: isAdmin || isStaff
   });
 
   const updateStatus = useMutation({
@@ -157,6 +157,42 @@ export const useAdmin = () => {
     onError: (error: any) => showError(error.message)
   });
 
+  const sendAdminNotification = useMutation({
+    mutationFn: async ({ targetUserId, content }: { targetUserId: string | 'all', content: string }) => {
+      const { data: { user: adminUser } } = await supabase.auth.getUser();
+      if (!adminUser) throw new Error("Non autenticato");
+
+      if (targetUserId === 'all') {
+        const { data: profiles } = await supabase.from('profiles').select('id');
+        if (!profiles) return;
+
+        const notifications = profiles.map(p => ({
+          user_id: p.id,
+          actor_id: adminUser.id,
+          type: 'admin_announcement',
+          content: content,
+          is_read: false
+        }));
+
+        const { error } = await supabase.from('notifications').insert(notifications);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('notifications').insert({
+          user_id: targetUserId,
+          actor_id: adminUser.id,
+          type: 'admin_announcement',
+          content: content,
+          is_read: false
+        });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      showSuccess("Notifica inviata correttamente!");
+    },
+    onError: (error: any) => showError(error.message)
+  });
+
   return { 
     role, 
     isAdmin, 
@@ -173,6 +209,7 @@ export const useAdmin = () => {
     deleteApplication,
     allUsers,
     loadingUsers,
-    updateUserRole
+    updateUserRole,
+    sendAdminNotification
   };
 };

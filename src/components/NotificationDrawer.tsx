@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Bell, Heart, MessageSquare, ClipboardCheck, User, Loader2, Trash2, Calendar, Car, UserPlus } from 'lucide-react';
+import { X, Bell, Heart, MessageSquare, ClipboardCheck, User, Loader2, Trash2, Calendar, Car, UserPlus, ShieldCheck } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/use-notifications';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { formatDistanceToNow } from 'date-fns';
@@ -39,6 +39,8 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
       navigate(`/events?view=${n.event_id}`);
     } else if (n.type === 'follow') {
       navigate(`/profile/${n.actor_id}`);
+    } else if (n.type === 'admin_announcement') {
+      // Gli annunci admin non hanno una destinazione specifica, rimangono nel drawer
     }
   };
 
@@ -55,6 +57,7 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
       case 'comment': return <MessageSquare size={14} className="text-blue-500" />;
       case 'application_status': return <ClipboardCheck size={14} className="text-green-500" />;
       case 'follow': return <UserPlus size={14} className="text-indigo-500" />;
+      case 'admin_announcement': return <ShieldCheck size={14} className="text-white" />;
       default: return <Bell size={14} />;
     }
   };
@@ -76,6 +79,8 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
         return <>SELEZIONI CHIUSE per l'evento: <span className="font-black uppercase text-red-400">{n.event?.title || 'Low District'}</span></>;
       case 'follow':
         return <><span className="font-black">{actorName}</span> ha iniziato a seguirti</>;
+      case 'admin_announcement':
+        return <><span className="font-black text-white uppercase">COMUNICAZIONE:</span> {n.content}</>;
       default: return 'Nuova notifica';
     }
   };
@@ -137,7 +142,8 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
                       onClick={() => handleNotificationClick(n)}
                       className={cn(
                         "w-full p-4 flex gap-4 text-left transition-all border border-transparent rounded-2xl",
-                        !n.is_read ? "bg-white/10 border-white/10" : "bg-black/20 hover:bg-white/5"
+                        !n.is_read ? "bg-white/10 border-white/10" : "bg-black/20 hover:bg-white/5",
+                        n.type === 'admin_announcement' && "border-white/20 bg-white/5"
                       )}
                     >
                       <div className="relative shrink-0">
@@ -164,6 +170,7 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
                         </p>
                         <p className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">
                           {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: it })}
+                        &nbsp;•&nbsp;{n.type === 'admin_announcement' ? 'Ufficiale' : 'Attività'}
                         </p>
                       </div>
                       {!n.is_read && <div className="w-1.5 h-1.5 bg-white rounded-full mt-2 shrink-0 animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
