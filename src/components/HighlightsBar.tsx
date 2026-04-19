@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useHighlights } from '@/hooks/use-highlights';
-import { Loader2, Plus } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
+import { supabase } from "@/integrations/supabase/client";
 import StoryViewer from './StoryViewer';
 
 interface HighlightsBarProps {
@@ -14,14 +15,20 @@ interface HighlightsBarProps {
 const HighlightsBar = ({ userId, isOwnProfile }: HighlightsBarProps) => {
   const { highlights, isLoading } = useHighlights(userId);
   const [selectedHighlightIndex, setSelectedHighlightIndex] = useState<number | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setCurrentUserId(user?.id || null);
+    });
+  }, []);
 
   if (isLoading) return <div className="flex gap-6 py-4"><Loader2 className="animate-spin text-zinc-800" size={20} /></div>;
   if (!highlights?.length && !isOwnProfile) return null;
 
-  // Trasformiamo gli highlights nel formato accettato da StoryViewer
   const formattedHighlights = highlights?.map(h => ({
     user_id: h.user_id,
-    username: h.title, // Usiamo il titolo della raccolta come nome
+    username: h.title,
     avatar_url: h.cover_url,
     role: 'highlight',
     items: h.highlight_items?.map((item: any) => item.stories).filter(Boolean) || []
@@ -60,6 +67,7 @@ const HighlightsBar = ({ userId, isOwnProfile }: HighlightsBarProps) => {
             allStories={formattedHighlights}
             initialUserIndex={selectedHighlightIndex}
             onClose={() => setSelectedHighlightIndex(null)}
+            currentUserId={currentUserId}
           />
         )}
       </AnimatePresence>

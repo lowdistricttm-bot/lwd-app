@@ -8,7 +8,6 @@ import { useStories, useStoryViews } from '@/hooks/use-stories';
 import { useMessages } from '@/hooks/use-messages';
 import { useAdmin } from '@/hooks/use-admin';
 import { useBodyLock } from '@/hooks/use-body-lock';
-import { supabase } from "@/integrations/supabase/client";
 import { Input } from './ui/input';
 import { showSuccess, showError } from '@/utils/toast';
 import ShareStoryModal from './ShareStoryModal';
@@ -22,19 +21,19 @@ interface StoryViewerProps {
   allStories: any[];
   initialUserIndex: number;
   onClose: () => void;
+  currentUserId: string | null; // Passato dal genitore per evitare caricamenti asincroni e flickering
 }
 
-const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps) => {
+const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: StoryViewerProps) => {
   const navigate = useNavigate();
   const { t, language } = useTranslation();
   const { role } = useAdmin();
   const [userIndex, setUserIndex] = useState(initialUserIndex);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   
-  // Ripristinato audio a false (non mutato) di default
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [showMuteHint, setShowMuteHint] = useState(true);
   
   const [replyText, setReplyText] = useState('');
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -54,26 +53,30 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
   useEffect(() => {
     const checkIOS = /iPhone|iPad|iPod/.test(window.navigator.userAgent);
     setIsIOS(checkIOS);
-
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setCurrentUserId(user?.id || null);
-    });
   }, []);
 
   const userStories = allStories[userIndex];
   const currentStory = userStories?.items[currentIndex];
   const isVideo = currentStory?.image_url.match(/\.(mp4|webm|ogg|mov)$/i) || currentStory?.image_url.includes('video');
   
-  const isOwner = currentUserId === userStories?.user_id;
+  // Calcolo immediato della proprietà
+  const isOwner = currentUserId !== null && currentUserId === userStories?.user_id;
   const isHighlight = userStories?.role === 'highlight';
 
-  const { data: views, isLoading: loadingViews } = useStoryViews(isOwner ? currentStory?.id : null);
+  const { data: views } = useStoryViews(isOwner ? currentStory?.id : null);
 
   useEffect(() => {
     setProgress(0);
     setIsMediaLoading(true);
     setIsLiked(false);
-  }, [currentStory?.id, userIndex]);
+    if (isMuted && isVideo) {
+      setShowMuteHint(true);
+      const timer = setTimeout(() => setShowMuteHint(false), 3000);
+      return () => clearTimeout(timer);
+    } else {
+      setShowMuteHint(false);
+    }
+  }, [currentStory?.id, userIndex, isVideo, isMuted]);
 
   useEffect(() => {
     if (currentStory?.id && currentUserId && !isOwner && !isHighlight) {
@@ -102,7 +105,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
     }
   }, [currentIndex, userIndex, allStories]);
 
-  // Gestione progresso per immagini
   useEffect(() => {
     if (isVideo || isShareModalOpen || isHighlightModalOpen || isMentionModalOpen || showViewers || !currentStory || isMediaLoading) return;
 
@@ -136,6 +138,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
   const toggleMute = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setIsMuted(!isMuted);
+    setShowMuteHint(false);
   };
 
   const handleLike = async () => {
@@ -269,42 +272,31 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
               <Loader2 className="animate-spin text-white/20" size={40} />
             </div>
           )}
+
+          <AnimatePresence>
+            {isVideo && isMuted && showMuteHint && !isMediaLoading && (
+              <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="absolute z-30 bg-black/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 flex items-center gap-2 pointer-events-none">
+                <VolumeX size={14} className="text-white" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-white">Tocca per l'audio</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
           
           {isVideo ? (
-            <video 
-              ref={videoRef} 
-              key={currentStory.id} 
-              src={currentStory.image_url} 
-              className="w-full h-full object-contain" 
-              autoPlay 
-              playsInline 
-              muted={isMuted} 
-              onLoadedData={() => setIsMediaLoading(false)}
-              onWaiting={() => setIsMediaLoading(true)}
-              onPlaying={() => setIsMediaLoading(false)}
-              onTimeUpdate={handleVideoTimeUpdate} 
-              onEnded={handleNext} 
-              onError={() => { setIsMediaLoading(false); handleNext(); }} 
-            />
+            <video ref={videoRef} key={currentStory.id} src={currentStory.image_url} className="w-full h-full object-contain" autoPlay playsInline muted={isMuted} onLoadedData={() => setIsMediaLoading(false)} onTimeUpdate={handleVideoTimeUpdate} onEnded={handleNext} onError={() => { setIsMediaLoading(false); handleNext(); }} />
           ) : (
-            <img 
-              key={currentStory.id} 
-              src={currentStory.image_url} 
-              className="w-full h-full object-contain" 
-              alt="Story" 
-              onLoad={() => setIsMediaLoading(false)} 
-              onError={() => { setIsMediaLoading(false); handleNext(); }} 
-            />
+            <img key={currentStory.id} src={currentStory.image_url} className="w-full h-full object-contain" alt="Story" onLoad={() => setIsMediaLoading(false)} onError={() => { setIsMediaLoading(false); handleNext(); }} />
           )}
         </div>
 
+        {/* Footer Controls - Logica di visualizzazione istantanea basata su isOwner */}
         <div 
-          key={`footer-${userStories.user_id}-${isOwner}`}
           className="absolute bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-3xl border-t border-white/10"
           style={{ height: footerHeight, paddingBottom: '0px', marginBottom: '0px' }}
         >
           <div className="h-full px-4 flex w-full max-w-md mx-auto items-center">
             {isOwner && !isHighlight ? (
+              /* BARRA PROPRIETARIO: Solo se isOwner è TRUE */
               <div className="flex items-center justify-around w-full">
                 <button onClick={() => setShowViewers(true)} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-end pb-1" : "h-full justify-center")}>
                   <Eye size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-white transition-colors" />
@@ -323,7 +315,8 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
                   <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-red-500">Elimina</span>
                 </button>
               </div>
-            ) : !isHighlight && (
+            ) : (!isOwner && !isHighlight) ? (
+              /* BARRA VISUALIZZATORE: Solo se isOwner è esplicitamente FALSE */
               <div className={cn("flex items-center gap-3 w-full h-full", isIOS ? "justify-end pb-1" : "justify-center")}>
                 <form onSubmit={handleReply} className="flex-1 flex gap-2">
                   <Input placeholder={`Rispondi a ${userStories.username}...`} value={replyText} onChange={(e) => setReplyText(e.target.value)} onFocus={() => videoRef.current?.pause()} onBlur={() => videoRef.current?.play()} className="bg-white/5 border-white/10 rounded-full h-8 px-4 text-[10px] font-bold uppercase tracking-widest text-white placeholder:text-zinc-600 focus-visible:ring-white/20" />
@@ -334,7 +327,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
                   <button onClick={handleShareClick} className="w-8 h-8 bg-white/5 border border-white/10 text-zinc-400 rounded-full flex items-center justify-center hover:text-white hover:bg-white/10 transition-all"><Send size={14} className="-rotate-12" /></button>
                 </div>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
 
@@ -349,9 +342,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
                   <button onClick={() => setShowViewers(false)} className="p-2 text-zinc-500"><X size={24} /></button>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
-                  {loadingViews ? (
-                    <div className="flex justify-center py-10"><Loader2 className="animate-spin text-zinc-500" /></div>
-                  ) : views?.length === 0 ? (
+                  {views?.length === 0 ? (
                     <div className="text-center py-10 opacity-30"><Eye size={40} className="mx-auto mb-2" /><p className="text-[10px] font-black uppercase tracking-widest">Nessuna visualizzazione</p></div>
                   ) : (
                     views?.map((view: any) => (

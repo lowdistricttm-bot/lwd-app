@@ -26,7 +26,6 @@ const Stories = () => {
   const { stories, isLoading, uploadStory } = useStories();
   const { role } = useAdmin();
   
-  // Utilizziamo un solo indice per la coda combinata di tutte le storie (mie + altri)
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -48,7 +47,6 @@ const Stories = () => {
   const myStoriesGroup: any = (stories as any[])?.find((group: any) => group.user_id === currentUser?.id);
   const otherStories: any[] = (stories as any[])?.filter((group: any) => group.user_id !== currentUser?.id) || [];
 
-  // Combina le storie per permettere uno scorrimento automatico e continuo
   const combinedStories = myStoriesGroup ? [myStoriesGroup, ...otherStories] : otherStories;
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -77,14 +75,13 @@ const Stories = () => {
   return (
     <>
       <div className="flex gap-4 overflow-x-auto no-scrollbar py-6 px-6 bg-gradient-to-b from-black via-black/95 to-zinc-950/20 border-b border-white/5">
-        {/* Sezione 'La tua storia' - Solo se l'utente è loggato */}
         {currentUser && (!isSubscriber || myStoriesGroup) && (
           <div className="flex flex-col items-center gap-2 shrink-0">
             <div className="relative">
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" multiple onChange={handleFileSelect} />
               <button 
                 onClick={() => {
-                  if (myStoriesGroup) handleStoryClick(0); // La tua storia è sempre all'indice 0 della coda combinata se esiste
+                  if (myStoriesGroup) handleStoryClick(0);
                   else if (!isSubscriber) fileInputRef.current?.click();
                 }}
                 className={cn(
@@ -116,9 +113,7 @@ const Stories = () => {
         )}
 
         {otherStories.map((userGroup: any, index: number) => {
-          // Calcola il vero indice all'interno dell'array combinato
           const actualIndex = myStoriesGroup ? index + 1 : index;
-          
           return (
             <button key={userGroup.user_id} onClick={() => handleStoryClick(actualIndex)} className="flex flex-col items-center gap-2 shrink-0">
               <div className="w-16 h-16 rounded-full p-[2.5px] bg-gradient-to-tr from-zinc-700 via-zinc-400 to-white">
@@ -132,11 +127,15 @@ const Stories = () => {
         })}
 
         {selectedIndex !== null && (
-          <StoryViewer allStories={combinedStories} initialUserIndex={selectedIndex} onClose={() => setSelectedIndex(null)} />
+          <StoryViewer 
+            allStories={combinedStories} 
+            initialUserIndex={selectedIndex} 
+            onClose={() => setSelectedIndex(null)} 
+            currentUserId={currentUser?.id || null}
+          />
         )}
       </div>
 
-      {/* Modal Invito Accesso per Storie */}
       <AlertDialog open={isAuthModalOpen} onOpenChange={setIsAuthModalOpen}>
         <AlertDialogContent className="bg-zinc-950 border-white/10 rounded-none">
           <AlertDialogHeader>
