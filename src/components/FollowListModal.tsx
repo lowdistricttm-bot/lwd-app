@@ -2,10 +2,11 @@
 
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, ChevronRight, Loader2, Users } from 'lucide-react';
+import { X, User, ChevronRight, Loader2, Users, ShieldCheck } from 'lucide-react';
 import { useFollowList } from '@/hooks/use-follow';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
 
 interface FollowListModalProps {
@@ -18,12 +19,17 @@ interface FollowListModalProps {
 
 const FollowListModal = ({ isOpen, onClose, userId, username, type }: FollowListModalProps) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { data: list, isLoading } = useFollowList(userId, type);
 
   // Blocco dello scroll e del background quando il modal è aperto
   useBodyLock(isOpen);
 
-  const title = type === 'followers' ? 'Follower' : 'Seguiti';
+  const title = type === 'followers' ? t.profile.followers : t.profile.following;
+
+  const getRoleLabel = (role: string) => {
+    return t.profile.roles[role] || t.profile.roles.member;
+  };
 
   return (
     <AnimatePresence>
@@ -86,11 +92,14 @@ const FollowListModal = ({ isOpen, onClose, userId, username, type }: FollowList
                         )}
                       </div>
                       <div className="text-left min-w-0">
-                        <span className="text-sm font-black italic uppercase text-white group-hover:text-white transition-colors truncate block">
-                          {user.username}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm font-black italic uppercase text-white group-hover:text-white transition-colors truncate block">
+                            {user.username}
+                          </span>
+                          {user.role === 'admin' && <ShieldCheck size={12} className="text-white" />}
+                        </div>
                         <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-widest">
-                          {user.role === 'subscriber' ? 'Iscritto' : 'Membro Ufficiale'}
+                          {getRoleLabel(user.role)}
                         </p>
                       </div>
                     </div>
