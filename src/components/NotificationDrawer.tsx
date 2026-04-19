@@ -47,6 +47,15 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
     deleteNotification.mutate(id);
   };
 
+  const getAdminStyles = (type: string) => {
+    switch (type) {
+      case 'admin_info': return { icon: Megaphone, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', label: 'ANNUNCIO' };
+      case 'admin_warning': return { icon: AlertTriangle, color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/20', label: 'AVVISO' };
+      case 'admin_important': return { icon: Zap, color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20', label: 'IMPORTANTE' };
+      default: return null;
+    }
+  };
+
   const getIcon = (type: string) => {
     if (type.startsWith('event_')) return <Calendar size={14} className="text-purple-500" />;
     switch (type) {
@@ -55,9 +64,6 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
       case 'comment': return <MessageSquare size={14} className="text-blue-500" />;
       case 'application_status': return <ClipboardCheck size={14} className="text-green-500" />;
       case 'follow': return <UserPlus size={14} className="text-indigo-500" />;
-      case 'admin_info': return <Megaphone size={14} className="text-blue-400" />;
-      case 'admin_warning': return <AlertTriangle size={14} className="text-orange-400" />;
-      case 'admin_important': return <Zap size={14} className="text-red-500" />;
       default: return <Bell size={14} />;
     }
   };
@@ -79,13 +85,7 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
         return <>SELEZIONI CHIUSE per l'evento: <span className="font-black uppercase text-red-400">{n.event?.title || 'Low District'}</span></>;
       case 'follow':
         return <><span className="font-black">{actorName}</span> ha iniziato a seguirti</>;
-      case 'admin_info':
-        return <><span className="font-black text-blue-400 uppercase">ANNUNCIO:</span> {n.content}</>;
-      case 'admin_warning':
-        return <><span className="font-black text-orange-400 uppercase">AVVISO:</span> {n.content}</>;
-      case 'admin_important':
-        return <><span className="font-black text-red-500 uppercase">IMPORTANTE:</span> {n.content}</>;
-      default: return 'Nuova notifica';
+      default: return n.content || 'Nuova notifica';
     }
   };
 
@@ -141,7 +141,9 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
                 </div>
               ) : (
                 notifications?.map((n) => {
-                  const isAdminType = n.type.startsWith('admin_');
+                  const adminStyles = getAdminStyles(n.type);
+                  const isAdminType = !!adminStyles;
+
                   return (
                     <div key={n.id} className="relative group">
                       <button
@@ -149,34 +151,53 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
                         className={cn(
                           "w-full p-4 flex gap-4 text-left transition-all border border-transparent rounded-2xl",
                           !n.is_read ? "bg-white/10 border-white/10" : "bg-black/20 hover:bg-white/5",
-                          isAdminType && "border-white/20 bg-white/5"
+                          isAdminType && cn("border-white/10", adminStyles.bg)
                         )}
                       >
                         <div className="relative shrink-0">
-                          <div className={cn(
-                            "w-10 h-10 bg-black/40 rounded-full overflow-hidden border",
-                            !n.is_read ? "border-white/40" : "border-white/10"
-                          )}>
-                            {n.actor?.avatar_url ? (
-                              <img src={n.actor.avatar_url} className="w-full h-full object-cover" alt="" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-zinc-600"><User size={16} /></div>
-                            )}
-                          </div>
-                          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-zinc-900 border border-white/10 rounded-full flex items-center justify-center">
-                            {getIcon(n.type)}
-                          </div>
+                          {isAdminType ? (
+                            <div className={cn(
+                              "w-10 h-10 rounded-xl flex items-center justify-center border shadow-lg",
+                              adminStyles.color,
+                              adminStyles.border,
+                              "bg-black/40"
+                            )}>
+                              <adminStyles.icon size={20} strokeWidth={2.5} />
+                            </div>
+                          ) : (
+                            <>
+                              <div className={cn(
+                                "w-10 h-10 bg-black/40 rounded-full overflow-hidden border",
+                                !n.is_read ? "border-white/40" : "border-white/10"
+                              )}>
+                                {n.actor?.avatar_url ? (
+                                  <img src={n.actor.avatar_url} className="w-full h-full object-cover" alt="" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-zinc-600"><User size={16} /></div>
+                                )}
+                              </div>
+                              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-zinc-900 border border-white/10 rounded-full flex items-center justify-center">
+                                {getIcon(n.type)}
+                              </div>
+                            </>
+                          )}
                         </div>
+
                         <div className="flex-1 min-w-0 pr-8">
+                          {isAdminType && (
+                            <p className={cn("text-[8px] font-black uppercase tracking-[0.2em] mb-1", adminStyles.color)}>
+                              {adminStyles.label}
+                            </p>
+                          )}
                           <p className={cn(
-                            "text-[11px] leading-tight mb-1",
+                            "text-[11px] leading-tight mb-1.5",
                             !n.is_read ? "text-white font-medium" : "text-zinc-400"
                           )}>
                             {getMessage(n)}
                           </p>
                           <p className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">
                             {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: it })}
-                          &nbsp;•&nbsp;{isAdminType ? 'Ufficiale' : 'Attività'}
+                            &nbsp;•&nbsp;{isAdminType ? 'Ufficiale' : 'Attività'}
                           </p>
                         </div>
                         {!n.is_read && <div className="w-1.5 h-1.5 bg-white rounded-full mt-2 shrink-0 animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
