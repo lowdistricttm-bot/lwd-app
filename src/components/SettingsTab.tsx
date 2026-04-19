@@ -144,19 +144,24 @@ const SettingsTab = () => {
           iconBg: "bg-green-600"
         },
         { 
-          icon: HelpCircle, 
-          label: t.settings?.support || "Centro Assistenza", 
-          desc: language === 'it' ? "FAQ e Supporto Staff" : "FAQ and Staff Support",
-          onClick: () => setIsFAQOpen(true),
-          iconBg: "bg-amber-500"
-        },
-        { 
           icon: Trash2, 
           label: t.settings?.deleteAccount || "Elimina Account", 
           desc: language === 'it' ? "Info cancellazione" : "Deletion info",
           onClick: () => alert("Contatta info@lowdistrict.it per la cancellazione."),
           action: <Info size={16} className="text-zinc-600" />,
           iconBg: "bg-red-500"
+        }
+      ]
+    },
+    {
+      title: "Supporto / FAQ",
+      items: [
+        { 
+          icon: HelpCircle, 
+          label: t.settings?.support || "Centro Assistenza", 
+          desc: language === 'it' ? "FAQ e Supporto Staff" : "FAQ and Staff Support",
+          onClick: () => setIsFAQOpen(true),
+          iconBg: "bg-amber-500"
         }
       ]
     }
