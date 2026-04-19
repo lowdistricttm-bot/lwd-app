@@ -45,7 +45,6 @@ export const useHighlights = (userId?: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Accedi per creare evidenze");
 
-      // 1. Crea la raccolta
       const { data: highlight, error: hError } = await supabase
         .from('highlights')
         .insert([{ user_id: user.id, title, cover_url: coverUrl }])
@@ -54,7 +53,6 @@ export const useHighlights = (userId?: string) => {
 
       if (hError) throw hError;
 
-      // 2. Aggiungi la prima storia
       const { error: iError } = await supabase
         .from('highlight_items')
         .insert([{ highlight_id: highlight.id, story_id: storyId }]);
@@ -87,16 +85,58 @@ export const useHighlights = (userId?: string) => {
     onError: (err: any) => showError(err.message)
   });
 
+  const updateHighlightTitle = useMutation({
+    mutationFn: async ({ id, title }: { id: string, title: string }) => {
+      const { error } = await supabase
+        .from('highlights')
+        .update({ title })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-highlights'] });
+      showSuccess("Titolo aggiornato!");
+    },
+    onError: (err: any) => showError(err.message)
+  });
+
+  const removeFromHighlight = useMutation({
+    mutationFn: async ({ highlightId, storyId }: { highlightId: string, storyId: string }) => {
+      const { error } = await supabase
+        .from('highlight_items')
+        .delete()
+        .eq('highlight_id', highlightId)
+        .eq('story_id', storyId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-highlights'] });
+      showSuccess("Rimosso dai contenuti in evidenza");
+    },
+    onError: (err: any) => showError(err.message)
+  });
+
   const deleteHighlight = useMutation({
     mutationFn: async (id: string) => {
+      // Prima eliminiamo gli item collegati (anche se c'è il cascade, meglio essere espliciti)
+      await supabase.from('highlight_items').delete().eq('highlight_id', id);
       const { error } = await supabase.from('highlights').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-highlights'] });
       showSuccess("Raccolta eliminata");
-    }
+    },
+    onError: (err: any) => showError(err.message)
   });
 
-  return { highlights, isLoading, createHighlight, addToHighlight, deleteHighlight };
+  return { 
+    highlights, 
+    isLoading, 
+    createHighlight, 
+    addToHighlight, 
+    updateHighlightTitle,
+    removeFromHighlight,
+    deleteHighlight 
+  };
 };

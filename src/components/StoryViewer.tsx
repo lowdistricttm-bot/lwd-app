@@ -3,8 +3,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight, Trash2, Loader2, Volume2, VolumeX, Send, Heart, Eye, User, Star, AtSign, RefreshCw } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Trash2, Loader2, Volume2, VolumeX, Send, Heart, Eye, User, Star, AtSign, RefreshCw, BookmarkX } from 'lucide-react';
 import { useStories, useStoryViews } from '@/hooks/use-stories';
+import { useHighlights } from '@/hooks/use-highlights';
 import { useMessages } from '@/hooks/use-messages';
 import { useAdmin } from '@/hooks/use-admin';
 import { useBodyLock } from '@/hooks/use-body-lock';
@@ -33,7 +34,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   
-  // Audio attivo di default come richiesto
   const [isMuted, setIsMuted] = useState(false);
   
   const [replyText, setReplyText] = useState('');
@@ -47,6 +47,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const { deleteStory, recordView } = useStories();
+  const { removeFromHighlight } = useHighlights(currentUserId || undefined);
   const { sendMessage } = useMessages();
   
   useBodyLock(true);
@@ -63,16 +64,14 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   const isOwner = currentUserId !== null && currentUserId === userStories?.user_id;
   const isHighlight = userStories?.role === 'highlight';
 
-  const { data: views } = useStoryViews(isOwner ? currentStory?.id : null);
+  const { data: views } = useStoryViews(isOwner && !isHighlight ? currentStory?.id : null);
 
-  // Reset stati al cambio storia
   useEffect(() => {
     setProgress(0);
     setIsMediaLoading(true);
     setIsLiked(false);
   }, [currentStory?.id, userIndex]);
 
-  // Registrazione visualizzazione
   useEffect(() => {
     if (currentStory?.id && currentUserId && !isOwner && !isHighlight) {
       recordView.mutate(currentStory.id);
@@ -100,7 +99,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
     }
   }, [currentIndex, userIndex, allStories]);
 
-  // Gestione progresso per immagini (10 secondi)
   useEffect(() => {
     if (isVideo || isShareModalOpen || isHighlightModalOpen || isMentionModalOpen || showViewers || !currentStory || isMediaLoading) return;
 
@@ -124,7 +122,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
     }
   }, [progress, isVideo, handleNext]);
 
-  // Sincronizzazione barra progresso con il tempo reale del video
   const handleVideoTimeUpdate = () => {
     if (videoRef.current && !isShareModalOpen && !isHighlightModalOpen && !isMentionModalOpen && !showViewers) {
       const p = (videoRef.current.currentTime / videoRef.current.duration) * 100;
@@ -185,7 +182,22 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
       try {
         await deleteStory.mutateAsync(currentStory.id);
         if (userStories.items.length === 1) handleNext();
-        else setCurrentIndex(prev => Math.min(prev, userStories.items.length - 2));
+        else setCurrentIndex(prev => Math.max(0, prev - 1));
+      } catch (err) {}
+    }
+  };
+
+  const handleRemoveFromHighlight = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isHighlight || !userStories.highlight_id) return;
+    if (confirm("Vuoi rimuovere questa storia dai contenuti in evidenza?")) {
+      try {
+        await removeFromHighlight.mutateAsync({ 
+          highlightId: userStories.highlight_id, 
+          storyId: currentStory.id 
+        });
+        if (userStories.items.length === 1) onClose();
+        else handleNext();
       } catch (err) {}
     }
   };
@@ -216,7 +228,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
       <div className="relative w-full h-full md:h-[85vh] md:w-[420px] md:aspect-[9/16] bg-black md:rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl md:border md:border-white/10">
         
-        {/* Progress Bars */}
         <div className="absolute top-[calc(1rem+env(safe-area-inset-top))] md:top-6 left-4 right-4 z-50 flex gap-1.5">
           {userStories.items.map((_, i) => (
             <div key={i} className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden">
@@ -228,7 +239,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           ))}
         </div>
 
-        {/* Header */}
         <div className="absolute top-[calc(2.5rem+env(safe-area-inset-top))] md:top-12 left-4 right-4 z-50 flex items-center justify-between">
           <button onClick={handleProfileClick} className="flex items-center gap-3 group text-left">
             <div className="w-10 h-10 rounded-full border-2 border-white/20 overflow-hidden bg-zinc-800 group-hover:border-white transition-all">
@@ -250,7 +260,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </div>
         </div>
 
-        {/* Reshare Badge */}
         {currentStory.reshared_from && (
           <div className="absolute top-[calc(6.5rem+env(safe-area-inset-top))] md:top-28 left-4 z-50">
             <div className="bg-black/40 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-full flex items-center gap-2">
@@ -260,13 +269,11 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </div>
         )}
 
-        {/* Tap Areas */}
         <div className="absolute inset-0 z-20 flex">
           <div className="w-1/3 h-full cursor-pointer" onClick={handlePrev} />
           <div className="w-2/3 h-full cursor-pointer" onClick={handleNext} />
         </div>
 
-        {/* Media Container */}
         <div className="flex-1 relative flex items-center justify-center bg-black">
           {isMediaLoading && (
             <div className="absolute inset-0 flex items-center justify-center z-10">
@@ -302,30 +309,39 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           )}
         </div>
 
-        {/* Footer */}
         <div 
           className="absolute bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-3xl border-t border-white/10"
           style={{ height: footerHeight, paddingBottom: '0px', marginBottom: '0px' }}
         >
           <div className="h-full px-4 flex w-full max-w-md mx-auto items-center">
-            {isOwner && !isHighlight ? (
+            {isOwner ? (
               <div className="flex items-center justify-around w-full">
-                <button onClick={() => setShowViewers(true)} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-end pb-1" : "h-full justify-center")}>
-                  <Eye size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-white transition-colors" />
-                  <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Attività</span>
-                </button>
-                <button onClick={() => setIsMentionModalOpen(true)} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-end pb-1" : "h-full justify-center")}>
-                  <AtSign size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-white transition-colors" />
-                  <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Menziona</span>
-                </button>
-                <button onClick={() => setIsHighlightModalOpen(true)} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-end pb-1" : "h-full justify-center")}>
-                  <Star size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-white transition-colors" />
-                  <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Evidenza</span>
-                </button>
-                <button onClick={handleDelete} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-end pb-1" : "h-full justify-center")}>
-                  <Trash2 size={18} className="text-zinc-400 group-hover:text-red-500 transition-colors" />
-                  <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-red-500">Elimina</span>
-                </button>
+                {!isHighlight && (
+                  <>
+                    <button onClick={() => setShowViewers(true)} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-end pb-1" : "h-full justify-center")}>
+                      <Eye size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-white transition-colors" />
+                      <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Attività</span>
+                    </button>
+                    <button onClick={() => setIsMentionModalOpen(true)} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-end pb-1" : "h-full justify-center")}>
+                      <AtSign size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-white transition-colors" />
+                      <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Menziona</span>
+                    </button>
+                    <button onClick={() => setIsHighlightModalOpen(true)} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-end pb-1" : "h-full justify-center")}>
+                      <Star size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-white transition-colors" />
+                      <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Evidenza</span>
+                    </button>
+                    <button onClick={handleDelete} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-end pb-1" : "h-full justify-center")}>
+                      <Trash2 size={18} className="text-zinc-400 group-hover:text-red-500 transition-colors" />
+                      <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-red-500">Elimina</span>
+                    </button>
+                  </>
+                )}
+                {isHighlight && (
+                  <button onClick={handleRemoveFromHighlight} className={cn("flex flex-col items-center gap-0.5 group w-full", isIOS ? "h-[50px] justify-end pb-1" : "h-full justify-center")}>
+                    <BookmarkX size={20} className="text-zinc-400 group-hover:text-red-500 transition-colors" />
+                    <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-red-500">Rimuovi da Evidenza</span>
+                  </button>
+                )}
               </div>
             ) : !isHighlight && (
               <div className={cn("flex items-center gap-3 w-full h-full", isIOS ? "justify-end pb-1" : "justify-center")}>
@@ -342,7 +358,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </div>
         </div>
 
-        {/* Viewers Modal */}
         <AnimatePresence>
           {showViewers && (
             <>
@@ -374,13 +389,12 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
         </AnimatePresence>
       </div>
 
-      {/* Desktop Navigation */}
       <button onClick={handlePrev} className="hidden md:flex fixed left-[calc(50%-320px)] top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-[10000] text-white transition-all border border-white/10 backdrop-blur-md shadow-2xl"><ChevronLeft size={32} /></button>
       <button onClick={handleNext} className="hidden md:flex fixed right-[calc(50%-320px)] top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-[10000] text-white transition-all border border-white/10 backdrop-blur-md shadow-2xl"><ChevronRight size={32} /></button>
 
       <ShareStoryModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} storyUrl={currentStory.image_url} authorName={userStories.username} />
       {currentUserId && <HighlightModal isOpen={isHighlightModalOpen} onClose={() => setIsHighlightModalOpen(false)} story={currentStory} userId={currentUserId} />}
-      {isOwner && <AddMentionModal isOpen={isMentionModalOpen} onClose={() => setIsMentionModalOpen(false)} storyId={currentStory.id} storyUrl={currentStory.image_url} existingMentions={currentStory.mentions || []} />}
+      {isOwner && !isHighlight && <AddMentionModal isOpen={isMentionModalOpen} onClose={() => setIsMentionModalOpen(false)} storyId={currentStory.id} storyUrl={currentStory.image_url} existingMentions={currentStory.mentions || []} />}
     </motion.div>,
     document.body
   );
