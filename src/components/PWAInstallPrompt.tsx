@@ -9,17 +9,16 @@ const PWAInstallPrompt = () => {
   const [platform, setPlatform] = useState<'ios' | 'android' | 'other'>('other');
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
-  const APP_ICON = "https://www.lowdistrict.it/wp-content/uploads/cropped-ico-new-culture-2026-1.png";
+  // Usiamo l'icona locale caricata nella cartella public
+  const APP_ICON = "/icon-only.png";
 
   useEffect(() => {
-    // 1. Verifica se l'app è già in modalità standalone (già installata)
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches 
       || (window.navigator as any).standalone 
       || document.referrer.includes('android-app://');
 
     if (isStandalone) return;
 
-    // 2. Rileva la piattaforma
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isIos = /iphone|ipad|ipod/.test(userAgent);
     const isAndroid = /android/.test(userAgent);
@@ -27,17 +26,14 @@ const PWAInstallPrompt = () => {
     if (isIos) setPlatform('ios');
     else if (isAndroid) setPlatform('android');
 
-    // 3. Gestione Android (evento beforeinstallprompt)
     const handleBeforeInstallPrompt = (e: any) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      // Mostra il prompt dopo 3 secondi per non essere troppo invasivi all'inizio
       setTimeout(() => setShowPrompt(true), 3000);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    // 4. Gestione iOS (mostra sempre se non standalone, dopo un delay)
     if (isIos && !isStandalone) {
       setTimeout(() => setShowPrompt(true), 3000);
     }
@@ -74,7 +70,7 @@ const PWAInstallPrompt = () => {
           </button>
 
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 border border-white/5">
+            <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 border border-white/5 bg-black">
               <img src={APP_ICON} alt="Low District App" className="w-full h-full object-cover" />
             </div>
             <div>
