@@ -47,31 +47,6 @@ export const useBPActivity = () => {
   });
 };
 
-export const useBPSearchMembers = (search: string) => {
-  return useQuery({
-    queryKey: ['bp-members-search', search],
-    queryFn: async () => {
-      if (!search || search.length < 2) return [];
-      
-      try {
-        const url = `${BP_API_URL}/members?search=${encodeURIComponent(search)}&type=active`;
-        const response = await fetch(url, {
-          headers: getAuthHeader()
-        });
-        
-        // Se non autorizzato, restituiamo array vuoto senza errore
-        if (response.status === 401) return [];
-        if (!response.ok) return [];
-        
-        return response.json();
-      } catch (err) {
-        return [];
-      }
-    },
-    enabled: false // Disabilitato: usiamo Supabase per la ricerca
-  });
-};
-
 export const useBPActions = () => {
   const queryClient = useQueryClient();
 
@@ -115,30 +90,35 @@ export const useBPActions = () => {
   return { favoriteMutation, commentMutation };
 };
 
-export const useBPMember = (username?: string) => {
+export const useBPMember = (identifier?: string, type: 'username' | 'id' = 'username') => {
   return useQuery({
-    queryKey: ['bp-member', username],
+    queryKey: ['bp-member', identifier, type],
     queryFn: async () => {
-      if (!username) return null;
-      
-      const searchTerm = username.replace(/-/g, ' ').trim();
-      if (!searchTerm) return null;
+      if (!identifier) return null;
       
       try {
+        // Se abbiamo l'ID, usiamo l'endpoint diretto che è infallibile
+        if (type === 'id') {
+          const response = await fetch(`${BP_API_URL}/members/${identifier}`, {
+            headers: getAuthHeader()
+          });
+          if (response.ok) return response.json();
+        }
+
+        // Altrimenti cerchiamo per username
+        const searchTerm = identifier.replace(/-/g, ' ').trim();
         const url = `${BP_API_URL}/members?search=${encodeURIComponent(searchTerm)}`;
         const response = await fetch(url, {
           headers: getAuthHeader()
         });
         
-        if (response.status === 401) return null;
         if (!response.ok) return null;
         
         const data = await response.json();
-        
         if (Array.isArray(data) && data.length > 0) {
           return data.find((m: any) => 
-            m.user_login === username || 
-            m.mention_name === username
+            m.user_login === identifier || 
+            m.mention_name === identifier
           ) || data[0];
         }
         return null;
@@ -146,7 +126,7 @@ export const useBPMember = (username?: string) => {
         return null;
       }
     },
-    enabled: !!username && username.length > 0,
+    enabled: !!identifier && identifier.length > 0,
     retry: false,
     staleTime: 1000 * 60 * 5
   });

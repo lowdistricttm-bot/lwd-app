@@ -14,7 +14,6 @@ serve(async (req) => {
 
   try {
     const body = await req.json()
-    // Pulizia input per evitare spazi accidentali
     const username = body.username?.trim()
     const password = body.password
 
@@ -34,8 +33,6 @@ serve(async (req) => {
     const wpData = await wpRes.json()
     
     if (!wpRes.ok) {
-      // Usiamo console.warn invece di error per i fallimenti di login "normali" (credenziali errate)
-      // così non sporchiamo i log critici del server.
       console.warn(`[sync-wp-auth] WP Auth negata per ${username}:`, wpData.message || wpData.data?.message);
       return new Response(JSON.stringify({ 
         error: "Credenziali Low District non valide. Verifica username e password sul sito ufficiale.",
@@ -46,31 +43,28 @@ serve(async (req) => {
       })
     }
 
-    // 2. Estrazione Email dal JWT o dalla risposta
-    let email = null;
+    // 2. Estrazione dati (Email e ID WordPress)
     const data = wpData.data || wpData;
+    let email = data.user_email || data.email || (data.user ? (data.user.user_email || data.user.email) : null);
+    let wpId = data.user_id || data.id || (data.user ? data.user.id : null);
+
+    // Se mancano, proviamo a decodificare il JWT
     const jwt = data.jwt || data.token;
-
-    email = data.user_email || data.email || (data.user ? (data.user.user_email || data.user.email) : null);
-
-    if (!email && jwt) {
+    if ((!email || !wpId) && jwt) {
       try {
         const base64Url = jwt.split('.')[1];
         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
         const payload = JSON.parse(atob(base64));
-        email = payload.email || payload.user_email || (payload.user ? payload.user.email : null);
+        email = email || payload.email || payload.user_email;
+        wpId = wpId || payload.id || payload.user_id || payload.sub;
       } catch (e) {
         console.error("[sync-wp-auth] Errore decodifica JWT:", e.message);
       }
     }
 
-    if (!email && username.includes('@')) {
-      email = username;
-    }
-
     if (!email) {
-      console.error(`[sync-wp-auth] Email non trovata per l'utente ${username}`);
-      throw new Error("Impossibile recuperare l'email. Prova ad accedere usando l'indirizzo EMAIL invece dello username.");
+      if (username.includes('@')) email = username;
+      else throw new Error("Impossibile recuperare l'email. Usa l'indirizzo EMAIL per accedere.");
     }
 
     // 3. Sincronizzazione su Supabase
@@ -79,32 +73,35 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Cerchiamo l'utente per email
     const { data: { users } } = await supabaseAdmin.auth.admin.listUsers()
     const existingUser = users.find(u => u.email?.toLowerCase() === email.toLowerCase())
 
     if (existingUser) {
-      console.log(`[sync-wp-auth] Utente esistente trovato (${email}). Aggiornamento password...`);
+      console.log(`[sync-wp-auth] Utente esistente trovato (${email}). Aggiornamento...`);
       await supabaseAdmin.auth.admin.updateUserById(existingUser.id, { 
         password: password, 
-        email_confirm: true 
+        email_confirm: true,
+        user_metadata: { 
+          ...existingUser.user_metadata,
+          wp_id: wpId?.toString(),
+          last_sync: new Date().toISOString()
+        }
       })
     } else {
-      console.log(`[sync-wp-auth] Nuovo utente rilevato (${email}). Creazione account Supabase...`);
+      console.log(`[sync-wp-auth] Nuovo utente rilevato (${email}).`);
       await supabaseAdmin.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
         user_metadata: { 
           username: username.includes('@') ? username.split('@')[0] : username,
+          wp_id: wpId?.toString(),
           synced_at: new Date().toISOString()
         }
       })
     }
 
-    console.log(`[sync-wp-auth] Sincronizzazione completata con successo per ${email}`);
-
-    return new Response(JSON.stringify({ success: true, email }), {
+    return new Response(JSON.stringify({ success: true, email, wpId: wpId?.toString() }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
