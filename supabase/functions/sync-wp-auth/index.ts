@@ -8,17 +8,15 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Gestione CORS per le chiamate dal browser
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
     const { username, password } = await req.json()
+    console.log(`[sync-wp-auth] Inizio sincronizzazione per: ${username}`);
 
-    console.log(`[sync-wp-auth] Tentativo di sincronizzazione per l'utente: ${username}`);
-
-    // 1. Verifica le credenziali su WordPress
+    // 1. Verifica su WordPress
     const wpRes = await fetch("https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth", {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -26,54 +24,46 @@ serve(async (req) => {
     })
 
     const wpData = await wpRes.json()
+    console.log("[sync-wp-auth] Risposta WP ricevuta:", JSON.stringify(wpData));
 
     if (!wpRes.ok) {
-      console.error("[sync-wp-auth] WordPress Auth fallita:", wpData);
       return new Response(JSON.stringify({ error: wpData.message || "Credenziali WordPress non valide" }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 401,
       })
     }
 
-    // Estrazione dati da WordPress
-    const data = wpData.data || wpData
-    const email = data.user_email || data.email
-    const wpId = data.user_id?.toString() || data.id?.toString()
+    // Estrazione sicura dell'email e ID
+    const data = wpData.data || wpData;
+    const email = data.user_email || data.email || (data.user ? data.user.user_email : null);
+    const wpId = (data.user_id || data.id || (data.user ? data.user.ID : null))?.toString();
 
     if (!email) {
-      throw new Error("Email non ricevuta da WordPress")
+      console.error("[sync-wp-auth] Struttura dati WP non riconosciuta:", wpData);
+      throw new Error("Impossibile recuperare l'email dal profilo WordPress");
     }
 
-    // 2. Inizializza Supabase con Service Role Key (Permessi Admin)
+    // 2. Inizializza Supabase Admin
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 3. Gestione Utente in Supabase
-    // Cerchiamo l'utente per email
+    // 3. Sincronizzazione Utente
     const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers()
     if (listError) throw listError
 
     const existingUser = users.find(u => u.email?.toLowerCase() === email.toLowerCase())
 
     if (existingUser) {
-      console.log(`[sync-wp-auth] Utente trovato. Aggiornamento password per: ${email}`);
-      // Se l'utente esiste, aggiorniamo la password per allinearla a quella di WP
+      console.log(`[sync-wp-auth] Aggiornamento password per: ${email}`);
       const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
         existingUser.id,
         { password: password, email_confirm: true }
       )
       if (updateError) throw updateError
     } else {
-      console.log(`[sync-wp-auth] Nuovo utente. Creazione account per: ${email}`);
-      // Se non esiste, lo creiamo direttamente con la password di WP
+      console.log(`[sync-wp-auth] Creazione nuovo utente: ${email}`);
       const { error: createError } = await supabaseAdmin.auth.admin.createUser({
         email,
         password,
@@ -83,11 +73,7 @@ serve(async (req) => {
       if (createError) throw createError
     }
 
-    return new Response(JSON.stringify({ 
-      success: true, 
-      email: email,
-      wp_id: wpId
-    }), {
+    return new Response(JSON.stringify({ success: true, email, wp_id: wpId }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
