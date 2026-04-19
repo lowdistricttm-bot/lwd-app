@@ -14,6 +14,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json()
+    // Pulizia input per evitare spazi accidentali
     const username = body.username?.trim()
     const password = body.password
 
@@ -21,7 +22,7 @@ serve(async (req) => {
       throw new Error("Username e password sono obbligatori");
     }
 
-    console.log(`[sync-wp-auth] Sincronizzazione per: ${username}`);
+    console.log(`[sync-wp-auth] Tentativo di sincronizzazione per: ${username}`);
 
     // 1. Autenticazione su WordPress
     const wpRes = await fetch("https://www.lowdistrict.it/wp-json/simple-jwt-login/v1/auth", {
@@ -33,26 +34,43 @@ serve(async (req) => {
     const wpData = await wpRes.json()
     
     if (!wpRes.ok) {
-      console.warn(`[sync-wp-auth] WP Auth negata per ${username}`);
+      // Usiamo console.warn invece di error per i fallimenti di login "normali" (credenziali errate)
+      // così non sporchiamo i log critici del server.
+      console.warn(`[sync-wp-auth] WP Auth negata per ${username}:`, wpData.message || wpData.data?.message);
       return new Response(JSON.stringify({ 
-        error: "Credenziali non valide sul sito ufficiale.",
+        error: "Credenziali Low District non valide. Verifica username e password sul sito ufficiale.",
+        details: wpData.data?.message 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 401,
       })
     }
 
-    // 2. Estrazione dati completi dal sito
+    // 2. Estrazione Email dal JWT o dalla risposta
+    let email = null;
     const data = wpData.data || wpData;
-    const user = data.user || {};
-    
-    const email = data.user_email || data.email || user.user_email || user.email;
-    const wpUsername = user.user_login || user.display_name || username;
-    const wpAvatar = user.avatar_url || null;
-    const wpId = user.ID || user.id || null;
+    const jwt = data.jwt || data.token;
+
+    email = data.user_email || data.email || (data.user ? (data.user.user_email || data.user.email) : null);
+
+    if (!email && jwt) {
+      try {
+        const base64Url = jwt.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const payload = JSON.parse(atob(base64));
+        email = payload.email || payload.user_email || (payload.user ? payload.user.email : null);
+      } catch (e) {
+        console.error("[sync-wp-auth] Errore decodifica JWT:", e.message);
+      }
+    }
+
+    if (!email && username.includes('@')) {
+      email = username;
+    }
 
     if (!email) {
-      throw new Error("Email non trovata. Usa l'email per il login.");
+      console.error(`[sync-wp-auth] Email non trovata per l'utente ${username}`);
+      throw new Error("Impossibile recuperare l'email. Prova ad accedere usando l'indirizzo EMAIL invece dello username.");
     }
 
     // 3. Sincronizzazione su Supabase
@@ -61,45 +79,38 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    // Cerchiamo l'utente per email
     const { data: { users } } = await supabaseAdmin.auth.admin.listUsers()
     const existingUser = users.find(u => u.email?.toLowerCase() === email.toLowerCase())
 
     if (existingUser) {
+      console.log(`[sync-wp-auth] Utente esistente trovato (${email}). Aggiornamento password...`);
       await supabaseAdmin.auth.admin.updateUserById(existingUser.id, { 
         password: password, 
-        email_confirm: true,
-        user_metadata: { 
-          ...existingUser.user_metadata,
-          username: wpUsername,
-          wp_id: wpId
-        }
+        email_confirm: true 
       })
     } else {
+      console.log(`[sync-wp-auth] Nuovo utente rilevato (${email}). Creazione account Supabase...`);
       await supabaseAdmin.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
         user_metadata: { 
-          username: wpUsername,
-          wp_id: wpId,
+          username: username.includes('@') ? username.split('@')[0] : username,
           synced_at: new Date().toISOString()
         }
       })
     }
 
-    return new Response(JSON.stringify({ 
-      success: true, 
-      email, 
-      username: wpUsername, 
-      avatar_url: wpAvatar,
-      wp_id: wpId 
-    }), {
+    console.log(`[sync-wp-auth] Sincronizzazione completata con successo per ${email}`);
+
+    return new Response(JSON.stringify({ success: true, email }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
 
   } catch (error: any) {
-    console.error("[sync-wp-auth] Errore:", error.message);
+    console.error("[sync-wp-auth] Errore critico:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
