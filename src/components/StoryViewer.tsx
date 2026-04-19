@@ -33,8 +33,8 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
   const [progress, setProgress] = useState(0);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   
-  const [isMuted, setIsMuted] = useState(true);
-  const [showMuteHint, setShowMuteHint] = useState(true);
+  // Ripristinato audio a false (non mutato) di default
+  const [isMuted, setIsMuted] = useState(false);
   
   const [replyText, setReplyText] = useState('');
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -73,14 +73,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
     setProgress(0);
     setIsMediaLoading(true);
     setIsLiked(false);
-    if (isMuted && isVideo) {
-      setShowMuteHint(true);
-      const timer = setTimeout(() => setShowMuteHint(false), 3000);
-      return () => clearTimeout(timer);
-    } else {
-      setShowMuteHint(false);
-    }
-  }, [currentStory?.id, userIndex, isVideo, isMuted]);
+  }, [currentStory?.id, userIndex]);
 
   useEffect(() => {
     if (currentStory?.id && currentUserId && !isOwner && !isHighlight) {
@@ -109,6 +102,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
     }
   }, [currentIndex, userIndex, allStories]);
 
+  // Gestione progresso per immagini
   useEffect(() => {
     if (isVideo || isShareModalOpen || isHighlightModalOpen || isMentionModalOpen || showViewers || !currentStory || isMediaLoading) return;
 
@@ -142,7 +136,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
   const toggleMute = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setIsMuted(!isMuted);
-    setShowMuteHint(false);
   };
 
   const handleLike = async () => {
@@ -276,24 +269,35 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose }: StoryViewerProps
               <Loader2 className="animate-spin text-white/20" size={40} />
             </div>
           )}
-
-          <AnimatePresence>
-            {isVideo && isMuted && showMuteHint && !isMediaLoading && (
-              <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="absolute z-30 bg-black/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 flex items-center gap-2 pointer-events-none">
-                <VolumeX size={14} className="text-white" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-white">Tocca per l'audio</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
           
           {isVideo ? (
-            <video ref={videoRef} key={currentStory.id} src={currentStory.image_url} className="w-full h-full object-contain" autoPlay playsInline muted={isMuted} onLoadedData={() => setIsMediaLoading(false)} onTimeUpdate={handleVideoTimeUpdate} onEnded={handleNext} onError={() => { setIsMediaLoading(false); handleNext(); }} />
+            <video 
+              ref={videoRef} 
+              key={currentStory.id} 
+              src={currentStory.image_url} 
+              className="w-full h-full object-contain" 
+              autoPlay 
+              playsInline 
+              muted={isMuted} 
+              onLoadedData={() => setIsMediaLoading(false)}
+              onWaiting={() => setIsMediaLoading(true)}
+              onPlaying={() => setIsMediaLoading(false)}
+              onTimeUpdate={handleVideoTimeUpdate} 
+              onEnded={handleNext} 
+              onError={() => { setIsMediaLoading(false); handleNext(); }} 
+            />
           ) : (
-            <img key={currentStory.id} src={currentStory.image_url} className="w-full h-full object-contain" alt="Story" onLoad={() => setIsMediaLoading(false)} onError={() => { setIsMediaLoading(false); handleNext(); }} />
+            <img 
+              key={currentStory.id} 
+              src={currentStory.image_url} 
+              className="w-full h-full object-contain" 
+              alt="Story" 
+              onLoad={() => setIsMediaLoading(false)} 
+              onError={() => { setIsMediaLoading(false); handleNext(); }} 
+            />
           )}
         </div>
 
-        {/* Footer Controls - Ottimizzato per visualizzazione istantanea senza animazioni */}
         <div 
           key={`footer-${userStories.user_id}-${isOwner}`}
           className="absolute bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-3xl border-t border-white/10"
