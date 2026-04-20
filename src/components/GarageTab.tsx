@@ -25,7 +25,6 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
   const { t } = useTranslation();
   const { role, canVote } = useAdmin(); 
   
-  // Verifica se l'utente è almeno un Membro Ufficiale (esclude solo i subscriber)
   const isProUser = role && role !== 'subscriber';
   
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -195,13 +194,12 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                   )}
                 </div>
 
-                {/* Funzioni Pro (Analyzer e Logbook) visibili a Member, Support, Staff, Admin */}
                 {isProUser && (
                   <div className="absolute top-5 right-5 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <button 
                       onClick={(e) => { e.stopPropagation(); setActiveAnalyzer({ url: mainImage || '', id: vehicle.id }); }} 
                       className="p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-white hover:text-black transition-all shadow-xl"
-                      title="AI Analyzer"
+                      title="Low Score Analyzer"
                     >
                       <Sparkles size={18} />
                     </button>
@@ -285,7 +283,6 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
         )}
       </div>
 
-      {/* Modali */}
       <AnimatePresence>
         {selectedVehicle && (
           <VehicleDetailModal 

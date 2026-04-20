@@ -23,7 +23,7 @@ const StanceAnalyzer = ({ imageUrl, vehicleId, onClose }: { imageUrl: string, ve
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session?.access_token}`
         },
-        body: JSON.stringify({ imageUrl, vehicleId }) // Passiamo anche l'ID del veicolo
+        body: JSON.stringify({ imageUrl, vehicleId })
       });
       
       const data = await response.json();
@@ -47,7 +47,7 @@ const StanceAnalyzer = ({ imageUrl, vehicleId, onClose }: { imageUrl: string, ve
   return (
     <div className="flex flex-col items-center text-center p-6">
       <div className="flex justify-between w-full mb-8">
-        <h3 className="text-xl font-black italic uppercase tracking-tighter">AI Stance Analyzer</h3>
+        <h3 className="text-xl font-black italic uppercase tracking-tighter">Low Score Analyzer</h3>
         <button onClick={onClose} className="p-2 bg-white/5 rounded-full"><X size={20} /></button>
       </div>
 
@@ -75,7 +75,7 @@ const StanceAnalyzer = ({ imageUrl, vehicleId, onClose }: { imageUrl: string, ve
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full space-y-8">
             <div className="bg-white text-black p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
               <div className="absolute -right-4 -bottom-4 opacity-10 rotate-12"><Gauge size={120} /></div>
-              <p className="text-[10px] font-black uppercase tracking-[0.4em] mb-2">Stance Score</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] mb-2">Low Score</p>
               <h4 className="text-7xl font-black italic tracking-tighter leading-none mb-4">{result.stance_score}</h4>
               <p className="text-xs font-bold uppercase italic leading-relaxed px-4">"{result.comment}"</p>
             </div>
