@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
 import CreateMarketplaceItemModal from '@/components/CreateMarketplaceItemModal';
+import MarketplaceItemDetailModal from '@/components/MarketplaceItemDetailModal';
 import ImageLightbox from '@/components/ImageLightbox';
 import { useTranslation } from '@/hooks/use-translation';
 
@@ -24,6 +25,7 @@ const Marketplace = () => {
   const [showFilters, setShowFilters] = useState(false);
   
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<MarketplaceItem | null>(null);
   const [editingItem, setEditingItem] = useState<MarketplaceItem | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
@@ -49,23 +51,20 @@ const Marketplace = () => {
     });
   }, [items, searchQuery, minPrice, maxPrice]);
 
-  const handleContact = (sellerId: string) => {
-    if (!currentUserId) { navigate('/login'); return; }
-    navigate(`/chat/${sellerId}`);
+  const handleDelete = (id: string) => {
+    if (confirm("Vuoi eliminare questo annuncio?")) {
+      deleteItem.mutate(id);
+      setSelectedItem(null);
+    }
   };
 
-  const handleDelete = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    if (confirm("Vuoi eliminare questo annuncio?")) deleteItem.mutate(id);
-  };
-
-  const handleEdit = (e: React.MouseEvent, item: MarketplaceItem) => {
-    e.stopPropagation();
+  const handleEdit = (item: MarketplaceItem) => {
     setEditingItem(item);
+    setSelectedItem(null);
     setIsCreateModalOpen(true);
   };
 
-  const handleCloseModal = () => {
+  const handleCloseCreateModal = () => {
     setIsCreateModalOpen(false);
     setEditingItem(null);
   };
@@ -145,27 +144,30 @@ const Marketplace = () => {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredItems.map((item, i) => (
-                  <motion.div key={item.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="bg-zinc-900/40 backdrop-blur-md border border-white/5 rounded-[2.5rem] overflow-hidden group hover:border-white/20 transition-all duration-500 shadow-2xl">
-                    <div className="aspect-square bg-zinc-950 relative overflow-hidden cursor-pointer" onClick={() => setLightboxData({ images: item.images, index: 0 })}>
+                  <motion.div 
+                    key={item.id} 
+                    initial={{ opacity: 0, y: 20 }} 
+                    animate={{ opacity: 1, y: 0 }} 
+                    transition={{ delay: i * 0.05 }} 
+                    onClick={() => setSelectedItem(item)}
+                    className="bg-zinc-900/40 backdrop-blur-md border border-white/5 rounded-[2.5rem] overflow-hidden group hover:border-white/20 transition-all duration-500 shadow-2xl cursor-pointer"
+                  >
+                    <div className="aspect-square bg-zinc-950 relative overflow-hidden">
                       {item.images?.[0] ? <img src={item.images[0]} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-1000" alt="" /> : <div className="w-full h-full flex items-center justify-center text-zinc-900"><Tag size={64} /></div>}
                       <div className="absolute top-5 left-5 bg-white text-black px-4 py-1.5 rounded-full text-[10px] font-black italic shadow-xl flex items-center gap-1.5"><Euro size={12} /> {item.price}</div>
                       <div className="absolute top-5 right-5"><span className="bg-black/60 backdrop-blur-md text-white text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full border border-white/10">{MARKETPLACE_CATEGORIES.find(c => c.id === item.category)?.label || item.category}</span></div>
-                      {currentUserId === item.seller_id && (
-                        <div className="absolute bottom-5 left-5 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                          <button onClick={(e) => handleEdit(e, item)} className="p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-white hover:text-black transition-all shadow-xl"><Edit3 size={16} /></button>
-                          <button onClick={(e) => handleDelete(e, item.id)} className="p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-red-600 transition-all shadow-xl"><Trash2 size={16} /></button>
-                        </div>
-                      )}
                     </div>
                     <div className="p-8">
                       <h3 className="text-xl font-black italic uppercase tracking-tight leading-none mb-4">{item.title}</h3>
                       <p className="text-xs text-zinc-400 italic leading-relaxed line-clamp-2 mb-8">{item.description}</p>
                       <div className="pt-6 border-t border-white/5 flex justify-between items-center">
-                        <button onClick={() => navigate(`/profile/${item.seller_id}`)} className="flex items-center gap-3 hover:opacity-70 transition-opacity">
+                        <button onClick={(e) => { e.stopPropagation(); navigate(`/profile/${item.seller_id}`); }} className="flex items-center gap-3 hover:opacity-70 transition-opacity">
                           <div className="w-8 h-8 rounded-full bg-zinc-800 overflow-hidden border border-white/10">{item.profiles?.avatar_url ? <img src={item.profiles.avatar_url} className="w-full h-full object-cover" /> : <User size={14} className="m-auto h-full text-zinc-600" />}</div>
                           <span className="text-[9px] font-black uppercase italic text-zinc-500">@{item.profiles?.username}</span>
                         </button>
-                        <Button onClick={() => handleContact(item.seller_id)} className="bg-white/5 hover:bg-white hover:text-black rounded-full h-10 px-6 text-[9px] font-black uppercase italic transition-all border border-white/10">Contatta <ChevronRight size={14} className="ml-1" /></Button>
+                        <div className="text-[9px] font-black uppercase tracking-widest text-white italic flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                          Dettagli <ChevronRight size={14} />
+                        </div>
                       </div>
                     </div>
                   </motion.div>
@@ -175,7 +177,24 @@ const Marketplace = () => {
           </>
         )}
       </main>
-      <CreateMarketplaceItemModal isOpen={isCreateModalOpen} onClose={handleCloseModal} editItem={editingItem} />
+
+      <CreateMarketplaceItemModal 
+        isOpen={isCreateModalOpen} 
+        onClose={handleCloseCreateModal} 
+        editItem={editingItem} 
+      />
+
+      {selectedItem && (
+        <MarketplaceItemDetailModal 
+          isOpen={!!selectedItem} 
+          onClose={() => setSelectedItem(null)} 
+          item={selectedItem}
+          isOwnItem={currentUserId === selectedItem.seller_id}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      )}
+
       <ImageLightbox images={lightboxData?.images || []} initialIndex={lightboxData?.index || 0} isOpen={!!lightboxData} onClose={() => setLightboxData(null)} />
     </div>
   );

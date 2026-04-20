@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from '@/components/Navbar';
 import GarageTab from '@/components/GarageTab';
 import ApplicationsTab from '@/components/ApplicationsTab';
+import MarketplaceTab from '@/components/MarketplaceTab';
 import ProfilePostGridItem from '@/components/ProfilePostGridItem';
 import CreatePostModal from '@/components/CreatePostModal';
 import ImageLightbox from '@/components/ImageLightbox';
@@ -22,7 +23,7 @@ import { useFollow } from '@/hooks/use-follow';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { 
-  User, Settings, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Share2, Edit2, Truck, ExternalLink, ShieldAlert
+  User, Settings, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Share2, Edit2, Truck, ExternalLink, ShieldAlert, Tag
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -142,7 +143,6 @@ const Profile = () => {
     const targetRole = profile?.role || 'subscriber';
     const isTargetStaff = ['admin', 'staff', 'support'].includes(targetRole);
     
-    // Se l'utente corrente è un iscritto e il target NON è staff, blocca
     if (role === 'subscriber' && !isTargetStaff) {
       setIsRestrictedOpen(true);
     } else {
@@ -219,6 +219,7 @@ const Profile = () => {
   if (!isTargetSubscriber) tabs.push({ id: 'activity', label: t.profile.posts, icon: MessageSquare });
   if (isOwnProfile || !isTargetSubscriber) tabs.push({ id: 'garage', label: t.nav.garage, icon: Car });
   if (isOwnProfile) {
+    tabs.push({ id: 'marketplace', label: 'Market', icon: Tag });
     tabs.push({ id: 'orders', label: t.profile.orders, icon: ShoppingBag });
     tabs.push({ id: 'selections', label: t.profile.selections, icon: ClipboardCheck });
   }
@@ -316,6 +317,7 @@ const Profile = () => {
                   </motion.div>
                 )}
                 {activeTab === 'garage' && <motion.div key="garage" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><GarageTab userId={targetUserId} isOwnProfile={isOwnProfile} /></motion.div>}
+                {activeTab === 'marketplace' && <motion.div key="marketplace" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><MarketplaceTab userId={targetUserId} isOwnProfile={isOwnProfile} /></motion.div>}
                 {activeTab === 'orders' && (
                   <motion.div key="orders" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                     <h3 className="text-lg font-black italic uppercase mb-4">{t.profile.orders}</h3>

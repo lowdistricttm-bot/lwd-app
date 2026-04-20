@@ -60,13 +60,12 @@ export const useMarketplace = (categoryFilter: string = 'all') => {
         return [];
       }
       
-      // Fix: Supabase restituisce un array per le JOIN, mappiamo per estrarre il profilo singolo
       return (data || []).map((item: any) => ({
         ...item,
         profiles: Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
       })) as MarketplaceItem[];
     },
-    staleTime: 1000 * 60 * 5 // Cache di 5 minuti
+    staleTime: 1000 * 60 * 5
   });
 
   useEffect(() => {
@@ -115,6 +114,7 @@ export const useMarketplace = (categoryFilter: string = 'all') => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['marketplace-items'] });
+      queryClient.invalidateQueries({ queryKey: ['user-marketplace-items'] });
       showSuccess("Annuncio pubblicato!");
     },
     onError: (err: any) => showError(err.message)
@@ -149,6 +149,7 @@ export const useMarketplace = (categoryFilter: string = 'all') => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['marketplace-items'] });
+      queryClient.invalidateQueries({ queryKey: ['user-marketplace-items'] });
       showSuccess("Annuncio aggiornato!");
     },
     onError: (err: any) => showError(err.message)
@@ -161,9 +162,36 @@ export const useMarketplace = (categoryFilter: string = 'all') => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['marketplace-items'] });
+      queryClient.invalidateQueries({ queryKey: ['user-marketplace-items'] });
       showSuccess("Annuncio rimosso.");
     }
   });
 
   return { items, isLoading, createItem, updateItem, deleteItem, refetch };
+};
+
+export const useUserMarketplace = (userId?: string) => {
+  return useQuery({
+    queryKey: ['user-marketplace-items', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      
+      const { data, error } = await supabase
+        .from('marketplace_items')
+        .select(`
+          id, seller_id, title, description, price, category, images, created_at,
+          profiles:seller_id (username, avatar_url)
+        `)
+        .eq('seller_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      return (data || []).map((item: any) => ({
+        ...item,
+        profiles: Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
+      })) as MarketplaceItem[];
+    },
+    enabled: !!userId
+  });
 };
