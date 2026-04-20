@@ -23,7 +23,10 @@ import { supabase } from "@/integrations/supabase/client";
 const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProfile?: boolean }) => {
   const { vehicles, isLoading, addVehicle, updateVehicle, deleteVehicle, toggleLike } = useGarage(userId);
   const { t } = useTranslation();
-  const { canVote } = useAdmin();
+  const { role, canVote } = useAdmin(); 
+  
+  // Verifica se l'utente è almeno un Membro Ufficiale (esclude solo i subscriber)
+  const isProUser = role && role !== 'subscriber';
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
@@ -194,46 +197,34 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                   )}
                 </div>
 
-                {/* Punteggio Stance (Visibile a tutti se presente) */}
-                {vehicle.stance_score && (
-                  <div className="absolute top-5 left-1/2 -translate-x-1/2">
-                    <div className="bg-black/60 backdrop-blur-md border border-white/20 px-4 py-1.5 rounded-full flex items-center gap-2 shadow-2xl">
-                      <Sparkles size={12} className="text-white" />
-                      <span className="text-[10px] font-black italic text-white">STANCE: {vehicle.stance_score}</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Funzioni Pro (Analyzer e Logbook) - SOLO PROPRIETARIO */}
-                {isOwnProfile && (
+                {/* Funzioni Pro (Analyzer e Logbook) visibili a Member, Support, Staff, Admin */}
+                {isProUser && (
                   <div className="absolute top-5 right-5 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <button 
-                      onClick={(e) => { e.stopPropagation(); if(mainImage) setActiveAnalyzer({ url: mainImage, id: vehicle.id }); }} 
+                      onClick={(e) => { e.stopPropagation(); setActiveAnalyzer({ url: mainImage || '', id: vehicle.id }); }} 
                       className="p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-white hover:text-black transition-all shadow-xl"
                       title="AI Analyzer"
                     >
                       <Sparkles size={18} />
                     </button>
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); setActiveLogbook(vehicle.id); }} 
-                      className="p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-white hover:text-black transition-all shadow-xl"
-                      title="Diario di Bordo"
-                    >
-                      <Book size={18} />
-                    </button>
+                    {isOwnProfile && (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setActiveLogbook(vehicle.id); }} 
+                        className="p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-white hover:text-black transition-all shadow-xl"
+                        title="Diario di Bordo"
+                      >
+                        <Book size={18} />
+                      </button>
+                    )}
                   </div>
                 )}
 
                 <div className="absolute bottom-5 right-5">
                   <button 
-                    onClick={(e) => { 
-                      e.stopPropagation(); 
-                      if (!isOwnProfile) toggleLike.mutate(vehicle.id); 
-                    }}
+                    onClick={(e) => { e.stopPropagation(); toggleLike.mutate(vehicle.id); }}
                     className={cn(
                       "flex items-center gap-2 px-4 py-2 backdrop-blur-md border rounded-full transition-all shadow-2xl",
-                      vehicle.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-black/40 border-white/10 text-white hover:bg-white/20",
-                      isOwnProfile && "cursor-default"
+                      vehicle.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-black/40 border-white/10 text-white hover:bg-white/20"
                     )}
                   >
                     <Heart size={14} fill={vehicle.is_liked ? "currentColor" : "none"} />
@@ -279,7 +270,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                   <button 
                     className="text-[9px] font-black uppercase tracking-widest text-white italic flex items-center gap-2 group"
                   >
-                    Vedi Progetto <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                    Dettagli Progetto <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
                   </button>
                 </div>
               </div>
