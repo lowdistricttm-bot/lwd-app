@@ -226,10 +226,15 @@ const Discover = () => {
                           <div className="w-full h-full flex items-center justify-center text-zinc-800"><Car size={48} /></div>
                         )}
                         
-                        <div className="absolute top-5 left-5">
+                        <div className="absolute top-5 left-5 flex flex-col gap-2">
                           <span className="bg-white/90 backdrop-blur-md text-black text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full shadow-2xl">
                             {vehicle.suspension_type}
                           </span>
+                          {vehicle.stance_score && (
+                            <span className="bg-black/60 backdrop-blur-md text-white text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full border border-white/10 flex items-center gap-1.5">
+                              <Sparkles size={10} /> {vehicle.stance_score}
+                            </span>
+                          )}
                         </div>
 
                         <div className="absolute bottom-5 right-5">

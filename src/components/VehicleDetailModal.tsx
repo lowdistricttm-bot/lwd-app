@@ -68,7 +68,7 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicle, isOwnProfile, onLike, cu
                       )}
                       {vehicle.stance_score && (
                         <span className="bg-black/60 text-white border border-white/20 text-[8px] font-black uppercase px-2 py-1 italic rounded-lg flex items-center gap-1.5">
-                          <Sparkles size={10} /> STANCE: {vehicle.stance_score}
+                          <Sparkles size={10} /> LOW SCORE: {vehicle.stance_score}
                         </span>
                       )}
                     </div>

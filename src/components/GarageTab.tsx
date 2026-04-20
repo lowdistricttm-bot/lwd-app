@@ -194,16 +194,16 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                   )}
                 </div>
 
-                {isProUser && (
-                  <div className="absolute top-5 right-5 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); setActiveAnalyzer({ url: mainImage || '', id: vehicle.id }); }} 
-                      className="p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-white hover:text-black transition-all shadow-xl"
-                      title="Low Score Analyzer"
-                    >
-                      <Sparkles size={18} />
-                    </button>
-                    {isOwnProfile && (
+                <div className="absolute top-5 right-5 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  {isOwnProfile && isProUser && (
+                    <>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setActiveAnalyzer({ url: mainImage || '', id: vehicle.id }); }} 
+                        className="p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-white hover:text-black transition-all shadow-xl"
+                        title="Low Score Analyzer"
+                      >
+                        <Sparkles size={18} />
+                      </button>
                       <button 
                         onClick={(e) => { e.stopPropagation(); setActiveLogbook(vehicle.id); }} 
                         className="p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-white hover:text-black transition-all shadow-xl"
@@ -211,9 +211,14 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                       >
                         <Book size={18} />
                       </button>
-                    )}
-                  </div>
-                )}
+                    </>
+                  )}
+                  {vehicle.stance_score && (
+                    <div className="bg-white text-black px-3 py-1.5 rounded-full text-[8px] font-black italic shadow-xl flex items-center gap-1.5">
+                      <Sparkles size={10} /> LOW SCORE: {vehicle.stance_score}
+                    </div>
+                  )}
+                </div>
 
                 <div className="absolute bottom-5 right-5">
                   <button 
