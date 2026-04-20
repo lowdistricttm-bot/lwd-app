@@ -13,7 +13,7 @@ import StanceAnalyzer from './StanceAnalyzer';
 import VehicleDetailModal from './VehicleDetailModal';
 import { 
   Plus, Car, Trash2, Camera, Loader2, X, Edit3, Heart, 
-  Gauge, Book, Sparkles, ChevronRight, Calendar 
+  Gauge, Book, Sparkles, ChevronRight, Calendar, CreditCard 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -183,17 +183,19 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                   <div className="w-full h-full flex items-center justify-center bg-zinc-950 text-zinc-800"><Car size={64} /></div>
                 )}
                 
+                {/* Top Left Badges */}
                 <div className="absolute top-5 left-5 flex flex-col gap-2">
-                  <span className="bg-white/90 backdrop-blur-md text-black text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full shadow-2xl">
+                  <span className="bg-white/90 backdrop-blur-md text-black text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full shadow-2xl w-fit">
                     {vehicle.suspension_type}
                   </span>
-                  {vehicle.license_plate && canSeePlate && (
-                    <span className="bg-black/60 backdrop-blur-md text-white text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full border border-white/10">
-                      {vehicle.license_plate}
-                    </span>
+                  {vehicle.stance_score && (
+                    <div className="bg-black/60 backdrop-blur-md text-white border border-white/20 text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full flex items-center gap-1.5 shadow-xl w-fit">
+                      <Sparkles size={10} /> LOW SCORE: {vehicle.stance_score}
+                    </div>
                   )}
                 </div>
 
+                {/* Top Right Actions */}
                 <div className="absolute top-5 right-5 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   {isOwnProfile && isProUser && (
                     <>
@@ -213,11 +215,6 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                       </button>
                     </>
                   )}
-                  {vehicle.stance_score && (
-                    <div className="bg-white text-black px-3 py-1.5 rounded-full text-[8px] font-black italic shadow-xl flex items-center gap-1.5">
-                      <Sparkles size={10} /> LOW SCORE: {vehicle.stance_score}
-                    </div>
-                  )}
                 </div>
 
                 <div className="absolute bottom-5 right-5">
@@ -236,16 +233,26 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
 
               <div className="p-8">
                 <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <h4 className="text-2xl font-black italic uppercase tracking-tighter leading-none mb-1">{vehicle.brand} {vehicle.model}</h4>
-                    <div className="flex items-center gap-3 text-zinc-500">
-                      <span className="text-[10px] font-black uppercase tracking-widest italic flex items-center gap-1.5">
-                        <Calendar size={12} /> {vehicle.year || 'N/A'}
-                      </span>
-                      <span className="text-zinc-800">•</span>
-                      <span className="text-[10px] font-black uppercase tracking-widest italic flex items-center gap-1.5">
-                        <Gauge size={12} /> {vehicle.suspension_type}
-                      </span>
+                  <div className="space-y-3">
+                    <h4 className="text-2xl font-black italic uppercase tracking-tighter leading-none">{vehicle.brand} {vehicle.model}</h4>
+                    
+                    <div className="flex flex-col gap-2.5">
+                      <div className="flex items-center gap-3 text-zinc-500">
+                        <span className="text-[10px] font-black uppercase tracking-widest italic flex items-center gap-1.5">
+                          <Calendar size={12} className="text-white" /> {vehicle.year || 'N/A'}
+                        </span>
+                        <span className="text-zinc-800">•</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest italic flex items-center gap-1.5">
+                          <Gauge size={12} className="text-white" /> {vehicle.suspension_type}
+                        </span>
+                      </div>
+
+                      {vehicle.license_plate && canSeePlate && (
+                        <div className="flex items-center gap-2 bg-white text-black px-2.5 py-1 rounded-lg w-fit shadow-lg">
+                          <CreditCard size={12} />
+                          <span className="text-[10px] font-black uppercase italic tracking-widest">{vehicle.license_plate}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                   
