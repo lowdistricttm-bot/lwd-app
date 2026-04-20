@@ -49,29 +49,32 @@ const StanceAnalyzer = ({ imageUrl, vehicleId, onClose }: { imageUrl: string, ve
   };
 
   return (
-    <div className="flex flex-col h-full min-h-[80vh] relative">
-      {/* Close Button */}
-      <button 
-        onClick={onClose} 
-        className="absolute top-6 right-6 z-[100] p-3 bg-white/10 backdrop-blur-xl rounded-full text-white hover:bg-white hover:text-black transition-all shadow-2xl border border-white/10"
-      >
-        <X size={24} />
-      </button>
-
-      <div className={cn(
-        "flex-1 flex flex-col p-6 md:p-10 transition-all duration-700",
-        result ? "bg-black" : ""
-      )}>
-        <div className="text-left mb-8 pr-16">
+    <div className="flex flex-col h-full max-h-[90vh] overflow-y-auto no-scrollbar relative bg-zinc-950">
+      {/* Header con X di chiusura interna al modal */}
+      <div className="p-6 md:p-8 flex justify-between items-start sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-md">
+        <div>
           <h3 className="text-2xl font-black italic uppercase tracking-tighter">Low Score Analyzer</h3>
           <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500">AI Visual Stance Evaluation</p>
         </div>
+        <button 
+          onClick={onClose} 
+          className="p-2.5 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors"
+        >
+          <X size={20} />
+        </button>
+      </div>
 
-        <div className={cn(
-          "relative w-full rounded-[2.5rem] overflow-hidden border border-white/10 bg-black shadow-2xl transition-all duration-1000",
-          result ? "aspect-[21/9] mb-10" : "aspect-video mb-8"
-        )}>
-          <img src={imageUrl} className={cn("w-full h-full object-cover transition-all duration-1000", loading ? "opacity-60 scale-105" : result ? "opacity-50" : "opacity-70")} alt="Auto" />
+      <div className="px-6 md:px-8 pb-10 space-y-8">
+        {/* Immagine con Scansione */}
+        <div className="relative w-full aspect-video rounded-[2rem] overflow-hidden border border-white/10 bg-black shadow-2xl">
+          <img 
+            src={imageUrl} 
+            className={cn(
+              "w-full h-full object-cover transition-all duration-1000", 
+              loading ? "opacity-60 scale-105" : result ? "opacity-40" : "opacity-70"
+            )} 
+            alt="Auto" 
+          />
           
           <AnimatePresence>
             {loading && (
@@ -104,55 +107,57 @@ const StanceAnalyzer = ({ imageUrl, vehicleId, onClose }: { imageUrl: string, ve
 
           {!result && !loading && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <Button onClick={analyze} className="bg-white text-black rounded-full h-16 px-12 font-black uppercase italic shadow-2xl hover:scale-105 transition-all border-none">
-                <Sparkles size={20} className="mr-3" /> Inizia Scansione
+              <Button onClick={analyze} className="bg-white text-black rounded-full h-14 px-10 font-black uppercase italic shadow-2xl hover:scale-105 transition-all border-none">
+                <Sparkles size={18} className="mr-2" /> Inizia Scansione
               </Button>
             </div>
           )}
         </div>
 
+        {/* Risultati del Report */}
         <AnimatePresence>
           {result && !loading && (
             <motion.div 
-              initial={{ opacity: 0, y: 30 }} 
+              initial={{ opacity: 0, y: 20 }} 
               animate={{ opacity: 1, y: 0 }} 
-              className="w-full space-y-10 animate-in fade-in duration-1000"
+              className="space-y-8"
             >
-              <div className="bg-zinc-900/80 backdrop-blur-2xl border border-white/10 p-10 rounded-[3rem] shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center gap-8">
-                <div className="absolute -right-10 -bottom-10 opacity-5 rotate-12 text-white"><Gauge size={240} /></div>
+              <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/10 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+                <div className="absolute -right-10 -bottom-10 opacity-5 rotate-12 text-white"><Gauge size={180} /></div>
                 
-                <div className="relative z-10 text-center md:text-left flex-1">
-                  <div className="flex items-center justify-center md:justify-start gap-2 mb-3">
-                    <ShieldCheck size={14} className="text-zinc-500" />
-                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500">Official Low Score</p>
-                  </div>
-                  <h4 className="text-8xl md:text-9xl font-black italic tracking-tighter leading-none mb-6 text-white">{result.stance_score}</h4>
-                  <div className="w-20 h-1.5 bg-white/20 rounded-full mb-6 hidden md:block" />
-                  <p className="text-sm md:text-base font-black uppercase italic leading-tight text-zinc-300 max-w-md">
-                    "{result.comment}"
-                  </p>
-                </div>
-
-                <div className="relative z-10 grid grid-cols-1 gap-3 w-full md:w-64">
-                  {[
-                    { label: 'Wheel Gap', val: result.wheel_gap },
-                    { label: 'Camber', val: result.camber },
-                    { label: 'Fitment', val: result.fitment_type }
-                  ].map((item, i) => (
-                    <div key={i} className="bg-white/5 border border-white/5 p-4 rounded-2xl flex justify-between items-center">
-                      <p className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">{item.label}</p>
-                      <p className="text-[11px] font-black italic text-white">{item.val}</p>
+                <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+                  <div className="text-center md:text-left flex-1">
+                    <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
+                      <ShieldCheck size={12} className="text-zinc-500" />
+                      <p className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500">Official Low Score</p>
                     </div>
-                  ))}
+                    <h4 className="text-7xl md:text-8xl font-black italic tracking-tighter leading-none mb-4 text-white">{result.stance_score}</h4>
+                    <p className="text-xs font-black uppercase italic leading-relaxed text-zinc-400 max-w-md">
+                      "{result.comment}"
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-2 w-full md:w-56">
+                    {[
+                      { label: 'Wheel Gap', val: result.wheel_gap },
+                      { label: 'Camber', val: result.camber },
+                      { label: 'Fitment', val: result.fitment_type }
+                    ].map((item, i) => (
+                      <div key={i} className="bg-white/5 border border-white/5 p-3.5 rounded-2xl flex justify-between items-center">
+                        <p className="text-[7px] font-black uppercase text-zinc-500 tracking-widest">{item.label}</p>
+                        <p className="text-[10px] font-black italic text-white">{item.val}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4 pb-10">
-                <Button className="flex-1 bg-white/5 border border-white/10 rounded-full h-16 font-black uppercase italic text-[11px] tracking-widest hover:bg-white/10 transition-all">
-                  <Share2 size={18} className="mr-3" /> Condividi Risultato
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button className="flex-1 bg-white/5 border border-white/10 rounded-full h-14 font-black uppercase italic text-[10px] tracking-widest hover:bg-white/10 transition-all">
+                  <Share2 size={16} className="mr-2" /> Condividi
                 </Button>
-                <Button onClick={onClose} className="flex-1 bg-white text-black rounded-full h-16 font-black uppercase italic text-[11px] tracking-widest shadow-2xl hover:bg-zinc-200 transition-all">
-                  <CheckCircle2 size={18} className="mr-3" /> Chiudi Report
+                <Button onClick={onClose} className="flex-1 bg-white text-black rounded-full h-14 font-black uppercase italic text-[10px] tracking-widest shadow-xl hover:bg-zinc-200 transition-all">
+                  <CheckCircle2 size={16} className="mr-2" /> Chiudi Report
                 </Button>
               </div>
             </motion.div>
