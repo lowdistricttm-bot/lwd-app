@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
-import { useMarketplace, MARKETPLACE_CATEGORIES } from '@/hooks/use-marketplace';
+import { useMarketplace, MARKETPLACE_CATEGORIES, MarketplaceItem } from '@/hooks/use-marketplace';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, Plus, Tag, Loader2, User, Trash2, Euro, ChevronRight, Lock, LogIn, AlertCircle } from 'lucide-react';
+import { ShoppingBag, Plus, Tag, Loader2, User, Trash2, Euro, ChevronRight, Lock, LogIn, AlertCircle, Edit3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -18,6 +18,7 @@ const Marketplace = () => {
   const { t } = useTranslation();
   const [category, setCategory] = useState('all');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<MarketplaceItem | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
@@ -44,6 +45,17 @@ const Marketplace = () => {
     if (confirm("Vuoi eliminare questo annuncio?")) {
       deleteItem.mutate(id);
     }
+  };
+
+  const handleEdit = (e: React.MouseEvent, item: MarketplaceItem) => {
+    e.stopPropagation();
+    setEditingItem(item);
+    setIsCreateModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsCreateModalOpen(false);
+    setEditingItem(null);
   };
 
   return (
@@ -152,12 +164,20 @@ const Marketplace = () => {
                         </span>
                       </div>
                       {currentUserId === item.seller_id && (
-                        <button 
-                          onClick={(e) => handleDelete(e, item.id)}
-                          className="absolute bottom-5 left-5 p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-red-600 transition-all shadow-xl z-10 opacity-0 group-hover:opacity-100"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        <div className="absolute bottom-5 left-5 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                          <button 
+                            onClick={(e) => handleEdit(e, item)}
+                            className="p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-white hover:text-black transition-all shadow-xl"
+                          >
+                            <Edit3 size={16} />
+                          </button>
+                          <button 
+                            onClick={(e) => handleDelete(e, item.id)}
+                            className="p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-red-600 transition-all shadow-xl"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       )}
                     </div>
 
@@ -197,7 +217,11 @@ const Marketplace = () => {
         )}
       </main>
 
-      <CreateMarketplaceItemModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
+      <CreateMarketplaceItemModal 
+        isOpen={isCreateModalOpen} 
+        onClose={handleCloseModal} 
+        editItem={editingItem}
+      />
       <ImageLightbox images={lightboxData?.images || []} initialIndex={lightboxData?.index || 0} isOpen={!!lightboxData} onClose={() => setLightboxData(null)} />
     </div>
   );

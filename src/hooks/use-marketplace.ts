@@ -37,7 +37,6 @@ export const useMarketplace = (categoryFilter: string = 'all') => {
   const { data: items = [], isLoading, refetch } = useQuery({
     queryKey: ['marketplace-items', categoryFilter],
     queryFn: async () => {
-      // Specifichiamo esplicitamente la relazione con profiles
       let query = supabase
         .from('marketplace_items')
         .select(`
@@ -116,6 +115,40 @@ export const useMarketplace = (categoryFilter: string = 'all') => {
     onError: (err: any) => showError(err.message)
   });
 
+  const updateItem = useMutation({
+    mutationFn: async (data: { id: string, title: string, description: string, price: number, category: string, files?: File[], existingImages?: string[] }) => {
+      let imageUrls = data.existingImages || [];
+      
+      if (data.files && data.files.length > 0) {
+        const newUrls: string[] = [];
+        for (const file of data.files) {
+          const compressed = await compressImage(file);
+          const url = await uploadToCloudinary(compressed);
+          newUrls.push(url);
+        }
+        imageUrls = [...imageUrls, ...newUrls].slice(0, 5);
+      }
+
+      const { error } = await supabase
+        .from('marketplace_items')
+        .update({
+          title: data.title,
+          description: data.description,
+          price: data.price,
+          category: data.category,
+          images: imageUrls
+        })
+        .eq('id', data.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['marketplace-items'] });
+      showSuccess("Annuncio aggiornato!");
+    },
+    onError: (err: any) => showError(err.message)
+  });
+
   const deleteItem = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from('marketplace_items').delete().eq('id', id);
@@ -127,5 +160,5 @@ export const useMarketplace = (categoryFilter: string = 'all') => {
     }
   });
 
-  return { items, isLoading, createItem, deleteItem, refetch };
+  return { items, isLoading, createItem, updateItem, deleteItem, refetch };
 };

@@ -1,23 +1,24 @@
 "use client";
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Camera, Loader2, Send, Tag, Euro, LayoutGrid } from 'lucide-react';
+import { X, Camera, Loader2, Send, Tag, Euro, LayoutGrid, Save } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import { useMarketplace, MARKETPLACE_CATEGORIES } from '@/hooks/use-marketplace';
+import { useMarketplace, MARKETPLACE_CATEGORIES, MarketplaceItem } from '@/hooks/use-marketplace';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { cn } from '@/lib/utils';
 
 interface CreateMarketplaceItemModalProps {
   isOpen: boolean;
   onClose: () => void;
+  editItem?: MarketplaceItem | null;
 }
 
-const CreateMarketplaceItemModal = ({ isOpen, onClose }: CreateMarketplaceItemModalProps) => {
-  const { createItem } = useMarketplace();
+const CreateMarketplaceItemModal = ({ isOpen, onClose, editItem }: CreateMarketplaceItemModalProps) => {
+  const { createItem, updateItem } = useMarketplace();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [formData, setFormData] = useState({
@@ -29,36 +30,77 @@ const CreateMarketplaceItemModal = ({ isOpen, onClose }: CreateMarketplaceItemMo
   
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (editItem) {
+      setFormData({
+        title: editItem.title,
+        description: editItem.description,
+        price: editItem.price.toString(),
+        category: editItem.category
+      });
+      setExistingImages(editItem.images || []);
+      setPreviews([]);
+      setSelectedFiles([]);
+    } else {
+      setFormData({ title: '', description: '', price: '', category: 'wheels' });
+      setExistingImages([]);
+      setPreviews([]);
+      setSelectedFiles([]);
+    }
+  }, [editItem, isOpen]);
 
   useBodyLock(isOpen);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const newFiles = [...selectedFiles, ...files].slice(0, 5);
+    const totalCount = existingImages.length + selectedFiles.length + files.length;
+    if (totalCount > 5) {
+      alert("Puoi caricare massimo 5 foto in totale.");
+      return;
+    }
+    const newFiles = [...selectedFiles, ...files];
     setSelectedFiles(newFiles);
     setPreviews(newFiles.map(file => URL.createObjectURL(file)));
   };
 
-  const removeFile = (index: number) => {
+  const removeNewFile = (index: number) => {
     const newFiles = [...selectedFiles];
     newFiles.splice(index, 1);
     setSelectedFiles(newFiles);
     setPreviews(newFiles.map(file => URL.createObjectURL(file)));
   };
 
+  const removeExistingImage = (index: number) => {
+    const newImages = [...existingImages];
+    newImages.splice(index, 1);
+    setExistingImages(newImages);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedFiles.length === 0) return;
+    if (existingImages.length === 0 && selectedFiles.length === 0) {
+      alert("Carica almeno una foto.");
+      return;
+    }
 
-    await createItem.mutateAsync({
-      ...formData,
-      price: parseFloat(formData.price),
-      files: selectedFiles
-    });
+    if (editItem) {
+      await updateItem.mutateAsync({
+        id: editItem.id,
+        ...formData,
+        price: parseFloat(formData.price),
+        files: selectedFiles,
+        existingImages: existingImages
+      });
+    } else {
+      await createItem.mutateAsync({
+        ...formData,
+        price: parseFloat(formData.price),
+        files: selectedFiles
+      });
+    }
     
-    setFormData({ title: '', description: '', price: '', category: 'wheels' });
-    setSelectedFiles([]);
-    setPreviews([]);
     onClose();
   };
 
@@ -80,8 +122,12 @@ const CreateMarketplaceItemModal = ({ isOpen, onClose }: CreateMarketplaceItemMo
             <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-8 pb-10">
               <div className="flex justify-between items-center">
                 <div>
-                  <h2 className="text-2xl font-black italic uppercase tracking-tighter">Nuovo Annuncio</h2>
-                  <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 mt-1">Vendi i tuoi componenti nel District</p>
+                  <h2 className="text-2xl font-black italic uppercase tracking-tighter">
+                    {editItem ? 'Modifica Annuncio' : 'Nuovo Annuncio'}
+                  </h2>
+                  <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 mt-1">
+                    {editItem ? 'Aggiorna i dettagli del tuo oggetto' : 'Vendi i tuoi componenti nel District'}
+                  </p>
                 </div>
                 <button type="button" onClick={onClose} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors"><X size={24} /></button>
               </div>
@@ -123,13 +169,23 @@ const CreateMarketplaceItemModal = ({ isOpen, onClose }: CreateMarketplaceItemMo
                 <div className="space-y-2">
                   <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Foto (Max 5)</Label>
                   <div className="flex flex-wrap gap-3">
-                    {previews.map((url, i) => (
-                      <div key={i} className="relative w-24 h-24 bg-zinc-900 border border-white/10 rounded-2xl overflow-hidden shadow-xl">
-                        <img src={url} className="w-full h-full object-cover" alt="Preview" />
-                        <button type="button" onClick={() => removeFile(i)} className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 text-white rounded-full hover:bg-red-600 transition-colors"><X size={12} /></button>
+                    {/* Existing Images */}
+                    {existingImages.map((url, i) => (
+                      <div key={`existing-${i}`} className="relative w-24 h-24 bg-zinc-900 border border-white/10 rounded-2xl overflow-hidden shadow-xl">
+                        <img src={url} className="w-full h-full object-cover" alt="Existing" />
+                        <button type="button" onClick={() => removeExistingImage(i)} className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 text-white rounded-full hover:bg-red-600 transition-colors"><X size={12} /></button>
                       </div>
                     ))}
-                    {selectedFiles.length < 5 && (
+                    
+                    {/* New Previews */}
+                    {previews.map((url, i) => (
+                      <div key={`new-${i}`} className="relative w-24 h-24 bg-zinc-900 border border-white/10 rounded-2xl overflow-hidden shadow-xl">
+                        <img src={url} className="w-full h-full object-cover" alt="Preview" />
+                        <button type="button" onClick={() => removeNewFile(i)} className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 text-white rounded-full hover:bg-red-600 transition-colors"><X size={12} /></button>
+                      </div>
+                    ))}
+
+                    {(existingImages.length + selectedFiles.length) < 5 && (
                       <button 
                         type="button" 
                         onClick={() => fileInputRef.current?.click()} 
@@ -158,10 +214,14 @@ const CreateMarketplaceItemModal = ({ isOpen, onClose }: CreateMarketplaceItemMo
 
                 <Button 
                   type="submit" 
-                  disabled={createItem.isPending || selectedFiles.length === 0}
+                  disabled={createItem.isPending || updateItem.isPending || (existingImages.length === 0 && selectedFiles.length === 0)}
                   className="w-full bg-white text-black hover:bg-zinc-200 h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl mt-4"
                 >
-                  {createItem.isPending ? <Loader2 className="animate-spin" /> : <><Send size={18} className="mr-2 -rotate-12" /> Pubblica Annuncio</>}
+                  {createItem.isPending || updateItem.isPending ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <><Save size={18} className="mr-2" /> {editItem ? 'Salva Modifiche' : 'Pubblica Annuncio'}</>
+                  )}
                 </Button>
               </div>
             </form>
