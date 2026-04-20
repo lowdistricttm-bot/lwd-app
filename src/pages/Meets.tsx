@@ -36,24 +36,26 @@ const Meets = () => {
     <div className="min-h-screen text-white flex flex-col bg-transparent">
       <Navbar />
       <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-6 max-w-5xl mx-auto w-full">
-        <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-8">
-          <div className="min-w-0 flex-1">
+        <header className="mb-16 flex flex-col items-center text-center gap-8">
+          <div className="min-w-0">
             <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Community Gatherings</h2>
-            <h1 className="text-3xl md:text-6xl font-black italic tracking-tighter uppercase truncate">District Meet</h1>
+            <h1 className="text-4xl md:text-7xl font-black italic tracking-tighter uppercase">District Meet</h1>
           </div>
-          <div className="flex gap-3 shrink-0">
+          
+          <div className="flex items-center justify-center gap-4 w-full">
             <button 
               onClick={handleManualRefresh}
-              className="w-12 h-12 bg-white/10 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all shadow-lg border border-white/10"
+              className="w-14 h-14 bg-white/10 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all shadow-lg border border-white/10 shrink-0"
             >
-              <RefreshCw size={20} className={cn(isRefreshing && "animate-spin")} />
+              <RefreshCw size={22} className={cn(isRefreshing && "animate-spin")} />
             </button>
+            
             {!isSubscriber && (
               <Button 
                 onClick={() => setIsCreateModalOpen(true)}
-                className="bg-white text-black rounded-full h-14 px-8 font-black uppercase italic shadow-xl hover:scale-105 transition-all"
+                className="bg-white text-black rounded-full h-14 px-10 font-black uppercase italic shadow-xl hover:scale-105 transition-all flex-1 sm:flex-none"
               >
-                <Plus size={18} className="mr-2" /> Organizza Meet
+                <Plus size={20} className="mr-2" /> Organizza Meet
               </Button>
             )}
           </div>
