@@ -9,7 +9,6 @@ import { Textarea } from './ui/textarea';
 import { Instagram, Facebook, Music2, Globe, Edit3, Save, X, User, Quote, MapPin, Navigation, Loader2 } from 'lucide-react';
 import { showSuccess, showError, showLoading, dismissToast } from '@/utils/toast';
 import { cn } from '@/lib/utils';
-import { Geolocation } from '@capacitor/geolocation';
 
 interface ProfileInfoTabProps {
   profile: any;
@@ -43,39 +42,63 @@ const ProfileInfoTab = ({ profile, isOwnProfile, onUpdate }: ProfileInfoTabProps
     }
   }, [profile]);
 
-  const handleGetLocation = async () => {
-    setIsLocating(true);
-    const toastId = showLoading("Rilevamento città...");
-
-    try {
-      const coordinates = await Geolocation.getCurrentPosition({
-        enableHighAccuracy: true,
-        timeout: 10000
-      });
-
-      const { latitude, longitude } = coordinates.coords;
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
-      );
-      const data = await response.json();
-      const city = data.address.city || data.address.town || data.address.village || data.address.county;
-      
-      if (city) {
-        setFormData(prev => ({ ...prev, city: city.toUpperCase() }));
-        if ('vibrate' in navigator) navigator.vibrate(15);
-      }
-    } catch (err: any) {
-      console.error("[GPS Error]", err);
-      showError("Permesso negato o errore GPS. Verifica le impostazioni del dispositivo.");
-    } finally {
-      setIsLocating(false);
-      dismissToast(toastId);
+  const handleGetLocation = () => {
+    if (!("geolocation" in navigator)) {
+      showError("Geolocalizzazione non supportata dal browser.");
+      return;
     }
+
+    setIsLocating(true);
+    const toastId = showLoading("Rilevamento posizione...");
+
+    const options = {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    };
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
+          );
+          const data = await response.json();
+          const city = data.address.city || data.address.town || data.address.village || data.address.county;
+          
+          if (city) {
+            setFormData(prev => ({ ...prev, city: city.toUpperCase() }));
+            showSuccess(`Posizione rilevata: ${city}`);
+            if ('vibrate' in navigator) navigator.vibrate(15);
+          } else {
+            showError("Impossibile determinare il nome della città.");
+          }
+        } catch (err) {
+          showError("Errore durante la conversione delle coordinate.");
+        } finally {
+          setIsLocating(false);
+          dismissToast(toastId);
+        }
+      },
+      (error) => {
+        setIsLocating(false);
+        dismissToast(toastId);
+        let msg = "Errore GPS.";
+        if (error.code === 1) msg = "Permesso negato. Abilita il GPS nelle impostazioni del browser/telefono.";
+        else if (error.code === 3) msg = "Timeout GPS. Riprova all'aperto.";
+        showError(msg);
+      },
+      options
+    );
   };
 
   const handleSave = async () => {
     setLoading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Utente non autenticato");
+
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -87,7 +110,7 @@ const ProfileInfoTab = ({ profile, isOwnProfile, onUpdate }: ProfileInfoTabProps
           website_url: formData.website_url,
           updated_at: new Date().toISOString()
         })
-        .eq('id', profile.id);
+        .eq('id', user.id);
 
       if (error) throw error;
       
