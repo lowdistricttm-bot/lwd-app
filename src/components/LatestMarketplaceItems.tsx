@@ -31,11 +31,11 @@ const LatestMarketplaceItems = () => {
     <section className="py-12 px-6 bg-transparent overflow-hidden">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-end mb-10">
-          <div>
+          <div className="min-w-0 flex-1">
             <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">District Marketplace</h2>
-            <h3 className="text-3xl md:text-5xl font-black italic tracking-tighter uppercase">Ultimi Annunci</h3>
+            <h3 className="text-2xl sm:text-3xl md:text-5xl font-black italic tracking-tighter uppercase whitespace-nowrap overflow-hidden text-ellipsis">Ultimi Annunci</h3>
           </div>
-          <Link to="/marketplace" className="hidden md:flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white border-b border-white/20 pb-1 hover:border-white transition-all">
+          <Link to="/marketplace" className="hidden md:flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white border-b border-white/20 pb-1 hover:border-white transition-all shrink-0 ml-4">
             {t.home.viewAll} <ArrowRight size={14} />
           </Link>
         </div>
