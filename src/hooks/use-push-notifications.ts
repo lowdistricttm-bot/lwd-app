@@ -1,13 +1,18 @@
+"use client";
+
 import { useState, useEffect } from 'react';
+import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from '@/utils/toast';
 
 export const usePushNotifications = () => {
   const [isSupported, setIsSupported] = useState(false);
-  const [permission, setPermission] = useState<NotificationPermission>('default');
+  const [permission, setPermission] = useState<NotificationPermission>(
+    typeof window !== 'undefined' ? Notification.permission : 'default'
+  );
   const [subscription, setSubscription] = useState<PushSubscription | null>(null);
 
   useEffect(() => {
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window) {
       setIsSupported(true);
       setPermission(Notification.permission);
       
@@ -19,11 +24,21 @@ export const usePushNotifications = () => {
     }
   }, []);
 
+  const requestPermission = async () => {
+    if (!('Notification' in window)) return;
+
+    const result = await Notification.requestPermission();
+    setPermission(result);
+    
+    if (result === 'granted') {
+      showSuccess("Notifiche attivate con successo!");
+    }
+    return result;
+  };
+
   const subscribeUser = async () => {
     try {
       const registration = await navigator.serviceWorker.ready;
-      
-      // Nota: In produzione dovrai sostituire questa chiave con la tua VAPID Public Key reale
       const vapidPublicKey = 'BEl627_5_2W-9ID99S3Y-9E2_7_5_2W-9ID99S3Y-9E2_7_5_2W-9ID99S3Y-9E2';
       const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
 
@@ -34,23 +49,16 @@ export const usePushNotifications = () => {
 
       setSubscription(sub);
       setPermission('granted');
-      
-      // Qui invieremo il token al database (Supabase)
-      console.log('Push Subscription:', JSON.stringify(sub));
-      showSuccess('Notifiche attivate con successo!');
-      
       return sub;
     } catch (error) {
       console.error('Errore durante la sottoscrizione:', error);
-      showError('Impossibile attivare le notifiche.');
       return null;
     }
   };
 
-  return { isSupported, permission, subscription, subscribeUser };
+  return { isSupported, permission, subscription, subscribeUser, requestPermission };
 };
 
-// Utility per convertire la chiave VAPID
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');

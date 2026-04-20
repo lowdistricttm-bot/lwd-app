@@ -1,7 +1,7 @@
 "use client";
 
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import Footer from '@/components/Footer';
@@ -11,12 +11,25 @@ import LatestActivities from '@/components/LatestActivities';
 import LatestMeets from '@/components/LatestMeets';
 import LatestMarketplaceItems from '@/components/LatestMarketplaceItems';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
-import { ShoppingBag, Users, Calendar, ArrowRight, Star, Music, Play, ChevronRight, MapPin, Tag } from 'lucide-react';
+import { ShoppingBag, Users, Calendar, ArrowRight, Star, Music, Play, ChevronRight, MapPin, Tag, Bell, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from '@/hooks/use-translation';
+import { usePushNotifications } from '@/hooks/use-push-notifications';
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const { t } = useTranslation();
+  const { permission, requestPermission } = usePushNotifications();
+  const [showPrompt, setShowPrompt] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user && permission === 'default') {
+        const timer = setTimeout(() => setShowPrompt(true), 5000);
+        return () => clearTimeout(timer);
+      }
+    });
+  }, [permission]);
 
   const navigationTabs = [
     { 
@@ -187,6 +200,60 @@ const Index = () => {
       
       <Footer />
       <PWAInstallPrompt />
+
+      {/* Push Notification Prompt */}
+      <AnimatePresence>
+        {showPrompt && (
+          <motion.div 
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            className="fixed bottom-24 left-6 right-6 z-[100] md:left-auto md:right-12 md:w-96"
+          >
+            <div className="bg-white text-black p-6 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/20 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-5">
+                <Bell size={80} />
+              </div>
+              
+              <button 
+                onClick={() => setShowPrompt(false)}
+                className="absolute top-4 right-4 p-1 hover:bg-black/5 rounded-full transition-colors"
+              >
+                <X size={16} />
+              </button>
+
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-white">
+                  <Bell size={20} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Resta Connesso</p>
+                  <p className="text-sm font-black uppercase italic">Attiva le Notifiche</p>
+                </div>
+              </div>
+
+              <p className="text-xs font-medium leading-relaxed mb-6 opacity-70">
+                Ricevi avvisi in tempo reale per nuovi messaggi, like e commenti ai tuoi post.
+              </p>
+
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => { requestPermission(); setShowPrompt(false); }}
+                  className="flex-1 bg-black text-white h-12 rounded-full font-black uppercase italic text-[10px] tracking-widest hover:scale-105 transition-all"
+                >
+                  Attiva Ora
+                </button>
+                <button 
+                  onClick={() => setShowPrompt(false)}
+                  className="px-6 h-12 rounded-full font-black uppercase italic text-[10px] tracking-widest border border-black/10 hover:bg-black/5 transition-all"
+                >
+                  Più Tardi
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
