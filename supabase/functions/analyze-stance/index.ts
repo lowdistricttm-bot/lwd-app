@@ -1,19 +1,10 @@
 // @ts-nocheck
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
+import { encode as encodeBase64 } from "https://deno.land/std@0.190.0/encoding/base64.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-function arrayBufferToBase64(buffer: ArrayBuffer) {
-  let binary = '';
-  const bytes = new Uint8Array(buffer);
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
 }
 
 serve(async (req) => {
@@ -33,7 +24,8 @@ serve(async (req) => {
     }
 
     const buffer = await imageRes.arrayBuffer();
-    const base64Data = arrayBufferToBase64(buffer);
+    // Utilizziamo l'encoder standard di Deno per evitare problemi di call stack su immagini grandi
+    const base64Data = encodeBase64(new Uint8Array(buffer));
 
     const payload = {
       contents: [{
@@ -47,7 +39,7 @@ serve(async (req) => {
       }
     }
 
-    console.log("[analyze-stance] Invio richiesta a Gemini v1beta (gemini-1.5-flash)...");
+    console.log("[analyze-stance] Invio richiesta a Gemini 1.5 Flash...");
     
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
@@ -70,7 +62,6 @@ serve(async (req) => {
     const textResponse = data.candidates[0].content.parts[0].text
     console.log("[analyze-stance] Risposta testuale ricevuta:", textResponse);
 
-    // Essendo in application/json la stringa in textResponse dovrebbe già essere un JSON pulito
     const result = JSON.parse(textResponse.replace(/```json/g, '').replace(/```/g, '').trim())
 
     return new Response(JSON.stringify(result), {
