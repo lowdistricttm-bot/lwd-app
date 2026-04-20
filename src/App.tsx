@@ -31,56 +31,14 @@ import AdminUsers from "./pages/AdminUsers";
 import Messages from "./pages/Messages";
 import Chat from "./pages/Chat";
 import PostDetail from "./pages/PostDetail";
+import Marketplace from "./pages/Marketplace";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60,
-      gcTime: 1000 * 60 * 10,
-      refetchOnWindowFocus: false,
-      retry: 1,
-    },
-  },
-});
+const queryClient = new QueryClient();
 
 const AppContent = () => {
   useNotificationListener();
-  
-  const [currentUsername, setCurrentUsername] = useState<string | undefined>();
-
-  useEffect(() => {
-    const handleFirstInteraction = () => {
-      unlockAudio();
-      window.removeEventListener('click', handleFirstInteraction);
-      window.removeEventListener('touchstart', handleFirstInteraction);
-    };
-
-    window.addEventListener('click', handleFirstInteraction);
-    window.addEventListener('touchstart', handleFirstInteraction);
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        const username = session.user.user_metadata?.username;
-        if (username) setCurrentUsername(username);
-        
-        supabase.from('profiles')
-          .select('username')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data }) => {
-            if (data?.username) setCurrentUsername(data.username);
-          });
-      }
-    });
-
-    return () => {
-      window.removeEventListener('click', handleFirstInteraction);
-      window.removeEventListener('touchstart', handleFirstInteraction);
-    };
-  }, []);
-
-  useProfileSync(currentUsername);
+  useProfileSync();
   
   return (
     <>
@@ -102,14 +60,13 @@ const AppContent = () => {
           <Route path="/events" element={<Events />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/chat/:userId" element={<Chat />} />
+          <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/applications" element={<AdminApplications />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </SwipeNavigation>
-      
-      {/* La BottomNav è ora l'ultimo elemento assoluto del DOM per evitare interferenze */}
       <BottomNav />
     </>
   );
@@ -122,7 +79,7 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <BrowserRouter>
             <ScrollToTop />
             <AppContent />
           </BrowserRouter>
