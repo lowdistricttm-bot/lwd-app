@@ -7,9 +7,7 @@ import { useNotificationListener } from "@/hooks/use-notification-listener";
 import { LanguageProvider } from "@/hooks/use-translation";
 import { useProfileSync } from "@/hooks/use-profile-sync";
 import { PresenceProvider } from "@/hooks/use-presence";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { unlockAudio } from "@/utils/sound";
+import { AuthProvider } from "@/hooks/use-auth";
 import PullToRefresh from "@/components/PullToRefresh";
 import SpotifyPlayer from "@/components/SpotifyPlayer";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -74,18 +72,20 @@ const AppContent = () => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <LanguageProvider>
-      <PresenceProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <ScrollToTop />
-            <AppContent />
-          </BrowserRouter>
-        </TooltipProvider>
-      </PresenceProvider>
-    </LanguageProvider>
+    <AuthProvider>
+      <LanguageProvider>
+        <PresenceProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <ScrollToTop />
+              <AppContent />
+            </BrowserRouter>
+          </TooltipProvider>
+        </PresenceProvider>
+      </LanguageProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
