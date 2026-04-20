@@ -59,19 +59,15 @@ const Meets = () => {
     });
   }, []);
 
-  const handleManualRefresh = async () => {
+  const handleManualRefresh = () => {
     if (!user) return;
     setIsRefreshing(true);
+    
+    // Feedback aptico
     if ('vibrate' in navigator) navigator.vibrate(15);
-    try {
-      await refetch();
-      await new Promise(resolve => setTimeout(resolve, 600));
-      showSuccess("Lista incontri aggiornata");
-    } catch (err) {
-      console.error("Errore durante il refresh:", err);
-    } finally {
-      setIsRefreshing(false);
-    }
+    
+    // Refresh completo della pagina come richiesto
+    window.location.reload();
   };
 
   const handleNearMe = () => {
@@ -173,7 +169,7 @@ const Meets = () => {
                     placeholder="CERCA PER CITTÀ O TITOLO..." 
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="bg-white/5 border-white/10 rounded-full h-14 pl-14 pr-6 text-xs font-black uppercase italic tracking-widest focus:bg-white/10 transition-all"
+                    className="bg-white/5 border-white/10 rounded-full h-14 pl-14 pr-6 text-xs font-black uppercase italic tracking-widest focus-visible:ring-white/10 transition-all"
                   />
                 </div>
                 
