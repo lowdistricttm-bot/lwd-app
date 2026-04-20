@@ -35,27 +35,24 @@ serve(async (req) => {
     const buffer = await imageRes.arrayBuffer();
     const base64Data = arrayBufferToBase64(buffer);
 
-    const prompt = {
+    const payload = {
       contents: [{
         parts: [
-          { text: "Sei un esperto di car styling e stance. Analizza questa foto laterale di un'auto. Valuta da 1 a 100 i seguenti parametri: stance_score (generale), wheel_gap (distanza gomma-passaruota), camber (inclinazione), fitment (allineamento). Restituisci SOLO un JSON con questi campi e un campo 'comment' di massimo 15 parole in italiano con stile aggressivo e tecnico." },
-          { inline_data: { mime_type: "image/jpeg", data: base64Data } }
+          { text: "Sei un esperto di car styling e stance. Analizza questa foto laterale di un'auto. Valuta da 1 a 100 i seguenti parametri: stance_score (generale), wheel_gap (distanza gomma-passaruota), camber (inclinazione), fitment (allineamento). Restituisci SOLO un JSON con questi campi esatti (stance_score, wheel_gap, camber, fitment_type) e un campo 'comment' di massimo 15 parole in italiano con stile aggressivo e tecnico." },
+          { inlineData: { mimeType: "image/jpeg", data: base64Data } }
         ]
       }],
-      safetySettings: [
-        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-      ]
+      generationConfig: {
+        responseMimeType: "application/json"
+      }
     }
 
-    console.log("[analyze-stance] Invio richiesta a Gemini v1 (gemini-1.5-flash)...");
-    // Utilizziamo l'endpoint v1 stabile con il nome modello standard
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+    console.log("[analyze-stance] Invio richiesta a Gemini v1beta (gemini-1.5-flash)...");
+    
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(prompt)
+      body: JSON.stringify(payload)
     })
 
     const data = await response.json()
@@ -71,14 +68,10 @@ serve(async (req) => {
     }
 
     const textResponse = data.candidates[0].content.parts[0].text
-    const jsonMatch = textResponse.match(/\{.*\}/s)
-    
-    if (!jsonMatch) {
-      console.error("[analyze-stance] Formato JSON non trovato nella risposta:", textResponse);
-      throw new Error("L'IA ha risposto in un formato non corretto.");
-    }
+    console.log("[analyze-stance] Risposta testuale ricevuta:", textResponse);
 
-    const result = JSON.parse(jsonMatch[0])
+    // Essendo in application/json la stringa in textResponse dovrebbe già essere un JSON pulito
+    const result = JSON.parse(textResponse.replace(/```json/g, '').replace(/```/g, '').trim())
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
