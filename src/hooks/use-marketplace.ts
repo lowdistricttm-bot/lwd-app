@@ -37,11 +37,15 @@ export const useMarketplace = (categoryFilter: string = 'all') => {
   const { data: items = [], isLoading, refetch } = useQuery({
     queryKey: ['marketplace-items', categoryFilter],
     queryFn: async () => {
+      // Specifichiamo esplicitamente la relazione con profiles
       let query = supabase
         .from('marketplace_items')
         .select(`
           *,
-          profiles:seller_id (username, avatar_url)
+          profiles:seller_id (
+            username, 
+            avatar_url
+          )
         `)
         .order('created_at', { ascending: false });
 
@@ -50,17 +54,18 @@ export const useMarketplace = (categoryFilter: string = 'all') => {
       }
 
       const { data, error } = await query;
+      
       if (error) {
-        console.error("[Marketplace] Errore:", error);
+        console.error("[Marketplace] Errore query:", error);
         return [];
       }
+      
       return (data || []) as MarketplaceItem[];
     },
     staleTime: 0
   });
 
   useEffect(() => {
-    // Generiamo un ID univoco per il canale per evitare conflitti di sottoscrizione
     const channelId = `marketplace-${Math.random().toString(36).substring(2, 9)}`;
     
     const channel = supabase
