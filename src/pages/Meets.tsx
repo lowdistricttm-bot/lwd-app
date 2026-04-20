@@ -5,7 +5,7 @@ import Navbar from '@/components/Navbar';
 import { useMeets, Meet } from '@/hooks/use-meets';
 import { useAdmin } from '@/hooks/use-admin';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Calendar, Plus, User, Loader2, ChevronRight, Trash2, RefreshCw, Clock, AlertCircle, LogIn, Info, Search, Navigation, X, Map as MapIcon, List, MapPinned } from 'lucide-react';
+import { MapPin, Calendar, Plus, User, Loader2, ChevronRight, Trash2, RefreshCw, Clock, AlertCircle, LogIn, Info, Search, Navigation, X, Map as MapIcon, List, MapPinned, CheckCircle2, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import CreateMeetModal from '@/components/CreateMeetModal';
@@ -32,7 +32,7 @@ import {
 const Meets = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { meets, isLoading, deleteMeet, refetch } = useMeets();
+  const { meets, isLoading, deleteMeet, toggleParticipation, refetch } = useMeets();
   const { role } = useAdmin();
   
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -61,21 +61,11 @@ const Meets = () => {
 
   const handleManualRefresh = async () => {
     if (!user) return;
-    
     setIsRefreshing(true);
-    
-    // Feedback aptico
-    if ('vibrate' in navigator) {
-      navigator.vibrate(15);
-    }
-
+    if ('vibrate' in navigator) navigator.vibrate(15);
     try {
-      // Forza il refetch dei dati
       await refetch();
-      
-      // Piccolo delay artificiale per rendere visibile l'animazione di caricamento
       await new Promise(resolve => setTimeout(resolve, 600));
-      
       showSuccess("Lista incontri aggiornata");
     } catch (err) {
       console.error("Errore durante il refresh:", err);
@@ -97,20 +87,17 @@ const Meets = () => {
 
   const filteredMeets = useMemo(() => {
     let result = meets || [];
-    
     if (searchQuery) {
       result = result.filter(meet => 
         meet.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         meet.location.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-
     if (isFilteringNearMe && userProfile?.city) {
       result = result.filter(meet => 
         meet.location.toLowerCase().includes(userProfile.city.toLowerCase())
       );
     }
-
     return result;
   }, [meets, searchQuery, isFilteringNearMe, userProfile]);
 
@@ -281,7 +268,15 @@ const Meets = () => {
                         </div>
 
                         <div className="p-8">
-                          <h3 className="text-2xl font-black italic uppercase tracking-tighter leading-none mb-4">{meet.title}</h3>
+                          <div className="flex justify-between items-start mb-4">
+                            <h3 className="text-2xl font-black italic uppercase tracking-tighter leading-none">{meet.title}</h3>
+                            {meet.is_participating && (
+                              <div className="bg-green-500/20 text-green-500 p-1.5 rounded-full border border-green-500/20">
+                                <CheckCircle2 size={14} />
+                              </div>
+                            )}
+                          </div>
+                          
                           <div className="flex flex-col gap-2 mb-6">
                             <div className="flex items-center gap-2 text-zinc-500">
                               <MapPin size={12} className="text-white" />
@@ -292,15 +287,50 @@ const Meets = () => {
                               <span className="text-[10px] font-black uppercase tracking-widest italic">{format(new Date(meet.date), 'HH:mm')}</span>
                             </div>
                           </div>
-                          <p className="text-xs text-zinc-400 italic leading-relaxed line-clamp-3 mb-8">{meet.description}</p>
-                          <div className="pt-6 border-t border-white/5 flex justify-between items-center">
+
+                          {/* Preview Partecipanti */}
+                          <div className="flex items-center gap-3 mb-8">
+                            <div className="flex -space-x-2">
+                              {meet.participants?.slice(0, 4).map((p, i) => (
+                                <div key={i} className="w-6 h-6 rounded-full border-2 border-black bg-zinc-800 overflow-hidden">
+                                  {p.profiles?.avatar_url ? <img src={p.profiles.avatar_url} className="w-full h-full object-cover" /> : <User size={10} className="m-auto h-full" />}
+                                </div>
+                              ))}
+                            </div>
+                            <span className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">
+                              {meet.participants?.length || 0} Partecipanti
+                            </span>
+                          </div>
+
+                          <div className="pt-6 border-t border-white/5 flex flex-col gap-4">
+                            <div className="flex gap-3">
+                              <Button 
+                                onClick={(e) => { e.stopPropagation(); toggleParticipation.mutate(meet.id); }}
+                                disabled={toggleParticipation.isPending}
+                                className={cn(
+                                  "flex-1 h-12 rounded-full font-black uppercase italic text-[9px] tracking-widest transition-all shadow-lg border",
+                                  meet.is_participating 
+                                    ? "bg-zinc-800 text-white border-white/10 hover:bg-red-600 hover:border-red-600" 
+                                    : "bg-white text-black border-white hover:bg-zinc-200"
+                                )}
+                              >
+                                {toggleParticipation.isPending ? <Loader2 className="animate-spin" size={14} /> : meet.is_participating ? 'ANNULLA' : 'PARTECIPA'}
+                              </Button>
+                              <Button 
+                                onClick={(e) => { e.stopPropagation(); setSelectedMeet(meet); }}
+                                variant="outline"
+                                className="flex-1 h-12 rounded-full font-black uppercase italic text-[9px] tracking-widest border-white/10 text-white hover:bg-white/5"
+                              >
+                                DETTAGLI
+                              </Button>
+                            </div>
+                            
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 rounded-full bg-zinc-800 overflow-hidden border border-white/10">
                                 {meet.profiles?.avatar_url ? <img src={meet.profiles.avatar_url} className="w-full h-full object-cover" /> : <User size={14} className="m-auto h-full text-zinc-600" />}
                               </div>
                               <span className="text-[9px] font-black uppercase italic text-zinc-500">@{meet.profiles?.username}</span>
                             </div>
-                            <button className="text-[9px] font-black uppercase tracking-widest text-white italic flex items-center gap-2 group">Dettagli <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" /></button>
                           </div>
                         </div>
                       </motion.div>

@@ -21,6 +21,14 @@ export interface Meet {
     username: string;
     avatar_url: string;
   };
+  participants?: {
+    user_id: string;
+    profiles: {
+      username: string;
+      avatar_url: string;
+    };
+  }[];
+  is_participating?: boolean;
 }
 
 export const useMeets = () => {
@@ -29,7 +37,7 @@ export const useMeets = () => {
   const { data: meets = [], isLoading, refetch } = useQuery({
     queryKey: ['district-meets'],
     queryFn: async () => {
-      // Calcoliamo l'inizio di oggi (mezzanotte locale) per mostrare tutti i meet odierni
+      const { data: { user } } = await supabase.auth.getUser();
       const now = new Date();
       const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
 
@@ -37,7 +45,11 @@ export const useMeets = () => {
         .from('meets')
         .select(`
           *,
-          profiles:user_id (username, avatar_url)
+          profiles:user_id (username, avatar_url),
+          meet_participants (
+            user_id,
+            profiles:user_id (username, avatar_url)
+          )
         `)
         .gte('date', startOfToday)
         .order('date', { ascending: true });
@@ -47,26 +59,30 @@ export const useMeets = () => {
         return [];
       }
       
-      // Gestione join Supabase (potrebbe restituire un array o un oggetto)
       return (data || []).map((m: any) => ({
         ...m,
-        profiles: Array.isArray(m.profiles) ? m.profiles[0] : m.profiles
+        profiles: Array.isArray(m.profiles) ? m.profiles[0] : m.profiles,
+        participants: m.meet_participants || [],
+        is_participating: user ? m.meet_participants?.some((p: any) => p.user_id === user.id) : false
       })) as Meet[];
     },
     staleTime: 0
   });
 
   useEffect(() => {
-    const channelId = `meets-${Math.random().toString(36).substring(2, 9)}`;
+    const channelId = `meets-global-${Math.random().toString(36).substring(2, 9)}`;
 
     const channel = supabase
       .channel(channelId)
       .on(
         'postgres_changes', 
         { event: '*', schema: 'public', table: 'meets' }, 
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['district-meets'] });
-        }
+        () => queryClient.invalidateQueries({ queryKey: ['district-meets'] })
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'meet_participants' },
+        () => queryClient.invalidateQueries({ queryKey: ['district-meets'] })
       )
       .subscribe();
 
@@ -91,7 +107,7 @@ export const useMeets = () => {
           user_id: user.id,
           title: newMeet.title,
           description: newMeet.description,
-          date: newMeet.date, // Già convertito in ISO dal componente
+          date: newMeet.date,
           location: newMeet.location,
           latitude: newMeet.latitude,
           longitude: newMeet.longitude,
@@ -107,6 +123,40 @@ export const useMeets = () => {
     onError: (err: any) => showError(err.message)
   });
 
+  const toggleParticipation = useMutation({
+    mutationFn: async (meetId: string) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Accedi per partecipare");
+
+      const { data: existing } = await supabase
+        .from('meet_participants')
+        .select('id')
+        .eq('meet_id', meetId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existing) {
+        const { error } = await supabase
+          .from('meet_participants')
+          .delete()
+          .eq('id', existing.id);
+        if (error) throw error;
+        return 'removed';
+      } else {
+        const { error } = await supabase
+          .from('meet_participants')
+          .insert([{ meet_id: meetId, user_id: user.id }]);
+        if (error) throw error;
+        return 'added';
+      }
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['district-meets'] });
+      showSuccess(result === 'added' ? "Ti sei unito all'incontro!" : "Partecipazione annullata.");
+    },
+    onError: (err: any) => showError(err.message)
+  });
+
   const deleteMeet = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from('meets').delete().eq('id', id);
@@ -118,5 +168,5 @@ export const useMeets = () => {
     }
   });
 
-  return { meets, isLoading, createMeet, deleteMeet, refetch };
+  return { meets, isLoading, createMeet, deleteMeet, toggleParticipation, refetch };
 };

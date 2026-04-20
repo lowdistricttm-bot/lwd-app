@@ -2,13 +2,14 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MapPin, Calendar, Clock, User, Info, Navigation, Share2 } from 'lucide-react';
-import { Meet } from '@/hooks/use-meets';
+import { X, MapPin, Calendar, Clock, User, Info, Navigation, Share2, Users, CheckCircle2, Loader2 } from 'lucide-react';
+import { Meet, useMeets } from '@/hooks/use-meets';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { Button } from './ui/button';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
 
 interface MeetDetailModalProps {
   isOpen: boolean;
@@ -17,6 +18,8 @@ interface MeetDetailModalProps {
 }
 
 const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
+  const navigate = useNavigate();
+  const { toggleParticipation } = useMeets();
   useBodyLock(isOpen);
 
   if (!meet) return null;
@@ -36,6 +39,8 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
       if (navigator.share) await navigator.share(shareData);
     } catch (err) {}
   };
+
+  const participants = meet.participants || [];
 
   return (
     <AnimatePresence>
@@ -102,6 +107,40 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
                 </div>
               </div>
 
+              {/* Sezione Partecipanti */}
+              <div className="bg-white/5 border border-white/10 p-6 rounded-[2rem] space-y-4">
+                <div className="flex justify-between items-center">
+                  <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.4em] italic flex items-center gap-2">
+                    <Users size={12} /> Partecipanti ({participants.length})
+                  </h4>
+                </div>
+                
+                {participants.length > 0 ? (
+                  <div className="flex flex-wrap gap-3">
+                    {participants.map((p, i) => (
+                      <button 
+                        key={i}
+                        onClick={() => { onClose(); navigate(`/profile/${p.user_id}`); }}
+                        className="group relative"
+                      >
+                        <div className="w-10 h-10 rounded-full border-2 border-white/10 overflow-hidden bg-zinc-900 group-hover:border-white transition-all">
+                          {p.profiles?.avatar_url ? (
+                            <img src={p.profiles.avatar_url} className="w-full h-full object-cover" alt={p.profiles.username} />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-zinc-700"><User size={16} /></div>
+                          )}
+                        </div>
+                        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-white text-black text-[7px] font-black uppercase px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                          {p.profiles?.username}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[9px] font-bold uppercase text-zinc-600 italic">Nessun partecipante ancora. Sii il primo!</p>
+                )}
+              </div>
+
               <div className="bg-white/5 border border-white/10 p-6 rounded-[2rem] flex items-center justify-between shadow-2xl">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-zinc-900 rounded-full overflow-hidden border-2 border-white/10">
@@ -129,20 +168,43 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
                 </div>
               </div>
 
-              <div className="pt-6 flex flex-col sm:flex-row gap-4">
-                <Button 
-                  onClick={handleOpenMap}
-                  className="flex-1 h-16 bg-white text-black hover:bg-zinc-200 rounded-full font-black uppercase italic text-[10px] tracking-widest transition-all shadow-xl flex items-center justify-center gap-3"
-                >
-                  <Navigation size={18} />
-                  PORTAMI ALL'INCONTRO
-                </Button>
+              <div className="pt-6 flex flex-col gap-4">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button 
+                    onClick={() => toggleParticipation.mutate(meet.id)}
+                    disabled={toggleParticipation.isPending}
+                    className={cn(
+                      "flex-1 h-16 rounded-full font-black uppercase italic text-[10px] tracking-widest transition-all shadow-xl flex items-center justify-center gap-3 border",
+                      meet.is_participating 
+                        ? "bg-zinc-800 text-white border-white/10 hover:bg-red-600 hover:border-red-600" 
+                        : "bg-white text-black border-white hover:bg-zinc-200"
+                    )}
+                  >
+                    {toggleParticipation.isPending ? (
+                      <Loader2 className="animate-spin" size={18} />
+                    ) : meet.is_participating ? (
+                      <>ANNULLA PARTECIPAZIONE</>
+                    ) : (
+                      <>PARTECIPA ALL'INCONTRO</>
+                    )}
+                  </Button>
+                  
+                  <Button 
+                    onClick={handleOpenMap}
+                    variant="outline"
+                    className="flex-1 h-16 rounded-full font-black uppercase italic text-[10px] tracking-widest border-white/10 text-white hover:bg-white/5 flex items-center justify-center gap-3"
+                  >
+                    <Navigation size={18} />
+                    PORTAMI LÌ
+                  </Button>
+                </div>
+                
                 <Button 
                   onClick={handleShare}
-                  variant="outline"
-                  className="h-16 w-full sm:w-16 rounded-full flex items-center justify-center border-white/10 text-white hover:bg-white/5"
+                  variant="ghost"
+                  className="h-12 rounded-full font-black uppercase italic text-[9px] tracking-widest text-zinc-500 hover:text-white flex items-center justify-center gap-2"
                 >
-                  <Share2 size={20} />
+                  <Share2 size={16} /> CONDIVIDI INCONTRO
                 </Button>
               </div>
             </div>
