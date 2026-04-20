@@ -64,15 +64,15 @@ const CreateMeetModal = ({ isOpen, onClose }: CreateMeetModalProps) => {
             <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-8 pb-10">
               <div className="flex justify-between items-center">
                 <div>
-                  <h2 className="text-2xl font-black italic uppercase tracking-tighter">Organizza Meet</h2>
-                  <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 mt-1">Crea un raduno per la community</p>
+                  <h2 className="text-2xl font-black italic uppercase tracking-tighter">Organizza Incontro</h2>
+                  <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 mt-1">Crea un incontro per la community</p>
                 </div>
                 <button type="button" onClick={onClose} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors"><X size={24} /></button>
               </div>
 
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Titolo Raduno</Label>
+                  <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Titolo Incontro</Label>
                   <div className="relative">
                     <Type className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
                     <Input required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value.toUpperCase()})} className={cn(inputClass, "pl-12")} placeholder="ES: COFFEE & CARS MILANO" />
@@ -121,7 +121,7 @@ const CreateMeetModal = ({ isOpen, onClose }: CreateMeetModalProps) => {
                       required 
                       value={formData.description} 
                       onChange={e => setFormData({...formData, description: e.target.value})} 
-                      placeholder="Descrivi il raduno..."
+                      placeholder="Descrivi l'incontro..."
                       className="bg-transparent border-none focus-visible:ring-0 p-0 min-h-[120px] text-sm italic text-white placeholder:text-zinc-800 resize-none" 
                     />
                   </div>
@@ -132,7 +132,7 @@ const CreateMeetModal = ({ isOpen, onClose }: CreateMeetModalProps) => {
                   disabled={createMeet.isPending}
                   className="w-full bg-white text-black hover:bg-zinc-200 h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl mt-4"
                 >
-                  {createMeet.isPending ? <Loader2 className="animate-spin" /> : <><Send size={18} className="mr-2 -rotate-12" /> Pubblica Meet</>}
+                  {createMeet.isPending ? <Loader2 className="animate-spin" /> : <><Send size={18} className="mr-2 -rotate-12" /> Pubblica Incontro</>}
                 </Button>
               </div>
             </form>

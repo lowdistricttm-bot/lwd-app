@@ -65,7 +65,7 @@ const Meets = () => {
                   onClick={() => setIsCreateModalOpen(true)}
                   className="bg-white text-black rounded-full h-14 px-10 font-black uppercase italic shadow-xl hover:scale-105 transition-all flex-1 sm:flex-none"
                 >
-                  <Plus size={20} className="mr-2" /> Organizza Meet
+                  <Plus size={20} className="mr-2" /> Organizza Incontro
                 </Button>
               )}
             </div>
@@ -82,7 +82,7 @@ const Meets = () => {
               <AlertCircle className="text-white shrink-0" size={32} />
               <div>
                 <p className="text-xs font-black uppercase tracking-widest text-white">Area Riservata</p>
-                <p className="text-[10px] text-zinc-400 font-bold uppercase mt-1">Accedi per visualizzare i raduni della community.</p>
+                <p className="text-[10px] text-zinc-400 font-bold uppercase mt-1">Accedi per visualizzare gli incontri della community.</p>
               </div>
             </div>
             <Button onClick={() => navigate('/login')} className="bg-white text-black hover:scale-105 rounded-full text-[10px] font-black uppercase tracking-widest h-12 px-8 italic shadow-xl">
@@ -97,7 +97,7 @@ const Meets = () => {
         ) : meets?.length === 0 ? (
           <div className="text-center py-24 bg-zinc-900/20 border border-dashed border-white/10 rounded-[3rem]">
             <MapPin size={48} className="mx-auto text-zinc-800 mb-6" />
-            <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Nessun raduno in programma. Sii il primo a organizzarne uno!</p>
+            <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Nessun incontro in programma. Sii il primo a organizzarne uno!</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
