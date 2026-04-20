@@ -110,10 +110,10 @@ const CreateMeetModal = ({ isOpen, onClose }: CreateMeetModalProps) => {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Luogo / Ritrovo</Label>
+                    <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Ritrovo</Label>
                     <div className="relative">
                       <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
-                      <Input required value={formData.location} onChange={e => setFormData({...formData, location: e.target.value.toUpperCase()})} className={cn(inputClass, "pl-12")} placeholder="ES: PARCHEGGIO IKEA" />
+                      <Input required value={formData.location} onChange={e => setFormData({...formData, location: e.target.value.toUpperCase()})} className={cn(inputClass, "pl-12")} placeholder="ES: MILANO (PARCHEGGIO IKEA)" />
                     </div>
                   </div>
                 </div>
