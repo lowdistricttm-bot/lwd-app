@@ -5,14 +5,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, Sparkles, Gauge, Share2, X, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { Button } from './ui/button';
 import { supabase } from "@/integrations/supabase/client";
-import { showError } from '@/utils/toast';
+import { showError, showSuccess } from '@/utils/toast';
 import { useGarage } from '@/hooks/use-garage';
 import { cn } from '@/lib/utils';
 
 const StanceAnalyzer = ({ imageUrl, vehicleId, onClose }: { imageUrl: string, vehicleId: string, onClose: () => void }) => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { updateStanceScore } = useGarage();
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setCurrentUserId(user?.id || null);
+    });
+  }, []);
 
   const analyze = async () => {
     setLoading(true);
@@ -30,7 +37,6 @@ const StanceAnalyzer = ({ imageUrl, vehicleId, onClose }: { imageUrl: string, ve
       const data = await response.json();
       if (data.error) throw new Error(data.error);
       
-      // Simuliamo la durata della scansione laser
       setTimeout(async () => {
         setResult(data);
         if (data.stance_score) {
@@ -48,17 +54,38 @@ const StanceAnalyzer = ({ imageUrl, vehicleId, onClose }: { imageUrl: string, ve
     }
   };
 
+  const handleShare = async () => {
+    if (!currentUserId || !result) return;
+
+    const shareUrl = `${window.location.origin}/profile/${currentUserId}?tab=garage`;
+    const shareData = {
+      title: 'Low District Stance Score',
+      text: `Il mio progetto ha ottenuto un Low Score di ${result.stance_score}! Scoprilo nel mio Garage su Low District.`,
+      url: shareUrl
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        showSuccess("Link del profilo copiato!");
+      }
+    } catch (err) {
+      console.error('Errore condivisione:', err);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full max-h-[90vh] overflow-y-auto no-scrollbar relative bg-zinc-950">
-      {/* Header con X di chiusura interna al modal */}
-      <div className="p-6 md:p-8 flex justify-between items-start sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-md">
-        <div>
-          <h3 className="text-2xl font-black italic uppercase tracking-tighter">Low Score Analyzer</h3>
-          <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500">AI Visual Stance Evaluation</p>
-        </div>
+      {/* Header */}
+      <div className="p-6 md:p-8 flex justify-between items-center sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-md">
+        <h3 className="text-xl md:text-2xl font-black italic uppercase tracking-tighter whitespace-nowrap">
+          Low Score Analyzer
+        </h3>
         <button 
           onClick={onClose} 
-          className="p-2.5 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors"
+          className="p-2.5 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors ml-4"
         >
           <X size={20} />
         </button>
@@ -153,7 +180,10 @@ const StanceAnalyzer = ({ imageUrl, vehicleId, onClose }: { imageUrl: string, ve
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
-                <Button className="flex-1 bg-white/5 border border-white/10 rounded-full h-14 font-black uppercase italic text-[10px] tracking-widest hover:bg-white/10 transition-all">
+                <Button 
+                  onClick={handleShare}
+                  className="flex-1 bg-white/5 border border-white/10 rounded-full h-14 font-black uppercase italic text-[10px] tracking-widest hover:bg-white/10 transition-all"
+                >
                   <Share2 size={16} className="mr-2" /> Condividi
                 </Button>
                 <Button onClick={onClose} className="flex-1 bg-white text-black rounded-full h-14 font-black uppercase italic text-[10px] tracking-widest shadow-xl hover:bg-zinc-200 transition-all">
