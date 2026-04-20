@@ -4,13 +4,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { useDiscover } from '@/hooks/use-discover';
-import { useGarage, Vehicle } from '@/hooks/use-garage';
+import { useGarage } from '@/hooks/use-garage';
 import { useAdmin } from '@/hooks/use-admin';
 import { usePresence } from '@/hooks/use-presence';
 import { Loader2, Car, Search, LayoutGrid, StretchHorizontal, User, ChevronRight, ShieldCheck, Sparkles, Users, Heart, Gauge } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import VehicleDetailModal from '@/components/VehicleDetailModal';
+import ImageLightbox from '@/components/ImageLightbox';
 import { useTranslation } from '@/hooks/use-translation';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -22,7 +22,7 @@ const Discover = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -39,10 +39,6 @@ const Discover = () => {
 
   const getRoleLabel = (role: string) => {
     return t.profile.roles[role] || t.profile.roles.member;
-  };
-
-  const handleOpenProject = (vehicle: any) => {
-    setSelectedVehicle(vehicle as Vehicle);
   };
 
   return (
@@ -214,7 +210,7 @@ const Discover = () => {
                           "bg-zinc-950 relative overflow-hidden cursor-pointer shrink-0",
                           viewMode === 'grid' ? "aspect-[4/5]" : "aspect-video md:w-80"
                         )}
-                        onClick={() => handleOpenProject(vehicle)}
+                        onClick={() => setLightboxData({ images: vehicle.images || [], index: 0 })}
                       >
                         {vehicle.images?.[0] ? (
                           <img 
@@ -330,7 +326,7 @@ const Discover = () => {
                             </button>
 
                             <button 
-                              onClick={() => handleOpenProject(vehicle)}
+                              onClick={() => navigate(`/profile/${vehicle.user_id}?tab=garage`)}
                               className="md:hidden p-2 text-zinc-500 hover:text-white transition-colors bg-white/5 rounded-full"
                             >
                               <ChevronRight size={20} />
@@ -341,7 +337,7 @@ const Discover = () => {
                         {viewMode === 'grid' && (
                           <div className="mt-6 pt-4 border-t border-white/5 flex justify-end">
                             <button 
-                              onClick={() => handleOpenProject(vehicle)}
+                              onClick={() => navigate(`/profile/${vehicle.user_id}?tab=garage`)}
                               className="group flex items-center gap-2 text-[9px] font-black uppercase italic text-zinc-500 hover:text-white transition-all"
                             >
                               Vedi Progetto <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
@@ -352,7 +348,7 @@ const Discover = () => {
                         {viewMode === 'list' && (
                           <div className="hidden md:block ml-8">
                             <button 
-                              onClick={() => handleOpenProject(vehicle)}
+                              onClick={() => navigate(`/profile/${vehicle.user_id}?tab=garage`)}
                               className="h-12 px-8 bg-white text-black hover:bg-zinc-200 transition-all text-[10px] font-black uppercase italic tracking-widest flex items-center gap-3 rounded-full shadow-xl"
                             >
                               Vedi Progetto <ChevronRight size={16} />
@@ -369,18 +365,12 @@ const Discover = () => {
         </section>
       </main>
 
-      <AnimatePresence>
-        {selectedVehicle && (
-          <VehicleDetailModal 
-            isOpen={!!selectedVehicle} 
-            onClose={() => setSelectedVehicle(null)} 
-            vehicle={selectedVehicle}
-            isOwnProfile={currentUserId === selectedVehicle.user_id}
-            onLike={(id) => toggleLike.mutate(id)}
-            currentUserId={currentUserId}
-          />
-        )}
-      </AnimatePresence>
+      <ImageLightbox 
+        images={lightboxData?.images || []} 
+        initialIndex={lightboxData?.index || 0} 
+        isOpen={!!lightboxData} 
+        onClose={() => setLightboxData(null)} 
+      />
     </div>
   );
 };

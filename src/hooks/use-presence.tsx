@@ -4,7 +4,6 @@ import React, { createContext, useContext, useEffect, useState, ReactNode, useRe
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { useAuth } from './use-auth';
 
 interface PresenceContextType {
   onlineUsers: string[];
@@ -15,7 +14,6 @@ interface PresenceContextType {
 const PresenceContext = createContext<PresenceContextType | undefined>(undefined);
 
 export const PresenceProvider = ({ children }: { children: ReactNode }): React.JSX.Element => {
-  const { user } = useAuth();
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const [lastSeenMap, setLastSeenMap] = useState<Record<string, string>>({});
   const channelRef = useRef<any>(null);
@@ -25,19 +23,19 @@ export const PresenceProvider = ({ children }: { children: ReactNode }): React.J
 
     const cleanup = async () => {
       if (channelRef.current) {
+        console.log("[Presence] Cleanup canale esistente...");
         await supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
     };
 
-    const setupPresence = async () => {
-      if (!user) {
-        cleanup();
-        setOnlineUsers([]);
-        return;
-      }
+    const setupPresence = async (user: any) => {
+      if (!user) return;
 
+      // Rimuoviamo eventuali canali con lo stesso nome prima di crearne uno nuovo
       await cleanup();
+
+      console.log("[Presence] Avvio sottoscrizione per:", user.id);
 
       const channel = supabase.channel(channelName, {
         config: {
@@ -81,12 +79,26 @@ export const PresenceProvider = ({ children }: { children: ReactNode }): React.J
       channelRef.current = channel;
     };
 
-    setupPresence();
+    // Gestione iniziale
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setupPresence(user);
+    });
+
+    // Listener per cambi di stato Auth
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        setupPresence(session.user);
+      } else if (event === 'SIGNED_OUT') {
+        cleanup();
+        setOnlineUsers([]);
+      }
+    });
 
     return () => {
       cleanup();
+      subscription.unsubscribe();
     };
-  }, [user]);
+  }, []);
 
   const isUserOnline = (userId: string | undefined) => {
     if (!userId) return false;

@@ -6,12 +6,10 @@ import { Loader2, Sparkles, ShieldCheck, Gauge, Info, Share2, X } from 'lucide-r
 import { Button } from './ui/button';
 import { supabase } from "@/integrations/supabase/client";
 import { showError } from '@/utils/toast';
-import { useGarage } from '@/hooks/use-garage';
 
-const StanceAnalyzer = ({ imageUrl, vehicleId, onClose }: { imageUrl: string, vehicleId: string, onClose: () => void }) => {
+const StanceAnalyzer = ({ imageUrl, onClose }: { imageUrl: string, onClose: () => void }) => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
-  const { updateStanceScore } = useGarage();
 
   const analyze = async () => {
     setLoading(true);
@@ -27,16 +25,7 @@ const StanceAnalyzer = ({ imageUrl, vehicleId, onClose }: { imageUrl: string, ve
       });
       const data = await response.json();
       if (data.error) throw new Error(data.error);
-      
       setResult(data);
-
-      // Salviamo il punteggio nel database se l'analisi ha avuto successo
-      if (data.stance_score) {
-        await updateStanceScore.mutateAsync({ 
-          vehicleId, 
-          score: parseInt(data.stance_score) 
-        });
-      }
     } catch (err: any) {
       showError(err.message);
     } finally {
