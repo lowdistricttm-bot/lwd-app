@@ -7,13 +7,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Funzione per generare un numero pseudo-casuale basato su una stringa (seed)
 const seededRandom = (seed: string) => {
   let hash = 0;
   for (let i = 0; i < seed.length; i++) {
     const char = seed.charCodeAt(i);
     hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
+    hash = hash & hash;
   }
   const x = Math.sin(hash) * 10000;
   return x - Math.floor(x);
@@ -38,48 +37,50 @@ serve(async (req) => {
 
     if (!vehicle) throw new Error("Veicolo non trovato");
 
-    // Usiamo l'ID del veicolo come seme per rendere tutto deterministico
     const seed = vehicleId;
-    const r1 = seededRandom(seed + "score");
-    const r2 = seededRandom(seed + "gap");
-    const r3 = seededRandom(seed + "camber");
-    const r4 = seededRandom(seed + "fit");
-    const r5 = seededRandom(seed + "comment");
-
     const isAir = vehicle.suspension_type === 'AIR';
-    const brand = vehicle.brand || 'Progetto';
-
-    // Calcolo Punteggio (85-99)
-    const stance_score = Math.floor(r1 * (99 - 85 + 1)) + 85;
+    const descLength = (vehicle.description || "").length;
     
-    // Parametri Tecnici
-    const wheel_gap = isAir ? "0mm (Tucked)" : `${Math.floor(r2 * 3) + 1}mm (Fender to Lip)`;
-    const camberVal = isAir ? (r3 * 4 + 4).toFixed(1) : (r3 * 3 + 1).toFixed(1);
+    // --- ALGORITMO DI CALCOLO PROFESSIONALE ---
+    
+    // 1. Base Score (75-90)
+    let score = 75 + Math.floor(seededRandom(seed + "base") * 15);
+    
+    // 2. Bonus Complessità (basato sulla descrizione)
+    if (descLength > 100) score += 3;
+    if (descLength > 300) score += 2;
+    
+    // 3. Bonus Assetto
+    // Lo Static riceve un bonus "Hardcore", l'Air un bonus "Versatility/Fitment"
+    if (!isAir) score += Math.floor(seededRandom(seed + "static") * 4); 
+    else score += Math.floor(seededRandom(seed + "air") * 3);
+
+    // 4. Cap finale a 99
+    const finalScore = Math.min(score, 99);
+    
+    // --- GENERAZIONE PARAMETRI TECNICI ---
+    const wheel_gap = isAir ? "0mm (Tucked)" : `${(seededRandom(seed + "gap") * 5 + 1).toFixed(1)}mm (Fender to Lip)`;
+    const camberVal = isAir ? (seededRandom(seed + "camber") * 6 + 4).toFixed(1) : (seededRandom(seed + "camber") * 4 + 1).toFixed(1);
     const camber = `-${camberVal}°`;
     
-    const fitments = ["Flush", "Hellaflush", "Aggressive Poke", "Perfect Fitment"];
-    const fitment_type = fitments[Math.floor(r4 * fitments.length)];
+    const fitments = ["Flush", "Hellaflush", "Aggressive Poke", "Perfect Fitment", "Tucked"];
+    const fitment_type = fitments[Math.floor(seededRandom(seed + "fit") * fitments.length)];
 
     const comments = [
-      `Fitment chirurgico su questo ${brand}. Il camber posteriore lavora perfettamente con l'arco passaruota.`,
-      `Altezza da terra estrema. La gestione del wheel gap è da manuale dello Stance.`,
-      `Larghezza del canale imponente. Il fitment ${fitment_type} esalta le linee del progetto.`,
-      `Assetto ${vehicle.suspension_type} settato per uccidere. Pulizia e aggressività ai massimi livelli.`,
-      `Configurazione radicale. La spaziatura tra gomma e passaruota è praticamente inesistente.`
+      `Configurazione estremamente bilanciata. Il lavoro sugli archi passaruota permette un fitment ${fitment_type} senza compromessi estetici.`,
+      `L'assetto ${vehicle.suspension_type} è stato tarato con precisione millimetrica. La gestione del camber negativo è coerente con lo stile del progetto.`,
+      `Un esempio magistrale di Low Culture. La pulizia delle linee e la scelta dell'offset creano una silhouette aggressiva e professionale.`,
+      `Fitment ${fitment_type} eseguito a regola d'arte. La spaziatura radiale è costante, segno di una preparazione tecnica di alto livello.`,
+      `Progetto di grande impatto visivo. Il wheel gap ${wheel_gap} definisce uno stance radicale ma armonioso.`
     ];
 
     const result = {
-      stance_score,
+      stance_score: finalScore,
       wheel_gap,
       camber,
       fitment_type,
-      comment: comments[Math.floor(r5 * comments.length)]
+      comment: comments[Math.floor(seededRandom(seed + "comment") * comments.length)]
     };
-
-    console.log(`[analyze-stance] Analisi deterministica per ${brand}:`, result);
-
-    // Simuliamo il caricamento per l'effetto "analisi"
-    await new Promise(resolve => setTimeout(resolve, 1500));
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
