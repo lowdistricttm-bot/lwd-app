@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Home, ShoppingBag, MessageSquare, User, Calendar, MapPin, Search } from 'lucide-react';
+import { Home, ShoppingBag, MessageSquare, User, Calendar, MapPin, Compass } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
@@ -19,11 +19,11 @@ const BottomNav = () => {
 
   const items = [
     { icon: Home, label: 'Home', href: '/' },
-    { icon: Search, label: 'Esplora', href: '/discover' },
-    { icon: MessageSquare, label: 'Feed', href: '/bacheca' },
+    { icon: MessageSquare, label: 'Bacheca', href: '/bacheca' },
     { icon: MapPin, label: 'Meet', href: '/meets' },
-    { icon: ShoppingBag, label: 'Shop', href: '/shop' },
+    { icon: Compass, label: 'Esplora', href: '/discover' },
     { icon: Calendar, label: 'Eventi', href: '/events' },
+    { icon: ShoppingBag, label: 'Shop', href: '/shop' },
     { icon: User, label: 'Profilo', href: '/profile' },
   ];
 
