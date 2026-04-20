@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import { useMeets } from '@/hooks/use-meets';
 import { useAdmin } from '@/hooks/use-admin';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Calendar, Plus, User, Loader2, ChevronRight, Trash2, Info, Clock } from 'lucide-react';
+import { MapPin, Calendar, Plus, User, Loader2, ChevronRight, Trash2, RefreshCw, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CreateMeetModal from '@/components/CreateMeetModal';
 import { cn } from '@/lib/utils';
@@ -14,14 +14,21 @@ import { it } from 'date-fns/locale';
 import { supabase } from "@/integrations/supabase/client";
 
 const Meets = () => {
-  const { meets, isLoading, deleteMeet } = useMeets();
+  const { meets, isLoading, deleteMeet, refetch } = useMeets();
   const { role } = useAdmin();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => setCurrentUserId(user?.id || null));
-  }, []);
+    refetch();
+  }, [refetch]);
+
+  const handleManualRefresh = () => {
+    setIsRefreshing(true);
+    refetch().finally(() => setIsRefreshing(false));
+  };
 
   const isSubscriber = role === 'subscriber';
 
@@ -30,22 +37,33 @@ const Meets = () => {
       <Navbar />
       <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-6 max-w-5xl mx-auto w-full">
         <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-8">
-          <div>
+          <div className="min-w-0 flex-1">
             <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Community Gatherings</h2>
-            <h1 className="text-3xl md:text-6xl font-black italic tracking-tighter uppercase">District Meet</h1>
+            <h1 className="text-3xl md:text-6xl font-black italic tracking-tighter uppercase truncate">District Meet</h1>
           </div>
-          {!isSubscriber && (
-            <Button 
-              onClick={() => setIsCreateModalOpen(true)}
-              className="bg-white text-black rounded-full h-14 px-8 font-black uppercase italic shadow-xl hover:scale-105 transition-all"
+          <div className="flex gap-3 shrink-0">
+            <button 
+              onClick={handleManualRefresh}
+              className="w-12 h-12 bg-white/10 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all shadow-lg border border-white/10"
             >
-              <Plus size={18} className="mr-2" /> Organizza Meet
-            </Button>
-          )}
+              <RefreshCw size={20} className={cn(isRefreshing && "animate-spin")} />
+            </button>
+            {!isSubscriber && (
+              <Button 
+                onClick={() => setIsCreateModalOpen(true)}
+                className="bg-white text-black rounded-full h-14 px-8 font-black uppercase italic shadow-xl hover:scale-105 transition-all"
+              >
+                <Plus size={18} className="mr-2" /> Organizza Meet
+              </Button>
+            )}
+          </div>
         </header>
 
-        {isLoading ? (
-          <div className="py-20 flex justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>
+        {isLoading && !meets ? (
+          <div className="py-20 flex flex-col items-center gap-4">
+            <Loader2 className="animate-spin text-zinc-500" size={40} />
+            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Sincronizzazione Meet...</p>
+          </div>
         ) : meets?.length === 0 ? (
           <div className="text-center py-24 bg-zinc-900/20 border border-dashed border-white/10 rounded-[3rem]">
             <MapPin size={48} className="mx-auto text-zinc-800 mb-6" />
@@ -73,8 +91,8 @@ const Meets = () => {
                   </div>
                   {currentUserId === meet.user_id && (
                     <button 
-                      onClick={() => deleteMeet.mutate(meet.id)}
-                      className="absolute top-5 right-5 p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-red-600 transition-all shadow-xl"
+                      onClick={(e) => { e.stopPropagation(); deleteMeet.mutate(meet.id); }}
+                      className="absolute top-5 right-5 p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-red-600 transition-all shadow-xl z-10"
                     >
                       <Trash2 size={16} />
                     </button>
