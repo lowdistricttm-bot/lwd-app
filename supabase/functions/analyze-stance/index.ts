@@ -26,27 +26,28 @@ serve(async (req) => {
     const buffer = await imageRes.arrayBuffer();
     const base64Data = encodeBase64(new Uint8Array(buffer));
 
-    // Utilizziamo snake_case per tutti i campi come richiesto dall'API REST di Google
+    // Utilizziamo v1beta e camelCase, che è lo standard più affidabile per Gemini 1.5 Flash
     const payload = {
       contents: [{
         parts: [
           { text: "Sei un esperto di car styling e stance. Analizza questa foto laterale di un'auto. Valuta da 1 a 100 i seguenti parametri: stance_score (generale), wheel_gap (distanza gomma-passaruota), camber (inclinazione), fitment (allineamento). Restituisci SOLO un JSON con questi campi esatti (stance_score, wheel_gap, camber, fitment_type) e un campo 'comment' di massimo 15 parole in italiano con stile aggressivo e tecnico." },
           { 
-            inline_data: { 
-              mime_type: "image/jpeg", 
+            inlineData: { 
+              mimeType: "image/jpeg", 
               data: base64Data 
             } 
           }
         ]
       }],
-      generation_config: {
-        response_mime_type: "application/json"
+      generationConfig: {
+        responseMimeType: "application/json"
       }
     }
 
-    console.log("[analyze-stance] Invio richiesta a Gemini 1.5 Flash (v1)...");
+    console.log("[analyze-stance] Invio richiesta a Gemini 1.5 Flash (v1beta)...");
     
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+    // Passaggio a v1beta per risolvere il problema dei campi non riconosciuti
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -67,7 +68,7 @@ serve(async (req) => {
     const textResponse = data.candidates[0].content.parts[0].text
     console.log("[analyze-stance] Risposta testuale ricevuta:", textResponse);
 
-    // Pulizia della risposta da eventuali blocchi di codice markdown
+    // Pulizia e parsing del JSON
     const cleanJson = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
     const result = JSON.parse(cleanJson);
 
