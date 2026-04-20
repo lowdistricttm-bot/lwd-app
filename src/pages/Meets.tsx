@@ -46,44 +46,6 @@ const Meets = () => {
     refetch().finally(() => setIsRefreshing(false));
   };
 
-  const handleGetLocation = () => {
-    if (!("geolocation" in navigator)) {
-      showError("Geolocalizzazione non supportata.");
-      return;
-    }
-
-    setIsLocating(true);
-    const toastId = showLoading("Rilevamento posizione...");
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
-          );
-          const data = await response.json();
-          const city = data.address.city || data.address.town || data.address.village || data.address.county;
-          
-          if (city) {
-            setSearchQuery(city.toUpperCase());
-            if ('vibrate' in navigator) navigator.vibrate(15);
-          }
-        } catch (err) {
-          showError("Impossibile identificare la città.");
-        } finally {
-          setIsLocating(false);
-          dismissToast(toastId);
-        }
-      },
-      () => {
-        setIsLocating(false);
-        dismissToast(toastId);
-        showError("Permesso negato o errore GPS.");
-      }
-    );
-  };
-
   const canOrganize = role && ['admin', 'staff', 'support', 'member'].includes(role);
 
   const filteredMeets = meets?.filter(meet => 
@@ -141,6 +103,18 @@ const Meets = () => {
           </motion.div>
         ) : (
           <>
+            {/* Avviso Incontri Spontanei - Spostato in alto */}
+            <div className="p-6 bg-white/5 backdrop-blur-md border border-white/10 rounded-[2rem] flex items-start gap-4 mb-10">
+              <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center shrink-0"><Info size={20} className="text-zinc-400" /></div>
+              <div className="space-y-1">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-white italic">Incontri Spontanei</h4>
+                <div className="text-[9px] text-zinc-500 font-bold uppercase leading-relaxed italic">
+                  <p>Questi incontri sono creati dagli utenti e non sono eventi ufficiali Low District.</p>
+                  <p className="mt-2 text-zinc-300 font-black">Lo staff non si assume alcuna responsabilità sull'incontro stesso.</p>
+                </div>
+              </div>
+            </div>
+
             <div className="flex flex-col sm:flex-row gap-4 mb-10">
               <div className="relative flex-1">
                 <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
@@ -261,17 +235,6 @@ const Meets = () => {
                 </motion.div>
               )}
             </AnimatePresence>
-
-            <div className="p-6 bg-white/5 backdrop-blur-md border border-white/10 rounded-[2rem] flex items-start gap-4">
-              <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center shrink-0"><Info size={20} className="text-zinc-400" /></div>
-              <div className="space-y-1">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-white italic">Incontri Spontanei</h4>
-                <div className="text-[9px] text-zinc-500 font-bold uppercase leading-relaxed italic">
-                  <p>Questi incontri sono creati dagli utenti e non sono eventi ufficiali Low District.</p>
-                  <p className="mt-2 text-zinc-300 font-black">Lo staff non si assume alcuna responsabilità sull'incontro stesso.</p>
-                </div>
-              </div>
-            </div>
           </>
         )}
       </main>
