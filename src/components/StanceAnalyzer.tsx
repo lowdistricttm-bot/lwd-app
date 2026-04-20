@@ -139,17 +139,17 @@ const StanceAnalyzer = ({ imageUrl, vehicleId, onClose }: { imageUrl: string, ve
               animate={{ opacity: 1, y: 0 }} 
               className="w-full space-y-10 animate-in fade-in duration-1000"
             >
-              <div className="bg-white text-black p-10 rounded-[3rem] shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center gap-8">
-                <div className="absolute -right-10 -bottom-10 opacity-5 rotate-12"><Gauge size={240} /></div>
+              <div className="bg-zinc-900/80 backdrop-blur-2xl border border-white/10 p-10 rounded-[3rem] shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center gap-8">
+                <div className="absolute -right-10 -bottom-10 opacity-5 rotate-12 text-white"><Gauge size={240} /></div>
                 
                 <div className="relative z-10 text-center md:text-left flex-1">
                   <div className="flex items-center justify-center md:justify-start gap-2 mb-3">
-                    <ShieldCheck size={14} className="text-zinc-400" />
+                    <ShieldCheck size={14} className="text-zinc-500" />
                     <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500">Official Low Score</p>
                   </div>
-                  <h4 className="text-8xl md:text-9xl font-black italic tracking-tighter leading-none mb-6">{result.stance_score}</h4>
-                  <div className="w-20 h-1.5 bg-black rounded-full mb-6 hidden md:block" />
-                  <p className="text-sm md:text-base font-black uppercase italic leading-tight text-zinc-800 max-w-md">
+                  <h4 className="text-8xl md:text-9xl font-black italic tracking-tighter leading-none mb-6 text-white">{result.stance_score}</h4>
+                  <div className="w-20 h-1.5 bg-white/20 rounded-full mb-6 hidden md:block" />
+                  <p className="text-sm md:text-base font-black uppercase italic leading-tight text-zinc-300 max-w-md">
                     "{result.comment}"
                   </p>
                 </div>
@@ -160,9 +160,9 @@ const StanceAnalyzer = ({ imageUrl, vehicleId, onClose }: { imageUrl: string, ve
                     { label: 'Camber', val: result.camber },
                     { label: 'Fitment', val: result.fitment_type }
                   ].map((item, i) => (
-                    <div key={i} className="bg-black/5 border border-black/5 p-4 rounded-2xl flex justify-between items-center">
+                    <div key={i} className="bg-white/5 border border-white/5 p-4 rounded-2xl flex justify-between items-center">
                       <p className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">{item.label}</p>
-                      <p className="text-[11px] font-black italic text-black">{item.val}</p>
+                      <p className="text-[11px] font-black italic text-white">{item.val}</p>
                     </div>
                   ))}
                 </div>
