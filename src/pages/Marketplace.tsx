@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { ShoppingBag, Search, Plus, MessageSquare, Tag, Filter, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 const Marketplace = () => {
   const navigate = useNavigate();
