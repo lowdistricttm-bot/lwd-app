@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from 'react';
 import { showError, showSuccess } from '@/utils/toast';
 import { uploadToCloudinary } from '@/utils/cloudinary';
 
@@ -23,13 +24,12 @@ export interface Meet {
 export const useMeets = () => {
   const queryClient = useQueryClient();
 
-  const { data: meets, isLoading, refetch } = useQuery({
+  const { data: meets = [], isLoading, refetch } = useQuery({
     queryKey: ['district-meets'],
     queryFn: async () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      // Recuperiamo i meet
       const { data, error } = await supabase
         .from('meets')
         .select(`
@@ -40,19 +40,29 @@ export const useMeets = () => {
         .order('date', { ascending: true });
 
       if (error) {
-        console.error("[Meets] Errore query:", error);
-        throw error;
+        console.error("[Meets] Errore:", error);
+        return [];
       }
-      return data as Meet[];
+      return (data || []) as Meet[];
     },
-    staleTime: 0,
-    refetchOnWindowFocus: true
+    staleTime: 0
   });
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('meets-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'meets' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['district-meets'] });
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [queryClient]);
 
   const createMeet = useMutation({
     mutationFn: async (newMeet: any) => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Devi accedere per creare un meet");
+      if (!user) throw new Error("Accedi per creare un meet");
 
       let image_url = null;
       if (newMeet.file) {
@@ -74,7 +84,7 @@ export const useMeets = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['district-meets'] });
-      showSuccess("Meet pubblicato con successo!");
+      showSuccess("Meet pubblicato!");
     },
     onError: (err: any) => showError(err.message)
   });

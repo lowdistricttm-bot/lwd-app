@@ -34,7 +34,7 @@ export const MARKETPLACE_CATEGORIES = [
 export const useMarketplace = (categoryFilter: string = 'all') => {
   const queryClient = useQueryClient();
 
-  const { data: items, isLoading, refetch } = useQuery({
+  const { data: items = [], isLoading, refetch } = useQuery({
     queryKey: ['marketplace-items', categoryFilter],
     queryFn: async () => {
       let query = supabase
@@ -50,38 +50,30 @@ export const useMarketplace = (categoryFilter: string = 'all') => {
       }
 
       const { data, error } = await query;
-      if (error) throw error;
-      return data as MarketplaceItem[];
+      if (error) {
+        console.error("[Marketplace] Errore:", error);
+        return [];
+      }
+      return (data || []) as MarketplaceItem[];
     },
-    staleTime: 0,
-    refetchOnMount: true
+    staleTime: 0
   });
 
-  // Realtime listener per aggiornamento immediato
   useEffect(() => {
-    const channelId = `marketplace-${Math.random().toString(36).substring(2, 9)}`;
-    
     const channel = supabase
-      .channel(channelId)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'marketplace_items' },
-        () => {
-          console.log("[Marketplace] Cambio rilevato, rinfresco dati...");
-          queryClient.invalidateQueries({ queryKey: ['marketplace-items'] });
-        }
-      )
+      .channel('marketplace-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'marketplace_items' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['marketplace-items'] });
+      })
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [queryClient]);
 
   const createItem = useMutation({
     mutationFn: async (data: { title: string, description: string, price: number, category: string, files: File[] }) => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Devi accedere per pubblicare un annuncio");
+      if (!user) throw new Error("Accedi per pubblicare");
 
       const imageUrls: string[] = [];
       for (const file of data.files) {
@@ -104,9 +96,8 @@ export const useMarketplace = (categoryFilter: string = 'all') => {
       if (error) throw error;
     },
     onSuccess: () => {
-      // Invalida tutte le query del marketplace per forzare il refresh
       queryClient.invalidateQueries({ queryKey: ['marketplace-items'] });
-      showSuccess("Annuncio pubblicato correttamente!");
+      showSuccess("Annuncio pubblicato!");
     },
     onError: (err: any) => showError(err.message)
   });
