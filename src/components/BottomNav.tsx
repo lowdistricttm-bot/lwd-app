@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Home, ShoppingBag, MessageSquare, User, Calendar, Compass } from 'lucide-react';
+import { Home, ShoppingBag, MessageSquare, User, Calendar, MapPin } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
@@ -20,7 +20,7 @@ const BottomNav = () => {
   const items = [
     { icon: Home, label: 'Home', href: '/' },
     { icon: MessageSquare, label: 'Feed', href: '/bacheca' },
-    { icon: Compass, label: 'Esplora', href: '/discover' },
+    { icon: MapPin, label: 'Meet', href: '/meets' },
     { icon: ShoppingBag, label: 'Shop', href: '/shop' },
     { icon: Calendar, label: 'Eventi', href: '/events' },
     { icon: User, label: 'Profilo', href: '/profile' },
@@ -34,7 +34,6 @@ const BottomNav = () => {
     }
   };
 
-  // Altezza aumentata a 50px per iOS come richiesto
   const navHeight = isIOS ? '50px' : '44px';
 
   return (
@@ -59,7 +58,6 @@ const BottomNav = () => {
               to={item.href}
               className={cn(
                 "flex-1 flex flex-col items-center h-full relative z-10 transition-colors duration-300",
-                // justify-end e pb-0 mantengono le icone incollate al bordo inferiore
                 isIOS ? "justify-end pb-0" : "justify-center",
                 isActive ? "text-white" : "text-zinc-600"
               )}
@@ -70,7 +68,6 @@ const BottomNav = () => {
                   scale: isActive ? 1.05 : 1,
                 }}
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                className="" // Rimosso mb-1 per incollare le icone al bordo
               >
                 <item.icon 
                   size={isIOS ? 20 : 22} 

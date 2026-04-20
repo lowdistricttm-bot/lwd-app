@@ -23,6 +23,7 @@ import Checkout from "./pages/Checkout";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import Events from "./pages/Events";
+import Meets from "./pages/Meets";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminApplications from "./pages/AdminApplications";
 import AdminUsers from "./pages/AdminUsers";
@@ -56,6 +57,7 @@ const AppContent = () => {
           <Route path="/profile/:userId" element={<Profile />} />
           <Route path="/post/:postId" element={<PostDetail />} />
           <Route path="/events" element={<Events />} />
+          <Route path="/meets" element={<Meets />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/chat/:userId" element={<Chat />} />
           <Route path="/marketplace" element={<Marketplace />} />
