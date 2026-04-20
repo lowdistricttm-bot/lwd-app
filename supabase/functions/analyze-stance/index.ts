@@ -42,7 +42,6 @@ serve(async (req) => {
           { inline_data: { mime_type: "image/jpeg", data: base64Data } }
         ]
       }],
-      // Riduciamo le restrizioni di sicurezza per evitare falsi positivi con le auto
       safetySettings: [
         { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
         { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
@@ -51,8 +50,9 @@ serve(async (req) => {
       ]
     }
 
-    console.log("[analyze-stance] Invio richiesta a Gemini...");
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+    console.log("[analyze-stance] Invio richiesta a Gemini v1...");
+    // Utilizziamo la versione v1 stabile e il modello gemini-1.5-flash
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(prompt)
@@ -67,11 +67,6 @@ serve(async (req) => {
 
     if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
       console.error("[analyze-stance] Risposta Gemini incompleta:", JSON.stringify(data));
-      
-      if (data.promptFeedback?.blockReason) {
-        throw new Error(`L'immagine è stata bloccata dall'IA: ${data.promptFeedback.blockReason}`);
-      }
-      
       throw new Error("L'IA non ha restituito una risposta valida. Riprova con un'altra foto.");
     }
 
