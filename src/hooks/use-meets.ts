@@ -26,26 +26,26 @@ export const useMeets = () => {
   const { data: meets, isLoading, refetch } = useQuery({
     queryKey: ['district-meets'],
     queryFn: async () => {
-      // Calcoliamo l'inizio della giornata odierna per non nascondere i meet appena creati
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
+      // Recuperiamo i meet
       const { data, error } = await supabase
         .from('meets')
         .select(`
           *,
           profiles:user_id (username, avatar_url)
         `)
-        .gte('date', today.toISOString()) // Mostra tutti i meet da oggi in poi
+        .gte('date', today.toISOString())
         .order('date', { ascending: true });
 
       if (error) {
-        console.error("[Meets] Errore caricamento:", error);
+        console.error("[Meets] Errore query:", error);
         throw error;
       }
       return data as Meet[];
     },
-    staleTime: 0, // Forza il refresh
+    staleTime: 0,
     refetchOnWindowFocus: true
   });
 
@@ -73,7 +73,6 @@ export const useMeets = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      // Invalida e rifetch immediato
       queryClient.invalidateQueries({ queryKey: ['district-meets'] });
       showSuccess("Meet pubblicato con successo!");
     },
