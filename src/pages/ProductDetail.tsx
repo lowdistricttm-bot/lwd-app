@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useWcProduct, useWcVariations } from '@/hooks/use-woocommerce';
 import { useCart } from '@/hooks/use-cart';
-import { useAdmin } from '@/hooks/use-admin';
 import { motion } from 'framer-motion';
 import ARPreview from '@/components/ARPreview';
 
@@ -16,7 +15,6 @@ const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const { canVote } = useAdmin();
   const { data: product, isLoading } = useWcProduct(id);
   const { data: variations } = useWcVariations(product?.id);
   
@@ -150,16 +148,14 @@ const ProductDetail = () => {
                 </span>
               </Button>
 
-              {/* AR Preview riservata allo Staff */}
-              {canVote && (
-                <Button 
-                  onClick={() => setIsAROpen(true)}
-                  variant="outline"
-                  className="w-full border-white/10 text-zinc-400 hover:bg-white/5 hover:text-white rounded-full h-12 font-black uppercase italic text-[9px] tracking-widest transition-all"
-                >
-                  <Camera size={14} className="mr-2" /> AR Lifestyle Preview (Staff Only)
-                </Button>
-              )}
+              {/* AR Preview disponibile per tutti */}
+              <Button 
+                onClick={() => setIsAROpen(true)}
+                variant="outline"
+                className="w-full border-white/10 text-zinc-400 hover:bg-white/5 hover:text-white rounded-full h-12 font-black uppercase italic text-[9px] tracking-widest transition-all"
+              >
+                <Camera size={14} className="mr-2" /> AR Lifestyle Preview
+              </Button>
             </div>
           </div>
         </div>
