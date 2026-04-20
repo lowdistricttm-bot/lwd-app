@@ -24,24 +24,28 @@ serve(async (req) => {
     }
 
     const buffer = await imageRes.arrayBuffer();
-    // Utilizziamo l'encoder standard di Deno per evitare problemi di call stack su immagini grandi
     const base64Data = encodeBase64(new Uint8Array(buffer));
 
+    // Utilizziamo snake_case per tutti i campi come richiesto dall'API REST di Google
     const payload = {
       contents: [{
         parts: [
           { text: "Sei un esperto di car styling e stance. Analizza questa foto laterale di un'auto. Valuta da 1 a 100 i seguenti parametri: stance_score (generale), wheel_gap (distanza gomma-passaruota), camber (inclinazione), fitment (allineamento). Restituisci SOLO un JSON con questi campi esatti (stance_score, wheel_gap, camber, fitment_type) e un campo 'comment' di massimo 15 parole in italiano con stile aggressivo e tecnico." },
-          { inlineData: { mimeType: "image/jpeg", data: base64Data } }
+          { 
+            inline_data: { 
+              mime_type: "image/jpeg", 
+              data: base64Data 
+            } 
+          }
         ]
       }],
-      generationConfig: {
-        responseMimeType: "application/json"
+      generation_config: {
+        response_mime_type: "application/json"
       }
     }
 
     console.log("[analyze-stance] Invio richiesta a Gemini 1.5 Flash (v1)...");
     
-    // Aggiornato endpoint da v1beta a v1
     const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -63,7 +67,9 @@ serve(async (req) => {
     const textResponse = data.candidates[0].content.parts[0].text
     console.log("[analyze-stance] Risposta testuale ricevuta:", textResponse);
 
-    const result = JSON.parse(textResponse.replace(/```json/g, '').replace(/```/g, '').trim())
+    // Pulizia della risposta da eventuali blocchi di codice markdown
+    const cleanJson = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+    const result = JSON.parse(cleanJson);
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
