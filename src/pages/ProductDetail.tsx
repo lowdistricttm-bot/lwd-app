@@ -3,13 +3,12 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
-import { ChevronLeft, Loader2, Plus, Minus, ShoppingCart, Camera } from 'lucide-react';
+import { ChevronLeft, Loader2, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useWcProduct, useWcVariations } from '@/hooks/use-woocommerce';
 import { useCart } from '@/hooks/use-cart';
 import { motion } from 'framer-motion';
-import ARPreview from '@/components/ARPreview';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -20,7 +19,6 @@ const ProductDetail = () => {
   
   const [selectedVariation, setSelectedVariation] = useState<any>(null);
   const [quantity, setQuantity] = useState(1);
-  const [isAROpen, setIsAROpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -134,7 +132,7 @@ const ProductDetail = () => {
             </div>
 
             {/* Tasto Acquisto */}
-            <div className="pt-6 space-y-4">
+            <div className="pt-6">
               <Button 
                 onClick={handleAddToCart}
                 disabled={product.stock_status !== "instock" || (hasVariations && !selectedVariation)}
@@ -147,21 +145,10 @@ const ProductDetail = () => {
                   {product.stock_status !== "instock" ? "Esaurito" : (hasVariations && !selectedVariation) ? "Seleziona Taglia" : "Aggiungi al Carrello"}
                 </span>
               </Button>
-
-              {/* AR Preview disponibile per tutti */}
-              <Button 
-                onClick={() => setIsAROpen(true)}
-                variant="outline"
-                className="w-full border-white/10 text-zinc-400 hover:bg-white/5 hover:text-white rounded-full h-12 font-black uppercase italic text-[9px] tracking-widest transition-all"
-              >
-                <Camera size={14} className="mr-2" /> AR Lifestyle Preview
-              </Button>
             </div>
           </div>
         </div>
       </main>
-
-      {isAROpen && <ARPreview productImg={product.images[0]?.src} onClose={() => setIsAROpen(false)} />}
     </div>
   );
 };
