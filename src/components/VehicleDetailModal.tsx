@@ -9,6 +9,7 @@ import { useBodyLock } from '@/hooks/use-body-lock';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 import ImageLightbox from './ImageLightbox';
+import VehicleStats from './VehicleStats';
 
 interface VehicleDetailModalProps {
   isOpen: boolean;
@@ -54,7 +55,6 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicle, isOwnProfile, onLike, cu
               <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
               
               <div className="max-w-2xl mx-auto space-y-8 pb-[calc(4rem+env(safe-area-inset-bottom))]">
-                {/* Header */}
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
@@ -81,7 +81,6 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicle, isOwnProfile, onLike, cu
                   </button>
                 </div>
 
-                {/* Media Gallery */}
                 <div className="space-y-4">
                   <div 
                     className="aspect-video bg-zinc-950 rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl cursor-pointer group"
@@ -114,7 +113,6 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicle, isOwnProfile, onLike, cu
                   )}
                 </div>
 
-                {/* Specs Grid */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-white/5 border border-white/10 p-5 rounded-[2rem] backdrop-blur-md">
                     <p className="text-[8px] font-black uppercase text-zinc-500 tracking-[0.3em] italic mb-2">Anno Progetto</p>
@@ -146,7 +144,12 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicle, isOwnProfile, onLike, cu
                   )}
                 </div>
 
-                {/* Description */}
+                {isOwnProfile && (
+                  <div className="pt-4">
+                    <VehicleStats vehicleId={vehicle.id} />
+                  </div>
+                )}
+
                 {vehicle.description && (
                   <div className="space-y-3 px-2">
                     <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.4em] italic flex items-center gap-2">
@@ -160,7 +163,6 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicle, isOwnProfile, onLike, cu
                   </div>
                 )}
 
-                {/* Actions */}
                 <div className="pt-6 flex items-center gap-4">
                   <Button 
                     onClick={() => !isOwnProfile && onLike(vehicle.id)}
