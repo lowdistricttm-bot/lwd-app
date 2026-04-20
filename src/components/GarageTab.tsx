@@ -13,7 +13,7 @@ import StanceAnalyzer from './StanceAnalyzer';
 import VehicleDetailModal from './VehicleDetailModal';
 import { 
   Plus, Car, Trash2, Camera, Loader2, X, Edit3, Heart, 
-  Gauge, Book, Sparkles, ChevronRight, Calendar 
+  Gauge, Book, Sparkles, ChevronRight, Calendar, CreditCard 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -183,39 +183,35 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                   <div className="w-full h-full flex items-center justify-center bg-zinc-950 text-zinc-800"><Car size={64} /></div>
                 )}
                 
-                <div className="absolute top-5 left-5 flex flex-col gap-2">
+                {/* Top Right Badges Stack */}
+                <div className="absolute top-5 right-5 flex flex-col items-end gap-2">
                   <span className="bg-white/90 backdrop-blur-md text-black text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full shadow-2xl">
                     {vehicle.suspension_type}
                   </span>
-                  {vehicle.license_plate && canSeePlate && (
-                    <span className="bg-black/60 backdrop-blur-md text-white text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full border border-white/10">
-                      {vehicle.license_plate}
-                    </span>
+                  
+                  {vehicle.stance_score && (
+                    <div className="bg-black/60 backdrop-blur-md text-white border border-white/20 text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full flex items-center gap-1.5 shadow-xl">
+                      <Sparkles size={10} /> LOW SCORE: {vehicle.stance_score}
+                    </div>
                   )}
-                </div>
 
-                <div className="absolute top-5 right-5 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  {/* Action Buttons (Hover) */}
                   {isOwnProfile && isProUser && (
-                    <>
+                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 mt-1">
                       <button 
                         onClick={(e) => { e.stopPropagation(); setActiveAnalyzer({ url: mainImage || '', id: vehicle.id }); }} 
-                        className="p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-white hover:text-black transition-all shadow-xl"
+                        className="p-2.5 bg-white text-black rounded-full hover:scale-110 transition-all shadow-xl"
                         title="Low Score Analyzer"
                       >
-                        <Sparkles size={18} />
+                        <Sparkles size={16} />
                       </button>
                       <button 
                         onClick={(e) => { e.stopPropagation(); setActiveLogbook(vehicle.id); }} 
-                        className="p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-white hover:text-black transition-all shadow-xl"
+                        className="p-2.5 bg-white text-black rounded-full hover:scale-110 transition-all shadow-xl"
                         title="Diario di Bordo"
                       >
-                        <Book size={18} />
+                        <Book size={16} />
                       </button>
-                    </>
-                  )}
-                  {vehicle.stance_score && (
-                    <div className="bg-white text-black px-3 py-1.5 rounded-full text-[8px] font-black italic shadow-xl flex items-center gap-1.5">
-                      <Sparkles size={10} /> LOW SCORE: {vehicle.stance_score}
                     </div>
                   )}
                 </div>
@@ -236,8 +232,8 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
 
               <div className="p-8">
                 <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <h4 className="text-2xl font-black italic uppercase tracking-tighter leading-none mb-1">{vehicle.brand} {vehicle.model}</h4>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-2xl font-black italic uppercase tracking-tighter leading-none mb-2 truncate">{vehicle.brand} {vehicle.model}</h4>
                     <div className="flex items-center gap-3 text-zinc-500">
                       <span className="text-[10px] font-black uppercase tracking-widest italic flex items-center gap-1.5">
                         <Calendar size={12} /> {vehicle.year || 'N/A'}
@@ -247,10 +243,18 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                         <Gauge size={12} /> {vehicle.suspension_type}
                       </span>
                     </div>
+
+                    {/* License Plate moved here */}
+                    {vehicle.license_plate && canSeePlate && (
+                      <div className="mt-4 flex items-center gap-2 bg-white text-black px-3 py-1.5 rounded-lg w-fit shadow-lg border border-black/5">
+                        <CreditCard size={12} className="opacity-50" />
+                        <span className="text-[10px] font-black uppercase italic tracking-widest">{vehicle.license_plate}</span>
+                      </div>
+                    )}
                   </div>
                   
                   {isOwnProfile && (
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 shrink-0 ml-4">
                       <button onClick={(e) => handleOpenEdit(e, vehicle)} className="p-2.5 bg-white/5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 transition-all">
                         <Edit3 size={16} />
                       </button>
