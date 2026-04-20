@@ -247,13 +247,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                   </p>
                 )}
 
-                <div className="pt-6 border-t border-white/5 flex justify-between items-center">
-                  <button 
-                    onClick={() => setLightboxData({ images: vehicle.images || [], index: 0 })}
-                    className="text-[9px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors flex items-center gap-2"
-                  >
-                    <Camera size={14} /> Gallery ({vehicle.images?.length || 0})
-                  </button>
+                <div className="pt-6 border-t border-white/5 flex justify-end items-center">
                   <button 
                     onClick={() => isOwnProfile ? setActiveLogbook(vehicle.id) : null}
                     className="text-[9px] font-black uppercase tracking-widest text-white italic flex items-center gap-2 group"
