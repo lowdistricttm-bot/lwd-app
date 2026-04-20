@@ -50,16 +50,41 @@ serve(async (req) => {
       ]
     }
 
-    console.log("[analyze-stance] Invio richiesta a Gemini v1 (gemini-1.5-flash)...");
-    // Utilizziamo l'endpoint v1 stabile con il nome modello standard
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+    let modelName = 'gemini-1.5-flash';
+    console.log(`[analyze-stance] Invio richiesta a Gemini (${modelName} su v1beta)...`);
+    
+    let response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(prompt)
-    })
+    });
 
-    const data = await response.json()
+    let data = await response.json();
+
+    // Fallback: se il modello flash non è trovato, proviamo con la versione pro
+    if (data.error && data.error.code === 404) {
+      console.log(`[analyze-stance] ${modelName} non trovato. Tentativo di fallback con gemini-1.5-pro...`);
+      modelName = 'gemini-1.5-pro';
+      response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(prompt)
+      });
+      data = await response.json();
+    }
     
+    // Ulteriore fallback su gemini-pro-vision se la key è associata a vecchi endpoint
+    if (data.error && data.error.code === 404) {
+      console.log(`[analyze-stance] ${modelName} non trovato. Tentativo di fallback finale con gemini-pro-vision...`);
+      modelName = 'gemini-pro-vision';
+      response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(prompt)
+      });
+      data = await response.json();
+    }
+
     if (data.error) {
       console.error("[analyze-stance] Errore API Gemini:", data.error);
       throw new Error(`Errore Google AI: ${data.error.message}`);
