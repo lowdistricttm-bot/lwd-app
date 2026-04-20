@@ -5,8 +5,9 @@ import Navbar from '@/components/Navbar';
 import { useMeets } from '@/hooks/use-meets';
 import { useAdmin } from '@/hooks/use-admin';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Calendar, Plus, User, Loader2, ChevronRight, Trash2, RefreshCw, Clock, AlertCircle, LogIn, Info } from 'lucide-react';
+import { MapPin, Calendar, Plus, User, Loader2, ChevronRight, Trash2, RefreshCw, Clock, AlertCircle, LogIn, Info, Search, Navigation, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import CreateMeetModal from '@/components/CreateMeetModal';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -14,6 +15,7 @@ import { it } from 'date-fns/locale';
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/use-translation';
+import { showLoading, dismissToast, showError } from '@/utils/toast';
 
 const Meets = () => {
   const navigate = useNavigate();
@@ -24,6 +26,9 @@ const Meets = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isLocating, setIsLocating] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -39,8 +44,52 @@ const Meets = () => {
     refetch().finally(() => setIsRefreshing(false));
   };
 
+  const handleGetLocation = () => {
+    if (!("geolocation" in navigator)) {
+      showError("Geolocalizzazione non supportata dal tuo browser.");
+      return;
+    }
+
+    setIsLocating(true);
+    const toastId = showLoading("Rilevamento posizione...");
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
+          );
+          const data = await response.json();
+          const city = data.address.city || data.address.town || data.address.village || data.address.county;
+          
+          if (city) {
+            setSearchQuery(city.toUpperCase());
+            if ('vibrate' in navigator) navigator.vibrate(15);
+          }
+        } catch (err) {
+          showError("Impossibile identificare la città.");
+        } finally {
+          setIsLocating(false);
+          dismissToast(toastId);
+        }
+      },
+      (error) => {
+        setIsLocating(false);
+        dismissToast(toastId);
+        showError("Permesso negato o errore GPS.");
+      },
+      { timeout: 10000 }
+    );
+  };
+
   // Permessi: Solo Membri Ufficiali, Staff, Admin e Support possono organizzare
   const canOrganize = role && ['admin', 'staff', 'support', 'member'].includes(role);
+
+  const filteredMeets = meets?.filter(meet => 
+    meet.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    meet.location.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent">
@@ -92,7 +141,39 @@ const Meets = () => {
           </motion.div>
         ) : (
           <>
-            {/* Disclaimer Incontri Spontanei - Visibile solo se loggati */}
+            {/* Barra di Ricerca e GPS */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-10">
+              <div className="relative flex-1">
+                <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
+                <Input 
+                  placeholder="CERCA PER CITTÀ O TITOLO..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="bg-white/5 border-white/10 rounded-full h-14 pl-14 pr-6 text-xs font-black uppercase italic tracking-widest focus:bg-white/10 transition-all"
+                />
+                {searchQuery && (
+                  <button 
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+              <Button 
+                onClick={handleGetLocation}
+                disabled={isLocating}
+                className={cn(
+                  "h-14 px-8 rounded-full border transition-all flex items-center gap-3",
+                  isLocating ? "bg-white text-black" : "bg-white/5 border-white/10 text-white hover:bg-white/10"
+                )}
+              >
+                {isLocating ? <Loader2 className="animate-spin" size={18} /> : <Navigation size={18} />}
+                <span className="text-[10px] font-black uppercase italic tracking-widest">Vicino a me</span>
+              </Button>
+            </div>
+
+            {/* Disclaimer Incontri Spontanei */}
             <div className="mb-10 p-6 bg-white/5 backdrop-blur-md border border-white/10 rounded-[2rem] flex items-start gap-4">
               <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center shrink-0">
                 <Info size={20} className="text-zinc-400" />
@@ -112,14 +193,16 @@ const Meets = () => {
                 <Loader2 className="animate-spin text-zinc-500" size={40} />
                 <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Sincronizzazione Meet...</p>
               </div>
-            ) : meets?.length === 0 ? (
+            ) : filteredMeets?.length === 0 ? (
               <div className="text-center py-24 bg-zinc-900/20 border border-dashed border-white/10 rounded-[3rem]">
                 <MapPin size={48} className="mx-auto text-zinc-800 mb-6" />
-                <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Nessun incontro in programma. Sii il primo a organizzarne uno!</p>
+                <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">
+                  {searchQuery ? `Nessun incontro trovato a "${searchQuery}"` : "Nessun incontro in programma. Sii il primo a organizzarne uno!"}
+                </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {meets?.map((meet) => (
+                {filteredMeets?.map((meet) => (
                   <motion.div 
                     key={meet.id} 
                     initial={{ opacity: 0, y: 20 }} 
@@ -133,7 +216,7 @@ const Meets = () => {
                         <div className="w-full h-full flex items-center justify-center text-zinc-900"><MapPin size={64} /></div>
                       )}
                       <div className="absolute top-5 left-5">
-                        <div className="bg-white text-black px-4 py-1.5 rounded-full text-[10px] font-black italic shadow-xl flex items-center gap-2">
+                        <div className="bg-white text-black px-4 py-1.5 rounded-full text-[10px] font-black italic shadow-xl flex items-center gap-1.5">
                           <Calendar size={12} /> {format(new Date(meet.date), 'dd MMM', { locale: it }).toUpperCase()}
                         </div>
                       </div>

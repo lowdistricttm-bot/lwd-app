@@ -6,7 +6,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import { Instagram, Facebook, Music2, Globe, Edit3, Save, X, User, Quote } from 'lucide-react';
+import { Instagram, Facebook, Music2, Globe, Edit3, Save, X, User, Quote, MapPin } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { cn } from '@/lib/utils';
 
@@ -21,6 +21,7 @@ const ProfileInfoTab = ({ profile, isOwnProfile, onUpdate }: ProfileInfoTabProps
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     bio: '',
+    city: '',
     instagram_handle: '',
     facebook_handle: '',
     tiktok_handle: '',
@@ -31,6 +32,7 @@ const ProfileInfoTab = ({ profile, isOwnProfile, onUpdate }: ProfileInfoTabProps
     if (profile) {
       setFormData({
         bio: profile.bio || '',
+        city: profile.city || '',
         instagram_handle: profile.instagram_handle || '',
         facebook_handle: profile.facebook_handle || '',
         tiktok_handle: profile.tiktok_handle || '',
@@ -46,6 +48,7 @@ const ProfileInfoTab = ({ profile, isOwnProfile, onUpdate }: ProfileInfoTabProps
         .from('profiles')
         .update({
           bio: formData.bio,
+          city: formData.city,
           instagram_handle: formData.instagram_handle,
           facebook_handle: formData.facebook_handle,
           tiktok_handle: formData.tiktok_handle,
@@ -73,13 +76,13 @@ const ProfileInfoTab = ({ profile, isOwnProfile, onUpdate }: ProfileInfoTabProps
           <h3 className="text-xl font-black italic uppercase tracking-tighter">Modifica Info</h3>
           <div className="flex gap-3">
             <button onClick={() => setIsEditing(false)} className="text-[10px] font-black uppercase italic text-zinc-500 hover:text-white transition-colors">Annulla</button>
-            <Button 
+            <button 
               onClick={handleSave} 
               disabled={loading} 
               className="bg-white text-black hover:bg-zinc-200 rounded-full h-10 px-6 text-[10px] font-black uppercase italic transition-all shadow-xl shadow-white/5"
             >
               {loading ? "Salvataggio..." : "Salva"}
-            </Button>
+            </button>
           </div>
         </div>
 
@@ -93,6 +96,21 @@ const ProfileInfoTab = ({ profile, isOwnProfile, onUpdate }: ProfileInfoTabProps
                 placeholder="Scrivi qualcosa su di te e sui tuoi progetti..."
                 className="bg-transparent border-none focus-visible:ring-0 p-0 min-h-[120px] text-sm italic text-white placeholder:text-zinc-700 resize-none"
               />
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest ml-4">Città di Residenza</Label>
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-6 py-1">
+              <div className="flex items-center gap-3">
+                <MapPin size={16} className="text-zinc-500" />
+                <Input 
+                  value={formData.city}
+                  onChange={e => setFormData({...formData, city: e.target.value.toUpperCase()})}
+                  placeholder="ES: MILANO"
+                  className="bg-transparent border-none focus-visible:ring-0 p-0 h-12 text-xs font-bold text-white placeholder:text-zinc-800"
+                />
+              </div>
             </div>
           </div>
 
@@ -132,12 +150,12 @@ const ProfileInfoTab = ({ profile, isOwnProfile, onUpdate }: ProfileInfoTabProps
       <div className="flex justify-between items-center">
         <h3 className="text-xl font-black italic uppercase tracking-tighter">Informazioni</h3>
         {isOwnProfile && (
-          <Button 
+          <button 
             onClick={() => setIsEditing(true)}
-            className="bg-white/10 backdrop-blur-md border border-white/10 hover:bg-white hover:text-black rounded-full font-black uppercase italic text-[10px] tracking-widest h-10 px-6 transition-all"
+            className="bg-white/10 backdrop-blur-md border border-white/10 hover:bg-white hover:text-black rounded-full font-black uppercase italic text-[10px] tracking-widest h-10 px-6 transition-all flex items-center gap-2"
           >
-            <Edit3 size={14} className="mr-2" /> Modifica
-          </Button>
+            <Edit3 size={14} /> Modifica
+          </button>
         )}
       </div>
 
@@ -154,6 +172,22 @@ const ProfileInfoTab = ({ profile, isOwnProfile, onUpdate }: ProfileInfoTabProps
             ) : (
               <p className="text-zinc-700 text-xs italic font-bold uppercase tracking-widest">Nessuna biografia inserita.</p>
             )}
+          </div>
+        </div>
+
+        {/* City Section */}
+        <div className="space-y-4">
+          <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.3em] italic ml-4">Posizione</h4>
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-full p-6 flex items-center gap-4 shadow-2xl">
+            <div className="w-10 h-10 bg-black/40 rounded-2xl flex items-center justify-center text-zinc-500 border border-white/5">
+              <MapPin size={18} className={cn(profile?.city && "text-white")} />
+            </div>
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 block mb-0.5">Città</span>
+              <span className="text-xs font-bold text-white italic uppercase">
+                {profile?.city || 'Non specificata'}
+              </span>
+            </div>
           </div>
         </div>
 
