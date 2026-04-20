@@ -6,7 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Funzione sicura per convertire ArrayBuffer in Base64 senza mandare in crash lo stack
 function arrayBufferToBase64(buffer: ArrayBuffer) {
   let binary = '';
   const bytes = new Uint8Array(buffer);
@@ -28,6 +27,11 @@ serve(async (req) => {
 
     console.log("[analyze-stance] Scaricamento immagine:", imageUrl);
     const imageRes = await fetch(imageUrl);
+    
+    if (!imageRes.ok) {
+      throw new Error(`Impossibile scaricare l'immagine: ${imageRes.statusText}`);
+    }
+
     const buffer = await imageRes.arrayBuffer();
     const base64Data = arrayBufferToBase64(buffer);
 
@@ -37,7 +41,14 @@ serve(async (req) => {
           { text: "Sei un esperto di car styling e stance. Analizza questa foto laterale di un'auto. Valuta da 1 a 100 i seguenti parametri: stance_score (generale), wheel_gap (distanza gomma-passaruota), camber (inclinazione), fitment (allineamento). Restituisci SOLO un JSON con questi campi e un campo 'comment' di massimo 15 parole in italiano con stile aggressivo e tecnico." },
           { inline_data: { mime_type: "image/jpeg", data: base64Data } }
         ]
-      }]
+      }],
+      // Riduciamo le restrizioni di sicurezza per evitare falsi positivi con le auto
+      safetySettings: [
+        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+      ]
     }
 
     console.log("[analyze-stance] Invio richiesta a Gemini...");
@@ -49,14 +60,30 @@ serve(async (req) => {
 
     const data = await response.json()
     
-    if (!data.candidates || !data.candidates[0]) {
-      console.error("[analyze-stance] Errore Gemini:", data);
-      throw new Error("L'IA non ha restituito una risposta valida.");
+    if (data.error) {
+      console.error("[analyze-stance] Errore API Gemini:", data.error);
+      throw new Error(`Errore Google AI: ${data.error.message}`);
+    }
+
+    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+      console.error("[analyze-stance] Risposta Gemini incompleta:", JSON.stringify(data));
+      
+      if (data.promptFeedback?.blockReason) {
+        throw new Error(`L'immagine è stata bloccata dall'IA: ${data.promptFeedback.blockReason}`);
+      }
+      
+      throw new Error("L'IA non ha restituito una risposta valida. Riprova con un'altra foto.");
     }
 
     const textResponse = data.candidates[0].content.parts[0].text
     const jsonMatch = textResponse.match(/\{.*\}/s)
-    const result = jsonMatch ? JSON.parse(jsonMatch[0]) : { error: "Analisi fallita" }
+    
+    if (!jsonMatch) {
+      console.error("[analyze-stance] Formato JSON non trovato nella risposta:", textResponse);
+      throw new Error("L'IA ha risposto in un formato non corretto.");
+    }
+
+    const result = JSON.parse(jsonMatch[0])
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
