@@ -130,26 +130,25 @@ const MarketplaceItemDetailModal = ({ isOpen, onClose, item, isOwnItem, onEdit, 
                   </div>
                 </div>
 
-                {/* Seller Info */}
+                {/* Seller Info - Uniformato allo stile iOS Dark */}
                 {!isOwnItem && (
-                  <div className="bg-white text-black p-6 rounded-[2rem] flex items-center justify-between shadow-xl">
+                  <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-[2rem] flex items-center justify-between shadow-2xl">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-zinc-200 rounded-full overflow-hidden border-2 border-black/5">
+                      <div className="w-12 h-12 bg-zinc-900 rounded-full overflow-hidden border-2 border-white/10">
                         {item.profiles?.avatar_url ? (
                           <img src={item.profiles.avatar_url} className="w-full h-full object-cover" alt="" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center"><User size={20} /></div>
+                          <div className="w-full h-full flex items-center justify-center text-zinc-700"><User size={20} /></div>
                         )}
                       </div>
                       <div>
-                        <p className="text-[7px] font-black uppercase tracking-widest opacity-60">Venditore</p>
-                        <p className="text-sm font-black uppercase italic tracking-tight">@{item.profiles?.username}</p>
+                        <p className="text-[7px] font-black uppercase tracking-widest text-zinc-500">Venditore</p>
+                        <p className="text-sm font-black uppercase italic tracking-tight text-white">@{item.profiles?.username}</p>
                       </div>
                     </div>
                     <Button 
                       onClick={() => navigate(`/profile/${item.seller_id}`)}
-                      variant="outline"
-                      className="border-black/10 rounded-full h-10 px-5 text-[8px] font-black uppercase italic"
+                      className="bg-white text-black hover:bg-zinc-200 rounded-full h-10 px-6 text-[8px] font-black uppercase italic shadow-lg"
                     >
                       Profilo
                     </Button>
