@@ -21,6 +21,7 @@ export interface Vehicle {
   created_at: string;
   likes_count?: number;
   is_liked?: boolean;
+  stance_score?: number; // Aggiunto punteggio AI
   profiles?: {
     license_plate_privacy?: string;
   };
@@ -171,5 +172,19 @@ export const useGarage = (targetUserId?: string) => {
     }
   });
 
-  return { vehicles, isLoading, addVehicle, updateVehicle, deleteVehicle, toggleLike };
+  // Nuova mutation per salvare il punteggio stance
+  const updateStanceScore = useMutation({
+    mutationFn: async ({ vehicleId, score }: { vehicleId: string, score: number }) => {
+      const { error } = await supabase
+        .from('vehicles')
+        .update({ stance_score: score })
+        .eq('id', vehicleId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['garage-vehicles'] });
+    }
+  });
+
+  return { vehicles, isLoading, addVehicle, updateVehicle, deleteVehicle, toggleLike, updateStanceScore };
 };
