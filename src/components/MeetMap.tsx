@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useEffect } from 'react';
+// @ts-ignore
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+// @ts-ignore
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Meet } from '@/hooks/use-meets';
