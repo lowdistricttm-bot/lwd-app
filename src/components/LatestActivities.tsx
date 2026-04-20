@@ -114,7 +114,7 @@ const LatestActivities = () => {
                         {firstMedia ? (
                           <>
                             {mediaIsVideo ? (
-                              <VideoPlayer src={firstMedia} className="w-full h-full" />
+                              <VideoPlayer src={firstMedia} className="w-full h-full" initialMuted={true} />
                             ) : (
                               <img src={firstMedia} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all duration-1000" alt="" />
                             )}

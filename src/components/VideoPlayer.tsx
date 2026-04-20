@@ -3,18 +3,19 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Volume2, VolumeX, Play, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 interface VideoPlayerProps {
   src: string;
   className?: string;
   poster?: string;
   autoPlay?: boolean;
+  initialMuted?: boolean;
 }
 
-const VideoPlayer = ({ src, className, poster, autoPlay = true }: VideoPlayerProps) => {
+const VideoPlayer = ({ src, className, poster, autoPlay = true, initialMuted = false }: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  // Impostato a false per partire con audio
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(initialMuted);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -26,11 +27,8 @@ const VideoPlayer = ({ src, className, poster, autoPlay = true }: VideoPlayerPro
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting && autoPlay) {
-            // Tentativo di riproduzione con audio
             video.play().catch((error) => {
-              console.warn("[VideoPlayer] Autoplay con audio bloccato dal browser. In attesa di interazione utente.", error);
-              // Se il browser blocca l'audio, il video potrebbe non partire affatto.
-              // In quel caso l'utente vedrà l'icona Play al centro.
+              console.warn("[VideoPlayer] Autoplay blocked. User interaction required for audio.", error);
             });
           } else {
             video.pause();
@@ -129,5 +127,4 @@ const VideoPlayer = ({ src, className, poster, autoPlay = true }: VideoPlayerPro
   );
 };
 
-import { motion } from 'framer-motion';
 export default VideoPlayer;
