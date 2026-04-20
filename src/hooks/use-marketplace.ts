@@ -52,12 +52,13 @@ export const useMarketplace = (categoryFilter: string = 'all') => {
       const { data, error } = await query;
       if (error) throw error;
       return data as MarketplaceItem[];
-    }
+    },
+    staleTime: 0,
+    refetchOnMount: true
   });
 
   // Realtime listener per aggiornamento immediato
   useEffect(() => {
-    // Generiamo un ID unico per evitare conflitti di sottoscrizione
     const channelId = `marketplace-${Math.random().toString(36).substring(2, 9)}`;
     
     const channel = supabase
@@ -103,6 +104,7 @@ export const useMarketplace = (categoryFilter: string = 'all') => {
       if (error) throw error;
     },
     onSuccess: () => {
+      // Invalida tutte le query del marketplace per forzare il refresh
       queryClient.invalidateQueries({ queryKey: ['marketplace-items'] });
       showSuccess("Annuncio pubblicato correttamente!");
     },
