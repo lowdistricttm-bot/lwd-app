@@ -48,6 +48,7 @@ const CreateMeetModal = ({ isOpen, onClose }: CreateMeetModalProps) => {
     let finalLat = formData.latitude;
     let finalLng = formData.longitude;
 
+    // Se non abbiamo coordinate, proviamo a cercarle tramite il nome della location
     if (!finalLat && formData.location) {
       try {
         const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(formData.location)}&limit=1`);
@@ -56,15 +57,27 @@ const CreateMeetModal = ({ isOpen, onClose }: CreateMeetModalProps) => {
           finalLat = parseFloat(data[0].lat);
           finalLng = parseFloat(data[0].lon);
         }
-      } catch (err) {}
+      } catch (err) {
+        console.warn("[Meets] Impossibile geolocalizzare la stringa:", formData.location);
+      }
+    }
+
+    // Convertiamo la data locale in ISO string per il database
+    const isoDate = formData.date ? new Date(formData.date).toISOString() : null;
+
+    if (!isoDate) {
+      alert("Seleziona una data valida.");
+      return;
     }
 
     await createMeet.mutateAsync({ 
       ...formData, 
+      date: isoDate,
       latitude: finalLat,
       longitude: finalLng,
       file: selectedFile 
     });
+    
     onClose();
   };
 

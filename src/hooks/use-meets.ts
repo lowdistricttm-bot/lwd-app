@@ -29,8 +29,9 @@ export const useMeets = () => {
   const { data: meets = [], isLoading, refetch } = useQuery({
     queryKey: ['district-meets'],
     queryFn: async () => {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      // Calcoliamo l'inizio di oggi (mezzanotte locale) per mostrare tutti i meet odierni
+      const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
 
       const { data, error } = await supabase
         .from('meets')
@@ -38,14 +39,19 @@ export const useMeets = () => {
           *,
           profiles:user_id (username, avatar_url)
         `)
-        .gte('date', today.toISOString())
+        .gte('date', startOfToday)
         .order('date', { ascending: true });
 
       if (error) {
-        console.error("[Meets] Errore:", error);
+        console.error("[Meets] Errore caricamento:", error);
         return [];
       }
-      return (data || []) as Meet[];
+      
+      // Gestione join Supabase (potrebbe restituire un array o un oggetto)
+      return (data || []).map((m: any) => ({
+        ...m,
+        profiles: Array.isArray(m.profiles) ? m.profiles[0] : m.profiles
+      })) as Meet[];
     },
     staleTime: 0
   });
@@ -85,7 +91,7 @@ export const useMeets = () => {
           user_id: user.id,
           title: newMeet.title,
           description: newMeet.description,
-          date: newMeet.date,
+          date: newMeet.date, // Già convertito in ISO dal componente
           location: newMeet.location,
           latitude: newMeet.latitude,
           longitude: newMeet.longitude,
