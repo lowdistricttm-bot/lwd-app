@@ -57,12 +57,16 @@ export const useMarketplace = (categoryFilter: string = 'all') => {
 
   // Realtime listener per aggiornamento immediato
   useEffect(() => {
+    // Generiamo un ID unico per evitare conflitti di sottoscrizione
+    const channelId = `marketplace-${Math.random().toString(36).substring(2, 9)}`;
+    
     const channel = supabase
-      .channel('marketplace-realtime')
+      .channel(channelId)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'marketplace_items' },
         () => {
+          console.log("[Marketplace] Cambio rilevato, rinfresco dati...");
           queryClient.invalidateQueries({ queryKey: ['marketplace-items'] });
         }
       )
