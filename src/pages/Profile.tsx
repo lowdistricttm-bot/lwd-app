@@ -91,7 +91,7 @@ const Profile = () => {
   const fetchProfile = async (id: string) => {
     const { data: profileData, error } = await supabase
       .from('profiles')
-      .select('id, username, first_name, last_name, avatar_url, cover_url, role, is_admin, bio, instagram_handle, facebook_handle, tiktok_handle, website_url, wp_id, last_seen_at, license_plate_privacy')
+      .select('id, username, first_name, last_name, avatar_url, cover_url, role, is_admin, bio, city, instagram_handle, facebook_handle, tiktok_handle, website_url, wp_id, last_seen_at, license_plate_privacy')
       .eq('id', id)
       .maybeSingle();
       

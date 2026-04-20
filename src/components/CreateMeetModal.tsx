@@ -11,6 +11,7 @@ import { useMeets } from '@/hooks/use-meets';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { cn } from '@/lib/utils';
 import { showLoading, dismissToast, showError } from '@/utils/toast';
+import { Geolocation } from '@capacitor/geolocation';
 
 interface CreateMeetModalProps {
   isOpen: boolean;
@@ -44,56 +45,47 @@ const CreateMeetModal = ({ isOpen, onClose }: CreateMeetModalProps) => {
     }
   };
 
-  const handleGetLocation = () => {
-    if (!("geolocation" in navigator)) {
-      showError("Geolocalizzazione non supportata.");
-      return;
-    }
-
+  const handleGetLocation = async () => {
     setIsLocating(true);
     const toastId = showLoading("Rilevamento posizione...");
 
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=14`
-          );
-          const data = await response.json();
-          
-          const city = data.address.city || data.address.town || data.address.village || data.address.county;
-          const road = data.address.road;
-          const locationString = road ? `${road}, ${city}` : city;
-          
-          if (locationString) {
-            setFormData(prev => ({ 
-              ...prev, 
-              location: locationString.toUpperCase(),
-              latitude,
-              longitude
-            }));
-            if ('vibrate' in navigator) navigator.vibrate(15);
-          }
-        } catch (err) {
-          showError("Impossibile identificare il luogo.");
-        } finally {
-          setIsLocating(false);
-          dismissToast(toastId);
-        }
-      },
-      () => {
-        setIsLocating(false);
-        dismissToast(toastId);
-        showError("Permesso negato o errore GPS.");
+    try {
+      const coordinates = await Geolocation.getCurrentPosition({
+        enableHighAccuracy: true,
+        timeout: 10000
+      });
+
+      const { latitude, longitude } = coordinates.coords;
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=14`
+      );
+      const data = await response.json();
+      
+      const city = data.address.city || data.address.town || data.address.village || data.address.county;
+      const road = data.address.road;
+      const locationString = road ? `${road}, ${city}` : city;
+      
+      if (locationString) {
+        setFormData(prev => ({ 
+          ...prev, 
+          location: locationString.toUpperCase(),
+          latitude,
+          longitude
+        }));
+        if ('vibrate' in navigator) navigator.vibrate(15);
       }
-    );
+    } catch (err: any) {
+      console.error("[GPS Error]", err);
+      showError("Permesso negato o errore GPS. Verifica le impostazioni del dispositivo.");
+    } finally {
+      setIsLocating(false);
+      dismissToast(toastId);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Se l'utente ha scritto a mano la città senza usare il GPS, proviamo a geocodificare
     let finalLat = formData.latitude;
     let finalLng = formData.longitude;
 

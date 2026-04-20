@@ -9,6 +9,7 @@ import { Textarea } from './ui/textarea';
 import { Instagram, Facebook, Music2, Globe, Edit3, Save, X, User, Quote, MapPin, Navigation, Loader2 } from 'lucide-react';
 import { showSuccess, showError, showLoading, dismissToast } from '@/utils/toast';
 import { cn } from '@/lib/utils';
+import { Geolocation } from '@capacitor/geolocation';
 
 interface ProfileInfoTabProps {
   profile: any;
@@ -42,42 +43,34 @@ const ProfileInfoTab = ({ profile, isOwnProfile, onUpdate }: ProfileInfoTabProps
     }
   }, [profile]);
 
-  const handleGetLocation = () => {
-    if (!("geolocation" in navigator)) {
-      showError("Geolocalizzazione non supportata.");
-      return;
-    }
-
+  const handleGetLocation = async () => {
     setIsLocating(true);
     const toastId = showLoading("Rilevamento città...");
 
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
-          );
-          const data = await response.json();
-          const city = data.address.city || data.address.town || data.address.village || data.address.county;
-          
-          if (city) {
-            setFormData(prev => ({ ...prev, city: city.toUpperCase() }));
-            if ('vibrate' in navigator) navigator.vibrate(15);
-          }
-        } catch (err) {
-          showError("Impossibile identificare la città.");
-        } finally {
-          setIsLocating(false);
-          dismissToast(toastId);
-        }
-      },
-      () => {
-        setIsLocating(false);
-        dismissToast(toastId);
-        showError("Permesso negato o errore GPS.");
+    try {
+      const coordinates = await Geolocation.getCurrentPosition({
+        enableHighAccuracy: true,
+        timeout: 10000
+      });
+
+      const { latitude, longitude } = coordinates.coords;
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
+      );
+      const data = await response.json();
+      const city = data.address.city || data.address.town || data.address.village || data.address.county;
+      
+      if (city) {
+        setFormData(prev => ({ ...prev, city: city.toUpperCase() }));
+        if ('vibrate' in navigator) navigator.vibrate(15);
       }
-    );
+    } catch (err: any) {
+      console.error("[GPS Error]", err);
+      showError("Permesso negato o errore GPS. Verifica le impostazioni del dispositivo.");
+    } finally {
+      setIsLocating(false);
+      dismissToast(toastId);
+    }
   };
 
   const handleSave = async () => {
