@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useGarage, Vehicle } from '@/hooks/use-garage';
 import { useAdmin } from '@/hooks/use-admin';
 import { Button } from './ui/button';
@@ -10,6 +10,7 @@ import { Textarea } from './ui/textarea';
 import ImageLightbox from './ImageLightbox';
 import VehicleLogbook from './VehicleLogbook';
 import StanceAnalyzer from './StanceAnalyzer';
+import VehicleDetailModal from './VehicleDetailModal';
 import { 
   Plus, Car, Trash2, Camera, Loader2, X, Edit3, Heart, 
   Gauge, Book, Sparkles, ChevronRight, Calendar 
@@ -17,6 +18,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/use-translation';
+import { supabase } from "@/integrations/supabase/client";
 
 const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProfile?: boolean }) => {
   const { vehicles, isLoading, addVehicle, updateVehicle, deleteVehicle, toggleLike } = useGarage(userId);
@@ -27,7 +29,9 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [activeLogbook, setActiveLogbook] = useState<string | null>(null);
   const [activeAnalyzer, setActiveAnalyzer] = useState<string | null>(null);
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({ 
     brand: '', model: '', year: '', license_plate: '', 
@@ -36,6 +40,10 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => setCurrentUserId(user?.id || null));
+  }, []);
+
   const handleOpenAdd = () => {
     setEditingVehicle(null);
     setFormData({ brand: '', model: '', year: '', license_plate: '', suspension_type: 'STATIC', description: '' });
@@ -43,7 +51,8 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
     setIsFormOpen(true);
   };
 
-  const handleOpenEdit = (v: Vehicle) => {
+  const handleOpenEdit = (e: React.MouseEvent, v: Vehicle) => {
+    e.stopPropagation();
     setEditingVehicle(v);
     setFormData({ 
       brand: v.brand, model: v.model, year: v.year || '', 
@@ -70,7 +79,8 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
     setIsFormOpen(false);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
     if (confirm("Sei sicuro di voler rimuovere questo veicolo dal tuo garage?")) {
       await deleteVehicle.mutateAsync(id);
     }
@@ -161,11 +171,12 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
           const mainImage = vehicle.images?.[0] || vehicle.image_url;
 
           return (
-            <motion.div key={vehicle.id} className="bg-zinc-900/40 backdrop-blur-md border border-white/5 rounded-[2.5rem] overflow-hidden group hover:border-white/20 transition-all duration-500 shadow-2xl">
-              <div 
-                className="aspect-video relative overflow-hidden cursor-pointer" 
-                onClick={() => setLightboxData({ images: vehicle.images || [], index: 0 })}
-              >
+            <motion.div 
+              key={vehicle.id} 
+              onClick={() => setSelectedVehicle(vehicle)}
+              className="bg-zinc-900/40 backdrop-blur-md border border-white/5 rounded-[2.5rem] overflow-hidden group hover:border-white/20 transition-all duration-500 shadow-2xl cursor-pointer"
+            >
+              <div className="aspect-video relative overflow-hidden">
                 {mainImage ? (
                   <img src={mainImage} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-1000 group-hover:scale-110" alt={vehicle.model} />
                 ) : (
@@ -233,10 +244,10 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                   
                   {isOwnProfile && (
                     <div className="flex gap-2">
-                      <button onClick={() => handleOpenEdit(vehicle)} className="p-2.5 bg-white/5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 transition-all">
+                      <button onClick={(e) => handleOpenEdit(e, vehicle)} className="p-2.5 bg-white/5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 transition-all">
                         <Edit3 size={16} />
                       </button>
-                      <button onClick={() => handleDelete(vehicle.id)} className="p-2.5 bg-white/5 rounded-xl text-zinc-400 hover:text-red-500 hover:bg-red-500/10 transition-all">
+                      <button onClick={(e) => handleDelete(e, vehicle.id)} className="p-2.5 bg-white/5 rounded-xl text-zinc-400 hover:text-red-500 hover:bg-red-500/10 transition-all">
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -249,16 +260,13 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                   </p>
                 )}
 
-                {isOwnProfile && (
-                  <div className="pt-6 border-t border-white/5 flex justify-end items-center">
-                    <button 
-                      onClick={() => setActiveLogbook(vehicle.id)}
-                      className="text-[9px] font-black uppercase tracking-widest text-white italic flex items-center gap-2 group"
-                    >
-                      Dettagli Progetto <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                    </button>
-                  </div>
-                )}
+                <div className="pt-6 border-t border-white/5 flex justify-end items-center">
+                  <button 
+                    className="text-[9px] font-black uppercase tracking-widest text-white italic flex items-center gap-2 group"
+                  >
+                    Dettagli Progetto <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                  </button>
+                </div>
               </div>
             </motion.div>
           );
@@ -275,6 +283,16 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
 
       {/* Modali */}
       <AnimatePresence>
+        {selectedVehicle && (
+          <VehicleDetailModal 
+            isOpen={!!selectedVehicle} 
+            onClose={() => setSelectedVehicle(null)} 
+            vehicle={selectedVehicle}
+            isOwnProfile={isOwnProfile}
+            onLike={(id) => toggleLike.mutate(id)}
+            currentUserId={currentUserId}
+          />
+        )}
         {activeLogbook && (
           <div className="fixed inset-0 z-[400] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveLogbook(null)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
