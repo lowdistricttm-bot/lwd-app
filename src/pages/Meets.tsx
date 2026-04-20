@@ -81,7 +81,9 @@ const Meets = () => {
           <div className="space-y-1">
             <h4 className="text-[10px] font-black uppercase tracking-widest text-white italic">Incontri Spontanei</h4>
             <p className="text-[9px] text-zinc-500 font-bold uppercase leading-relaxed italic">
-              Questi incontri sono creati dagli utenti e non sono eventi ufficiali Low District. Sono pensati per una chiacchierata, una sigaretta e per passare tempo insieme tra appassionati. Lo staff non si assume alcuna responsabilità sull'incontro stesso.
+              Questi incontri sono creati dagli utenti e non sono eventi ufficiali Low District. <br />
+              Sono pensati per una chiacchierata, un caffè e per passare tempo insieme tra appassionati. <br />
+              Lo staff non si assume alcuna responsabilità sull'incontro stesso.
             </p>
           </div>
         </div>
