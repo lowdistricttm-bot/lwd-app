@@ -10,7 +10,7 @@ import FeaturedProducts from '@/components/FeaturedProducts';
 import LatestActivities from '@/components/LatestActivities';
 import LatestMeets from '@/components/LatestMeets';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
-import { ShoppingBag, Users, Calendar, ArrowRight, Star, Music, Play, ChevronRight } from 'lucide-react';
+import { ShoppingBag, Users, Calendar, ArrowRight, Star, Music, Play, ChevronRight, Tag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from '@/hooks/use-translation';
 
@@ -33,6 +33,13 @@ const Index = () => {
       label: 'Vai allo Shop'
     },
     { 
+      icon: Tag, 
+      title: 'MARKETPLACE', 
+      desc: 'Vendi e acquista componenti usati tra i membri del District.',
+      href: '/marketplace',
+      label: 'Vedi Annunci'
+    },
+    { 
       icon: Calendar, 
       title: t.home.values.events, 
       desc: t.home.values.eventsDesc,
@@ -53,7 +60,7 @@ const Index = () => {
 
         <section className="py-12 px-6">
           <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
               {navigationTabs.map((item, i) => (
                 <motion.div 
                   key={i}
@@ -64,7 +71,7 @@ const Index = () => {
                 >
                   <Link 
                     to={item.href}
-                    className="group block relative bg-zinc-900/40 backdrop-blur-sm border border-white/5 p-8 md:p-12 hover:bg-zinc-800/60 hover:border-white/20 transition-all duration-500 overflow-hidden rounded-[2rem]"
+                    className="group block relative bg-zinc-900/40 backdrop-blur-sm border border-white/5 p-8 md:p-12 hover:bg-zinc-800/60 hover:border-white/20 transition-all duration-500 overflow-hidden rounded-[2rem] h-full"
                   >
                     <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity">
                       <item.icon size={120} className="text-white" />

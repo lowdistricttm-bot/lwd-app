@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { useWcProducts, useWcCategories } from '@/hooks/use-woocommerce';
-import { Loader2, Filter, X, Search as SearchIcon } from 'lucide-react';
+import { Loader2, Filter, X, Search as SearchIcon, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -91,37 +91,43 @@ const Shop = () => {
               )}
             </div>
 
-            <div className="hidden md:flex items-center gap-6 overflow-x-auto no-scrollbar pb-2">
+            <div className="flex items-center gap-4">
+              <Link to="/marketplace" className="flex items-center gap-2 bg-white text-black px-6 py-3 rounded-full text-[9px] font-black uppercase tracking-widest italic shadow-xl hover:scale-105 transition-all">
+                <Tag size={14} /> Marketplace Usato
+              </Link>
+              
               <button 
-                onClick={() => handleCategorySelect('all')}
+                onClick={() => setIsFilterOpen(true)}
+                className="md:hidden flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md border border-white/10 px-4 py-3 text-[9px] font-black uppercase tracking-widest italic"
+              >
+                <Filter size={14} /> {t.shop.filter}
+              </button>
+            </div>
+          </div>
+
+          <div className="hidden md:flex items-center gap-6 overflow-x-auto no-scrollbar pb-4 border-b border-white/5 mb-8">
+            <button 
+              onClick={() => handleCategorySelect('all')}
+              className={cn(
+                "text-[9px] font-black uppercase tracking-widest whitespace-nowrap transition-all border-b-2 pb-1",
+                currentCategoryId === 'all' ? "text-white border-white" : "text-zinc-500 border-transparent hover:text-white"
+              )}
+            >
+              {t.shop.all}
+            </button>
+            {mainCategories.map((cat: any) => (
+              <button 
+                key={cat.id}
+                onClick={() => handleCategorySelect(cat.id.toString())}
                 className={cn(
                   "text-[9px] font-black uppercase tracking-widest whitespace-nowrap transition-all border-b-2 pb-1",
-                  currentCategoryId === 'all' ? "text-white border-white" : "text-zinc-500 border-transparent hover:text-white"
+                  (currentCategoryId === cat.id.toString() || (cat.slug === 'abbigliamento' && isAbbigliamentoActive)) 
+                    ? "text-white border-white" 
+                    : "text-zinc-500 border-transparent hover:text-white"
                 )}
-              >
-                {t.shop.all}
-              </button>
-              {mainCategories.map((cat: any) => (
-                <button 
-                  key={cat.id}
-                  onClick={() => handleCategorySelect(cat.id.toString())}
-                  className={cn(
-                    "text-[9px] font-black uppercase tracking-widest whitespace-nowrap transition-all border-b-2 pb-1",
-                    (currentCategoryId === cat.id.toString() || (cat.slug === 'abbigliamento' && isAbbigliamentoActive)) 
-                      ? "text-white border-white" 
-                      : "text-zinc-500 border-transparent hover:text-white"
-                  )}
-                  dangerouslySetInnerHTML={{ __html: cat.name }}
-                />
-              ))}
-            </div>
-
-            <button 
-              onClick={() => setIsFilterOpen(true)}
-              className="md:hidden flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md border border-white/10 px-4 py-3 text-[9px] font-black uppercase tracking-widest italic"
-            >
-              <Filter size={14} /> {t.shop.filter}
-            </button>
+                dangerouslySetInnerHTML={{ __html: cat.name }}
+              />
+            ))}
           </div>
 
           <AnimatePresence>
@@ -129,7 +135,7 @@ const Shop = () => {
               <motion.div 
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-4 overflow-x-auto no-scrollbar py-4 border-t border-white/5"
+                className="flex items-center gap-4 overflow-x-auto no-scrollbar py-4 mb-8"
               >
                 <span className="text-[8px] font-black uppercase tracking-widest text-zinc-600 shrink-0">{t.shop.subcategories}:</span>
                 <div className="flex gap-3">

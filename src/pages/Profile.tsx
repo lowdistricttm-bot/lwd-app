@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from '@/components/Navbar';
 import GarageTab from '@/components/GarageTab';
 import ApplicationsTab from '@/components/ApplicationsTab';
+import MarketplaceTab from '@/components/MarketplaceTab';
 import ProfilePostGridItem from '@/components/ProfilePostGridItem';
 import CreatePostModal from '@/components/CreatePostModal';
 import ImageLightbox from '@/components/ImageLightbox';
@@ -22,7 +23,7 @@ import { useFollow } from '@/hooks/use-follow';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { 
-  User, Settings, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Share2, Edit2, Truck, ExternalLink
+  User, Settings, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Share2, Edit2, Truck, ExternalLink, Tag
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -204,6 +205,9 @@ const Profile = () => {
     tabs.push({ id: 'orders', label: t.profile.orders, icon: ShoppingBag });
     tabs.push({ id: 'selections', label: t.profile.selections, icon: ClipboardCheck });
   }
+  // Aggiungiamo la tab Marketplace
+  tabs.push({ id: 'marketplace', label: 'Annunci', icon: Tag });
+  
   tabs.push({ id: 'profile', label: t.profile.info, icon: User });
   if (isOwnProfile) tabs.push({ id: 'settings', label: t.profile.settings, icon: Settings });
 
@@ -291,6 +295,7 @@ const Profile = () => {
                   </motion.div>
                 )}
                 {activeTab === 'garage' && <motion.div key="garage" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><GarageTab userId={targetUserId} isOwnProfile={isOwnProfile} /></motion.div>}
+                {activeTab === 'marketplace' && <motion.div key="marketplace" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><MarketplaceTab userId={targetUserId} isOwnProfile={isOwnProfile} /></motion.div>}
                 {activeTab === 'orders' && (
                   <motion.div key="orders" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                     <h3 className="text-lg font-black italic uppercase mb-4">{t.profile.orders}</h3>
