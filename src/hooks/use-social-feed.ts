@@ -36,12 +36,13 @@ export const useSocialFeed = () => {
       const { data: postsData, error: postsError } = await supabase
         .from('posts')
         .select(`
-          *,
-          profiles:user_id (id, username, first_name, last_name, avatar_url),
+          id, user_id, content, image_url, images, created_at,
+          profiles:user_id (id, username, avatar_url),
           likes (user_id, profiles:user_id (username, avatar_url)),
-          comments (*, profiles:user_id (id, username, first_name, last_name, avatar_url))
+          comments (id, post_id, user_id, content, created_at, parent_id, image_url, profiles:user_id (id, username, avatar_url))
         `)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(20);
 
       if (postsError) {
         console.error("[SocialFeed] Errore query:", postsError);
@@ -51,16 +52,20 @@ export const useSocialFeed = () => {
       if (!postsData) return [];
 
       return postsData.map((post: any) => {
-        const profile = post.profiles;
+        // Fix: Supabase restituisce un array per le JOIN, prendiamo il primo elemento
+        const profile = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles;
         const likes_count = post.likes?.length || 0;
         const is_liked = user ? post.likes?.some((l: any) => l.user_id === user.id) : false;
         const username = profile?.username || 'Membro District';
         
-        const liked_by = post.likes?.map((l: any) => ({
-          user_id: l.user_id,
-          username: l.profiles?.username || 'Membro',
-          avatar_url: l.profiles?.avatar_url
-        })) || [];
+        const liked_by = post.likes?.map((l: any) => {
+          const likerProfile = Array.isArray(l.profiles) ? l.profiles[0] : l.profiles;
+          return {
+            user_id: l.user_id,
+            username: likerProfile?.username || 'Membro',
+            avatar_url: likerProfile?.avatar_url
+          };
+        }) || [];
 
         return {
           ...post,
@@ -69,17 +74,20 @@ export const useSocialFeed = () => {
           likes_count,
           is_liked,
           liked_by,
-          comments: post.comments?.map((c: any) => ({
-            ...c,
-            profiles: {
-              ...c.profiles,
-              username: c.profiles?.username || 'Utente'
-            }
-          })) || []
+          comments: post.comments?.map((c: any) => {
+            const commentProfile = Array.isArray(c.profiles) ? c.profiles[0] : c.profiles;
+            return {
+              ...c,
+              profiles: {
+                ...commentProfile,
+                username: commentProfile?.username || 'Utente'
+              }
+            };
+          }) || []
         };
       }) as Post[];
     },
-    staleTime: 0, // Forza la sincronizzazione ad ogni apertura
+    staleTime: 1000 * 60 * 2,
     refetchOnMount: true
   });
 
@@ -144,7 +152,7 @@ export const useSocialFeed = () => {
           images: imageUrls,
           image_url: imageUrls[0] || null 
         }])
-        .select()
+        .select('id')
         .single();
 
       if (error) throw error;
@@ -270,10 +278,10 @@ export const usePost = (postId?: string) => {
       const { data: post, error } = await supabase
         .from('posts')
         .select(`
-          *,
+          id, user_id, content, image_url, images, created_at,
           profiles:user_id (id, username, first_name, last_name, avatar_url),
           likes (user_id, profiles:user_id (username, avatar_url)),
-          comments (*, profiles:user_id (id, username, first_name, last_name, avatar_url))
+          comments (id, post_id, user_id, content, created_at, parent_id, image_url, profiles:user_id (id, username, avatar_url))
         `)
         .eq('id', postId)
         .maybeSingle();
@@ -285,16 +293,19 @@ export const usePost = (postId?: string) => {
       
       if (!post) return null;
 
-      const profile = post.profiles;
+      const profile = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles;
       const likes_count = post.likes?.length || 0;
       const is_liked = user ? post.likes?.some((l: any) => l.user_id === user.id) : false;
       const username = profile?.username || 'Membro District';
       
-      const liked_by = post.likes?.map((l: any) => ({
-        user_id: l.user_id,
-        username: l.profiles?.username || 'Membro',
-        avatar_url: l.profiles?.avatar_url
-      })) || [];
+      const liked_by = post.likes?.map((l: any) => {
+        const likerProfile = Array.isArray(l.profiles) ? l.profiles[0] : l.profiles;
+        return {
+          user_id: l.user_id,
+          username: likerProfile?.username || 'Membro',
+          avatar_url: likerProfile?.avatar_url
+        };
+      }) || [];
 
       return {
         ...post,
@@ -303,13 +314,16 @@ export const usePost = (postId?: string) => {
         likes_count,
         is_liked,
         liked_by,
-        comments: post.comments?.map((c: any) => ({
-          ...c,
-          profiles: {
-            ...c.profiles,
-            username: c.profiles?.username || 'Utente'
-          }
-        })) || []
+        comments: post.comments?.map((c: any) => {
+          const commentProfile = Array.isArray(c.profiles) ? c.profiles[0] : c.profiles;
+          return {
+            ...c,
+            profiles: {
+              ...commentProfile,
+              username: commentProfile?.username || 'Utente'
+            }
+          };
+        }) || []
       } as Post;
     },
     enabled: !!postId,

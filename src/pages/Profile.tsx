@@ -88,7 +88,12 @@ const Profile = () => {
   }, [activeTab, refetchOrders, refetchPosts]);
 
   const fetchProfile = async (id: string) => {
-    const { data: profileData, error } = await supabase.from('profiles').select('*').eq('id', id).maybeSingle();
+    const { data: profileData, error } = await supabase
+      .from('profiles')
+      .select('id, username, first_name, last_name, avatar_url, cover_url, role, is_admin, bio, instagram_handle, facebook_handle, tiktok_handle, website_url, wp_id, last_seen_at, license_plate_privacy')
+      .eq('id', id)
+      .maybeSingle();
+      
     if (error) console.error("[Profile] Errore caricamento:", error);
     setProfile(profileData);
     

@@ -40,13 +40,14 @@ export const useMarketplace = (categoryFilter: string = 'all') => {
       let query = supabase
         .from('marketplace_items')
         .select(`
-          *,
+          id, seller_id, title, description, price, category, images, created_at,
           profiles:seller_id (
             username, 
             avatar_url
           )
         `)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(50);
 
       if (categoryFilter !== 'all') {
         query = query.eq('category', categoryFilter);
@@ -59,9 +60,13 @@ export const useMarketplace = (categoryFilter: string = 'all') => {
         return [];
       }
       
-      return (data || []) as MarketplaceItem[];
+      // Fix: Supabase restituisce un array per le JOIN, mappiamo per estrarre il profilo singolo
+      return (data || []).map((item: any) => ({
+        ...item,
+        profiles: Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
+      })) as MarketplaceItem[];
     },
-    staleTime: 0
+    staleTime: 1000 * 60 * 5 // Cache di 5 minuti
   });
 
   useEffect(() => {

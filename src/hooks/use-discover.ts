@@ -16,7 +16,7 @@ export const useDiscover = (searchQuery: string = "") => {
       let query = supabase
         .from('vehicles')
         .select(`
-          *,
+          id, user_id, brand, model, year, suspension_type, description, image_url, images, stance_score, created_at,
           profiles:user_id (
             username, 
             avatar_url, 
@@ -62,7 +62,7 @@ export const useDiscover = (searchQuery: string = "") => {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, username, avatar_url, role, is_admin')
         .in('role', AUTHORIZED_ROLES) // Solo membri ufficiali e staff
         .ilike('username', `%${searchQuery}%`)
         .limit(10);
@@ -78,7 +78,7 @@ export const useDiscover = (searchQuery: string = "") => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, username, avatar_url, role, is_admin, updated_at')
         .in('role', AUTHORIZED_ROLES) // Solo membri ufficiali e staff
         .order('updated_at', { ascending: false })
         .limit(8);
