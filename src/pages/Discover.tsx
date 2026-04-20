@@ -261,7 +261,8 @@ const Discover = () => {
                           </span>
                           {vehicle.stance_score && (
                             <span className="bg-black/60 backdrop-blur-md text-white text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full border border-white/10 flex items-center gap-1.5 w-fit">
-                              <Sparkles size={10} /> LOW SCORE: {vehicle.stance_score}
+                              <Sparkles size={10} /> 
+                              {viewMode === 'list' ? `LOW SCORE: ${vehicle.stance_score}` : vehicle.stance_score}
                             </span>
                           )}
                         </div>
