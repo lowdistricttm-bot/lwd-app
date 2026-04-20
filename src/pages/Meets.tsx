@@ -5,7 +5,7 @@ import Navbar from '@/components/Navbar';
 import { useMeets } from '@/hooks/use-meets';
 import { useAdmin } from '@/hooks/use-admin';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Calendar, Plus, User, Loader2, ChevronRight, Trash2, RefreshCw, Clock, AlertCircle, LogIn } from 'lucide-react';
+import { MapPin, Calendar, Plus, User, Loader2, ChevronRight, Trash2, RefreshCw, Clock, AlertCircle, LogIn, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CreateMeetModal from '@/components/CreateMeetModal';
 import { cn } from '@/lib/utils';
@@ -72,6 +72,19 @@ const Meets = () => {
             </div>
           )}
         </header>
+
+        {/* Disclaimer Incontri Spontanei */}
+        <div className="mb-10 p-6 bg-white/5 backdrop-blur-md border border-white/10 rounded-[2rem] flex items-start gap-4">
+          <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center shrink-0">
+            <Info size={20} className="text-zinc-400" />
+          </div>
+          <div className="space-y-1">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-white italic">Incontri Spontanei</h4>
+            <p className="text-[9px] text-zinc-500 font-bold uppercase leading-relaxed italic">
+              Questi incontri sono creati dagli utenti e non sono eventi ufficiali Low District. Sono pensati per una chiacchierata, una sigaretta e per passare tempo insieme tra appassionati. Lo staff non si assume alcuna responsabilità sull'incontro stesso.
+            </p>
+          </div>
+        </div>
 
         {!user ? (
           <motion.div 
