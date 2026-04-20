@@ -6,8 +6,8 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import { Instagram, Facebook, Music2, Globe, Edit3, Save, X, User, Quote, MapPin, Navigation, Loader2 } from 'lucide-react';
-import { showSuccess, showError, showLoading, dismissToast } from '@/utils/toast';
+import { Instagram, Facebook, Music2, Globe, Edit3, Save, X, User, Quote, MapPin } from 'lucide-react';
+import { showSuccess, showError } from '@/utils/toast';
 import { cn } from '@/lib/utils';
 
 interface ProfileInfoTabProps {
@@ -19,7 +19,6 @@ interface ProfileInfoTabProps {
 const ProfileInfoTab = ({ profile, isOwnProfile, onUpdate }: ProfileInfoTabProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isLocating, setIsLocating] = useState(false);
   const [formData, setFormData] = useState({
     bio: '',
     city: '',
@@ -41,57 +40,6 @@ const ProfileInfoTab = ({ profile, isOwnProfile, onUpdate }: ProfileInfoTabProps
       });
     }
   }, [profile]);
-
-  const handleGetLocation = () => {
-    if (!("geolocation" in navigator)) {
-      showError("Geolocalizzazione non supportata dal browser.");
-      return;
-    }
-
-    setIsLocating(true);
-    const toastId = showLoading("Rilevamento posizione...");
-
-    const options = {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0
-    };
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
-          );
-          const data = await response.json();
-          const city = data.address.city || data.address.town || data.address.village || data.address.county;
-          
-          if (city) {
-            setFormData(prev => ({ ...prev, city: city.toUpperCase() }));
-            showSuccess(`Posizione rilevata: ${city}`);
-            if ('vibrate' in navigator) navigator.vibrate(15);
-          } else {
-            showError("Impossibile determinare il nome della città.");
-          }
-        } catch (err) {
-          showError("Errore durante la conversione delle coordinate.");
-        } finally {
-          setIsLocating(false);
-          dismissToast(toastId);
-        }
-      },
-      (error) => {
-        setIsLocating(false);
-        dismissToast(toastId);
-        let msg = "Errore GPS.";
-        if (error.code === 1) msg = "Permesso negato. Abilita il GPS nelle impostazioni del browser/telefono.";
-        else if (error.code === 3) msg = "Timeout GPS. Riprova all'aperto.";
-        showError(msg);
-      },
-      options
-    );
-  };
 
   const handleSave = async () => {
     setLoading(true);
@@ -163,16 +111,8 @@ const ProfileInfoTab = ({ profile, isOwnProfile, onUpdate }: ProfileInfoTabProps
                   value={formData.city}
                   onChange={e => setFormData({...formData, city: e.target.value.toUpperCase()})}
                   placeholder="ES: MILANO"
-                  className="bg-transparent border-none focus-visible:ring-0 p-0 h-12 text-xs font-bold text-white placeholder:text-zinc-800 pr-10"
+                  className="bg-transparent border-none focus-visible:ring-0 p-0 h-12 text-xs font-bold text-white placeholder:text-zinc-800"
                 />
-                <button 
-                  type="button"
-                  onClick={handleGetLocation}
-                  disabled={isLocating}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
-                >
-                  {isLocating ? <Loader2 className="animate-spin" size={16} /> : <Navigation size={16} />}
-                </button>
               </div>
             </div>
           </div>

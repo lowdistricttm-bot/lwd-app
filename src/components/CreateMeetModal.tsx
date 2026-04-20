@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, MapPin, Camera, Loader2, Send, Type, AlignLeft, Navigation } from 'lucide-react';
+import { X, Calendar, MapPin, Camera, Loader2, Send, Type } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -10,7 +10,6 @@ import { Textarea } from './ui/textarea';
 import { useMeets } from '@/hooks/use-meets';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { cn } from '@/lib/utils';
-import { showLoading, dismissToast, showError, showSuccess } from '@/utils/toast';
 
 interface CreateMeetModalProps {
   isOpen: boolean;
@@ -32,7 +31,6 @@ const CreateMeetModal = ({ isOpen, onClose }: CreateMeetModalProps) => {
   
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isLocating, setIsLocating] = useState(false);
 
   useBodyLock(isOpen);
 
@@ -42,54 +40,6 @@ const CreateMeetModal = ({ isOpen, onClose }: CreateMeetModalProps) => {
       setSelectedFile(file);
       setPreviewUrl(URL.createObjectURL(file));
     }
-  };
-
-  const handleGetLocation = () => {
-    if (!("geolocation" in navigator)) {
-      showError("Geolocalizzazione non supportata.");
-      return;
-    }
-
-    setIsLocating(true);
-    const toastId = showLoading("Rilevamento posizione...");
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=14`
-          );
-          const data = await response.json();
-          
-          const city = data.address.city || data.address.town || data.address.village || data.address.county;
-          const road = data.address.road;
-          const locationString = road ? `${road}, ${city}` : city;
-          
-          if (locationString) {
-            setFormData(prev => ({ 
-              ...prev, 
-              location: locationString.toUpperCase(),
-              latitude,
-              longitude
-            }));
-            showSuccess("Posizione acquisita!");
-            if ('vibrate' in navigator) navigator.vibrate(15);
-          }
-        } catch (err) {
-          showError("Impossibile identificare l'indirizzo.");
-        } finally {
-          setIsLocating(false);
-          dismissToast(toastId);
-        }
-      },
-      (error) => {
-        setIsLocating(false);
-        dismissToast(toastId);
-        showError("Permesso negato o errore GPS.");
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -163,15 +113,7 @@ const CreateMeetModal = ({ isOpen, onClose }: CreateMeetModalProps) => {
                     <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Luogo / Ritrovo</Label>
                     <div className="relative">
                       <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
-                      <Input required value={formData.location} onChange={e => setFormData({...formData, location: e.target.value.toUpperCase()})} className={cn(inputClass, "pl-12 pr-12")} placeholder="ES: PARCHEGGIO IKEA" />
-                      <button 
-                        type="button"
-                        onClick={handleGetLocation}
-                        disabled={isLocating}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
-                      >
-                        {isLocating ? <Loader2 className="animate-spin" size={16} /> : <Navigation size={16} />}
-                      </button>
+                      <Input required value={formData.location} onChange={e => setFormData({...formData, location: e.target.value.toUpperCase()})} className={cn(inputClass, "pl-12")} placeholder="ES: PARCHEGGIO IKEA" />
                     </div>
                   </div>
                 </div>

@@ -9,11 +9,12 @@ export interface Notification {
   id: string;
   user_id: string;
   actor_id: string;
-  type: 'like' | 'comment' | 'vehicle_like' | 'application_status' | 'event_update' | 'event_new' | 'event_open' | 'event_closed' | 'follow' | 'admin_info' | 'admin_warning' | 'admin_important';
+  type: 'like' | 'comment' | 'vehicle_like' | 'application_status' | 'event_update' | 'event_new' | 'event_open' | 'event_closed' | 'follow' | 'admin_info' | 'admin_warning' | 'admin_important' | 'meet_new';
   post_id?: string;
   application_id?: string;
   event_id?: string;
   vehicle_id?: string;
+  meet_id?: string;
   content?: string;
   is_read: boolean;
   created_at: string;
@@ -30,6 +31,10 @@ export interface Notification {
   };
   event?: {
     title: string;
+  };
+  meets?: {
+    title: string;
+    location: string;
   };
   vehicles?: {
     brand: string;
@@ -54,6 +59,7 @@ export const useNotifications = () => {
           posts:post_id (content),
           applications:application_id (status, events:event_id (title)),
           event:event_id (title),
+          meets:meet_id (title, location),
           vehicles:vehicle_id (brand, model)
         `)
         .eq('user_id', user.id)

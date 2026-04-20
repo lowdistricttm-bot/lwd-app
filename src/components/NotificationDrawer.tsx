@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Bell, Heart, MessageSquare, ClipboardCheck, User, Loader2, Trash2, Calendar, Car, UserPlus, ShieldCheck, Megaphone, AlertTriangle, Zap } from 'lucide-react';
+import { X, Bell, Heart, MessageSquare, ClipboardCheck, User, Loader2, Trash2, Calendar, Car, UserPlus, ShieldCheck, Megaphone, AlertTriangle, Zap, MapPin } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/use-notifications';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { formatDistanceToNow } from 'date-fns';
@@ -39,6 +39,8 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
       navigate(`/events?view=${n.event_id}`);
     } else if (n.type === 'follow') {
       navigate(`/profile/${n.actor_id}`);
+    } else if (n.type === 'meet_new') {
+      navigate('/meets');
     }
   };
 
@@ -64,6 +66,7 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
       case 'comment': return <MessageSquare size={14} className="text-blue-500" />;
       case 'application_status': return <ClipboardCheck size={14} className="text-green-500" />;
       case 'follow': return <UserPlus size={14} className="text-indigo-500" />;
+      case 'meet_new': return <MapPin size={14} className="text-orange-500" />;
       default: return <Bell size={14} />;
     }
   };
@@ -85,6 +88,13 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
         return <>SELEZIONI CHIUSE per l'evento: <span className="font-black uppercase text-red-400">{n.event?.title || 'Low District'}</span></>;
       case 'follow':
         return <><span className="font-black">{actorName}</span> ha iniziato a seguirti</>;
+      case 'meet_new':
+        return (
+          <>
+            Nuovo incontro a <span className="font-black">{n.meets?.location || 'vicino a te'}</span>: 
+            <span className="font-black text-orange-400"> {n.meets?.title}</span>
+          </>
+        );
       default: return n.content || 'Nuova notifica';
     }
   };
