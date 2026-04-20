@@ -19,7 +19,7 @@ const Meets = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { meets, isLoading, deleteMeet, refetch } = useMeets();
-  const { role } = useAdmin();
+  const { role, checkingAdmin } = useAdmin();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -39,7 +39,8 @@ const Meets = () => {
     refetch().finally(() => setIsRefreshing(false));
   };
 
-  const isSubscriber = role === 'subscriber';
+  // Permessi: Solo Membri Ufficiali, Staff, Admin e Support possono organizzare
+  const canOrganize = role && ['admin', 'staff', 'support', 'member'].includes(role);
 
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent">
@@ -60,7 +61,7 @@ const Meets = () => {
                 <RefreshCw size={20} className={cn(isRefreshing && "animate-spin")} />
               </button>
               
-              {!isSubscriber && (
+              {canOrganize && (
                 <button 
                   onClick={() => setIsCreateModalOpen(true)}
                   className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 transition-all shadow-xl shadow-white/20"
@@ -89,7 +90,7 @@ const Meets = () => {
               <LogIn size={16} className="mr-2" /> Accedi Ora
             </Button>
           </motion.div>
-        ) : isLoading && !meets ? (
+        ) : (isLoading || checkingAdmin) && !meets ? (
           <div className="py-20 flex flex-col items-center gap-4">
             <Loader2 className="animate-spin text-zinc-500" size={40} />
             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Sincronizzazione Meet...</p>
