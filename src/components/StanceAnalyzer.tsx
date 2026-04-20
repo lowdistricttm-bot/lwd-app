@@ -2,41 +2,20 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Sparkles, Gauge, Share2, X, Terminal, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { Loader2, Sparkles, Gauge, Share2, X, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { Button } from './ui/button';
 import { supabase } from "@/integrations/supabase/client";
 import { showError } from '@/utils/toast';
 import { useGarage } from '@/hooks/use-garage';
 import { cn } from '@/lib/utils';
 
-const SCAN_STEPS = [
-  "Inizializzazione sensori ottici...",
-  "Rilevamento archi passaruota...",
-  "Calcolo luce a terra (Ground Clearance)...",
-  "Analisi angoli di Camber...",
-  "Verifica Offset e Fitment...",
-  "Elaborazione Low Score finale..."
-];
-
 const StanceAnalyzer = ({ imageUrl, vehicleId, onClose }: { imageUrl: string, vehicleId: string, onClose: () => void }) => {
   const [loading, setLoading] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
   const [result, setResult] = useState<any>(null);
   const { updateStanceScore } = useGarage();
 
-  useEffect(() => {
-    let interval: any;
-    if (loading && currentStep < SCAN_STEPS.length - 1) {
-      interval = setInterval(() => {
-        setCurrentStep(prev => prev + 1);
-      }, 800);
-    }
-    return () => clearInterval(interval);
-  }, [loading, currentStep]);
-
   const analyze = async () => {
     setLoading(true);
-    setCurrentStep(0);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const response = await fetch('https://cxjqbxhhslxqpkfcwqhr.supabase.co/functions/v1/analyze-stance', {
@@ -51,6 +30,7 @@ const StanceAnalyzer = ({ imageUrl, vehicleId, onClose }: { imageUrl: string, ve
       const data = await response.json();
       if (data.error) throw new Error(data.error);
       
+      // Simuliamo la durata della scansione laser
       setTimeout(async () => {
         setResult(data);
         if (data.stance_score) {
@@ -60,7 +40,7 @@ const StanceAnalyzer = ({ imageUrl, vehicleId, onClose }: { imageUrl: string, ve
           });
         }
         setLoading(false);
-      }, 1000);
+      }, 3500);
 
     } catch (err: any) {
       showError(err.message);
@@ -70,7 +50,7 @@ const StanceAnalyzer = ({ imageUrl, vehicleId, onClose }: { imageUrl: string, ve
 
   return (
     <div className="flex flex-col h-full min-h-[80vh] relative">
-      {/* Close Button - Always Fixed Top Right */}
+      {/* Close Button */}
       <button 
         onClick={onClose} 
         className="absolute top-6 right-6 z-[100] p-3 bg-white/10 backdrop-blur-xl rounded-full text-white hover:bg-white hover:text-black transition-all shadow-2xl border border-white/10"
@@ -91,42 +71,41 @@ const StanceAnalyzer = ({ imageUrl, vehicleId, onClose }: { imageUrl: string, ve
           "relative w-full rounded-[2.5rem] overflow-hidden border border-white/10 bg-black shadow-2xl transition-all duration-1000",
           result ? "aspect-[21/9] mb-10" : "aspect-video mb-8"
         )}>
-          <img src={imageUrl} className={cn("w-full h-full object-cover transition-all duration-1000", loading ? "opacity-40 scale-110 blur-sm" : result ? "opacity-50" : "opacity-70")} alt="Auto" />
+          <img src={imageUrl} className={cn("w-full h-full object-cover transition-all duration-1000", loading ? "opacity-60 scale-105" : result ? "opacity-50" : "opacity-70")} alt="Auto" />
           
           <AnimatePresence>
             {loading && (
-              <motion.div 
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="absolute inset-0 flex flex-col items-center justify-center p-6 bg-black/40 backdrop-blur-sm"
-              >
-                <div className="w-full max-w-xs bg-black/80 border border-white/10 rounded-2xl p-6 font-mono text-left shadow-2xl">
-                  <div className="flex items-center gap-2 mb-4 border-b border-white/5 pb-3">
-                    <Terminal size={14} className="text-zinc-500" />
-                    <span className="text-[9px] text-zinc-500 uppercase font-black tracking-widest">Visual Analysis Log</span>
-                  </div>
-                  <div className="space-y-2">
-                    {SCAN_STEPS.slice(0, currentStep + 1).map((step, i) => (
-                      <motion.p 
-                        key={i} 
-                        initial={{ opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }}
-                        className="text-[10px] text-white flex items-center gap-2"
-                      >
-                        <span className="text-green-500 font-bold">{">"}</span> {step}
-                      </motion.p>
-                    ))}
-                  </div>
-                  <div className="mt-6 flex justify-center">
-                    <Loader2 className="animate-spin text-white/20" size={28} />
+              <>
+                {/* Laser Scanner Bar */}
+                <motion.div 
+                  initial={{ top: "0%" }}
+                  animate={{ top: "100%" }}
+                  transition={{ 
+                    duration: 1.5, 
+                    repeat: Infinity, 
+                    ease: "linear" 
+                  }}
+                  className="absolute left-0 right-0 h-1 bg-white shadow-[0_0_20px_rgba(255,255,255,0.8)] z-20"
+                />
+                {/* Overlay Scansione */}
+                <motion.div 
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                  className="absolute inset-0 bg-white/5 backdrop-blur-[2px] z-10"
+                />
+                <div className="absolute inset-0 flex items-center justify-center z-30">
+                  <div className="bg-black/60 backdrop-blur-md px-6 py-3 rounded-full border border-white/10 flex items-center gap-3">
+                    <Loader2 className="animate-spin text-white" size={18} />
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Analisi in corso...</span>
                   </div>
                 </div>
-              </motion.div>
+              </>
             )}
           </AnimatePresence>
 
           {!result && !loading && (
             <div className="absolute inset-0 flex items-center justify-center">
               <Button onClick={analyze} className="bg-white text-black rounded-full h-16 px-12 font-black uppercase italic shadow-2xl hover:scale-105 transition-all border-none">
-                <Sparkles size={20} className="mr-3" /> Inizia Analisi Visiva
+                <Sparkles size={20} className="mr-3" /> Inizia Scansione
               </Button>
             </div>
           )}
