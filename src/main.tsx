@@ -23,7 +23,7 @@ if ('serviceWorker' in navigator) {
           };
         })
         .catch(err => {
-          // Gestione specifica per l'errore di Lock "steal"
+          // Gestione specifica per l'errore di Lock "steal" o interruzioni di rete
           const isLockError = err.name === 'AbortError' || 
                              err.message?.includes('Lock broken') || 
                              err.message?.includes('steal');
@@ -31,11 +31,11 @@ if ('serviceWorker' in navigator) {
           if (!isLockError) {
             console.error('[SW] Errore registrazione:', err);
           } else {
-            // Log silenzioso per errori di lock comuni durante il refresh
-            console.warn('[SW] Registrazione interrotta da un altro processo (Lock steal).');
+            // Log silenzioso per errori di lock comuni durante il refresh o navigazione rapida
+            console.warn('[SW] Registrazione interrotta o gestita da un altro processo.');
           }
         });
-    }, 100);
+    }, 200); // Aumentato leggermente il delay per stabilità
   });
 }
 

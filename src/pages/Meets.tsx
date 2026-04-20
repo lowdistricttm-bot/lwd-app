@@ -5,27 +5,36 @@ import Navbar from '@/components/Navbar';
 import { useMeets } from '@/hooks/use-meets';
 import { useAdmin } from '@/hooks/use-admin';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Calendar, Plus, User, Loader2, ChevronRight, Trash2, RefreshCw, Clock } from 'lucide-react';
+import { MapPin, Calendar, Plus, User, Loader2, ChevronRight, Trash2, RefreshCw, Clock, AlertCircle, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CreateMeetModal from '@/components/CreateMeetModal';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from '@/hooks/use-translation';
 
 const Meets = () => {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
   const { meets, isLoading, deleteMeet, refetch } = useMeets();
   const { role } = useAdmin();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => setCurrentUserId(user?.id || null));
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setCurrentUserId(session?.user?.id || null);
+    });
     refetch();
   }, [refetch]);
 
   const handleManualRefresh = () => {
+    if (!user) return;
     setIsRefreshing(true);
     refetch().finally(() => setIsRefreshing(false));
   };
@@ -42,26 +51,45 @@ const Meets = () => {
             <h1 className="text-4xl md:text-7xl font-black italic tracking-tighter uppercase">District Meet</h1>
           </div>
           
-          <div className="flex items-center justify-center gap-4 w-full">
-            <button 
-              onClick={handleManualRefresh}
-              className="w-14 h-14 bg-white/10 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all shadow-lg border border-white/10 shrink-0"
-            >
-              <RefreshCw size={22} className={cn(isRefreshing && "animate-spin")} />
-            </button>
-            
-            {!isSubscriber && (
-              <Button 
-                onClick={() => setIsCreateModalOpen(true)}
-                className="bg-white text-black rounded-full h-14 px-10 font-black uppercase italic shadow-xl hover:scale-105 transition-all flex-1 sm:flex-none"
+          {user && (
+            <div className="flex items-center justify-center gap-4 w-full">
+              <button 
+                onClick={handleManualRefresh}
+                className="w-14 h-14 bg-white/10 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all shadow-lg border border-white/10 shrink-0"
               >
-                <Plus size={20} className="mr-2" /> Organizza Meet
-              </Button>
-            )}
-          </div>
+                <RefreshCw size={22} className={cn(isRefreshing && "animate-spin")} />
+              </button>
+              
+              {!isSubscriber && (
+                <Button 
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="bg-white text-black rounded-full h-14 px-10 font-black uppercase italic shadow-xl hover:scale-105 transition-all flex-1 sm:flex-none"
+                >
+                  <Plus size={20} className="mr-2" /> Organizza Meet
+                </Button>
+              )}
+            </div>
+          )}
         </header>
 
-        {isLoading && !meets ? (
+        {!user ? (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-8 bg-white/10 backdrop-blur-md border border-white/10 rounded-[2.5rem] flex flex-col md:flex-row items-center justify-between gap-6"
+          >
+            <div className="flex items-center gap-4">
+              <AlertCircle className="text-white shrink-0" size={32} />
+              <div>
+                <p className="text-xs font-black uppercase tracking-widest text-white">Area Riservata</p>
+                <p className="text-[10px] text-zinc-400 font-bold uppercase mt-1">Accedi per visualizzare i raduni della community.</p>
+              </div>
+            </div>
+            <Button onClick={() => navigate('/login')} className="bg-white text-black hover:scale-105 rounded-full text-[10px] font-black uppercase tracking-widest h-12 px-8 italic shadow-xl">
+              <LogIn size={16} className="mr-2" /> Accedi Ora
+            </Button>
+          </motion.div>
+        ) : isLoading && !meets ? (
           <div className="py-20 flex flex-col items-center gap-4">
             <Loader2 className="animate-spin text-zinc-500" size={40} />
             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Sincronizzazione Meet...</p>
