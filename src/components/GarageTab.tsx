@@ -40,6 +40,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
     suspension_type: 'STATIC', description: '' 
   });
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -50,6 +51,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
     setEditingVehicle(null);
     setFormData({ brand: '', model: '', year: '', license_plate: '', suspension_type: 'STATIC', description: '' });
     setSelectedFiles([]);
+    setExistingImages([]);
     setIsFormOpen(true);
   };
 
@@ -63,7 +65,16 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
       description: v.description || '' 
     });
     setSelectedFiles([]);
+    setExistingImages(v.images || []);
     setIsFormOpen(true);
+  };
+
+  const removeExistingImage = (index: number) => {
+    setExistingImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeNewFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -73,7 +84,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
         id: editingVehicle.id, 
         ...formData, 
         files: selectedFiles,
-        existingImages: editingVehicle.images 
+        existingImages: existingImages 
       });
     } else {
       await addVehicle.mutateAsync({ ...formData, files: selectedFiles });
@@ -150,11 +161,51 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                 <Textarea placeholder="Racconta la storia del tuo veicolo..." value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="bg-black/40 border-white/5 rounded-[1.5rem] min-h-[100px] p-6 text-sm italic" />
               </div>
 
-              <div onClick={() => fileInputRef.current?.click()} className="h-32 border-2 border-dashed border-white/10 rounded-[2rem] flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition-all group">
-                <Camera size={32} className="text-zinc-600 mb-2 group-hover:text-white transition-colors" />
-                <span className="text-[10px] font-black uppercase text-zinc-500 group-hover:text-white">{selectedFiles.length > 0 ? `${selectedFiles.length} Foto Selezionate` : 'Carica Foto Progetto'}</span>
+              <div className="space-y-4">
+                <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Foto Progetto (Max 6)</Label>
+                
+                <div className="flex flex-wrap gap-3">
+                  {/* Foto Esistenti */}
+                  {existingImages.map((url, i) => (
+                    <div key={`existing-${i}`} className="relative w-20 h-20 rounded-xl overflow-hidden border border-white/10 group">
+                      <img src={url} className="w-full h-full object-cover" alt="Esistente" />
+                      <button 
+                        type="button" 
+                        onClick={() => removeExistingImage(i)}
+                        className="absolute top-1 right-1 p-1 bg-black/60 text-white rounded-full hover:bg-red-600 transition-colors"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+
+                  {/* Nuove Foto Selezionate */}
+                  {selectedFiles.map((file, i) => (
+                    <div key={`new-${i}`} className="relative w-20 h-20 rounded-xl overflow-hidden border border-white/20 bg-white/5">
+                      <img src={URL.createObjectURL(file)} className="w-full h-full object-cover opacity-60" alt="Nuova" />
+                      <button 
+                        type="button" 
+                        onClick={() => removeNewFile(i)}
+                        className="absolute top-1 right-1 p-1 bg-black/60 text-white rounded-full hover:bg-red-600 transition-colors"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+
+                  {/* Tasto Aggiungi */}
+                  {(existingImages.length + selectedFiles.length) < 6 && (
+                    <button 
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()} 
+                      className="w-20 h-20 border-2 border-dashed border-white/10 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition-all group"
+                    >
+                      <Camera size={20} className="text-zinc-600 group-hover:text-white transition-colors" />
+                    </button>
+                  )}
+                </div>
+                <input type="file" ref={fileInputRef} className="hidden" multiple accept="image/*" onChange={e => setSelectedFiles(prev => [...prev, ...Array.from(e.target.files || [])].slice(0, 6 - existingImages.length))} />
               </div>
-              <input type="file" ref={fileInputRef} className="hidden" multiple accept="image/*" onChange={e => setSelectedFiles(Array.from(e.target.files || []))} />
               
               <Button type="submit" disabled={addVehicle.isPending || updateVehicle.isPending} className="w-full bg-white text-black rounded-full h-16 font-black uppercase italic tracking-widest shadow-2xl">
                 {(addVehicle.isPending || updateVehicle.isPending) ? <Loader2 className="animate-spin" /> : editingVehicle ? 'Aggiorna Veicolo' : 'Salva nel Garage'}
