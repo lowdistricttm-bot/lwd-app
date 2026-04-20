@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 const Bacheca = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { posts, isLoading, error } = useSocialFeed();
+  const { posts, isLoading, refetch } = useSocialFeed();
   const { role } = useAdmin();
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -26,14 +26,16 @@ const Bacheca = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
     });
-  }, []);
+    // Sincronizzazione immediata all'apertura
+    refetch();
+  }, [refetch]);
 
   const isSubscriber = role === 'subscriber';
 
   const handleManualRefresh = () => {
     setIsRefreshing(true);
     if ('vibrate' in navigator) navigator.vibrate(10);
-    setTimeout(() => window.location.reload(), 500);
+    refetch().finally(() => setIsRefreshing(false));
   };
 
   return (
@@ -59,6 +61,7 @@ const Bacheca = () => {
           )}
         </header>
 
+        {/* L'avviso appare SOLO se l'utente non è loggato */}
         {!user && (
           <div className="mb-8 p-8 bg-white/10 backdrop-blur-md border border-white/10 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-4">
@@ -74,7 +77,7 @@ const Bacheca = () => {
           </div>
         )}
 
-        {isLoading ? (
+        {isLoading && !posts ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Loader2 className="animate-spin text-zinc-500" size={40} />
             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{t.feed.syncing}</p>
@@ -83,8 +86,8 @@ const Bacheca = () => {
           <div className="space-y-4">
             {posts.map((post) => <FeedPost key={post.id} post={post} />)}
           </div>
-        ) : user && (
-          <div className="text-center py-20 bg-zinc-900/30 border border-white/5 rounded-[2rem] p-8">
+        ) : user && !isLoading && (
+          <div className="text-center py-20 opacity-20">
             <p className="text-sm font-black uppercase tracking-widest text-zinc-500">{t.feed.noPosts}</p>
           </div>
         )}

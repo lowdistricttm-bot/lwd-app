@@ -68,7 +68,7 @@ const Profile = () => {
   const [followModal, setFollowModal] = useState<{ type: 'followers' | 'following', isOpen: boolean } | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   
-  const { posts, isLoading: loadingPosts } = useSocialFeed();
+  const { posts, isLoading: loadingPosts, refetch: refetchPosts } = useSocialFeed();
   const targetUserId = userId || currentUser?.id;
   const isOwnProfile = !userId || userId === currentUser?.id;
   const isOnline = isUserOnline(targetUserId);
@@ -83,7 +83,8 @@ const Profile = () => {
 
   useEffect(() => {
     if (activeTab === 'orders') refetchOrders();
-  }, [activeTab, refetchOrders]);
+    if (activeTab === 'activity') refetchPosts();
+  }, [activeTab, refetchOrders, refetchPosts]);
 
   const fetchProfile = async (id: string) => {
     const { data: profileData, error } = await supabase.from('profiles').select('*').eq('id', id).maybeSingle();
@@ -179,39 +180,15 @@ const Profile = () => {
 
   const getTrackingInfo = (order: any) => {
     const meta = order.meta_data || [];
-
-    // 1. Plugin Ufficiale WooCommerce Shipment Tracking
     const official = meta.find((m: any) => m.key === '_wc_shipment_tracking_items');
     if (official && Array.isArray(official.value) && official.value.length > 0) {
       const item = official.value[0];
-      return {
-        number: item.tracking_number,
-        provider: item.tracking_provider,
-        url: item.custom_tracking_link || item.tracking_link
-      };
+      return { number: item.tracking_number, provider: item.tracking_provider, url: item.custom_tracking_link || item.tracking_link };
     }
-
-    // 2. YITH WooCommerce Order & Shipment Tracking (Supporto esteso chiavi)
     const yithCode = meta.find((m: any) => m.key === '_ywto_tracking_code' || m.key === 'ywto_tracking_code')?.value;
     const yithCarrier = meta.find((m: any) => m.key === '_ywto_carrier_name' || m.key === 'ywto_carrier_name')?.value;
     const yithUrl = meta.find((m: any) => m.key === '_ywto_tracking_url' || m.key === 'ywto_tracking_url')?.value;
-
-    if (yithCode) {
-      return {
-        number: yithCode,
-        provider: yithCarrier,
-        url: yithUrl
-      };
-    }
-    
-    // 3. Fallback per altri plugin comuni o inserimento manuale
-    const simpleNumber = meta.find((m: any) => m.key === '_tracking_number' || m.key === 'tracking_number')?.value;
-    const simpleProvider = meta.find((m: any) => m.key === '_tracking_provider' || m.key === 'tracking_provider')?.value;
-    
-    if (simpleNumber) {
-      return { number: simpleNumber, provider: simpleProvider };
-    }
-
+    if (yithCode) return { number: yithCode, provider: yithCarrier, url: yithUrl };
     return null;
   };
 
@@ -252,145 +229,53 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Profile Info Section - Centered Layout */}
+        {/* Profile Info Section */}
         <div className="px-5 md:px-12 max-w-6xl mx-auto relative">
           <div className="flex flex-col items-center text-center -mt-12 md:-mt-16">
-            {/* Avatar */}
             <div className="relative group/avatar z-20 mb-6">
-              <div 
-                onClick={() => !isOwnProfile && setLightboxData({ images: [profile?.avatar_url || DEFAULT_AVATAR], index: 0 })} 
-                className={cn(
-                  "w-24 h-24 md:w-36 md:h-36 bg-zinc-900 border-[4px] rounded-full overflow-hidden flex items-center justify-center relative transition-all duration-500",
-                  isOnline 
-                    ? "border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.3)]" 
-                    : "border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.2)]"
-                )}
-              >
+              <div onClick={() => !isOwnProfile && setLightboxData({ images: [profile?.avatar_url || DEFAULT_AVATAR], index: 0 })} className={cn("w-24 h-24 md:w-36 md:h-36 bg-zinc-900 border-[4px] rounded-full overflow-hidden flex items-center justify-center relative transition-all duration-500", isOnline ? "border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.3)]" : "border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.2)]")}>
                 {uploadingAvatar ? <Loader2 className="animate-spin text-zinc-500" /> : (profile?.avatar_url || DEFAULT_AVATAR) ? <img src={profile?.avatar_url || DEFAULT_AVATAR} alt="Avatar" className="w-full h-full object-cover" /> : <User size={32} className="text-zinc-800" />}
-                {isOwnProfile && (
-                  <button onClick={(e) => { e.stopPropagation(); avatarInputRef.current?.click(); }} className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity bg-black/40 rounded-full">
-                    <Camera size={20} className="text-white" />
-                  </button>
-                )}
+                {isOwnProfile && <button onClick={(e) => { e.stopPropagation(); avatarInputRef.current?.click(); }} className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity bg-black/40 rounded-full"><Camera size={20} className="text-white" /></button>}
               </div>
               <input type="file" ref={avatarInputRef} className="hidden" accept="image/*,video/*" onChange={(e) => handleFileUpload(e, 'avatar')} />
             </div>
 
-            {/* Text Info */}
             <div className="flex flex-col items-center w-full max-w-xl">
-              {/* Nome Utente e Pulsanti Piccoli */}
               <div className="flex items-center justify-center gap-3 flex-wrap mb-2">
-                <h1 className="text-2xl md:text-4xl font-black italic uppercase tracking-tighter leading-none">
-                  {profile?.username || 'Utente'}
-                </h1>
-                
+                <h1 className="text-2xl md:text-4xl font-black italic uppercase tracking-tighter leading-none">{profile?.username || 'Utente'}</h1>
                 <div className="flex items-center gap-1.5">
-                  {!isOwnProfile && currentUser && (!isTargetSubscriber || canVote) && (
-                    <button 
-                      onClick={() => navigate(`/chat/${profile.id}`)} 
-                      className="w-7 h-7 bg-white/5 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all flex items-center justify-center border border-white/10 shadow-lg"
-                    >
-                      <Mail size={14} />
-                    </button>
-                  )}
-                  <button 
-                    onClick={handleShareProfile} 
-                    className="w-7 h-7 bg-white/5 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all flex items-center justify-center border border-white/10 shadow-lg"
-                  >
-                    <Share2 size={14} />
-                  </button>
-                  {isOwnProfile && (
-                    <button 
-                      onClick={() => setIsUsernameNoticeOpen(true)} 
-                      className="w-7 h-7 bg-white/5 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all flex items-center justify-center border border-white/10 shadow-lg"
-                    >
-                      <Edit2 size={12} />
-                    </button>
-                  )}
+                  {!isOwnProfile && currentUser && (!isTargetSubscriber || canVote) && <button onClick={() => navigate(`/chat/${profile.id}`)} className="w-7 h-7 bg-white/5 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all flex items-center justify-center border border-white/10 shadow-lg"><Mail size={14} /></button>}
+                  <button onClick={handleShareProfile} className="w-7 h-7 bg-white/5 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all flex items-center justify-center border border-white/10 shadow-lg"><Share2 size={14} /></button>
+                  {isOwnProfile && <button onClick={() => setIsUsernameNoticeOpen(true)} className="w-7 h-7 bg-white/5 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all flex items-center justify-center border border-white/10 shadow-lg"><Edit2 size={12} /></button>}
                 </div>
               </div>
 
-              {/* Ruolo e Stato Online */}
               <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mb-6">
-                <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.2em] italic leading-none">
-                  {t.profile.roles[userRole] || t.profile.roles.member}
-                </p>
+                <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.2em] italic leading-none">{t.profile.roles[userRole] || t.profile.roles.member}</p>
                 <div className="flex items-center gap-1.5">
-                  <div className={cn(
-                    "w-1.5 h-1.5 rounded-full",
-                    isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500"
-                  )} />
-                  <p className={cn(
-                    "text-[8px] font-black uppercase tracking-widest leading-none",
-                    isOnline ? 'Online' : lastSeen ? `Accesso ${lastSeen}` : 'Offline'
-                  )}>
-                    {isOnline ? 'Online' : lastSeen ? `Accesso ${lastSeen}` : 'Offline'}
-                  </p>
+                  <div className={cn("w-1.5 h-1.5 rounded-full", isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500")} />
+                  <p className={cn("text-[8px] font-black uppercase tracking-widest leading-none", isOnline ? 'Online' : lastSeen ? `Accesso ${lastSeen}` : 'Offline')}>{isOnline ? 'Online' : lastSeen ? `Accesso ${lastSeen}` : 'Offline'}</p>
                 </div>
               </div>
 
-              {/* Follow Stats - Centered */}
               <div className="flex justify-center gap-8 md:gap-12 mb-8">
-                <button 
-                  onClick={() => setFollowModal({ type: 'followers', isOpen: true })}
-                  className="flex flex-col items-center group"
-                >
-                  <span className="text-xl font-black italic tracking-tighter leading-none mb-1">{loadingCounts ? '...' : counts?.followers}</span>
-                  <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white transition-colors">{t.profile.followers}</span>
-                </button>
-                <button 
-                  onClick={() => setFollowModal({ type: 'following', isOpen: true })}
-                  className="flex flex-col items-center group"
-                >
-                  <span className="text-xl font-black italic tracking-tighter leading-none mb-1">{loadingCounts ? '...' : counts?.following}</span>
-                  <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white transition-colors">{t.profile.following}</span>
-                </button>
-                <div className="flex flex-col items-center">
-                  <span className="text-xl font-black italic tracking-tighter leading-none mb-1">{userPosts.length}</span>
-                  <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">{t.profile.posts}</span>
-                </div>
+                <button onClick={() => setFollowModal({ type: 'followers', isOpen: true })} className="flex flex-col items-center group"><span className="text-xl font-black italic tracking-tighter leading-none mb-1">{loadingCounts ? '...' : counts?.followers}</span><span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white transition-colors">{t.profile.followers}</span></button>
+                <button onClick={() => setFollowModal({ type: 'following', isOpen: true })} className="flex flex-col items-center group"><span className="text-xl font-black italic tracking-tighter leading-none mb-1">{loadingCounts ? '...' : counts?.following}</span><span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white transition-colors">{t.profile.following}</span></button>
+                <div className="flex flex-col items-center"><span className="text-xl font-black italic tracking-tighter leading-none mb-1">{userPosts.length}</span><span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">{t.profile.posts}</span></div>
               </div>
 
-              {/* Pulsante Follow (Primario) - Centered */}
-              {!isOwnProfile && currentUser && (!isTargetSubscriber || canVote) && (
-                <FollowButton userId={targetUserId} className="w-full sm:w-64 h-12 mb-6" />
-              )}
+              {!isOwnProfile && currentUser && (!isTargetSubscriber || canVote) && <FollowButton userId={targetUserId} className="w-full sm:w-64 h-12 mb-6" />}
 
-              {/* Dashboard Admin Bar */}
-              {isOwnProfile && (userRole === 'admin' || userRole === 'staff' || userRole === 'support') && (
-                <button 
-                  onClick={() => navigate('/admin')} 
-                  className="w-full mb-8 bg-white/10 backdrop-blur-md border border-white/10 p-3.5 rounded-2xl flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500 shadow-xl"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center group-hover:bg-black/10 transition-colors">
-                      <ShieldCheck size={16} />
-                    </div>
-                    <p className="text-[10px] font-black uppercase italic tracking-widest">DASHBOARD {userRole.toUpperCase()}</p>
-                  </div>
-                  <ChevronRight size={18} />
-                </button>
-              )}
+              {isOwnProfile && (userRole === 'admin' || userRole === 'staff' || userRole === 'support') && <button onClick={() => navigate('/admin')} className="w-full mb-8 bg-white/10 backdrop-blur-md border border-white/10 p-3.5 rounded-2xl flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500 shadow-xl"><div className="flex items-center gap-3"><div className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center group-hover:bg-black/10 transition-colors"><ShieldCheck size={16} /></div><p className="text-[10px] font-black uppercase italic tracking-widest">DASHBOARD {userRole.toUpperCase()}</p></div><ChevronRight size={18} /></button>}
             </div>
           </div>
 
-          {/* Content Tabs */}
           <div className="mt-4">
             {!isTargetSubscriber && targetUserId && <HighlightsBar userId={targetUserId} isOwnProfile={isOwnProfile} />}
 
             <div className="flex bg-zinc-900/50 backdrop-blur-md rounded-full p-1 mb-6 border border-white/5 overflow-x-auto no-scrollbar">
               {tabs.map((tab) => (
-                <button 
-                  key={tab.id} 
-                  onClick={() => setActiveTab(tab.id)} 
-                  className={cn(
-                    "flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-full transition-all duration-500 whitespace-nowrap",
-                    activeTab === tab.id ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-zinc-300"
-                  )}
-                >
-                  <tab.icon size={14} />
-                  <span className="text-[8px] font-black uppercase tracking-widest hidden sm:block">{tab.label}</span>
-                </button>
+                <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={cn("flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-full transition-all duration-500 whitespace-nowrap", activeTab === tab.id ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-zinc-300")}><tab.icon size={14} /><span className="text-[8px] font-black uppercase tracking-widest hidden sm:block">{tab.label}</span></button>
               ))}
             </div>
 
@@ -402,97 +287,14 @@ const Profile = () => {
                       <h3 className="text-lg font-black italic uppercase">{isOwnProfile ? t.profile.myPosts : t.profile.posts}</h3>
                       {isOwnProfile && <Button onClick={() => setIsPostModalOpen(true)} className="bg-white text-black hover:scale-105 rounded-full text-[9px] font-black uppercase italic tracking-widest h-9 px-5 shadow-lg shadow-white/20"><Plus size={12} className="mr-2" /> {t.feed.newPost}</Button>}
                     </div>
-                    {loadingPosts ? <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div> : userPosts.length > 0 ? <div className="grid grid-cols-3 gap-1 md:gap-4">{userPosts.map((post) => <ProfilePostGridItem key={post.id} post={post} />)}</div> : <div className="bg-zinc-900/30 border border-white/5 p-10 rounded-[2rem] text-center"><MessageSquare className="mx-auto text-zinc-800 mb-4" size={40} /><p className="text-zinc-500 text-[9px] font-bold uppercase tracking-widest">{isOwnProfile ? t.profile.noPosts : t.feed.noPosts}</p></div>}
+                    {loadingPosts && !userPosts.length ? <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div> : userPosts.length > 0 ? <div className="grid grid-cols-3 gap-1 md:gap-4">{userPosts.map((post) => <ProfilePostGridItem key={post.id} post={post} />)}</div> : <div className="text-center py-20 opacity-20"><MessageSquare className="mx-auto text-zinc-800 mb-4" size={40} /><p className="text-zinc-500 text-[9px] font-bold uppercase tracking-widest">{isOwnProfile ? t.profile.noPosts : t.feed.noPosts}</p></div>}
                   </motion.div>
                 )}
                 {activeTab === 'garage' && <motion.div key="garage" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><GarageTab userId={targetUserId} isOwnProfile={isOwnProfile} /></motion.div>}
                 {activeTab === 'orders' && (
                   <motion.div key="orders" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                     <h3 className="text-lg font-black italic uppercase mb-4">{t.profile.orders}</h3>
-                    {loadingOrders ? (
-                      <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div>
-                    ) : orders?.length > 0 ? (
-                      <div className="space-y-3">
-                        {orders.map((order: any) => {
-                          const tracking = getTrackingInfo(order);
-                          const totalItems = order.line_items.reduce((acc: number, item: any) => acc + item.quantity, 0);
-                          
-                          return (
-                            <div 
-                              key={order.id} 
-                              onClick={() => setSelectedOrder(order)}
-                              className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 p-5 rounded-2xl group hover:border-white/20 transition-all shadow-xl cursor-pointer"
-                            >
-                              <div className="flex flex-col md:flex-row justify-between gap-3">
-                                <div className="space-y-1.5">
-                                  <div className="flex items-center gap-2">
-                                    <span className="bg-white text-black text-[7px] font-black uppercase px-1.5 py-0.5 italic rounded-full">#{order.id}</span>
-                                    <span className={cn(
-                                      "text-[7px] font-black uppercase px-1.5 py-0.5 italic rounded-full text-white",
-                                      order.status === 'completed' && "bg-green-600",
-                                      order.status === 'pending' && "bg-blue-600",
-                                      order.status === 'on-hold' && "bg-orange-500",
-                                      !['completed', 'pending', 'on-hold'].includes(order.status) && "bg-zinc-800"
-                                    )}>
-                                      {translateOrderStatus(order.status)}
-                                    </span>
-                                  </div>
-                                  <h4 className="text-xs font-black italic uppercase tracking-tight">{totalItems} {totalItems === 1 ? 'Prodotto' : 'Prodotti'}</h4>
-                                  <p className="text-[8px] text-zinc-500 font-bold uppercase">Effettuato il {new Date(order.date_created).toLocaleDateString('it-IT')}</p>
-                                </div>
-                                <div className="text-right flex flex-col justify-center">
-                                  <p className="text-[7px] font-black uppercase text-zinc-600 tracking-widest mb-0.5">{t.checkout.total}</p>
-                                  <p className="text-xl font-black italic tracking-tighter">{order.total} €</p>
-                                </div>
-                              </div>
-
-                              {/* Sezione Tracking */}
-                              {tracking && (
-                                <div className="mt-4 p-4 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-500">
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center text-white">
-                                      <Truck size={16} />
-                                    </div>
-                                    <div>
-                                      <p className="text-[7px] font-black uppercase text-zinc-500 tracking-widest">Tracking {tracking.provider || 'Spedizione'}</p>
-                                      {tracking.url ? (
-                                        <a 
-                                          href={tracking.url} 
-                                          target="_blank" 
-                                          rel="noopener noreferrer"
-                                          onClick={(e) => e.stopPropagation()}
-                                          className="text-[10px] font-black uppercase italic text-white tracking-tight hover:text-zinc-300 transition-colors flex items-center gap-1"
-                                        >
-                                          {tracking.number} <ExternalLink size={8} className="opacity-50" />
-                                        </a>
-                                      ) : (
-                                        <p className="text-[10px] font-black uppercase italic text-white tracking-tight">{tracking.number}</p>
-                                      )}
-                                    </div>
-                                  </div>
-                                  {tracking.url && (
-                                    <a 
-                                      href={tracking.url} 
-                                      target="_blank" 
-                                      rel="noopener noreferrer" 
-                                      onClick={(e) => e.stopPropagation()}
-                                      className="flex items-center gap-1.5 bg-white text-black px-3 py-1.5 rounded-full text-[8px] font-black uppercase italic hover:bg-zinc-200 transition-all shadow-lg"
-                                    >
-                                      Segui <ExternalLink size={10} />
-                                    </a>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="bg-zinc-900/30 border border-white/5 p-10 rounded-[2rem] text-center">
-                        <ShoppingBag className="mx-auto text-zinc-800 mb-4" size={40} />
-                        <p className="text-zinc-500 text-[9px] font-bold uppercase tracking-widest">{t.profile.noOrders}</p>
-                      </div>
-                    )}
+                    {loadingOrders ? <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div> : orders?.length > 0 ? <div className="space-y-3">{orders.map((order: any) => { const tracking = getTrackingInfo(order); const totalItems = order.line_items.reduce((acc: number, item: any) => acc + item.quantity, 0); return <div key={order.id} onClick={() => setSelectedOrder(order)} className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 p-5 rounded-2xl group hover:border-white/20 transition-all shadow-xl cursor-pointer"><div className="flex flex-col md:flex-row justify-between gap-3"><div className="space-y-1.5"><div className="flex items-center gap-2"><span className="bg-white text-black text-[7px] font-black uppercase px-1.5 py-0.5 italic rounded-full">#{order.id}</span><span className={cn("text-[7px] font-black uppercase px-1.5 py-0.5 italic rounded-full text-white", order.status === 'completed' && "bg-green-600", order.status === 'pending' && "bg-blue-600", order.status === 'on-hold' && "bg-orange-500", !['completed', 'pending', 'on-hold'].includes(order.status) && "bg-zinc-800")}>{translateOrderStatus(order.status)}</span></div><h4 className="text-xs font-black italic uppercase tracking-tight">{totalItems} {totalItems === 1 ? 'Prodotto' : 'Prodotti'}</h4><p className="text-[8px] text-zinc-500 font-bold uppercase">Effettuato il {new Date(order.date_created).toLocaleDateString('it-IT')}</p></div><div className="text-right flex flex-col justify-center"><p className="text-[7px] font-black uppercase text-zinc-600 tracking-widest mb-0.5">{t.checkout.total}</p><p className="text-xl font-black italic tracking-tighter">{order.total} €</p></div></div>{tracking && <div className="mt-4 p-4 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-500"><div className="flex items-center gap-3"><div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center text-white"><Truck size={16} /></div><div><p className="text-[7px] font-black uppercase text-zinc-500 tracking-widest">Tracking {tracking.provider || 'Spedizione'}</p>{tracking.url ? <a href={tracking.url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-[10px] font-black uppercase italic text-white tracking-tight hover:text-zinc-300 transition-colors flex items-center gap-1">{tracking.number} <ExternalLink size={8} className="opacity-50" /></a> : <p className="text-[10px] font-black uppercase italic text-white tracking-tight">{tracking.number}</p>}</div></div>{tracking.url && <a href={tracking.url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="flex items-center gap-1.5 bg-white text-black px-3 py-1.5 rounded-full text-[8px] font-black uppercase italic hover:bg-zinc-200 transition-all shadow-lg">Segui <ExternalLink size={10} /></a>}</div>}</div>; })}</div> : <div className="text-center py-20 opacity-20"><ShoppingBag className="mx-auto text-zinc-800 mb-4" size={40} /><p className="text-zinc-500 text-[9px] font-bold uppercase tracking-widest">{t.profile.noOrders}</p></div>}
                   </motion.div>
                 )}
                 {activeTab === 'selections' && <motion.div key="selections" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><ApplicationsTab /></motion.div>}

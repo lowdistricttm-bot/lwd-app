@@ -27,7 +27,7 @@ export interface Post {
 export const useSocialFeed = () => {
   const queryClient = useQueryClient();
 
-  const { data: posts, isLoading, error } = useQuery({
+  const { data: posts, isLoading, error, refetch } = useQuery({
     queryKey: ['social-posts'],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -78,7 +78,9 @@ export const useSocialFeed = () => {
           })) || []
         };
       }) as Post[];
-    }
+    },
+    staleTime: 0, // Forza la sincronizzazione ad ogni apertura
+    refetchOnMount: true
   });
 
   // --- REALTIME LISTENER ---
@@ -253,7 +255,7 @@ export const useSocialFeed = () => {
     }
   });
 
-  return { posts, isLoading, error, createPost, updatePost, deletePost, toggleLike, addComment, deleteComment };
+  return { posts, isLoading, error, refetch, createPost, updatePost, deletePost, toggleLike, addComment, deleteComment };
 };
 
 export const usePost = (postId?: string) => {
