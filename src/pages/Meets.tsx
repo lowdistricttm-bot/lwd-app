@@ -1,41 +1,61 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Navbar from '@/components/Navbar';
-import { useMeets } from '@/hooks/use-meets';
+import { useMeets, Meet } from '@/hooks/use-meets';
 import { useAdmin } from '@/hooks/use-admin';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Calendar, Plus, User, Loader2, ChevronRight, Trash2, RefreshCw, Clock, AlertCircle, LogIn, Info, Search, Navigation, X, Map as MapIcon, List } from 'lucide-react';
+import { MapPin, Calendar, Plus, User, Loader2, ChevronRight, Trash2, RefreshCw, Clock, AlertCircle, LogIn, Info, Search, Navigation, X, Map as MapIcon, List, MapPinned } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import CreateMeetModal from '@/components/CreateMeetModal';
 import MeetMap from '@/components/MeetMap';
+import MeetDetailModal from '@/components/MeetDetailModal';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/use-translation';
-import { showLoading, dismissToast, showError } from '@/utils/toast';
+import { showLoading, dismissToast, showError, showSuccess } from '@/utils/toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Meets = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { meets, isLoading, deleteMeet, refetch } = useMeets();
-  const { role, checkingAdmin } = useAdmin();
+  const { role } = useAdmin();
+  
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedMeet, setSelectedMeet] = useState<Meet | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [user, setUser] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isLocationAlertOpen, setIsLocationAlertOpen] = useState(false);
   
   const [searchQuery, setSearchQuery] = useState('');
-  const [isLocating, setIsLocating] = useState(false);
+  const [isFilteringNearMe, setIsFilteringNearMe] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setCurrentUserId(session?.user?.id || null);
+      if (session?.user) {
+        supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle().then(({ data }) => {
+          setUserProfile(data);
+        });
+      }
     });
     refetch();
   }, [refetch]);
@@ -46,12 +66,37 @@ const Meets = () => {
     refetch().finally(() => setIsRefreshing(false));
   };
 
-  const canOrganize = role && ['admin', 'staff', 'support', 'member'].includes(role);
+  const handleNearMe = () => {
+    if (!userProfile?.city) {
+      setIsLocationAlertOpen(true);
+      return;
+    }
+    setIsFilteringNearMe(!isFilteringNearMe);
+    if (!isFilteringNearMe) {
+      showSuccess(`Filtrando per incontri vicino a ${userProfile.city}`);
+    }
+  };
 
-  const filteredMeets = meets?.filter(meet => 
-    meet.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    meet.location.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredMeets = useMemo(() => {
+    let result = meets || [];
+    
+    if (searchQuery) {
+      result = result.filter(meet => 
+        meet.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        meet.location.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    if (isFilteringNearMe && userProfile?.city) {
+      result = result.filter(meet => 
+        meet.location.toLowerCase().includes(userProfile.city.toLowerCase())
+      );
+    }
+
+    return result;
+  }, [meets, searchQuery, isFilteringNearMe, userProfile]);
+
+  const canOrganize = role && ['admin', 'staff', 'support', 'member'].includes(role);
 
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent">
@@ -103,7 +148,6 @@ const Meets = () => {
           </motion.div>
         ) : (
           <>
-            {/* Avviso Incontri Spontanei - Padding ridotto a mb-6 */}
             <div className="p-6 bg-white/5 backdrop-blur-md border border-white/10 rounded-[2rem] flex items-start gap-4 mb-6">
               <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center shrink-0"><Info size={20} className="text-zinc-400" /></div>
               <div className="space-y-1">
@@ -115,18 +159,28 @@ const Meets = () => {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 mb-10">
-              <div className="relative flex-1">
-                <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
-                <Input 
-                  placeholder="CERCA PER CITTÀ O TITOLO..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-white/5 border-white/10 rounded-full h-14 pl-14 pr-6 text-xs font-black uppercase italic tracking-widest focus:bg-white/10 transition-all"
-                />
-                {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white"><X size={16} /></button>
-                )}
+            <div className="flex flex-col gap-4 mb-10">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
+                  <Input 
+                    placeholder="CERCA PER CITTÀ O TITOLO..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="bg-white/5 border-white/10 rounded-full h-14 pl-14 pr-6 text-xs font-black uppercase italic tracking-widest focus:bg-white/10 transition-all"
+                  />
+                </div>
+                
+                <button 
+                  onClick={handleNearMe}
+                  className={cn(
+                    "h-14 px-6 rounded-full border transition-all flex items-center justify-center gap-3 font-black uppercase italic text-[10px] tracking-widest shadow-xl",
+                    isFilteringNearMe ? "bg-white text-black border-white" : "bg-white/5 border-white/10 text-white hover:bg-white/10"
+                  )}
+                >
+                  <MapPinned size={18} />
+                  Vicino a me
+                </button>
               </div>
               
               <div className="flex bg-white/5 backdrop-blur-md border border-white/10 rounded-full p-1 h-14">
@@ -162,7 +216,7 @@ const Meets = () => {
                   exit={{ opacity: 0, scale: 0.95 }}
                   className="mb-10"
                 >
-                  <MeetMap meets={filteredMeets || []} />
+                  <MeetMap meets={filteredMeets || []} onSelectMeet={setSelectedMeet} />
                 </motion.div>
               ) : (
                 <motion.div 
@@ -183,7 +237,8 @@ const Meets = () => {
                     filteredMeets?.map((meet) => (
                       <motion.div 
                         key={meet.id} 
-                        className="bg-zinc-900/40 backdrop-blur-md border border-white/5 rounded-[2.5rem] overflow-hidden group hover:border-white/20 transition-all duration-500 shadow-2xl"
+                        onClick={() => setSelectedMeet(meet)}
+                        className="bg-zinc-900/40 backdrop-blur-md border border-white/5 rounded-[2.5rem] overflow-hidden group hover:border-white/20 transition-all duration-500 shadow-2xl cursor-pointer"
                       >
                         <div className="aspect-video relative overflow-hidden bg-zinc-950">
                           {meet.image_url ? (
@@ -226,7 +281,7 @@ const Meets = () => {
                               </div>
                               <span className="text-[9px] font-black uppercase italic text-zinc-500">@{meet.profiles?.username}</span>
                             </div>
-                            <button className="text-[9px] font-black uppercase tracking-widest text-white italic flex items-center gap-2 group">Partecipa <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" /></button>
+                            <button className="text-[9px] font-black uppercase tracking-widest text-white italic flex items-center gap-2 group">Dettagli <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" /></button>
                           </div>
                         </div>
                       </motion.div>
@@ -240,6 +295,41 @@ const Meets = () => {
       </main>
 
       <CreateMeetModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
+      
+      {selectedMeet && (
+        <MeetDetailModal 
+          isOpen={!!selectedMeet} 
+          onClose={() => setSelectedMeet(null)} 
+          meet={selectedMeet} 
+        />
+      )}
+
+      <AlertDialog open={isLocationAlertOpen} onOpenChange={setIsLocationAlertOpen}>
+        <AlertDialogContent className="bg-zinc-950 border-white/10 rounded-[2rem]">
+          <AlertDialogHeader>
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-white/5 border border-white/10 flex items-center justify-center rounded-2xl rotate-12">
+                <MapPin size={32} className="text-white -rotate-12" />
+              </div>
+            </div>
+            <AlertDialogTitle className="text-white font-black uppercase italic text-center">Città non impostata</AlertDialogTitle>
+            <AlertDialogDescription className="text-zinc-400 text-xs font-bold uppercase leading-relaxed text-center">
+              Per usare la funzione "Vicino a me", devi prima impostare la tua città nel profilo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
+            <AlertDialogAction 
+              onClick={() => navigate('/profile?tab=profile')} 
+              className="rounded-full bg-white text-black hover:bg-zinc-200 font-black uppercase italic text-[10px] w-full h-14 transition-all"
+            >
+              Vai al Profilo
+            </AlertDialogAction>
+            <AlertDialogCancel className="rounded-full border-white/10 text-white hover:bg-white/5 font-black uppercase italic text-[10px] w-full h-14 mt-0 transition-all">
+              Chiudi
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

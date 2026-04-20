@@ -2,25 +2,21 @@
 
 import React, { useEffect, useRef } from 'react';
 import { Meet } from '@/hooks/use-meets';
-import { format } from 'date-fns';
-import { it } from 'date-fns/locale';
-import { MapPin, Calendar, Clock, User } from 'lucide-react';
 
 interface MeetMapProps {
   meets: Meet[];
+  onSelectMeet: (meet: Meet) => void;
 }
 
-const MeetMap = ({ meets }: MeetMapProps) => {
+const MeetMap = ({ meets, onSelectMeet }: MeetMapProps) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
 
   useEffect(() => {
-    // @ts-ignore - L è caricato globalmente da index.html
-    const L = window.L;
+    const L = (window as any).L;
     if (!L || !mapContainerRef.current) return;
 
-    // Inizializza la mappa se non esiste
     if (!mapInstanceRef.current) {
       mapInstanceRef.current = L.map(mapContainerRef.current, {
         center: [41.9028, 12.4964],
@@ -37,8 +33,6 @@ const MeetMap = ({ meets }: MeetMapProps) => {
     }
 
     const map = mapInstanceRef.current;
-
-    // Pulisce i marker esistenti
     markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
 
@@ -51,56 +45,74 @@ const MeetMap = ({ meets }: MeetMapProps) => {
         const latLng: [number, number] = [meet.latitude!, meet.longitude!];
         bounds.extend(latLng);
 
-        const popupContent = `
-          <div style="min-width: 200px; font-family: 'Inter', sans-serif;">
-            ${meet.image_url ? `<img src="${meet.image_url}" style="width: 100%; height: 100px; object-fit: cover; border-radius: 12px; margin-bottom: 8px;" />` : ''}
-            <h4 style="margin: 0 0 8px 0; font-weight: 900; text-transform: uppercase; font-style: italic; color: white;">${meet.title}</h4>
-            <div style="font-size: 10px; color: #888; text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">
-              📅 ${format(new Date(meet.date), 'dd MMMM yyyy', { locale: it })}
+        const customIcon = L.divIcon({
+          className: 'custom-meet-marker',
+          html: `
+            <div class="marker-container">
+              <div class="marker-dot"></div>
+              <div class="marker-pulse"></div>
             </div>
-            <div style="font-size: 10px; color: #888; text-transform: uppercase; font-weight: bold; margin-bottom: 8px;">
-              📍 ${meet.location}
-            </div>
-            <div style="border-top: 1px solid #333; padding-top: 8px; font-size: 9px; color: #555; font-weight: 900; text-transform: uppercase; font-style: italic;">
-              @${meet.profiles?.username || 'Membro'}
-            </div>
-          </div>
-        `;
+          `,
+          iconSize: [30, 30],
+          iconAnchor: [15, 15]
+        });
 
-        const marker = L.marker(latLng).addTo(map).bindPopup(popupContent);
+        const marker = L.marker(latLng, { icon: customIcon }).addTo(map);
+        
+        marker.on('click', () => {
+          onSelectMeet(meet);
+          map.setView(latLng, 14);
+        });
+
         markersRef.current.push(marker);
       });
 
-      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 });
+      if (validMeets.length === 1) {
+        map.setView([validMeets[0].latitude!, validMeets[0].longitude!], 10);
+      } else {
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 });
+      }
     }
 
-    // Fix per il resize della mappa
     setTimeout(() => {
       map.invalidateSize();
     }, 100);
 
-  }, [meets]);
+  }, [meets, onSelectMeet]);
 
   return (
     <div className="h-[60vh] w-full rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl relative z-0 bg-zinc-950">
       <div ref={mapContainerRef} className="h-full w-full" />
       
       <style>{`
-        .leaflet-popup-content-wrapper {
-          background: #09090b !important;
-          color: white !important;
-          border-radius: 1.5rem !important;
-          border: 1px solid rgba(255,255,255,0.1) !important;
-          padding: 0 !important;
-          box-shadow: 0 20px 50px rgba(0,0,0,0.5) !important;
+        .marker-container {
+          position: relative;
+          width: 30px;
+          height: 30px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
-        .leaflet-popup-content {
-          margin: 12px !important;
-          width: auto !important;
+        .marker-dot {
+          width: 12px;
+          height: 12px;
+          background: white;
+          border-radius: 50%;
+          z-index: 2;
+          box-shadow: 0 0 10px rgba(255,255,255,0.8);
         }
-        .leaflet-popup-tip {
-          background: #09090b !important;
-          border: 1px solid rgba(255,255,255,0.1) !important;
+        .marker-pulse {
+          position: absolute;
+          width: 30px;
+          height: 30px;
+          background: rgba(255,255,255,0.2);
+          border-radius: 50%;
+          animation: marker-pulse 2s infinite;
+          z-index: 1;
+        }
+        @keyframes marker-pulse {
+          0% { transform: scale(0.5); opacity: 1; }
+          100% { transform: scale(2); opacity: 0; }
         }
         .leaflet-container {
           background: #000 !important;
