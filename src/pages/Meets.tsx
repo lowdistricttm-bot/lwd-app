@@ -80,11 +80,11 @@ const Meets = () => {
           </div>
           <div className="space-y-1">
             <h4 className="text-[10px] font-black uppercase tracking-widest text-white italic">Incontri Spontanei</h4>
-            <p className="text-[9px] text-zinc-500 font-bold uppercase leading-relaxed italic">
-              Questi incontri sono creati dagli utenti e non sono eventi ufficiali Low District. <br />
-              Sono pensati per una chiacchierata o un momento insieme! <br /><br />
-              Lo staff non si assume alcuna responsabilità sull'incontro stesso.
-            </p>
+            <div className="text-[9px] text-zinc-500 font-bold uppercase leading-relaxed italic">
+              <p>Questi incontri sono creati dagli utenti e non sono eventi ufficiali Low District.</p>
+              <p>Sono pensati per una chiacchierata, un caffè o un momento insieme!</p>
+              <p className="mt-2 text-zinc-300 font-black">Lo staff non si assume alcuna responsabilità sull'incontro stesso.</p>
+            </div>
           </div>
         </div>
 
