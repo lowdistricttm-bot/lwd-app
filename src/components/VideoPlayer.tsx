@@ -13,10 +13,10 @@ interface VideoPlayerProps {
 
 const VideoPlayer = ({ src, className, poster, autoPlay = true }: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isMuted, setIsMuted] = useState(true);
+  // Impostato a false per partire con audio
+  const [isMuted, setIsMuted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasInteracted, setHasInteracted] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -26,16 +26,18 @@ const VideoPlayer = ({ src, className, poster, autoPlay = true }: VideoPlayerPro
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting && autoPlay) {
-            video.play().catch(() => {
-              // L'autoplay potrebbe fallire se non mutato o senza interazione
-              console.log("[VideoPlayer] Autoplay blocked or failed");
+            // Tentativo di riproduzione con audio
+            video.play().catch((error) => {
+              console.warn("[VideoPlayer] Autoplay con audio bloccato dal browser. In attesa di interazione utente.", error);
+              // Se il browser blocca l'audio, il video potrebbe non partire affatto.
+              // In quel caso l'utente vedrà l'icona Play al centro.
             });
           } else {
             video.pause();
           }
         });
       },
-      { threshold: 0.6 } // Parte quando il 60% del video è visibile
+      { threshold: 0.6 }
     );
 
     observer.observe(video);
@@ -57,13 +59,11 @@ const VideoPlayer = ({ src, className, poster, autoPlay = true }: VideoPlayerPro
       video.pause();
       setIsPlaying(false);
     }
-    setHasInteracted(true);
   };
 
   const toggleMute = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsMuted(!isMuted);
-    setHasInteracted(true);
   };
 
   return (
@@ -110,7 +110,7 @@ const VideoPlayer = ({ src, className, poster, autoPlay = true }: VideoPlayerPro
         </div>
       </div>
 
-      {/* Progress Bar (Minimal) */}
+      {/* Progress Bar */}
       <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10">
         <motion.div 
           className="h-full bg-white"
