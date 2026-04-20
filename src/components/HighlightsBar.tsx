@@ -65,12 +65,13 @@ const HighlightsBar = ({ userId, isOwnProfile }: HighlightsBarProps) => {
   return (
     <div className="mb-8 border-b border-white/5 pb-6">
       {(highlights?.length > 0 || isOwnProfile) && (
-        <h3 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] italic mb-4">
+        <h3 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] italic mb-4 ml-1">
           Storie in evidenza
         </h3>
       )}
       
-      <div className="flex gap-6 overflow-x-auto no-scrollbar">
+      {/* Aggiunto padding superiore (pt-4) per far spazio ai pulsanti admin */}
+      <div className="flex gap-6 overflow-x-auto no-scrollbar pt-4 pb-2 px-1">
         {highlights?.map((h, idx) => (
           <div key={h.id} className="flex flex-col items-center gap-2 shrink-0 group relative">
             <div className="relative">
@@ -84,20 +85,20 @@ const HighlightsBar = ({ userId, isOwnProfile }: HighlightsBarProps) => {
                 </div>
               </div>
               
-              {/* Admin actions - now siblings of the trigger, not children */}
+              {/* Admin actions - Posizionamento migliorato per evitare clipping */}
               {isOwnProfile && !editingId && (
-                <div className="absolute -top-1 -right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                <div className="absolute -top-3 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 z-10 scale-90 group-hover:scale-100">
                   <button 
                     onClick={(e) => handleStartEdit(e, h)}
-                    className="w-6 h-6 bg-white text-black rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-transform"
+                    className="w-7 h-7 bg-white text-black rounded-full flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.5)] hover:bg-zinc-200 transition-colors"
                   >
-                    <Edit2 size={10} />
+                    <Edit2 size={12} />
                   </button>
                   <button 
                     onClick={(e) => handleDelete(e, h.id)}
-                    className="w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-transform"
+                    className="w-7 h-7 bg-red-600 text-white rounded-full flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.5)] hover:bg-red-700 transition-colors"
                   >
-                    <Trash2 size={10} />
+                    <Trash2 size={12} />
                   </button>
                 </div>
               )}
