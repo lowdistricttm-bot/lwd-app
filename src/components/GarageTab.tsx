@@ -23,7 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProfile?: boolean }) => {
   const { vehicles, isLoading, addVehicle, updateVehicle, deleteVehicle, toggleLike } = useGarage(userId);
   const { t } = useTranslation();
-  const { canVote } = useAdmin();
+  const { canVote } = useAdmin(); // canVote include Admin, Staff e Support
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
@@ -194,7 +194,8 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                   )}
                 </div>
 
-                {isOwnProfile && (
+                {/* Funzioni Pro (Analyzer e Logbook) visibili solo a Staff/Admin/Support */}
+                {canVote && (
                   <div className="absolute top-5 right-5 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <button 
                       onClick={(e) => { e.stopPropagation(); setActiveAnalyzer(mainImage || null); }} 
@@ -203,13 +204,15 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                     >
                       <Sparkles size={18} />
                     </button>
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); setActiveLogbook(vehicle.id); }} 
-                      className="p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-white hover:text-black transition-all shadow-xl"
-                      title="Diario di Bordo"
-                    >
-                      <Book size={18} />
-                    </button>
+                    {isOwnProfile && (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setActiveLogbook(vehicle.id); }} 
+                        className="p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-white hover:text-black transition-all shadow-xl"
+                        title="Diario di Bordo"
+                      >
+                        <Book size={18} />
+                      </button>
+                    )}
                   </div>
                 )}
 
