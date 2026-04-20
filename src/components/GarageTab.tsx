@@ -28,7 +28,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [activeLogbook, setActiveLogbook] = useState<string | null>(null);
-  const [activeAnalyzer, setActiveAnalyzer] = useState<string | null>(null);
+  const [activeAnalyzer, setActiveAnalyzer] = useState<{ url: string, id: string } | null>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -194,16 +194,26 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                   )}
                 </div>
 
-                {/* Funzioni Pro (Analyzer e Logbook) */}
-                <div className="absolute top-5 right-5 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setActiveAnalyzer(mainImage || null); }} 
-                    className="p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-white hover:text-black transition-all shadow-xl"
-                    title="AI Analyzer"
-                  >
-                    <Sparkles size={18} />
-                  </button>
-                  {isOwnProfile && (
+                {/* Punteggio Stance (Visibile a tutti se presente) */}
+                {vehicle.stance_score && (
+                  <div className="absolute top-5 left-1/2 -translate-x-1/2">
+                    <div className="bg-black/60 backdrop-blur-md border border-white/20 px-4 py-1.5 rounded-full flex items-center gap-2 shadow-2xl">
+                      <Sparkles size={12} className="text-white" />
+                      <span className="text-[10px] font-black italic text-white">STANCE: {vehicle.stance_score}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Funzioni Pro (Analyzer e Logbook) - SOLO PROPRIETARIO */}
+                {isOwnProfile && (
+                  <div className="absolute top-5 right-5 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); if(mainImage) setActiveAnalyzer({ url: mainImage, id: vehicle.id }); }} 
+                      className="p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-white hover:text-black transition-all shadow-xl"
+                      title="AI Analyzer"
+                    >
+                      <Sparkles size={18} />
+                    </button>
                     <button 
                       onClick={(e) => { e.stopPropagation(); setActiveLogbook(vehicle.id); }} 
                       className="p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-white hover:text-black transition-all shadow-xl"
@@ -211,8 +221,8 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                     >
                       <Book size={18} />
                     </button>
-                  )}
-                </div>
+                  </div>
+                )}
 
                 <div className="absolute bottom-5 right-5">
                   <button 
@@ -310,7 +320,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
           <div className="fixed inset-0 z-[400] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveAnalyzer(null)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-zinc-950 border border-white/10 w-full max-w-2xl rounded-[3rem] overflow-hidden shadow-2xl">
-              <StanceAnalyzer imageUrl={activeAnalyzer} onClose={() => setActiveAnalyzer(null)} />
+              <StanceAnalyzer imageUrl={activeAnalyzer.url} vehicleId={activeAnalyzer.id} onClose={() => setActiveAnalyzer(null)} />
             </motion.div>
           </div>
         )}

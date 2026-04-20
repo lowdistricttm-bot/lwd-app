@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Car, Calendar, Gauge, Heart, CreditCard, Info, ChevronRight } from 'lucide-react';
+import { X, Car, Calendar, Gauge, Heart, CreditCard, Info, ChevronRight, Sparkles } from 'lucide-react';
 import { Vehicle } from '@/hooks/use-garage';
 import { useAdmin } from '@/hooks/use-admin';
 import { useBodyLock } from '@/hooks/use-body-lock';
@@ -64,6 +64,11 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicle, isOwnProfile, onLike, cu
                       {vehicle.is_main && (
                         <span className="bg-zinc-800 text-zinc-400 text-[8px] font-black uppercase px-2 py-1 italic rounded-lg border border-white/5">
                           PROGETTO ATTIVO
+                        </span>
+                      )}
+                      {vehicle.stance_score && (
+                        <span className="bg-black/60 text-white border border-white/20 text-[8px] font-black uppercase px-2 py-1 italic rounded-lg flex items-center gap-1.5">
+                          <Sparkles size={10} /> STANCE: {vehicle.stance_score}
                         </span>
                       )}
                     </div>
