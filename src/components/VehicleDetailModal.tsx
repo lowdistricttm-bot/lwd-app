@@ -158,14 +158,15 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicle, isOwnProfile, onLike, cu
                 {/* Actions */}
                 <div className="pt-6 flex items-center gap-4">
                   <Button 
-                    onClick={() => onLike(vehicle.id)}
+                    onClick={() => !isOwnProfile && onLike(vehicle.id)}
                     className={cn(
                       "flex-1 h-16 rounded-full font-black uppercase italic text-[10px] tracking-widest transition-all duration-500 shadow-xl border",
-                      vehicle.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-white/5 border-white/10 text-white hover:bg-white/10"
+                      vehicle.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-white/5 border-white/10 text-white hover:bg-white/10",
+                      isOwnProfile && "cursor-default opacity-80"
                     )}
                   >
                     <Heart size={18} className="mr-2" fill={vehicle.is_liked ? "currentColor" : "none"} />
-                    {vehicle.is_liked ? 'Ti piace' : 'Metti Like'} ({vehicle.likes_count || 0})
+                    {isOwnProfile ? 'Apprezzamenti' : vehicle.is_liked ? 'Ti piace' : 'Metti Like'} ({vehicle.likes_count || 0})
                   </Button>
                   
                   {!isOwnProfile && (
