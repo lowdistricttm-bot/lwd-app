@@ -80,7 +80,7 @@ const MarketplaceItemDetailModal = ({ isOpen, onClose, item, isOwnItem, onEdit, 
                 {/* Gallery */}
                 <div className="space-y-4">
                   <div 
-                    className="aspect-square bg-zinc-900 rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl cursor-pointer group"
+                    className="aspect-square bg-zinc-950 rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl cursor-pointer group"
                     onClick={() => setLightboxData({ images: allImages, index: 0 })}
                   >
                     {allImages[0] ? (
@@ -148,7 +148,7 @@ const MarketplaceItemDetailModal = ({ isOpen, onClose, item, isOwnItem, onEdit, 
                     </div>
                     <Button 
                       onClick={() => navigate(`/profile/${item.seller_id}`)}
-                      className="bg-white text-black hover:bg-zinc-200 rounded-full h-10 px-6 text-[8px] font-black uppercase italic shadow-lg"
+                      className="bg-white text-black hover:bg-zinc-200 rounded-full h-8 px-4 text-[7px] font-black uppercase italic shadow-lg"
                     >
                       Profilo
                     </Button>
