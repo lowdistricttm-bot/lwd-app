@@ -7,7 +7,7 @@ import { useDiscover } from '@/hooks/use-discover';
 import { useGarage, Vehicle } from '@/hooks/use-garage';
 import { useAdmin } from '@/hooks/use-admin';
 import { usePresence } from '@/hooks/use-presence';
-import { Loader2, Car, Search, LayoutGrid, StretchHorizontal, User, ChevronRight, ShieldCheck, Sparkles, Users, Heart, Gauge } from 'lucide-react';
+import { Loader2, Car, Search, LayoutGrid, StretchHorizontal, User, ChevronRight, ShieldCheck, Sparkles, Users, Heart, Gauge, Calendar, CreditCard } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import VehicleDetailModal from '@/components/VehicleDetailModal';
@@ -227,11 +227,11 @@ const Discover = () => {
                         )}
                         
                         <div className="absolute top-5 left-5 flex flex-col gap-2">
-                          <span className="bg-white/90 backdrop-blur-md text-black text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full shadow-2xl">
+                          <span className="bg-white/90 backdrop-blur-md text-black text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full shadow-2xl w-fit">
                             {vehicle.suspension_type}
                           </span>
                           {vehicle.stance_score && (
-                            <span className="bg-black/60 backdrop-blur-md text-white text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full border border-white/10 flex items-center gap-1.5">
+                            <span className="bg-black/60 backdrop-blur-md text-white text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full border border-white/10 flex items-center gap-1.5 w-fit">
                               <Sparkles size={10} /> {vehicle.stance_score}
                             </span>
                           )}
@@ -266,14 +266,27 @@ const Discover = () => {
                               </span>
                             </div>
                             
-                            <div className="flex items-center gap-4">
-                              <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
-                                {vehicle.year || 'N/A'}
-                              </p>
+                            <div className="flex flex-col gap-2.5">
+                              <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-1.5 text-zinc-500">
+                                  <Calendar size={12} className="text-white" />
+                                  <span className="text-[10px] font-bold uppercase tracking-widest">
+                                    {vehicle.year || 'N/A'}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1.5 text-zinc-500">
+                                  <Gauge size={12} className="text-white" />
+                                  <span className="text-[10px] font-bold uppercase tracking-widest">
+                                    {vehicle.suspension_type}
+                                  </span>
+                                </div>
+                              </div>
+                              
                               {vehicle.license_plate && canSeePlate && (
-                                <span className="text-[8px] font-black uppercase px-2 py-1 italic flex items-center gap-2 bg-white text-black rounded-lg">
-                                  {vehicle.license_plate}
-                                </span>
+                                <div className="flex items-center gap-2 bg-white text-black px-2.5 py-1 rounded-lg w-fit shadow-lg">
+                                  <CreditCard size={12} />
+                                  <span className="text-[10px] font-black uppercase italic tracking-widest">{vehicle.license_plate}</span>
+                                </div>
                               )}
                             </div>
                             
