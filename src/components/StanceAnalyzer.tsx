@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Sparkles, ShieldCheck, Gauge, Info, Share2, X } from 'lucide-react';
+import { Loader2, Sparkles, Gauge, Share2, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { supabase } from "@/integrations/supabase/client";
 import { showError } from '@/utils/toast';
@@ -23,14 +23,14 @@ const StanceAnalyzer = ({ imageUrl, vehicleId, onClose }: { imageUrl: string, ve
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session?.access_token}`
         },
-        body: JSON.stringify({ imageUrl })
+        body: JSON.stringify({ imageUrl, vehicleId }) // Passiamo anche l'ID del veicolo
       });
+      
       const data = await response.json();
       if (data.error) throw new Error(data.error);
       
       setResult(data);
 
-      // Salviamo il punteggio nel database se l'analisi ha avuto successo
       if (data.stance_score) {
         await updateStanceScore.mutateAsync({ 
           vehicleId, 
