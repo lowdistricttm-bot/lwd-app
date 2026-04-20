@@ -142,9 +142,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                   className="w-full bg-black/40 border border-white/5 rounded-full h-12 px-6 text-xs font-bold appearance-none"
                 >
                   <option value="STATIC">STATIC</option>
-                  <option value="AIR RIDE">AIR RIDE</option>
-                  <option value="HYDRAULIC">HYDRAULIC</option>
-                  <option value="OEM+">OEM+</option>
+                  <option value="AIR">AIR</option>
                 </select>
               </div>
 
