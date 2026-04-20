@@ -22,7 +22,7 @@ import { useFollow } from '@/hooks/use-follow';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { 
-  User, Settings, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Share2, Edit2, Truck, ExternalLink
+  User, Settings, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Share2, Edit2, Truck, ExternalLink, ShieldAlert
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -50,7 +50,7 @@ const Profile = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
   const { t, language } = useTranslation();
-  const { canVote } = useAdmin();
+  const { role, canVote } = useAdmin();
   const { isUserOnline, getLastSeen } = usePresence();
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
@@ -63,6 +63,7 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState('');
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isUsernameNoticeOpen, setIsUsernameNoticeOpen] = useState(false);
+  const [isRestrictedOpen, setIsRestrictedOpen] = useState(false);
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
   const [dbLastSeen, setDbLastSeen] = useState<string | null>(null);
   const [followModal, setFollowModal] = useState<{ type: 'followers' | 'following', isOpen: boolean } | null>(null);
@@ -130,6 +131,18 @@ const Profile = () => {
         showSuccess(language === 'it' ? "Link copiato!" : "Link copied!");
       }
     } catch (err) {}
+  };
+
+  const handleMessageClick = () => {
+    const targetRole = profile?.role || 'subscriber';
+    const isTargetStaff = ['admin', 'staff', 'support'].includes(targetRole);
+    
+    // Se l'utente corrente è un iscritto e il target NON è staff, blocca
+    if (role === 'subscriber' && !isTargetStaff) {
+      setIsRestrictedOpen(true);
+    } else {
+      navigate(`/chat/${profile.id}`);
+    }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'cover') => {
@@ -244,7 +257,14 @@ const Profile = () => {
               <div className="flex items-center justify-center gap-3 flex-wrap mb-2">
                 <h1 className="text-2xl md:text-4xl font-black italic uppercase tracking-tighter leading-none">{profile?.username || 'Utente'}</h1>
                 <div className="flex items-center gap-1.5">
-                  {!isOwnProfile && currentUser && (!isTargetSubscriber || canVote) && <button onClick={() => navigate(`/chat/${profile.id}`)} className="w-7 h-7 bg-white/5 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all flex items-center justify-center border border-white/10 shadow-lg"><Mail size={14} /></button>}
+                  {!isOwnProfile && currentUser && (userRole !== 'subscriber' || canVote) && (
+                    <button 
+                      onClick={handleMessageClick} 
+                      className="w-7 h-7 bg-white/5 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all flex items-center justify-center border border-white/10 shadow-lg"
+                    >
+                      <Mail size={14} />
+                    </button>
+                  )}
                   <button onClick={handleShareProfile} className="w-7 h-7 bg-white/5 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all flex items-center justify-center border border-white/10 shadow-lg"><Share2 size={14} /></button>
                   {isOwnProfile && <button onClick={() => setIsUsernameNoticeOpen(true)} className="w-7 h-7 bg-white/5 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition-all flex items-center justify-center border border-white/10 shadow-lg"><Edit2 size={12} /></button>}
                 </div>
@@ -315,6 +335,33 @@ const Profile = () => {
           <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
             <AlertDialogAction onClick={() => window.location.href = 'mailto:info@lowdistrict.it'} className="rounded-full bg-white text-black hover:bg-zinc-200 font-black uppercase italic text-[10px] w-full h-12 transition-all">{t.profile.contactAdmin}</AlertDialogAction>
             <AlertDialogCancel className="rounded-full border-white/10 text-white hover:bg-white/5 font-black uppercase italic text-[10px] w-full h-12 mt-0 transition-all">{t.feed.cancel}</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isRestrictedOpen} onOpenChange={setIsRestrictedOpen}>
+        <AlertDialogContent className="bg-black/60 backdrop-blur-2xl border-white/10 rounded-[2rem]">
+          <AlertDialogHeader>
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-white/5 border border-white/10 flex items-center justify-center rounded-2xl rotate-12">
+                <ShieldAlert size={32} className="text-white -rotate-12" />
+              </div>
+            </div>
+            <AlertDialogTitle className="text-white font-black uppercase italic text-center">Accesso Limitato</AlertDialogTitle>
+            <AlertDialogDescription className="text-zinc-400 text-xs font-bold uppercase leading-relaxed text-center">
+              I messaggi privati sono una funzione esclusiva riservata ai membri ufficiali del District.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
+            <AlertDialogAction 
+              onClick={() => window.open('https://www.lowdistrict.it/selection-lwdstrct/', '_blank')} 
+              className="rounded-full bg-white text-black hover:bg-zinc-200 font-black uppercase italic text-[10px] w-full h-14 transition-all"
+            >
+              Invia Selezione
+            </AlertDialogAction>
+            <AlertDialogCancel className="rounded-full border-white/10 text-white hover:bg-white/5 font-black uppercase italic text-[10px] w-full h-14 mt-0 transition-all">
+              Chiudi
+            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

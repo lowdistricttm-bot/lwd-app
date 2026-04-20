@@ -32,7 +32,7 @@ const Chat = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { canVote } = useAdmin();
+  const { role, canVote } = useAdmin();
   const [message, setMessage] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -70,11 +70,23 @@ const Chat = () => {
         .maybeSingle()
         .then(({ data }) => {
           if (data) {
-            if (data.role === 'subscriber' && !canVote) {
+            const targetRole = data.role || 'subscriber';
+            const isTargetStaff = ['admin', 'staff', 'support'].includes(targetRole);
+
+            // 1. Se il target è un iscritto, solo lo staff può scrivergli (Protezione Iscritti)
+            if (targetRole === 'subscriber' && !canVote) {
               showError("Non hai i permessi per contattare questo utente.");
               navigate('/messages');
               return;
             }
+
+            // 2. Se l'utente corrente è un iscritto, può scrivere SOLO allo staff (Restrizione Iscritti)
+            if (role === 'subscriber' && !isTargetStaff) {
+              showError("I messaggi privati sono riservati ai membri ufficiali.");
+              navigate('/messages');
+              return;
+            }
+
             setOtherUserProfile(data);
             if (data.last_seen_at) {
               setDbLastSeen(formatDistanceToNow(new Date(data.last_seen_at), { addSuffix: true, locale: it }));
@@ -83,7 +95,7 @@ const Chat = () => {
         });
       markAsRead.mutate(userId);
     }
-  }, [userId, navigate, canVote]);
+  }, [userId, navigate, canVote, role]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
