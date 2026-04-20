@@ -9,6 +9,7 @@ import { useMessages } from '@/hooks/use-messages';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { showSuccess } from '@/utils/toast';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/hooks/use-translation';
 
 interface SharePostModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ interface SharePostModalProps {
 }
 
 const SharePostModal = ({ isOpen, onClose, postId, postImageUrl, postContent }: SharePostModalProps) => {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [results, setResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -70,6 +72,10 @@ const SharePostModal = ({ isOpen, onClose, postId, postImageUrl, postContent }: 
     }
   };
 
+  const getRoleLabel = (role: string) => {
+    return t.profile.roles[role] || t.profile.roles.member;
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -104,7 +110,15 @@ const SharePostModal = ({ isOpen, onClose, postId, postImageUrl, postContent }: 
                   <div key={user.id} className="flex items-center justify-between p-4 bg-white/5 backdrop-blur-md border border-white/5 rounded-[1.5rem] group hover:bg-white/10 transition-all">
                     <div className="flex items-center gap-4 min-w-0">
                       <div className="w-12 h-12 bg-black/40 rounded-full overflow-hidden border border-white/10 shrink-0">{user.avatar_url ? <img src={user.avatar_url} className="w-full h-full object-cover" alt="" /> : <div className="w-full h-full flex items-center justify-center text-zinc-500"><User size={20} /></div>}</div>
-                      <div className="min-w-0"><div className="flex items-center gap-2"><span className="text-sm font-black italic uppercase truncate text-white">{user.username}</span>{user.is_admin && <ShieldCheck size={12} className="text-white" />}</div><p className="text-[8px] text-zinc-500 font-bold uppercase tracking-widest">Membro Ufficiale</p></div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-black italic uppercase truncate text-white">{user.username}</span>
+                          {user.is_admin && <ShieldCheck size={12} className="text-white" />}
+                        </div>
+                        <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-widest">
+                          {getRoleLabel(user.role)}
+                        </p>
+                      </div>
                     </div>
                     <button onClick={() => handleShare(user)} disabled={sendingTo === user.id} className={cn("w-11 h-11 rounded-full flex items-center justify-center transition-all shadow-lg", sendingTo === user.id ? "bg-zinc-800" : "bg-white text-black hover:scale-110 active:scale-95")}>{sendingTo === user.id ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} className="-rotate-12" />}</button>
                   </div>
