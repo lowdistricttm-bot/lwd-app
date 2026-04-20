@@ -1,106 +1,90 @@
 "use client";
 
-import React, { useEffect } from 'react';
-// @ts-ignore
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-// @ts-ignore
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import React, { useEffect, useRef } from 'react';
 import { Meet } from '@/hooks/use-meets';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { MapPin, Calendar, Clock, User } from 'lucide-react';
 
-// Fix per le icone di Leaflet che a volte spariscono in React
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-const DefaultIcon = L.icon({
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-});
-
-L.Marker.prototype.options.icon = DefaultIcon;
-
 interface MeetMapProps {
   meets: Meet[];
 }
 
-// Componente per centrare la mappa quando cambiano i meet
-const RecenterMap = ({ meets }: { meets: Meet[] }) => {
-  const map = useMap();
-  useEffect(() => {
-    if (meets.length > 0) {
-      const validMeets = meets.filter(m => (m as any).latitude && (m as any).longitude);
-      if (validMeets.length > 0) {
-        const bounds = L.latLngBounds(validMeets.map(m => [(m as any).latitude, (m as any).longitude]));
-        map.fitBounds(bounds, { padding: [50, 50] });
-      }
-    }
-  }, [meets, map]);
-  return null;
-};
-
 const MeetMap = ({ meets }: MeetMapProps) => {
-  const validMeets = meets.filter(m => (m as any).latitude && (m as any).longitude);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const markersRef = useRef<any[]>([]);
+
+  useEffect(() => {
+    // @ts-ignore - L è caricato globalmente da index.html
+    const L = window.L;
+    if (!L || !mapContainerRef.current) return;
+
+    // Inizializza la mappa se non esiste
+    if (!mapInstanceRef.current) {
+      mapInstanceRef.current = L.map(mapContainerRef.current, {
+        center: [41.9028, 12.4964],
+        zoom: 6,
+        zoomControl: false,
+        attributionControl: false
+      });
+
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19,
+      }).addTo(mapInstanceRef.current);
+
+      L.control.zoom({ position: 'bottomright' }).addTo(mapInstanceRef.current);
+    }
+
+    const map = mapInstanceRef.current;
+
+    // Pulisce i marker esistenti
+    markersRef.current.forEach(m => m.remove());
+    markersRef.current = [];
+
+    const validMeets = meets.filter(m => m.latitude && m.longitude);
+
+    if (validMeets.length > 0) {
+      const bounds = L.latLngBounds([]);
+
+      validMeets.forEach((meet) => {
+        const latLng: [number, number] = [meet.latitude!, meet.longitude!];
+        bounds.extend(latLng);
+
+        const popupContent = `
+          <div style="min-width: 200px; font-family: 'Inter', sans-serif;">
+            ${meet.image_url ? `<img src="${meet.image_url}" style="width: 100%; height: 100px; object-fit: cover; border-radius: 12px; margin-bottom: 8px;" />` : ''}
+            <h4 style="margin: 0 0 8px 0; font-weight: 900; text-transform: uppercase; font-style: italic; color: white;">${meet.title}</h4>
+            <div style="font-size: 10px; color: #888; text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">
+              📅 ${format(new Date(meet.date), 'dd MMMM yyyy', { locale: it })}
+            </div>
+            <div style="font-size: 10px; color: #888; text-transform: uppercase; font-weight: bold; margin-bottom: 8px;">
+              📍 ${meet.location}
+            </div>
+            <div style="border-top: 1px solid #333; padding-top: 8px; font-size: 9px; color: #555; font-weight: 900; text-transform: uppercase; font-style: italic;">
+              @${meet.profiles?.username || 'Membro'}
+            </div>
+          </div>
+        `;
+
+        const marker = L.marker(latLng).addTo(map).bindPopup(popupContent);
+        markersRef.current.push(marker);
+      });
+
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 });
+    }
+
+    // Fix per il resize della mappa
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
+
+  }, [meets]);
 
   return (
-    <div className="h-[60vh] w-full rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl relative z-0">
-      <MapContainer 
-        center={[41.9028, 12.4964]} 
-        zoom={6} 
-        style={{ height: '100%', width: '100%', background: '#000' }}
-        scrollWheelZoom={true}
-      >
-        {/* Layer Mappa Dark (CartoDB Dark Matter) */}
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        />
-        
-        {validMeets.map((meet) => (
-          <Marker 
-            key={meet.id} 
-            position={[(meet as any).latitude, (meet as any).longitude]}
-          >
-            <Popup className="custom-popup">
-              <div className="p-2 min-w-[200px] bg-zinc-950 text-white">
-                {meet.image_url && (
-                  <img src={meet.image_url} className="w-full h-24 object-cover rounded-xl mb-3 border border-white/10" alt="" />
-                )}
-                <h4 className="text-sm font-black uppercase italic mb-2 text-white">{meet.title}</h4>
-                
-                <div className="space-y-1.5 mb-4">
-                  <div className="flex items-center gap-2 text-[9px] font-bold uppercase text-zinc-400">
-                    <Calendar size={10} className="text-white" />
-                    {format(new Date(meet.date), 'dd MMMM yyyy', { locale: it })}
-                  </div>
-                  <div className="flex items-center gap-2 text-[9px] font-bold uppercase text-zinc-400">
-                    <Clock size={10} className="text-white" />
-                    {format(new Date(meet.date), 'HH:mm')}
-                  </div>
-                  <div className="flex items-center gap-2 text-[9px] font-bold uppercase text-zinc-400">
-                    <MapPin size={10} className="text-white" />
-                    {meet.location}
-                  </div>
-                </div>
-
-                <div className="pt-2 border-t border-white/10 flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-full bg-zinc-800 overflow-hidden">
-                    {meet.profiles?.avatar_url ? <img src={meet.profiles.avatar_url} className="w-full h-full object-cover" /> : <User size={10} className="m-auto h-full" />}
-                  </div>
-                  <span className="text-[8px] font-black uppercase italic text-zinc-500">@{meet.profiles?.username}</span>
-                </div>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-        
-        <RecenterMap meets={meets} />
-      </MapContainer>
-
+    <div className="h-[60vh] w-full rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl relative z-0 bg-zinc-950">
+      <div ref={mapContainerRef} className="h-full w-full" />
+      
       <style>{`
         .leaflet-popup-content-wrapper {
           background: #09090b !important;
@@ -108,9 +92,10 @@ const MeetMap = ({ meets }: MeetMapProps) => {
           border-radius: 1.5rem !important;
           border: 1px solid rgba(255,255,255,0.1) !important;
           padding: 0 !important;
+          box-shadow: 0 20px 50px rgba(0,0,0,0.5) !important;
         }
         .leaflet-popup-content {
-          margin: 0 !important;
+          margin: 12px !important;
           width: auto !important;
         }
         .leaflet-popup-tip {
@@ -118,7 +103,7 @@ const MeetMap = ({ meets }: MeetMapProps) => {
           border: 1px solid rgba(255,255,255,0.1) !important;
         }
         .leaflet-container {
-          font-family: 'Inter', sans-serif !important;
+          background: #000 !important;
         }
       `}</style>
     </div>
