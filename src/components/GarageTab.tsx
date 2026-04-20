@@ -13,12 +13,19 @@ import StanceAnalyzer from './StanceAnalyzer';
 import VehicleDetailModal from './VehicleDetailModal';
 import { 
   Plus, Car, Trash2, Camera, Loader2, X, Edit3, Heart, 
-  Gauge, Book, Sparkles, ChevronRight, Calendar, CreditCard 
+  Gauge, Book, Sparkles, ChevronRight, Calendar, CreditCard, GripVertical 
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/use-translation';
 import { supabase } from "@/integrations/supabase/client";
+
+interface MediaItem {
+  id: string;
+  type: 'existing' | 'new';
+  url: string;
+  file?: File;
+}
 
 const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProfile?: boolean }) => {
   const { vehicles, isLoading, addVehicle, updateVehicle, deleteVehicle, toggleLike } = useGarage(userId);
@@ -39,8 +46,9 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
     brand: '', model: '', year: '', license_plate: '', 
     suspension_type: 'STATIC', description: '' 
   });
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [existingImages, setExistingImages] = useState<string[]>([]);
+  
+  // Stato unificato per gestire l'ordine di foto vecchie e nuove
+  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -50,8 +58,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
   const handleOpenAdd = () => {
     setEditingVehicle(null);
     setFormData({ brand: '', model: '', year: '', license_plate: '', suspension_type: 'STATIC', description: '' });
-    setSelectedFiles([]);
-    setExistingImages([]);
+    setMediaItems([]);
     setIsFormOpen(true);
   };
 
@@ -64,30 +71,54 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
       suspension_type: v.suspension_type || 'STATIC', 
       description: v.description || '' 
     });
-    setSelectedFiles([]);
-    setExistingImages(v.images || []);
+    
+    // Popoliamo la lista media con le immagini esistenti
+    const existing: MediaItem[] = (v.images || []).map((url, i) => ({
+      id: `existing-${i}-${Date.now()}`,
+      type: 'existing',
+      url
+    }));
+    setMediaItems(existing);
     setIsFormOpen(true);
   };
 
-  const removeExistingImage = (index: number) => {
-    setExistingImages(prev => prev.filter((_, i) => i !== index));
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const remainingSlots = 6 - mediaItems.length;
+    
+    if (remainingSlots <= 0) return;
+
+    const newItems: MediaItem[] = files.slice(0, remainingSlots).map(file => ({
+      id: `new-${Math.random()}-${Date.now()}`,
+      type: 'new',
+      url: URL.createObjectURL(file),
+      file
+    }));
+
+    setMediaItems(prev => [...prev, ...newItems]);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const removeNewFile = (index: number) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  const removeItem = (id: string) => {
+    setMediaItems(prev => prev.filter(item => item.id !== id));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Separiamo i file nuovi dagli URL esistenti mantenendo l'ordine scelto dall'utente
+    const files = mediaItems.filter(m => m.type === 'new').map(m => m.file!);
+    const existingImages = mediaItems.filter(m => m.type === 'existing').map(m => m.url);
+
     if (editingVehicle) {
       await updateVehicle.mutateAsync({ 
         id: editingVehicle.id, 
         ...formData, 
-        files: selectedFiles,
-        existingImages: existingImages 
+        files,
+        existingImages 
       });
     } else {
-      await addVehicle.mutateAsync({ ...formData, files: selectedFiles });
+      await addVehicle.mutateAsync({ ...formData, files });
     }
     setIsFormOpen(false);
   };
@@ -162,39 +193,47 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
               </div>
 
               <div className="space-y-4">
-                <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Foto Progetto (Max 6)</Label>
+                <div className="flex justify-between items-center px-4">
+                  <Label className="text-[9px] font-black uppercase text-zinc-500">Foto Progetto (Max 6)</Label>
+                  <span className="text-[8px] font-black uppercase text-zinc-600 italic">Trascina per ordinare</span>
+                </div>
                 
-                <div className="flex flex-wrap gap-3">
-                  {/* Foto Esistenti */}
-                  {existingImages.map((url, i) => (
-                    <div key={`existing-${i}`} className="relative w-20 h-20 rounded-xl overflow-hidden border border-white/10 group">
-                      <img src={url} className="w-full h-full object-cover" alt="Esistente" />
+                <Reorder.Group 
+                  axis="x" 
+                  values={mediaItems} 
+                  onReorder={setMediaItems}
+                  className="flex flex-wrap gap-3"
+                >
+                  {mediaItems.map((item, index) => (
+                    <Reorder.Item 
+                      key={item.id} 
+                      value={item}
+                      className="relative w-20 h-20 rounded-xl overflow-hidden border border-white/10 group cursor-grab active:cursor-grabbing"
+                    >
+                      <img src={item.url} className="w-full h-full object-cover" alt="" />
+                      
+                      {/* Badge Foto Principale */}
+                      {index === 0 && (
+                        <div className="absolute top-0 left-0 right-0 bg-white text-black text-[6px] font-black uppercase py-0.5 text-center">
+                          Principale
+                        </div>
+                      )}
+
+                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <GripVertical size={14} className="text-white" />
+                      </div>
+
                       <button 
                         type="button" 
-                        onClick={() => removeExistingImage(i)}
-                        className="absolute top-1 right-1 p-1 bg-black/60 text-white rounded-full hover:bg-red-600 transition-colors"
+                        onClick={() => removeItem(item.id)}
+                        className="absolute top-1 right-1 p-1 bg-black/60 text-white rounded-full hover:bg-red-600 transition-colors z-10"
                       >
-                        <X size={12} />
+                        <X size={10} />
                       </button>
-                    </div>
+                    </Reorder.Item>
                   ))}
 
-                  {/* Nuove Foto Selezionate */}
-                  {selectedFiles.map((file, i) => (
-                    <div key={`new-${i}`} className="relative w-20 h-20 rounded-xl overflow-hidden border border-white/20 bg-white/5">
-                      <img src={URL.createObjectURL(file)} className="w-full h-full object-cover opacity-60" alt="Nuova" />
-                      <button 
-                        type="button" 
-                        onClick={() => removeNewFile(i)}
-                        className="absolute top-1 right-1 p-1 bg-black/60 text-white rounded-full hover:bg-red-600 transition-colors"
-                      >
-                        <X size={12} />
-                      </button>
-                    </div>
-                  ))}
-
-                  {/* Tasto Aggiungi */}
-                  {(existingImages.length + selectedFiles.length) < 6 && (
+                  {mediaItems.length < 6 && (
                     <button 
                       type="button"
                       onClick={() => fileInputRef.current?.click()} 
@@ -203,8 +242,8 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                       <Camera size={20} className="text-zinc-600 group-hover:text-white transition-colors" />
                     </button>
                   )}
-                </div>
-                <input type="file" ref={fileInputRef} className="hidden" multiple accept="image/*" onChange={e => setSelectedFiles(prev => [...prev, ...Array.from(e.target.files || [])].slice(0, 6 - existingImages.length))} />
+                </Reorder.Group>
+                <input type="file" ref={fileInputRef} className="hidden" multiple accept="image/*" onChange={handleFileChange} />
               </div>
               
               <Button type="submit" disabled={addVehicle.isPending || updateVehicle.isPending} className="w-full bg-white text-black rounded-full h-16 font-black uppercase italic tracking-widest shadow-2xl">
