@@ -25,7 +25,9 @@ const CreateMeetModal = ({ isOpen, onClose }: CreateMeetModalProps) => {
     title: '',
     description: '',
     date: '',
-    location: ''
+    location: '',
+    latitude: null as number | null,
+    longitude: null as number | null
   });
   
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -60,13 +62,17 @@ const CreateMeetModal = ({ isOpen, onClose }: CreateMeetModalProps) => {
           );
           const data = await response.json();
           
-          // Costruiamo un indirizzo leggibile
           const city = data.address.city || data.address.town || data.address.village || data.address.county;
           const road = data.address.road;
           const locationString = road ? `${road}, ${city}` : city;
           
           if (locationString) {
-            setFormData(prev => ({ ...prev, location: locationString.toUpperCase() }));
+            setFormData(prev => ({ 
+              ...prev, 
+              location: locationString.toUpperCase(),
+              latitude,
+              longitude
+            }));
             if ('vibrate' in navigator) navigator.vibrate(15);
           }
         } catch (err) {
@@ -86,7 +92,28 @@ const CreateMeetModal = ({ isOpen, onClose }: CreateMeetModalProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await createMeet.mutateAsync({ ...formData, file: selectedFile });
+    
+    // Se l'utente ha scritto a mano la città senza usare il GPS, proviamo a geocodificare
+    let finalLat = formData.latitude;
+    let finalLng = formData.longitude;
+
+    if (!finalLat && formData.location) {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(formData.location)}&limit=1`);
+        const data = await res.json();
+        if (data[0]) {
+          finalLat = parseFloat(data[0].lat);
+          finalLng = parseFloat(data[0].lon);
+        }
+      } catch (err) {}
+    }
+
+    await createMeet.mutateAsync({ 
+      ...formData, 
+      latitude: finalLat,
+      longitude: finalLng,
+      file: selectedFile 
+    });
     onClose();
   };
 

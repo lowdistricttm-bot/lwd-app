@@ -13,6 +13,8 @@ export interface Meet {
   description: string;
   date: string;
   location: string;
+  latitude?: number;
+  longitude?: number;
   image_url?: string;
   created_at: string;
   profiles?: {
@@ -49,7 +51,6 @@ export const useMeets = () => {
   });
 
   useEffect(() => {
-    // Generiamo un ID univoco per il canale per evitare conflitti di sottoscrizione
     const channelId = `meets-${Math.random().toString(36).substring(2, 9)}`;
 
     const channel = supabase
@@ -86,6 +87,8 @@ export const useMeets = () => {
           description: newMeet.description,
           date: newMeet.date,
           location: newMeet.location,
+          latitude: newMeet.latitude,
+          longitude: newMeet.longitude,
           image_url
         }]);
 
