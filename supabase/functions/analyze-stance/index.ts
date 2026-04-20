@@ -26,11 +26,11 @@ serve(async (req) => {
     const buffer = await imageRes.arrayBuffer();
     const base64Data = encodeBase64(new Uint8Array(buffer));
 
-    // Utilizziamo v1beta e camelCase, che è lo standard più affidabile per Gemini 1.5 Flash
+    // Payload ridotto all'osso per evitare errori di campi sconosciuti
     const payload = {
       contents: [{
         parts: [
-          { text: "Sei un esperto di car styling e stance. Analizza questa foto laterale di un'auto. Valuta da 1 a 100 i seguenti parametri: stance_score (generale), wheel_gap (distanza gomma-passaruota), camber (inclinazione), fitment (allineamento). Restituisci SOLO un JSON con questi campi esatti (stance_score, wheel_gap, camber, fitment_type) e un campo 'comment' di massimo 15 parole in italiano con stile aggressivo e tecnico." },
+          { text: "Sei un esperto di car styling e stance. Analizza questa foto. Restituisci SOLO un oggetto JSON (senza markdown) con questi campi: stance_score (numero 1-100), wheel_gap (numero 1-100), camber (numero 1-100), fitment_type (stringa), comment (max 15 parole in italiano tecnico/aggressivo)." },
           { 
             inlineData: { 
               mimeType: "image/jpeg", 
@@ -38,15 +38,11 @@ serve(async (req) => {
             } 
           }
         ]
-      }],
-      generationConfig: {
-        responseMimeType: "application/json"
-      }
+      }]
     }
 
-    console.log("[analyze-stance] Invio richiesta a Gemini 1.5 Flash (v1beta)...");
+    console.log("[analyze-stance] Invio richiesta a Gemini 1.5 Flash...");
     
-    // Passaggio a v1beta per risolvere il problema dei campi non riconosciuti
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -61,16 +57,17 @@ serve(async (req) => {
     }
 
     if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-      console.error("[analyze-stance] Risposta Gemini incompleta:", JSON.stringify(data));
-      throw new Error("L'IA non ha restituito una risposta valida. Riprova con un'altra foto.");
+      throw new Error("L'IA non ha restituito una risposta valida.");
     }
 
     const textResponse = data.candidates[0].content.parts[0].text
-    console.log("[analyze-stance] Risposta testuale ricevuta:", textResponse);
+    console.log("[analyze-stance] Risposta grezza:", textResponse);
 
-    // Pulizia e parsing del JSON
-    const cleanJson = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
-    const result = JSON.parse(cleanJson);
+    // Estrazione sicura del JSON tramite Regex (cerca il contenuto tra le graffe)
+    const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error("Formato risposta non valido.");
+    
+    const result = JSON.parse(jsonMatch[0]);
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
