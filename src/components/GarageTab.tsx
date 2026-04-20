@@ -163,8 +163,8 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
           return (
             <motion.div key={vehicle.id} className="bg-zinc-900/40 backdrop-blur-md border border-white/5 rounded-[2.5rem] overflow-hidden group hover:border-white/20 transition-all duration-500 shadow-2xl">
               <div 
-                className={cn("aspect-video relative overflow-hidden", isOwnProfile && "cursor-pointer")} 
-                onClick={() => isOwnProfile ? setLightboxData({ images: vehicle.images || [], index: 0 }) : null}
+                className="aspect-video relative overflow-hidden cursor-pointer" 
+                onClick={() => setLightboxData({ images: vehicle.images || [], index: 0 })}
               >
                 {mainImage ? (
                   <img src={mainImage} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-1000 group-hover:scale-110" alt={vehicle.model} />
