@@ -50,9 +50,9 @@ serve(async (req) => {
       ]
     }
 
-    console.log("[analyze-stance] Invio richiesta a Gemini v1...");
-    // Utilizziamo la versione v1 stabile e il modello gemini-1.5-flash
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+    console.log("[analyze-stance] Invio richiesta a Gemini (v1beta/gemini-1.5-flash-latest)...");
+    // Utilizziamo v1beta con gemini-1.5-flash-latest che è la combinazione più stabile per vision
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(prompt)
