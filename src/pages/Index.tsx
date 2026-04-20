@@ -9,8 +9,9 @@ import Stories from '@/components/Stories';
 import FeaturedProducts from '@/components/FeaturedProducts';
 import LatestActivities from '@/components/LatestActivities';
 import LatestMeets from '@/components/LatestMeets';
+import LatestMarketplaceItems from '@/components/LatestMarketplaceItems';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
-import { ShoppingBag, Users, Calendar, ArrowRight, Star, Music, Play, ChevronRight } from 'lucide-react';
+import { ShoppingBag, Users, Calendar, ArrowRight, Star, Music, Play, ChevronRight, MapPin, Tag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from '@/hooks/use-translation';
 
@@ -26,11 +27,18 @@ const Index = () => {
       label: 'Entra nel Feed'
     },
     { 
-      icon: Star, 
-      title: t.home.values.quality, 
-      desc: t.home.values.qualityDesc,
-      href: '/shop',
-      label: 'Vai allo Shop'
+      icon: MapPin, 
+      title: 'MEETS', 
+      desc: 'Incontri spontanei e raduni della community.',
+      href: '/meets',
+      label: 'Vedi Incontri'
+    },
+    { 
+      icon: Tag, 
+      title: 'MARKETPLACE', 
+      desc: 'Compra e vendi componenti nel District.',
+      href: '/marketplace',
+      label: 'Vai agli Annunci'
     },
     { 
       icon: Calendar, 
@@ -53,7 +61,7 @@ const Index = () => {
 
         <section className="py-12 px-6">
           <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               {navigationTabs.map((item, i) => (
                 <motion.div 
                   key={i}
@@ -64,10 +72,10 @@ const Index = () => {
                 >
                   <Link 
                     to={item.href}
-                    className="group block relative bg-zinc-900/40 backdrop-blur-sm border border-white/5 p-8 md:p-12 hover:bg-zinc-800/60 hover:border-white/20 transition-all duration-500 overflow-hidden rounded-[2rem]"
+                    className="group block relative bg-zinc-900/40 backdrop-blur-sm border border-white/5 p-8 hover:bg-zinc-800/60 hover:border-white/20 transition-all duration-500 overflow-hidden rounded-[2rem] h-full"
                   >
                     <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity">
-                      <item.icon size={120} className="text-white" />
+                      <item.icon size={100} className="text-white" />
                     </div>
 
                     <div className="relative z-10 space-y-6">
@@ -76,16 +84,16 @@ const Index = () => {
                       </div>
                       
                       <div>
-                        <h4 className="text-2xl font-black italic uppercase tracking-tighter text-white">
+                        <h4 className="text-xl font-black italic uppercase tracking-tighter text-white">
                           {item.title}
                         </h4>
-                        <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest leading-relaxed mt-2">
+                        <p className="text-zinc-500 text-[9px] font-bold uppercase tracking-widest leading-relaxed mt-2">
                           {item.desc}
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 group-hover:text-white transition-colors pt-4 border-t border-white/5">
-                        {item.label} <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                      <div className="flex items-center gap-2 text-[8px] font-black uppercase tracking-[0.2em] text-zinc-400 group-hover:text-white transition-colors pt-4 border-t border-white/5">
+                        {item.label} <ChevronRight size={12} className="group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
                   </Link>
@@ -98,6 +106,8 @@ const Index = () => {
         <LatestActivities />
         
         <LatestMeets />
+
+        <LatestMarketplaceItems />
 
         <section className="py-12 px-6 overflow-hidden relative">
           <div className="max-w-7xl mx-auto relative z-10">
