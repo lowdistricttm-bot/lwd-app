@@ -135,7 +135,7 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
                   className="flex-1 h-16 bg-white text-black hover:bg-zinc-200 rounded-full font-black uppercase italic text-[10px] tracking-widest transition-all shadow-xl flex items-center justify-center gap-3"
                 >
                   <Navigation size={18} />
-                  Apri Navigatore
+                  PORTAMI ALL'INCONTRO
                 </Button>
                 <Button 
                   onClick={handleShare}
