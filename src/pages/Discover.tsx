@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { useDiscover } from '@/hooks/use-discover';
 import { useGarage, Vehicle } from '@/hooks/use-garage';
@@ -11,19 +11,25 @@ import { Loader2, Car, Search, LayoutGrid, StretchHorizontal, User, ChevronRight
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import VehicleDetailModal from '@/components/VehicleDetailModal';
+import StanceAnalyzer from '@/components/StanceAnalyzer';
 import { useTranslation } from '@/hooks/use-translation';
 import { supabase } from "@/integrations/supabase/client";
 
 const Discover = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useTranslation();
   const { canVote } = useAdmin();
   const { isUserOnline } = usePresence();
+  
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [stanceVehicle, setStanceVehicle] = useState<Vehicle | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  const stanceId = searchParams.get('stance_id');
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchQuery), 400);
@@ -33,6 +39,29 @@ const Discover = () => {
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => setCurrentUserId(user?.id || null));
   }, []);
+
+  // Gestione link condiviso Stance Score
+  useEffect(() => {
+    if (stanceId) {
+      const fetchStanceVehicle = async () => {
+        const { data, error } = await supabase
+          .from('vehicles')
+          .select('*')
+          .eq('id', stanceId)
+          .maybeSingle();
+        
+        if (data && !error) {
+          setStanceVehicle(data as Vehicle);
+        }
+        
+        // Puliamo l'URL dopo aver caricato
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete('stance_id');
+        setSearchParams(newParams, { replace: true });
+      };
+      fetchStanceVehicle();
+    }
+  }, [stanceId, searchParams, setSearchParams]);
 
   const { vehicles, users, newMembers, isLoading } = useDiscover(debouncedSearch);
   const { toggleLike } = useGarage();
@@ -232,7 +261,7 @@ const Discover = () => {
                           </span>
                           {vehicle.stance_score && (
                             <span className="bg-black/60 backdrop-blur-md text-white text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full border border-white/10 flex items-center gap-1.5 w-fit">
-                              <Sparkles size={10} /> {vehicle.stance_score}
+                              <circle className="w-2 h-2 bg-white rounded-full" /> {vehicle.stance_score}
                             </span>
                           )}
                         </div>
@@ -289,32 +318,7 @@ const Discover = () => {
                                 </div>
                               )}
                             </div>
-                            
-                            {viewMode === 'list' && vehicle.description && (
-                              <p className="text-xs text-zinc-500 italic line-clamp-2 mt-4 leading-relaxed hidden md:block">
-                                {vehicle.description}
-                              </p>
-                            )}
                           </div>
-
-                          {viewMode === 'list' && (
-                            <div className="hidden md:flex items-center gap-12 px-10 border-x border-white/5">
-                              <div className="space-y-1.5">
-                                <p className="text-[8px] font-black text-zinc-600 uppercase tracking-widest">Assetto</p>
-                                <div className="flex items-center gap-2 text-zinc-300">
-                                  <Gauge size={14} />
-                                  <span className="text-[10px] font-black uppercase italic">{vehicle.suspension_type}</span>
-                                </div>
-                              </div>
-                              <div className="space-y-1.5">
-                                <p className="text-[8px] font-black text-zinc-600 uppercase tracking-widest">Apprezzamenti</p>
-                                <div className="flex items-center gap-2 text-zinc-300">
-                                  <Heart size={14} className={vehicle.is_liked ? "text-red-500 fill-red-500" : ""} />
-                                  <span className="text-[10px] font-black uppercase italic">{vehicle.likes_count || 0} Like</span>
-                                </div>
-                              </div>
-                            </div>
-                          )}
 
                           <div className={cn(
                             "flex items-center justify-between",
@@ -355,28 +359,6 @@ const Discover = () => {
                             </button>
                           </div>
                         </div>
-                        
-                        {viewMode === 'grid' && (
-                          <div className="mt-6 pt-4 border-t border-white/5 flex justify-end">
-                            <button 
-                              onClick={() => handleOpenProject(vehicle)}
-                              className="group flex items-center gap-2 text-[9px] font-black uppercase italic text-zinc-500 hover:text-white transition-all"
-                            >
-                              Vedi Progetto <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                            </button>
-                          </div>
-                        )}
-
-                        {viewMode === 'list' && (
-                          <div className="hidden md:block ml-8">
-                            <button 
-                              onClick={() => handleOpenProject(vehicle)}
-                              className="h-12 px-8 bg-white text-black hover:bg-zinc-200 transition-all text-[10px] font-black uppercase italic tracking-widest flex items-center gap-3 rounded-full shadow-xl"
-                            >
-                              Vedi Progetto <ChevronRight size={16} />
-                            </button>
-                          </div>
-                        )}
                       </div>
                     </motion.div>
                   );
@@ -397,6 +379,19 @@ const Discover = () => {
             onLike={(id) => toggleLike.mutate(id)}
             currentUserId={currentUserId}
           />
+        )}
+        {stanceVehicle && (
+          <div className="fixed inset-0 z-[400] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setStanceVehicle(null)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-zinc-950 border border-white/10 w-full max-w-2xl rounded-[3rem] overflow-hidden shadow-2xl">
+              <StanceAnalyzer 
+                imageUrl={stanceVehicle.images?.[0] || stanceVehicle.image_url || ''} 
+                vehicleId={stanceVehicle.id} 
+                onClose={() => setStanceVehicle(null)} 
+                autoStart={true}
+              />
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

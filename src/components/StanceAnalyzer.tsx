@@ -9,7 +9,14 @@ import { showError, showSuccess } from '@/utils/toast';
 import { useGarage } from '@/hooks/use-garage';
 import { cn } from '@/lib/utils';
 
-const StanceAnalyzer = ({ imageUrl, vehicleId, onClose }: { imageUrl: string, vehicleId: string, onClose: () => void }) => {
+interface StanceAnalyzerProps {
+  imageUrl: string;
+  vehicleId: string;
+  onClose: () => void;
+  autoStart?: boolean;
+}
+
+const StanceAnalyzer = ({ imageUrl, vehicleId, onClose, autoStart = false }: StanceAnalyzerProps) => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -19,9 +26,15 @@ const StanceAnalyzer = ({ imageUrl, vehicleId, onClose }: { imageUrl: string, ve
     supabase.auth.getUser().then(({ data: { user } }) => {
       setCurrentUserId(user?.id || null);
     });
-  }, []);
+
+    // Se è un link condiviso, avviamo l'analisi automaticamente
+    if (autoStart && imageUrl && vehicleId) {
+      analyze();
+    }
+  }, [autoStart, imageUrl, vehicleId]);
 
   const analyze = async () => {
+    if (loading) return;
     setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -49,18 +62,19 @@ const StanceAnalyzer = ({ imageUrl, vehicleId, onClose }: { imageUrl: string, ve
       }, 3500);
 
     } catch (err: any) {
-      showError(err.message);
+      showError(err.message || "Errore durante l'analisi");
       setLoading(false);
     }
   };
 
   const handleShare = async () => {
-    if (!currentUserId || !result) return;
+    if (!result) return;
 
-    const shareUrl = `${window.location.origin}/profile/${currentUserId}?tab=garage`;
+    // Il link punta alla pagina Discover con il parametro stance_id
+    const shareUrl = `${window.location.origin}/discover?stance_id=${vehicleId}`;
     const shareData = {
       title: 'Low District Stance Score',
-      text: `Il mio progetto ha ottenuto un Low Score di ${result.stance_score}! Scoprilo nel mio Garage su Low District.`,
+      text: `Il mio progetto ha ottenuto un Low Score di ${result.stance_score}! Analizzalo anche tu su Low District.`,
       url: shareUrl
     };
 
@@ -69,7 +83,7 @@ const StanceAnalyzer = ({ imageUrl, vehicleId, onClose }: { imageUrl: string, ve
         await navigator.share(shareData);
       } else {
         await navigator.clipboard.writeText(shareUrl);
-        showSuccess("Link del profilo copiato!");
+        showSuccess("Link del report copiato!");
       }
     } catch (err) {
       console.error('Errore condivisione:', err);
