@@ -49,14 +49,23 @@ export const useMeets = () => {
   });
 
   useEffect(() => {
+    // Generiamo un ID univoco per il canale per evitare conflitti di sottoscrizione
+    const channelId = `meets-${Math.random().toString(36).substring(2, 9)}`;
+
     const channel = supabase
-      .channel('meets-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'meets' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['district-meets'] });
-      })
+      .channel(channelId)
+      .on(
+        'postgres_changes', 
+        { event: '*', schema: 'public', table: 'meets' }, 
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['district-meets'] });
+        }
+      )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => { 
+      supabase.removeChannel(channel); 
+    };
   }, [queryClient]);
 
   const createMeet = useMutation({

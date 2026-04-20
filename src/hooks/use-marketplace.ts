@@ -60,14 +60,23 @@ export const useMarketplace = (categoryFilter: string = 'all') => {
   });
 
   useEffect(() => {
+    // Generiamo un ID univoco per il canale per evitare conflitti di sottoscrizione
+    const channelId = `marketplace-${Math.random().toString(36).substring(2, 9)}`;
+    
     const channel = supabase
-      .channel('marketplace-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'marketplace_items' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['marketplace-items'] });
-      })
+      .channel(channelId)
+      .on(
+        'postgres_changes', 
+        { event: '*', schema: 'public', table: 'marketplace_items' }, 
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['marketplace-items'] });
+        }
+      )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => { 
+      supabase.removeChannel(channel); 
+    };
   }, [queryClient]);
 
   const createItem = useMutation({
