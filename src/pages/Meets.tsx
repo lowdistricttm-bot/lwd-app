@@ -103,8 +103,8 @@ const Meets = () => {
           </motion.div>
         ) : (
           <>
-            {/* Avviso Incontri Spontanei - Spostato in alto */}
-            <div className="p-6 bg-white/5 backdrop-blur-md border border-white/10 rounded-[2rem] flex items-start gap-4 mb-10">
+            {/* Avviso Incontri Spontanei - Padding ridotto a mb-6 */}
+            <div className="p-6 bg-white/5 backdrop-blur-md border border-white/10 rounded-[2rem] flex items-start gap-4 mb-6">
               <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center shrink-0"><Info size={20} className="text-zinc-400" /></div>
               <div className="space-y-1">
                 <h4 className="text-[10px] font-black uppercase tracking-widest text-white italic">Incontri Spontanei</h4>
