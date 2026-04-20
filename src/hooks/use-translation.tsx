@@ -30,6 +30,8 @@ const translations: Record<Language, any> = {
       viewAll: 'VEDI TUTTO',
       communityActivity: 'COMMUNITY ACTIVITY',
       districtLive: 'DISTRICT LIVE',
+      districtMeet: 'DISTRICT MEET',
+      upcomingMeets: 'INCONTRI COMMUNITY',
       enterFeed: 'ENTRA NELLA BACHECA',
       values: {
         community: 'COMMUNITY',
@@ -268,6 +270,8 @@ const translations: Record<Language, any> = {
       viewAll: 'VIEW ALL',
       communityActivity: 'COMMUNITY ACTIVITY',
       districtLive: 'DISTRICT LIVE',
+      districtMeet: 'DISTRICT MEET',
+      upcomingMeets: 'COMMUNITY GATHERINGS',
       enterFeed: 'ENTER FEED',
       values: {
         community: 'COMMUNITY',

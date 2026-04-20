@@ -8,6 +8,7 @@ import Footer from '@/components/Footer';
 import Stories from '@/components/Stories';
 import FeaturedProducts from '@/components/FeaturedProducts';
 import LatestActivities from '@/components/LatestActivities';
+import LatestMeets from '@/components/LatestMeets';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
 import { ShoppingBag, Users, Calendar, ArrowRight, Star, Music, Play, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -95,6 +96,8 @@ const Index = () => {
         </section>
         
         <LatestActivities />
+        
+        <LatestMeets />
 
         <section className="py-12 px-6 overflow-hidden relative">
           <div className="max-w-7xl mx-auto relative z-10">
