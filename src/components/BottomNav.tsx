@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Home, ShoppingBag, MessageSquare, User, Calendar, MapPin } from 'lucide-react';
+import { Home, ShoppingBag, MessageSquare, User, Calendar, MapPin, Search } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
@@ -19,6 +19,7 @@ const BottomNav = () => {
 
   const items = [
     { icon: Home, label: 'Home', href: '/' },
+    { icon: Search, label: 'Esplora', href: '/discover' },
     { icon: MessageSquare, label: 'Feed', href: '/bacheca' },
     { icon: MapPin, label: 'Meet', href: '/meets' },
     { icon: ShoppingBag, label: 'Shop', href: '/shop' },
@@ -48,7 +49,7 @@ const BottomNav = () => {
       }}
     >
       <div 
-        className="relative flex items-center justify-around h-full w-full max-w-2xl mx-auto px-2"
+        className="relative flex items-center justify-around h-full w-full max-w-2xl mx-auto px-1 sm:px-2"
       >
         {items.map((item, i) => {
           const isActive = activeIndex === i;
