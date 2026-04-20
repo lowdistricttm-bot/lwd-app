@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, MessageSquare, User, MoreHorizontal, Send, Loader2, CornerDownRight, Trash2, Camera, X, Share2, Play } from 'lucide-react';
+import { Heart, MessageSquare, User, MoreHorizontal, Send, Loader2, CornerDownRight, Trash2, Camera, X, Share2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Post, useSocialFeed } from '@/hooks/use-social-feed';
@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import ImageLightbox from './ImageLightbox';
 import SharePostModal from './SharePostModal';
 import LikesModal from './LikesModal';
+import VideoPlayer from './VideoPlayer';
 import { Link, useNavigate } from 'react-router-dom';
 import { showSuccess, showError } from '@/utils/toast';
 import { useTranslation } from '@/hooks/use-translation';
@@ -80,12 +81,16 @@ const CommentItem = ({
             {comment.image_url && (
               <div 
                 className="mt-2 max-w-[180px] aspect-square bg-black rounded-xl overflow-hidden cursor-pointer border border-white/10"
-                onClick={() => !isVideo(comment.image_url) && onImageClick(comment.image_url)}
               >
                 {isVideo(comment.image_url) ? (
-                  <video src={comment.image_url} className="w-full h-full object-cover" controls />
+                  <VideoPlayer src={comment.image_url} className="w-full h-full" autoPlay={false} />
                 ) : (
-                  <img src={comment.image_url} className="w-full h-full object-cover" alt="" />
+                  <img 
+                    src={comment.image_url} 
+                    className="w-full h-full object-cover" 
+                    alt="" 
+                    onClick={() => onImageClick(comment.image_url)}
+                  />
                 )}
               </div>
             )}
@@ -286,20 +291,18 @@ const FeedPost = ({ post }: { post: Post }) => {
                 key={idx} 
                 className={cn(
                   "aspect-square bg-zinc-950 overflow-hidden relative",
-                  images.length === 3 && idx === 0 ? "row-span-2 h-full" : "",
-                  !isVideo(url) && "cursor-pointer"
+                  images.length === 3 && idx === 0 ? "row-span-2 h-full" : ""
                 )}
-                onClick={() => !isVideo(url) && setLightboxData({ images, index: idx })}
               >
                 {isVideo(url) ? (
-                  <video src={url} className="w-full h-full object-cover" controls />
+                  <VideoPlayer src={url} className="w-full h-full" />
                 ) : (
-                  <img src={url} className="w-full h-full object-cover hover:scale-105 transition-transform duration-1000" alt="" />
-                )}
-                {isVideo(url) && (
-                  <div className="absolute top-3 right-3 p-1.5 bg-black/40 backdrop-blur-md rounded-full text-white/80">
-                    <Play size={12} fill="currentColor" />
-                  </div>
+                  <img 
+                    src={url} 
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-1000 cursor-pointer" 
+                    alt="" 
+                    onClick={() => setLightboxData({ images, index: idx })}
+                  />
                 )}
               </div>
             ))}

@@ -9,6 +9,7 @@ import useEmblaCarousel from 'embla-carousel-react';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from './ui/button';
+import VideoPlayer from './VideoPlayer';
 
 const LatestActivities = () => {
   const navigate = useNavigate();
@@ -113,14 +114,9 @@ const LatestActivities = () => {
                         {firstMedia ? (
                           <>
                             {mediaIsVideo ? (
-                              <video src={firstMedia} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" muted playsInline loop />
+                              <VideoPlayer src={firstMedia} className="w-full h-full" />
                             ) : (
                               <img src={firstMedia} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all duration-1000" alt="" />
-                            )}
-                            {mediaIsVideo && (
-                              <div className="absolute top-3 right-3 p-1.5 bg-black/40 backdrop-blur-md rounded-full text-white/60">
-                                <Play size={12} fill="currentColor" />
-                              </div>
                             )}
                           </>
                         ) : (
