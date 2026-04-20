@@ -17,7 +17,7 @@ import { it } from 'date-fns/locale';
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/use-translation';
-import { showLoading, dismissToast, showError, showSuccess } from '@/utils/toast';
+import { showSuccess } from '@/utils/toast';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -57,13 +57,31 @@ const Meets = () => {
         });
       }
     });
-    refetch();
-  }, [refetch]);
+  }, []);
 
-  const handleManualRefresh = () => {
+  const handleManualRefresh = async () => {
     if (!user) return;
+    
     setIsRefreshing(true);
-    refetch().finally(() => setIsRefreshing(false));
+    
+    // Feedback aptico
+    if ('vibrate' in navigator) {
+      navigator.vibrate(15);
+    }
+
+    try {
+      // Forza il refetch dei dati
+      await refetch();
+      
+      // Piccolo delay artificiale per rendere visibile l'animazione di caricamento
+      await new Promise(resolve => setTimeout(resolve, 600));
+      
+      showSuccess("Lista incontri aggiornata");
+    } catch (err) {
+      console.error("Errore durante il refresh:", err);
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const handleNearMe = () => {
@@ -112,7 +130,8 @@ const Meets = () => {
             <div className="flex gap-3 ml-4 shrink-0">
               <button 
                 onClick={handleManualRefresh}
-                className="w-12 h-12 bg-white/10 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all shadow-lg border border-white/10"
+                disabled={isRefreshing}
+                className="w-12 h-12 bg-white/10 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all shadow-lg border border-white/10 disabled:opacity-50"
               >
                 <RefreshCw size={20} className={cn(isRefreshing && "animate-spin")} />
               </button>
