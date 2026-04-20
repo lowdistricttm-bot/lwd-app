@@ -12,12 +12,11 @@ import VehicleLogbook from './VehicleLogbook';
 import StanceAnalyzer from './StanceAnalyzer';
 import { 
   Plus, Car, Trash2, Camera, Loader2, X, Edit3, Heart, 
-  Gauge, Book, Sparkles, ChevronRight, Calendar, CreditCard 
+  Gauge, Book, Sparkles, ChevronRight, Calendar 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/use-translation';
-import { supabase } from "@/integrations/supabase/client";
 
 const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProfile?: boolean }) => {
   const { vehicles, isLoading, addVehicle, updateVehicle, deleteVehicle, toggleLike } = useGarage(userId);
@@ -163,7 +162,10 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
 
           return (
             <motion.div key={vehicle.id} className="bg-zinc-900/40 backdrop-blur-md border border-white/5 rounded-[2.5rem] overflow-hidden group hover:border-white/20 transition-all duration-500 shadow-2xl">
-              <div className="aspect-video relative overflow-hidden cursor-pointer" onClick={() => setLightboxData({ images: vehicle.images || [], index: 0 })}>
+              <div 
+                className={cn("aspect-video relative overflow-hidden", isOwnProfile && "cursor-pointer")} 
+                onClick={() => isOwnProfile ? setLightboxData({ images: vehicle.images || [], index: 0 }) : null}
+              >
                 {mainImage ? (
                   <img src={mainImage} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-1000 group-hover:scale-110" alt={vehicle.model} />
                 ) : (
@@ -181,15 +183,15 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                   )}
                 </div>
 
-                <div className="absolute top-5 right-5 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setActiveAnalyzer(mainImage || null); }} 
-                    className="p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-white hover:text-black transition-all shadow-xl"
-                    title="AI Analyzer"
-                  >
-                    <Sparkles size={18} />
-                  </button>
-                  {isOwnProfile && (
+                {isOwnProfile && (
+                  <div className="absolute top-5 right-5 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setActiveAnalyzer(mainImage || null); }} 
+                      className="p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-white hover:text-black transition-all shadow-xl"
+                      title="AI Analyzer"
+                    >
+                      <Sparkles size={18} />
+                    </button>
                     <button 
                       onClick={(e) => { e.stopPropagation(); setActiveLogbook(vehicle.id); }} 
                       className="p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-white hover:text-black transition-all shadow-xl"
@@ -197,8 +199,8 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                     >
                       <Book size={18} />
                     </button>
-                  )}
-                </div>
+                  </div>
+                )}
 
                 <div className="absolute bottom-5 right-5">
                   <button 
@@ -247,14 +249,16 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                   </p>
                 )}
 
-                <div className="pt-6 border-t border-white/5 flex justify-end items-center">
-                  <button 
-                    onClick={() => isOwnProfile ? setActiveLogbook(vehicle.id) : null}
-                    className="text-[9px] font-black uppercase tracking-widest text-white italic flex items-center gap-2 group"
-                  >
-                    Dettagli Progetto <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                  </button>
-                </div>
+                {isOwnProfile && (
+                  <div className="pt-6 border-t border-white/5 flex justify-end items-center">
+                    <button 
+                      onClick={() => setActiveLogbook(vehicle.id)}
+                      className="text-[9px] font-black uppercase tracking-widest text-white italic flex items-center gap-2 group"
+                    >
+                      Dettagli Progetto <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  </div>
+                )}
               </div>
             </motion.div>
           );
