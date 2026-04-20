@@ -55,7 +55,7 @@ export const useMarketplace = (categoryFilter: string = 'all') => {
     }
   });
 
-  // Realtime listener
+  // Realtime listener per aggiornamento immediato
   useEffect(() => {
     const channel = supabase
       .channel('marketplace-realtime')

@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Camera, Loader2, Send, Tag, Euro, LayoutGrid, AlignLeft } from 'lucide-react';
+import { X, Camera, Loader2, Send, Tag, Euro, LayoutGrid } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';

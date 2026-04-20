@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import { useMarketplace, MARKETPLACE_CATEGORIES } from '@/hooks/use-marketplace';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, Search, Plus, MessageSquare, Tag, Filter, Loader2, User, Trash2, Euro, ChevronRight } from 'lucide-react';
+import { ShoppingBag, Plus, Tag, Loader2, User, Trash2, Euro, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
