@@ -133,7 +133,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   };
 
   const handleLike = async () => {
-    if (isOwner || !currentUserId || toggleStoryLike.isPending) return;
+    if (isOwner || !currentUserId) return;
     
     try {
       await toggleStoryLike.mutateAsync({
@@ -142,12 +142,8 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
         imageUrl: currentStory.image_url,
         isCurrentlyLiked: currentStory.is_liked
       });
-      
-      if (!currentStory.is_liked) {
-        showSuccess("Like inviato via Direct!");
-      }
     } catch (err) {
-      showError("Errore nell'invio del like");
+      // L'errore è gestito dal rollback ottimistico nel hook
     }
   };
 
@@ -156,7 +152,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
     if (!replyText.trim() || !currentUserId || sendMessage.isPending) return;
     
     const textToSend = replyText;
-    setReplyText(''); // Pulizia immediata per velocità percepita
+    setReplyText(''); 
     
     try {
       await sendMessage.mutateAsync({
@@ -166,7 +162,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
       });
       showSuccess("Risposta inviata!");
     } catch (err) {
-      setReplyText(textToSend); // Ripristina in caso di errore
+      setReplyText(textToSend); 
       showError("Errore nell'invio della risposta");
     }
   };
@@ -246,7 +242,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
         <div className="absolute top-[calc(2.5rem+env(safe-area-inset-top))] md:top-12 left-4 right-4 z-50 flex items-center justify-between">
           <button onClick={handleProfileClick} className="flex items-center gap-3 group text-left">
-            <div className="w-10 h-10 rounded-full border-2 border-white/20 overflow-hidden bg-zinc-800 group-hover:border-white transition-all">
+            <div className="w-10 h-10 rounded-full border-2 border-white/20 overflow-hidden bg-zinc-900 group-hover:border-white transition-all">
               {userStories.avatar_url && <img src={userStories.avatar_url} className="w-full h-full object-cover" alt="" />}
             </div>
             <div className="flex flex-col">
@@ -372,17 +368,12 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                 <div className="flex items-center gap-2">
                   <button 
                     onClick={handleLike} 
-                    disabled={toggleStoryLike.isPending}
                     className={cn(
                       "w-8 h-8 rounded-full flex items-center justify-center transition-all border", 
                       currentStory.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-white/5 border-white/10 text-zinc-400 hover:text-white hover:bg-white/10"
                     )}
                   >
-                    {toggleStoryLike.isPending ? (
-                      <Loader2 size={12} className="animate-spin" />
-                    ) : (
-                      <Heart size={14} fill={currentStory.is_liked ? "currentColor" : "none"} />
-                    )}
+                    <Heart size={14} fill={currentStory.is_liked ? "currentColor" : "none"} />
                   </button>
                   <button onClick={handleShareClick} className="w-8 h-8 bg-white/5 border border-white/10 text-zinc-400 rounded-full flex items-center justify-center hover:text-white hover:bg-white/10 transition-all"><Send size={14} className="-rotate-12" /></button>
                 </div>

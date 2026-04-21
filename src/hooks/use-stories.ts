@@ -170,10 +170,40 @@ export const useStories = () => {
         return 'liked';
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['active-stories'] });
+    onMutate: async ({ storyId, isCurrentlyLiked }) => {
+      // Cancella eventuali refetch in corso per non sovrascrivere l'update ottimistico
+      await queryClient.cancelQueries({ queryKey: ['active-stories'] });
+
+      // Salva lo stato precedente per il rollback in caso di errore
+      const previousStories = queryClient.getQueryData(['active-stories']);
+
+      // Aggiorna ottimisticamente la cache
+      queryClient.setQueryData(['active-stories'], (old: any) => {
+        if (!old) return old;
+        return old.map((userGroup: any) => ({
+          ...userGroup,
+          items: userGroup.items.map((item: any) => {
+            if (item.id === storyId) {
+              return { ...item, is_liked: !isCurrentlyLiked };
+            }
+            return item;
+          })
+        }));
+      });
+
+      return { previousStories };
     },
-    onError: (error: any) => showError(error)
+    onError: (err, variables, context) => {
+      // Rollback in caso di errore
+      if (context?.previousStories) {
+        queryClient.setQueryData(['active-stories'], context.previousStories);
+      }
+      showError(err);
+    },
+    onSettled: () => {
+      // Sincronizza con il server alla fine
+      queryClient.invalidateQueries({ queryKey: ['active-stories'] });
+    }
   });
 
   const addMention = useMutation({
