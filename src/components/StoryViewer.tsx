@@ -60,6 +60,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   const userStories = allStories[userIndex];
   const currentStory = userStories?.items[currentIndex];
   
+  // Pre-caricamento della prossima storia
   const nextStory = useMemo(() => {
     if (currentIndex < userStories?.items.length - 1) {
       return userStories.items[currentIndex + 1];
@@ -216,9 +217,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   if (!userStories || !currentStory) return null;
 
   const roleLabel = isHighlight ? 'RACCOLTA' : (t.profile.roles[userStories.role] || t.profile.roles.member);
-  
-  // Altezza uniformata con BottomNav
-  const footerHeight = isIOS ? 'calc(50px + env(safe-area-inset-bottom))' : '60px';
+  const footerHeight = isIOS ? '50px' : '44px';
 
   return createPortal(
     <motion.div 
@@ -336,11 +335,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
         <div 
           className="absolute bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-3xl border-t border-white/10"
-          style={{ 
-            height: footerHeight, 
-            paddingBottom: 'env(safe-area-inset-bottom)',
-            marginBottom: '0px' 
-          }}
+          style={{ height: footerHeight, paddingBottom: '0px', marginBottom: '0px' }}
         >
           <div className="h-full px-4 flex w-full max-w-md mx-auto items-center">
             {isOwner ? (
@@ -348,15 +343,15 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                 {!isHighlight && (
                   <>
                     <button onClick={() => setShowViewers(true)} className="flex flex-col items-center justify-center gap-0.5 group h-full flex-1">
-                      <Eye size={20} className="text-zinc-400 group-hover:text-white transition-colors" />
+                      <Eye size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-white transition-colors" />
                       <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Attività</span>
                     </button>
                     <button onClick={() => setIsMentionModalOpen(true)} className="flex flex-col items-center justify-center gap-0.5 group h-full flex-1">
-                      <AtSign size={20} className="text-zinc-400 group-hover:text-white transition-colors" />
+                      <AtSign size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-white transition-colors" />
                       <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Menziona</span>
                     </button>
                     <button onClick={() => setIsHighlightModalOpen(true)} className="flex flex-col items-center justify-center gap-0.5 group h-full flex-1">
-                      <Star size={20} className="text-zinc-400 group-hover:text-white transition-colors" />
+                      <Star size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-white transition-colors" />
                       <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Evidenza</span>
                     </button>
                     <button onClick={handleDelete} className="flex flex-col items-center justify-center gap-0.5 group h-full flex-1">
