@@ -14,7 +14,7 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#ffffff", // Tornato a Bianco
+          DEFAULT: "#ffffff",
           foreground: "#000000",
         },
         secondary: {
@@ -47,6 +47,9 @@ export default {
       letterSpacing: {
         tighter: "-0.05em",
         widest: "0.25em",
+      },
+      animation: {
+        "pulse-slow": "pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       }
     },
   },

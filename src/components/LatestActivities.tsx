@@ -55,8 +55,8 @@ const LatestActivities = () => {
 
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <Loader2 className="animate-spin text-zinc-800" size={32} />
-            <p className="text-[9px] font-black uppercase tracking-widest text-zinc-700 italic">Sincronizzazione...</p>
+            <Loader2 className="animate-spin text-zinc-500" size={32} />
+            <p className="text-[9px] font-black uppercase tracking-widest text-zinc-600 italic">Sincronizzazione...</p>
           </div>
         ) : !user ? (
           <motion.div 
