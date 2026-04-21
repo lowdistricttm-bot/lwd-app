@@ -272,8 +272,8 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           <div className="w-2/3 h-full cursor-pointer" onClick={handleNext} />
         </div>
 
-        {/* Main Content (Image/Video) - Allineato al fondo e object-cover */}
-        <div className="absolute inset-0 flex items-end justify-center bg-transparent z-10">
+        {/* Main Content (Image/Video) */}
+        <div className="absolute inset-0 flex items-center justify-center bg-transparent z-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentStory.id}
@@ -293,7 +293,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                 <video 
                   ref={videoRef} 
                   src={currentStory.image_url} 
-                  className="w-full h-full object-cover" 
+                  className="w-full h-full object-contain" 
                   autoPlay 
                   playsInline 
                   muted={isMuted} 
@@ -307,7 +307,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
               ) : (
                 <img 
                   src={currentStory.image_url} 
-                  className="w-full h-full object-cover" 
+                  className="w-full h-full object-contain" 
                   alt="Story" 
                   onLoad={() => setIsMediaLoading(false)} 
                   onError={() => { setIsMediaLoading(false); handleNext(); }} 
@@ -317,9 +317,9 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </AnimatePresence>
         </div>
 
-        {/* Footer Interaction Area - Spinto al bordo estremo */}
+        {/* Footer Interaction Area */}
         <div 
-          className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black/90 via-black/30 to-transparent pt-32 pointer-events-none"
+          className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black/80 via-black/20 to-transparent pt-32 pointer-events-none"
         >
           <div 
             className="px-2 flex w-full max-w-md mx-auto items-end pointer-events-auto pb-0" 
@@ -381,7 +381,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0, opacity: 0 }}
                         type="submit" 
-                        className="absolute right-1.5 top-1.5 w-9 h-9 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 transition-transform shrink-0 shadow-lg"
+                        className="absolute right-1.5 top-1.5 w-9 h-9 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shrink-0 shadow-lg"
                       >
                         <Send size={14} className="-rotate-12 ml-0.5" />
                       </motion.button>
@@ -417,7 +417,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                 animate={{ y: 0 }} 
                 exit={{ y: '100%' }} 
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }} 
-                className="absolute inset-x-0 z-[61] bg-zinc-950 border border-white/10 rounded-[2.5rem] max-h-[60%] flex flex-col pb-0 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]" 
+                className="absolute inset-x-0 z-[61] bg-zinc-950 border border-white/10 rounded-[2.5rem] max-h-[60%] flex flex-col pb-10 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]" 
                 style={{ 
                   touchAction: 'pan-y',
                   bottom: modalBottomOffset 
@@ -428,7 +428,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                   <h3 className="text-lg font-black italic uppercase tracking-tighter">Visualizzazioni</h3>
                   <button onClick={() => setShowViewers(false)} className="p-2 text-zinc-500"><X size={24} /></button>
                 </div>
-                <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar pb-10">
+                <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
                   {views?.length === 0 ? (
                     <div className="text-center py-10 opacity-30"><Eye size={40} className="mx-auto mb-2" /><p className="text-[10px] font-black uppercase tracking-widest">Nessuna visualizzazione</p></div>
                   ) : (
