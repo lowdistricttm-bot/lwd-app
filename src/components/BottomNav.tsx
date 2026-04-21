@@ -29,7 +29,7 @@ const BottomNav = () => {
     }
   };
 
-  // Altezza fissa 56px ignorando la safe area
+  // Altezza fissa 56px
   const navHeight = "56px";
 
   return (
@@ -42,7 +42,7 @@ const BottomNav = () => {
       }}
     >
       <div 
-        className="relative flex items-center justify-around h-full w-full max-w-2xl mx-auto px-1 sm:px-2"
+        className="relative flex items-end justify-around h-full w-full max-w-2xl mx-auto px-1 sm:px-2 pb-2"
       >
         {items.map((item, i) => {
           const isActive = activeIndex === i;
