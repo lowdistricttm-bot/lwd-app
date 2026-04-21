@@ -217,8 +217,8 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
   const roleLabel = isHighlight ? 'RACCOLTA' : (t.profile.roles[userStories.role] || t.profile.roles.member);
   
-  const navHeight = isIOS ? 50 : 44;
-  const footerHeight = `calc(${navHeight}px + env(safe-area-inset-bottom))`;
+  const baseFooterHeight = isIOS ? 50 : 44;
+  const modalBottomOffset = `calc(${baseFooterHeight}px + env(safe-area-inset-bottom))`;
 
   return createPortal(
     <motion.div 
@@ -227,7 +227,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[9999] bg-black flex items-center justify-center overflow-hidden touch-none"
     >
-      {/* Background Blur */}
+      {/* Background Blur forzato a coprire tutto lo schermo */}
       <div className="absolute inset-0 z-0 opacity-70 blur-[60px] scale-125">
         <img src={currentStory.image_url} className="w-full h-full object-cover" alt="" />
       </div>
@@ -272,7 +272,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           <div className="w-2/3 h-full cursor-pointer" onClick={handleNext} />
         </div>
 
-        {/* Main Content */}
+        {/* Main Content (Image/Video) */}
         <div className="absolute inset-0 flex items-center justify-center bg-transparent z-10">
           <AnimatePresence mode="wait">
             <motion.div
@@ -317,40 +317,55 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </AnimatePresence>
         </div>
 
-        {/* Footer Interaction Area - Uniformata alla BottomNav */}
+        {/* Footer Interaction Area */}
         <div 
-          className="absolute bottom-0 left-0 right-0 z-50 bg-black border-t border-white/10"
-          style={{ 
-            height: footerHeight,
-            paddingBottom: 'env(safe-area-inset-bottom)'
-          }}
+          className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black/80 via-black/20 to-transparent pt-32 pointer-events-none"
         >
-          <div className="h-full px-4 flex items-center max-w-md mx-auto w-full">
+          <div 
+            className="px-2 flex w-full max-w-md mx-auto items-end pointer-events-auto" 
+            style={{ paddingBottom: `env(safe-area-inset-bottom)` }}
+          >
             {isOwner ? (
-              <div className="flex items-center justify-around w-full">
-                {!isHighlight ? (
+              <div className="flex items-end justify-between w-full gap-0.5">
+                {!isHighlight && (
                   <>
-                    <button onClick={() => setShowViewers(true)} className="p-2 text-white hover:opacity-70 transition-opacity">
-                      <Eye size={22} />
+                    <button onClick={() => setShowViewers(true)} className="flex flex-col items-center gap-1.5 group flex-1 pt-20 pb-2">
+                      <div className="w-[30px] h-[30px] rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center group-hover:bg-white/20 transition-all shadow-xl">
+                        <Eye size={14} className="text-white" />
+                      </div>
+                      <span className="text-[9px] font-black uppercase tracking-widest text-white drop-shadow-md">Attività</span>
                     </button>
-                    <button onClick={() => setIsMentionModalOpen(true)} className="p-2 text-white hover:opacity-70 transition-opacity">
-                      <AtSign size={22} />
+                    <button onClick={() => setIsMentionModalOpen(true)} className="flex flex-col items-center gap-1.5 group flex-1 pt-20 pb-2">
+                      <div className="w-[30px] h-[30px] rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center group-hover:bg-white/20 transition-all shadow-xl">
+                        <AtSign size={14} className="text-white" />
+                      </div>
+                      <span className="text-[9px] font-black uppercase tracking-widest text-white drop-shadow-md">Menziona</span>
                     </button>
-                    <button onClick={() => setIsHighlightModalOpen(true)} className="p-2 text-white hover:opacity-70 transition-opacity">
-                      <Star size={22} />
+                    <button onClick={() => setIsHighlightModalOpen(true)} className="flex flex-col items-center gap-1.5 group flex-1 pt-20 pb-2">
+                      <div className="w-[30px] h-[30px] rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center group-hover:bg-white/20 transition-all shadow-xl">
+                        <Star size={14} className="text-white" />
+                      </div>
+                      <span className="text-[9px] font-black uppercase tracking-widest text-white drop-shadow-md">Evidenza</span>
                     </button>
-                    <button onClick={handleDelete} className="p-2 text-red-500 hover:opacity-70 transition-opacity">
-                      <Trash2 size={22} />
+                    <button onClick={handleDelete} className="flex flex-col items-center gap-1.5 group flex-1 pt-20 pb-2">
+                      <div className="w-[30px] h-[30px] rounded-full bg-black/40 backdrop-blur-xl border border-red-500/30 flex items-center justify-center group-hover:bg-red-500/20 transition-all shadow-xl">
+                        <Trash2 size={14} className="text-red-500" />
+                      </div>
+                      <span className="text-[9px] font-black uppercase tracking-widest text-red-500 drop-shadow-md">Elimina</span>
                     </button>
                   </>
-                ) : (
-                  <button onClick={handleRemoveFromHighlight} className="flex items-center gap-2 text-red-500 font-black uppercase italic text-[10px] tracking-widest">
-                    <BookmarkX size={18} /> Rimuovi da Evidenza
+                )}
+                {isHighlight && (
+                  <button onClick={handleRemoveFromHighlight} className="flex flex-col items-center gap-2 group w-full justify-center pt-20 pb-6">
+                    <div className="w-[30px] h-[30px] rounded-full bg-black/40 backdrop-blur-xl border border-red-500/30 flex items-center justify-center group-hover:bg-red-500/20 transition-all shadow-xl">
+                      <BookmarkX size={14} className="text-red-500" />
+                    </div>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-red-500 drop-shadow-md mt-1">Rimuovi da Evidenza</span>
                   </button>
                 )}
               </div>
             ) : !isHighlight && (
-              <div className="flex items-center gap-3 w-full">
+              <div className="flex items-center gap-3 w-full pt-20 pb-6">
                 <form onSubmit={handleReply} className="flex-1 flex relative">
                   <Input 
                     placeholder={`Rispondi a ${userStories.username}...`} 
@@ -358,7 +373,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                     onChange={(e) => setReplyText(e.target.value)} 
                     onFocus={() => videoRef.current?.pause()} 
                     onBlur={() => videoRef.current?.play()} 
-                    className="bg-white/5 border-white/10 rounded-full h-9 px-4 text-[11px] font-bold uppercase tracking-widest text-white placeholder:text-zinc-600 focus-visible:ring-white/20" 
+                    className="bg-black/40 backdrop-blur-xl border border-white/20 rounded-full h-12 px-5 text-[11px] font-bold uppercase tracking-widest text-white placeholder:text-white/70 focus-visible:ring-white/40 shadow-xl" 
                   />
                   <AnimatePresence>
                     {replyText.trim() && (
@@ -367,26 +382,26 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0, opacity: 0 }}
                         type="submit" 
-                        className="absolute right-1 top-1 w-7 h-7 bg-white text-black rounded-full flex items-center justify-center shadow-lg"
+                        className="absolute right-1.5 top-1.5 w-9 h-9 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shrink-0 shadow-lg"
                       >
-                        <Send size={12} className="-rotate-12 ml-0.5" />
+                        <Send size={14} className="-rotate-12 ml-0.5" />
                       </motion.button>
                     )}
                   </AnimatePresence>
                 </form>
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   <motion.button 
                     whileTap={{ scale: 1.4 }}
                     onClick={handleLike} 
                     className={cn(
-                      "p-2 transition-all", 
-                      currentStory.is_liked ? "text-red-500" : "text-white"
+                      "w-[30px] h-[30px] rounded-full flex items-center justify-center transition-all border shadow-xl backdrop-blur-xl", 
+                      currentStory.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-black/40 border-white/20 text-white hover:bg-white/20 hover:scale-105"
                     )}
                   >
-                    <Heart size={22} fill={currentStory.is_liked ? "currentColor" : "none"} />
+                    <Heart size={14} fill={currentStory.is_liked ? "currentColor" : "none"} />
                   </motion.button>
-                  <button onClick={handleShareClick} className="p-2 text-white">
-                    <Send size={22} className="-rotate-12" />
+                  <button onClick={handleShareClick} className="w-[30px] h-[30px] bg-black/40 backdrop-blur-xl border border-white/20 text-white rounded-full flex items-center justify-center hover:bg-white/20 hover:scale-105 transition-all shadow-xl">
+                    <Send size={14} className="-rotate-12 mr-0.5" />
                   </button>
                 </div>
               </div>
@@ -406,7 +421,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                 className="absolute inset-x-0 z-[61] bg-zinc-950 border border-white/10 rounded-[2.5rem] max-h-[60%] flex flex-col pb-10 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]" 
                 style={{ 
                   touchAction: 'pan-y',
-                  bottom: footerHeight 
+                  bottom: modalBottomOffset 
                 }}
               >
                 <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mt-4 mb-2 shrink-0" />
@@ -438,9 +453,9 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
       <button onClick={handlePrev} className="hidden md:flex fixed left-[calc(50%-320px)] top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-[10000] text-white transition-all border border-white/10 backdrop-blur-md shadow-2xl"><ChevronLeft size={32} /></button>
       <button onClick={handleNext} className="hidden md:flex fixed right-[calc(50%-320px)] top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-[10000] text-white transition-all border border-white/10 backdrop-blur-md shadow-2xl"><ChevronRight size={32} /></button>
 
-      <ShareStoryModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} storyUrl={currentStory.image_url} authorName={userStories.username} bottomOffset={footerHeight} />
-      {currentUserId && <HighlightModal isOpen={isHighlightModalOpen} onClose={() => setIsHighlightModalOpen(false)} story={currentStory} userId={currentUserId} bottomOffset={footerHeight} />}
-      {isOwner && !isHighlight && <AddMentionModal isOpen={isMentionModalOpen} onClose={() => setIsMentionModalOpen(false)} storyId={currentStory.id} storyUrl={currentStory.image_url} existingMentions={currentStory.mentions || []} bottomOffset={footerHeight} />}
+      <ShareStoryModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} storyUrl={currentStory.image_url} authorName={userStories.username} bottomOffset={modalBottomOffset} />
+      {currentUserId && <HighlightModal isOpen={isHighlightModalOpen} onClose={() => setIsHighlightModalOpen(false)} story={currentStory} userId={currentUserId} bottomOffset={modalBottomOffset} />}
+      {isOwner && !isHighlight && <AddMentionModal isOpen={isMentionModalOpen} onClose={() => setIsMentionModalOpen(false)} storyId={currentStory.id} storyUrl={currentStory.image_url} existingMentions={currentStory.mentions || []} bottomOffset={modalBottomOffset} />}
     </motion.div>,
     document.body
   );
