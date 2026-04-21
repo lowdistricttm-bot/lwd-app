@@ -70,7 +70,7 @@ const Messages = () => {
           </div>
           <h1 className="text-3xl font-black uppercase italic mb-4 tracking-tighter">Accesso Limitato</h1>
           <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-12 leading-relaxed">
-            I messaggi privati sono una funzione esclusiva riservata ai membri ufficiali del District.
+            I messaggi privati sono una funzione esclusiva riservata ai membri ufficiali del District e agli Iscritti+.
           </p>
           
           <div className="w-full space-y-4">
