@@ -73,6 +73,10 @@ export const useStories = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
+        // Gestione silenziosa degli errori di interruzione del browser
+        if (error.message?.includes('AbortError') || error.message?.includes('Lock broken')) {
+          return [];
+        }
         console.error("[Stories] Errore caricamento:", error);
         return [];
       }
@@ -171,13 +175,9 @@ export const useStories = () => {
       }
     },
     onMutate: async ({ storyId, isCurrentlyLiked }) => {
-      // Cancella eventuali refetch in corso per non sovrascrivere l'update ottimistico
       await queryClient.cancelQueries({ queryKey: ['active-stories'] });
-
-      // Salva lo stato precedente per il rollback in caso di errore
       const previousStories = queryClient.getQueryData(['active-stories']);
 
-      // Aggiorna ottimisticamente la cache
       queryClient.setQueryData(['active-stories'], (old: any) => {
         if (!old) return old;
         return old.map((userGroup: any) => ({
@@ -194,14 +194,12 @@ export const useStories = () => {
       return { previousStories };
     },
     onError: (err, variables, context) => {
-      // Rollback in caso di errore
       if (context?.previousStories) {
         queryClient.setQueryData(['active-stories'], context.previousStories);
       }
       showError(err);
     },
     onSettled: () => {
-      // Sincronizza con il server alla fine
       queryClient.invalidateQueries({ queryKey: ['active-stories'] });
     }
   });

@@ -56,6 +56,10 @@ export const useMarketplace = (categoryFilter: string = 'all') => {
       const { data, error } = await query;
       
       if (error) {
+        // Gestione silenziosa degli errori di interruzione del browser
+        if (error.message?.includes('AbortError') || error.message?.includes('Lock broken')) {
+          return [];
+        }
         console.error("[Marketplace] Errore query:", error);
         return [];
       }
