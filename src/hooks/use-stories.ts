@@ -159,7 +159,6 @@ export const useStories = () => {
         
         if (error) throw error;
 
-        // Invia il messaggio in direct solo al primo like
         await supabase.from('messages').insert([{
           sender_id: user.id,
           receiver_id: authorId,
