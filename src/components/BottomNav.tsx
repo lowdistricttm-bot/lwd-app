@@ -35,14 +35,15 @@ const BottomNav = () => {
     }
   };
 
-  const navHeight = isIOS ? '50px' : '44px';
+  // Altezza uniformata: 50px base + safe area su iOS, 60px su altri dispositivi
+  const navHeight = isIOS ? 'calc(50px + env(safe-area-inset-bottom))' : '60px';
 
   return (
     <div 
       className="fixed bottom-0 left-0 right-0 z-[999] bg-black border-t border-white/10 select-none"
       style={{ 
         height: navHeight,
-        paddingBottom: '0px',
+        paddingBottom: 'env(safe-area-inset-bottom)',
         marginBottom: '0px',
         WebkitUserSelect: 'none',
         touchAction: 'none'
@@ -70,7 +71,7 @@ const BottomNav = () => {
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
               >
                 <item.icon 
-                  size={isIOS ? 20 : 22} 
+                  size={22} 
                   strokeWidth={isActive ? 2.2 : 1.8} 
                 />
               </motion.div>
