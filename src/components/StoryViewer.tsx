@@ -226,15 +226,15 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[9999] bg-black flex items-center justify-center overflow-hidden touch-none"
-      style={{ height: '100dvh' }}
     >
+      {/* Background Blur forzato a coprire tutto lo schermo */}
       <div className="absolute inset-0 z-0 opacity-70 blur-[60px] scale-125">
         <img src={currentStory.image_url} className="w-full h-full object-cover" alt="" />
       </div>
 
       <div className="relative w-full h-full md:h-[85vh] md:w-[420px] md:aspect-[9/16] bg-transparent md:bg-black/40 md:rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl md:border md:border-white/10 z-10">
         
-        <div className="absolute top-[calc(1rem+env(safe-area-inset-top))] md:top-6 left-4 right-4 z-50 flex gap-1.5">
+        <div className="absolute top-[calc(0.5rem+env(safe-area-inset-top))] md:top-6 left-4 right-4 z-50 flex gap-1.5">
           {userStories.items.map((_, i) => (
             <div key={i} className="h-1 flex-1 bg-white/30 rounded-full overflow-hidden backdrop-blur-md">
               <div 
@@ -245,7 +245,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           ))}
         </div>
 
-        <div className="absolute top-[calc(2.5rem+env(safe-area-inset-top))] md:top-12 left-4 right-4 z-50 flex items-center justify-between">
+        <div className="absolute top-[calc(2rem+env(safe-area-inset-top))] md:top-12 left-4 right-4 z-50 flex items-center justify-between">
           <button onClick={handleProfileClick} className="flex items-center gap-3 group text-left">
             <div className="w-10 h-10 rounded-full border-2 border-white/40 shadow-lg overflow-hidden bg-zinc-900 group-hover:border-white transition-all">
               {userStories.avatar_url && <img src={userStories.avatar_url} className="w-full h-full object-cover" alt="" />}
@@ -266,12 +266,14 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </div>
         </div>
 
+        {/* Navigation Layers */}
         <div className="absolute inset-0 z-20 flex">
           <div className="w-1/3 h-full cursor-pointer" onClick={handlePrev} />
           <div className="w-2/3 h-full cursor-pointer" onClick={handleNext} />
         </div>
 
-        <div className="flex-1 relative flex items-center justify-center bg-transparent">
+        {/* Main Content (Image/Video) */}
+        <div className="absolute inset-0 flex items-center justify-center bg-transparent z-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentStory.id}
@@ -315,12 +317,13 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </AnimatePresence>
         </div>
 
+        {/* Footer Interaction Area */}
         <div 
-          className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black/40 via-transparent to-transparent pt-32 pointer-events-none"
+          className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black/80 via-black/20 to-transparent pt-32 pointer-events-none"
         >
           <div 
             className="px-4 flex w-full max-w-md mx-auto items-end pointer-events-auto" 
-            style={{ paddingBottom: `calc(1.5rem + env(safe-area-inset-bottom))` }}
+            style={{ paddingBottom: `calc(1rem + env(safe-area-inset-bottom))` }}
           >
             {isOwner ? (
               <div className="flex items-end justify-between w-full gap-2">
