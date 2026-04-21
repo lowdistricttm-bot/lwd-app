@@ -322,7 +322,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black/90 via-black/40 to-transparent pt-20 pointer-events-none"
         >
           <div 
-            className="flex w-full max-w-md mx-auto items-end pointer-events-auto px-4 pb-2" 
+            className="flex w-full max-w-md mx-auto items-center pointer-events-auto px-4" 
             style={{ height: navHeight }}
           >
             {isOwner ? (
@@ -347,14 +347,14 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                     </button>
                   </>
                 ) : (
-                  <button onClick={handleRemoveFromHighlight} className="flex items-center gap-3 bg-red-600/20 border border-red-500/30 px-6 py-2 rounded-full mb-1">
+                  <button onClick={handleRemoveFromHighlight} className="flex items-center gap-3 bg-red-600/20 border border-red-500/30 px-6 py-2 rounded-full">
                     <BookmarkX size={16} className="text-red-500" />
                     <span className="text-[9px] font-black uppercase tracking-widest text-red-500">Rimuovi da Evidenza</span>
                   </button>
                 )}
               </div>
             ) : !isHighlight && (
-              <div className="flex items-center gap-4 w-full mb-1">
+              <div className="flex items-center gap-4 w-full">
                 <form onSubmit={handleReply} className="flex-1 flex relative">
                   <Input 
                     placeholder={`Rispondi a ${userStories.username}...`} 

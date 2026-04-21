@@ -142,7 +142,7 @@ const Chat = () => {
 
   if (loadingChat || authLoading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
-  // Altezza fissa 56px
+  // Altezza fissa 56px ignorando la safe area
   const inputBarHeight = "56px";
 
   return (
@@ -346,7 +346,7 @@ const Chat = () => {
 
           <form 
             onSubmit={handleSend} 
-            className="h-full px-4 flex items-end gap-3 pb-2"
+            className="h-full px-4 flex items-center gap-3"
           >
             <input 
               type="file" 
@@ -360,12 +360,12 @@ const Chat = () => {
             <button 
               type="button" 
               onClick={() => fileInputRef.current?.click()} 
-              className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/20 transition-all shrink-0 mb-0.5"
+              className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/20 transition-all shrink-0"
             >
               <Camera size={16} />
             </button>
 
-            <div className="flex-1 mb-0.5">
+            <div className="flex-1">
               <Input 
                 placeholder="Messaggio" 
                 value={message} 
@@ -378,7 +378,7 @@ const Chat = () => {
               type="submit" 
               disabled={sendMessage.isPending || (!message.trim() && selectedFiles.length === 0)} 
               className={cn(
-                "w-8 h-8 rounded-full flex items-center justify-center transition-all shrink-0 disabled:opacity-30 shadow-lg mb-0.5",
+                "w-8 h-8 rounded-full flex items-center justify-center transition-all shrink-0 disabled:opacity-30 shadow-lg",
                 (message.trim() || selectedFiles.length > 0) ? "bg-white text-black" : "bg-white/10 text-zinc-500"
               )}
             >
