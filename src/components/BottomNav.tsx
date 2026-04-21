@@ -58,8 +58,7 @@ const BottomNav = () => {
               key={i} 
               to={item.href}
               className={cn(
-                "flex-1 flex flex-col items-center h-full relative z-10 transition-colors duration-300",
-                isIOS ? "justify-end pb-0" : "justify-center",
+                "flex-1 flex flex-col items-center justify-center h-full relative z-10 transition-colors duration-300",
                 isActive ? "text-white" : "text-zinc-600"
               )}
               onClick={() => triggerHaptic(10)}
