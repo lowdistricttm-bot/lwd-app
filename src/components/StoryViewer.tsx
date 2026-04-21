@@ -225,11 +225,17 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[9999] bg-black flex items-center justify-center overflow-hidden touch-none"
+      className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden touch-none"
       style={{ height: '100dvh' }}
     >
-      <div className="absolute inset-0 z-0 opacity-60 blur-[60px] scale-125">
-        <img src={currentStory.image_url} className="w-full h-full object-cover" alt="" />
+      {/* BACKGROUND SFOCATO - Esteso con inset negativo per coprire il notch su iOS */}
+      <div className="absolute inset-[-15%] z-0 opacity-80 overflow-hidden bg-black">
+        <img 
+          src={currentStory.image_url} 
+          className="w-full h-full object-cover blur-[60px] scale-110 opacity-60" 
+          alt="" 
+        />
+        <div className="absolute inset-0 bg-black/20" />
       </div>
 
       <div className="relative w-full h-full md:h-[85vh] md:w-[420px] md:aspect-[9/16] bg-transparent md:bg-black/40 md:rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl md:border md:border-white/10 z-10">
