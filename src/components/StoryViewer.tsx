@@ -317,37 +317,37 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </AnimatePresence>
         </div>
 
-        {/* Footer Interaction Area */}
+        {/* Footer Interaction Area - Ottimizzato per coprire tutto il fondo */}
         <div 
-          className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black/80 via-black/20 to-transparent pt-32 pointer-events-none"
+          className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black/90 via-black/20 to-transparent pt-32 pointer-events-none"
         >
           <div 
             className="px-2 flex w-full max-w-md mx-auto items-end pointer-events-auto" 
-            style={{ paddingBottom: `env(safe-area-inset-bottom)` }}
+            style={{ paddingBottom: `calc(8px + env(safe-area-inset-bottom))` }}
           >
             {isOwner ? (
               <div className="flex items-end justify-between w-full gap-0.5">
                 {!isHighlight && (
                   <>
-                    <button onClick={() => setShowViewers(true)} className="flex flex-col items-center gap-1.5 group flex-1 pt-20 pb-2">
+                    <button onClick={() => setShowViewers(true)} className="flex flex-col items-center gap-1.5 group flex-1 py-2">
                       <div className="w-[30px] h-[30px] rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center group-hover:bg-white/20 transition-all shadow-xl">
                         <Eye size={14} className="text-white" />
                       </div>
                       <span className="text-[9px] font-black uppercase tracking-widest text-white drop-shadow-md">Attività</span>
                     </button>
-                    <button onClick={() => setIsMentionModalOpen(true)} className="flex flex-col items-center gap-1.5 group flex-1 pt-20 pb-2">
+                    <button onClick={() => setIsMentionModalOpen(true)} className="flex flex-col items-center gap-1.5 group flex-1 py-2">
                       <div className="w-[30px] h-[30px] rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center group-hover:bg-white/20 transition-all shadow-xl">
                         <AtSign size={14} className="text-white" />
                       </div>
                       <span className="text-[9px] font-black uppercase tracking-widest text-white drop-shadow-md">Menziona</span>
                     </button>
-                    <button onClick={() => setIsHighlightModalOpen(true)} className="flex flex-col items-center gap-1.5 group flex-1 pt-20 pb-2">
+                    <button onClick={() => setIsHighlightModalOpen(true)} className="flex flex-col items-center gap-1.5 group flex-1 py-2">
                       <div className="w-[30px] h-[30px] rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center group-hover:bg-white/20 transition-all shadow-xl">
                         <Star size={14} className="text-white" />
                       </div>
                       <span className="text-[9px] font-black uppercase tracking-widest text-white drop-shadow-md">Evidenza</span>
                     </button>
-                    <button onClick={handleDelete} className="flex flex-col items-center gap-1.5 group flex-1 pt-20 pb-2">
+                    <button onClick={handleDelete} className="flex flex-col items-center gap-1.5 group flex-1 py-2">
                       <div className="w-[30px] h-[30px] rounded-full bg-black/40 backdrop-blur-xl border border-red-500/30 flex items-center justify-center group-hover:bg-red-500/20 transition-all shadow-xl">
                         <Trash2 size={14} className="text-red-500" />
                       </div>
@@ -356,7 +356,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                   </>
                 )}
                 {isHighlight && (
-                  <button onClick={handleRemoveFromHighlight} className="flex flex-col items-center gap-2 group w-full justify-center pt-20 pb-6">
+                  <button onClick={handleRemoveFromHighlight} className="flex flex-col items-center gap-2 group w-full justify-center py-4">
                     <div className="w-[30px] h-[30px] rounded-full bg-black/40 backdrop-blur-xl border border-red-500/30 flex items-center justify-center group-hover:bg-red-500/20 transition-all shadow-xl">
                       <BookmarkX size={14} className="text-red-500" />
                     </div>
@@ -365,7 +365,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                 )}
               </div>
             ) : !isHighlight && (
-              <div className="flex items-center gap-3 w-full pt-20 pb-6">
+              <div className="flex items-center gap-3 w-full py-4">
                 <form onSubmit={handleReply} className="flex-1 flex relative">
                   <Input 
                     placeholder={`Rispondi a ${userStories.username}...`} 
