@@ -35,15 +35,15 @@ const BottomNav = () => {
     }
   };
 
-  const navHeight = isIOS ? '50px' : '44px';
+  // Altezza dinamica con gestione safe area nativa
+  const navHeight = `calc(${isIOS ? 50 : 44}px + env(safe-area-inset-bottom))`;
 
   return (
     <div 
       className="fixed bottom-0 left-0 right-0 z-[999] bg-black border-t border-white/10 select-none"
       style={{ 
         height: navHeight,
-        paddingBottom: '0px',
-        marginBottom: '0px',
+        paddingBottom: 'env(safe-area-inset-bottom)',
         WebkitUserSelect: 'none',
         touchAction: 'none'
       }}

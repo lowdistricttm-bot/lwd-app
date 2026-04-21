@@ -217,16 +217,18 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
   const roleLabel = isHighlight ? 'RACCOLTA' : (t.profile.roles[userStories.role] || t.profile.roles.member);
   
-  const footerHeight = isIOS ? '50px' : '44px';
-  // Calcolo dell'offset per far iniziare i modal sopra la barra
-  const modalBottomOffset = isIOS ? '25px' : '19px';
+  // Calcolo altezze dinamiche basate sulla safe area
+  const baseFooterHeight = isIOS ? 50 : 44;
+  const footerHeight = `calc(${baseFooterHeight}px + env(safe-area-inset-bottom))`;
+  const modalBottomOffset = `calc(${baseFooterHeight}px + env(safe-area-inset-bottom))`;
 
   return createPortal(
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[9999] bg-black flex items-center justify-center overflow-hidden touch-none h-screen w-screen"
+      className="fixed inset-0 z-[9999] bg-black flex items-center justify-center overflow-hidden touch-none"
+      style={{ height: '100dvh' }}
     >
       <div className="absolute inset-0 z-0 opacity-40 blur-[100px] scale-150 hidden md:block">
         <img src={currentStory.image_url} className="w-full h-full object-cover" alt="" />
@@ -315,18 +317,17 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </AnimatePresence>
         </div>
 
+        {/* Footer delle Storie - Posizionamento absolute per restare nel box */}
         <div 
-          className="fixed left-0 right-0 z-50 bg-black border-t border-white/10 select-none"
+          className="absolute bottom-0 left-0 right-0 z-50 bg-black border-t border-white/10 select-none"
           style={{ 
-            bottom: '-25px',
             height: footerHeight,
-            paddingBottom: '0px',
-            marginBottom: '0px',
+            paddingBottom: 'env(safe-area-inset-bottom)',
             WebkitUserSelect: 'none',
             touchAction: 'none'
           }}
         >
-          <div className="h-full px-4 flex w-full max-w-md mx-auto items-center pb-[25px]">
+          <div className="h-full px-4 flex w-full max-w-md mx-auto items-center">
             {isOwner ? (
               <div className="flex items-center justify-around w-full h-full">
                 {!isHighlight && (
