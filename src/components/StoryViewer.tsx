@@ -218,7 +218,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   const roleLabel = isHighlight ? 'RACCOLTA' : (t.profile.roles[userStories.role] || t.profile.roles.member);
   
   // Calcolo altezze dinamiche basate sulla safe area
-  const baseFooterHeight = isIOS ? 50 : 44;
+  const baseFooterHeight = 44;
   const footerHeight = `calc(${baseFooterHeight}px + env(safe-area-inset-bottom))`;
   const modalBottomOffset = `calc(${baseFooterHeight}px + env(safe-area-inset-bottom))`;
 
@@ -293,7 +293,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                 <video 
                   ref={videoRef} 
                   src={currentStory.image_url} 
-                  className="w-full h-full object-contain" 
+                  className="w-full h-full object-cover md:object-contain" 
                   autoPlay 
                   playsInline 
                   muted={isMuted} 
@@ -307,7 +307,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
               ) : (
                 <img 
                   src={currentStory.image_url} 
-                  className="w-full h-full object-contain" 
+                  className="w-full h-full object-cover md:object-contain" 
                   alt="Story" 
                   onLoad={() => setIsMediaLoading(false)} 
                   onError={() => { setIsMediaLoading(false); handleNext(); }} 
@@ -319,7 +319,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
         {/* Footer delle Storie - Posizionamento absolute per restare nel box */}
         <div 
-          className="absolute bottom-0 left-0 right-0 z-50 bg-black border-t border-white/10 select-none"
+          className="absolute bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-black/90 via-black/40 to-transparent select-none"
           style={{ 
             height: footerHeight,
             paddingBottom: 'env(safe-area-inset-bottom)',
