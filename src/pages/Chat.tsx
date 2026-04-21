@@ -8,7 +8,7 @@ import { useStories } from '@/hooks/use-stories';
 import { usePresence } from '@/hooks/use-presence';
 import { useAdmin } from '@/hooks/use-admin';
 import { useAuth } from '@/hooks/use-auth';
-import { ChevronLeft, Send, User, Loader2, Mail, Trash2, Camera, X, Plus, Play, AtSign, RefreshCw, LayoutGrid, ArrowRight } from 'lucide-react';
+import { ChevronLeft, Send, User, Loader2, Trash2, Camera, X, AtSign, RefreshCw, LayoutGrid, ArrowRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
@@ -43,7 +43,6 @@ const Chat = () => {
   const [dbLastSeen, setDbLastSeen] = useState<string | null>(null);
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
   const [deleteMessageTarget, setDeleteMessageTarget] = useState<string | null>(null);
-  const [isIOS, setIsIOS] = useState(false);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -57,9 +56,6 @@ const Chat = () => {
   const lastSeen = getLastSeen(userId) || dbLastSeen;
 
   useEffect(() => {
-    const checkIOS = /iPhone|iPad|iPod/.test(window.navigator.userAgent);
-    setIsIOS(checkIOS);
-
     if (authLoading) return;
     if (!currentUser) {
       navigate('/login');
@@ -142,9 +138,6 @@ const Chat = () => {
 
   if (loadingChat || authLoading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
-  // Altezza dinamica coerente con BottomNav e StoryViewer
-  const inputBarHeight = `calc(${isIOS ? 50 : 44}px + env(safe-area-inset-bottom))`;
-
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent" style={{ height: '100dvh' }}>
       <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-2xl border-b border-white/10 pt-[env(safe-area-inset-top)]">
@@ -188,7 +181,7 @@ const Chat = () => {
       <main 
         ref={scrollRef} 
         className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] px-6 overflow-y-auto space-y-6 custom-scrollbar overflow-x-hidden"
-        style={{ paddingBottom: inputBarHeight }}
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 80px)' }}
       >
         {chatMessages?.map((msg) => {
           const isMe = msg.sender_id === currentUser?.id;
@@ -315,15 +308,14 @@ const Chat = () => {
         })}
       </main>
 
+      {/* Chat Input Bar - Optimized for Safe Area */}
       <div 
         className="fixed bottom-0 left-0 right-0 bg-black border-t border-white/10 z-50"
         style={{ 
-          height: inputBarHeight,
-          paddingBottom: 'env(safe-area-inset-bottom)',
-          marginBottom: '0px'
+          paddingBottom: 'calc(env(safe-area-inset-bottom) + 8px)',
         }}
       >
-        <div className="max-w-2xl mx-auto h-full relative">
+        <div className="max-w-2xl mx-auto relative">
           {previews.length > 0 && (
             <div className="absolute bottom-full left-0 right-0 p-4 flex gap-2 overflow-x-auto no-scrollbar bg-black/40 backdrop-blur-md border-t border-white/5">
               {previews.map((url, i) => (
@@ -347,7 +339,7 @@ const Chat = () => {
 
           <form 
             onSubmit={handleSend} 
-            className="h-full px-4 flex items-center gap-3"
+            className="h-14 px-4 flex items-center gap-3"
           >
             <input 
               type="file" 
@@ -361,9 +353,9 @@ const Chat = () => {
             <button 
               type="button" 
               onClick={() => fileInputRef.current?.click()} 
-              className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/20 transition-all shrink-0"
+              className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/20 transition-all shrink-0"
             >
-              <Camera size={16} />
+              <Camera size={20} />
             </button>
 
             <div className="flex-1">
@@ -371,7 +363,7 @@ const Chat = () => {
                 placeholder="Messaggio" 
                 value={message} 
                 onChange={(e) => setMessage(e.target.value)} 
-                className="bg-white/5 border-white/10 rounded-full h-8 px-4 font-medium text-[11px] focus-visible:ring-0 text-white placeholder:text-zinc-600" 
+                className="bg-white/5 border-white/10 rounded-full h-10 px-5 font-medium text-[13px] focus-visible:ring-0 text-white placeholder:text-zinc-600" 
               />
             </div>
             
@@ -379,14 +371,14 @@ const Chat = () => {
               type="submit" 
               disabled={sendMessage.isPending || (!message.trim() && selectedFiles.length === 0)} 
               className={cn(
-                "w-8 h-8 rounded-full flex items-center justify-center transition-all shrink-0 disabled:opacity-30 shadow-lg",
+                "w-10 h-10 rounded-full flex items-center justify-center transition-all shrink-0 disabled:opacity-30 shadow-lg",
                 (message.trim() || selectedFiles.length > 0) ? "bg-white text-black" : "bg-white/10 text-zinc-500"
               )}
             >
               {sendMessage.isPending ? (
-                <Loader2 size={14} className="animate-spin" />
+                <Loader2 className="animate-spin" size={18} />
               ) : (
-                <Send size={14} strokeWidth={2.5} className="-rotate-12" />
+                <Send size={18} strokeWidth={2.5} className="-rotate-12" />
               )}
             </button>
           </form>
