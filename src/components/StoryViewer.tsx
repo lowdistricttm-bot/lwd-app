@@ -319,11 +319,11 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
         {/* Footer Interaction Area */}
         <div 
-          className="absolute bottom-0 left-0 right-0 z-50 select-none pointer-events-none"
+          className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black/40 via-transparent to-transparent pt-20 pointer-events-none"
         >
           <div 
             className="px-4 flex w-full max-w-md mx-auto items-center justify-center pointer-events-auto" 
-            style={{ paddingBottom: `calc(0.5rem + env(safe-area-inset-bottom))` }}
+            style={{ paddingBottom: `calc(1.5rem + env(safe-area-inset-bottom))` }}
           >
             {isOwner ? (
               <div className="flex items-center justify-between w-full gap-2">
