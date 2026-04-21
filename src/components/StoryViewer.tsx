@@ -40,13 +40,12 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isHighlightModalOpen, setIsHighlightModalOpen] = useState(false);
   const [isMentionModalOpen, setIsMentionModalOpen] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
   const [showViewers, setShowViewers] = useState(false);
   const [isMediaLoading, setIsMediaLoading] = useState(true);
   const [isIOS, setIsIOS] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
-  const { deleteStory, recordView } = useStories();
+  const { deleteStory, recordView, toggleStoryLike } = useStories();
   const { removeFromHighlight } = useHighlights(currentUserId || undefined);
   const { sendMessage } = useMessages();
   
@@ -69,7 +68,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   useEffect(() => {
     setProgress(0);
     setIsMediaLoading(true);
-    setIsLiked(false);
   }, [currentStory?.id, userIndex]);
 
   useEffect(() => {
@@ -135,33 +133,40 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   };
 
   const handleLike = async () => {
-    if (isLiked || isOwner || !currentUserId) return;
-    setIsLiked(true);
+    if (isOwner || !currentUserId || toggleStoryLike.isPending) return;
+    
     try {
-      await sendMessage.mutateAsync({
-        receiverId: userStories.user_id,
-        content: "❤️ Ha messo like alla tua storia",
-        imageUrl: currentStory.image_url
+      await toggleStoryLike.mutateAsync({
+        storyId: currentStory.id,
+        authorId: userStories.user_id,
+        imageUrl: currentStory.image_url,
+        isCurrentlyLiked: currentStory.is_liked
       });
-      showSuccess("Like inviato via Direct!");
+      
+      if (!currentStory.is_liked) {
+        showSuccess("Like inviato via Direct!");
+      }
     } catch (err) {
-      setIsLiked(false);
       showError("Errore nell'invio del like");
     }
   };
 
   const handleReply = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!replyText.trim() || !currentUserId) return;
+    if (!replyText.trim() || !currentUserId || sendMessage.isPending) return;
+    
+    const textToSend = replyText;
+    setReplyText(''); // Pulizia immediata per velocità percepita
+    
     try {
       await sendMessage.mutateAsync({
         receiverId: userStories.user_id,
-        content: replyText,
+        content: textToSend,
         imageUrl: currentStory.image_url
       });
-      setReplyText('');
       showSuccess("Risposta inviata!");
     } catch (err) {
+      setReplyText(textToSend); // Ripristina in caso di errore
       showError("Errore nell'invio della risposta");
     }
   };
@@ -346,11 +351,39 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
             ) : !isHighlight && (
               <div className={cn("flex items-center gap-3 w-full h-full", isIOS ? "justify-end pb-1" : "justify-center")}>
                 <form onSubmit={handleReply} className="flex-1 flex gap-2">
-                  <Input placeholder={`Rispondi a ${userStories.username}...`} value={replyText} onChange={(e) => setReplyText(e.target.value)} onFocus={() => videoRef.current?.pause()} onBlur={() => videoRef.current?.play()} className="bg-white/5 border-white/10 rounded-full h-8 px-4 text-[10px] font-bold uppercase tracking-widest text-white placeholder:text-zinc-600 focus-visible:ring-white/20" />
-                  {replyText.trim() && <button type="submit" className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 transition-transform shrink-0 shadow-xl"><Send size={12} /></button>}
+                  <Input 
+                    placeholder={`Rispondi a ${userStories.username}...`} 
+                    value={replyText} 
+                    onChange={(e) => setReplyText(e.target.value)} 
+                    onFocus={() => videoRef.current?.pause()} 
+                    onBlur={() => videoRef.current?.play()} 
+                    className="bg-white/5 border-white/10 rounded-full h-8 px-4 text-[10px] font-bold uppercase tracking-widest text-white placeholder:text-zinc-600 focus-visible:ring-white/20" 
+                  />
+                  {replyText.trim() && (
+                    <button 
+                      type="submit" 
+                      disabled={sendMessage.isPending}
+                      className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 transition-transform shrink-0 shadow-xl"
+                    >
+                      {sendMessage.isPending ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
+                    </button>
+                  )}
                 </form>
                 <div className="flex items-center gap-2">
-                  <button onClick={handleLike} className={cn("w-8 h-8 rounded-full flex items-center justify-center transition-all border", isLiked ? "bg-red-500 border-red-500 text-white" : "bg-white/5 border-white/10 text-zinc-400 hover:text-white hover:bg-white/10")}><Heart size={14} fill={isLiked ? "currentColor" : "none"} /></button>
+                  <button 
+                    onClick={handleLike} 
+                    disabled={toggleStoryLike.isPending}
+                    className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center transition-all border", 
+                      currentStory.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-white/5 border-white/10 text-zinc-400 hover:text-white hover:bg-white/10"
+                    )}
+                  >
+                    {toggleStoryLike.isPending ? (
+                      <Loader2 size={12} className="animate-spin" />
+                    ) : (
+                      <Heart size={14} fill={currentStory.is_liked ? "currentColor" : "none"} />
+                    )}
+                  </button>
                   <button onClick={handleShareClick} className="w-8 h-8 bg-white/5 border border-white/10 text-zinc-400 rounded-full flex items-center justify-center hover:text-white hover:bg-white/10 transition-all"><Send size={14} className="-rotate-12" /></button>
                 </div>
               </div>

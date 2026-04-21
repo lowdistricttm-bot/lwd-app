@@ -66,7 +66,8 @@ export const useStories = () => {
           ),
           reshared_from:reshared_from_profile_id (
             username
-          )
+          ),
+          story_likes (user_id)
         `)
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false });
@@ -90,9 +91,13 @@ export const useStories = () => {
           items: []
         };
       }
+      
+      const isLiked = user ? story.story_likes?.some((l: any) => l.user_id === user.id) : false;
+
       acc[story.user_id].items.push({
         ...story,
-        mentions: Array.isArray(story.mentions) ? story.mentions : []
+        mentions: Array.isArray(story.mentions) ? story.mentions : [],
+        is_liked: isLiked
       });
       return acc;
     }, {});
@@ -131,6 +136,43 @@ export const useStories = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['active-stories'] });
       showSuccess("Storia pubblicata!");
+    },
+    onError: (error: any) => showError(error)
+  });
+
+  const toggleStoryLike = useMutation({
+    mutationFn: async ({ storyId, authorId, imageUrl, isCurrentlyLiked }: { storyId: string, authorId: string, imageUrl: string, isCurrentlyLiked: boolean }) => {
+      if (!user) throw new Error("Accedi per mettere like");
+
+      if (isCurrentlyLiked) {
+        const { error } = await supabase
+          .from('story_likes')
+          .delete()
+          .eq('story_id', storyId)
+          .eq('user_id', user.id);
+        if (error) throw error;
+        return 'unliked';
+      } else {
+        const { error } = await supabase
+          .from('story_likes')
+          .insert([{ story_id: storyId, user_id: user.id }]);
+        
+        if (error) throw error;
+
+        // Invia il messaggio in direct solo al primo like
+        await supabase.from('messages').insert([{
+          sender_id: user.id,
+          receiver_id: authorId,
+          content: "❤️ Ha messo like alla tua storia",
+          image_url: imageUrl,
+          images: [imageUrl]
+        }]);
+
+        return 'liked';
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['active-stories'] });
     },
     onError: (error: any) => showError(error)
   });
@@ -210,5 +252,5 @@ export const useStories = () => {
     onError: (error: any) => showError(error)
   });
 
-  return { stories, isLoading, uploadStory, addMention, deleteStory, recordView, reshareStory };
+  return { stories, isLoading, uploadStory, addMention, deleteStory, recordView, reshareStory, toggleStoryLike };
 };
