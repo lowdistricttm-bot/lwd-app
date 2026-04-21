@@ -217,7 +217,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
   const roleLabel = isHighlight ? 'RACCOLTA' : (t.profile.roles[userStories.role] || t.profile.roles.member);
   
-  // Offset nullo per spingere tutto al bordo
+  // Altezza fissa 0px per spingere tutto al bordo
   const modalBottomOffset = "0px";
 
   return createPortal(
@@ -317,12 +317,12 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </AnimatePresence>
         </div>
 
-        {/* Footer Interaction Area - Spinto al limite inferiore */}
+        {/* Footer Interaction Area */}
         <div 
-          className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black/90 via-black/20 to-transparent pt-32 pointer-events-none"
+          className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black/80 via-black/20 to-transparent pt-32 pointer-events-none"
         >
           <div 
-            className="px-2 flex w-full max-w-md mx-auto items-end pointer-events-auto pb-0 mb-[-2px]" 
+            className="px-2 flex w-full max-w-md mx-auto items-end pointer-events-auto pb-0" 
           >
             {isOwner ? (
               <div className="flex items-end justify-between w-full gap-0.5">
@@ -355,7 +355,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                   </>
                 )}
                 {isHighlight && (
-                  <button onClick={handleRemoveFromHighlight} className="flex flex-col items-center gap-2 group w-full justify-center pt-20 pb-1">
+                  <button onClick={handleRemoveFromHighlight} className="flex flex-col items-center gap-2 group w-full justify-center pt-20 pb-2">
                     <div className="w-[30px] h-[30px] rounded-full bg-black/40 backdrop-blur-xl border border-red-500/30 flex items-center justify-center group-hover:bg-red-500/20 transition-all shadow-xl">
                       <BookmarkX size={14} className="text-red-500" />
                     </div>
