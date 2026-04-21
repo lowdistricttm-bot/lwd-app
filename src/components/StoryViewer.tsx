@@ -217,7 +217,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
   const roleLabel = isHighlight ? 'RACCOLTA' : (t.profile.roles[userStories.role] || t.profile.roles.member);
   
-  // Safe area forzata a 0px
+  // Altezza fissa 0px per spingere tutto al bordo
   const modalBottomOffset = "0px";
 
   return createPortal(
@@ -317,16 +317,15 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </AnimatePresence>
         </div>
 
-        {/* Footer Interaction Area - Safe Area 0px */}
+        {/* Footer Interaction Area */}
         <div 
           className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black/80 via-black/20 to-transparent pt-32 pointer-events-none"
         >
           <div 
-            className="px-4 flex w-full max-w-md mx-auto items-end pointer-events-auto pb-0" 
-            style={{ paddingBottom: '0px' }}
+            className="px-4 flex w-full max-w-md mx-auto items-end pointer-events-auto pb-2" 
           >
             {isOwner ? (
-              <div className="flex items-end justify-between w-full gap-2 pb-1">
+              <div className="flex items-center justify-between w-full gap-2">
                 {!isHighlight && (
                   <>
                     <button onClick={() => setShowViewers(true)} className="flex-1 h-10 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all shadow-xl">
@@ -344,14 +343,14 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                   </>
                 )}
                 {isHighlight && (
-                  <button onClick={handleRemoveFromHighlight} className="w-full h-12 rounded-full bg-black/40 backdrop-blur-xl border border-red-500/30 flex items-center justify-center gap-2 hover:bg-red-500/20 transition-all shadow-xl mb-2">
+                  <button onClick={handleRemoveFromHighlight} className="w-full h-12 rounded-full bg-black/40 backdrop-blur-xl border border-red-500/30 flex items-center justify-center gap-2 hover:bg-red-500/20 transition-all shadow-xl">
                     <BookmarkX size={18} className="text-red-500" />
                     <span className="text-[10px] font-black uppercase tracking-widest text-red-500">Rimuovi</span>
                   </button>
                 )}
               </div>
             ) : !isHighlight && (
-              <div className="flex items-center gap-3 w-full pb-1">
+              <div className="flex items-center gap-3 w-full">
                 <form onSubmit={handleReply} className="flex-1 flex relative">
                   <Input 
                     placeholder={`Rispondi a ${userStories.username}...`} 
