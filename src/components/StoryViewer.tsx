@@ -219,7 +219,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   
   // Calcolo altezze dinamiche basate sulla safe area
   const baseFooterHeight = isIOS ? 50 : 44;
-  const footerHeight = `calc(${baseFooterHeight}px + env(safe-area-inset-bottom))`;
   const modalBottomOffset = `calc(${baseFooterHeight}px + env(safe-area-inset-bottom))`;
 
   return createPortal(
@@ -230,17 +229,18 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
       className="fixed inset-0 z-[9999] bg-black flex items-center justify-center overflow-hidden touch-none"
       style={{ height: '100dvh' }}
     >
-      <div className="absolute inset-0 z-0 opacity-40 blur-[100px] scale-150 hidden md:block">
+      {/* Sfondo sfocato dinamico */}
+      <div className="absolute inset-0 z-0 opacity-60 blur-[60px] scale-125">
         <img src={currentStory.image_url} className="w-full h-full object-cover" alt="" />
       </div>
 
-      <div className="relative w-full h-full md:h-[85vh] md:w-[420px] md:aspect-[9/16] bg-black md:rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl md:border md:border-white/10">
+      <div className="relative w-full h-full md:h-[85vh] md:w-[420px] md:aspect-[9/16] bg-transparent md:bg-black/40 md:rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl md:border md:border-white/10 z-10">
         
         <div className="absolute top-[calc(1rem+env(safe-area-inset-top))] md:top-6 left-4 right-4 z-50 flex gap-1.5">
           {userStories.items.map((_, i) => (
-            <div key={i} className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden">
+            <div key={i} className="h-1 flex-1 bg-white/30 rounded-full overflow-hidden backdrop-blur-md">
               <div 
-                className="h-full bg-white transition-all duration-100 ease-linear"
+                className="h-full bg-white transition-all duration-100 ease-linear shadow-[0_0_10px_rgba(255,255,255,0.8)]"
                 style={{ width: i === currentIndex ? `${progress}%` : i < currentIndex ? '100%' : '0%' }}
               />
             </div>
@@ -249,22 +249,22 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
         <div className="absolute top-[calc(2.5rem+env(safe-area-inset-top))] md:top-12 left-4 right-4 z-50 flex items-center justify-between">
           <button onClick={handleProfileClick} className="flex items-center gap-3 group text-left">
-            <div className="w-10 h-10 rounded-full border-2 border-white/20 overflow-hidden bg-zinc-900 group-hover:border-white transition-all">
+            <div className="w-10 h-10 rounded-full border-2 border-white/40 shadow-lg overflow-hidden bg-zinc-900 group-hover:border-white transition-all">
               {userStories.avatar_url && <img src={userStories.avatar_url} className="w-full h-full object-cover" alt="" />}
             </div>
-            <div className="flex flex-col">
+            <div className="flex flex-col drop-shadow-md">
               <span className="text-sm font-black uppercase italic tracking-widest text-white drop-shadow-lg group-hover:text-zinc-300 transition-colors">{userStories.username}</span>
-              <span className="text-[8px] font-bold text-white/60 uppercase tracking-widest">{roleLabel}</span>
+              <span className="text-[8px] font-bold text-white/80 uppercase tracking-widest">{roleLabel}</span>
             </div>
           </button>
           
           <div className="flex items-center gap-1">
             {isVideo && (
-              <button onClick={toggleMute} className="p-2 text-white/80 hover:text-white drop-shadow-md transition-all">
+              <button onClick={toggleMute} className="p-2 text-white hover:text-zinc-300 drop-shadow-lg transition-all bg-black/20 backdrop-blur-md rounded-full">
                 {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
               </button>
             )}
-            <button onClick={onClose} className="p-2 text-white/80 hover:text-white transition-all drop-shadow-md"><X size={24} /></button>
+            <button onClick={onClose} className="p-2 text-white hover:text-zinc-300 transition-all drop-shadow-lg bg-black/20 backdrop-blur-md rounded-full ml-2"><X size={24} /></button>
           </div>
         </div>
 
@@ -273,7 +273,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           <div className="w-2/3 h-full cursor-pointer" onClick={handleNext} />
         </div>
 
-        <div className="flex-1 relative flex items-center justify-center bg-black">
+        <div className="flex-1 relative flex items-center justify-center bg-transparent">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentStory.id}
@@ -285,7 +285,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
             >
               {isMediaLoading && (
                 <div className="absolute inset-0 flex items-center justify-center z-10">
-                  <Loader2 className="animate-spin text-white/20" size={40} />
+                  <Loader2 className="animate-spin text-white/40" size={40} />
                 </div>
               )}
               
@@ -317,80 +317,84 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </AnimatePresence>
         </div>
 
-        {/* Footer delle Storie - Posizionamento absolute per restare nel box */}
+        {/* Footer delle Storie - Sfondo gradiente per overlay fluido, nessuna interruzione netta */}
         <div 
-          className="absolute bottom-0 left-0 right-0 z-50 bg-black border-t border-white/10 select-none"
+          className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black/90 via-black/40 to-transparent pt-16 pb-4 pointer-events-none"
           style={{ 
-            height: footerHeight,
-            paddingBottom: 'env(safe-area-inset-bottom)',
+            paddingBottom: `calc(1rem + env(safe-area-inset-bottom))`,
             WebkitUserSelect: 'none',
             touchAction: 'none'
           }}
         >
-          <div className="h-full px-4 flex w-full max-w-md mx-auto items-center">
+          <div className="px-4 flex w-full max-w-md mx-auto items-center pointer-events-auto" style={{ height: `${baseFooterHeight}px` }}>
             {isOwner ? (
               <div className="flex items-center justify-around w-full h-full">
                 {!isHighlight && (
                   <>
-                    <button onClick={() => setShowViewers(true)} className="flex flex-col items-center justify-center gap-0.5 group h-full flex-1">
-                      <Eye size={isIOS ? 18 : 20} className="text-zinc-600 group-hover:text-white transition-colors" />
-                      <span className="text-[6px] font-black uppercase tracking-widest text-zinc-600 group-hover:text-white">Attività</span>
+                    <button onClick={() => setShowViewers(true)} className="flex flex-col items-center justify-center gap-1.5 group h-full flex-1">
+                      <Eye size={isIOS ? 20 : 22} className="text-white drop-shadow-md hover:scale-110 transition-transform" />
+                      <span className="text-[9px] font-black uppercase tracking-widest text-white drop-shadow-md">Attività</span>
                     </button>
-                    <button onClick={() => setIsMentionModalOpen(true)} className="flex flex-col items-center justify-center gap-0.5 group h-full flex-1">
-                      <AtSign size={isIOS ? 18 : 20} className="text-zinc-600 group-hover:text-white transition-colors" />
-                      <span className="text-[6px] font-black uppercase tracking-widest text-zinc-600 group-hover:text-white">Menziona</span>
+                    <button onClick={() => setIsMentionModalOpen(true)} className="flex flex-col items-center justify-center gap-1.5 group h-full flex-1">
+                      <AtSign size={isIOS ? 20 : 22} className="text-white drop-shadow-md hover:scale-110 transition-transform" />
+                      <span className="text-[9px] font-black uppercase tracking-widest text-white drop-shadow-md">Menziona</span>
                     </button>
-                    <button onClick={() => setIsHighlightModalOpen(true)} className="flex flex-col items-center justify-center gap-0.5 group h-full flex-1">
-                      <Star size={isIOS ? 18 : 20} className="text-zinc-600 group-hover:text-white transition-colors" />
-                      <span className="text-[6px] font-black uppercase tracking-widest text-zinc-600 group-hover:text-white">Evidenza</span>
+                    <button onClick={() => setIsHighlightModalOpen(true)} className="flex flex-col items-center justify-center gap-1.5 group h-full flex-1">
+                      <Star size={isIOS ? 20 : 22} className="text-white drop-shadow-md hover:scale-110 transition-transform" />
+                      <span className="text-[9px] font-black uppercase tracking-widest text-white drop-shadow-md">Evidenza</span>
                     </button>
-                    <button onClick={handleDelete} className="flex flex-col items-center justify-center gap-0.5 group h-full flex-1">
-                      <Trash2 size={18} className="text-zinc-600 group-hover:text-red-500 transition-colors" />
-                      <span className="text-[6px] font-black uppercase tracking-widest text-zinc-600 group-hover:text-red-500">Elimina</span>
+                    <button onClick={handleDelete} className="flex flex-col items-center justify-center gap-1.5 group h-full flex-1">
+                      <Trash2 size={20} className="text-red-500 drop-shadow-md hover:scale-110 transition-transform" />
+                      <span className="text-[9px] font-black uppercase tracking-widest text-red-500 drop-shadow-md">Elimina</span>
                     </button>
                   </>
                 )}
                 {isHighlight && (
-                  <button onClick={handleRemoveFromHighlight} className="flex flex-col items-center justify-center gap-0.5 group w-full h-full">
-                    <BookmarkX size={20} className="text-zinc-600 group-hover:text-red-500 transition-colors" />
-                    <span className="text-[8px] font-black uppercase tracking-widest text-zinc-600 group-hover:text-red-500">Rimuovi da Evidenza</span>
+                  <button onClick={handleRemoveFromHighlight} className="flex flex-col items-center justify-center gap-1 group w-full h-full">
+                    <BookmarkX size={22} className="text-white drop-shadow-md group-hover:text-red-500 hover:scale-110 transition-all" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-white drop-shadow-md group-hover:text-red-500 mt-1">Rimuovi da Evidenza</span>
                   </button>
                 )}
               </div>
             ) : !isHighlight && (
               <div className="flex items-center justify-center gap-3 w-full h-full">
-                <form onSubmit={handleReply} className="flex-1 flex gap-2">
+                <form onSubmit={handleReply} className="flex-1 flex gap-2 relative">
                   <Input 
                     placeholder={`Rispondi a ${userStories.username}...`} 
                     value={replyText} 
                     onChange={(e) => setReplyText(e.target.value)} 
                     onFocus={() => videoRef.current?.pause()} 
                     onBlur={() => videoRef.current?.play()} 
-                    className="bg-white/5 border-white/10 rounded-full h-8 px-4 text-[10px] font-bold uppercase tracking-widest text-white placeholder:text-zinc-600 focus-visible:ring-white/20" 
+                    className="bg-black/30 backdrop-blur-xl border border-white/20 rounded-full h-12 px-6 text-[11px] font-bold uppercase tracking-widest text-white placeholder:text-white/70 focus-visible:ring-white/40 shadow-xl" 
                   />
-                  {replyText.trim() && (
-                    <motion.button 
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      type="submit" 
-                      className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 active:scale-90 transition-transform shrink-0 shadow-xl"
-                    >
-                      <Send size={12} />
-                    </motion.button>
-                  )}
+                  <AnimatePresence>
+                    {replyText.trim() && (
+                      <motion.button 
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0, opacity: 0 }}
+                        type="submit" 
+                        className="absolute right-1 top-1 w-10 h-10 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shrink-0 shadow-lg"
+                      >
+                        <Send size={14} className="-rotate-12" />
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
                 </form>
                 <div className="flex items-center gap-2">
                   <motion.button 
                     whileTap={{ scale: 1.4 }}
                     onClick={handleLike} 
                     className={cn(
-                      "w-8 h-8 rounded-full flex items-center justify-center transition-all border", 
-                      currentStory.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-white/5 border-white/10 text-zinc-600 hover:text-white hover:bg-white/10"
+                      "w-12 h-12 rounded-full flex items-center justify-center transition-all border shadow-xl backdrop-blur-xl", 
+                      currentStory.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-black/30 border-white/20 text-white hover:bg-white/20 hover:scale-105"
                     )}
                   >
-                    <Heart size={14} fill={currentStory.is_liked ? "currentColor" : "none"} />
+                    <Heart size={22} fill={currentStory.is_liked ? "currentColor" : "none"} />
                   </motion.button>
-                  <button onClick={handleShareClick} className="w-8 h-8 bg-white/5 border border-white/10 text-zinc-600 rounded-full flex items-center justify-center hover:text-white hover:bg-white/10 transition-all"><Send size={14} className="-rotate-12" /></button>
+                  <button onClick={handleShareClick} className="w-12 h-12 bg-black/30 backdrop-blur-xl border border-white/20 text-white rounded-full flex items-center justify-center hover:bg-white/20 hover:scale-105 transition-all shadow-xl">
+                    <Send size={20} className="-rotate-12" />
+                  </button>
                 </div>
               </div>
             )}
@@ -406,7 +410,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                 animate={{ y: 0 }} 
                 exit={{ y: '100%' }} 
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }} 
-                className="absolute inset-x-0 z-[61] bg-zinc-950 border border-white/10 rounded-[2rem] max-h-[60%] flex flex-col pb-10 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]" 
+                className="absolute inset-x-0 z-[61] bg-zinc-950 border border-white/10 rounded-[2.5rem] max-h-[60%] flex flex-col pb-10 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]" 
                 style={{ 
                   touchAction: 'pan-y',
                   bottom: modalBottomOffset 
