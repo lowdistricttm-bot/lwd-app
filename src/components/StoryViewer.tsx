@@ -319,7 +319,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
         {/* Footer Interaction Area - Uniformata alla BottomNav */}
         <div 
-          className="fixed bottom-0 left-0 right-0 z-[100] bg-black border-t border-white/10"
+          className="absolute bottom-0 left-0 right-0 z-50 bg-black border-t border-white/10"
           style={{ 
             height: footerHeight,
             paddingBottom: 'env(safe-area-inset-bottom)'
@@ -327,7 +327,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
         >
           <div className="h-full px-4 flex items-center max-w-md mx-auto w-full">
             {isOwner ? (
-              <div className="flex items-center justify-around w-full h-full">
+              <div className="flex items-center justify-around w-full">
                 {!isHighlight ? (
                   <>
                     <button onClick={() => setShowViewers(true)} className="p-2 text-white hover:opacity-70 transition-opacity">
@@ -350,7 +350,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                 )}
               </div>
             ) : !isHighlight && (
-              <div className="flex items-center gap-3 w-full h-full">
+              <div className="flex items-center gap-3 w-full">
                 <form onSubmit={handleReply} className="flex-1 flex relative">
                   <Input 
                     placeholder={`Rispondi a ${userStories.username}...`} 
