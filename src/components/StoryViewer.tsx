@@ -217,7 +217,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
   const roleLabel = isHighlight ? 'RACCOLTA' : (t.profile.roles[userStories.role] || t.profile.roles.member);
   
-  // Altezza identica a BottomNav e Chat, senza padding safe area
+  // Altezza identica a Chat e BottomNav
   const footerHeight = isIOS ? '50px' : '44px';
 
   return createPortal(
@@ -315,9 +315,9 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </AnimatePresence>
         </div>
 
-        {/* Barra inferiore sincronizzata con BottomNav, senza padding safe area */}
+        {/* Barra inferiore: ora FIXED e posizionata esattamente come la chat */}
         <div 
-          className="absolute bottom-0 left-0 right-0 z-50 bg-black border-t border-white/10 select-none"
+          className="fixed bottom-0 left-0 right-0 z-50 bg-black border-t border-white/10 select-none"
           style={{ 
             height: footerHeight,
             paddingBottom: '0px',
