@@ -217,7 +217,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
   const roleLabel = isHighlight ? 'RACCOLTA' : (t.profile.roles[userStories.role] || t.profile.roles.member);
   
-  // Safe area forzata a 0px
+  // Altezza fissa 0px per spingere tutto al bordo
   const modalBottomOffset = "0px";
 
   return createPortal(
@@ -234,8 +234,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
       <div className="relative w-full h-full md:h-[85vh] md:w-[420px] md:aspect-[9/16] bg-transparent md:bg-black/40 md:rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl md:border md:border-white/10 z-10">
         
-        {/* Progress Bar - Safe Area 0px */}
-        <div className="absolute top-2 md:top-6 left-4 right-4 z-50 flex gap-1.5">
+        <div className="absolute top-[calc(0.5rem+env(safe-area-inset-top))] md:top-6 left-4 right-4 z-50 flex gap-1.5">
           {userStories.items.map((_, i) => (
             <div key={i} className="h-1 flex-1 bg-white/30 rounded-full overflow-hidden backdrop-blur-md">
               <div 
@@ -246,8 +245,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           ))}
         </div>
 
-        {/* Header - Safe Area 0px */}
-        <div className="absolute top-8 md:top-12 left-4 right-4 z-50 flex items-center justify-between">
+        <div className="absolute top-[calc(2rem+env(safe-area-inset-top))] md:top-12 left-4 right-4 z-50 flex items-center justify-between">
           <button onClick={handleProfileClick} className="flex items-center gap-3 group text-left">
             <div className="w-10 h-10 rounded-full border-2 border-white/40 shadow-lg overflow-hidden bg-zinc-900 group-hover:border-white transition-all">
               {userStories.avatar_url && <img src={userStories.avatar_url} className="w-full h-full object-cover" alt="" />}
@@ -319,15 +317,15 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </AnimatePresence>
         </div>
 
-        {/* Footer Interaction Area - Safe Area 0px */}
+        {/* Footer Interaction Area */}
         <div 
           className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black/80 via-black/20 to-transparent pt-32 pointer-events-none"
         >
           <div 
-            className="px-4 flex w-full max-w-md mx-auto items-end pointer-events-auto pb-0" 
+            className="px-4 flex w-full max-w-md mx-auto items-end pointer-events-auto pb-2" 
           >
             {isOwner ? (
-              <div className="flex items-center justify-between w-full gap-2 pb-2">
+              <div className="flex items-center justify-between w-full gap-2">
                 {!isHighlight && (
                   <>
                     <button onClick={() => setShowViewers(true)} className="flex-1 h-10 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all shadow-xl">
@@ -352,7 +350,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                 )}
               </div>
             ) : !isHighlight && (
-              <div className="flex items-center gap-3 w-full pb-2">
+              <div className="flex items-center gap-3 w-full">
                 <form onSubmit={handleReply} className="flex-1 flex relative">
                   <Input 
                     placeholder={`Rispondi a ${userStories.username}...`} 
