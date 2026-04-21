@@ -4,8 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { Vehicle } from './use-garage';
 
-// Rimosso 'subscriber' dai ruoli autorizzati a comparire in Esplora
-const AUTHORIZED_ROLES = ['admin', 'staff', 'support', 'member'];
+// Aggiunto 'subscriber_plus' ai ruoli autorizzati a comparire in Esplora
+const AUTHORIZED_ROLES = ['admin', 'staff', 'support', 'member', 'subscriber_plus'];
 
 export const useDiscover = (searchQuery: string = "") => {
   const { data: vehicles, isLoading: loadingVehicles } = useQuery({
@@ -41,7 +41,7 @@ export const useDiscover = (searchQuery: string = "") => {
         return [];
       }
 
-      // Filtriamo rigorosamente per escludere i subscriber
+      // Filtriamo rigorosamente per escludere i subscriber (ma includere subscriber_plus)
       const filteredData = (data || [])
         .filter((v: any) => v.profiles && AUTHORIZED_ROLES.includes(v.profiles.role))
         .map((v: any) => ({
@@ -63,7 +63,7 @@ export const useDiscover = (searchQuery: string = "") => {
       const { data, error } = await supabase
         .from('profiles')
         .select('id, username, avatar_url, role, is_admin')
-        .in('role', AUTHORIZED_ROLES) // Solo membri ufficiali e staff
+        .in('role', AUTHORIZED_ROLES) // Solo membri ufficiali, staff e subscriber_plus
         .ilike('username', `%${searchQuery}%`)
         .limit(10);
 
@@ -79,7 +79,7 @@ export const useDiscover = (searchQuery: string = "") => {
       const { data, error } = await supabase
         .from('profiles')
         .select('id, username, avatar_url, role, is_admin, updated_at')
-        .in('role', AUTHORIZED_ROLES) // Solo membri ufficiali e staff
+        .in('role', AUTHORIZED_ROLES) // Solo membri ufficiali, staff e subscriber_plus
         .order('updated_at', { ascending: false })
         .limit(8);
       

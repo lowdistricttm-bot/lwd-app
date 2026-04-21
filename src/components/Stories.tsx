@@ -40,6 +40,7 @@ const Stories = () => {
     }
   }, [currentUser]);
 
+  // Solo il ruolo 'subscriber' base ha restrizioni, 'subscriber_plus' ha permessi completi
   const isSubscriber = role === 'subscriber';
   const myStoriesGroup: any = (stories as any[])?.find((group: any) => group.user_id === currentUser?.id);
   const otherStories: any[] = (stories as any[])?.filter((group: any) => group.user_id !== currentUser?.id) || [];

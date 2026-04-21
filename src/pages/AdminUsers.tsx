@@ -57,6 +57,7 @@ const AdminUsers = () => {
 
   const roles: { value: UserRole, label: string }[] = [
     { value: 'subscriber', label: 'Iscritto' },
+    { value: 'subscriber_plus', label: 'Iscritto+' },
     { value: 'member', label: 'Membro Ufficiale' },
     { value: 'support', label: 'Supporto Staff' },
     { value: 'staff', label: 'Staff' },

@@ -184,7 +184,8 @@ const translations: Record<Language, any> = {
         staff: 'MEMBRO DELLO STAFF',
         support: 'SUPPORTO STAFF',
         member: 'MEMBRO UFFICIALE',
-        subscriber: 'ISCRITTO'
+        subscriber: 'ISCRITTO',
+        subscriber_plus: 'ISCRITTO+'
       }
     },
     messages: {
@@ -224,7 +225,7 @@ const translations: Record<Language, any> = {
       suspension: 'ASSETTO',
       licensePlate: 'TARGA',
       description: 'DESCRIZIONE PROGETTO',
-      photos: 'FOTO VEICOLO',
+      photos: 'VEHICLE PHOTOS',
       save: 'SALVA VEICOLO',
       update: 'AGGIORNA VEICOLO'
     },
@@ -424,7 +425,8 @@ const translations: Record<Language, any> = {
         staff: 'STAFF MEMBER',
         support: 'STAFF SUPPORT',
         member: 'OFFICIAL MEMBER',
-        subscriber: 'SUBSCRIBER'
+        subscriber: 'SUBSCRIBER',
+        subscriber_plus: 'SUBSCRIBER+'
       }
     },
     messages: {

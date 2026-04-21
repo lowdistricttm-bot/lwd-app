@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { showError, showSuccess } from '@/utils/toast';
 
-export type UserRole = 'admin' | 'staff' | 'support' | 'member' | 'subscriber';
+export type UserRole = 'admin' | 'staff' | 'support' | 'member' | 'subscriber' | 'subscriber_plus';
 export type AdminNotificationType = 'admin_info' | 'admin_warning' | 'admin_important';
 
 export const useAdmin = () => {

@@ -27,6 +27,7 @@ const Bacheca = () => {
     refetch();
   }, [refetch]);
 
+  // Solo il ruolo 'subscriber' base ha restrizioni, 'subscriber_plus' ha permessi completi
   const isSubscriber = role === 'subscriber';
 
   const handleManualRefresh = () => {
