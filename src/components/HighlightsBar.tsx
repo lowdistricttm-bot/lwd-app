@@ -20,11 +20,8 @@ const HighlightsBar = ({ userId, isOwnProfile }: HighlightsBarProps) => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState('');
-  const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
-    const checkIOS = /iPhone|iPad|iPod/.test(window.navigator.userAgent);
-    setIsIOS(checkIOS);
     supabase.auth.getUser().then(({ data: { user } }) => {
       setCurrentUserId(user?.id || null);
     });
@@ -65,42 +62,62 @@ const HighlightsBar = ({ userId, isOwnProfile }: HighlightsBarProps) => {
     })).filter(Boolean) || []
   })).filter(h => h.items.length > 0) || [];
 
-  const barHeight = isIOS ? '50px' : '44px';
-
   return (
-    <div className="mb-8">
+    <div className="mb-8 border-b border-white/5 pb-6">
       {(highlights?.length > 0 || isOwnProfile) && (
-        <h3 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] italic mb-3 ml-1">
+        <h3 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] italic mb-4 ml-1">
           Storie in evidenza
         </h3>
       )}
       
-      <div 
-        className="flex gap-4 overflow-x-auto no-scrollbar items-center px-4 bg-black border border-white/10 rounded-full select-none"
-        style={{ height: barHeight, WebkitUserSelect: 'none', touchAction: 'pan-x' }}
-      >
+      <div className="flex gap-6 overflow-x-auto no-scrollbar items-center py-4 px-1">
         {highlights?.map((h, idx) => (
-          <div key={h.id} className="shrink-0 group relative flex items-center">
-            <div 
-              onClick={() => setSelectedHighlightIndex(idx)}
-              className="w-9 h-9 rounded-full border border-white/10 group-hover:border-white transition-all duration-500 cursor-pointer overflow-hidden bg-zinc-900"
-            >
-              <img src={h.cover_url} className="w-full h-full object-cover" alt={h.title} />
-            </div>
-            
-            {isOwnProfile && !editingId && (
-              <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 z-10 scale-75">
-                <button onClick={(e) => handleStartEdit(e, h)} className="w-6 h-6 bg-white text-black rounded-full flex items-center justify-center shadow-xl"><Edit2 size={10} /></button>
-                <button onClick={(e) => handleDelete(e, h.id)} className="w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center shadow-xl"><Trash2 size={10} /></button>
+          <div key={h.id} className="flex flex-col items-center gap-2 shrink-0 group relative">
+            <div className="relative">
+              {/* Main trigger area */}
+              <div 
+                onClick={() => setSelectedHighlightIndex(idx)}
+                className="w-16 h-16 rounded-full p-[2px] border border-white/10 group-hover:border-white transition-all duration-500 cursor-pointer"
+              >
+                <div className="w-full h-full rounded-full overflow-hidden bg-zinc-900">
+                  <img src={h.cover_url} className="w-full h-full object-cover" alt={h.title} />
+                </div>
               </div>
-            )}
+              
+              {/* Admin actions */}
+              {isOwnProfile && !editingId && (
+                <div className="absolute -top-3 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 z-10 scale-90 group-hover:scale-100">
+                  <button 
+                    onClick={(e) => handleStartEdit(e, h)}
+                    className="w-7 h-7 bg-white text-black rounded-full flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.5)] hover:bg-zinc-200 transition-colors"
+                  >
+                    <Edit2 size={12} />
+                  </button>
+                  <button 
+                    onClick={(e) => handleDelete(e, h.id)}
+                    className="w-7 h-7 bg-red-600 text-white rounded-full flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.5)] hover:bg-red-700 transition-colors"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              )}
+            </div>
 
-            {editingId === h.id && (
-              <div className="absolute left-full ml-2 flex items-center gap-1 bg-black/90 backdrop-blur-md p-1 rounded-lg border border-white/20 z-20">
-                <Input autoFocus value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="h-6 w-20 bg-white/10 border-none text-[8px] font-black uppercase p-1 text-center" />
+            {editingId === h.id ? (
+              <div className="flex items-center gap-1 animate-in fade-in zoom-in-95">
+                <Input 
+                  autoFocus
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  className="h-6 w-20 bg-white/10 border-white/20 text-[8px] font-black uppercase p-1 text-center rounded-md"
+                />
                 <button onClick={handleSaveTitle} className="text-green-500"><Check size={12} /></button>
                 <button onClick={() => setEditingId(null)} className="text-zinc-500"><X size={12} /></button>
               </div>
+            ) : (
+              <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 group-hover:text-white transition-colors truncate w-16 text-center">
+                {h.title}
+              </span>
             )}
           </div>
         ))}
