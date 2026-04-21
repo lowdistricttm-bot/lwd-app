@@ -36,7 +36,7 @@ export const useNotificationListener = () => {
               playNotificationSound();
             }
 
-            // Aggiorniamo solo le query necessarie invece di resettare tutto l'app
+            console.log("[Realtime] Messaggio ricevuto/aggiornato, rinfresco UI...");
             queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
             queryClient.invalidateQueries({ queryKey: ['conversations'] });
             queryClient.invalidateQueries({ queryKey: ['chat'] });
@@ -46,19 +46,20 @@ export const useNotificationListener = () => {
     };
 
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && user) {
-        // Rinfreschiamo solo i dati critici, non l'intera cache
-        queryClient.invalidateQueries({ queryKey: ['notifications'] });
-        queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
+      if (document.visibilityState === 'visible') {
+        queryClient.invalidateQueries();
+        startListening();
       }
     };
 
     startListening();
     window.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleVisibilityChange);
 
     return () => {
       if (channel) supabase.removeChannel(channel);
       window.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleVisibilityChange);
     };
   }, [queryClient, user]);
 };
