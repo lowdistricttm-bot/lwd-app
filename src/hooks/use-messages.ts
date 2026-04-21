@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from '@/utils/toast';
 import { uploadToCloudinary } from '@/utils/cloudinary';
+import { useAuth } from './use-auth';
 
 export interface Message {
   id: string;
@@ -20,12 +21,12 @@ export interface Message {
 
 export const useMessages = (otherUserId?: string) => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   // Query per la lista delle conversazioni
   const { data: conversations, isLoading: loadingConvs } = useQuery({
-    queryKey: ['conversations'],
+    queryKey: ['conversations', user?.id],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
 
       const { data, error } = await supabase
@@ -54,14 +55,14 @@ export const useMessages = (otherUserId?: string) => {
 
       return Array.from(groups.values());
     },
+    enabled: !!user,
     staleTime: 0
   });
 
-  // Query per il conteggio messaggi non letti (Badge Navbar)
+  // Query per il conteggio messaggi non letti
   const { data: unreadCount = 0 } = useQuery({
-    queryKey: ['unread-messages-count'],
+    queryKey: ['unread-messages-count', user?.id],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return 0;
       const { count, error } = await supabase
         .from('messages')
@@ -71,17 +72,16 @@ export const useMessages = (otherUserId?: string) => {
       if (error) return 0;
       return count || 0;
     },
+    enabled: !!user,
     staleTime: 0,
-    refetchInterval: 15000 // Backup ogni 15 secondi
+    refetchInterval: 15000
   });
 
   // Query per i messaggi di una singola chat
   const { data: chatMessages, isLoading: loadingChat } = useQuery({
-    queryKey: ['chat', otherUserId],
+    queryKey: ['chat', otherUserId, user?.id],
     queryFn: async () => {
-      if (!otherUserId) return [];
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
+      if (!otherUserId || !user) return [];
 
       const { data, error } = await supabase
         .from('messages')
@@ -100,13 +100,12 @@ export const useMessages = (otherUserId?: string) => {
         images: Array.isArray(msg.images) ? msg.images : (msg.image_url ? [msg.image_url] : [])
       })) as Message[];
     },
-    enabled: !!otherUserId,
+    enabled: !!otherUserId && !!user,
     staleTime: 0
   });
 
   const sendMessage = useMutation({
     mutationFn: async ({ receiverId, content, files, imageUrl }: { receiverId: string, content: string, files?: File[], imageUrl?: string }) => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Accedi per inviare messaggi");
 
       let imageUrls: string[] = [];
@@ -133,26 +132,24 @@ export const useMessages = (otherUserId?: string) => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
+      queryClient.invalidateQueries({ queryKey: ['conversations', user?.id] });
+      if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId, user?.id] });
     }
   });
 
   const markAsRead = useMutation({
     mutationFn: async (senderId: string) => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       await supabase.from('messages').update({ is_read: true }).eq('receiver_id', user.id).eq('sender_id', senderId).eq('is_read', false);
     },
     onSuccess: () => { 
-      queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] }); 
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['unread-messages-count', user?.id] }); 
+      queryClient.invalidateQueries({ queryKey: ['conversations', user?.id] });
     }
   });
 
   const deleteConversation = useMutation({
     mutationFn: async (otherId: string) => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { error } = await supabase
@@ -163,8 +160,8 @@ export const useMessages = (otherUserId?: string) => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
+      queryClient.invalidateQueries({ queryKey: ['conversations', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['unread-messages-count', user?.id] });
       showSuccess("Conversazione eliminata");
     }
   });
@@ -175,8 +172,8 @@ export const useMessages = (otherUserId?: string) => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId] });
+      queryClient.invalidateQueries({ queryKey: ['conversations', user?.id] });
+      if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId, user?.id] });
     }
   });
 

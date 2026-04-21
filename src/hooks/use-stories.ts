@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { showError, showSuccess } from '@/utils/toast';
 import { compressImage, validateVideo } from '@/utils/media';
 import { uploadToCloudinary } from '@/utils/cloudinary';
+import { useAuth } from './use-auth';
 
 export interface Story {
   id: string;
@@ -48,6 +49,7 @@ export const useStoryViews = (storyId: string | null) => {
 
 export const useStories = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const { data: stories, isLoading } = useQuery({
     queryKey: ['active-stories'],
@@ -99,7 +101,6 @@ export const useStories = () => {
 
   const uploadStory = useMutation({
     mutationFn: async ({ files }: { files: File[] }) => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Accedi per caricare una storia");
 
       const uploadPromises = files.map(async (originalFile) => {
@@ -136,13 +137,11 @@ export const useStories = () => {
 
   const addMention = useMutation({
     mutationFn: async ({ storyId, mentionId, storyUrl }: { storyId: string, mentionId: string, storyUrl: string }) => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Accedi per menzionare");
 
       const { data: story } = await supabase.from('stories').select('mentions').eq('id', storyId).single();
       const currentMentions = Array.isArray(story?.mentions) ? story.mentions : [];
       
-      // Se l'utente non è ancora nell'array delle menzioni, lo aggiungiamo
       if (!currentMentions.includes(mentionId)) {
         const { error: updateError } = await supabase
           .from('stories')
@@ -152,7 +151,6 @@ export const useStories = () => {
         if (updateError) throw updateError;
       }
 
-      // Inviamo comunque il messaggio Direct (notifica) anche se già menzionato
       await supabase.from('messages').insert([{
         sender_id: user.id,
         receiver_id: mentionId,
@@ -182,7 +180,6 @@ export const useStories = () => {
 
   const recordView = useMutation({
     mutationFn: async (storyId: string) => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       
       await supabase
@@ -193,7 +190,6 @@ export const useStories = () => {
 
   const reshareStory = useMutation({
     mutationFn: async ({ storyUrl, originalAuthorId }: { storyUrl: string, originalAuthorId: string }) => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Accedi per ricondividere");
 
       const { error } = await supabase
