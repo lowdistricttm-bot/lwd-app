@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Home, ShoppingBag, MessageSquare, User, Calendar, MapPin, Compass } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -8,6 +8,12 @@ import { motion } from 'framer-motion';
 
 const BottomNav = () => {
   const location = useLocation();
+  const [isIOS, setIsIOS] = useState(false);
+  
+  useEffect(() => {
+    const checkIOS = /iPhone|iPad|iPod/.test(window.navigator.userAgent);
+    setIsIOS(checkIOS);
+  }, []);
   
   if (location.pathname.startsWith('/chat/')) return null;
 
@@ -29,17 +35,21 @@ const BottomNav = () => {
     }
   };
 
+  // Altezza dinamica con gestione safe area nativa
+  const navHeight = `calc(${isIOS ? 50 : 44}px + env(safe-area-inset-bottom))`;
+
   return (
     <div 
-      className="fixed bottom-0 left-0 right-0 z-[999] bg-black border-t border-white/10 select-none flex flex-col"
+      className="fixed bottom-0 left-0 right-0 z-[999] bg-black border-t border-white/10 select-none"
       style={{ 
+        height: navHeight,
         paddingBottom: 'env(safe-area-inset-bottom)',
         WebkitUserSelect: 'none',
         touchAction: 'none'
       }}
     >
       <div 
-        className="relative flex items-center justify-around h-14 w-full max-w-2xl mx-auto px-1 sm:px-2"
+        className="relative flex items-center justify-around h-full w-full max-w-2xl mx-auto px-1 sm:px-2"
       >
         {items.map((item, i) => {
           const isActive = activeIndex === i;
@@ -55,12 +65,12 @@ const BottomNav = () => {
             >
               <motion.div
                 animate={{ 
-                  scale: isActive ? 1.1 : 1,
+                  scale: isActive ? 1.05 : 1,
                 }}
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
               >
                 <item.icon 
-                  size={22} 
+                  size={isIOS ? 20 : 22} 
                   strokeWidth={isActive ? 2.2 : 1.8} 
                 />
               </motion.div>
