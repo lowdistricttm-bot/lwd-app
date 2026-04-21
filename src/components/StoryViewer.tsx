@@ -217,8 +217,8 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
   const roleLabel = isHighlight ? 'RACCOLTA' : (t.profile.roles[userStories.role] || t.profile.roles.member);
   
-  // Altezza fissa 56px
-  const navHeight = "56px";
+  // Altezza totale coerente con BottomNav (56px + safe area)
+  const navHeight = "calc(56px + env(safe-area-inset-bottom))";
 
   return createPortal(
     <motion.div 
@@ -317,13 +317,16 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </AnimatePresence>
         </div>
 
-        {/* Footer Interaction Area - Barra fissa 56px */}
+        {/* Footer Interaction Area - Barra fissa 56px + safe area */}
         <div 
           className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black/90 via-black/40 to-transparent pt-20 pointer-events-none"
         >
           <div 
             className="flex w-full max-w-md mx-auto items-center pointer-events-auto px-4" 
-            style={{ height: navHeight }}
+            style={{ 
+              height: navHeight,
+              paddingBottom: 'env(safe-area-inset-bottom)'
+            }}
           >
             {isOwner ? (
               <div className="flex items-center justify-around w-full">
