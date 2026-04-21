@@ -29,14 +29,15 @@ const BottomNav = () => {
     }
   };
 
-  // Altezza fissa ignorando la safe area per portare le icone più in basso
-  const navHeight = "56px";
+  // Altezza totale: 56px di contenuto + safe area inferiore
+  const navHeight = "calc(56px + env(safe-area-inset-bottom))";
 
   return (
     <div 
       className="fixed bottom-0 left-0 right-0 z-[999] bg-black border-t border-white/10 select-none"
       style={{ 
         height: navHeight,
+        paddingBottom: 'env(safe-area-inset-bottom)',
         WebkitUserSelect: 'none',
         touchAction: 'none'
       }}

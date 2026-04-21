@@ -142,8 +142,8 @@ const Chat = () => {
 
   if (loadingChat || authLoading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
-  // Altezza dinamica coerente con BottomNav e StoryViewer
-  const inputBarHeight = `calc(${isIOS ? 50 : 44}px + env(safe-area-inset-bottom))`;
+  // Altezza totale coerente con BottomNav
+  const inputBarHeight = "calc(56px + env(safe-area-inset-bottom))";
 
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent" style={{ height: '100dvh' }}>

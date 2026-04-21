@@ -217,9 +217,8 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
   const roleLabel = isHighlight ? 'RACCOLTA' : (t.profile.roles[userStories.role] || t.profile.roles.member);
   
-  // Ignoriamo la safe area per portare tutto più in basso
-  const baseFooterHeight = 56;
-  const modalBottomOffset = `${baseFooterHeight}px`;
+  // Altezza totale coerente con BottomNav
+  const modalBottomOffset = "calc(56px + env(safe-area-inset-bottom))";
 
   return createPortal(
     <motion.div 
@@ -321,6 +320,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
         {/* Footer Interaction Area */}
         <div 
           className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black/80 via-black/20 to-transparent pt-32 pointer-events-none"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
           <div 
             className="px-2 flex w-full max-w-md mx-auto items-end pointer-events-auto pb-4" 
