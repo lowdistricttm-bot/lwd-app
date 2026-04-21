@@ -107,7 +107,8 @@ const Chat = () => {
     if (files.length > 0) {
       const newFiles = [...selectedFiles, ...files].slice(0, 10);
       setSelectedFiles(newFiles);
-      setPreviews(newFiles.map(file => URL.createObjectURL(file)));
+      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+      setPreviews(newPreviews);
     }
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -141,7 +142,8 @@ const Chat = () => {
 
   if (loadingChat || authLoading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
-  const inputBarHeight = isIOS ? '50px' : '44px';
+  // Uniformata l'altezza a 65px per iOS per gestire la safe area
+  const inputBarHeight = isIOS ? '65px' : '50px';
 
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent">
@@ -313,8 +315,7 @@ const Chat = () => {
         className="fixed bottom-0 left-0 right-0 bg-black border-t border-white/10 z-50"
         style={{ 
           height: inputBarHeight,
-          paddingBottom: '0px',
-          marginBottom: '0px'
+          paddingBottom: isIOS ? 'env(safe-area-inset-bottom)' : '0px'
         }}
       >
         <div className="max-w-2xl mx-auto h-full relative">
@@ -341,10 +342,7 @@ const Chat = () => {
 
           <form 
             onSubmit={handleSend} 
-            className={cn(
-              "h-full px-4 flex items-center gap-3",
-              isIOS ? "justify-end pb-0" : "justify-center"
-            )}
+            className="h-full px-4 flex items-center justify-center gap-3"
           >
             <input 
               type="file" 
