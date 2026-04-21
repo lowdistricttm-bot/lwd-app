@@ -43,6 +43,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   const [isMentionModalOpen, setIsMentionModalOpen] = useState(false);
   const [showViewers, setShowViewers] = useState(false);
   const [isMediaLoading, setIsMediaLoading] = useState(true);
+  const [isIOS, setIsIOS] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const { deleteStory, recordView, toggleStoryLike } = useStories();
@@ -51,9 +52,23 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   
   useBodyLock(true);
 
+  useEffect(() => {
+    const checkIOS = /iPhone|iPad|iPod/.test(window.navigator.userAgent);
+    setIsIOS(checkIOS);
+  }, []);
+
   const userStories = allStories[userIndex];
   const currentStory = userStories?.items[currentIndex];
   
+  const nextStory = useMemo(() => {
+    if (currentIndex < userStories?.items.length - 1) {
+      return userStories.items[currentIndex + 1];
+    } else if (userIndex < allStories.length - 1) {
+      return allStories[userIndex + 1].items[0];
+    }
+    return null;
+  }, [currentIndex, userIndex, allStories, userStories]);
+
   const isVideo = currentStory?.image_url.match(/\.(mp4|webm|ogg|mov)$/i) || currentStory?.image_url.includes('video');
   const isOwner = currentUserId !== null && currentUserId === userStories?.user_id;
   const isHighlight = userStories?.role === 'highlight';
@@ -207,10 +222,10 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[9999] bg-zinc-950 flex items-center justify-center overflow-hidden touch-none"
+      className="fixed inset-0 z-[9999] bg-black flex items-center justify-center overflow-hidden touch-none"
     >
-      {/* Background Blur - Opacità aumentata per coprire il nero */}
-      <div className="absolute inset-0 z-0 opacity-90 blur-[80px] scale-150">
+      {/* Background Blur */}
+      <div className="absolute inset-0 z-0 opacity-70 blur-[60px] scale-125">
         <img src={currentStory.image_url} className="w-full h-full object-cover" alt="" />
       </div>
 
@@ -218,7 +233,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
         
         <div className="absolute top-[calc(0.5rem+env(safe-area-inset-top))] md:top-6 left-4 right-4 z-50 flex gap-1.5">
           {userStories.items.map((_, i) => (
-            <div key={i} className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden backdrop-blur-md">
+            <div key={i} className="h-1 flex-1 bg-white/30 rounded-full overflow-hidden backdrop-blur-md">
               <div 
                 className="h-full bg-white transition-all duration-100 ease-linear shadow-[0_0_10px_rgba(255,255,255,0.8)]"
                 style={{ width: i === currentIndex ? `${progress}%` : i < currentIndex ? '100%' : '0%' }}
@@ -299,9 +314,9 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </AnimatePresence>
         </div>
 
-        {/* Footer Interaction Area - Trasparente e senza overlay */}
+        {/* Footer Interaction Area - Pulito e senza overlay nero */}
         <div 
-          className="absolute bottom-6 left-0 right-0 z-50 select-none pointer-events-none"
+          className="absolute bottom-0 left-0 right-0 z-50 select-none pb-[calc(1rem+env(safe-area-inset-bottom))] pointer-events-none"
         >
           <div className="px-4 flex w-full max-w-md mx-auto items-end pointer-events-auto">
             {isOwner ? (
