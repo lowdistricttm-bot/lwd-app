@@ -21,7 +21,7 @@ const LatestMarketplaceItems = () => {
 
   if (isLoading) return (
     <div className="flex justify-center py-12">
-      <Loader2 className="animate-spin text-zinc-800" size={32} />
+      <Loader2 className="animate-spin text-zinc-500" size={32} />
     </div>
   );
 
@@ -36,7 +36,7 @@ const LatestMarketplaceItems = () => {
             <h3 className="text-2xl sm:text-3xl md:text-5xl font-black italic tracking-tighter uppercase whitespace-nowrap overflow-hidden text-ellipsis">Ultimi Annunci</h3>
           </div>
           <Link to="/marketplace" className="hidden md:flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white border-b border-white/20 pb-1 hover:border-white transition-all shrink-0 ml-4">
-            {t.home.viewAll} <ArrowRight size={14} />
+            {t?.home?.viewAll || 'VEDI TUTTO'} <ArrowRight size={14} />
           </Link>
         </div>
 
@@ -93,7 +93,7 @@ const LatestMarketplaceItems = () => {
         )}
 
         <Link to="/marketplace" className="flex md:hidden items-center justify-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-white border border-white/10 py-5 mt-8 italic hover:bg-white/5 transition-all rounded-full">
-          {t.home.viewAll} <ArrowRight size={14} />
+          {t?.home?.viewAll || 'VEDI TUTTO'} <ArrowRight size={14} />
         </Link>
       </div>
     </section>

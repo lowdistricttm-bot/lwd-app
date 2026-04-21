@@ -30,14 +30,12 @@ const Index = () => {
     }
   }, [user, permission]);
 
-  // Se t non è ancora disponibile, evitiamo il crash
-  if (!t) return <div className="min-h-screen bg-black" />;
-
+  // Definiamo i tab in modo sicuro, gestendo l'eventuale assenza temporanea di t.home
   const navigationTabs = [
     { 
       icon: Users, 
-      title: t.home?.values?.community || 'COMMUNITY', 
-      desc: t.home?.values?.communityDesc || 'Migliaia di appassionati uniti dalla stessa passione.',
+      title: t?.home?.values?.community || 'COMMUNITY', 
+      desc: t?.home?.values?.communityDesc || 'Migliaia di appassionati uniti dalla stessa passione.',
       href: '/bacheca',
       label: 'Entra nel Feed'
     },
@@ -57,15 +55,15 @@ const Index = () => {
     },
     { 
       icon: Calendar, 
-      title: t.home?.values?.events || 'EVENTI', 
-      desc: t.home?.values?.eventsDesc || 'Gli eventi più esclusivi a portata di app.',
+      title: t?.home?.values?.events || 'EVENTI', 
+      desc: t?.home?.values?.eventsDesc || 'Gli eventi più esclusivi a portata di app.',
       href: '/events',
       label: 'Vedi Calendario'
     }
   ];
 
   return (
-    <div className="min-h-screen text-white flex flex-col bg-transparent">
+    <div className="min-h-screen text-white flex flex-col bg-black">
       <Navbar />
       
       <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top))]">
@@ -157,7 +155,7 @@ const Index = () => {
                   frameBorder="0" 
                   allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
                   loading="lazy"
-                  className="grayscale opacity-90 hover:grayscale-0 transition-all duration-700"
+                  className="opacity-90 hover:opacity-100 transition-all duration-700"
                 />
               </div>
             </div>
@@ -182,17 +180,17 @@ const Index = () => {
               className="w-full"
             >
               <h2 className="text-[clamp(15px,5.5vw,72px)] font-black italic uppercase tracking-tighter mb-1 leading-none drop-shadow-2xl whitespace-nowrap">
-                {t.home?.banner?.title}
+                {t?.home?.banner?.title}
               </h2>
               <p className="text-white/80 text-[clamp(7px,2.2vw,14px)] font-black uppercase tracking-tight md:tracking-[0.4em] mb-12 italic leading-none whitespace-nowrap">
-                {t.home?.banner?.subtitle}
+                {t?.home?.banner?.subtitle}
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md mx-auto">
                 <Link to="/events" className="w-full sm:w-auto bg-white text-black px-12 py-5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] italic hover:scale-105 transition-all shadow-xl">
-                  {t.home?.banner?.applyBtn}
+                  {t?.home?.banner?.applyBtn}
                 </Link>
                 <Link to="/shop" className="w-full sm:w-auto bg-white/10 backdrop-blur-md border border-white/20 text-white px-12 py-5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] italic hover:bg-white/20 transition-all">
-                  {t.home?.banner?.shopBtn}
+                  {t?.home?.banner?.shopBtn}
                 </Link>
               </div>
             </motion.div>

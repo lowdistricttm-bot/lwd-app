@@ -48,8 +48,16 @@ body {
   @apply bg-black text-white antialiased;
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
-  /* Usiamo dvh per adattarsi alla tastiera */
+  /* Fallback per browser che non supportano dvh */
+  min-height: 100vh;
   min-height: 100dvh;
+}
+
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Tipografia Low District */

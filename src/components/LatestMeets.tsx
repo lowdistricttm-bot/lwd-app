@@ -23,7 +23,7 @@ const LatestMeets = () => {
 
   if (isLoading) return (
     <div className="flex justify-center py-12">
-      <Loader2 className="animate-spin text-zinc-800" size={32} />
+      <Loader2 className="animate-spin text-zinc-500" size={32} />
     </div>
   );
 
@@ -34,13 +34,13 @@ const LatestMeets = () => {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-end mb-10">
           <div className="min-w-0 flex-1">
-            <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">{t.home.districtMeet}</h2>
+            <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">{t?.home?.districtMeet || 'DISTRICT MEET'}</h2>
             <h3 className="text-2xl sm:text-3xl md:text-5xl font-black italic tracking-tighter uppercase whitespace-nowrap overflow-hidden text-ellipsis">
-              {t.home.upcomingMeets}
+              {t?.home?.upcomingMeets || 'INCONTRI COMMUNITY'}
             </h3>
           </div>
           <Link to="/meets" className="hidden md:flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white border-b border-white/20 pb-1 hover:border-white transition-all shrink-0 ml-4">
-            {t.home.viewAll} <ArrowRight size={14} />
+            {t?.home?.viewAll || 'VEDI TUTTO'} <ArrowRight size={14} />
           </Link>
         </div>
 
@@ -105,7 +105,7 @@ const LatestMeets = () => {
         )}
 
         <Link to="/meets" className="flex md:hidden items-center justify-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-white border border-white/10 py-5 mt-8 italic hover:bg-white/5 transition-all rounded-full">
-          {t.home.viewAll} <ArrowRight size={14} />
+          {t?.home?.viewAll || 'VEDI TUTTO'} <ArrowRight size={14} />
         </Link>
       </div>
     </section>
