@@ -322,41 +322,41 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black/80 via-black/20 to-transparent pt-32 pointer-events-none"
         >
           <div 
-            className="px-4 flex w-full max-w-md mx-auto items-end pointer-events-auto" 
-            style={{ paddingBottom: `calc(1rem + env(safe-area-inset-bottom))` }}
+            className="px-2 flex w-full max-w-md mx-auto items-end pointer-events-auto" 
+            style={{ paddingBottom: `env(safe-area-inset-bottom)` }}
           >
             {isOwner ? (
-              <div className="flex items-end justify-between w-full gap-2">
+              <div className="flex items-end justify-between w-full gap-0.5">
                 {!isHighlight && (
                   <>
-                    <button onClick={() => setShowViewers(true)} className="flex flex-col items-center gap-2 group flex-1">
-                      <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center group-hover:bg-white/20 transition-all shadow-xl">
+                    <button onClick={() => setShowViewers(true)} className="flex flex-col items-center gap-1.5 group flex-1 py-4">
+                      <div className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center group-hover:bg-white/20 transition-all shadow-xl">
                         <Eye size={20} className="text-white" />
                       </div>
-                      <span className="text-[8px] font-black uppercase tracking-widest text-white drop-shadow-md">Attività</span>
+                      <span className="text-[9px] font-black uppercase tracking-widest text-white drop-shadow-md">Attività</span>
                     </button>
-                    <button onClick={() => setIsMentionModalOpen(true)} className="flex flex-col items-center gap-2 group flex-1">
-                      <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center group-hover:bg-white/20 transition-all shadow-xl">
+                    <button onClick={() => setIsMentionModalOpen(true)} className="flex flex-col items-center gap-1.5 group flex-1 py-4">
+                      <div className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center group-hover:bg-white/20 transition-all shadow-xl">
                         <AtSign size={20} className="text-white" />
                       </div>
-                      <span className="text-[8px] font-black uppercase tracking-widest text-white drop-shadow-md">Menziona</span>
+                      <span className="text-[9px] font-black uppercase tracking-widest text-white drop-shadow-md">Menziona</span>
                     </button>
-                    <button onClick={() => setIsHighlightModalOpen(true)} className="flex flex-col items-center gap-2 group flex-1">
-                      <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center group-hover:bg-white/20 transition-all shadow-xl">
+                    <button onClick={() => setIsHighlightModalOpen(true)} className="flex flex-col items-center gap-1.5 group flex-1 py-4">
+                      <div className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center group-hover:bg-white/20 transition-all shadow-xl">
                         <Star size={20} className="text-white" />
                       </div>
-                      <span className="text-[8px] font-black uppercase tracking-widest text-white drop-shadow-md">Evidenza</span>
+                      <span className="text-[9px] font-black uppercase tracking-widest text-white drop-shadow-md">Evidenza</span>
                     </button>
-                    <button onClick={handleDelete} className="flex flex-col items-center gap-2 group flex-1">
-                      <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-xl border border-red-500/30 flex items-center justify-center group-hover:bg-red-500/20 transition-all shadow-xl">
+                    <button onClick={handleDelete} className="flex flex-col items-center gap-1.5 group flex-1 py-4">
+                      <div className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-xl border border-red-500/30 flex items-center justify-center group-hover:bg-red-500/20 transition-all shadow-xl">
                         <Trash2 size={20} className="text-red-500" />
                       </div>
-                      <span className="text-[8px] font-black uppercase tracking-widest text-red-500 drop-shadow-md">Elimina</span>
+                      <span className="text-[9px] font-black uppercase tracking-widest text-red-500 drop-shadow-md">Elimina</span>
                     </button>
                   </>
                 )}
                 {isHighlight && (
-                  <button onClick={handleRemoveFromHighlight} className="flex flex-col items-center gap-2 group w-full justify-center">
+                  <button onClick={handleRemoveFromHighlight} className="flex flex-col items-center gap-2 group w-full justify-center py-6">
                     <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-xl border border-red-500/30 flex items-center justify-center group-hover:bg-red-500/20 transition-all shadow-xl">
                       <BookmarkX size={20} className="text-red-500" />
                     </div>
@@ -365,7 +365,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                 )}
               </div>
             ) : !isHighlight && (
-              <div className="flex items-center gap-3 w-full">
+              <div className="flex items-center gap-3 w-full pb-6">
                 <form onSubmit={handleReply} className="flex-1 flex relative">
                   <Input 
                     placeholder={`Rispondi a ${userStories.username}...`} 
