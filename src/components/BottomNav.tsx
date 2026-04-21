@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Home, ShoppingBag, MessageSquare, User, Calendar, MapPin, Compass } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -8,12 +8,6 @@ import { motion } from 'framer-motion';
 
 const BottomNav = () => {
   const location = useLocation();
-  const [isIOS, setIsIOS] = useState(false);
-  
-  useEffect(() => {
-    const checkIOS = /iPhone|iPad|iPod/.test(window.navigator.userAgent);
-    setIsIOS(checkIOS);
-  }, []);
   
   if (location.pathname.startsWith('/chat/')) return null;
 
@@ -35,15 +29,14 @@ const BottomNav = () => {
     }
   };
 
-  // Altezza dinamica con gestione safe area nativa
-  const navHeight = `calc(${isIOS ? 50 : 44}px + env(safe-area-inset-bottom))`;
+  // Altezza fissa ignorando la safe area per portare le icone più in basso
+  const navHeight = "56px";
 
   return (
     <div 
       className="fixed bottom-0 left-0 right-0 z-[999] bg-black border-t border-white/10 select-none"
       style={{ 
         height: navHeight,
-        paddingBottom: 'env(safe-area-inset-bottom)',
         WebkitUserSelect: 'none',
         touchAction: 'none'
       }}
@@ -70,7 +63,7 @@ const BottomNav = () => {
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
               >
                 <item.icon 
-                  size={isIOS ? 20 : 22} 
+                  size={22} 
                   strokeWidth={isActive ? 2.2 : 1.8} 
                 />
               </motion.div>
