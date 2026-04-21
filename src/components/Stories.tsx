@@ -31,8 +31,12 @@ const Stories = () => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
+    const checkIOS = /iPhone|iPad|iPod/.test(window.navigator.userAgent);
+    setIsIOS(checkIOS);
+
     if (currentUser) {
       supabase.from('profiles').select('*').eq('id', currentUser.id).maybeSingle().then(({ data }) => {
         setUserProfile(data);
@@ -69,11 +73,21 @@ const Stories = () => {
     }
   };
 
+  const navHeight = isIOS ? '50px' : '44px';
+
   return (
     <>
-      <div className="flex gap-4 overflow-x-auto no-scrollbar py-4 items-center min-h-[120px] px-6 bg-gradient-to-b from-black via-black/95 to-zinc-950/20 border-b border-white/5">
+      <div 
+        className="fixed left-0 right-0 z-[998] bg-black/80 backdrop-blur-2xl border-t border-white/10 flex gap-4 overflow-x-auto no-scrollbar items-center px-6 select-none"
+        style={{ 
+          bottom: navHeight,
+          height: '100px',
+          WebkitUserSelect: 'none',
+          touchAction: 'pan-x'
+        }}
+      >
         {currentUser && (!isSubscriber || myStoriesGroup) && (
-          <div className="flex flex-col items-center gap-2 shrink-0">
+          <div className="flex flex-col items-center gap-1.5 shrink-0">
             <div className="relative">
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" multiple onChange={handleFileSelect} />
               <button 
@@ -82,43 +96,43 @@ const Stories = () => {
                   else if (!isSubscriber) fileInputRef.current?.click();
                 }}
                 className={cn(
-                  "w-16 h-16 rounded-full border-[2.5px] flex items-center justify-center bg-zinc-900 overflow-hidden transition-all",
+                  "w-14 h-14 rounded-full border-[2px] flex items-center justify-center bg-zinc-900 overflow-hidden transition-all",
                   myStoriesGroup ? "border-white" : "border-zinc-800"
                 )}
               >
                 {uploadStory.isPending ? (
-                  <Loader2 className="animate-spin text-zinc-400" size={20} />
+                  <Loader2 className="animate-spin text-zinc-400" size={18} />
                 ) : (myStoriesGroup?.avatar_url || userProfile?.avatar_url) ? (
                   <img src={myStoriesGroup?.avatar_url || userProfile?.avatar_url} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-zinc-800">
-                    <User size={24} className="text-zinc-600" />
+                    <User size={20} className="text-zinc-600" />
                   </div>
                 )}
               </button>
               {!isSubscriber && (
                 <button 
                   onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
-                  className="absolute bottom-0 right-0 w-5 h-5 bg-white rounded-full flex items-center justify-center border-2 border-black shadow-lg"
+                  className="absolute bottom-0 right-0 w-4 h-4 bg-white rounded-full flex items-center justify-center border-2 border-black shadow-lg"
                 >
-                  <Plus size={12} className="text-black font-bold" />
+                  <Plus size={10} className="text-black font-bold" />
                 </button>
               )}
             </div>
-            <span className="text-zinc-500 text-[8px] font-black uppercase tracking-widest italic">La tua storia</span>
+            <span className="text-zinc-500 text-[7px] font-black uppercase tracking-widest italic">Tu</span>
           </div>
         )}
 
         {otherStories.map((userGroup: any, index: number) => {
           const actualIndex = myStoriesGroup ? index + 1 : index;
           return (
-            <button key={userGroup.user_id} onClick={() => handleStoryClick(actualIndex)} className="flex flex-col items-center gap-2 shrink-0">
-              <div className="w-16 h-16 rounded-full p-[2.5px] bg-gradient-to-tr from-zinc-700 via-zinc-400 to-white">
-                <div className="w-full h-full rounded-full border-[2.5px] border-black overflow-hidden bg-zinc-900">
-                  {userGroup.avatar_url ? <img src={userGroup.avatar_url} className="w-full h-full object-cover" /> : <User size={24} className="m-auto text-zinc-700" />}
+            <button key={userGroup.user_id} onClick={() => handleStoryClick(actualIndex)} className="flex flex-col items-center gap-1.5 shrink-0">
+              <div className="w-14 h-14 rounded-full p-[2px] bg-gradient-to-tr from-zinc-700 via-zinc-400 to-white">
+                <div className="w-full h-full rounded-full border-[2px] border-black overflow-hidden bg-zinc-900">
+                  {userGroup.avatar_url ? <img src={userGroup.avatar_url} className="w-full h-full object-cover" /> : <User size={20} className="m-auto text-zinc-700" />}
                 </div>
               </div>
-              <span className="text-[8px] font-black uppercase tracking-widest text-zinc-300 truncate w-16 text-center">{userGroup.username}</span>
+              <span className="text-[7px] font-black uppercase tracking-widest text-zinc-300 truncate w-14 text-center">{userGroup.username}</span>
             </button>
           );
         })}

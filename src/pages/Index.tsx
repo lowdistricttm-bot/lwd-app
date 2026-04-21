@@ -30,7 +30,6 @@ const Index = () => {
     }
   }, [user, permission]);
 
-  // Definiamo i tab in modo sicuro, gestendo l'eventuale assenza temporanea di t.home
   const navigationTabs = [
     { 
       icon: Users, 
@@ -66,8 +65,7 @@ const Index = () => {
     <div className="min-h-screen text-white flex flex-col bg-black">
       <Navbar />
       
-      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top))]">
-        <Stories />
+      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top))] pb-[160px]">
         <Hero />
         
         <FeaturedProducts />
@@ -198,10 +196,10 @@ const Index = () => {
         </section>
       </main>
       
+      <Stories />
       <Footer />
       <PWAInstallPrompt />
 
-      {/* Push Notification Prompt */}
       <AnimatePresence>
         {showPrompt && (
           <motion.div 
