@@ -322,7 +322,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black/90 via-black/20 to-transparent pt-32 pointer-events-none"
         >
           <div 
-            className="px-2 flex w-full max-w-md mx-auto items-end pointer-events-auto pb-0 mb-[-15px]" 
+            className="px-2 flex w-full max-w-md mx-auto items-end pointer-events-auto pb-4" 
           >
             {isOwner ? (
               <div className="flex items-end justify-between w-full gap-0.5">
@@ -364,7 +364,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                 )}
               </div>
             ) : !isHighlight && (
-              <div className="flex items-center gap-3 w-full pt-20 pb-0 mb-[-5px]">
+              <div className="flex items-center gap-3 w-full pt-20 pb-0">
                 <form onSubmit={handleReply} className="flex-1 flex relative">
                   <Input 
                     placeholder={`Rispondi a ${userStories.username}...`} 
