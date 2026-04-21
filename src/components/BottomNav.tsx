@@ -35,15 +35,15 @@ const BottomNav = () => {
     }
   };
 
-  // Altezza aumentata per iOS per gestire meglio la safe area mantenendo la centratura
-  const navHeight = isIOS ? '65px' : '50px';
+  const navHeight = isIOS ? '50px' : '44px';
 
   return (
     <div 
       className="fixed bottom-0 left-0 right-0 z-[999] bg-black border-t border-white/10 select-none"
       style={{ 
         height: navHeight,
-        paddingBottom: isIOS ? 'env(safe-area-inset-bottom)' : '0px',
+        paddingBottom: '0px',
+        marginBottom: '0px',
         WebkitUserSelect: 'none',
         touchAction: 'none'
       }}
@@ -58,7 +58,8 @@ const BottomNav = () => {
               key={i} 
               to={item.href}
               className={cn(
-                "flex-1 flex flex-col items-center justify-center h-full relative z-10 transition-colors duration-300",
+                "flex-1 flex flex-col items-center h-full relative z-10 transition-colors duration-300",
+                isIOS ? "justify-end pb-0" : "justify-center",
                 isActive ? "text-white" : "text-zinc-600"
               )}
               onClick={() => triggerHaptic(10)}
@@ -70,7 +71,7 @@ const BottomNav = () => {
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
               >
                 <item.icon 
-                  size={22} 
+                  size={isIOS ? 20 : 22} 
                   strokeWidth={isActive ? 2.2 : 1.8} 
                 />
               </motion.div>
