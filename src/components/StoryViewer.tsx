@@ -218,6 +218,8 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   const roleLabel = isHighlight ? 'RACCOLTA' : (t.profile.roles[userStories.role] || t.profile.roles.member);
   
   const footerHeight = isIOS ? '50px' : '44px';
+  // Calcolo dell'offset per far iniziare i modal sopra la barra
+  const modalBottomOffset = isIOS ? '25px' : '19px';
 
   return createPortal(
     <motion.div 
@@ -313,7 +315,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </AnimatePresence>
         </div>
 
-        {/* Barra inferiore: spostata a -25px per ignorare la safe area */}
         <div 
           className="fixed left-0 right-0 z-50 bg-black border-t border-white/10 select-none"
           style={{ 
@@ -399,8 +400,18 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           {showViewers && (
             <>
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowViewers(false)} className="absolute inset-0 bg-black/60 backdrop-blur-sm z-[60]" />
-              <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }} className="absolute inset-x-0 bottom-0 z-[61] bg-zinc-950 border-t border-white/10 rounded-t-[2rem] max-h-[60%] flex flex-col pb-15 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]" style={{ touchAction: 'pan-y' }}>
-                <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
+              <motion.div 
+                initial={{ y: '100%' }} 
+                animate={{ y: 0 }} 
+                exit={{ y: '100%' }} 
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }} 
+                className="absolute inset-x-0 z-[61] bg-zinc-950 border border-white/10 rounded-[2rem] max-h-[60%] flex flex-col pb-10 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]" 
+                style={{ 
+                  touchAction: 'pan-y',
+                  bottom: modalBottomOffset 
+                }}
+              >
+                <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mt-4 mb-2 shrink-0" />
                 <div className="p-6 border-b border-white/5 flex items-center justify-between">
                   <h3 className="text-lg font-black italic uppercase tracking-tighter">Visualizzazioni</h3>
                   <button onClick={() => setShowViewers(false)} className="p-2 text-zinc-500"><X size={24} /></button>
@@ -429,9 +440,9 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
       <button onClick={handlePrev} className="hidden md:flex fixed left-[calc(50%-320px)] top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-[10000] text-white transition-all border border-white/10 backdrop-blur-md shadow-2xl"><ChevronLeft size={32} /></button>
       <button onClick={handleNext} className="hidden md:flex fixed right-[calc(50%-320px)] top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-[10000] text-white transition-all border border-white/10 backdrop-blur-md shadow-2xl"><ChevronRight size={32} /></button>
 
-      <ShareStoryModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} storyUrl={currentStory.image_url} authorName={userStories.username} />
-      {currentUserId && <HighlightModal isOpen={isHighlightModalOpen} onClose={() => setIsHighlightModalOpen(false)} story={currentStory} userId={currentUserId} />}
-      {isOwner && !isHighlight && <AddMentionModal isOpen={isMentionModalOpen} onClose={() => setIsMentionModalOpen(false)} storyId={currentStory.id} storyUrl={currentStory.image_url} existingMentions={currentStory.mentions || []} />}
+      <ShareStoryModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} storyUrl={currentStory.image_url} authorName={userStories.username} bottomOffset={modalBottomOffset} />
+      {currentUserId && <HighlightModal isOpen={isHighlightModalOpen} onClose={() => setIsHighlightModalOpen(false)} story={currentStory} userId={currentUserId} bottomOffset={modalBottomOffset} />}
+      {isOwner && !isHighlight && <AddMentionModal isOpen={isMentionModalOpen} onClose={() => setIsMentionModalOpen(false)} storyId={currentStory.id} storyUrl={currentStory.image_url} existingMentions={currentStory.mentions || []} bottomOffset={modalBottomOffset} />}
     </motion.div>,
     document.body
   );

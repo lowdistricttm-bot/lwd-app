@@ -14,9 +14,10 @@ interface HighlightModalProps {
   onClose: () => void;
   story: any;
   userId: string;
+  bottomOffset?: string;
 }
 
-const HighlightModal = ({ isOpen, onClose, story, userId }: HighlightModalProps) => {
+const HighlightModal = ({ isOpen, onClose, story, userId, bottomOffset = '0px' }: HighlightModalProps) => {
   const { highlights, createHighlight, addToHighlight, isLoading } = useHighlights(userId);
   const [isCreating, setIsCreating] = useState(false);
   const [newTitle, setNewTitle] = useState('');
@@ -55,10 +56,11 @@ const HighlightModal = ({ isOpen, onClose, story, userId }: HighlightModalProps)
             animate={{ y: 0 }} 
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[401] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-5 pb-10 rounded-t-[2.5rem] max-h-[60dvh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            className="fixed inset-x-0 z-[401] bg-black/60 backdrop-blur-2xl border border-white/10 p-5 pb-10 rounded-[2.5rem] max-h-[60dvh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
             style={{ 
               touchAction: 'pan-y',
-              overscrollBehavior: 'contain'
+              overscrollBehavior: 'contain',
+              bottom: bottomOffset
             }}
           >
             <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
@@ -68,7 +70,7 @@ const HighlightModal = ({ isOpen, onClose, story, userId }: HighlightModalProps)
               <button onClick={onClose} className="p-2 text-zinc-500 hover:text-white bg-white/5 rounded-full transition-colors"><X size={24} /></button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+            <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar pb-10">
               {isCreating ? (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
                   <div className="flex justify-center">

@@ -15,9 +15,10 @@ interface AddMentionModalProps {
   storyId: string;
   storyUrl: string;
   existingMentions: string[];
+  bottomOffset?: string;
 }
 
-const AddMentionModal = ({ isOpen, onClose, storyId, storyUrl, existingMentions }: AddMentionModalProps) => {
+const AddMentionModal = ({ isOpen, onClose, storyId, storyUrl, existingMentions, bottomOffset = '0px' }: AddMentionModalProps) => {
   const [search, setSearch] = useState('');
   const [results, setResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -67,10 +68,11 @@ const AddMentionModal = ({ isOpen, onClose, storyId, storyUrl, existingMentions 
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[1001] bg-zinc-950 border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[90dvh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.8)]"
+            className="fixed inset-x-0 z-[1001] bg-zinc-950 border border-white/10 p-6 rounded-[2.5rem] max-h-[90dvh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.8)]"
             style={{ 
               touchAction: 'pan-y',
-              overscrollBehavior: 'contain'
+              overscrollBehavior: 'contain',
+              bottom: bottomOffset
             }}
           >
             <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
@@ -93,7 +95,7 @@ const AddMentionModal = ({ isOpen, onClose, storyId, storyUrl, existingMentions 
               />
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar pb-[calc(2rem+env(safe-area-inset-bottom))]">
+            <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar pb-10">
               {isLoading ? (
                 <div className="flex justify-center py-10"><Loader2 className="animate-spin text-zinc-500" /></div>
               ) : results.length > 0 ? (
