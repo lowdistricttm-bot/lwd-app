@@ -217,8 +217,9 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
   const roleLabel = isHighlight ? 'RACCOLTA' : (t.profile.roles[userStories.role] || t.profile.roles.member);
   
-  const baseFooterHeight = isIOS ? 50 : 44;
-  const modalBottomOffset = `calc(${baseFooterHeight}px + env(safe-area-inset-bottom))`;
+  // Ignoriamo la safe area per portare tutto più in basso
+  const baseFooterHeight = 56;
+  const modalBottomOffset = `${baseFooterHeight}px`;
 
   return createPortal(
     <motion.div 
@@ -322,8 +323,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black/80 via-black/20 to-transparent pt-32 pointer-events-none"
         >
           <div 
-            className="px-2 flex w-full max-w-md mx-auto items-end pointer-events-auto" 
-            style={{ paddingBottom: `env(safe-area-inset-bottom)` }}
+            className="px-2 flex w-full max-w-md mx-auto items-end pointer-events-auto pb-4" 
           >
             {isOwner ? (
               <div className="flex items-end justify-between w-full gap-0.5">
