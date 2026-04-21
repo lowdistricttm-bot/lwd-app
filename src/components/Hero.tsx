@@ -12,13 +12,13 @@ const Hero = () => {
   const { t } = useTranslation();
 
   return (
-    <section className="relative h-[85vh] w-full flex items-center justify-center overflow-hidden bg-transparent">
-      {/* Background con overlay dinamico e sfocatura minima */}
-      <div className="absolute inset-0 z-0">
+    <section className="relative h-[85vh] w-full flex items-center justify-center overflow-hidden bg-black">
+      {/* Background ottimizzato: rimosso blur e aggiunto transform-gpu */}
+      <div className="absolute inset-0 z-0 transform-gpu">
         <img 
           src="https://www.lowdistrict.it/wp-content/uploads/DSC01359-1-scaled-e1751832356345.jpg" 
           alt="Low District Stance" 
-          className="w-full h-full object-cover opacity-40 grayscale scale-110 blur-[2px] animate-pulse-slow"
+          className="w-full h-full object-cover opacity-40 grayscale scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-transparent"></div>
