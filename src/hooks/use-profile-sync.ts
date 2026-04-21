@@ -49,23 +49,33 @@ export const useProfileSync = (initialUsername?: string) => {
         const bpAvatar = bpMember.avatar_urls?.full || bpMember.avatar_urls?.thumb;
         const bpId = bpMember.id?.toString();
 
+        // Priorità ai dati locali: sincronizziamo l'avatar solo se quello locale è vuoto o è quello di default
+        const isDefaultAvatar = !currentProfile?.avatar_url || currentProfile.avatar_url.includes('immagine-profilo-sito-new-scaled.jpg');
+        const shouldSyncAvatar = bpAvatar && isDefaultAvatar && currentProfile?.avatar_url !== bpAvatar;
+
         const needsUpdate = currentProfile && (
           currentProfile.username !== bpUsername || 
-          currentProfile.avatar_url !== bpAvatar ||
+          shouldSyncAvatar ||
           currentProfile.wp_id !== bpId
         );
 
         if (needsUpdate) {
-          console.log(`[Sync] Rilevato cambiamento sul sito per ${user.id}. Aggiornamento in corso...`);
+          console.log(`[Sync] Rilevato cambiamento sul sito per ${user.id}. Aggiornamento selettivo...`);
           
+          const updateData: any = {
+            username: bpUsername,
+            wp_id: bpId,
+            updated_at: new Date().toISOString(),
+          };
+
+          // Aggiorniamo l'avatar solo se necessario (priorità ai dati locali dell'app)
+          if (shouldSyncAvatar) {
+            updateData.avatar_url = bpAvatar;
+          }
+
           await supabase
             .from('profiles')
-            .update({
-              username: bpUsername,
-              avatar_url: bpAvatar,
-              wp_id: bpId,
-              updated_at: new Date().toISOString(),
-            })
+            .update(updateData)
             .eq('id', user.id);
             
           setSyncData({ id: bpId, username: bpUsername });
