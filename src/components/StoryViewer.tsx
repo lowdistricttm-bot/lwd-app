@@ -355,7 +355,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                   </>
                 )}
                 {isHighlight && (
-                  <button onClick={handleRemoveFromHighlight} className="flex flex-col items-center gap-2 group w-full justify-center pt-20 pb-2">
+                  <button onClick={handleRemoveFromHighlight} className="flex flex-col items-center gap-2 group w-full justify-center pt-20 pb-0">
                     <div className="w-[30px] h-[30px] rounded-full bg-black/40 backdrop-blur-xl border border-red-500/30 flex items-center justify-center group-hover:bg-red-500/20 transition-all shadow-xl">
                       <BookmarkX size={14} className="text-red-500" />
                     </div>
