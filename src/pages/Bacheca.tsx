@@ -8,11 +8,22 @@ import CreatePostModal from '@/components/CreatePostModal';
 import { useSocialFeed } from '@/hooks/use-social-feed';
 import { useAdmin } from '@/hooks/use-admin';
 import { useAuth } from '@/hooks/use-auth';
-import { Loader2, Plus, AlertCircle, LogIn, RefreshCw } from 'lucide-react';
+import { useRoleRequests } from '@/hooks/use-role-requests';
+import { Loader2, Plus, AlertCircle, LogIn, RefreshCw, ShieldAlert, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Bacheca = () => {
   const navigate = useNavigate();
@@ -20,20 +31,40 @@ const Bacheca = () => {
   const { posts, isLoading, refetch } = useSocialFeed();
   const { role } = useAdmin();
   const { user, isLoading: authLoading } = useAuth();
+  const { myRequest, sendRequest } = useRoleRequests();
+  
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isRestrictedOpen, setIsRestrictedOpen] = useState(false);
 
   useEffect(() => {
     refetch();
   }, [refetch]);
 
-  // Solo il ruolo 'subscriber' base ha restrizioni, 'subscriber_plus' ha permessi completi
   const isSubscriber = role === 'subscriber';
 
   const handleManualRefresh = () => {
     setIsRefreshing(true);
     if ('vibrate' in navigator) navigator.vibrate(10);
     refetch().finally(() => setIsRefreshing(false));
+  };
+
+  const handleCreateClick = () => {
+    if (isSubscriber) {
+      setIsRestrictedOpen(true);
+    } else {
+      setIsPostModalOpen(true);
+    }
+  };
+
+  const handleUpgradeRequest = async () => {
+    if (myRequest) {
+      setIsRestrictedOpen(false);
+      navigate('/profile?tab=profile');
+      return;
+    }
+    await sendRequest.mutateAsync('subscriber_plus');
+    setIsRestrictedOpen(false);
   };
 
   return (
@@ -50,11 +81,12 @@ const Bacheca = () => {
               <button onClick={handleManualRefresh} className="w-12 h-12 bg-white/10 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all shadow-lg border border-white/10">
                 <RefreshCw size={20} className={cn(isRefreshing && "animate-spin")} />
               </button>
-              {!isSubscriber && (
-                <button onClick={() => setIsPostModalOpen(true)} className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 transition-all shadow-xl shadow-white/20">
-                  <Plus size={24} />
-                </button>
-              )}
+              <button 
+                onClick={handleCreateClick} 
+                className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 transition-all shadow-xl shadow-white/20"
+              >
+                <Plus size={24} />
+              </button>
             </div>
           )}
         </header>
@@ -91,7 +123,42 @@ const Bacheca = () => {
           </div>
         )}
       </main>
+
       <CreatePostModal isOpen={isPostModalOpen} onClose={() => setIsPostModalOpen(false)} />
+
+      <AlertDialog open={isRestrictedOpen} onOpenChange={setIsRestrictedOpen}>
+        <AlertDialogContent className="bg-black/60 backdrop-blur-2xl border-white/10 rounded-[2rem]">
+          <AlertDialogHeader>
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-white/5 border border-white/10 flex items-center justify-center rounded-2xl rotate-12">
+                <ShieldAlert size={32} className="text-white -rotate-12" />
+              </div>
+            </div>
+            <AlertDialogTitle className="text-white font-black uppercase italic text-center">Accesso Limitato</AlertDialogTitle>
+            <AlertDialogDescription className="text-zinc-400 text-xs font-bold uppercase leading-relaxed text-center">
+              La pubblicazione di post è una funzione esclusiva riservata ai membri ufficiali del District e agli Iscritti+.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
+            <button 
+              onClick={handleUpgradeRequest}
+              disabled={sendRequest.isPending}
+              className="rounded-full bg-white text-black hover:bg-zinc-200 font-black uppercase italic text-[10px] w-full h-14 transition-all flex items-center justify-center gap-2 shadow-xl"
+            >
+              {sendRequest.isPending ? <Loader2 className="animate-spin" size={14} /> : <><Sparkles size={14} /> {myRequest ? 'Vedi Stato Richiesta' : 'Richiedi Upgrade ISCRITTO+'}</>}
+            </button>
+            <AlertDialogAction 
+              onClick={() => window.open('https://www.lowdistrict.it/selection-lwdstrct/', '_blank')} 
+              className="rounded-full bg-white/10 border border-white/10 text-white hover:bg-white/20 font-black uppercase italic text-[10px] w-full h-14 transition-all"
+            >
+              Invia Selezione Ufficiale
+            </AlertDialogAction>
+            <AlertDialogCancel className="rounded-full border-white/10 text-white hover:bg-white/5 font-black uppercase italic text-[10px] w-full h-14 mt-0 transition-all">
+              Chiudi
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
