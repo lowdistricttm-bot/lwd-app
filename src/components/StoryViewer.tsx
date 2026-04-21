@@ -217,7 +217,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
   const roleLabel = isHighlight ? 'RACCOLTA' : (t.profile.roles[userStories.role] || t.profile.roles.member);
   
-  // Altezza identica a Chat e BottomNav
   const footerHeight = isIOS ? '50px' : '44px';
 
   return createPortal(
@@ -314,10 +313,11 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </AnimatePresence>
         </div>
 
-        {/* Barra inferiore: ora FIXED e posizionata esattamente come la chat */}
+        {/* Barra inferiore: spostata a -15px per ignorare la safe area */}
         <div 
-          className="fixed bottom-0 left-0 right-0 z-50 bg-black border-t border-white/10 select-none"
+          className="fixed left-0 right-0 z-50 bg-black border-t border-white/10 select-none"
           style={{ 
+            bottom: '-15px',
             height: footerHeight,
             paddingBottom: '0px',
             marginBottom: '0px',
@@ -325,7 +325,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
             touchAction: 'none'
           }}
         >
-          <div className="h-full px-4 flex w-full max-w-md mx-auto items-center">
+          <div className="h-full px-4 flex w-full max-w-md mx-auto items-center pb-[15px]">
             {isOwner ? (
               <div className="flex items-center justify-around w-full h-full">
                 {!isHighlight && (
