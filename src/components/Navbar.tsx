@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, ShoppingBag, X, Send, Bell, ShieldAlert } from 'lucide-react';
+import { Search, ShoppingBag, X, Send, Bell, ShieldAlert, Sparkles, Loader2 } from 'lucide-react';
 import Logo from './Logo';
 import { useCart } from '@/hooks/use-cart';
 import { useMessages } from '@/hooks/use-messages';
 import { useNotifications } from '@/hooks/use-notifications';
 import { useAdmin } from '@/hooks/use-admin';
 import { useBodyLock } from '@/hooks/use-body-lock';
+import { useRoleRequests } from '@/hooks/use-role-requests';
 import CartDrawer from './CartDrawer';
 import NotificationDrawer from './NotificationDrawer';
 import { Input } from './ui/input';
@@ -34,6 +35,7 @@ const Navbar = () => {
   const { unreadCount: unreadMessages } = useMessages();
   const { unreadCount: unreadNotifications } = useNotifications();
   const { role } = useAdmin();
+  const { myRequest, sendRequest } = useRoleRequests();
   const navigate = useNavigate();
 
   const isSubscriber = role === 'subscriber';
@@ -56,6 +58,16 @@ const Navbar = () => {
     } else {
       navigate('/messages');
     }
+  };
+
+  const handleUpgradeRequest = async () => {
+    if (myRequest) {
+      setIsRestrictedOpen(false);
+      navigate('/profile?tab=profile');
+      return;
+    }
+    await sendRequest.mutateAsync('subscriber_plus');
+    setIsRestrictedOpen(false);
   };
 
   return (
@@ -136,11 +148,18 @@ const Navbar = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
+            <button 
+              onClick={handleUpgradeRequest}
+              disabled={sendRequest.isPending}
+              className="rounded-full bg-white text-black hover:bg-zinc-200 font-black uppercase italic text-[10px] w-full h-14 transition-all flex items-center justify-center gap-2 shadow-xl"
+            >
+              {sendRequest.isPending ? <Loader2 className="animate-spin" size={14} /> : <><Sparkles size={14} /> {myRequest ? 'Vedi Stato Richiesta' : 'Richiedi Upgrade ISCRITTO+'}</>}
+            </button>
             <AlertDialogAction 
               onClick={() => window.open('https://www.lowdistrict.it/selection-lwdstrct/', '_blank')} 
-              className="rounded-full bg-white text-black hover:bg-zinc-200 font-black uppercase italic text-[10px] w-full h-14 transition-all"
+              className="rounded-full bg-white/10 border border-white/10 text-white hover:bg-white/20 font-black uppercase italic text-[10px] w-full h-14 transition-all"
             >
-              Invia Selezione
+              Invia Selezione Ufficiale
             </AlertDialogAction>
             <AlertDialogCancel className="rounded-full border-white/10 text-white hover:bg-white/5 font-black uppercase italic text-[10px] w-full h-14 mt-0 transition-all">
               Chiudi

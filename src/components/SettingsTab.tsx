@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from './ui/button';
 import { useTranslation, Language } from '@/hooks/use-translation';
 import FAQModal from './FAQModal';
+import { useRoleRequests } from '@/hooks/use-role-requests';
+import { useAdmin } from '@/hooks/use-admin';
 import { 
   LogOut, 
   Bell, 
@@ -20,7 +22,9 @@ import {
   Check,
   Eye,
   EyeOff,
-  CheckCircle2
+  CheckCircle2,
+  Sparkles,
+  Clock
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import {
@@ -34,9 +38,13 @@ import { cn } from '@/lib/utils';
 const SettingsTab = () => {
   const navigate = useNavigate();
   const { language, setLanguage, t } = useTranslation();
+  const { role } = useAdmin();
+  const { myRequest, sendRequest } = useRoleRequests();
   const [loading, setLoading] = useState(true);
   const [platePrivacy, setPlatePrivacy] = useState('private');
   const [isFAQOpen, setIsFAQOpen] = useState(false);
+
+  const isSubscriber = role === 'subscriber';
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -275,6 +283,48 @@ const SettingsTab = () => {
             </div>
           </div>
         ))}
+
+        {/* Sezione Upgrade per Iscritti */}
+        {isSubscriber && (
+          <div className="space-y-3">
+            <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.3em] italic ml-4">
+              Upgrade Account
+            </h4>
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl">
+              {myRequest ? (
+                <div className="p-5 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white bg-zinc-800">
+                      <Clock size={16} strokeWidth={2.5} />
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-black uppercase italic tracking-tight text-white">Richiesta Inviata</p>
+                      <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-widest">Stato: {myRequest.status.toUpperCase()}</p>
+                    </div>
+                  </div>
+                  <span className="text-[7px] font-black uppercase bg-zinc-800 px-3 py-1.5 rounded-full text-zinc-400 italic">In Revisione</span>
+                </div>
+              ) : (
+                <button 
+                  onClick={() => sendRequest.mutate('subscriber_plus')}
+                  disabled={sendRequest.isPending}
+                  className="w-full p-5 flex items-center justify-between hover:bg-white/5 transition-all group"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg group-hover:scale-110 transition-transform">
+                      <Sparkles size={16} strokeWidth={2.5} />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-[11px] font-black uppercase italic tracking-tight text-white">Diventa ISCRITTO+</p>
+                      <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-widest">Sblocca tutte le funzioni social</p>
+                    </div>
+                  </div>
+                  {sendRequest.isPending ? <Loader2 className="animate-spin text-zinc-500" size={14} /> : <ChevronRight size={14} className="text-zinc-700 group-hover:text-white transition-colors" />}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="pt-4">
           <Button 

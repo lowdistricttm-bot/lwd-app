@@ -5,7 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { useMessages } from '@/hooks/use-messages';
 import { useAdmin } from '@/hooks/use-admin';
-import { User, MessageSquare, ChevronRight, Loader2, Plus, Trash2, ShieldAlert } from 'lucide-react';
+import { useRoleRequests } from '@/hooks/use-role-requests';
+import { User, MessageSquare, ChevronRight, Loader2, Plus, Trash2, ShieldAlert, Sparkles, ArrowRight, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { it, enUS } from 'date-fns/locale';
 import NewChatModal from '@/components/NewChatModal';
@@ -29,6 +30,7 @@ const Messages = () => {
   const { t, language } = useTranslation();
   const { conversations, loadingConvs, deleteConversation } = useMessages();
   const { role, checkingAdmin } = useAdmin();
+  const { myRequest, sendRequest } = useRoleRequests();
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -62,11 +64,53 @@ const Messages = () => {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col">
         <Navbar />
-        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <ShieldAlert size={64} strokeWidth={1.5} className="text-zinc-800 mb-6" />
-          <h1 className="text-2xl font-black uppercase italic mb-4">Accesso Limitato</h1>
-          <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-8">I messaggi privati sono riservati ai membri ufficiali del District.</p>
-          <button onClick={() => navigate('/')} className="bg-white text-black h-12 px-8 rounded-full font-black uppercase italic hover:bg-zinc-200 transition-all">Torna alla Home</button>
+        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto">
+          <div className="w-20 h-20 bg-white/5 border border-white/10 flex items-center justify-center rounded-3xl rotate-12 mb-8">
+            <ShieldAlert size={40} strokeWidth={1.5} className="text-white -rotate-12" />
+          </div>
+          <h1 className="text-3xl font-black uppercase italic mb-4 tracking-tighter">Accesso Limitato</h1>
+          <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-12 leading-relaxed">
+            I messaggi privati sono una funzione esclusiva riservata ai membri ufficiali del District.
+          </p>
+          
+          <div className="w-full space-y-4">
+            {myRequest ? (
+              <div className="bg-white/5 border border-white/10 p-6 rounded-2xl flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Clock size={20} className="text-zinc-500" />
+                  <div className="text-left">
+                    <p className="text-xs font-black uppercase italic">Richiesta Inviata</p>
+                    <p className="text-[8px] font-bold uppercase text-zinc-600">Stato: {myRequest.status.toUpperCase()}</p>
+                  </div>
+                </div>
+                <span className="text-[8px] font-black uppercase bg-zinc-800 px-3 py-1.5 rounded-full text-zinc-400 italic">In Revisione</span>
+              </div>
+            ) : (
+              <button 
+                onClick={() => sendRequest.mutate('subscriber_plus')}
+                disabled={sendRequest.isPending}
+                className="w-full bg-white text-black hover:bg-zinc-200 p-6 rounded-2xl flex items-center justify-between group transition-all shadow-2xl"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-white group-hover:scale-110 transition-transform">
+                    <Sparkles size={20} />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-black uppercase italic">Diventa ISCRITTO+</p>
+                    <p className="text-[9px] font-bold uppercase text-zinc-500">Sblocca i messaggi privati</p>
+                  </div>
+                </div>
+                {sendRequest.isPending ? <Loader2 className="animate-spin" size={18} /> : <ChevronRight size={20} />}
+              </button>
+            )}
+
+            <button 
+              onClick={() => navigate('/')} 
+              className="w-full border border-white/10 text-zinc-500 hover:text-white hover:bg-white/5 h-14 rounded-full font-black uppercase italic text-[10px] tracking-widest transition-all"
+            >
+              Torna alla Home
+            </button>
+          </div>
         </main>
       </div>
     );
