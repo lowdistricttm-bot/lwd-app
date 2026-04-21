@@ -17,6 +17,7 @@ export interface Message {
   created_at: string;
   sender?: { username: string, avatar_url: string };
   receiver?: { username: string, avatar_url: string };
+  is_optimistic?: boolean;
 }
 
 export const useMessages = (otherUserId?: string) => {
@@ -28,7 +29,6 @@ export const useMessages = (otherUserId?: string) => {
     queryKey: ['conversations', user?.id],
     queryFn: async () => {
       if (!user) return [];
-
       const { data, error } = await supabase
         .from('messages')
         .select(`
@@ -52,11 +52,9 @@ export const useMessages = (otherUserId?: string) => {
           });
         }
       });
-
       return Array.from(groups.values());
     },
     enabled: !!user,
-    staleTime: 0
   });
 
   // Query per il conteggio messaggi non letti
@@ -73,8 +71,6 @@ export const useMessages = (otherUserId?: string) => {
       return count || 0;
     },
     enabled: !!user,
-    staleTime: 0,
-    refetchInterval: 15000
   });
 
   // Query per i messaggi di una singola chat
@@ -82,7 +78,6 @@ export const useMessages = (otherUserId?: string) => {
     queryKey: ['chat', otherUserId, user?.id],
     queryFn: async () => {
       if (!otherUserId || !user) return [];
-
       const { data, error } = await supabase
         .from('messages')
         .select(`
@@ -94,14 +89,12 @@ export const useMessages = (otherUserId?: string) => {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      
       return data.map((msg: any) => ({
         ...msg,
         images: Array.isArray(msg.images) ? msg.images : (msg.image_url ? [msg.image_url] : [])
       })) as Message[];
     },
     enabled: !!otherUserId && !!user,
-    staleTime: 0
   });
 
   const sendMessage = useMutation({
@@ -109,7 +102,6 @@ export const useMessages = (otherUserId?: string) => {
       if (!user) throw new Error("Accedi per inviare messaggi");
 
       let imageUrls: string[] = [];
-      
       if (imageUrl) {
         imageUrls = [imageUrl];
       } else if (files && files.length > 0) {
@@ -119,7 +111,7 @@ export const useMessages = (otherUserId?: string) => {
         }
       }
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('messages')
         .insert([{ 
           sender_id: user.id, 
@@ -127,13 +119,44 @@ export const useMessages = (otherUserId?: string) => {
           content,
           images: imageUrls,
           image_url: imageUrls[0] || null 
-        }]);
+        }])
+        .select()
+        .single();
 
       if (error) throw error;
+      return data;
     },
-    onSuccess: () => {
+    onMutate: async (variables) => {
+      const chatKey = ['chat', variables.receiverId, user?.id];
+      await queryClient.cancelQueries({ queryKey: chatKey });
+      const previousChat = queryClient.getQueryData(chatKey);
+
+      queryClient.setQueryData(chatKey, (old: any) => [
+        ...(old || []),
+        {
+          id: 'temp-' + Date.now(),
+          sender_id: user?.id,
+          receiver_id: variables.receiverId,
+          content: variables.content,
+          image_url: variables.imageUrl,
+          images: variables.imageUrl ? [variables.imageUrl] : [],
+          created_at: new Date().toISOString(),
+          is_read: false,
+          is_optimistic: true
+        }
+      ]);
+
+      return { previousChat };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousChat) {
+        queryClient.setQueryData(['chat', variables.receiverId, user?.id], context.previousChat);
+      }
+      showError("Errore nell'invio");
+    },
+    onSettled: (data, error, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['chat', variables.receiverId, user?.id] });
       queryClient.invalidateQueries({ queryKey: ['conversations', user?.id] });
-      if (otherUserId) queryClient.invalidateQueries({ queryKey: ['chat', otherUserId, user?.id] });
     }
   });
 
@@ -148,24 +171,6 @@ export const useMessages = (otherUserId?: string) => {
     }
   });
 
-  const deleteConversation = useMutation({
-    mutationFn: async (otherId: string) => {
-      if (!user) return;
-
-      const { error } = await supabase
-        .from('messages')
-        .delete()
-        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${otherId}),and(sender_id.eq.${otherId},receiver_id.eq.${user.id})`);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['conversations', user?.id] });
-      queryClient.invalidateQueries({ queryKey: ['unread-messages-count', user?.id] });
-      showSuccess("Conversazione eliminata");
-    }
-  });
-
   const deleteMessage = useMutation({
     mutationFn: async (messageId: string) => {
       const { error } = await supabase.from('messages').delete().eq('id', messageId);
@@ -177,5 +182,22 @@ export const useMessages = (otherUserId?: string) => {
     }
   });
 
-  return { conversations, unreadCount, loadingConvs, chatMessages, loadingChat, sendMessage, markAsRead, deleteConversation, deleteMessage };
+  const deleteConversation = useMutation({
+    mutationFn: async (otherId: string) => {
+      if (!user) return;
+      const { error } = await supabase
+        .from('messages')
+        .delete()
+        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${otherId}),and(sender_id.eq.${otherId},receiver_id.eq.${user.id})`);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['unread-messages-count', user?.id] });
+      showSuccess("Conversazione eliminata");
+    },
+    onError: (err: any) => showError(err.message)
+  });
+
+  return { conversations, unreadCount, loadingConvs, chatMessages, loadingChat, sendMessage, markAsRead, deleteMessage, deleteConversation };
 };

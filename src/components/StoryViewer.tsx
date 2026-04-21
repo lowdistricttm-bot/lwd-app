@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, Trash2, Loader2, Volume2, VolumeX, Send, Heart, Eye, User, Star, AtSign, RefreshCw, BookmarkX } from 'lucide-react';
@@ -26,6 +26,9 @@ interface StoryViewerProps {
   currentUserId: string | null;
 }
 
+// Stato persistente per il volume
+let globalMuteState = false;
+
 const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: StoryViewerProps) => {
   const navigate = useNavigate();
   const { t, language } = useTranslation();
@@ -33,9 +36,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   const [userIndex, setUserIndex] = useState(initialUserIndex);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progress, setProgress] = useState(0);
-  
-  const [isMuted, setIsMuted] = useState(false);
-  
+  const [isMuted, setIsMuted] = useState(globalMuteState);
   const [replyText, setReplyText] = useState('');
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isHighlightModalOpen, setIsHighlightModalOpen] = useState(false);
@@ -47,7 +48,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   const videoRef = useRef<HTMLVideoElement>(null);
   const { deleteStory, recordView, toggleStoryLike } = useStories();
   const { removeFromHighlight } = useHighlights(currentUserId || undefined);
-  const { sendMessage } = useMessages();
+  const { sendMessage } = useMessages(allStories[userIndex]?.user_id);
   
   useBodyLock(true);
 
@@ -58,8 +59,18 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
   const userStories = allStories[userIndex];
   const currentStory = userStories?.items[currentIndex];
-  const isVideo = currentStory?.image_url.match(/\.(mp4|webm|ogg|mov)$/i) || currentStory?.image_url.includes('video');
   
+  // Pre-caricamento della prossima storia
+  const nextStory = useMemo(() => {
+    if (currentIndex < userStories?.items.length - 1) {
+      return userStories.items[currentIndex + 1];
+    } else if (userIndex < allStories.length - 1) {
+      return allStories[userIndex + 1].items[0];
+    }
+    return null;
+  }, [currentIndex, userIndex, allStories, userStories]);
+
+  const isVideo = currentStory?.image_url.match(/\.(mp4|webm|ogg|mov)$/i) || currentStory?.image_url.includes('video');
   const isOwner = currentUserId !== null && currentUserId === userStories?.user_id;
   const isHighlight = userStories?.role === 'highlight';
 
@@ -129,42 +140,35 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
   const toggleMute = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    setIsMuted(!isMuted);
+    const newState = !isMuted;
+    setIsMuted(newState);
+    globalMuteState = newState;
   };
 
   const handleLike = async () => {
     if (isOwner || !currentUserId) return;
-    
-    try {
-      await toggleStoryLike.mutateAsync({
-        storyId: currentStory.id,
-        authorId: userStories.user_id,
-        imageUrl: currentStory.image_url,
-        isCurrentlyLiked: currentStory.is_liked
-      });
-    } catch (err) {
-      // L'errore è gestito dal rollback ottimistico nel hook
-    }
+    toggleStoryLike.mutate({
+      storyId: currentStory.id,
+      authorId: userStories.user_id,
+      imageUrl: currentStory.image_url,
+      isCurrentlyLiked: currentStory.is_liked
+    });
   };
 
   const handleReply = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!replyText.trim() || !currentUserId || sendMessage.isPending) return;
+    if (!replyText.trim() || !currentUserId) return;
     
     const textToSend = replyText;
     setReplyText(''); 
     
-    try {
-      await sendMessage.mutateAsync({
-        receiverId: userStories.user_id,
-        content: textToSend,
-        imageUrl: currentStory.image_url
-      });
-      showSuccess("Risposta inviata!");
-    } catch (err) {
-      setReplyText(textToSend); 
-      showError("Errore nell'invio della risposta");
-    }
+    sendMessage.mutate({
+      receiverId: userStories.user_id,
+      content: textToSend,
+      imageUrl: currentStory.image_url
+    });
+    
+    showSuccess("Risposta inviata!");
   };
 
   const handleShareClick = () => {
@@ -223,6 +227,16 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
       className="fixed inset-0 z-[9999] bg-black flex items-center justify-center overflow-hidden touch-none"
       style={{ height: '100dvh', width: '100vw' }}
     >
+      {nextStory && (
+        <div className="hidden">
+          {nextStory.image_url.match(/\.(mp4|webm|ogg|mov)$/i) || nextStory.image_url.includes('video') ? (
+            <video src={nextStory.image_url} preload="auto" muted />
+          ) : (
+            <img src={nextStory.image_url} alt="" />
+          )}
+        </div>
+      )}
+
       <div className="absolute inset-0 z-0 opacity-40 blur-[100px] scale-150 hidden md:block">
         <img src={currentStory.image_url} className="w-full h-full object-cover" alt="" />
       </div>
@@ -276,38 +290,47 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
         </div>
 
         <div className="flex-1 relative flex items-center justify-center bg-black">
-          {isMediaLoading && (
-            <div className="absolute inset-0 flex items-center justify-center z-10">
-              <Loader2 className="animate-spin text-white/20" size={40} />
-            </div>
-          )}
-          
-          {isVideo ? (
-            <video 
-              ref={videoRef} 
-              key={currentStory.id} 
-              src={currentStory.image_url} 
-              className="w-full h-full object-contain" 
-              autoPlay 
-              playsInline 
-              muted={isMuted} 
-              onCanPlay={() => setIsMediaLoading(false)}
-              onWaiting={() => setIsMediaLoading(true)}
-              onPlaying={() => setIsMediaLoading(false)}
-              onTimeUpdate={handleVideoTimeUpdate} 
-              onEnded={handleNext} 
-              onError={() => { setIsMediaLoading(false); handleNext(); }} 
-            />
-          ) : (
-            <img 
-              key={currentStory.id} 
-              src={currentStory.image_url} 
-              className="w-full h-full object-contain" 
-              alt="Story" 
-              onLoad={() => setIsMediaLoading(false)} 
-              onError={() => { setIsMediaLoading(false); handleNext(); }} 
-            />
-          )}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentStory.id}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.05 }}
+              transition={{ duration: 0.2 }}
+              className="w-full h-full flex items-center justify-center"
+            >
+              {isMediaLoading && (
+                <div className="absolute inset-0 flex items-center justify-center z-10">
+                  <Loader2 className="animate-spin text-white/20" size={40} />
+                </div>
+              )}
+              
+              {isVideo ? (
+                <video 
+                  ref={videoRef} 
+                  src={currentStory.image_url} 
+                  className="w-full h-full object-contain" 
+                  autoPlay 
+                  playsInline 
+                  muted={isMuted} 
+                  onCanPlay={() => setIsMediaLoading(false)}
+                  onWaiting={() => setIsMediaLoading(true)}
+                  onPlaying={() => setIsMediaLoading(false)}
+                  onTimeUpdate={handleVideoTimeUpdate} 
+                  onEnded={handleNext} 
+                  onError={() => { setIsMediaLoading(false); handleNext(); }} 
+                />
+              ) : (
+                <img 
+                  src={currentStory.image_url} 
+                  className="w-full h-full object-contain" 
+                  alt="Story" 
+                  onLoad={() => setIsMediaLoading(false)} 
+                  onError={() => { setIsMediaLoading(false); handleNext(); }} 
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
 
         <div 
@@ -356,17 +379,19 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                     className="bg-white/5 border-white/10 rounded-full h-8 px-4 text-[10px] font-bold uppercase tracking-widest text-white placeholder:text-zinc-600 focus-visible:ring-white/20" 
                   />
                   {replyText.trim() && (
-                    <button 
+                    <motion.button 
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
                       type="submit" 
-                      disabled={sendMessage.isPending}
-                      className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 transition-transform shrink-0 shadow-xl"
+                      className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 active:scale-90 transition-transform shrink-0 shadow-xl"
                     >
-                      {sendMessage.isPending ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
-                    </button>
+                      <Send size={12} />
+                    </motion.button>
                   )}
                 </form>
                 <div className="flex items-center gap-2">
-                  <button 
+                  <motion.button 
+                    whileTap={{ scale: 1.4 }}
                     onClick={handleLike} 
                     className={cn(
                       "w-8 h-8 rounded-full flex items-center justify-center transition-all border", 
@@ -374,7 +399,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                     )}
                   >
                     <Heart size={14} fill={currentStory.is_liked ? "currentColor" : "none"} />
-                  </button>
+                  </motion.button>
                   <button onClick={handleShareClick} className="w-8 h-8 bg-white/5 border border-white/10 text-zinc-400 rounded-full flex items-center justify-center hover:text-white hover:bg-white/10 transition-all"><Send size={14} className="-rotate-12" /></button>
                 </div>
               </div>
