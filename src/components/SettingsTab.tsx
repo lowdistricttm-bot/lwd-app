@@ -250,7 +250,7 @@ const SettingsTab = () => {
                           </div>
                         </button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-zinc-900/90 backdrop-blur-xl border-white/10 rounded-2xl min-w-[200px] z-[200] p-2">
+                      <DropdownMenuContent align="end" className="bg-zinc-900/90 backdrop-blur-xl border-white/10 rounded-2xl min-w-[180px] z-[200] p-2">
                         {privacyOptions.map((opt) => (
                           <DropdownMenuItem 
                             key={opt.value}
@@ -291,7 +291,7 @@ const SettingsTab = () => {
               Upgrade Account
             </h4>
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl">
-              {myRequest ? (
+              {myRequest && myRequest.status === 'pending' ? (
                 <div className="p-5 flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white bg-zinc-800">

@@ -155,6 +155,16 @@ const Profile = () => {
     }
   };
 
+  const handleUpgradeRequest = async () => {
+    if (myRequest) {
+      setIsRestrictedOpen(false);
+      setActiveTab('profile');
+      return;
+    }
+    await sendRequest.mutateAsync('subscriber_plus');
+    setIsRestrictedOpen(false);
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'cover') => {
     let file = e.target.files?.[0];
     if (!file || !currentUser || !isOwnProfile) return;
@@ -298,7 +308,7 @@ const Profile = () => {
               {/* Upgrade Section for Subscribers */}
               {isOwnProfile && userRole === 'subscriber' && (
                 <div className="w-full max-w-md mb-8">
-                  {myRequest ? (
+                  {myRequest && myRequest.status === 'pending' ? (
                     <div className="bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <Clock size={16} className="text-zinc-500" />
@@ -307,7 +317,7 @@ const Profile = () => {
                           <p className="text-[8px] font-bold uppercase text-zinc-500">Stato: {myRequest.status.toUpperCase()}</p>
                         </div>
                       </div>
-                      <span className="text-[8px] font-black uppercase bg-zinc-800 px-2 py-1 rounded-md">In Revisione</span>
+                      <span className="text-[8px] font-black uppercase bg-zinc-800 px-3 py-1.5 rounded-full text-zinc-400 italic">In Revisione</span>
                     </div>
                   ) : (
                     <button 
@@ -400,11 +410,18 @@ const Profile = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
+            <button 
+              onClick={handleUpgradeRequest}
+              disabled={sendRequest.isPending}
+              className="rounded-full bg-white text-black hover:bg-zinc-200 font-black uppercase italic text-[10px] w-full h-14 transition-all flex items-center justify-center gap-2 shadow-xl"
+            >
+              {sendRequest.isPending ? <Loader2 className="animate-spin" size={14} /> : <><Sparkles size={14} /> {myRequest && myRequest.status === 'pending' ? 'Vedi Stato Richiesta' : 'Richiedi Upgrade ISCRITTO+'}</>}
+            </button>
             <AlertDialogAction 
               onClick={() => window.open('https://www.lowdistrict.it/selection-lwdstrct/', '_blank')} 
-              className="rounded-full bg-white text-black hover:bg-zinc-200 font-black uppercase italic text-[10px] w-full h-14 transition-all"
+              className="rounded-full bg-white/10 border border-white/10 text-white hover:bg-white/20 font-black uppercase italic text-[10px] w-full h-14 transition-all"
             >
-              Invia Selezione
+              Invia Selezione Ufficiale
             </AlertDialogAction>
             <AlertDialogCancel className="rounded-full border-white/10 text-white hover:bg-white/5 font-black uppercase italic text-[10px] w-full h-14 mt-0 transition-all">
               Chiudi
