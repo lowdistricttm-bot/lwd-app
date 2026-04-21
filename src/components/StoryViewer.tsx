@@ -334,8 +334,14 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
         </div>
 
         <div 
-          className="absolute bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-3xl border-t border-white/10"
-          style={{ height: footerHeight, paddingBottom: '0px', marginBottom: '0px' }}
+          className="absolute bottom-0 left-0 right-0 z-50 bg-black border-t border-white/10 select-none"
+          style={{ 
+            height: footerHeight,
+            paddingBottom: '0px',
+            marginBottom: '0px',
+            WebkitUserSelect: 'none',
+            touchAction: 'none'
+          }}
         >
           <div className="h-full px-4 flex w-full max-w-md mx-auto items-center">
             {isOwner ? (
@@ -343,27 +349,27 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                 {!isHighlight && (
                   <>
                     <button onClick={() => setShowViewers(true)} className="flex flex-col items-center justify-center gap-0.5 group h-full flex-1">
-                      <Eye size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-white transition-colors" />
-                      <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Attività</span>
+                      <Eye size={isIOS ? 18 : 20} className="text-zinc-600 group-hover:text-white transition-colors" />
+                      <span className="text-[6px] font-black uppercase tracking-widest text-zinc-600 group-hover:text-white">Attività</span>
                     </button>
                     <button onClick={() => setIsMentionModalOpen(true)} className="flex flex-col items-center justify-center gap-0.5 group h-full flex-1">
-                      <AtSign size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-white transition-colors" />
-                      <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Menziona</span>
+                      <AtSign size={isIOS ? 18 : 20} className="text-zinc-600 group-hover:text-white transition-colors" />
+                      <span className="text-[6px] font-black uppercase tracking-widest text-zinc-600 group-hover:text-white">Menziona</span>
                     </button>
                     <button onClick={() => setIsHighlightModalOpen(true)} className="flex flex-col items-center justify-center gap-0.5 group h-full flex-1">
-                      <Star size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-white transition-colors" />
-                      <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Evidenza</span>
+                      <Star size={isIOS ? 18 : 20} className="text-zinc-600 group-hover:text-white transition-colors" />
+                      <span className="text-[6px] font-black uppercase tracking-widest text-zinc-600 group-hover:text-white">Evidenza</span>
                     </button>
                     <button onClick={handleDelete} className="flex flex-col items-center justify-center gap-0.5 group h-full flex-1">
-                      <Trash2 size={18} className="text-zinc-400 group-hover:text-red-500 transition-colors" />
-                      <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-red-500">Elimina</span>
+                      <Trash2 size={18} className="text-zinc-600 group-hover:text-red-500 transition-colors" />
+                      <span className="text-[6px] font-black uppercase tracking-widest text-zinc-600 group-hover:text-red-500">Elimina</span>
                     </button>
                   </>
                 )}
                 {isHighlight && (
                   <button onClick={handleRemoveFromHighlight} className="flex flex-col items-center justify-center gap-0.5 group w-full h-full">
-                    <BookmarkX size={20} className="text-zinc-400 group-hover:text-red-500 transition-colors" />
-                    <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-red-500">Rimuovi da Evidenza</span>
+                    <BookmarkX size={20} className="text-zinc-600 group-hover:text-red-500 transition-colors" />
+                    <span className="text-[8px] font-black uppercase tracking-widest text-zinc-600 group-hover:text-red-500">Rimuovi da Evidenza</span>
                   </button>
                 )}
               </div>
@@ -395,12 +401,12 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                     onClick={handleLike} 
                     className={cn(
                       "w-8 h-8 rounded-full flex items-center justify-center transition-all border", 
-                      currentStory.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-white/5 border-white/10 text-zinc-400 hover:text-white hover:bg-white/10"
+                      currentStory.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-white/5 border-white/10 text-zinc-600 hover:text-white hover:bg-white/10"
                     )}
                   >
                     <Heart size={14} fill={currentStory.is_liked ? "currentColor" : "none"} />
                   </motion.button>
-                  <button onClick={handleShareClick} className="w-8 h-8 bg-white/5 border border-white/10 text-zinc-400 rounded-full flex items-center justify-center hover:text-white hover:bg-white/10 transition-all"><Send size={14} className="-rotate-12" /></button>
+                  <button onClick={handleShareClick} className="w-8 h-8 bg-white/5 border border-white/10 text-zinc-600 rounded-full flex items-center justify-center hover:text-white hover:bg-white/10 transition-all"><Send size={14} className="-rotate-12" /></button>
                 </div>
               </div>
             )}
