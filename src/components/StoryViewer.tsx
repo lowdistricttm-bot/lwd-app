@@ -60,7 +60,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   const userStories = allStories[userIndex];
   const currentStory = userStories?.items[currentIndex];
   
-  // Pre-caricamento della prossima storia
   const nextStory = useMemo(() => {
     if (currentIndex < userStories?.items.length - 1) {
       return userStories.items[currentIndex + 1];
@@ -217,6 +216,8 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   if (!userStories || !currentStory) return null;
 
   const roleLabel = isHighlight ? 'RACCOLTA' : (t.profile.roles[userStories.role] || t.profile.roles.member);
+  
+  // Altezza identica a BottomNav e Chat
   const footerHeight = isIOS ? '50px' : '44px';
 
   return createPortal(
@@ -227,16 +228,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
       className="fixed inset-0 z-[9999] bg-black flex items-center justify-center overflow-hidden touch-none"
       style={{ height: '100dvh', width: '100vw' }}
     >
-      {nextStory && (
-        <div className="hidden">
-          {nextStory.image_url.match(/\.(mp4|webm|ogg|mov)$/i) || nextStory.image_url.includes('video') ? (
-            <video src={nextStory.image_url} preload="auto" muted />
-          ) : (
-            <img src={nextStory.image_url} alt="" />
-          )}
-        </div>
-      )}
-
       <div className="absolute inset-0 z-0 opacity-40 blur-[100px] scale-150 hidden md:block">
         <img src={currentStory.image_url} className="w-full h-full object-cover" alt="" />
       </div>
@@ -274,15 +265,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
             <button onClick={onClose} className="p-2 text-white/80 hover:text-white transition-all drop-shadow-md"><X size={24} /></button>
           </div>
         </div>
-
-        {currentStory.reshared_from && (
-          <div className="absolute top-[calc(6.5rem+env(safe-area-inset-top))] md:top-28 left-4 z-50">
-            <div className="bg-black/40 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-full flex items-center gap-2">
-              <RefreshCw size={10} className="text-white/60" />
-              <span className="text-[9px] font-black uppercase italic tracking-widest text-white">Ricondivisa da @{currentStory.reshared_from.username}</span>
-            </div>
-          </div>
-        )}
 
         <div className="absolute inset-0 z-20 flex">
           <div className="w-1/3 h-full cursor-pointer" onClick={handlePrev} />
@@ -333,6 +315,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </AnimatePresence>
         </div>
 
+        {/* Barra inferiore sincronizzata con BottomNav */}
         <div 
           className="absolute bottom-0 left-0 right-0 z-50 bg-black border-t border-white/10 select-none"
           style={{ 
