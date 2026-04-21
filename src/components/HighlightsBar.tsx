@@ -70,8 +70,7 @@ const HighlightsBar = ({ userId, isOwnProfile }: HighlightsBarProps) => {
         </h3>
       )}
       
-      {/* Aggiunto padding superiore (pt-4) per far spazio ai pulsanti admin */}
-      <div className="flex gap-6 overflow-x-auto no-scrollbar pt-4 pb-2 px-1">
+      <div className="flex gap-6 overflow-x-auto no-scrollbar items-center py-4 px-1">
         {highlights?.map((h, idx) => (
           <div key={h.id} className="flex flex-col items-center gap-2 shrink-0 group relative">
             <div className="relative">
@@ -85,7 +84,7 @@ const HighlightsBar = ({ userId, isOwnProfile }: HighlightsBarProps) => {
                 </div>
               </div>
               
-              {/* Admin actions - Posizionamento migliorato per evitare clipping */}
+              {/* Admin actions */}
               {isOwnProfile && !editingId && (
                 <div className="absolute -top-3 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 z-10 scale-90 group-hover:scale-100">
                   <button 

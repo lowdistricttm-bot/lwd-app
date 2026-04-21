@@ -71,7 +71,7 @@ const Stories = () => {
 
   return (
     <>
-      <div className="flex gap-4 overflow-x-auto no-scrollbar py-6 px-6 bg-gradient-to-b from-black via-black/95 to-zinc-950/20 border-b border-white/5">
+      <div className="flex gap-4 overflow-x-auto no-scrollbar py-4 items-center min-h-[120px] px-6 bg-gradient-to-b from-black via-black/95 to-zinc-950/20 border-b border-white/5">
         {currentUser && (!isSubscriber || myStoriesGroup) && (
           <div className="flex flex-col items-center gap-2 shrink-0">
             <div className="relative">

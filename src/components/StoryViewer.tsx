@@ -339,36 +339,36 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
         >
           <div className="h-full px-4 flex w-full max-w-md mx-auto items-center">
             {isOwner ? (
-              <div className="flex items-center justify-around w-full">
+              <div className="flex items-center justify-around w-full h-full">
                 {!isHighlight && (
                   <>
-                    <button onClick={() => setShowViewers(true)} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-end pb-1" : "h-full justify-center")}>
+                    <button onClick={() => setShowViewers(true)} className="flex flex-col items-center justify-center gap-0.5 group h-full flex-1">
                       <Eye size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-white transition-colors" />
                       <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Attività</span>
                     </button>
-                    <button onClick={() => setIsMentionModalOpen(true)} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-end pb-1" : "h-full justify-center")}>
+                    <button onClick={() => setIsMentionModalOpen(true)} className="flex flex-col items-center justify-center gap-0.5 group h-full flex-1">
                       <AtSign size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-white transition-colors" />
                       <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Menziona</span>
                     </button>
-                    <button onClick={() => setIsHighlightModalOpen(true)} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-end pb-1" : "h-full justify-center")}>
+                    <button onClick={() => setIsHighlightModalOpen(true)} className="flex flex-col items-center justify-center gap-0.5 group h-full flex-1">
                       <Star size={isIOS ? 18 : 20} className="text-zinc-400 group-hover:text-white transition-colors" />
                       <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white">Evidenza</span>
                     </button>
-                    <button onClick={handleDelete} className={cn("flex flex-col items-center gap-0.5 group", isIOS ? "h-[50px] justify-end pb-1" : "h-full justify-center")}>
+                    <button onClick={handleDelete} className="flex flex-col items-center justify-center gap-0.5 group h-full flex-1">
                       <Trash2 size={18} className="text-zinc-400 group-hover:text-red-500 transition-colors" />
                       <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-red-500">Elimina</span>
                     </button>
                   </>
                 )}
                 {isHighlight && (
-                  <button onClick={handleRemoveFromHighlight} className={cn("flex flex-col items-center gap-0.5 group w-full", isIOS ? "h-[50px] justify-end pb-1" : "h-full justify-center")}>
+                  <button onClick={handleRemoveFromHighlight} className="flex flex-col items-center justify-center gap-0.5 group w-full h-full">
                     <BookmarkX size={20} className="text-zinc-400 group-hover:text-red-500 transition-colors" />
                     <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-red-500">Rimuovi da Evidenza</span>
                   </button>
                 )}
               </div>
             ) : !isHighlight && (
-              <div className={cn("flex items-center gap-3 w-full h-full", isIOS ? "justify-end pb-1" : "justify-center")}>
+              <div className="flex items-center justify-center gap-3 w-full h-full">
                 <form onSubmit={handleReply} className="flex-1 flex gap-2">
                   <Input 
                     placeholder={`Rispondi a ${userStories.username}...`} 
