@@ -21,10 +21,11 @@ import { useAdmin } from '@/hooks/use-admin';
 import { usePresence } from '@/hooks/use-presence';
 import { useFollow } from '@/hooks/use-follow';
 import { useAuth } from '@/hooks/use-auth';
+import { useRoleRequests } from '@/hooks/use-role-requests';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { 
-  User, Settings, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Share2, Edit2, Truck, ExternalLink, ShieldAlert, Tag
+  User, Settings, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Share2, Edit2, Truck, ExternalLink, ShieldAlert, Tag, Sparkles, Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -55,6 +56,7 @@ const Profile = () => {
   const { role, canVote } = useAdmin();
   const { isUserOnline, getLastSeen } = usePresence();
   const { user: currentUser, isLoading: authLoading } = useAuth();
+  const { myRequest, sendRequest } = useRoleRequests();
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   
@@ -292,6 +294,41 @@ const Profile = () => {
                 <button onClick={() => setFollowModal({ type: 'following', isOpen: true })} className="flex flex-col items-center group"><span className="text-xl font-black italic tracking-tighter leading-none mb-1">{loadingCounts ? '...' : counts?.following}</span><span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white transition-colors">{t.profile.following}</span></button>
                 <div className="flex flex-col items-center"><span className="text-xl font-black italic tracking-tighter leading-none mb-1">{userPosts.length}</span><span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">{t.profile.posts}</span></div>
               </div>
+
+              {/* Upgrade Section for Subscribers */}
+              {isOwnProfile && userRole === 'subscriber' && (
+                <div className="w-full max-w-md mb-8">
+                  {myRequest ? (
+                    <div className="bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Clock size={16} className="text-zinc-500" />
+                        <div className="text-left">
+                          <p className="text-[10px] font-black uppercase italic">Richiesta Upgrade</p>
+                          <p className="text-[8px] font-bold uppercase text-zinc-500">Stato: {myRequest.status.toUpperCase()}</p>
+                        </div>
+                      </div>
+                      <span className="text-[8px] font-black uppercase bg-zinc-800 px-2 py-1 rounded-md">In Revisione</span>
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={() => sendRequest.mutate('subscriber_plus')}
+                      disabled={sendRequest.isPending}
+                      className="w-full bg-white text-black hover:bg-zinc-200 p-4 rounded-2xl flex items-center justify-between group transition-all shadow-xl"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-white group-hover:scale-110 transition-transform">
+                          <Sparkles size={20} />
+                        </div>
+                        <div className="text-left">
+                          <p className="text-xs font-black uppercase italic">Diventa ISCRITTO+</p>
+                          <p className="text-[8px] font-bold uppercase text-zinc-500">Sblocca post, storie e messaggi</p>
+                        </div>
+                      </div>
+                      {sendRequest.isPending ? <Loader2 className="animate-spin" size={18} /> : <ChevronRight size={20} />}
+                    </button>
+                  )}
+                </div>
+              )}
 
               {!isOwnProfile && currentUser && (!isTargetSubscriber || canVote) && <FollowButton userId={targetUserId} className="w-full sm:w-64 h-12 mb-6" />}
 

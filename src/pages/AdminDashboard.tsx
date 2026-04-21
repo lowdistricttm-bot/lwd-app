@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar';
 import EmailSettingsModal from '@/components/EmailSettingsModal';
 import AdminNotificationModal from '@/components/AdminNotificationModal';
 import { useAdmin } from '@/hooks/use-admin';
+import { useRoleRequests } from '@/hooks/use-role-requests';
 import { 
   Loader2, 
   XCircle, 
@@ -15,15 +16,22 @@ import {
   Mail,
   ShieldCheck,
   ChevronRight,
-  Bell
+  Bell,
+  Sparkles,
+  Check,
+  X,
+  User
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { isAdmin, isStaff, isSupport, canVote, checkingAdmin, role } = useAdmin();
+  const { allRequests, loadingAll, handleRequest } = useRoleRequests();
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [isNotifModalOpen, setIsNotifModalOpen] = useState(false);
+  const [showRequests, setShowRequests] = useState(false);
 
   if (checkingAdmin) {
     return (
@@ -54,6 +62,14 @@ const AdminDashboard = () => {
       icon: ClipboardCheck,
       action: () => navigate('/admin/applications'),
       show: true
+    },
+    {
+      title: "Richieste Upgrade",
+      desc: `Gestisci le richieste per il ruolo ISCRITTO+ (${allRequests?.length || 0} in attesa)`,
+      icon: Sparkles,
+      action: () => setShowRequests(!showRequests),
+      show: isAdmin || isStaff,
+      badge: allRequests?.length || 0
     },
     {
       title: "Centro Notifiche",
@@ -100,22 +116,73 @@ const AdminDashboard = () => {
 
         <div className="space-y-4">
           {menuItems.filter(item => item.show).map((item, i) => (
-            <button
-              key={i}
-              onClick={item.action}
-              className="w-full bg-zinc-900/40 backdrop-blur-md border border-white/5 p-6 flex items-center justify-between group hover:bg-zinc-800/60 hover:border-white/20 transition-all duration-500 text-left rounded-[2rem]"
-            >
-              <div className="flex items-center gap-6">
-                <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all duration-500">
-                  <item.icon size={24} className="group-hover:scale-110 transition-transform" />
+            <div key={i} className="space-y-4">
+              <button
+                onClick={item.action}
+                className="w-full bg-zinc-900/40 backdrop-blur-md border border-white/5 p-6 flex items-center justify-between group hover:bg-zinc-800/60 hover:border-white/20 transition-all duration-500 text-left rounded-[2rem]"
+              >
+                <div className="flex items-center gap-6">
+                  <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all duration-500 relative">
+                    <item.icon size={24} className="group-hover:scale-110 transition-transform" />
+                    {item.badge > 0 && (
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-white text-black text-[10px] font-black flex items-center justify-center rounded-full border-2 border-black">
+                        {item.badge}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black uppercase italic tracking-tight">{item.title}</h3>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 group-hover:text-zinc-400 mt-1 transition-colors">{item.desc}</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-black uppercase italic tracking-tight">{item.title}</h3>
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 group-hover:text-zinc-400 mt-1 transition-colors">{item.desc}</p>
-                </div>
-              </div>
-              <ChevronRight size={20} className="text-zinc-700 group-hover:text-white transition-all translate-x-[-10px] group-hover:translate-x-0" />
-            </button>
+                <ChevronRight size={20} className={cn("text-zinc-700 group-hover:text-white transition-all translate-x-[-10px] group-hover:translate-x-0", showRequests && item.title === "Richieste Upgrade" && "rotate-90")} />
+              </button>
+
+              {/* Sezione Espandibile Richieste Upgrade */}
+              {item.title === "Richieste Upgrade" && showRequests && (
+                <motion.div 
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  className="space-y-3 pl-4 border-l border-white/5"
+                >
+                  {loadingAll ? (
+                    <div className="py-10 text-center"><Loader2 className="animate-spin mx-auto text-zinc-800" /></div>
+                  ) : allRequests?.length === 0 ? (
+                    <p className="text-[9px] font-black uppercase text-zinc-600 italic py-4">Nessuna richiesta in attesa.</p>
+                  ) : (
+                    allRequests?.map((req) => (
+                      <div key={req.id} className="bg-white/5 border border-white/5 p-4 rounded-2xl flex items-center justify-between animate-in slide-in-from-left-2">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-900 border border-white/10">
+                            {req.profiles?.avatar_url ? <img src={req.profiles.avatar_url} className="w-full h-full object-cover" /> : <User size={16} className="m-auto h-full text-zinc-700" />}
+                          </div>
+                          <div>
+                            <p className="text-xs font-black uppercase italic">@{req.profiles?.username}</p>
+                            <p className="text-[8px] font-bold uppercase text-zinc-500">Richiede: {req.requested_role.toUpperCase()}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => handleRequest.mutate({ requestId: req.id, userId: req.user_id, status: 'approved', role: req.requested_role })}
+                            disabled={handleRequest.isPending}
+                            className="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 transition-all shadow-lg"
+                          >
+                            <Check size={18} strokeWidth={3} />
+                          </button>
+                          <button 
+                            onClick={() => handleRequest.mutate({ requestId: req.id, userId: req.user_id, status: 'rejected', role: req.requested_role })}
+                            disabled={handleRequest.isPending}
+                            className="w-10 h-10 bg-zinc-800 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-all shadow-lg"
+                          >
+                            <X size={18} strokeWidth={3} />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </motion.div>
+              )}
+            </div>
           ))}
         </div>
       </main>
