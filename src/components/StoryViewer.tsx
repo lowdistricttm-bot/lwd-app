@@ -317,15 +317,15 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </AnimatePresence>
         </div>
 
-        {/* Footer Interaction Area */}
+        {/* Footer Interaction Area - Spostato nel gradiente nero estremo */}
         <div 
-          className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black/80 via-black/20 to-transparent pt-32 pointer-events-none"
+          className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black via-black/60 to-transparent pt-32 pointer-events-none"
         >
           <div 
-            className="px-4 flex w-full max-w-md mx-auto items-end pointer-events-auto pb-2" 
+            className="px-4 flex w-full max-w-md mx-auto items-end pointer-events-auto pb-1" 
           >
             {isOwner ? (
-              <div className="flex items-center justify-between w-full gap-2">
+              <div className="flex items-center justify-between w-full gap-2 mb-1">
                 {!isHighlight && (
                   <>
                     <button onClick={() => setShowViewers(true)} className="flex-1 h-10 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all shadow-xl">
@@ -350,7 +350,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                 )}
               </div>
             ) : !isHighlight && (
-              <div className="flex items-center gap-3 w-full">
+              <div className="flex items-center gap-3 w-full mb-1">
                 <form onSubmit={handleReply} className="flex-1 flex relative">
                   <Input 
                     placeholder={`Rispondi a ${userStories.username}...`} 
