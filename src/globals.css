@@ -17,6 +17,16 @@
     --ring: 211 100% 50%;
     --radius: 1.5rem;
   }
+
+  /* Nasconde la barra di scorrimento globalmente per tutti gli elementi */
+  * {
+    -ms-overflow-style: none;  /* IE e Edge */
+    scrollbar-width: none;     /* Firefox */
+  }
+
+  *::-webkit-scrollbar {
+    display: none;             /* Chrome, Safari e Opera */
+  }
 }
 
 /* Regola universale per nascondere le scrollbar senza rompere il rendering */
@@ -35,6 +45,7 @@ html, body {
   margin: 0;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
 }
 
 body {
