@@ -228,7 +228,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
       className="fixed inset-0 z-[9999] bg-black flex items-center justify-center overflow-hidden touch-none"
       style={{ height: '100dvh' }}
     >
-      <div className="absolute inset-0 z-0 opacity-60 blur-[60px] scale-125">
+      <div className="absolute inset-0 z-0 opacity-70 blur-[60px] scale-125">
         <img src={currentStory.image_url} className="w-full h-full object-cover" alt="" />
       </div>
 
@@ -316,7 +316,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
         </div>
 
         <div 
-          className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black/80 via-black/20 to-transparent pt-32 pointer-events-none"
+          className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black/40 via-transparent to-transparent pt-32 pointer-events-none"
         >
           <div 
             className="px-4 flex w-full max-w-md mx-auto items-end pointer-events-auto" 
