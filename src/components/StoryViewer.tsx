@@ -323,31 +323,31 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
         >
           <div 
             className="px-2 flex w-full max-w-md mx-auto items-end pointer-events-auto" 
-            style={{ paddingBottom: `env(safe-area-inset-bottom)` }}
+            style={{ paddingBottom: '10px' }}
           >
             {isOwner ? (
               <div className="flex items-end justify-between w-full gap-0.5">
                 {!isHighlight && (
                   <>
-                    <button onClick={() => setShowViewers(true)} className="flex flex-col items-center gap-1.5 group flex-1 py-4">
+                    <button onClick={() => setShowViewers(true)} className="flex flex-col items-center gap-1.5 group flex-1 pt-12 pb-2">
                       <div className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center group-hover:bg-white/20 transition-all shadow-xl">
                         <Eye size={20} className="text-white" />
                       </div>
                       <span className="text-[9px] font-black uppercase tracking-widest text-white drop-shadow-md">Attività</span>
                     </button>
-                    <button onClick={() => setIsMentionModalOpen(true)} className="flex flex-col items-center gap-1.5 group flex-1 py-4">
+                    <button onClick={() => setIsMentionModalOpen(true)} className="flex flex-col items-center gap-1.5 group flex-1 pt-12 pb-2">
                       <div className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center group-hover:bg-white/20 transition-all shadow-xl">
                         <AtSign size={20} className="text-white" />
                       </div>
                       <span className="text-[9px] font-black uppercase tracking-widest text-white drop-shadow-md">Menziona</span>
                     </button>
-                    <button onClick={() => setIsHighlightModalOpen(true)} className="flex flex-col items-center gap-1.5 group flex-1 py-4">
+                    <button onClick={() => setIsHighlightModalOpen(true)} className="flex flex-col items-center gap-1.5 group flex-1 pt-12 pb-2">
                       <div className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center group-hover:bg-white/20 transition-all shadow-xl">
                         <Star size={20} className="text-white" />
                       </div>
                       <span className="text-[9px] font-black uppercase tracking-widest text-white drop-shadow-md">Evidenza</span>
                     </button>
-                    <button onClick={handleDelete} className="flex flex-col items-center gap-1.5 group flex-1 py-4">
+                    <button onClick={handleDelete} className="flex flex-col items-center gap-1.5 group flex-1 pt-12 pb-2">
                       <div className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-xl border border-red-500/30 flex items-center justify-center group-hover:bg-red-500/20 transition-all shadow-xl">
                         <Trash2 size={20} className="text-red-500" />
                       </div>
