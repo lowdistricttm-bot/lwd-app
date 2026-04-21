@@ -317,9 +317,10 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </AnimatePresence>
         </div>
 
-        {/* Footer Interaction Area */}
+        {/* Footer Interaction Area - Glassmorphism Effect */}
         <div 
-          className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black/80 via-black/20 to-transparent pt-32 pointer-events-none"
+          className="absolute bottom-0 left-0 right-0 z-50 select-none bg-black/10 backdrop-blur-2xl border-t border-white/10 pt-20 pointer-events-none"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
           <div 
             className="px-2 flex w-full max-w-md mx-auto items-end pointer-events-auto" 
@@ -329,26 +330,26 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
               <div className="flex items-end justify-between w-full gap-0.5">
                 {!isHighlight && (
                   <>
-                    <button onClick={() => setShowViewers(true)} className="flex flex-col items-center gap-1.5 group flex-1 pt-20 pb-2">
-                      <div className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center group-hover:bg-white/20 transition-all shadow-xl">
+                    <button onClick={() => setShowViewers(true)} className="flex flex-col items-center gap-1.5 group flex-1 pt-4 pb-2">
+                      <div className="w-11 h-11 rounded-full bg-white/5 backdrop-blur-xl border border-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all shadow-xl">
                         <Eye size={20} className="text-white" />
                       </div>
                       <span className="text-[9px] font-black uppercase tracking-widest text-white drop-shadow-md">Attività</span>
                     </button>
-                    <button onClick={() => setIsMentionModalOpen(true)} className="flex flex-col items-center gap-1.5 group flex-1 pt-20 pb-2">
-                      <div className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center group-hover:bg-white/20 transition-all shadow-xl">
+                    <button onClick={() => setIsMentionModalOpen(true)} className="flex flex-col items-center gap-1.5 group flex-1 pt-4 pb-2">
+                      <div className="w-11 h-11 rounded-full bg-white/5 backdrop-blur-xl border border-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all shadow-xl">
                         <AtSign size={20} className="text-white" />
                       </div>
                       <span className="text-[9px] font-black uppercase tracking-widest text-white drop-shadow-md">Menziona</span>
                     </button>
-                    <button onClick={() => setIsHighlightModalOpen(true)} className="flex flex-col items-center gap-1.5 group flex-1 pt-20 pb-2">
-                      <div className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center group-hover:bg-white/20 transition-all shadow-xl">
+                    <button onClick={() => setIsHighlightModalOpen(true)} className="flex flex-col items-center gap-1.5 group flex-1 pt-4 pb-2">
+                      <div className="w-11 h-11 rounded-full bg-white/5 backdrop-blur-xl border border-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all shadow-xl">
                         <Star size={20} className="text-white" />
                       </div>
                       <span className="text-[9px] font-black uppercase tracking-widest text-white drop-shadow-md">Evidenza</span>
                     </button>
-                    <button onClick={handleDelete} className="flex flex-col items-center gap-1.5 group flex-1 pt-20 pb-2">
-                      <div className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-xl border border-red-500/30 flex items-center justify-center group-hover:bg-red-500/20 transition-all shadow-xl">
+                    <button onClick={handleDelete} className="flex flex-col items-center gap-1.5 group flex-1 pt-4 pb-2">
+                      <div className="w-11 h-11 rounded-full bg-white/5 backdrop-blur-xl border border-red-500/20 flex items-center justify-center group-hover:bg-red-500/30 transition-all shadow-xl">
                         <Trash2 size={20} className="text-red-500" />
                       </div>
                       <span className="text-[9px] font-black uppercase tracking-widest text-red-500 drop-shadow-md">Elimina</span>
@@ -357,7 +358,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                 )}
                 {isHighlight && (
                   <button onClick={handleRemoveFromHighlight} className="flex flex-col items-center gap-2 group w-full justify-center py-6">
-                    <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-xl border border-red-500/30 flex items-center justify-center group-hover:bg-red-500/20 transition-all shadow-xl">
+                    <div className="w-12 h-12 rounded-full bg-white/5 backdrop-blur-xl border border-red-500/20 flex items-center justify-center group-hover:bg-red-500/30 transition-all shadow-xl">
                       <BookmarkX size={20} className="text-red-500" />
                     </div>
                     <span className="text-[9px] font-black uppercase tracking-widest text-red-500 drop-shadow-md mt-1">Rimuovi da Evidenza</span>
@@ -373,7 +374,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                     onChange={(e) => setReplyText(e.target.value)} 
                     onFocus={() => videoRef.current?.pause()} 
                     onBlur={() => videoRef.current?.play()} 
-                    className="bg-black/40 backdrop-blur-xl border border-white/20 rounded-full h-12 px-5 text-[11px] font-bold uppercase tracking-widest text-white placeholder:text-white/70 focus-visible:ring-white/40 shadow-xl" 
+                    className="bg-white/5 backdrop-blur-xl border border-white/20 rounded-full h-12 px-5 text-[11px] font-bold uppercase tracking-widest text-white placeholder:text-white/70 focus-visible:ring-white/40 shadow-xl" 
                   />
                   <AnimatePresence>
                     {replyText.trim() && (
@@ -395,12 +396,12 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                     onClick={handleLike} 
                     className={cn(
                       "w-12 h-12 rounded-full flex items-center justify-center transition-all border shadow-xl backdrop-blur-xl", 
-                      currentStory.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-black/40 border-white/20 text-white hover:bg-white/20 hover:scale-105"
+                      currentStory.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-white/5 border-white/20 text-white hover:bg-white/20 hover:scale-105"
                     )}
                   >
                     <Heart size={20} fill={currentStory.is_liked ? "currentColor" : "none"} />
                   </motion.button>
-                  <button onClick={handleShareClick} className="w-12 h-12 bg-black/40 backdrop-blur-xl border border-white/20 text-white rounded-full flex items-center justify-center hover:bg-white/20 hover:scale-105 transition-all shadow-xl">
+                  <button onClick={handleShareClick} className="w-12 h-12 bg-white/5 backdrop-blur-xl border border-white/20 text-white rounded-full flex items-center justify-center hover:bg-white/20 hover:scale-105 transition-all shadow-xl">
                     <Send size={18} className="-rotate-12 mr-0.5" />
                   </button>
                 </div>
