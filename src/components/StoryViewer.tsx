@@ -228,16 +228,13 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
       className="fixed inset-0 z-[9999] bg-black flex items-center justify-center overflow-hidden touch-none"
       style={{ height: '100dvh' }}
     >
-      {/* Sfondo sfocato che copre sempre tutto */}
       <div className="absolute inset-0 z-0 opacity-60 blur-[60px] scale-125">
         <img src={currentStory.image_url} className="w-full h-full object-cover" alt="" />
       </div>
 
-      {/* Contenitore Principale: h-full su mobile per coprire le safe area */}
       <div className="relative w-full h-full md:h-[85vh] md:w-[420px] md:aspect-[9/16] bg-transparent md:bg-black/40 md:rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl md:border md:border-white/10 z-10">
         
-        {/* Progress Bar in alto, posizionata dinamicamente sotto la notch di iOS */}
-        <div className="absolute top-[calc(0.5rem+env(safe-area-inset-top))] md:top-6 left-4 right-4 z-50 flex gap-1.5">
+        <div className="absolute top-[calc(1rem+env(safe-area-inset-top))] md:top-6 left-4 right-4 z-50 flex gap-1.5">
           {userStories.items.map((_, i) => (
             <div key={i} className="h-1 flex-1 bg-white/30 rounded-full overflow-hidden backdrop-blur-md">
               <div 
@@ -248,8 +245,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           ))}
         </div>
 
-        {/* Header Profilo sotto la barra di progresso */}
-        <div className="absolute top-[calc(1.5rem+env(safe-area-inset-top))] md:top-12 left-4 right-4 z-50 flex items-center justify-between">
+        <div className="absolute top-[calc(2.5rem+env(safe-area-inset-top))] md:top-12 left-4 right-4 z-50 flex items-center justify-between">
           <button onClick={handleProfileClick} className="flex items-center gap-3 group text-left">
             <div className="w-10 h-10 rounded-full border-2 border-white/40 shadow-lg overflow-hidden bg-zinc-900 group-hover:border-white transition-all">
               {userStories.avatar_url && <img src={userStories.avatar_url} className="w-full h-full object-cover" alt="" />}
@@ -270,13 +266,11 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </div>
         </div>
 
-        {/* Area di interazione tap (sinistra/destra) */}
         <div className="absolute inset-0 z-20 flex">
           <div className="w-1/3 h-full cursor-pointer" onClick={handlePrev} />
           <div className="w-2/3 h-full cursor-pointer" onClick={handleNext} />
         </div>
 
-        {/* Visualizzatore Media: object-cover su mobile per riempire tutto */}
         <div className="flex-1 relative flex items-center justify-center bg-transparent">
           <AnimatePresence mode="wait">
             <motion.div
@@ -297,7 +291,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                 <video 
                   ref={videoRef} 
                   src={currentStory.image_url} 
-                  className="w-full h-full object-cover md:object-contain" 
+                  className="w-full h-full object-contain" 
                   autoPlay 
                   playsInline 
                   muted={isMuted} 
@@ -311,7 +305,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
               ) : (
                 <img 
                   src={currentStory.image_url} 
-                  className="w-full h-full object-cover md:object-contain" 
+                  className="w-full h-full object-contain" 
                   alt="Story" 
                   onLoad={() => setIsMediaLoading(false)} 
                   onError={() => { setIsMediaLoading(false); handleNext(); }} 
@@ -321,7 +315,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </AnimatePresence>
         </div>
 
-        {/* Footer con azioni, rispettando la safe area inferiore di iOS */}
         <div 
           className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black/80 via-black/20 to-transparent pt-32 pointer-events-none"
         >
@@ -413,7 +406,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </div>
         </div>
 
-        {/* Modal Visualizzazioni */}
         <AnimatePresence>
           {showViewers && (
             <>
@@ -455,7 +447,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
         </AnimatePresence>
       </div>
 
-      {/* Navigazione desktop */}
       <button onClick={handlePrev} className="hidden md:flex fixed left-[calc(50%-320px)] top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-[10000] text-white transition-all border border-white/10 backdrop-blur-md shadow-2xl"><ChevronLeft size={32} /></button>
       <button onClick={handleNext} className="hidden md:flex fixed right-[calc(50%-320px)] top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-[10000] text-white transition-all border border-white/10 backdrop-blur-md shadow-2xl"><ChevronRight size={32} /></button>
 
