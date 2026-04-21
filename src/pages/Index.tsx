@@ -15,21 +15,20 @@ import { ShoppingBag, Users, Calendar, ArrowRight, Star, Music, Play, ChevronRig
 import { Link } from 'react-router-dom';
 import { useTranslation } from '@/hooks/use-translation';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from '@/hooks/use-auth';
 
 const Index = () => {
   const { t } = useTranslation();
   const { permission, requestPermission } = usePushNotifications();
+  const { user } = useAuth();
   const [showPrompt, setShowPrompt] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user && permission === 'default') {
-        const timer = setTimeout(() => setShowPrompt(true), 5000);
-        return () => clearTimeout(timer);
-      }
-    });
-  }, [permission]);
+    if (user && permission === 'default') {
+      const timer = setTimeout(() => setShowPrompt(true), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [user, permission]);
 
   const navigationTabs = [
     { 

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Plus, Loader2, User, ShieldCheck, LogIn, ArrowRight } from 'lucide-react';
 import { useStories } from '@/hooks/use-stories';
 import { useAdmin } from '@/hooks/use-admin';
+import { useAuth } from '@/hooks/use-auth';
 import { supabase } from "@/integrations/supabase/client";
 import StoryViewer from './StoryViewer';
 import { cn } from '@/lib/utils';
@@ -25,23 +26,19 @@ const Stories = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { stories, isLoading, uploadStory } = useStories();
   const { role } = useAdmin();
+  const { user: currentUser } = useAuth();
   
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
 
   useEffect(() => {
-    const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setCurrentUser(user);
-      if (user) {
-        const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
+    if (currentUser) {
+      supabase.from('profiles').select('*').eq('id', currentUser.id).maybeSingle().then(({ data }) => {
         setUserProfile(data);
-      }
-    };
-    checkUser();
-  }, []);
+      });
+    }
+  }, [currentUser]);
 
   const isSubscriber = role === 'subscriber';
   const myStoriesGroup: any = (stories as any[])?.find((group: any) => group.user_id === currentUser?.id);

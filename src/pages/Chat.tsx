@@ -7,6 +7,7 @@ import { useMessages } from '@/hooks/use-messages';
 import { useStories } from '@/hooks/use-stories';
 import { usePresence } from '@/hooks/use-presence';
 import { useAdmin } from '@/hooks/use-admin';
+import { useAuth } from '@/hooks/use-auth';
 import { ChevronLeft, Send, User, Loader2, Mail, Trash2, Camera, X, Plus, Play, AtSign, RefreshCw, LayoutGrid, ArrowRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -33,10 +34,11 @@ const Chat = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { role, canVote } = useAdmin();
+  const { user: currentUser, isLoading: authLoading } = useAuth();
+  
   const [message, setMessage] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [otherUserProfile, setOtherUserProfile] = useState<any>(null);
   const [dbLastSeen, setDbLastSeen] = useState<string | null>(null);
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
@@ -58,10 +60,11 @@ const Chat = () => {
     const checkIOS = /iPhone|iPad|iPod/.test(window.navigator.userAgent);
     setIsIOS(checkIOS);
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) navigate('/login');
-      else { setCurrentUserId(session.user.id); }
-    });
+    if (authLoading) return;
+    if (!currentUser) {
+      navigate('/login');
+      return;
+    }
     
     if (userId) {
       supabase.from('profiles')
@@ -73,14 +76,12 @@ const Chat = () => {
             const targetRole = data.role || 'subscriber';
             const isTargetStaff = ['admin', 'staff', 'support'].includes(targetRole);
 
-            // 1. Se il target è un iscritto, solo lo staff può scrivergli (Protezione Iscritti)
             if (targetRole === 'subscriber' && !canVote) {
               showError("Non hai i permessi per contattare questo utente.");
               navigate('/messages');
               return;
             }
 
-            // 2. Se l'utente corrente è un iscritto, può scrivere SOLO allo staff (Restrizione Iscritti)
             if (role === 'subscriber' && !isTargetStaff) {
               showError("I messaggi privati sono riservati ai membri ufficiali.");
               navigate('/messages');
@@ -95,7 +96,7 @@ const Chat = () => {
         });
       markAsRead.mutate(userId);
     }
-  }, [userId, navigate, canVote, role]);
+  }, [userId, navigate, canVote, role, currentUser, authLoading]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -138,14 +139,12 @@ const Chat = () => {
     }
   };
 
-  if (loadingChat) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
+  if (loadingChat || authLoading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
-  // Altezza uniformata alla BottomNav (50px iOS / 44px altri)
   const inputBarHeight = isIOS ? '50px' : '44px';
 
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent">
-      {/* Header Uniformato alla Navbar (h-16) */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-2xl border-b border-white/10 pt-[env(safe-area-inset-top)]">
         <div className="h-16 px-4 flex items-center gap-2">
           <button onClick={() => navigate(-1)} className="p-2 text-zinc-400 hover:text-white shrink-0">
@@ -186,7 +185,7 @@ const Chat = () => {
 
       <main ref={scrollRef} className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] pb-[80px] px-6 overflow-y-auto space-y-6 custom-scrollbar overflow-x-hidden">
         {chatMessages?.map((msg) => {
-          const isMe = msg.sender_id === currentUserId;
+          const isMe = msg.sender_id === currentUser?.id;
           const isMention = msg.content.includes('Ti ha menzionato');
           const isSharedPost = msg.content.includes('Ti ha inviato un post');
           const msgImages = msg.images || [];
@@ -310,7 +309,6 @@ const Chat = () => {
         })}
       </main>
 
-      {/* Barra di Input Uniformata alla BottomNav */}
       <div 
         className="fixed bottom-0 left-0 right-0 bg-black border-t border-white/10 z-50"
         style={{ 
@@ -320,7 +318,6 @@ const Chat = () => {
         }}
       >
         <div className="max-w-2xl mx-auto h-full relative">
-          {/* Previews (sopra la barra) */}
           {previews.length > 0 && (
             <div className="absolute bottom-full left-0 right-0 p-4 flex gap-2 overflow-x-auto no-scrollbar bg-black/40 backdrop-blur-md border-t border-white/5">
               {previews.map((url, i) => (

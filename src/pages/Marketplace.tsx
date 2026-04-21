@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Navbar from '@/components/Navbar';
 import { useMarketplace, MARKETPLACE_CATEGORIES, MarketplaceItem } from '@/hooks/use-marketplace';
+import { useAuth } from '@/hooks/use-auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Plus, Tag, Loader2, User, Trash2, Euro, ChevronRight, Lock, LogIn, Search, SlidersHorizontal, X, Edit3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,8 @@ import { useTranslation } from '@/hooks/use-translation';
 const Marketplace = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { user, isLoading: authLoading } = useAuth();
+  
   const [category, setCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [minPrice, setMinPrice] = useState('');
@@ -27,18 +30,9 @@ const Marketplace = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MarketplaceItem | null>(null);
   const [editingItem, setEditingItem] = useState<MarketplaceItem | null>(null);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [loadingAuth, setLoadingAuth] = useState(true);
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
 
   const { items, isLoading, deleteItem } = useMarketplace(category);
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setCurrentUserId(user?.id || null);
-      setLoadingAuth(false);
-    });
-  }, []);
 
   const filteredItems = useMemo(() => {
     if (!items) return [];
@@ -78,16 +72,16 @@ const Marketplace = () => {
             <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">District Marketplace</h2>
             <h1 className="text-3xl md:text-6xl font-black italic tracking-tighter uppercase">Bacheca Annunci</h1>
           </div>
-          {currentUserId && (
+          {user && (
             <Button onClick={() => setIsCreateModalOpen(true)} className="bg-white text-black rounded-full h-14 px-8 font-black uppercase italic shadow-xl hover:scale-105 transition-all">
               <Plus size={18} className="mr-2" /> Pubblica Annuncio
             </Button>
           )}
         </header>
 
-        {loadingAuth ? (
+        {authLoading ? (
           <div className="py-20 flex justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>
-        ) : !currentUserId ? (
+        ) : !user ? (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-8 bg-white/10 backdrop-blur-md border border-white/10 rounded-[2.5rem] flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-zinc-900 border border-white/10 flex items-center justify-center rotate-45 shrink-0"><Lock size={32} className="text-white -rotate-45" /></div>
@@ -189,7 +183,7 @@ const Marketplace = () => {
           isOpen={!!selectedItem} 
           onClose={() => setSelectedItem(null)} 
           item={selectedItem}
-          isOwnItem={currentUserId === selectedItem.seller_id}
+          isOwnItem={user?.id === selectedItem.seller_id}
           onEdit={handleEdit}
           onDelete={handleDelete}
         />

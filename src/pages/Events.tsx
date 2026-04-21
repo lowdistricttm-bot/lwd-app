@@ -7,6 +7,7 @@ import { useEvents, Event, useUserApplications } from '@/hooks/use-events';
 import { useGarage } from '@/hooks/use-garage';
 import { useAdmin } from '@/hooks/use-admin';
 import { useBodyLock } from '@/hooks/use-body-lock';
+import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,6 +26,7 @@ const Events = () => {
   const [searchParams, searchParamsSetter] = useSearchParams();
   const { t, language } = useTranslation();
   const interiorInputRef = useRef<HTMLInputElement>(null);
+  const { user, isLoading: authLoading } = useAuth();
   
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [viewingEvent, setViewingEvent] = useState<Event | null>(null);
@@ -32,7 +34,6 @@ const Events = () => {
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [manageApp, setManageApp] = useState<any>(null);
   
-  const [user, setUser] = useState<any>(null);
   const [formData, setFormData] = useState({ fullName: '', email: '', phone: '', city: '', instagram: '', vehicleId: '', modifications: '' });
   const [interiorFiles, setInteriorFiles] = useState<File[]>([]);
   const [interiorPreviews, setInteriorPreviews] = useState<string[]>([]);
@@ -48,17 +49,14 @@ const Events = () => {
   useBodyLock(!!viewingEvent || !!selectedEvent || !!manageApp || isAdminModalOpen);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setUser(session.user);
-        setFormData(prev => ({ 
-          ...prev, 
-          fullName: session.user.user_metadata?.full_name || '', 
-          email: session.user.email || '' 
-        }));
-      }
-    });
-  }, []);
+    if (user) {
+      setFormData(prev => ({ 
+        ...prev, 
+        fullName: user.user_metadata?.full_name || '', 
+        email: user.email || '' 
+      }));
+    }
+  }, [user]);
 
   useEffect(() => {
     if (viewEventId && events && events.length > 0) {
@@ -136,7 +134,7 @@ const Events = () => {
           )}
         </header>
 
-        {eventsLoading || appsLoading ? (
+        {eventsLoading || appsLoading || authLoading ? (
           <div className="flex justify-center py-20"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>
         ) : (
           <div className="space-y-8">

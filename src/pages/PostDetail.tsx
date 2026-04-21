@@ -5,6 +5,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import FeedPost from '@/components/FeedPost';
 import { usePost } from '@/hooks/use-social-feed';
+import { useAuth } from '@/hooks/use-auth';
 import { Loader2, ChevronLeft, Lock, LogIn, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/use-translation';
@@ -15,17 +16,14 @@ const PostDetail = () => {
   const { postId } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { user, isLoading: authLoading } = useAuth();
   const { data: post, isLoading, error } = usePost(postId);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsLoggedIn(!!session);
-    });
-  }, []);
+  if (authLoading) {
+    return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
+  }
 
-  // Se non è loggato e il post non viene caricato (bloccato da RLS)
-  if (isLoggedIn === false && !post && !isLoading) {
+  if (!user && !post && !isLoading) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col">
         <Navbar />

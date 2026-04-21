@@ -7,6 +7,7 @@ import FeedPost from '@/components/FeedPost';
 import CreatePostModal from '@/components/CreatePostModal';
 import { useSocialFeed } from '@/hooks/use-social-feed';
 import { useAdmin } from '@/hooks/use-admin';
+import { useAuth } from '@/hooks/use-auth';
 import { Loader2, Plus, AlertCircle, LogIn, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from "@/integrations/supabase/client";
@@ -18,15 +19,11 @@ const Bacheca = () => {
   const { t } = useTranslation();
   const { posts, isLoading, refetch } = useSocialFeed();
   const { role } = useAdmin();
+  const { user, isLoading: authLoading } = useAuth();
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-    // Sincronizzazione immediata all'apertura
     refetch();
   }, [refetch]);
 
@@ -61,21 +58,22 @@ const Bacheca = () => {
           )}
         </header>
 
-        {/* L'avviso appare SOLO se l'utente non è loggato */}
-        {!user && (
+        {authLoading ? (
+          <div className="flex justify-center py-20"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>
+        ) : !user ? (
           <div className="mb-8 p-8 bg-white/10 backdrop-blur-md border border-white/10 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-4">
               <AlertCircle className="text-white shrink-0" size={32} />
               <div>
                 <p className="text-xs font-black uppercase tracking-widest text-white">{t.feed.private}</p>
-                <p className="text-[10px] text-zinc-400 font-bold uppercase mt-1">Accedi per partecipare alle discussioni.</p>
+                <p className="text-[10px] text-zinc-400 font-bold uppercase mt-1">Accedi per partecipare alle discussioni del District.</p>
               </div>
             </div>
             <Button onClick={() => navigate('/login')} className="bg-white text-black hover:scale-105 rounded-full text-[10px] font-black uppercase tracking-widest h-12 px-8 italic shadow-xl">
               <LogIn size={16} className="mr-2" /> {t.auth.login}
             </Button>
           </div>
-        )}
+        ) : null}
 
         {isLoading && !posts ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">

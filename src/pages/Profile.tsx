@@ -20,6 +20,7 @@ import { useSocialFeed } from '@/hooks/use-social-feed';
 import { useAdmin } from '@/hooks/use-admin';
 import { usePresence } from '@/hooks/use-presence';
 import { useFollow } from '@/hooks/use-follow';
+import { useAuth } from '@/hooks/use-auth';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { 
@@ -53,10 +54,10 @@ const Profile = () => {
   const { t, language } = useTranslation();
   const { role, canVote } = useAdmin();
   const { isUserOnline, getLastSeen } = usePresence();
+  const { user: currentUser, isLoading: authLoading } = useAuth();
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   
-  const [currentUser, setCurrentUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -113,19 +114,21 @@ const Profile = () => {
   };
 
   useEffect(() => {
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session && !userId) {
-        navigate('/login');
-        return;
-      }
-      setCurrentUser(session?.user || null);
+    if (authLoading) return;
+    
+    if (!currentUser && !userId) {
+      navigate('/login');
+      return;
+    }
+
+    const loadProfile = async () => {
       if (userId) await fetchProfile(userId);
-      else if (session?.user) await fetchProfile(session.user.id);
+      else if (currentUser) await fetchProfile(currentUser.id);
       setLoading(false);
     };
-    checkUser();
-  }, [navigate, userId]);
+    
+    loadProfile();
+  }, [authLoading, currentUser, userId, navigate]);
 
   const handleShareProfile = async () => {
     const profileUrl = `${window.location.origin}/profile/${targetUserId}`;
@@ -210,7 +213,7 @@ const Profile = () => {
     return null;
   };
 
-  if (loading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
+  if (loading || authLoading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
   const userRole = profile?.role || 'subscriber';
   const isTargetSubscriber = userRole === 'subscriber';

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Navbar from '@/components/Navbar';
 import { useMeets, Meet } from '@/hooks/use-meets';
 import { useAdmin } from '@/hooks/use-admin';
+import { useAuth } from '@/hooks/use-auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Calendar, Plus, User, Loader2, ChevronRight, Trash2, RefreshCw, Clock, AlertCircle, LogIn, Info, Search, Navigation, X, Map as MapIcon, List, MapPinned, CheckCircle2, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -34,39 +35,30 @@ const Meets = () => {
   const { t } = useTranslation();
   const { meets, isLoading, deleteMeet, toggleParticipation, refetch } = useMeets();
   const { role } = useAdmin();
+  const { user, isLoading: authLoading } = useAuth();
   
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedMeet, setSelectedMeet] = useState<Meet | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
-  const [user, setUser] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isLocationAlertOpen, setIsLocationAlertOpen] = useState(false);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [isFilteringNearMe, setIsFilteringNearMe] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setCurrentUserId(session?.user?.id || null);
-      if (session?.user) {
-        supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle().then(({ data }) => {
-          setUserProfile(data);
-        });
-      }
-    });
-  }, []);
+    if (user) {
+      supabase.from('profiles').select('*').eq('id', user.id).maybeSingle().then(({ data }) => {
+        setUserProfile(data);
+      });
+    }
+  }, [user]);
 
   const handleManualRefresh = () => {
     if (!user) return;
     setIsRefreshing(true);
-    
-    // Feedback aptico
     if ('vibrate' in navigator) navigator.vibrate(15);
-    
-    // Refresh completo della pagina come richiesto
     window.location.reload();
   };
 
@@ -131,7 +123,9 @@ const Meets = () => {
           )}
         </header>
 
-        {!user ? (
+        {authLoading ? (
+          <div className="flex justify-center py-20"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>
+        ) : !user ? (
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -145,7 +139,7 @@ const Meets = () => {
               </div>
             </div>
             <Button onClick={() => navigate('/login')} className="bg-white text-black hover:scale-105 rounded-full text-[10px] font-black uppercase tracking-widest h-12 px-8 italic shadow-xl">
-              <LogIn size={16} className="mr-2" /> Accedi Ora
+              <LogIn size={16} className="mr-2" /> {t.auth.login}
             </Button>
           </motion.div>
         ) : (
@@ -253,7 +247,7 @@ const Meets = () => {
                               <Calendar size={12} /> {format(new Date(meet.date), 'dd MMM', { locale: it }).toUpperCase()}
                             </div>
                           </div>
-                          {currentUserId === meet.user_id && (
+                          {user?.id === meet.user_id && (
                             <button 
                               onClick={(e) => { e.stopPropagation(); deleteMeet.mutate(meet.id); }}
                               className="absolute top-5 right-5 p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-red-600 transition-all shadow-xl z-10"
