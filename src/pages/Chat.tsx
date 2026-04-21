@@ -107,7 +107,8 @@ const Chat = () => {
     if (files.length > 0) {
       const newFiles = [...selectedFiles, ...files].slice(0, 10);
       setSelectedFiles(newFiles);
-      setPreviews(newFiles.map(file => URL.createObjectURL(file)));
+      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+      setPreviews(newPreviews);
     }
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -141,10 +142,11 @@ const Chat = () => {
 
   if (loadingChat || authLoading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
-  const inputBarHeight = isIOS ? '50px' : '44px';
+  // Altezza dinamica coerente con BottomNav e StoryViewer
+  const inputBarHeight = `calc(${isIOS ? 50 : 44}px + env(safe-area-inset-bottom))`;
 
   return (
-    <div className="min-h-screen text-white flex flex-col bg-transparent">
+    <div className="min-h-screen text-white flex flex-col bg-transparent" style={{ height: '100dvh' }}>
       <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-2xl border-b border-white/10 pt-[env(safe-area-inset-top)]">
         <div className="h-16 px-4 flex items-center gap-2">
           <button onClick={() => navigate(-1)} className="p-2 text-zinc-400 hover:text-white shrink-0">
@@ -183,7 +185,11 @@ const Chat = () => {
         </div>
       </nav>
 
-      <main ref={scrollRef} className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] pb-[80px] px-6 overflow-y-auto space-y-6 custom-scrollbar overflow-x-hidden">
+      <main 
+        ref={scrollRef} 
+        className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] px-6 overflow-y-auto space-y-6 custom-scrollbar overflow-x-hidden"
+        style={{ paddingBottom: inputBarHeight }}
+      >
         {chatMessages?.map((msg) => {
           const isMe = msg.sender_id === currentUser?.id;
           const isMention = msg.content.includes('Ti ha menzionato');
@@ -313,7 +319,7 @@ const Chat = () => {
         className="fixed bottom-0 left-0 right-0 bg-black border-t border-white/10 z-50"
         style={{ 
           height: inputBarHeight,
-          paddingBottom: '0px',
+          paddingBottom: 'env(safe-area-inset-bottom)',
           marginBottom: '0px'
         }}
       >
@@ -341,10 +347,7 @@ const Chat = () => {
 
           <form 
             onSubmit={handleSend} 
-            className={cn(
-              "h-full px-4 flex items-center gap-3",
-              isIOS ? "justify-end pb-0" : "justify-center"
-            )}
+            className="h-full px-4 flex items-center gap-3"
           >
             <input 
               type="file" 
