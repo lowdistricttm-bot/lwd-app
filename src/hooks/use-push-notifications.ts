@@ -6,15 +6,17 @@ import { showSuccess, showError } from '@/utils/toast';
 
 export const usePushNotifications = () => {
   const [isSupported, setIsSupported] = useState(false);
-  const [permission, setPermission] = useState<NotificationPermission>(
-    typeof window !== 'undefined' ? Notification.permission : 'default'
-  );
+  const [permission, setPermission] = useState<NotificationPermission>('default');
   const [subscription, setSubscription] = useState<PushSubscription | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window) {
       setIsSupported(true);
-      setPermission(Notification.permission);
+      
+      // Controllo sicuro per l'esistenza dell'API Notification
+      if ('Notification' in window) {
+        setPermission(Notification.permission);
+      }
       
       navigator.serviceWorker.ready.then((registration) => {
         registration.pushManager.getSubscription().then((sub) => {
@@ -25,15 +27,20 @@ export const usePushNotifications = () => {
   }, []);
 
   const requestPermission = async () => {
-    if (!('Notification' in window)) return;
+    if (!('Notification' in window)) return 'default';
 
-    const result = await Notification.requestPermission();
-    setPermission(result);
-    
-    if (result === 'granted') {
-      showSuccess("Notifiche attivate con successo!");
+    try {
+      const result = await Notification.requestPermission();
+      setPermission(result);
+      
+      if (result === 'granted') {
+        showSuccess("Notifiche attivate con successo!");
+      }
+      return result;
+    } catch (err) {
+      console.error("Errore richiesta permessi:", err);
+      return 'default';
     }
-    return result;
   };
 
   const subscribeUser = async () => {
