@@ -225,8 +225,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[9999] bg-black flex items-center justify-center overflow-hidden touch-none"
-      style={{ height: '100dvh', width: '100vw' }}
+      className="fixed inset-0 z-[9999] bg-black flex items-center justify-center overflow-hidden touch-none h-screen w-screen"
     >
       <div className="absolute inset-0 z-0 opacity-40 blur-[100px] scale-150 hidden md:block">
         <img src={currentStory.image_url} className="w-full h-full object-cover" alt="" />
