@@ -225,10 +225,10 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden touch-none"
+      className="fixed inset-0 z-[9999] bg-black flex items-center justify-center overflow-hidden touch-none"
     >
-      {/* Background Blur forzato a coprire tutto lo schermo, inclusa safe area */}
-      <div className="absolute inset-0 z-0 opacity-90 blur-[100px] scale-150">
+      {/* Background Blur forzato a coprire tutto lo schermo */}
+      <div className="absolute inset-0 z-0 opacity-70 blur-[60px] scale-125">
         <img src={currentStory.image_url} className="w-full h-full object-cover" alt="" />
       </div>
 
@@ -317,9 +317,9 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </AnimatePresence>
         </div>
 
-        {/* Footer Interaction Area - Gradiente più leggero per mostrare i colori dello sfondo */}
+        {/* Footer Interaction Area */}
         <div 
-          className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black/40 via-transparent to-transparent pt-40 pointer-events-none"
+          className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black/80 via-black/20 to-transparent pt-32 pointer-events-none"
         >
           <div 
             className="px-4 flex w-full max-w-md mx-auto items-end pointer-events-auto pb-2" 
