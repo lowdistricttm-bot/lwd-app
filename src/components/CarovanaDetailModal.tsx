@@ -73,14 +73,14 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
             animate={{ y: 0 }} 
             exit={{ y: '100%' }} 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[251] bg-zinc-950 border-t border-white/10 p-6 pt-10 rounded-t-[2.5rem] max-h-[92dvh] overflow-y-auto shadow-2xl"
+            className="fixed inset-x-0 bottom-0 z-[251] bg-zinc-950 border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[92dvh] overflow-y-auto shadow-2xl"
             style={{ 
               touchAction: 'pan-y', 
               overscrollBehavior: 'contain' 
             }}
             data-no-swipe="true"
           >
-            <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-10 shrink-0" />
+            <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
             
             <div className="max-w-2xl mx-auto space-y-8 pb-10">
               <div className="flex justify-between items-start">
@@ -146,7 +146,7 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
                     <div className="absolute left-8 top-10 bottom-10 w-[1px] bg-white/10" />
                     {carovana.carovane_tappe.map((stop, i) => (
                       <div key={stop.id} className="flex items-start gap-6 relative z-10">
-                        <div className="w-4 h-4 rounded-full bg-white border-4 border-zinc-900 mt-1 shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
+                        <div className="w-4 h-4 rounded-full bg-white border-4 border-zinc-900 mt-1 shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
                         <div className="flex-1">
                           <div className="flex justify-between items-start">
                             <p className="text-sm font-black uppercase italic text-white">{stop.location}</p>
