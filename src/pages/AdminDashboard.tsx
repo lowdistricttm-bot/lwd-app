@@ -63,6 +63,13 @@ const AdminDashboard = () => {
 
   const menuItems = [
     {
+      title: "Centro Notifiche",
+      desc: "Invia messaggi diretti o annunci a tutta la community",
+      icon: Bell,
+      action: () => setIsNotifModalOpen(true),
+      show: isAdmin || isStaff
+    },
+    {
       title: "Gestione Selezioni",
       desc: isAdmin || isStaff 
         ? "Approva o rifiuta le candidature agli eventi" 
@@ -73,11 +80,19 @@ const AdminDashboard = () => {
       badge: pendingAppsCount
     },
     {
-      title: "Mystery Box",
-      desc: "Configura la box mensile a stock limitato",
-      icon: Gift,
-      action: () => setIsMysteryModalOpen(true),
-      show: isAdmin || isStaff
+      title: "Richieste Upgrade",
+      desc: `Gestisci le richieste per il ruolo ISCRITTO+ (${allRequests?.length || 0} in attesa)`,
+      icon: Sparkles,
+      action: () => setShowRequests(!showRequests),
+      show: isAdmin || isStaff,
+      badge: allRequests?.length || 0
+    },
+    {
+      title: "Gestione Membri",
+      desc: "Modifica i ruoli e i gradi degli utenti del District",
+      icon: Users,
+      action: () => navigate('/admin/users'),
+      show: isAdmin === true
     },
     {
       title: "Assegna Trofei",
@@ -87,26 +102,11 @@ const AdminDashboard = () => {
       show: isAdmin || isStaff
     },
     {
-      title: "Richieste Upgrade",
-      desc: `Gestisci le richieste per il ruolo ISCRITTO+ (${allRequests?.length || 0} in attesa)`,
-      icon: Sparkles,
-      action: () => setShowRequests(!showRequests),
-      show: isAdmin || isStaff,
-      badge: allRequests?.length || 0
-    },
-    {
-      title: "Centro Notifiche",
-      desc: "Invia messaggi diretti o annunci a tutta la community",
-      icon: Bell,
-      action: () => setIsNotifModalOpen(true),
+      title: "Mystery Box",
+      desc: "Configura la box mensile a stock limitato",
+      icon: Gift,
+      action: () => setIsMysteryModalOpen(true),
       show: isAdmin || isStaff
-    },
-    {
-      title: "Gestione Membri",
-      desc: "Modifica i ruoli e i gradi degli utenti del District",
-      icon: Users,
-      action: () => navigate('/admin/users'),
-      show: isAdmin === true
     },
     {
       title: "Configurazione Email",
