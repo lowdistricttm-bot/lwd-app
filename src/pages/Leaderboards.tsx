@@ -65,7 +65,7 @@ const Leaderboards = () => {
             )}
           >
             <Sparkles size={16} />
-            <span className="text-[10px] font-black uppercase tracking-widest italic">Top Stance</span>
+            <span className="text-[10px] font-black uppercase tracking-widest italic">Top Low</span>
           </button>
           <button 
             onClick={() => setActiveTab('likes')}
@@ -75,7 +75,7 @@ const Leaderboards = () => {
             )}
           >
             <Heart size={16} />
-            <span className="text-[10px] font-black uppercase tracking-widest italic">Community Choice</span>
+            <span className="text-[10px] font-black uppercase tracking-widest italic">Community Like</span>
           </button>
         </div>
 
