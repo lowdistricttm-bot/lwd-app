@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MapPin, Clock, Users, Car, ChevronRight, Loader2, Trash2, Share2, Info, Navigation } from 'lucide-react';
+import { X, MapPin, Clock, Users, Car, ChevronRight, Loader2, Trash2, Share2, Info, Navigation, Edit3 } from 'lucide-react';
 import { Carovana, useCarovane } from '@/hooks/use-carovane';
 import { useGarage } from '@/hooks/use-garage';
 import { useBodyLock } from '@/hooks/use-body-lock';
@@ -17,9 +17,10 @@ interface CarovanaDetailModalProps {
   onClose: () => void;
   carovana: Carovana;
   currentUserId: string | null;
+  onEdit?: (carovana: Carovana) => void;
 }
 
-const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId }: CarovanaDetailModalProps) => {
+const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit }: CarovanaDetailModalProps) => {
   const navigate = useNavigate();
   const { toggleJoin, deleteCarovana } = useCarovane();
   const { vehicles } = useGarage();
@@ -86,7 +87,20 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId }: Carov
                 </div>
                 <div className="flex gap-2">
                   {isCreator && (
-                    <button onClick={() => { if(confirm("Eliminare carovana?")) { deleteCarovana.mutate(carovana.id); onClose(); } }} className="p-2 bg-red-500/10 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all"><Trash2 size={20} /></button>
+                    <>
+                      <button 
+                        onClick={() => onEdit?.(carovana)} 
+                        className="p-2 bg-white/5 text-zinc-400 rounded-full hover:bg-white hover:text-black transition-all"
+                      >
+                        <Edit3 size={20} />
+                      </button>
+                      <button 
+                        onClick={() => { if(confirm("Eliminare carovana?")) { deleteCarovana.mutate(carovana.id); onClose(); } }} 
+                        className="p-2 bg-red-500/10 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all"
+                      >
+                        <Trash2 size={20} />
+                      </button>
+                    </>
                   )}
                   <button onClick={onClose} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors"><X size={24} /></button>
                 </div>
@@ -177,7 +191,7 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId }: Carov
                   onClick={handleJoin}
                   disabled={toggleJoin.isPending}
                   className={cn(
-                    "h-16 rounded-full font-black uppercase italic text-[10px] tracking-widest transition-all shadow-xl flex items-center justify-center gap-3 border",
+                    "h-16 rounded-full font-black uppercase italic text-[10px] tracking-widest transition-all duration-500 shadow-xl flex items-center justify-center gap-3 border",
                     carovana.is_joined 
                       ? "bg-zinc-800 text-white border-white/10 hover:bg-red-600 hover:border-red-600" 
                       : "bg-white text-black border-white hover:bg-zinc-200"

@@ -21,11 +21,24 @@ const EventCarovane = ({ eventId, eventTitle, currentUserId }: EventCarovaneProp
   const { carovane, isLoading, refetch } = useCarovane(eventId);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedCarovana, setSelectedCarovana] = useState<Carovana | null>(null);
+  const [editingCarovana, setEditingCarovana] = useState<Carovana | null>(null);
 
   // Forza il rinfresco quando il componente viene montato
   useEffect(() => {
     refetch();
   }, [eventId, refetch]);
+
+  const handleEdit = (carovana: Carovana) => {
+    setEditingCarovana(carovana);
+    setSelectedCarovana(null);
+    setIsCreateOpen(true);
+  };
+
+  const handleCloseCreate = () => {
+    setIsCreateOpen(false);
+    setEditingCarovana(null);
+    refetch();
+  };
 
   if (isLoading) return (
     <div className="py-20 flex flex-col items-center gap-4">
@@ -42,7 +55,7 @@ const EventCarovane = ({ eventId, eventTitle, currentUserId }: EventCarovaneProp
           <p className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Viaggia in gruppo verso l'evento</p>
         </div>
         <button 
-          onClick={() => setIsCreateOpen(true)}
+          onClick={() => { setEditingCarovana(null); setIsCreateOpen(true); }}
           className="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 transition-all shadow-lg"
         >
           <Plus size={20} />
@@ -54,7 +67,7 @@ const EventCarovane = ({ eventId, eventTitle, currentUserId }: EventCarovaneProp
           <Car className="mx-auto text-zinc-800 mb-6" size={48} />
           <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest italic">Nessuna carovana creata per questo evento.</p>
           <button 
-            onClick={() => setIsCreateOpen(true)} 
+            onClick={() => { setEditingCarovana(null); setIsCreateOpen(true); }} 
             className="mt-6 bg-white/5 hover:bg-white/10 text-white px-6 py-2 rounded-full text-[9px] font-black uppercase italic border border-white/10 transition-all"
           >
             Crea la prima
@@ -113,12 +126,10 @@ const EventCarovane = ({ eventId, eventTitle, currentUserId }: EventCarovaneProp
 
       <CreateCarovanaModal 
         isOpen={isCreateOpen} 
-        onClose={() => {
-          setIsCreateOpen(false);
-          refetch(); 
-        }} 
+        onClose={handleCloseCreate} 
         eventId={eventId} 
         eventTitle={eventTitle} 
+        editCarovana={editingCarovana}
       />
 
       {selectedCarovana && (
@@ -127,6 +138,7 @@ const EventCarovane = ({ eventId, eventTitle, currentUserId }: EventCarovaneProp
           onClose={() => setSelectedCarovana(null)} 
           carovana={selectedCarovana} 
           currentUserId={currentUserId}
+          onEdit={handleEdit}
         />
       )}
     </div>

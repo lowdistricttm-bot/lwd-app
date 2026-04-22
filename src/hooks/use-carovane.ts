@@ -136,10 +136,51 @@ export const useCarovane = (eventId?: string) => {
       return carovana;
     },
     onSuccess: async (_, variables) => {
-      // Invalida e aspetta il completamento per sicurezza
       await queryClient.invalidateQueries({ queryKey: ['carovane'] });
       await queryClient.invalidateQueries({ queryKey: ['carovane', variables.eventId] });
       showSuccess("Carovana creata! Run to the show!");
+    },
+    onError: (err: any) => showError(err.message)
+  });
+
+  const updateCarovana = useMutation({
+    mutationFn: async (data: { 
+      id: string,
+      title: string, 
+      startLocation: string, 
+      startTime: string, 
+      routeDescription: string,
+      stops: { location: string, arrivalTime: string }[]
+    }) => {
+      const { error: cError } = await supabase
+        .from('carovane')
+        .update({
+          title: data.title,
+          start_location: data.startLocation,
+          start_time: data.startTime,
+          route_description: data.routeDescription
+        })
+        .eq('id', data.id);
+
+      if (cError) throw cError;
+
+      // Semplifichiamo l'aggiornamento delle tappe: eliminiamo e ricreiamo
+      await supabase.from('carovane_tappe').delete().eq('carovana_id', data.id);
+
+      if (data.stops.length > 0) {
+        const stops = data.stops.map((s, i) => ({
+          carovana_id: data.id,
+          location: s.location,
+          arrival_time: s.arrivalTime || null,
+          order_index: i
+        }));
+        const { error: sError } = await supabase.from('carovane_tappe').insert(stops);
+        if (sError) throw sError;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['carovane'] });
+      showSuccess("Carovana aggiornata!");
     },
     onError: (err: any) => showError(err.message)
   });
@@ -186,5 +227,5 @@ export const useCarovane = (eventId?: string) => {
     }
   });
 
-  return { carovane, isLoading, createCarovana, toggleJoin, deleteCarovana, refetch };
+  return { carovane, isLoading, createCarovana, updateCarovana, toggleJoin, deleteCarovana, refetch };
 };

@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MapPin, Clock, Plus, Trash2, Loader2, Send, Type } from 'lucide-react';
+import { X, MapPin, Clock, Plus, Trash2, Loader2, Send, Type, Save } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import { useCarovane } from '@/hooks/use-carovane';
+import { useCarovane, Carovana } from '@/hooks/use-carovane';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { cn } from '@/lib/utils';
 
@@ -16,10 +16,11 @@ interface CreateCarovanaModalProps {
   onClose: () => void;
   eventId: string;
   eventTitle: string;
+  editCarovana?: Carovana | null;
 }
 
-const CreateCarovanaModal = ({ isOpen, onClose, eventId, eventTitle }: CreateCarovanaModalProps) => {
-  const { createCarovana } = useCarovane();
+const CreateCarovanaModal = ({ isOpen, onClose, eventId, eventTitle, editCarovana }: CreateCarovanaModalProps) => {
+  const { createCarovana, updateCarovana } = useCarovane();
   const [formData, setFormData] = useState({
     title: '',
     startLocation: '',
@@ -28,7 +29,24 @@ const CreateCarovanaModal = ({ isOpen, onClose, eventId, eventTitle }: CreateCar
   });
   const [stops, setStops] = useState<{ location: string, arrivalTime: string }[]>([]);
 
-  // Blocca lo scroll del body
+  useEffect(() => {
+    if (editCarovana) {
+      setFormData({
+        title: editCarovana.title,
+        startLocation: editCarovana.start_location,
+        startTime: new Date(editCarovana.start_time).toISOString().slice(0, 16),
+        routeDescription: editCarovana.route_description || ''
+      });
+      setStops(editCarovana.carovane_tappe?.map(s => ({
+        location: s.location,
+        arrivalTime: s.arrival_time ? new Date(s.arrival_time).toISOString().slice(0, 16) : ''
+      })) || []);
+    } else {
+      setFormData({ title: '', startLocation: '', startTime: '', routeDescription: '' });
+      setStops([]);
+    }
+  }, [editCarovana, isOpen]);
+
   useBodyLock(isOpen);
 
   const addStop = () => setStops([...stops, { location: '', arrivalTime: '' }]);
@@ -41,7 +59,11 @@ const CreateCarovanaModal = ({ isOpen, onClose, eventId, eventTitle }: CreateCar
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await createCarovana.mutateAsync({ ...formData, eventId, stops });
+    if (editCarovana) {
+      await updateCarovana.mutateAsync({ id: editCarovana.id, ...formData, stops });
+    } else {
+      await createCarovana.mutateAsync({ ...formData, eventId, stops });
+    }
     onClose();
   };
 
@@ -77,7 +99,9 @@ const CreateCarovanaModal = ({ isOpen, onClose, eventId, eventTitle }: CreateCar
             <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-8 pb-10">
               <div className="flex justify-between items-center">
                 <div>
-                  <h2 className="text-2xl font-black italic uppercase tracking-tighter">Crea Carovana</h2>
+                  <h2 className="text-2xl font-black italic uppercase tracking-tighter">
+                    {editCarovana ? 'Modifica Carovana' : 'Crea Carovana'}
+                  </h2>
                   <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 mt-1">Run to: {eventTitle}</p>
                 </div>
                 <button type="button" onClick={onClose} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors"><X size={24} /></button>
@@ -142,10 +166,14 @@ const CreateCarovanaModal = ({ isOpen, onClose, eventId, eventTitle }: CreateCar
 
                 <Button 
                   type="submit" 
-                  disabled={createCarovana.isPending}
+                  disabled={createCarovana.isPending || updateCarovana.isPending}
                   className="w-full bg-white text-black hover:bg-zinc-200 h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl mt-4"
                 >
-                  {createCarovana.isPending ? <Loader2 className="animate-spin" /> : <><Send size={18} className="mr-2 -rotate-12" /> Crea Carovana</>}
+                  {createCarovana.isPending || updateCarovana.isPending ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <><Save size={18} className="mr-2 -rotate-12" /> {editCarovana ? 'Salva Modifiche' : 'Crea Carovana'}</>
+                  )}
                 </Button>
               </div>
             </form>
