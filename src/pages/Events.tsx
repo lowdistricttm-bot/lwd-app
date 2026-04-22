@@ -12,13 +12,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Car, Loader2, ChevronRight, X, MapPin, Camera, Trash2, Settings2, Calendar, Plus, Edit3, Clock, Lock, CheckCircle2, User as UserIcon, Mail, Phone, Instagram, Info } from 'lucide-react';
+import { Car, Loader2, ChevronRight, X, MapPin, Camera, Trash2, Settings2, Calendar, Plus, Edit3, Clock, Lock, CheckCircle2, User as UserIcon, Mail, Phone, Instagram, Info, Truck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
 import { showError } from '@/utils/toast';
 import EventAdminModal from '@/components/EventAdminModal';
 import ManageApplicationModal from '@/components/ManageApplicationModal';
+import EventConvoys from '@/components/EventConvoys';
 import { useTranslation } from '@/hooks/use-translation';
 
 const Events = () => {
@@ -33,6 +34,7 @@ const Events = () => {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [manageApp, setManageApp] = useState<any>(null);
+  const [activeViewTab, setActiveViewTab] = useState<'info' | 'convoys'>('info');
   
   const [formData, setFormData] = useState({ fullName: '', email: '', phone: '', city: '', instagram: '', vehicleId: '', modifications: '' });
   const [interiorFiles, setInteriorFiles] = useState<File[]>([]);
@@ -183,7 +185,7 @@ const Events = () => {
                       </div>
                       
                       <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
-                        <button onClick={() => setViewingEvent(event)} className={cn(btnBaseClass, "bg-white/10 border-white/10 text-white hover:bg-white/20")}>{t.events.viewEvent} <ChevronRight size={14} /></button>
+                        <button onClick={() => { setViewingEvent(event); setActiveViewTab('info'); }} className={cn(btnBaseClass, "bg-white/10 border-white/10 text-white hover:bg-white/20")}>{t.events.viewEvent} <ChevronRight size={14} /></button>
                         {existingApp ? (
                           <button onClick={() => setManageApp(existingApp)} className={cn(btnBaseClass, "bg-zinc-800 text-white border-white/10 hover:bg-zinc-700")}>{t.events.manage} <Settings2 size={14} /></button>
                         ) : (
@@ -223,47 +225,94 @@ const Events = () => {
                     <button onClick={() => setViewingEvent(null)} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors"><X size={24} /></button>
                   </div>
 
-                  {viewingEvent.image_url && (
-                    <div className="aspect-video bg-zinc-950 rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl">
-                      <img src={viewingEvent.image_url} className="w-full h-full object-cover" alt={viewingEvent.title} />
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white/5 border border-white/10 p-6 rounded-[2rem] backdrop-blur-md">
-                      <p className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.3em] italic mb-2">{t.events.date}</p>
-                      <p className="text-sm font-black uppercase italic text-white tracking-tight">
-                        {formatDateRange(viewingEvent.date, viewingEvent.end_date)}
-                      </p>
-                    </div>
-                    <div className="bg-white/5 border border-white/10 p-6 rounded-[2rem] backdrop-blur-md">
-                      <p className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.3em] italic mb-2">{t.events.location}</p>
-                      <p className="text-sm font-black uppercase italic text-white tracking-tight">
-                        {viewingEvent.location}
-                      </p>
-                    </div>
+                  {/* Tabs per Info vs Convogli */}
+                  <div className="flex bg-white/5 p-1 rounded-full border border-white/10">
+                    <button 
+                      onClick={() => setActiveViewTab('info')}
+                      className={cn(
+                        "flex-1 flex items-center justify-center gap-2 py-3 rounded-full text-[10px] font-black uppercase italic transition-all",
+                        activeViewTab === 'info' ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-white"
+                      )}
+                    >
+                      <Info size={14} /> Info Evento
+                    </button>
+                    <button 
+                      onClick={() => setActiveViewTab('convoys')}
+                      className={cn(
+                        "flex-1 flex items-center justify-center gap-2 py-3 rounded-full text-[10px] font-black uppercase italic transition-all",
+                        activeViewTab === 'convoys' ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-white"
+                      )}
+                    >
+                      <Truck size={14} /> Convogli
+                    </button>
                   </div>
 
-                  {viewingEvent.description && (
-                    <div className="space-y-3 px-2">
-                      <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.4em] italic">{t.events.description}</h4>
-                      <p className="text-sm font-black uppercase italic text-white leading-relaxed tracking-tight">{viewingEvent.description}</p>
-                    </div>
-                  )}
+                  <AnimatePresence mode="wait">
+                    {activeViewTab === 'info' ? (
+                      <motion.div 
+                        key="info-tab"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        className="space-y-10"
+                      >
+                        {viewingEvent.image_url && (
+                          <div className="aspect-video bg-zinc-950 rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl">
+                            <img src={viewingEvent.image_url} className="w-full h-full object-cover" alt={viewingEvent.title} />
+                          </div>
+                        )}
 
-                  {viewingEvent.program && (
-                    <div className="space-y-3 px-2">
-                      <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.4em] italic">{t.events.program}</h4>
-                      <p className="text-sm font-black uppercase italic text-white leading-relaxed tracking-tight whitespace-pre-wrap">{viewingEvent.program}</p>
-                    </div>
-                  )}
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="bg-white/5 border border-white/10 p-6 rounded-[2rem] backdrop-blur-md">
+                            <p className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.3em] italic mb-2">{t.events.date}</p>
+                            <p className="text-sm font-black uppercase italic text-white tracking-tight">
+                              {formatDateRange(viewingEvent.date, viewingEvent.end_date)}
+                            </p>
+                          </div>
+                          <div className="bg-white/5 border border-white/10 p-6 rounded-[2rem] backdrop-blur-md">
+                            <p className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.3em] italic mb-2">{t.events.location}</p>
+                            <p className="text-sm font-black uppercase italic text-white tracking-tight">
+                              {viewingEvent.location}
+                            </p>
+                          </div>
+                        </div>
 
-                  {isAdmin && (
-                    <div className="pt-6 pb-10 flex gap-4">
-                      <Button onClick={() => { setEditingEvent(viewingEvent); setViewingEvent(null); setIsAdminModalOpen(true); }} className="flex-1 bg-white text-black font-black uppercase italic rounded-full h-14 shadow-xl"><Edit3 size={16} className="mr-2" /> Modifica</Button>
-                      <Button onClick={() => { if(confirm("Eliminare evento?")) { deleteEvent.mutate(viewingEvent.id); setViewingEvent(null); } }} variant="destructive" className="flex-1 font-black uppercase italic rounded-full h-14 shadow-xl"><Trash2 size={16} className="mr-2" /> Elimina</Button>
-                    </div>
-                  )}
+                        {viewingEvent.description && (
+                          <div className="space-y-3 px-2">
+                            <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.4em] italic">{t.events.description}</h4>
+                            <p className="text-sm font-black uppercase italic text-white leading-relaxed tracking-tight">{viewingEvent.description}</p>
+                          </div>
+                        )}
+
+                        {viewingEvent.program && (
+                          <div className="space-y-3 px-2">
+                            <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.4em] italic">{t.events.program}</h4>
+                            <p className="text-sm font-black uppercase italic text-white leading-relaxed tracking-tight whitespace-pre-wrap">{viewingEvent.program}</p>
+                          </div>
+                        )}
+
+                        {isAdmin && (
+                          <div className="pt-6 pb-10 flex gap-4">
+                            <Button onClick={() => { setEditingEvent(viewingEvent); setViewingEvent(null); setIsAdminModalOpen(true); }} className="flex-1 bg-white text-black font-black uppercase italic rounded-full h-14 shadow-xl"><Edit3 size={16} className="mr-2" /> Modifica</Button>
+                            <Button onClick={() => { if(confirm("Eliminare evento?")) { deleteEvent.mutate(viewingEvent.id); setViewingEvent(null); } }} variant="destructive" className="flex-1 font-black uppercase italic rounded-full h-14 shadow-xl"><Trash2 size={16} className="mr-2" /> Elimina</Button>
+                          </div>
+                        )}
+                      </motion.div>
+                    ) : (
+                      <motion.div 
+                        key="convoys-tab"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                      >
+                        <EventConvoys 
+                          eventId={viewingEvent.id} 
+                          eventTitle={viewingEvent.title} 
+                          currentUserId={user?.id || null} 
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </motion.div>
             </>
@@ -415,7 +464,7 @@ const Events = () => {
                             const newFiles = [...interiorFiles]; newFiles.splice(i, 1);
                             const newPreviews = [...interiorPreviews]; newPreviews.splice(i, 1);
                             setInteriorFiles(newFiles); setInteriorPreviews(newPreviews);
-                          }} className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 text-white rounded-full hover:bg-red-600 transition-colors"><X size={12} /></button>
+                          }} className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 text-white rounded-full hover:bg-red-500 transition-colors"><X size={12} /></button>
                         </div>
                       ))}
                       {interiorFiles.length < 6 && (
