@@ -42,7 +42,7 @@ export interface Convoy {
 export const useConvoys = (eventId?: string) => {
   const queryClient = useQueryClient();
 
-  const { data: convoys, isLoading } = useQuery({
+  const { data: convoys, isLoading, refetch } = useQuery({
     queryKey: ['convoys', eventId],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -66,7 +66,10 @@ export const useConvoys = (eventId?: string) => {
       }
 
       const { data, error } = await query;
-      if (error) throw error;
+      if (error) {
+        console.error("[Convoys] Error fetching:", error);
+        return [];
+      }
 
       return (data || []).map((c: any) => ({
         ...c,
@@ -74,8 +77,7 @@ export const useConvoys = (eventId?: string) => {
         convoy_stops: (c.convoy_stops || []).sort((a: any, b: any) => a.order_index - b.order_index),
         is_joined: user ? c.convoy_participants?.some((p: any) => p.user_id === user.id) : false
       })) as Convoy[];
-    },
-    enabled: true
+    }
   });
 
   const createConvoy = useMutation({
@@ -109,7 +111,7 @@ export const useConvoys = (eventId?: string) => {
         const stops = data.stops.map((s, i) => ({
           convoy_id: convoy.id,
           location: s.location,
-          arrival_time: s.arrivalTime,
+          arrival_time: s.arrivalTime || null,
           order_index: i
         }));
         const { error: sError } = await supabase.from('convoy_stops').insert(stops);
@@ -127,7 +129,7 @@ export const useConvoys = (eventId?: string) => {
       await supabase.from('convoy_participants').insert([{
         convoy_id: convoy.id,
         user_id: user.id,
-        vehicle_id: mainVehicle?.id
+        vehicle_id: mainVehicle?.id || null
       }]);
 
       return convoy;
@@ -158,7 +160,7 @@ export const useConvoys = (eventId?: string) => {
         await supabase.from('convoy_participants').insert([{
           convoy_id: convoyId,
           user_id: user.id,
-          vehicle_id: vehicleId
+          vehicle_id: vehicleId || null
         }]);
         return 'joined';
       }
@@ -181,5 +183,5 @@ export const useConvoys = (eventId?: string) => {
     }
   });
 
-  return { convoys, isLoading, createConvoy, toggleJoin, deleteConvoy };
+  return { convoys, isLoading, createConvoy, toggleJoin, deleteConvoy, refetch };
 };
