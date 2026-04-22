@@ -65,12 +65,6 @@ const AcademyDetailModal = ({ isOpen, onClose, tutorial, canManage, onEdit, onDe
                 </div>
               </div>
 
-              {tutorial.image_url && (
-                <div className="aspect-video bg-zinc-900 rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl">
-                  <img src={tutorial.image_url} className="w-full h-full object-cover" alt="" />
-                </div>
-              )}
-
               <div className="flex items-center justify-between p-6 bg-white/5 border border-white/10 rounded-[2rem] shadow-2xl">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-black rounded-full overflow-hidden border-2 border-white/10">

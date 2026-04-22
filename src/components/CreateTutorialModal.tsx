@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Camera, Loader2, Save, Type, LayoutGrid, Link as LinkIcon, AlignLeft } from 'lucide-react';
+import { X, Loader2, Save, Type, LayoutGrid, Link as LinkIcon } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -19,7 +19,6 @@ interface CreateTutorialModalProps {
 
 const CreateTutorialModal = ({ isOpen, onClose, editTutorial }: CreateTutorialModalProps) => {
   const { createTutorial, updateTutorial } = useAcademy();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -27,9 +26,6 @@ const CreateTutorialModal = ({ isOpen, onClose, editTutorial }: CreateTutorialMo
     category: 'mechanics',
     video_url: ''
   });
-  
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (editTutorial) {
@@ -39,37 +35,23 @@ const CreateTutorialModal = ({ isOpen, onClose, editTutorial }: CreateTutorialMo
         category: editTutorial.category,
         video_url: editTutorial.video_url || ''
       });
-      setPreviewUrl(editTutorial.image_url || null);
     } else {
       setFormData({ title: '', content: '', category: 'mechanics', video_url: '' });
-      setPreviewUrl(null);
     }
-    setSelectedFile(null);
   }, [editTutorial, isOpen]);
 
   useBodyLock(isOpen);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editTutorial) {
       await updateTutorial.mutateAsync({
         id: editTutorial.id,
-        ...formData,
-        file: selectedFile || undefined,
-        existingImage: editTutorial.image_url
+        ...formData
       });
     } else {
       await createTutorial.mutateAsync({
-        ...formData,
-        file: selectedFile || undefined
+        ...formData
       });
     }
     onClose();
@@ -133,24 +115,6 @@ const CreateTutorialModal = ({ isOpen, onClose, editTutorial }: CreateTutorialMo
                       <Input value={formData.video_url} onChange={e => setFormData({...formData, video_url: e.target.value})} className={cn(inputClass, "pl-12")} placeholder="https://..." />
                     </div>
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Immagine di Copertina</Label>
-                  <div 
-                    onClick={() => fileInputRef.current?.click()}
-                    className="aspect-video border-2 border-dashed border-white/10 rounded-[2rem] flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition-all bg-white/5 overflow-hidden relative group"
-                  >
-                    {previewUrl ? (
-                      <img src={previewUrl} className="w-full h-full object-cover opacity-80" alt="Preview" />
-                    ) : (
-                      <>
-                        <Camera size={24} className="text-zinc-600 mb-2" />
-                        <span className="text-[10px] font-black uppercase text-zinc-600">Carica Foto</span>
-                      </>
-                    )}
-                  </div>
-                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
                 </div>
 
                 <div className="space-y-2">
