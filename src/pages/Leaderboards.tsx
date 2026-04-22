@@ -12,7 +12,6 @@ import {
   Loader2, 
   ChevronLeft, 
   Info,
-  TrendingUp,
   Medal
 } from 'lucide-react';
 import { cn } from '@/lib/utils';

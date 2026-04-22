@@ -40,7 +40,6 @@ const LeaderboardCard = ({ vehicle, rank, type }: LeaderboardCardProps) => {
         "hover:bg-white/10"
       )}
     >
-      {/* Rank Number */}
       <div className="w-8 shrink-0 flex flex-col items-center">
         {rank <= 3 ? (
           <Trophy size={20} className={styles.icon} />
@@ -49,7 +48,6 @@ const LeaderboardCard = ({ vehicle, rank, type }: LeaderboardCardProps) => {
         )}
       </div>
 
-      {/* Vehicle Image */}
       <div className="w-20 h-20 rounded-2xl overflow-hidden border border-white/10 shrink-0 bg-zinc-950">
         {mainImage ? (
           <img src={mainImage} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
@@ -58,7 +56,6 @@ const LeaderboardCard = ({ vehicle, rank, type }: LeaderboardCardProps) => {
         )}
       </div>
 
-      {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
           <h4 className="text-sm font-black italic uppercase truncate text-white">

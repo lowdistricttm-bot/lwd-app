@@ -30,7 +30,6 @@ export const useLeaderboards = () => {
   const { data: mostLiked, isLoading: loadingLikes } = useQuery({
     queryKey: ['leaderboard-likes'],
     queryFn: async () => {
-      // Recuperiamo tutti i veicoli con i loro like
       const { data, error } = await supabase
         .from('vehicles')
         .select(`
@@ -42,7 +41,6 @@ export const useLeaderboards = () => {
 
       if (error) throw error;
 
-      // Ordiniamo manualmente per numero di like
       const sorted = (data || [])
         .map((v: any) => ({
           ...v,
