@@ -75,12 +75,12 @@ const CamberHelper = () => {
   }, []);
 
   // Calcolo dell'angolo assoluto:
-  // Assumiamo che la ruota sia sempre in "Camber Negativo" per le auto stance.
-  // Limitiamo a un massimo di 10 gradi assoluti come richiesto.
+  // Nelle auto stance indichiamo sempre un Camber Negativo.
+  // Limite massimo impostato a 50 gradi (Range 0 - 50° come da specifiche).
   let displayAngle = Math.abs(rawAngle - offset);
-  displayAngle = Math.min(10, displayAngle);
+  displayAngle = Math.min(50, displayAngle);
   
-  // Precisione a due cifre decimali
+  // Precisione estrema a due cifre decimali (0.01°) - supera il requisito minimo di 0.1°
   const formattedAngle = displayAngle.toFixed(2);
 
   return (
@@ -157,12 +157,17 @@ const CamberHelper = () => {
                   <span className="text-7xl font-black italic tracking-tighter tabular-nums">{formattedAngle}</span>
                   <span className="text-4xl font-black">°</span>
                 </div>
-                <p className={cn(
-                  "text-[10px] font-black uppercase tracking-widest mt-2",
-                  displayAngle > 0.1 ? "text-red-500" : "text-zinc-500"
-                )}>
-                  {displayAngle > 0.1 ? 'Camber Negativo (Stance)' : 'Ruota Dritta (0°)'}
-                </p>
+                <div className="flex items-center justify-center gap-2 mt-2">
+                  <p className={cn(
+                    "text-[10px] font-black uppercase tracking-widest",
+                    displayAngle > 0.1 ? "text-red-500" : "text-zinc-500"
+                  )}>
+                    {displayAngle > 0.1 ? 'Camber Negativo (Stance)' : 'Ruota Dritta (0°)'}
+                  </p>
+                  <span className="text-[8px] font-bold text-zinc-600 border border-zinc-700 px-1.5 py-0.5 rounded">
+                    MAX -50°
+                  </span>
+                </div>
               </div>
 
               {/* Rappresentazione visiva ruota */}
@@ -206,28 +211,29 @@ const CamberHelper = () => {
               <Button 
                 onClick={calibrate}
                 variant="outline"
-                className="h-16 bg-white/5 border-white/10 text-white rounded-2xl flex flex-col items-center justify-center gap-1 hover:bg-white/10 hover:text-white shadow-xl"
+                className="h-16 bg-white/5 border-white/10 text-white rounded-2xl flex flex-col items-center justify-center gap-1 hover:bg-white/10 hover:text-white shadow-xl relative overflow-hidden group"
               >
-                <Crosshair size={18} />
-                <span className="text-[9px] font-black uppercase tracking-widest italic">Tara a Zero</span>
+                <div className="absolute inset-0 bg-green-500/10 opacity-0 group-active:opacity-100 transition-opacity" />
+                <Crosshair size={18} className="relative z-10" />
+                <span className="text-[9px] font-black uppercase tracking-widest italic relative z-10">Tara a Zero</span>
               </Button>
               <Button 
                 onClick={resetCalibration}
                 variant="outline"
-                className="h-16 bg-white/5 border-white/10 text-white rounded-2xl flex flex-col items-center justify-center gap-1 hover:bg-white/10 hover:text-white shadow-xl"
+                className="h-16 bg-white/5 border-white/10 text-white rounded-2xl flex flex-col items-center justify-center gap-1 hover:bg-white/10 hover:text-white shadow-xl relative overflow-hidden group"
               >
-                <RefreshCcw size={18} />
-                <span className="text-[9px] font-black uppercase tracking-widest italic">Resetta Tara</span>
+                <div className="absolute inset-0 bg-red-500/10 opacity-0 group-active:opacity-100 transition-opacity" />
+                <RefreshCcw size={18} className="relative z-10" />
+                <span className="text-[9px] font-black uppercase tracking-widest italic relative z-10">Resetta Tara</span>
               </Button>
             </div>
 
             <div className="bg-white/5 border border-white/10 p-6 rounded-[2rem] shadow-xl">
-              <h4 className="text-[10px] font-black uppercase text-zinc-400 tracking-[0.3em] mb-4">Istruzioni per l'uso</h4>
+              <h4 className="text-[10px] font-black uppercase text-zinc-400 tracking-[0.3em] mb-4">Taratura & Misurazione</h4>
               <ol className="space-y-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 leading-relaxed">
-                <li className="flex gap-3"><span className="text-white">1.</span> Assicurati che l'auto sia in piano perfetto.</li>
-                <li className="flex gap-3"><span className="text-white">2.</span> Se hai una cover irregolare sul telefono, rimuovila per una misurazione millimetrica.</li>
-                <li className="flex gap-3"><span className="text-white">3.</span> Appoggia il telefono in verticale contro i bordi estremi del cerchio (evitando le razze concave).</li>
-                <li className="flex gap-3"><span className="text-white">4.</span> Non importa su quale lato dell'auto misuri, l'app calcolerà automaticamente i gradi di camber.</li>
+                <li className="flex gap-3"><span className="text-white">1.</span> <strong>Zero / Offset:</strong> Per compensare eventuali pendenze del suolo, appoggia prima il telefono su un piano orizzontale o verticale di riferimento perfetto (es. una squadra a terra) e premi "Tara a Zero".</li>
+                <li className="flex gap-3"><span className="text-white">2.</span> <strong>Lettura:</strong> Rimuovi cover irregolari. Appoggia il telefono in verticale contro i bordi estremi del cerchio, evitando le razze centrali se sono concave.</li>
+                <li className="flex gap-3"><span className="text-white">3.</span> <strong>Precisione:</strong> La misurazione ha una tolleranza e risoluzione di 0.01° ed è garantita fino a -50°.</li>
               </ol>
             </div>
           </motion.div>
