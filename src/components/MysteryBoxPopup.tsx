@@ -14,6 +14,9 @@ const MysteryBoxPopup = () => {
   const { addToCart } = useCart();
   const [isOpen, setIsOpen] = useState(false);
 
+  // URL immagine scatola nera con fiocco argento
+  const BOX_IMAGE = "https://images.unsplash.com/photo-1577083164800-90400169c17c?q=80&w=1974&auto=format&fit=crop";
+
   useEffect(() => {
     if (!activeBox || isLoading) return;
 
@@ -50,7 +53,7 @@ const MysteryBoxPopup = () => {
       id: 999999,
       name: activeBox!.title,
       price: activeBox!.price,
-      image: "https://www.lowdistrict.it/wp-content/uploads/new-logo-header-2025.png",
+      image: BOX_IMAGE,
       quantity: 1,
       variationId: undefined
     });
