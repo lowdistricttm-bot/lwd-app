@@ -21,8 +21,7 @@ export interface Vehicle {
   created_at: string;
   likes_count?: number;
   is_liked?: boolean;
-  stance_score?: number;
-  trophies?: any[]; // Added trophies
+  stance_score?: number; // Aggiunto punteggio AI
   profiles?: {
     username?: string;
     avatar_url?: string;
@@ -51,8 +50,7 @@ export const useGarage = (targetUserId?: string) => {
         .select(`
           *,
           profiles:user_id (id, username, license_plate_privacy),
-          vehicle_likes (user_id),
-          vehicle_trophies (*)
+          vehicle_likes (user_id)
         `)
         .eq('user_id', uid)
         .order('created_at', { ascending: false });
@@ -68,8 +66,7 @@ export const useGarage = (targetUserId?: string) => {
         ...v,
         images: Array.isArray(v.images) ? v.images : (v.image_url ? [v.image_url] : []),
         likes_count: v.vehicle_likes?.length || 0,
-        is_liked: currentUser ? v.vehicle_likes?.some((l: any) => l.user_id === currentUser.id) : false,
-        trophies: v.vehicle_trophies || []
+        is_liked: currentUser ? v.vehicle_likes?.some((l: any) => l.user_id === currentUser.id) : false
       })) as Vehicle[];
     }
   });
@@ -179,6 +176,7 @@ export const useGarage = (targetUserId?: string) => {
     }
   });
 
+  // Nuova mutation per salvare il punteggio stance
   const updateStanceScore = useMutation({
     mutationFn: async ({ vehicleId, score }: { vehicleId: string, score: number }) => {
       const { error } = await supabase

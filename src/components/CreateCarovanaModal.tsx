@@ -44,7 +44,7 @@ const CreateCarovanaModal = ({ isOpen, onClose, eventId, eventTitle }: CreateCar
     onClose();
   };
 
-  const inputClass = "w-full bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest focus-visible:ring-white/20 transition-all placeholder:text-zinc-700";
+  const inputClass = "bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest focus-visible:ring-white/20 transition-all placeholder:text-zinc-700";
 
   return (
     <AnimatePresence>
@@ -62,11 +62,11 @@ const CreateCarovanaModal = ({ isOpen, onClose, eventId, eventTitle }: CreateCar
             animate={{ y: 0 }} 
             exit={{ y: '100%' }} 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 z-[1001] bg-zinc-950 border border-white/10 p-6 rounded-t-[2.5rem] max-h-[85dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.8)]"
+            className="fixed inset-x-0 bottom-0 z-[1001] bg-zinc-950 border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[92dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.8)]"
             style={{ 
-              bottom: '56px', 
               touchAction: 'pan-y', 
-              overscrollBehavior: 'contain'
+              overscrollBehavior: 'contain',
+              paddingBottom: 'calc(2rem + env(safe-area-inset-bottom))'
             }}
           >
             <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
@@ -90,14 +90,14 @@ const CreateCarovanaModal = ({ isOpen, onClose, eventId, eventTitle }: CreateCar
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2 min-w-0">
+                  <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Punto di Partenza</Label>
                     <div className="relative">
                       <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
                       <Input required value={formData.startLocation} onChange={e => setFormData({...formData, startLocation: e.target.value.toUpperCase()})} className={cn(inputClass, "pl-12")} placeholder="ES: IKEA CORSICO" />
                     </div>
                   </div>
-                  <div className="space-y-2 min-w-0">
+                  <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Orario Partenza</Label>
                     <div className="relative">
                       <Clock className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
@@ -108,18 +108,18 @@ const CreateCarovanaModal = ({ isOpen, onClose, eventId, eventTitle }: CreateCar
 
                 <div className="space-y-4">
                   <div className="flex justify-between items-center px-4">
-                    <Label className="text-[9px] font-black uppercase text-zinc-500">Tappe Intermedie</Label>
+                    <Label className="text-[9px] font-black uppercase text-zinc-500">Tappe Intermedie (Autogrill/Meeting Points)</Label>
                     <button type="button" onClick={addStop} className="text-[9px] font-black uppercase text-white bg-white/10 px-3 py-1 rounded-full hover:bg-white hover:text-black transition-all">Aggiungi</button>
                   </div>
                   
                   <div className="space-y-3">
                     {stops.map((stop, i) => (
                       <div key={i} className="flex gap-3 items-center animate-in slide-in-from-left-2">
-                        <div className="flex-1 grid grid-cols-2 gap-2 min-w-0">
-                          <Input placeholder="LUOGO" value={stop.location} onChange={e => updateStop(i, 'location', e.target.value.toUpperCase())} className="w-full bg-white/5 border-white/10 rounded-full h-10 px-4 text-[10px] font-bold" />
-                          <Input type="datetime-local" value={stop.arrivalTime} onChange={e => updateStop(i, 'arrivalTime', e.target.value)} className="w-full bg-white/5 border-white/10 rounded-full h-10 px-4 text-[10px] font-bold" />
+                        <div className="flex-1 grid grid-cols-2 gap-2">
+                          <Input placeholder="LUOGO" value={stop.location} onChange={e => updateStop(i, 'location', e.target.value.toUpperCase())} className="bg-white/5 border-white/10 rounded-full h-10 px-4 text-[10px] font-bold" />
+                          <Input type="datetime-local" value={stop.arrivalTime} onChange={e => updateStop(i, 'arrivalTime', e.target.value)} className="bg-white/5 border-white/10 rounded-full h-10 px-4 text-[10px] font-bold" />
                         </div>
-                        <button type="button" onClick={() => removeStop(i)} className="p-2 text-zinc-600 hover:text-red-500 shrink-0"><Trash2 size={16} /></button>
+                        <button type="button" onClick={() => removeStop(i)} className="p-2 text-zinc-600 hover:text-red-500"><Trash2 size={16} /></button>
                       </div>
                     ))}
                   </div>
