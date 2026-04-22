@@ -17,6 +17,8 @@ interface AdminTrophyModalProps {
   onClose: () => void;
 }
 
+const ALLOWED_TROPHIES = ['BEST OF SHOW', 'BEST LIMBO', 'BEST WHEELS'];
+
 const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
   const { availableTrophies, awardTrophy, isLoading: loadingTrophies } = useTrophies();
   const { allUsers } = useAdmin();
@@ -48,6 +50,11 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
     u.username?.toLowerCase().includes(search.toLowerCase()) || 
     u.first_name?.toLowerCase().includes(search.toLowerCase())
   ).slice(0, 6) || [];
+
+  // Filtriamo i trofei disponibili per mostrare solo quelli richiesti
+  const activeTrophies = availableTrophies?.filter(t => 
+    ALLOWED_TROPHIES.includes(t.title.toUpperCase())
+  ) || [];
 
   const handleAward = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,8 +133,8 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
                   <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto no-scrollbar p-1">
                     {loadingTrophies ? (
                       <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-zinc-500" /></div>
-                    ) : availableTrophies && availableTrophies.length > 0 ? (
-                      availableTrophies.map(t => (
+                    ) : activeTrophies.length > 0 ? (
+                      activeTrophies.map(t => (
                         <button 
                           key={t.id} 
                           type="button" 
@@ -150,7 +157,7 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
                     ) : (
                       <div className="py-10 text-center bg-white/5 rounded-2xl border border-dashed border-white/10">
                         <AlertCircle className="mx-auto text-zinc-700 mb-2" size={24} />
-                        <p className="text-[10px] font-black uppercase text-zinc-600">Nessun premio configurato nel database.</p>
+                        <p className="text-[10px] font-black uppercase text-zinc-600">Nessun premio attivo trovato.</p>
                       </div>
                     )}
                   </div>
