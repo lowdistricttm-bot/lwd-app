@@ -34,6 +34,7 @@ import Chat from "./pages/Chat";
 import PostDetail from "./pages/PostDetail";
 import Marketplace from "./pages/Marketplace";
 import FitmentTool from "./pages/FitmentTool";
+import CamberHelper from "./pages/CamberHelper";
 import Leaderboards from "./pages/Leaderboards";
 import NotFound from "./pages/NotFound";
 
@@ -73,6 +74,7 @@ const AppContent = () => {
             <Route path="/chat/:userId" element={<Chat />} />
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/fitment" element={<FitmentTool />} />
+            <Route path="/camber" element={<CamberHelper />} />
             <Route path="/leaderboards" element={<Leaderboards />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/applications" element={<AdminApplications />} />
