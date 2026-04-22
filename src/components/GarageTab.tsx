@@ -280,25 +280,31 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
               Garage Tools
             </h3>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Link to="/fitment" className="bg-white/5 backdrop-blur-2xl border border-white/10 p-4 rounded-[1.5rem] hover:border-white/20 transition-all group flex items-center gap-4 shadow-xl">
-              <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center border border-white/10 group-hover:border-white/30 transition-all shadow-xl shrink-0">
-                <ArrowRightLeft size={16} className="text-white" />
+          <div className="space-y-3">
+            <Link to="/fitment" className="w-full bg-zinc-900/40 backdrop-blur-md border border-white/5 p-4 flex items-center justify-between group hover:bg-zinc-800/60 hover:border-white/20 transition-all duration-500 text-left rounded-[1.5rem]">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all duration-500 shrink-0">
+                  <ArrowRightLeft size={20} className="group-hover:scale-110 transition-transform" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-base font-black italic uppercase tracking-tight text-white truncate">Wheel Lab</h3>
+                  <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-500 group-hover:text-zinc-400 mt-0.5 transition-colors truncate">Calcola offset e sporgenza</p>
+                </div>
               </div>
-              <div className="flex flex-col justify-center">
-                <h4 className="text-sm font-black italic uppercase tracking-tight text-white mb-0.5">Wheel Lab</h4>
-                <p className="text-[8px] text-zinc-400 font-bold uppercase tracking-widest">Calcola offset e sporgenza</p>
-              </div>
+              <ChevronRight size={18} className="text-zinc-700 group-hover:text-white transition-all translate-x-[-8px] group-hover:translate-x-0 shrink-0" />
             </Link>
             
-            <Link to="/camber" className="bg-white/5 backdrop-blur-2xl border border-white/10 p-4 rounded-[1.5rem] hover:border-white/20 transition-all group flex items-center gap-4 shadow-xl">
-              <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center border border-white/10 group-hover:border-white/30 transition-all shadow-xl shrink-0">
-                <Smartphone size={16} className="text-white" />
+            <Link to="/camber" className="w-full bg-zinc-900/40 backdrop-blur-md border border-white/5 p-4 flex items-center justify-between group hover:bg-zinc-800/60 hover:border-white/20 transition-all duration-500 text-left rounded-[1.5rem]">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all duration-500 shrink-0">
+                  <Smartphone size={20} className="group-hover:scale-110 transition-transform" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-base font-black italic uppercase tracking-tight text-white truncate">Camber Helper</h3>
+                  <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-500 group-hover:text-zinc-400 mt-0.5 transition-colors truncate">Misura l'inclinazione</p>
+                </div>
               </div>
-              <div className="flex flex-col justify-center">
-                <h4 className="text-sm font-black italic uppercase tracking-tight text-white mb-0.5">Camber Helper</h4>
-                <p className="text-[8px] text-zinc-400 font-bold uppercase tracking-widest">Misura l'inclinazione</p>
-              </div>
+              <ChevronRight size={18} className="text-zinc-700 group-hover:text-white transition-all translate-x-[-8px] group-hover:translate-x-0 shrink-0" />
             </Link>
           </div>
         </div>
