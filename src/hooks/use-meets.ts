@@ -129,7 +129,26 @@ export const useMeets = () => {
       // Auto-partecipazione
       await supabase.from('meet_participants').insert([{ meet_id: meet.id, user_id: user.id }]);
       
-      return meet;
+      // Recupera i dati completi del meet (idratato) per mostrarlo nella modale
+      const { data: completeMeet } = await supabase
+        .from('meets')
+        .select(`
+          *,
+          profiles:user_id (username, avatar_url),
+          meet_participants (
+            user_id,
+            profiles:user_id (username, avatar_url)
+          )
+        `)
+        .eq('id', meet.id)
+        .single();
+
+      return {
+        ...completeMeet,
+        profiles: Array.isArray(completeMeet?.profiles) ? completeMeet.profiles[0] : completeMeet?.profiles,
+        participants: completeMeet?.meet_participants || [],
+        is_participating: true
+      };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['district-meets'] });

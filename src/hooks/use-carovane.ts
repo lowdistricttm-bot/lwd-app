@@ -142,7 +142,28 @@ export const useCarovane = (eventId?: string) => {
         vehicle_id: mainVehicle?.id || null
       }]);
 
-      return carovana;
+      // Recupera la carovana completa (idratata) per la UI
+      const { data: completeCarovana } = await supabase
+        .from('carovane')
+        .select(`
+          *,
+          profiles:creator_id (username, avatar_url),
+          carovane_tappe (*),
+          carovane_partecipanti (
+            user_id,
+            profiles:user_id (username, avatar_url),
+            vehicles:vehicle_id (brand, model)
+          )
+        `)
+        .eq('id', carovana.id)
+        .single();
+
+      return {
+        ...completeCarovana,
+        profiles: Array.isArray(completeCarovana?.profiles) ? completeCarovana.profiles[0] : completeCarovana?.profiles,
+        carovane_tappe: (completeCarovana?.carovane_tappe || []).sort((a: any, b: any) => a.order_index - b.order_index),
+        is_joined: true
+      };
     },
     onSuccess: async (_, variables) => {
       await queryClient.invalidateQueries({ queryKey: ['carovane'] });
