@@ -109,7 +109,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-6 max-w-2xl mx-auto w-full">
+      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-6 max-w-7xl mx-auto w-full">
         <div className="mb-12">
           <button 
             onClick={() => navigate('/profile')}
@@ -125,15 +125,15 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {menuItems.filter(item => item.show).map((item, i) => (
-            <div key={i} className="space-y-4">
+            <div key={i} className="flex flex-col">
               <button
                 onClick={item.action}
-                className="w-full bg-zinc-900/40 backdrop-blur-md border border-white/5 p-6 flex items-center justify-between group hover:bg-zinc-800/60 hover:border-white/20 transition-all duration-500 text-left rounded-[2rem]"
+                className="w-full bg-zinc-900/40 backdrop-blur-md border border-white/5 p-6 flex items-center justify-between group hover:bg-zinc-800/60 hover:border-white/20 transition-all duration-500 text-left rounded-[2rem] h-full"
               >
                 <div className="flex items-center gap-6">
-                  <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all duration-500 relative">
+                  <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all duration-500 relative shrink-0">
                     <item.icon size={24} className="group-hover:scale-110 transition-transform" />
                     {item.badge > 0 && (
                       <span className="absolute -top-1 -right-1 w-5 h-5 bg-white text-black text-[10px] font-black flex items-center justify-center rounded-full border-2 border-black">
@@ -143,10 +143,10 @@ const AdminDashboard = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-black italic uppercase tracking-tight">{item.title}</h3>
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 group-hover:text-zinc-400 mt-1 transition-colors">{item.desc}</p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 group-hover:text-zinc-400 mt-1 transition-colors leading-relaxed">{item.desc}</p>
                   </div>
                 </div>
-                <ChevronRight size={20} className={cn("text-zinc-700 group-hover:text-white transition-all translate-x-[-10px] group-hover:translate-x-0", showRequests && item.title === "Richieste Upgrade" && "rotate-90")} />
+                <ChevronRight size={20} className={cn("text-zinc-700 group-hover:text-white transition-all translate-x-[-10px] group-hover:translate-x-0 shrink-0", showRequests && item.title === "Richieste Upgrade" && "rotate-90")} />
               </button>
 
               {/* Sezione Espandibile Richieste Upgrade */}
@@ -154,12 +154,12 @@ const AdminDashboard = () => {
                 <motion.div 
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
-                  className="space-y-3 pl-4 border-l border-white/5"
+                  className="space-y-3 mt-4"
                 >
                   {loadingAll ? (
                     <div className="py-10 text-center"><Loader2 className="animate-spin mx-auto text-zinc-800" /></div>
                   ) : allRequests?.length === 0 ? (
-                    <p className="text-[9px] font-black uppercase text-zinc-600 italic py-4">Nessuna richiesta in attesa.</p>
+                    <p className="text-[9px] font-black uppercase text-zinc-600 italic py-4 bg-white/5 p-4 rounded-2xl">Nessuna richiesta in attesa.</p>
                   ) : (
                     allRequests?.map((req) => (
                       <div key={req.id} className="bg-white/5 border border-white/5 p-4 rounded-2xl flex items-center justify-between animate-in slide-in-from-left-2">

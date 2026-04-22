@@ -153,17 +153,17 @@ const Checkout = () => {
   if (isFinished) {
     return (
       <div className="min-h-screen bg-transparent text-white flex flex-col">
-        <main className="flex-1 flex flex-col items-center justify-center px-6 py-20 text-center max-w-2xl mx-auto">
+        <main className="flex-1 flex flex-col items-center justify-center px-6 py-20 text-center max-w-7xl mx-auto w-full">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="flex flex-col items-center"
+            className="flex flex-col items-center max-w-2xl mx-auto w-full"
           >
             <div className="w-24 h-24 bg-white/10 backdrop-blur-xl border border-white/20 rounded-full flex items-center justify-center mb-8 shadow-2xl">
               <CheckCircle2 size={48} className="text-white" />
             </div>
             <h1 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter mb-4">Ordine Ricevuto</h1>
-            <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.3em] mb-12 italic">
+            <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.3em] mb-12 italic leading-relaxed">
               Il tuo ordine #{orderId} è stato registrato nel District. <br />
               Riceverai una mail di conferma a breve.
             </p>
@@ -183,7 +183,7 @@ const Checkout = () => {
 
   return (
     <div className="min-h-screen bg-transparent text-white flex flex-col">
-      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-6 max-w-4xl mx-auto w-full">
+      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-6 max-w-7xl mx-auto w-full">
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-zinc-500 hover:text-white mb-8 uppercase text-[9px] font-black tracking-widest transition-colors">
           <ChevronLeft size={14} /> Torna al Carrello
         </button>

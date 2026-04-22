@@ -235,7 +235,7 @@ const Profile = () => {
         </div>
 
         {/* Profile Info Section */}
-        <div className="px-5 md:px-12 max-w-6xl mx-auto relative">
+        <div className="px-5 md:px-12 max-w-7xl mx-auto relative">
           <div className="flex flex-col items-center text-center -mt-12 md:-mt-16">
             <div className="relative group/avatar z-20 mb-6">
               <div onClick={() => !isOwnProfile && setLightboxData({ images: [profile?.avatar_url || DEFAULT_AVATAR], index: 0 })} className={cn("w-24 h-24 md:w-36 md:h-36 bg-zinc-900 border-[4px] rounded-full overflow-hidden flex items-center justify-center relative transition-all duration-500", isOnline ? "border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.3)]" : "border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.2)]")}>
@@ -312,7 +312,7 @@ const Profile = () => {
 
               {!isOwnProfile && currentUser && (!isTargetSubscriber || canVote) && <FollowButton userId={targetUserId} className="w-full sm:w-64 h-12 mb-6" />}
 
-              {isOwnProfile && (userRole === 'admin' || userRole === 'staff' || userRole === 'support') && <button onClick={() => navigate('/admin')} className="w-full mb-8 bg-white/10 backdrop-blur-md border border-white/10 p-3.5 rounded-2xl flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500 shadow-xl"><div className="flex items-center gap-3"><div className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center group-hover:bg-black/10 transition-colors"><ShieldCheck size={16} /></div><p className="text-[10px] font-black uppercase italic tracking-widest">DASHBOARD {userRole.toUpperCase()}</p></div><ChevronRight size={18} /></button>}
+              {isOwnProfile && (userRole === 'admin' || userRole === 'staff' || userRole === 'support') && <button onClick={() => navigate('/admin')} className="w-full mb-8 bg-white/10 backdrop-blur-md border border-white/10 p-3.5 rounded-2xl flex items-center justify-between group hover:bg-white hover:text-black transition-all duration-500 shadow-xl max-w-sm mx-auto"><div className="flex items-center gap-3"><div className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center group-hover:bg-black/10 transition-colors"><ShieldCheck size={16} /></div><p className="text-[10px] font-black uppercase italic tracking-widest">DASHBOARD {userRole.toUpperCase()}</p></div><ChevronRight size={18} /></button>}
             </div>
           </div>
 
@@ -320,7 +320,7 @@ const Profile = () => {
             {targetUserId && <TrophySection userId={targetUserId} />}
             {!isTargetSubscriber && targetUserId && <HighlightsBar userId={targetUserId} isOwnProfile={isOwnProfile} />}
 
-            <div className="flex bg-zinc-900/50 backdrop-blur-md rounded-full p-1 mb-6 border border-white/5 overflow-x-auto no-scrollbar">
+            <div className="flex bg-zinc-900/50 backdrop-blur-md rounded-full p-1 mb-6 border border-white/5 overflow-x-auto no-scrollbar max-w-2xl mx-auto">
               {tabs.map((tab) => (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={cn("flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-full transition-all duration-500 whitespace-nowrap", activeTab === tab.id ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-zinc-300")}><tab.icon size={14} /><span className="text-[8px] font-black uppercase tracking-widest hidden sm:block">{tab.label}</span></button>
               ))}

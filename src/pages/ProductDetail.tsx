@@ -51,7 +51,7 @@ const ProductDetail = () => {
 
   return (
     <div className="min-h-screen bg-transparent text-white pb-32">
-      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] px-6 max-w-4xl mx-auto w-full">
+      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] px-6 max-w-7xl mx-auto w-full">
         <button 
           onClick={() => navigate(-1)} 
           className="flex items-center gap-2 text-zinc-500 hover:text-white mb-8 uppercase text-[9px] font-black tracking-widest transition-colors"
@@ -59,36 +59,36 @@ const ProductDetail = () => {
           <ChevronLeft size={14} /> Torna allo Shop
         </button>
 
-        <div className="flex flex-col gap-12">
+        <div className="flex flex-col md:flex-row gap-12 items-start">
           {/* Immagine Prodotto */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="aspect-[4/5] bg-zinc-900/40 backdrop-blur-md rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl"
+            className="w-full md:w-1/2 aspect-[4/5] bg-zinc-900/40 backdrop-blur-md rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl"
           >
             <img src={product.images[0]?.src} alt={product.name} className="w-full h-full object-cover" />
           </motion.div>
 
           {/* Info Prodotto */}
-          <div className="flex flex-col space-y-10">
-            <div className="flex flex-col items-center">
+          <div className="w-full md:w-1/2 flex flex-col space-y-10 md:sticky md:top-[calc(4rem+env(safe-area-inset-top)+2rem)]">
+            <div className="flex flex-col items-center md:items-start">
               <h1 
-                className="text-[10px] font-black tracking-[0.4em] uppercase italic text-zinc-500 mb-2 text-center" 
+                className="text-[10px] font-black tracking-[0.4em] uppercase italic text-zinc-500 mb-2 text-center md:text-left" 
                 dangerouslySetInnerHTML={{ __html: product.name }} 
               />
-              <p className="text-3xl md:text-4xl font-black tracking-tight text-white italic text-center">
+              <p className="text-3xl md:text-5xl font-black tracking-tight text-white italic text-center md:text-left">
                 {selectedVariation ? selectedVariation.price : product.price} €
               </p>
             </div>
             
-            <div className="text-zinc-400 leading-relaxed text-sm font-medium italic prose prose-invert max-w-none text-center" 
+            <div className="text-zinc-400 leading-relaxed text-sm font-medium italic prose prose-invert max-w-none text-center md:text-left" 
                  dangerouslySetInnerHTML={{ __html: product.short_description || product.description }} />
 
             {/* Varianti / Taglie */}
             {hasVariations && (
-              <div className="space-y-5 flex flex-col items-center">
+              <div className="space-y-5 flex flex-col items-center md:items-start">
                 <p className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 italic">Seleziona Taglia</p>
-                <div className="flex flex-wrap justify-center gap-3">
+                <div className="flex flex-wrap justify-center md:justify-start gap-3">
                   {variations.map((v: any) => (
                     <button
                       key={v.id}
@@ -110,7 +110,7 @@ const ProductDetail = () => {
             )}
 
             {/* Quantità */}
-            <div className="space-y-5 flex flex-col items-center">
+            <div className="space-y-5 flex flex-col items-center md:items-start">
               <p className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 italic">Quantità</p>
               <div className="flex items-center bg-white/5 backdrop-blur-md border border-white/10 rounded-full w-fit overflow-hidden h-12 shadow-xl">
                 <button 

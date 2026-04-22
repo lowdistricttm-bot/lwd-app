@@ -38,7 +38,7 @@ const Leaderboards = () => {
     <div className="min-h-screen text-white flex flex-col bg-transparent">
       <Navbar />
       
-      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-6 max-w-4xl mx-auto w-full">
+      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-6 max-w-7xl mx-auto w-full">
         <header className="mb-12">
           <button 
             onClick={() => navigate(-1)}
@@ -56,7 +56,7 @@ const Leaderboards = () => {
           <h1 className="text-3xl md:text-6xl font-black italic tracking-tighter uppercase">Classifiche</h1>
         </header>
 
-        <div className="flex bg-zinc-900/50 backdrop-blur-md rounded-full p-1 mb-10 border border-white/5">
+        <div className="flex bg-zinc-900/50 backdrop-blur-md rounded-full p-1 mb-10 border border-white/5 max-w-3xl">
           <button 
             onClick={() => setActiveTab('score')}
             className={cn(
@@ -105,7 +105,7 @@ const Leaderboards = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="space-y-3"
+                  className="grid grid-cols-1 lg:grid-cols-2 gap-4"
                 >
                   {topScored?.map((v, i) => (
                     <LeaderboardCard 
@@ -117,7 +117,7 @@ const Leaderboards = () => {
                     />
                   ))}
                   {topScored?.length === 0 && (
-                    <div className="text-center py-20 opacity-20">
+                    <div className="col-span-full text-center py-20 opacity-20">
                       <Medal size={48} className="mx-auto mb-4" />
                       <p className="text-[10px] font-black uppercase tracking-widest">Nessun punteggio registrato</p>
                     </div>
@@ -129,7 +129,7 @@ const Leaderboards = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="space-y-3"
+                  className="grid grid-cols-1 lg:grid-cols-2 gap-4"
                 >
                   {mostLiked?.map((v, i) => (
                     <LeaderboardCard 
@@ -141,7 +141,7 @@ const Leaderboards = () => {
                     />
                   ))}
                   {mostLiked?.length === 0 && (
-                    <div className="text-center py-20 opacity-20">
+                    <div className="col-span-full text-center py-20 opacity-20">
                       <Heart size={48} className="mx-auto mb-4" />
                       <p className="text-[10px] font-black uppercase tracking-widest">Nessun apprezzamento ancora</p>
                     </div>

@@ -67,7 +67,7 @@ const PostDetail = () => {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-24 px-4 md:px-6 max-w-2xl mx-auto w-full">
+      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-24 px-4 md:px-6 max-w-7xl mx-auto w-full">
         <header className="mb-8">
           <button 
             onClick={() => navigate(-1)}
@@ -89,19 +89,21 @@ const PostDetail = () => {
             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Caricamento post...</p>
           </div>
         ) : error || !post ? (
-          <div className="text-center py-20 border border-white/5 bg-zinc-900/30 p-8">
+          <div className="text-center py-20 border border-white/5 bg-zinc-900/30 p-8 max-w-2xl mx-auto rounded-[2rem]">
             <Lock className="mx-auto text-zinc-800 mb-4" size={48} />
             <p className="text-sm font-black uppercase tracking-widest text-zinc-500">Accesso Richiesto</p>
             <p className="text-[10px] text-zinc-600 mt-2 uppercase font-bold">Devi essere loggato per visualizzare questo contenuto.</p>
             <Button 
               onClick={() => navigate('/login')}
-              className="mt-8 bg-white text-black hover:bg-zinc-200 rounded-none font-black uppercase italic px-8 h-12 transition-all"
+              className="mt-8 bg-white text-black hover:bg-zinc-200 rounded-full font-black uppercase italic px-8 h-12 transition-all border-none"
             >
               Vai al Login
             </Button>
           </div>
         ) : (
-          <FeedPost post={post} />
+          <div className="max-w-2xl mx-auto w-full">
+            <FeedPost post={post} />
+          </div>
         )}
       </main>
     </div>

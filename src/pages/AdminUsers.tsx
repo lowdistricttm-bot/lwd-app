@@ -66,7 +66,7 @@ const AdminUsers = () => {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-6 max-w-4xl mx-auto w-full">
+      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-6 max-w-7xl mx-auto w-full">
         <div className="mb-12">
           <button 
             onClick={() => navigate('/admin')}
@@ -78,7 +78,7 @@ const AdminUsers = () => {
           <h1 className="text-3xl md:text-6xl font-black italic tracking-tighter uppercase">Membri</h1>
         </div>
 
-        <div className="relative mb-10">
+        <div className="relative mb-10 max-w-3xl">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={20} />
           <Input 
             placeholder="CERCA PER USERNAME O NOME..."
@@ -94,7 +94,7 @@ const AdminUsers = () => {
             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Caricamento database...</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredUsers.map((user) => (
               <div key={user.id} className="bg-zinc-900/40 backdrop-blur-md border border-white/5 p-5 flex items-center justify-between group hover:border-white/20 transition-all rounded-[2rem]">
                 <div className="flex items-center gap-4 min-w-0">
@@ -108,7 +108,7 @@ const AdminUsers = () => {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <h4 className="text-sm font-black italic uppercase tracking-tight truncate">{user.username || 'Utente'}</h4>
-                      {user.role === 'admin' && <ShieldCheck size={12} className="text-white" />}
+                      {user.role === 'admin' && <ShieldCheck size={12} className="text-white shrink-0" />}
                     </div>
                     <p className="text-[8px] text-zinc-600 font-bold uppercase tracking-widest mt-1">
                       {user.first_name} {user.last_name}
@@ -116,11 +116,11 @@ const AdminUsers = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 shrink-0">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button className="flex items-center gap-2 bg-zinc-950 border border-white/10 px-5 py-2.5 rounded-full hover:bg-white hover:text-black transition-all shadow-lg">
-                        <span className="text-[9px] font-black uppercase italic tracking-widest">
+                        <span className="text-[9px] font-black uppercase italic tracking-widest hidden sm:inline">
                           {roles.find(r => r.value === user.role)?.label || 'Iscritto'}
                         </span>
                         <ChevronLeft size={12} className="-rotate-90" />
@@ -144,7 +144,7 @@ const AdminUsers = () => {
             ))}
             
             {filteredUsers.length === 0 && (
-              <div className="text-center py-24 bg-zinc-900/20 border border-white/5 rounded-[2.5rem]">
+              <div className="col-span-full text-center py-24 bg-zinc-900/20 border border-white/5 rounded-[2.5rem]">
                 <Users size={48} className="mx-auto text-zinc-800 mb-4" />
                 <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Nessun utente trovato.</p>
               </div>

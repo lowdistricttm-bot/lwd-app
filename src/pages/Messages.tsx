@@ -75,7 +75,7 @@ const Messages = () => {
           
           <div className="w-full space-y-4">
             {myRequest ? (
-              <div className="bg-white/5 border border-white/10 p-6 rounded-2xl flex items-center justify-between">
+              <div className="bg-white/5 border border-white/10 p-6 rounded-2xl flex items-center justify-center">
                 <div className="flex items-center gap-3">
                   <Clock size={20} className="text-zinc-500" />
                   <div className="text-left">
@@ -83,7 +83,7 @@ const Messages = () => {
                     <p className="text-[8px] font-bold uppercase text-zinc-600">Stato: {myRequest.status.toUpperCase()}</p>
                   </div>
                 </div>
-                <span className="text-[8px] font-black uppercase bg-zinc-800 px-3 py-1.5 rounded-full text-zinc-400 italic">In Revisione</span>
+                <span className="ml-auto text-[8px] font-black uppercase bg-zinc-800 px-3 py-1.5 rounded-full text-zinc-400 italic">In Revisione</span>
               </div>
             ) : (
               <button 
@@ -119,7 +119,7 @@ const Messages = () => {
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent">
       <Navbar />
-      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-6 max-w-2xl mx-auto w-full">
+      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-6 max-w-7xl mx-auto w-full">
         <header className="mb-12 flex items-end justify-between">
           <div>
             <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">{t.messages.subtitle}</h2>
@@ -136,9 +136,9 @@ const Messages = () => {
         {loadingConvs ? (
           <div className="flex justify-center py-20"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>
         ) : conversations?.length === 0 ? (
-          <div className="text-center py-20 bg-zinc-900/20 border border-white/5 rounded-[2rem]"><MessageSquare className="mx-auto text-zinc-800 mb-6" size={48} strokeWidth={1.5} /><p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{t.messages.noConvs}</p></div>
+          <div className="text-center py-20 bg-zinc-900/20 border border-white/5 rounded-[2rem] max-w-2xl mx-auto"><MessageSquare className="mx-auto text-zinc-800 mb-6" size={48} strokeWidth={1.5} /><p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{t.messages.noConvs}</p></div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {conversations?.map((conv: any) => {
               const isUnread = !conv.lastMessage.is_read && conv.lastMessage.receiver_id === currentUserId;
               

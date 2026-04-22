@@ -14,8 +14,8 @@ const FitmentTool = () => {
     <div className="min-h-screen text-white flex flex-col bg-transparent">
       <Navbar />
       
-      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-6 max-w-lg mx-auto w-full">
-        <header className="mb-10">
+      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-6 max-w-7xl mx-auto w-full">
+        <header className="mb-10 max-w-3xl mx-auto">
           <button 
             onClick={() => navigate(-1)}
             className="flex items-center gap-2 text-zinc-500 hover:text-white mb-6 uppercase text-[10px] font-black tracking-widest transition-colors"
@@ -39,6 +39,7 @@ const FitmentTool = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
+          className="max-w-3xl mx-auto"
         >
           <FitmentCalculator />
         </motion.div>

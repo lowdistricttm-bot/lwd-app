@@ -67,7 +67,7 @@ const Bacheca = () => {
 
   return (
     <div className="min-h-full text-white flex flex-col bg-transparent">
-      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-4 md:px-6 max-w-2xl mx-auto w-full">
+      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-4 md:px-6 max-w-7xl mx-auto w-full">
         <header className="mb-12 flex items-end justify-between">
           <div className="min-w-0 flex-1">
             <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">{t.feed.subtitle}</h2>
@@ -91,7 +91,7 @@ const Bacheca = () => {
         {authLoading ? (
           <div className="flex justify-center py-20"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>
         ) : !user ? (
-          <div className="mb-8 p-8 bg-white/10 backdrop-blur-md border border-white/10 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="mb-8 p-8 bg-white/10 backdrop-blur-md border border-white/10 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6 max-w-2xl mx-auto">
             <div className="flex items-center gap-4">
               <AlertCircle className="text-white shrink-0" size={32} />
               <div>
@@ -111,8 +111,12 @@ const Bacheca = () => {
             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{t.feed.syncing}</p>
           </div>
         ) : posts && posts.length > 0 ? (
-          <div className="space-y-4">
-            {posts.map((post) => <FeedPost key={post.id} post={post} />)}
+          <div className="columns-1 md:columns-2 lg:columns-3 gap-6">
+            {posts.map((post) => (
+              <div key={post.id} className="break-inside-avoid mb-6">
+                <FeedPost post={post} />
+              </div>
+            ))}
           </div>
         ) : user && !isLoading && (
           <div className="text-center py-20 opacity-20">

@@ -47,7 +47,7 @@ const AdminApplications = () => {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-6 max-w-4xl mx-auto w-full">
+      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-6 max-w-7xl mx-auto w-full">
         <div className="mb-12">
           <button 
             onClick={() => navigate('/admin')}
@@ -59,7 +59,7 @@ const AdminApplications = () => {
           <h1 className="text-3xl md:text-6xl font-black italic tracking-tighter uppercase">Selezioni</h1>
         </div>
 
-        <div className="flex bg-zinc-900/50 backdrop-blur-md rounded-full p-1 mb-10 border border-white/5">
+        <div className="flex bg-zinc-900/50 backdrop-blur-md rounded-full p-1 mb-10 border border-white/5 max-w-2xl">
           <button 
             onClick={() => setActiveTab('pending')}
             className={cn(
@@ -95,7 +95,7 @@ const AdminApplications = () => {
             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Recupero candidature...</p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {displayedApps.map((app: any) => (
               <AdminApplicationCard 
                 key={app.id} 
@@ -105,7 +105,7 @@ const AdminApplications = () => {
               />
             ))}
             {displayedApps.length === 0 && (
-              <div className="text-center py-24 bg-zinc-900/20 border border-white/5 rounded-[2.5rem]">
+              <div className="col-span-full text-center py-24 bg-zinc-900/20 border border-white/5 rounded-[2.5rem]">
                 <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">
                   {activeTab === 'pending' ? 'Nessuna candidatura in attesa.' : 'Nessuna candidatura gestita.'}
                 </p>
