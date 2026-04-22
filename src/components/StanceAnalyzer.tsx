@@ -105,7 +105,8 @@ const StanceAnalyzer = ({ imageUrl, vehicleId, onClose, autoStart = false }: Sta
         </button>
       </div>
 
-      <div className="px-6 md:px-8 pb-10 space-y-8">
+      {/* Aumentato il padding inferiore da pb-10 a pb-24 */}
+      <div className="px-6 md:px-8 pb-24 space-y-8">
         {/* Immagine con Scansione */}
         <div className="relative w-full aspect-video rounded-[2rem] overflow-hidden border border-white/10 bg-black shadow-2xl">
           <img 
@@ -194,11 +195,12 @@ const StanceAnalyzer = ({ imageUrl, vehicleId, onClose, autoStart = false }: Sta
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
+                {/* Tasto Condividi reso più chiaro e visibile */}
                 <Button 
                   onClick={handleShare}
-                  className="flex-1 bg-white/5 border border-white/10 rounded-full h-14 font-black uppercase italic text-[10px] tracking-widest hover:bg-white/10 transition-all"
+                  className="flex-1 bg-white/20 border border-white/30 text-white hover:bg-white/30 rounded-full h-14 font-black uppercase italic text-[10px] tracking-widest transition-all shadow-lg backdrop-blur-md"
                 >
-                  <Share2 size={16} className="mr-2" /> Condividi
+                  <Share2 size={16} className="mr-2" /> Condividi Report
                 </Button>
                 <Button onClick={onClose} className="flex-1 bg-white text-black rounded-full h-14 font-black uppercase italic text-[10px] tracking-widest shadow-xl hover:bg-zinc-200 transition-all">
                   <CheckCircle2 size={16} className="mr-2" /> Chiudi Report
