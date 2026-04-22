@@ -58,26 +58,26 @@ const FitmentCalculator = () => {
 
   return (
     <div className="space-y-12">
-      {/* Visual Simulation */}
-      <div className="relative h-96 bg-zinc-950 rounded-[3rem] border border-white/5 overflow-hidden flex items-center justify-center shadow-2xl">
+      {/* Visual Simulation - Aumentata altezza e rimosso overflow-hidden critico */}
+      <div className="relative h-[480px] bg-zinc-950 rounded-[3rem] border border-white/5 flex flex-col items-center justify-center shadow-2xl overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
         
-        {/* Fender Line */}
-        <div className="absolute top-12 left-1/2 -translate-x-1/2 w-64 h-1.5 bg-white/20 rounded-full z-10">
-          <div className="absolute -top-7 left-1/2 -translate-x-1/2 text-[8px] font-black uppercase tracking-widest text-zinc-600">Linea Passaruota</div>
+        {/* Fender Line - Spostata leggermente più in basso per non toccare il bordo */}
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 w-64 h-1.5 bg-white/20 rounded-full z-10">
+          <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-[8px] font-black uppercase tracking-[0.3em] text-zinc-500 whitespace-nowrap">Linea Passaruota</div>
         </div>
 
-        <div className="relative w-full flex justify-center items-center">
+        <div className="relative w-full flex justify-center items-center mt-8">
           {/* Current Wheel Outline */}
           <div 
             className="absolute border-2 border-dashed border-white/5 rounded-[2rem] flex items-center justify-center opacity-20"
             style={{ 
               width: current.width * 12 + 40,
-              height: 280,
-              x: -(current.et - current.spacer) / 2
+              height: 260,
+              transform: `translateX(${-(current.et - current.spacer) / 2}px)`
             }}
           >
-            <span className="text-[8px] font-black uppercase text-zinc-500 rotate-90">ORIGINALE</span>
+            <span className="text-[7px] font-black uppercase text-zinc-500 rotate-90 tracking-widest">ORIGINALE</span>
           </div>
 
           {/* New Wheel & Tire Simulation */}
@@ -85,27 +85,28 @@ const FitmentCalculator = () => {
             animate={{ 
               x: -(next.et - next.spacer) / 2,
               width: next.width * 12 + 40,
-              scale: 1
             }}
-            className="relative h-[300px] bg-white/5 border border-white/20 rounded-[2.5rem] flex flex-col items-center justify-center shadow-[0_0_60px_rgba(255,255,255,0.05)]"
+            className="relative h-[280px] bg-white/5 border border-white/20 rounded-[2.5rem] flex flex-col items-center justify-center shadow-[0_0_60px_rgba(255,255,255,0.05)]"
           >
             {/* Tire Part */}
-            <div className="absolute inset-0 border-[12px] border-zinc-900 rounded-[2.5rem]" />
+            <div className="absolute inset-0 border-[10px] border-zinc-900 rounded-[2.5rem]" />
             
             {/* Rim Part */}
-            <div className="relative z-10 flex flex-col items-center bg-white text-black p-4 rounded-2xl shadow-2xl">
+            <div className="relative z-10 flex flex-col items-center bg-white text-black p-4 rounded-2xl shadow-2xl scale-90">
               <span className="text-xs font-black italic leading-none">{next.diameter}"</span>
               <span className="text-[8px] font-bold opacity-60">{next.width}J ET{next.et}</span>
               {next.spacer > 0 && <span className="text-[7px] font-black text-red-600 mt-1">+{next.spacer}mm Spacer</span>}
             </div>
 
-            {/* Indicators */}
-            <div className="absolute -bottom-12 flex flex-col items-center gap-1">
-              <div className="flex items-center gap-2">
-                <MoveHorizontal size={12} className={cn(pokeVal > 0 ? "text-green-400" : "text-red-400")} />
-                <span className="text-lg font-black italic">{Math.abs(pokeVal)}mm</span>
+            {/* Indicators - Riposizionati con più spazio */}
+            <div className="absolute -bottom-20 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 w-full">
+              <div className="flex items-center justify-center gap-2">
+                <MoveHorizontal size={14} className={cn(pokeVal > 0 ? "text-green-400" : "text-red-400")} />
+                <span className={cn("text-3xl font-black italic tracking-tighter", pokeVal > 0 ? "text-green-400" : "text-red-400")}>
+                  {Math.abs(pokeVal)}mm
+                </span>
               </div>
-              <span className="text-[7px] font-black uppercase tracking-widest text-zinc-500">
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500 italic">
                 {pokeVal > 0 ? 'Più Sporgente' : 'Più Rientrante'}
               </span>
             </div>
