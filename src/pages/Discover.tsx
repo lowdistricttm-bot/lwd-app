@@ -145,6 +145,40 @@ const Discover = () => {
           </div>
         </header>
 
+        {/* SEZIONE NUOVI NEL DISTRICT - TORNATA IN CIMA */}
+        {!debouncedSearch && newMembers && newMembers.length > 0 && (
+          <section className="mb-14">
+            <h3 className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 flex items-center gap-2 italic mb-6">
+              <Sparkles size={12} /> Nuovi nel District
+            </h3>
+            <div className="flex gap-6 overflow-x-auto no-scrollbar pb-4">
+              {newMembers.map((member) => (
+                <button 
+                  key={member.id}
+                  onClick={() => navigate(`/profile/${member.id}`)}
+                  className="flex flex-col items-center gap-3 shrink-0 group"
+                >
+                  <div className={cn(
+                    "w-16 h-16 rounded-full p-[2px] border-2 transition-all duration-500",
+                    isUserOnline(member.id) ? "border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]" : "border-white/10"
+                  )}>
+                    <div className="w-full h-full rounded-full overflow-hidden bg-zinc-950">
+                      {member.avatar_url ? (
+                        <img src={member.avatar_url} className="w-full h-full object-cover" alt="" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-zinc-800"><User size={24} /></div>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-[9px] font-black uppercase italic truncate w-20 text-center text-zinc-500 group-hover:text-white transition-colors">
+                    {member.username}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* SEZIONE TOP 5 LOW SCORE */}
         {!debouncedSearch && topScored && topScored.length > 0 && (
           <section className="mb-14">
@@ -248,39 +282,6 @@ const Discover = () => {
             </motion.section>
           )}
         </AnimatePresence>
-
-        {!debouncedSearch && newMembers && newMembers.length > 0 && (
-          <section className="mb-14">
-            <h3 className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 flex items-center gap-2 italic mb-6">
-              <Sparkles size={12} /> Nuovi nel District
-            </h3>
-            <div className="flex gap-6 overflow-x-auto no-scrollbar pb-4">
-              {newMembers.map((member) => (
-                <button 
-                  key={member.id}
-                  onClick={() => navigate(`/profile/${member.id}`)}
-                  className="flex flex-col items-center gap-3 shrink-0 group"
-                >
-                  <div className={cn(
-                    "w-16 h-16 rounded-full p-[2px] border-2 transition-all duration-500",
-                    isUserOnline(member.id) ? "border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]" : "border-white/10"
-                  )}>
-                    <div className="w-full h-full rounded-full overflow-hidden bg-zinc-950">
-                      {member.avatar_url ? (
-                        <img src={member.avatar_url} className="w-full h-full object-cover" alt="" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-zinc-800"><User size={24} /></div>
-                      )}
-                    </div>
-                  </div>
-                  <span className="text-[9px] font-black uppercase italic truncate w-20 text-center text-zinc-500 group-hover:text-white transition-colors">
-                    {member.username}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </section>
-        )}
 
         <section>
           <div className="flex items-center justify-between mb-6">
