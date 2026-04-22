@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 
 interface CreateCarovanaModalProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose: (carovanaCreated?: Carovana) => void;
   eventId: string;
   eventTitle: string;
   editCarovana?: Carovana | null;
@@ -61,12 +61,17 @@ const CreateCarovanaModal = ({ isOpen, onClose, eventId, eventTitle, editCarovan
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editCarovana) {
-      await updateCarovana.mutateAsync({ id: editCarovana.id, ...formData, stops });
-    } else {
-      await createCarovana.mutateAsync({ ...formData, eventId, stops });
+    try {
+      if (editCarovana) {
+        await updateCarovana.mutateAsync({ id: editCarovana.id, ...formData, stops });
+        onClose();
+      } else {
+        const newCarovana = await createCarovana.mutateAsync({ ...formData, eventId, stops });
+        onClose(newCarovana as any);
+      }
+    } catch (err) {
+      console.error(err);
     }
-    onClose();
   };
 
   const inputClass = "bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest focus-visible:ring-white/20 transition-all placeholder:text-zinc-700 w-full max-w-full text-white";
@@ -79,7 +84,7 @@ const CreateCarovanaModal = ({ isOpen, onClose, eventId, eventTitle, editCarovan
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }} 
-            onClick={onClose} 
+            onClick={() => onClose()} 
             className="fixed inset-0 bg-black/80 z-[1000] touch-none"
             data-no-swipe="true"
           />
@@ -107,7 +112,7 @@ const CreateCarovanaModal = ({ isOpen, onClose, eventId, eventTitle, editCarovan
                   </h2>
                   <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 mt-1">Run to: {eventTitle}</p>
                 </div>
-                <button type="button" onClick={onClose} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors"><X size={24} /></button>
+                <button type="button" onClick={() => onClose()} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors"><X size={24} /></button>
               </div>
 
               <div className="space-y-6">

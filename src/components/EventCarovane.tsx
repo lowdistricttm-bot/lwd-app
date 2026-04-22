@@ -34,10 +34,15 @@ const EventCarovane = ({ eventId, eventTitle, currentUserId }: EventCarovaneProp
     setIsCreateOpen(true);
   };
 
-  const handleCloseCreate = () => {
+  const handleCloseCreate = (newCarovana?: Carovana) => {
     setIsCreateOpen(false);
     setEditingCarovana(null);
     refetch();
+    
+    // Apri subito il dettaglio della carovana per consentirne la condivisione
+    if (newCarovana) {
+      setSelectedCarovana(newCarovana);
+    }
   };
 
   if (isLoading) return (

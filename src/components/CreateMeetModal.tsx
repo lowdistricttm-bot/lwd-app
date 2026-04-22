@@ -7,13 +7,13 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import { useMeets } from '@/hooks/use-meets';
+import { useMeets, Meet } from '@/hooks/use-meets';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { cn } from '@/lib/utils';
 
 interface CreateMeetModalProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose: (meetCreated?: Meet) => void;
 }
 
 const CreateMeetModal = ({ isOpen, onClose }: CreateMeetModalProps) => {
@@ -69,15 +69,20 @@ const CreateMeetModal = ({ isOpen, onClose }: CreateMeetModalProps) => {
       return;
     }
 
-    await createMeet.mutateAsync({ 
-      ...formData, 
-      date: isoDate,
-      latitude: finalLat,
-      longitude: finalLng,
-      file: selectedFile 
-    });
-    
-    onClose();
+    try {
+      const newMeet = await createMeet.mutateAsync({ 
+        ...formData, 
+        date: isoDate,
+        latitude: finalLat,
+        longitude: finalLng,
+        file: selectedFile 
+      });
+      
+      // Passa il meet creato al componente padre per poterlo aprire subito
+      onClose(newMeet as any);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const inputClass = "bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest focus-visible:ring-white/20 transition-all placeholder:text-zinc-700 w-full max-w-full text-white";
@@ -86,7 +91,7 @@ const CreateMeetModal = ({ isOpen, onClose }: CreateMeetModalProps) => {
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/80 z-[200] touch-none" />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => onClose()} className="fixed inset-0 bg-black/80 z-[200] touch-none" />
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
@@ -105,7 +110,7 @@ const CreateMeetModal = ({ isOpen, onClose }: CreateMeetModalProps) => {
                   <h2 className="text-2xl font-black italic uppercase tracking-tighter">Organizza Incontro</h2>
                   <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 mt-1">Crea un incontro per la community</p>
                 </div>
-                <button type="button" onClick={onClose} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors"><X size={24} /></button>
+                <button type="button" onClick={() => onClose()} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors"><X size={24} /></button>
               </div>
 
               <div className="space-y-6">

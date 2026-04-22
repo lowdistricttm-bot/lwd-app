@@ -91,6 +91,15 @@ const Meets = () => {
 
   const canOrganize = role && ['admin', 'staff', 'support', 'member'].includes(role);
 
+  const handleCreateClose = (newMeet?: Meet) => {
+    setIsCreateModalOpen(false);
+    if (newMeet) {
+      // Se è stato creato un nuovo incontro, lo impostiamo come selezionato 
+      // per aprire automaticamente la modale di dettaglio da cui può essere condiviso
+      setSelectedMeet(newMeet);
+    }
+  };
+
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent">
       <Navbar />
@@ -333,7 +342,7 @@ const Meets = () => {
         )}
       </main>
 
-      <CreateMeetModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
+      <CreateMeetModal isOpen={isCreateModalOpen} onClose={handleCreateClose} />
       
       {selectedMeet && (
         <MeetDetailModal 
