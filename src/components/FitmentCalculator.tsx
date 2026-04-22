@@ -18,11 +18,11 @@ const FitmentCalculator = () => {
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>('');
   
   const [current, setCurrent] = useState({ 
-    width: 8.5, et: 35, diameter: 18, tireW: 225, tireA: 40, spacer: 0, camber: -1.5
+    width: 8.5, et: 35, diameter: 18, tireW: 225, tireA: 40, spacer: 0, camber: 1.5
   });
 
   const [next, setNext] = useState({ 
-    width: 9.5, et: 22, diameter: 19, tireW: 235, tireA: 35, spacer: 12, camber: -3.5
+    width: 9.5, et: 22, diameter: 19, tireW: 235, tireA: 35, spacer: 12, camber: 3.5
   });
 
   const { addLog } = useVehicleLogs(selectedVehicleId || undefined);
@@ -71,8 +71,6 @@ const FitmentCalculator = () => {
     const rimW = data.width * 15; 
     const tireW = (data.tireW / 25.4) * 15;
     const offset = (data.et - data.spacer) * 0.5;
-    // Il camber viene applicato come rotazione. Invertiamo il segno perché in SVG la rotazione oraria è positiva.
-    // Solitamente il camber negativo inclina la parte superiore verso l'interno.
     const rotation = data.camber || 0;
 
     return (
