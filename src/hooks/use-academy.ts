@@ -28,7 +28,6 @@ export const ACADEMY_CATEGORIES = [
   { id: 'static', label: 'Assetti Statici' }
 ];
 
-// Tutorial di default mostrati se il database è vuoto
 const DEFAULT_TUTORIALS: Tutorial[] = [
   {
     id: 'def-1',
@@ -71,24 +70,24 @@ export const useAcademy = (categoryFilter: string = 'all') => {
           query = query.eq('category', categoryFilter);
         }
 
-        const { data, error } = await query;
-        
+        const { data: dbData, error } = await query;
         if (error) throw error;
 
-        // Se il database è vuoto, restituiamo i tutorial di default
-        if (!data || data.length === 0) {
-          return categoryFilter === 'all' 
-            ? DEFAULT_TUTORIALS 
-            : DEFAULT_TUTORIALS.filter(t => t.category === categoryFilter);
+        // Uniamo i dati del DB con quelli di default
+        // I dati del DB (i tuoi tutorial) appaiono per primi
+        const combined = [...(dbData || []), ...DEFAULT_TUTORIALS];
+
+        if (categoryFilter !== 'all') {
+          return combined.filter(t => t.category === categoryFilter);
         }
 
-        return data as Tutorial[];
+        return combined as Tutorial[];
       } catch (err) {
         console.error("[Academy] Errore caricamento:", err);
-        return DEFAULT_TUTORIALS; // Fallback in caso di errore tabella
+        return DEFAULT_TUTORIALS;
       }
     },
-    staleTime: 1000 * 60 * 5
+    staleTime: 1000 * 60 * 2
   });
 
   const createTutorial = useMutation({
@@ -124,7 +123,6 @@ export const useAcademy = (categoryFilter: string = 'all') => {
   const updateTutorial = useMutation({
     mutationFn: async (data: { id: string, title: string, content: string, category: string, file?: File, video_url?: string, existingImage?: string }) => {
       let image_url = data.existingImage;
-      
       if (data.file) {
         image_url = await uploadToCloudinary(data.file);
       }
