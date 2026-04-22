@@ -58,8 +58,8 @@ const FitmentCalculator = () => {
 
   return (
     <div className="space-y-12">
-      {/* Visual Simulation */}
-      <div className="relative h-96 bg-zinc-950 rounded-[3rem] border border-white/5 overflow-hidden flex items-center justify-center shadow-2xl">
+      {/* Visual Simulation - Aumentata altezza e sistemati margini */}
+      <div className="relative h-[420px] bg-zinc-950 rounded-[3rem] border border-white/5 overflow-hidden flex items-center justify-center shadow-2xl">
         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
         
         {/* Fender Line */}
@@ -67,13 +67,13 @@ const FitmentCalculator = () => {
           <div className="absolute -top-7 left-1/2 -translate-x-1/2 text-[8px] font-black uppercase tracking-widest text-zinc-600">Linea Passaruota</div>
         </div>
 
-        <div className="relative w-full flex justify-center items-center">
+        <div className="relative w-full flex justify-center items-center pt-4">
           {/* Current Wheel Outline */}
           <div 
             className="absolute border-2 border-dashed border-white/5 rounded-[2rem] flex items-center justify-center opacity-20"
             style={{ 
               width: current.width * 12 + 40,
-              height: 280,
+              height: 260,
               x: -(current.et - current.spacer) / 2
             }}
           >
@@ -87,7 +87,7 @@ const FitmentCalculator = () => {
               width: next.width * 12 + 40,
               scale: 1
             }}
-            className="relative h-[300px] bg-white/5 border border-white/20 rounded-[2.5rem] flex flex-col items-center justify-center shadow-[0_0_60px_rgba(255,255,255,0.05)]"
+            className="relative h-[280px] bg-white/5 border border-white/20 rounded-[2.5rem] flex flex-col items-center justify-center shadow-[0_0_60px_rgba(255,255,255,0.05)]"
           >
             {/* Tire Part */}
             <div className="absolute inset-0 border-[12px] border-zinc-900 rounded-[2.5rem]" />
@@ -99,14 +99,17 @@ const FitmentCalculator = () => {
               {next.spacer > 0 && <span className="text-[7px] font-black text-red-600 mt-1">+{next.spacer}mm Spacer</span>}
             </div>
 
-            {/* Indicators */}
-            <div className="absolute -bottom-12 flex flex-col items-center gap-1">
+            {/* Indicators - Riposizionati per visibilità ottimale */}
+            <div className="absolute -bottom-20 flex flex-col items-center gap-1 w-64">
               <div className="flex items-center gap-2">
-                <MoveHorizontal size={12} className={cn(pokeVal > 0 ? "text-green-400" : "text-red-400")} />
-                <span className="text-lg font-black italic">{Math.abs(pokeVal)}mm</span>
+                <MoveHorizontal size={14} className={cn(pokeVal > 0 ? "text-green-400" : "text-red-400")} />
+                <span className="text-2xl font-black italic tracking-tighter text-white">{Math.abs(pokeVal)}mm</span>
               </div>
-              <span className="text-[7px] font-black uppercase tracking-widest text-zinc-500">
-                {pokeVal > 0 ? 'Più Sporgente' : 'Più Rientrante'}
+              <span className={cn(
+                "text-[9px] font-black uppercase tracking-[0.2em] italic",
+                pokeVal > 0 ? "text-green-400" : "text-red-400"
+              )}>
+                {pokeVal > 0 ? 'PIÙ SPORGENTE' : 'PIÙ RIENTRANTE'}
               </span>
             </div>
           </motion.div>
