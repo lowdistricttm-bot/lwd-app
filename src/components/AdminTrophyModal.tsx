@@ -17,7 +17,8 @@ interface AdminTrophyModalProps {
   onClose: () => void;
 }
 
-const ALLOWED_TROPHIES = ['BEST OF SHOW', 'BEST LIMBO', 'BEST WHEELS'];
+// Definiamo i 3 trofei ufficiali ammessi
+const OFFICIAL_TROPHY_TITLES = ['BEST OF SHOW', 'BEST WHEELS', 'BEST LIMBO'];
 
 const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
   const { availableTrophies, awardTrophy, isLoading: loadingTrophies } = useTrophies();
@@ -51,10 +52,20 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
     u.first_name?.toLowerCase().includes(search.toLowerCase())
   ).slice(0, 6) || [];
 
-  // Filtriamo i trofei disponibili per mostrare solo quelli richiesti
-  const activeTrophies = availableTrophies?.filter(t => 
-    ALLOWED_TROPHIES.includes(t.title.toUpperCase())
-  ) || [];
+  // Filtriamo i trofei per mostrare SOLO i 3 richiesti e rimuovere eventuali duplicati per titolo
+  const activeTrophies = React.useMemo(() => {
+    if (!availableTrophies) return [];
+    
+    const seen = new Set();
+    return availableTrophies
+      .filter(t => OFFICIAL_TROPHY_TITLES.includes(t.title.toUpperCase()))
+      .filter(t => {
+        const title = t.title.toUpperCase();
+        if (seen.has(title)) return false;
+        seen.add(title);
+        return true;
+      });
+  }, [availableTrophies]);
 
   const handleAward = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,7 +112,7 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
                     <div className="bg-zinc-900 border border-white/10 p-4 rounded-2xl flex items-center justify-between shadow-xl">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full overflow-hidden bg-black border border-white/10">
-                          {selectedUser.avatar_url ? <img src={selectedUser.avatar_url} className="w-full h-full object-cover" /> : <User size={20} className="m-auto h-full text-zinc-700" />}
+                          {selectedUser.avatar_url ? <img src={selectedUser.avatar_url} className="w-full h-full object-cover" /> : <UserIcon size={20} className="m-auto h-full text-zinc-700" />}
                         </div>
                         <span className="text-sm font-black uppercase italic text-white">@{selectedUser.username}</span>
                       </div>
@@ -117,7 +128,7 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
                         {filteredUsers.map(u => (
                           <button key={u.id} type="button" onClick={() => setSelectedUser(u)} className="p-3 bg-white/5 border border-white/5 rounded-xl flex items-center gap-3 hover:bg-white/10 transition-all">
                             <div className="w-8 h-8 rounded-full overflow-hidden bg-zinc-800 shrink-0">
-                              {u.avatar_url ? <img src={u.avatar_url} className="w-full h-full object-cover" /> : <User size={14} className="m-auto h-full text-zinc-700" />}
+                              {u.avatar_url ? <img src={u.avatar_url} className="w-full h-full object-cover" /> : <UserIcon size={14} className="m-auto h-full text-zinc-700" />}
                             </div>
                             <span className="text-[10px] font-black uppercase italic truncate text-zinc-400">{u.username}</span>
                           </button>
