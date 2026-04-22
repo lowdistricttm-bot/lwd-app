@@ -112,11 +112,22 @@ const Navbar = () => {
 
   return (
     <>
+      {/* 
+        Sfondo solido nero per la Status Bar di iOS. 
+        Rimane sempre visibile (z-60) così quando la navbar si nasconde, 
+        i contenuti scorrono "sotto" senza coprire l'orario o la batteria.
+      */}
+      <div 
+        className="fixed top-0 left-0 right-0 z-[60] bg-black" 
+        style={{ height: 'env(safe-area-inset-top)' }} 
+      />
+
       <nav 
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 bg-black/60 backdrop-blur-2xl border-b border-white/5 pt-[env(safe-area-inset-top)] touch-none select-none transition-transform duration-300 ease-in-out",
+          "fixed left-0 right-0 z-50 bg-black/60 backdrop-blur-2xl border-b border-white/5 touch-none select-none transition-transform duration-300 ease-in-out",
           isVisible ? "translate-y-0" : "-translate-y-full"
         )}
+        style={{ top: 'env(safe-area-inset-top)' }}
         data-no-swipe="true"
       >
         <div className="h-16 px-6 flex items-center justify-between">
