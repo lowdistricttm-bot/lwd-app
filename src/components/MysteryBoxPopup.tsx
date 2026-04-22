@@ -14,22 +14,20 @@ const MysteryBoxPopup = () => {
   const { addToCart } = useCart();
   const [isOpen, setIsOpen] = useState(false);
 
-  // URL immagine scatola nera con fiocco argento
-  const BOX_IMAGE = "https://images.unsplash.com/photo-1577083164800-90400169c17c?q=80&w=1974&auto=format&fit=crop";
+  // Icona vettoriale (SVG) codificata per l'anteprima nel carrello
+  const GIFT_ICON_SVG = `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIHJ4PSI0MCIgZmlsbD0iYmxhY2siLz48cGF0aCBkPSJNNjAgODBoODB2NjBINjB6IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjgiLz48cGF0aCBkPSJNNTUgNjBoOTB2MjBINTV6IiBmaWxsPSJ3aGl0ZSIvPjxwYXRoIGQ9Ik0xMDAgNjB2ODBNNjAgMTAwaDgwIiBzdHJva2U9ImJsYWNrIiBzdHJva2Utd2lkdGg9IjQiLz48cGF0aCBkPSJNMTAwIDYwYy0xMC0yMC00MC0yMC00MCAwczMwIDIwIDQwIDBNMTAwIDYwYzEwLTIwIDQwLTIwIDQwIDBzLTMwIDIwLTQwIDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iOCIvPjwvc3ZnPg==`;
 
   useEffect(() => {
     if (!activeBox || isLoading) return;
 
-    // Determiniamo la chiave in base alla sezione corrente
     let storageKey = "";
     if (location.pathname === "/") storageKey = "lwd-popup-last-home";
     else if (location.pathname === "/shop") storageKey = "lwd-popup-last-shop";
-    else return; // Non mostrare in altre sezioni
+    else return;
 
     const today = new Date().toDateString();
     const lastDismissed = localStorage.getItem(storageKey);
 
-    // Se non è mai stato chiuso o l'ultima volta era un giorno diverso, mostralo
     if (lastDismissed !== today) {
       const timer = setTimeout(() => setIsOpen(true), 3000);
       return () => clearTimeout(timer);
@@ -38,8 +36,6 @@ const MysteryBoxPopup = () => {
 
   const handleClose = () => {
     setIsOpen(false);
-    
-    // Salviamo la data di chiusura per la sezione corrente
     const today = new Date().toDateString();
     if (location.pathname === "/") {
       localStorage.setItem("lwd-popup-last-home", today);
@@ -53,7 +49,7 @@ const MysteryBoxPopup = () => {
       id: 999999,
       name: activeBox!.title,
       price: activeBox!.price,
-      image: BOX_IMAGE,
+      image: GIFT_ICON_SVG,
       quantity: 1,
       variationId: undefined
     });
@@ -73,12 +69,12 @@ const MysteryBoxPopup = () => {
             className="absolute inset-0 bg-black/95 backdrop-blur-md"
           />
 
-          {/* Modal Content Stealth */}
+          {/* Modal Content - Centrato verticalmente */}
           <motion.div 
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.9, y: 0 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-md bg-zinc-950 border border-white/5 rounded-[2.5rem] overflow-hidden shadow-[0_0_80px_rgba(0,0,0,1)]"
+            exit={{ opacity: 0, scale: 0.9, y: 0 }}
+            className="relative w-full max-w-md bg-zinc-950 border border-white/5 rounded-[2.5rem] overflow-hidden shadow-[0_0_80px_rgba(0,0,0,1)] z-10"
           >
             <button 
               onClick={handleClose}
