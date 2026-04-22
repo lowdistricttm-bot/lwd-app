@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Trophy, Medal, Star } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface RankBadgeProps {
@@ -11,7 +11,7 @@ interface RankBadgeProps {
   showLabel?: boolean;
 }
 
-const RankBadge = ({ rank, type, className, showLabel = false }: RankBadgeProps) => {
+const RankBadge = ({ rank, type, className }: RankBadgeProps) => {
   if (rank > 3 || rank < 1) return null;
 
   const config = {
@@ -40,21 +40,20 @@ const RankBadge = ({ rank, type, className, showLabel = false }: RankBadgeProps)
 
   return (
     <div className={cn(
-      "flex items-center gap-1.5 px-2.5 py-1 rounded-lg border backdrop-blur-md transition-all duration-500",
+      "group flex items-center gap-0 hover:gap-2 px-2 py-1.5 rounded-full backdrop-blur-md border shadow-xl w-fit transition-all duration-500 ease-in-out overflow-hidden max-w-[32px] hover:max-w-[150px]",
       config.bg,
       config.border,
       config.shadow,
       className
     )}>
-      <Trophy size={12} className={cn(config.color, "drop-shadow-sm")} fill="currentColor" />
-      {showLabel && (
-        <span className={cn("text-[8px] font-black uppercase tracking-widest italic", config.color)}>
-          {config.label} {type === 'score' ? 'LOW' : 'LIKE'}
-        </span>
-      )}
-      {!showLabel && (
-        <span className={cn("text-[9px] font-black italic", config.color)}>#{rank}</span>
-      )}
+      <Trophy size={14} className={cn(config.color, "shrink-0 drop-shadow-sm")} fill="currentColor" />
+      
+      <span className={cn(
+        "text-[8px] font-black uppercase tracking-widest italic whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-500",
+        config.color
+      )}>
+        {config.label} {type === 'score' ? 'LOW' : 'LIKE'}
+      </span>
     </div>
   );
 };

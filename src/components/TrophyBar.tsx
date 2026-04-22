@@ -20,14 +20,15 @@ const TrophyBar = ({ trophy, className }: TrophyBarProps) => {
 
   return (
     <div className={cn(
-      "flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-md border shadow-xl w-fit transition-all duration-500",
+      "group flex items-center gap-0 hover:gap-2 px-2 py-1.5 rounded-full backdrop-blur-md border shadow-xl w-fit transition-all duration-500 ease-in-out overflow-hidden max-w-[32px] hover:max-w-[300px]",
       isGold 
-        ? "bg-yellow-500 text-black border-yellow-300 shadow-yellow-500/20" 
-        : "bg-zinc-200 text-black border-white shadow-white/10",
+        ? "bg-yellow-500/90 border-yellow-300 shadow-yellow-500/20" 
+        : "bg-zinc-200/90 border-white shadow-white/10",
       className
     )}>
-      <Icon size={12} strokeWidth={3} />
-      <span className="text-[8px] font-black uppercase italic tracking-widest whitespace-nowrap">
+      <Icon size={14} strokeWidth={3} className="text-black shrink-0" />
+      
+      <span className="text-[8px] font-black uppercase italic tracking-widest whitespace-nowrap text-black opacity-0 group-hover:opacity-100 transition-opacity duration-500">
         {trophy.title} • {trophy.event_name}
       </span>
     </div>
