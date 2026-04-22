@@ -2,38 +2,59 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Gift, ShoppingCart, Ticket, PackageCheck, Sparkles } from 'lucide-react';
+import { X, Gift, ShoppingCart, Ticket, PackageCheck } from 'lucide-react';
 import { useMysteryBox } from '@/hooks/use-mystery-box';
 import { useCart } from '@/hooks/use-cart';
 import { Button } from './ui/button';
-import { cn } from '@/lib/utils';
+import { useLocation } from 'react-router-dom';
 
 const MysteryBoxPopup = () => {
+  const location = useLocation();
   const { activeBox, isLoading } = useMysteryBox();
   const { addToCart } = useCart();
   const [isOpen, setIsOpen] = useState(false);
-  const [hasDismissed, setHasDismissed] = useState(false);
 
   useEffect(() => {
-    if (activeBox && !hasDismissed) {
+    if (!activeBox || isLoading) return;
+
+    // Determiniamo la chiave in base alla sezione corrente
+    let storageKey = "";
+    if (location.pathname === "/") storageKey = "lwd-popup-last-home";
+    else if (location.pathname === "/shop") storageKey = "lwd-popup-last-shop";
+    else return; // Non mostrare in altre sezioni
+
+    const today = new Date().toDateString();
+    const lastDismissed = localStorage.getItem(storageKey);
+
+    // Se non è mai stato chiuso o l'ultima volta era un giorno diverso, mostralo
+    if (lastDismissed !== today) {
       const timer = setTimeout(() => setIsOpen(true), 3000);
       return () => clearTimeout(timer);
     }
-  }, [activeBox, hasDismissed]);
+  }, [activeBox, isLoading, location.pathname]);
 
-  if (!activeBox || isLoading) return null;
+  const handleClose = () => {
+    setIsOpen(false);
+    
+    // Salviamo la data di chiusura per la sezione corrente
+    const today = new Date().toDateString();
+    if (location.pathname === "/") {
+      localStorage.setItem("lwd-popup-last-home", today);
+    } else if (location.pathname === "/shop") {
+      localStorage.setItem("lwd-popup-last-shop", today);
+    }
+  };
 
   const handleAddToCart = () => {
     addToCart({
       id: 999999,
-      name: activeBox.title,
-      price: activeBox.price,
+      name: activeBox!.title,
+      price: activeBox!.price,
       image: "https://www.lowdistrict.it/wp-content/uploads/new-logo-header-2025.png",
       quantity: 1,
       variationId: undefined
     });
-    setIsOpen(false);
-    setHasDismissed(true);
+    handleClose();
   };
 
   return (
@@ -45,7 +66,7 @@ const MysteryBoxPopup = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => { setIsOpen(false); setHasDismissed(true); }}
+            onClick={handleClose}
             className="absolute inset-0 bg-black/95 backdrop-blur-md"
           />
 
@@ -57,7 +78,7 @@ const MysteryBoxPopup = () => {
             className="relative w-full max-w-md bg-zinc-950 border border-white/5 rounded-[2.5rem] overflow-hidden shadow-[0_0_80px_rgba(0,0,0,1)]"
           >
             <button 
-              onClick={() => { setIsOpen(false); setHasDismissed(true); }}
+              onClick={handleClose}
               className="absolute top-6 right-6 p-2 bg-white/5 text-zinc-600 hover:text-white rounded-full transition-all z-10"
             >
               <X size={20} />
@@ -66,7 +87,6 @@ const MysteryBoxPopup = () => {
             <div className="p-8 md:p-10 space-y-8">
               <div className="text-center space-y-6">
                 <div className="flex justify-center">
-                  {/* Icona scura con bordo sottile */}
                   <div className="w-20 h-20 bg-zinc-900 border border-white/10 rounded-[2rem] flex items-center justify-center rotate-12 shadow-2xl">
                     <Gift size={40} className="-rotate-12 text-zinc-400" />
                   </div>
