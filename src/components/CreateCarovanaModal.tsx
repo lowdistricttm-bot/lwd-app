@@ -67,7 +67,7 @@ const CreateCarovanaModal = ({ isOpen, onClose, eventId, eventTitle, editCarovan
     onClose();
   };
 
-  const inputClass = "bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest focus-visible:ring-white/20 transition-all placeholder:text-zinc-700";
+  const inputClass = "bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest focus-visible:ring-white/20 transition-all placeholder:text-zinc-700 w-full max-w-full";
 
   return (
     <AnimatePresence>
@@ -112,7 +112,7 @@ const CreateCarovanaModal = ({ isOpen, onClose, eventId, eventTitle, editCarovan
                 <div className="space-y-2">
                   <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Titolo Carovana</Label>
                   <div className="relative">
-                    <Type className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
+                    <Type className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" size={16} />
                     <Input required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value.toUpperCase()})} className={cn(inputClass, "pl-12")} placeholder="ES: CREW MILANO SUD" />
                   </div>
                 </div>
@@ -121,14 +121,14 @@ const CreateCarovanaModal = ({ isOpen, onClose, eventId, eventTitle, editCarovan
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Punto di Partenza</Label>
                     <div className="relative">
-                      <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
+                      <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" size={16} />
                       <Input required value={formData.startLocation} onChange={e => setFormData({...formData, startLocation: e.target.value.toUpperCase()})} className={cn(inputClass, "pl-12")} placeholder="ES: IKEA CORSICO" />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Orario Partenza</Label>
-                    <div className="relative">
-                      <Clock className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
+                    <div className="relative overflow-hidden">
+                      <Clock className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" size={16} />
                       <Input required type="datetime-local" value={formData.startTime} onChange={e => setFormData({...formData, startTime: e.target.value})} className={cn(inputClass, "pl-12")} />
                     </div>
                   </div>
@@ -136,18 +136,18 @@ const CreateCarovanaModal = ({ isOpen, onClose, eventId, eventTitle, editCarovan
 
                 <div className="space-y-4">
                   <div className="flex justify-between items-center px-4">
-                    <Label className="text-[9px] font-black uppercase text-zinc-500">Tappe Intermedie (Autogrill/Meeting Points)</Label>
+                    <Label className="text-[9px] font-black uppercase text-zinc-500">Tappe Intermedie (Meeting Points)</Label>
                     <button type="button" onClick={addStop} className="text-[9px] font-black uppercase text-white bg-white/10 px-3 py-1 rounded-full hover:bg-white hover:text-black transition-all">Aggiungi</button>
                   </div>
                   
                   <div className="space-y-3">
                     {stops.map((stop, i) => (
                       <div key={i} className="flex gap-3 items-center animate-in slide-in-from-left-2">
-                        <div className="flex-1 grid grid-cols-2 gap-2">
-                          <Input placeholder="LUOGO" value={stop.location} onChange={e => updateStop(i, 'location', e.target.value.toUpperCase())} className="bg-white/5 border-white/10 rounded-full h-10 px-4 text-[10px] font-bold" />
-                          <Input type="datetime-local" value={stop.arrivalTime} onChange={e => updateStop(i, 'arrivalTime', e.target.value)} className="bg-white/5 border-white/10 rounded-full h-10 px-4 text-[10px] font-bold" />
+                        <div className="flex-1 grid grid-cols-2 gap-2 overflow-hidden">
+                          <Input placeholder="LUOGO" value={stop.location} onChange={e => updateStop(i, 'location', e.target.value.toUpperCase())} className="bg-white/5 border-white/10 rounded-full h-10 px-4 text-[10px] font-bold w-full max-w-full" />
+                          <Input type="datetime-local" value={stop.arrivalTime} onChange={e => updateStop(i, 'arrivalTime', e.target.value)} className="bg-white/5 border-white/10 rounded-full h-10 px-4 text-[10px] font-bold w-full max-w-full" />
                         </div>
-                        <button type="button" onClick={() => removeStop(i)} className="p-2 text-zinc-600 hover:text-red-500"><Trash2 size={16} /></button>
+                        <button type="button" onClick={() => removeStop(i)} className="p-2 text-zinc-600 hover:text-red-500 shrink-0"><Trash2 size={16} /></button>
                       </div>
                     ))}
                   </div>
@@ -168,7 +168,7 @@ const CreateCarovanaModal = ({ isOpen, onClose, eventId, eventTitle, editCarovan
                 <Button 
                   type="submit" 
                   disabled={createCarovana.isPending || updateCarovana.isPending}
-                  className="w-full bg-white text-black hover:bg-zinc-200 h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl mt-4"
+                  className="w-full bg-white text-black hover:bg-zinc-200 h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl mt-4 border-none"
                 >
                   {createCarovana.isPending || updateCarovana.isPending ? (
                     <Loader2 className="animate-spin" />

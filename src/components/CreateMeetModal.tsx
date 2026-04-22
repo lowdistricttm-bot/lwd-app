@@ -48,7 +48,6 @@ const CreateMeetModal = ({ isOpen, onClose }: CreateMeetModalProps) => {
     let finalLat = formData.latitude;
     let finalLng = formData.longitude;
 
-    // Se non abbiamo coordinate, proviamo a cercarle tramite il nome della location
     if (!finalLat && formData.location) {
       try {
         const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(formData.location)}&limit=1`);
@@ -62,7 +61,6 @@ const CreateMeetModal = ({ isOpen, onClose }: CreateMeetModalProps) => {
       }
     }
 
-    // Convertiamo la data locale in ISO string per il database
     const isoDate = formData.date ? new Date(formData.date).toISOString() : null;
 
     if (!isoDate) {
@@ -81,7 +79,7 @@ const CreateMeetModal = ({ isOpen, onClose }: CreateMeetModalProps) => {
     onClose();
   };
 
-  const inputClass = "bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest focus-visible:ring-white/20 transition-all placeholder:text-zinc-700";
+  const inputClass = "bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest focus-visible:ring-white/20 transition-all placeholder:text-zinc-700 w-full max-w-full";
 
   return (
     <AnimatePresence>
@@ -113,7 +111,7 @@ const CreateMeetModal = ({ isOpen, onClose }: CreateMeetModalProps) => {
                 <div className="space-y-2">
                   <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Titolo Incontro</Label>
                   <div className="relative">
-                    <Type className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
+                    <Type className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" size={16} />
                     <Input required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value.toUpperCase()})} className={cn(inputClass, "pl-12")} placeholder="ES: COFFEE & CARS MILANO" />
                   </div>
                 </div>
@@ -121,15 +119,15 @@ const CreateMeetModal = ({ isOpen, onClose }: CreateMeetModalProps) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Data e Ora</Label>
-                    <div className="relative">
-                      <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
+                    <div className="relative overflow-hidden">
+                      <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" size={16} />
                       <Input required type="datetime-local" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className={cn(inputClass, "pl-12")} />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Ritrovo</Label>
                     <div className="relative">
-                      <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
+                      <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" size={16} />
                       <Input required value={formData.location} onChange={e => setFormData({...formData, location: e.target.value.toUpperCase()})} className={cn(inputClass, "pl-12")} placeholder="ES: MILANO (PARCHEGGIO IKEA)" />
                     </div>
                   </div>
@@ -169,7 +167,7 @@ const CreateMeetModal = ({ isOpen, onClose }: CreateMeetModalProps) => {
                 <Button 
                   type="submit" 
                   disabled={createMeet.isPending}
-                  className="w-full bg-white text-black hover:bg-zinc-200 h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl mt-4"
+                  className="w-full bg-white text-black hover:bg-zinc-200 h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl mt-4 border-none"
                 >
                   {createMeet.isPending ? <Loader2 className="animate-spin" /> : <><Send size={18} className="mr-2 -rotate-12" /> Pubblica Incontro</>}
                 </Button>

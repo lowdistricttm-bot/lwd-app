@@ -90,7 +90,7 @@ const EventAdminModal = ({ isOpen, onClose, event }: EventAdminModalProps) => {
   };
 
   const labelClass = "text-[9px] font-black uppercase text-zinc-500 tracking-[0.3em] italic ml-4 mb-2 block";
-  const inputClass = "bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest focus-visible:ring-white/20 transition-all placeholder:text-zinc-700";
+  const inputClass = "bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest focus-visible:ring-white/20 transition-all placeholder:text-zinc-700 w-full max-w-full";
 
   return (
     <AnimatePresence>
@@ -133,7 +133,7 @@ const EventAdminModal = ({ isOpen, onClose, event }: EventAdminModalProps) => {
                 <div className="space-y-2">
                   <Label className={labelClass}>Titolo Evento</Label>
                   <div className="relative">
-                    <Type className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
+                    <Type className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" size={16} />
                     <Input required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className={cn(inputClass, "pl-12")} placeholder="ES: LOW DISTRICT SHOW 2026" />
                   </div>
                 </div>
@@ -142,15 +142,15 @@ const EventAdminModal = ({ isOpen, onClose, event }: EventAdminModalProps) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className={labelClass}>Data Inizio</Label>
-                    <div className="relative">
-                      <CalendarIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
+                    <div className="relative overflow-hidden">
+                      <CalendarIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" size={16} />
                       <Input required type="datetime-local" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className={cn(inputClass, "pl-12")} />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label className={labelClass}>Data Fine (Opzionale)</Label>
-                    <div className="relative">
-                      <CalendarIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
+                    <div className="relative overflow-hidden">
+                      <CalendarIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" size={16} />
                       <Input type="datetime-local" value={formData.end_date} onChange={e => setFormData({...formData, end_date: e.target.value})} className={cn(inputClass, "pl-12")} />
                     </div>
                   </div>
@@ -160,7 +160,7 @@ const EventAdminModal = ({ isOpen, onClose, event }: EventAdminModalProps) => {
                 <div className="space-y-2">
                   <Label className={labelClass}>Luogo</Label>
                   <div className="relative">
-                    <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
+                    <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" size={16} />
                     <Input required value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} className={cn(inputClass, "pl-12")} placeholder="ES: MILANO, ITALY" />
                   </div>
                 </div>
@@ -222,7 +222,7 @@ const EventAdminModal = ({ isOpen, onClose, event }: EventAdminModalProps) => {
                 <div className="space-y-2">
                   <Label className={labelClass}>Stato Iscrizioni</Label>
                   <div className="relative">
-                    <Info className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
+                    <Info className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" size={16} />
                     <select 
                       value={formData.status} 
                       onChange={e => setFormData({...formData, status: e.target.value})}
@@ -238,7 +238,7 @@ const EventAdminModal = ({ isOpen, onClose, event }: EventAdminModalProps) => {
                 <Button 
                   type="submit" 
                   disabled={createEvent.isPending || updateEvent.isPending}
-                  className="w-full bg-white text-black hover:bg-zinc-200 hover:scale-[1.02] active:scale-[0.98] h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl shadow-white/10 mt-4"
+                  className="w-full bg-white text-black hover:bg-zinc-200 hover:scale-[1.02] active:scale-[0.98] h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl shadow-white/10 mt-4 border-none"
                 >
                   {(createEvent.isPending || updateEvent.isPending) ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> Salva Evento</>}
                 </Button>
