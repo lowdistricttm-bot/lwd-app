@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Tag, Euro, User, MessageSquare, Calendar, LayoutGrid, ChevronRight, Info, Camera } from 'lucide-react';
-import { MarketplaceItem, MARKETPLACE_CATEGORIES } from '@/hooks/use-marketplace';
+import { X, Tag, Euro, User, MessageSquare, Calendar, LayoutGrid, ChevronRight, Info, Camera, Loader2, Trash2 } from 'lucide-react';
+import { MarketplaceItem, MARKETPLACE_CATEGORIES, useMarketplace } from '@/hooks/use-marketplace';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { Button } from './ui/button';
 import ImageLightbox from './ImageLightbox';
@@ -21,6 +21,7 @@ interface MarketplaceItemDetailModalProps {
 
 const MarketplaceItemDetailModal = ({ isOpen, onClose, item, isOwnItem, onEdit, onDelete }: MarketplaceItemDetailModalProps) => {
   const navigate = useNavigate();
+  const { updateItemStatus } = useMarketplace();
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
   
   useBodyLock(isOpen);
@@ -67,6 +68,11 @@ const MarketplaceItemDetailModal = ({ isOpen, onClose, item, isOwnItem, onEdit, 
                       <span className="bg-zinc-800 text-zinc-400 text-[8px] font-black uppercase px-2 py-1 italic rounded-lg border border-white/5">
                         MARKETPLACE
                       </span>
+                      {item.status === 'sold' && (
+                        <span className="bg-red-600 text-white text-[8px] font-black uppercase px-2 py-1 italic rounded-lg shadow-lg border border-red-500">
+                          VENDUTO
+                        </span>
+                      )}
                     </div>
                     <h3 className="text-3xl font-black italic uppercase tracking-tighter leading-none pr-4">
                       {item.title}
@@ -80,13 +86,20 @@ const MarketplaceItemDetailModal = ({ isOpen, onClose, item, isOwnItem, onEdit, 
                 {/* Gallery */}
                 <div className="space-y-4">
                   <div 
-                    className="aspect-square bg-black rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl cursor-pointer group"
+                    className={cn("aspect-square bg-black rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl cursor-pointer group relative", item.status === 'sold' && "opacity-70 grayscale")}
                     onClick={() => setLightboxData({ images: allImages, index: 0 })}
                   >
                     {allImages[0] ? (
                       <img src={allImages[0]} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" alt="" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-zinc-800"><Tag size={64} /></div>
+                    )}
+                    {item.status === 'sold' && (
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                        <span className="bg-red-600 text-white text-lg font-black uppercase px-6 py-2 italic rounded-xl shadow-lg border border-red-500 -rotate-12">
+                          VENDUTO
+                        </span>
+                      </div>
                     )}
                   </div>
 
@@ -95,7 +108,7 @@ const MarketplaceItemDetailModal = ({ isOpen, onClose, item, isOwnItem, onEdit, 
                       {allImages.slice(1, 5).map((img, idx) => (
                         <div 
                           key={idx} 
-                          className="aspect-square bg-black rounded-2xl overflow-hidden border border-white/5 cursor-pointer relative group"
+                          className={cn("aspect-square bg-black rounded-2xl overflow-hidden border border-white/5 cursor-pointer relative group", item.status === 'sold' && "opacity-70 grayscale")}
                           onClick={() => setLightboxData({ images: allImages, index: idx + 1 })}
                         >
                           <img src={img} className="w-full h-full object-cover group-hover:opacity-80 transition-opacity" alt="" />
@@ -170,20 +183,32 @@ const MarketplaceItemDetailModal = ({ isOpen, onClose, item, isOwnItem, onEdit, 
                 {/* Actions */}
                 <div className="pt-6 flex items-center gap-4">
                   {isOwnItem ? (
-                    <div className="flex gap-3 w-full">
+                    <div className="flex gap-2 w-full flex-wrap sm:flex-nowrap">
                       <Button 
-                        onClick={() => onEdit?.(item)}
-                        className="flex-1 h-16 bg-white text-black rounded-full font-black uppercase italic text-[10px] tracking-widest shadow-xl hover:scale-[1.02] transition-all"
+                        onClick={() => updateItemStatus.mutate({ id: item.id, status: item.status === 'sold' ? 'active' : 'sold' })}
+                        disabled={updateItemStatus.isPending}
+                        className={cn(
+                          "flex-1 h-14 sm:h-16 rounded-full font-black uppercase italic text-[9px] sm:text-[10px] tracking-widest shadow-xl transition-all border border-white/10",
+                          item.status === 'sold' ? "bg-white text-black hover:bg-zinc-200" : "bg-red-600 text-white hover:bg-red-700 border-red-500"
+                        )}
                       >
-                        Modifica Annuncio
+                        {updateItemStatus.isPending ? <Loader2 className="animate-spin" /> : (item.status === 'sold' ? 'Ripubblica Annuncio' : 'Segna Venduto')}
                       </Button>
-                      <Button 
-                        onClick={() => onDelete?.(item.id)}
-                        variant="destructive"
-                        className="h-16 w-16 rounded-full flex items-center justify-center shadow-xl hover:scale-105 transition-all"
-                      >
-                        <X size={24} />
-                      </Button>
+                      <div className="flex gap-2 w-full sm:w-auto">
+                        <Button 
+                          onClick={() => onEdit?.(item)}
+                          className="flex-1 sm:w-auto h-14 sm:h-16 bg-white/10 text-white rounded-full font-black uppercase italic text-[9px] sm:text-[10px] tracking-widest shadow-xl hover:bg-white/20 transition-all border border-white/10"
+                        >
+                          Modifica
+                        </Button>
+                        <Button 
+                          onClick={() => onDelete?.(item.id)}
+                          variant="destructive"
+                          className="h-14 sm:h-16 w-14 sm:w-16 shrink-0 rounded-full flex items-center justify-center shadow-xl hover:scale-105 transition-all"
+                        >
+                          <Trash2 size={20} />
+                        </Button>
+                      </div>
                     </div>
                   ) : (
                     <Button 

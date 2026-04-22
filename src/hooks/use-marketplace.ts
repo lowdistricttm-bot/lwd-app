@@ -15,8 +15,22 @@ export interface MarketplaceItem {
   price: number;
   category: string;
   images: string[];
+  status?: string;
   created_at: string;
   profiles?: {
+    username: string;
+    avatar_url: string;
+  };
+}
+
+export interface SellerReview {
+  id: string;
+  seller_id: string;
+  reviewer_id: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+  reviewer?: {
     username: string;
     avatar_url: string;
   };
@@ -40,7 +54,7 @@ export const useMarketplace = (categoryFilter: string = 'all') => {
       let query = supabase
         .from('marketplace_items')
         .select(`
-          id, seller_id, title, description, price, category, images, created_at,
+          id, seller_id, title, description, price, category, images, status, created_at,
           profiles:seller_id (
             username, 
             avatar_url
@@ -111,7 +125,8 @@ export const useMarketplace = (categoryFilter: string = 'all') => {
           description: data.description,
           price: data.price,
           category: data.category,
-          images: imageUrls
+          images: imageUrls,
+          status: 'active'
         }]);
 
       if (error) throw error;
@@ -159,6 +174,23 @@ export const useMarketplace = (categoryFilter: string = 'all') => {
     onError: (err: any) => showError(err.message)
   });
 
+  const updateItemStatus = useMutation({
+    mutationFn: async ({ id, status }: { id: string, status: 'active' | 'sold' }) => {
+      const { error } = await supabase
+        .from('marketplace_items')
+        .update({ status })
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['marketplace-items'] });
+      queryClient.invalidateQueries({ queryKey: ['user-marketplace-items'] });
+      showSuccess("Stato annuncio aggiornato!");
+    },
+    onError: (err: any) => showError(err.message)
+  });
+
   const deleteItem = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from('marketplace_items').delete().eq('id', id);
@@ -171,7 +203,7 @@ export const useMarketplace = (categoryFilter: string = 'all') => {
     }
   });
 
-  return { items, isLoading, createItem, updateItem, deleteItem, refetch };
+  return { items, isLoading, createItem, updateItem, updateItemStatus, deleteItem, refetch };
 };
 
 export const useUserMarketplace = (userId?: string) => {
@@ -183,7 +215,7 @@ export const useUserMarketplace = (userId?: string) => {
       const { data, error } = await supabase
         .from('marketplace_items')
         .select(`
-          id, seller_id, title, description, price, category, images, created_at,
+          id, seller_id, title, description, price, category, images, status, created_at,
           profiles:seller_id (username, avatar_url)
         `)
         .eq('seller_id', userId)
@@ -197,5 +229,60 @@ export const useUserMarketplace = (userId?: string) => {
       })) as MarketplaceItem[];
     },
     enabled: !!userId
+  });
+};
+
+export const useSellerReviews = (sellerId?: string) => {
+  return useQuery({
+    queryKey: ['seller-reviews', sellerId],
+    queryFn: async () => {
+      if (!sellerId) return [];
+      const { data, error } = await supabase
+        .from('seller_reviews')
+        .select(`
+          *,
+          reviewer:reviewer_id (username, avatar_url)
+        `)
+        .eq('seller_id', sellerId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        if (error.message?.includes('AbortError')) return [];
+        throw error;
+      }
+
+      return (data || []).map((review: any) => ({
+        ...review,
+        reviewer: Array.isArray(review.reviewer) ? review.reviewer[0] : review.reviewer
+      })) as SellerReview[];
+    },
+    enabled: !!sellerId
+  });
+};
+
+export const useReviewSeller = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ sellerId, rating, comment }: { sellerId: string, rating: number, comment: string }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Devi accedere per recensire");
+
+      const { error } = await supabase
+        .from('seller_reviews')
+        .upsert([{
+          seller_id: sellerId,
+          reviewer_id: user.id,
+          rating,
+          comment
+        }], { onConflict: 'seller_id, reviewer_id' });
+
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['seller-reviews', variables.sellerId] });
+      showSuccess("Recensione salvata!");
+    },
+    onError: (err: any) => showError(err.message)
   });
 };
