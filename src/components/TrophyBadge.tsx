@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 
 interface TrophyBadgeProps {
   trophy: any;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   showDetails?: boolean;
 }
 
@@ -15,21 +15,23 @@ const TrophyBadge = ({ trophy, size = 'md', showDetails = false }: TrophyBadgePr
   const isGold = trophy.category?.includes('best') || trophy.category === 'of_show';
   
   const sizes = {
-    sm: "w-12 h-12",
+    xs: "w-12 h-12",
+    sm: "w-16 h-16",
     md: "w-20 h-20",
     lg: "w-32 h-32"
   };
 
   const iconSizes = {
-    sm: 16,
+    xs: 14,
+    sm: 20,
     md: 28,
     lg: 48
   };
 
   return (
     <motion.div 
-      whileHover={{ scale: 1.05, rotateY: 10 }}
-      className="flex flex-col items-center gap-3 group"
+      whileHover={{ scale: 1.1, rotateY: 15 }}
+      className="flex flex-col items-center gap-2 group"
     >
       <div className={cn(
         "relative rounded-full flex items-center justify-center shadow-2xl transition-all duration-700",
@@ -57,11 +59,11 @@ const TrophyBadge = ({ trophy, size = 'md', showDetails = false }: TrophyBadgePr
       </div>
 
       {showDetails && (
-        <div className="text-center">
-          <p className="text-[10px] font-black uppercase italic tracking-tighter text-white leading-none mb-1">
+        <div className="text-center max-w-[80px]">
+          <p className="text-[8px] font-black uppercase italic tracking-tighter text-white leading-none mb-1 truncate">
             {trophy.title}
           </p>
-          <p className="text-[7px] font-bold uppercase tracking-[0.3em] text-zinc-500">
+          <p className="text-[6px] font-bold uppercase tracking-widest text-zinc-500 truncate">
             {trophy.event_name}
           </p>
         </div>

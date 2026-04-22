@@ -87,8 +87,9 @@ export const useTrophies = (userId?: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-trophies'] });
-      showSuccess("Trofeo revocato.");
-    }
+      showSuccess("Trofeo revocato correttamente.");
+    },
+    onError: (err: any) => showError("Errore durante la revoca.")
   });
 
   return { 
