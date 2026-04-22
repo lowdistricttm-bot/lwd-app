@@ -142,8 +142,8 @@ const Chat = () => {
 
   if (loadingChat || authLoading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
-  // Altezza fissa 56px ignorando la safe area
-  const inputBarHeight = "56px";
+  // Altezza fissa 35px ignorando la safe area
+  const inputBarHeight = "35px";
 
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent" style={{ height: '100dvh' }}>
@@ -316,10 +316,14 @@ const Chat = () => {
       </main>
 
       <div 
-        className="fixed bottom-0 left-0 right-0 bg-black border-t border-white/10 z-50"
+        className="fixed bottom-0 left-0 right-0 bg-black border-t border-white/10 z-50 select-none touch-none"
         style={{ 
           height: inputBarHeight,
-          marginBottom: '0px'
+          minHeight: inputBarHeight,
+          maxHeight: inputBarHeight,
+          paddingBottom: '0px',
+          marginBottom: '0px',
+          touchAction: 'none'
         }}
       >
         <div className="max-w-2xl mx-auto h-full relative">
@@ -346,7 +350,7 @@ const Chat = () => {
 
           <form 
             onSubmit={handleSend} 
-            className="h-full px-4 flex items-center gap-3"
+            className="h-full px-4 flex items-center gap-2"
           >
             <input 
               type="file" 
@@ -360,9 +364,9 @@ const Chat = () => {
             <button 
               type="button" 
               onClick={() => fileInputRef.current?.click()} 
-              className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/20 transition-all shrink-0"
+              className="w-7 h-7 bg-white/10 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/20 transition-all shrink-0"
             >
-              <Camera size={16} />
+              <Camera size={14} />
             </button>
 
             <div className="flex-1">
@@ -370,7 +374,7 @@ const Chat = () => {
                 placeholder="Messaggio" 
                 value={message} 
                 onChange={(e) => setMessage(e.target.value)} 
-                className="bg-white/5 border-white/10 rounded-full h-8 px-4 font-medium text-[11px] focus-visible:ring-0 text-white placeholder:text-zinc-600" 
+                className="bg-white/5 border-white/10 rounded-full h-7 px-3 font-medium text-[10px] focus-visible:ring-0 text-white placeholder:text-zinc-600" 
               />
             </div>
             
@@ -378,14 +382,14 @@ const Chat = () => {
               type="submit" 
               disabled={sendMessage.isPending || (!message.trim() && selectedFiles.length === 0)} 
               className={cn(
-                "w-8 h-8 rounded-full flex items-center justify-center transition-all shrink-0 disabled:opacity-30 shadow-lg",
+                "w-7 h-7 rounded-full flex items-center justify-center transition-all shrink-0 disabled:opacity-30 shadow-lg",
                 (message.trim() || selectedFiles.length > 0) ? "bg-white text-black" : "bg-white/10 text-zinc-500"
               )}
             >
               {sendMessage.isPending ? (
-                <Loader2 size={14} className="animate-spin" />
+                <Loader2 size={12} className="animate-spin" />
               ) : (
-                <Send size={14} strokeWidth={2.5} className="-rotate-12" />
+                <Send size={12} strokeWidth={2.5} className="-rotate-12" />
               )}
             </button>
           </form>
