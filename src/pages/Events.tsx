@@ -8,6 +8,7 @@ import { useGarage } from '@/hooks/use-garage';
 import { useAdmin } from '@/hooks/use-admin';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { useAuth } from '@/hooks/use-auth';
+import { useCarovana } from '@/hooks/use-carovane';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,6 +21,7 @@ import { showError } from '@/utils/toast';
 import EventAdminModal from '@/components/EventAdminModal';
 import ManageApplicationModal from '@/components/ManageApplicationModal';
 import EventCarovane from '@/components/EventCarovane';
+import CarovanaDetailModal from '@/components/CarovanaDetailModal';
 import { useTranslation } from '@/hooks/use-translation';
 
 const Events = () => {
@@ -46,8 +48,12 @@ const Events = () => {
   const { isAdmin } = useAdmin();
 
   const viewEventId = searchParams.get('view');
+  const carovanaId = searchParams.get('carovana_id');
 
-  useBodyLock(!!viewingEvent || !!selectedEvent || !!manageApp || isAdminModalOpen);
+  // Hook per caricare la carovana se presente nel link
+  const { data: directCarovana, isLoading: loadingDirectCarovana } = useCarovana(carovanaId || undefined);
+
+  useBodyLock(!!viewingEvent || !!selectedEvent || !!manageApp || isAdminModalOpen || !!directCarovana);
 
   useEffect(() => {
     if (user) {
@@ -135,7 +141,7 @@ const Events = () => {
           )}
         </header>
 
-        {eventsLoading || appsLoading || authLoading ? (
+        {eventsLoading || appsLoading || authLoading || loadingDirectCarovana ? (
           <div className="flex justify-center py-20"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>
         ) : (
           <div className="space-y-8">
@@ -202,6 +208,20 @@ const Events = () => {
         )}
 
         <AnimatePresence>
+          {/* Modal Carovana da Link Diretto */}
+          {directCarovana && (
+            <CarovanaDetailModal 
+              isOpen={true} 
+              onClose={() => {
+                const newParams = new URLSearchParams(searchParams);
+                newParams.delete('carovana_id');
+                searchParamsSetter(newParams, { replace: true });
+              }} 
+              carovana={directCarovana} 
+              currentUserId={user?.id || null} 
+            />
+          )}
+
           {viewingEvent && (
             <>
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setViewingEvent(null)} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150] touch-none" />

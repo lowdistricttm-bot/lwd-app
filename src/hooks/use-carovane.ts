@@ -164,7 +164,6 @@ export const useCarovane = (eventId?: string) => {
 
       if (cError) throw cError;
 
-      // Semplifichiamo l'aggiornamento delle tappe: eliminiamo e ricreiamo
       await supabase.from('carovane_tappe').delete().eq('carovana_id', data.id);
 
       if (data.stops.length > 0) {
@@ -228,4 +227,40 @@ export const useCarovane = (eventId?: string) => {
   });
 
   return { carovane, isLoading, createCarovana, updateCarovana, toggleJoin, deleteCarovana, refetch };
+};
+
+export const useCarovana = (id?: string) => {
+  return useQuery({
+    queryKey: ['carovana', id],
+    queryFn: async () => {
+      if (!id) return null;
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data, error } = await supabase
+        .from('carovane')
+        .select(`
+          *,
+          profiles:creator_id (username, avatar_url),
+          carovane_tappe (*),
+          carovane_partecipanti (
+            user_id,
+            profiles:user_id (username, avatar_url),
+            vehicles:vehicle_id (brand, model)
+          )
+        `)
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      
+      const c = data;
+      return {
+        ...c,
+        profiles: Array.isArray(c.profiles) ? c.profiles[0] : c.profiles,
+        carovane_tappe: (c.carovane_tappe || []).sort((a: any, b: any) => a.order_index - b.order_index),
+        is_joined: user ? c.carovane_partecipanti?.some((p: any) => p.user_id === user.id) : false
+      } as Carovana;
+    },
+    enabled: !!id,
+    staleTime: 0
+  });
 };

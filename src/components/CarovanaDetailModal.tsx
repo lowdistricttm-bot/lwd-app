@@ -11,6 +11,7 @@ import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { showSuccess } from '@/utils/toast';
 
 interface CarovanaDetailModalProps {
   isOpen: boolean;
@@ -25,7 +26,6 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
   const { toggleJoin, deleteCarovana } = useCarovane();
   const { vehicles } = useGarage();
   
-  // Blocca lo scroll del body in modo definitivo
   useBodyLock(isOpen);
 
   if (!carovana) return null;
@@ -39,13 +39,20 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
   };
 
   const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/events?carovana_id=${carovana.id}`;
     const shareData = {
       title: carovana.title,
       text: `Unisciti alla mia carovana per l'evento! Partenza da ${carovana.start_location}`,
-      url: window.location.href
+      url: shareUrl
     };
+    
     try {
-      if (navigator.share) await navigator.share(shareData);
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        showSuccess("Link carovana copiato!");
+      }
     } catch (err) {}
   };
 
