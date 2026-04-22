@@ -18,11 +18,11 @@ const FitmentCalculator = () => {
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>('');
   
   const [current, setCurrent] = useState({ 
-    width: 8.5, et: 35, diameter: 18, tireW: 225, tireA: 40, spacer: 0
+    width: 8.5, et: 35, diameter: 18, tireW: 225, tireA: 40, spacer: 0, camber: -1.5
   });
 
   const [next, setNext] = useState({ 
-    width: 9.5, et: 22, diameter: 19, tireW: 235, tireA: 35, spacer: 12
+    width: 9.5, et: 22, diameter: 19, tireW: 235, tireA: 35, spacer: 12, camber: -3.5
   });
 
   const { addLog } = useVehicleLogs(selectedVehicleId || undefined);
@@ -61,20 +61,22 @@ const FitmentCalculator = () => {
 
   const handleSaveToGarage = async () => {
     if (!selectedVehicleId) { showError("Seleziona un veicolo"); return; }
-    const logTitle = `FITMENT: ${next.width}J ET${next.et} (${next.tireW}/${next.tireA} R${next.diameter})`;
-    const logDesc = `Configurazione calcolata nel Wheel Lab.\n\nRISULTATI:\n- Poke: ${results.pokeDiff}mm\n- Inset: ${results.insetDiff}mm\n- Speedo: ${results.speedoDiff}%`;
+    const logTitle = `FITMENT: ${next.width}J ET${next.et} (${next.tireW}/${next.tireA} R${next.diameter}) CAMBER ${next.camber}°`;
+    const logDesc = `Configurazione calcolata nel Wheel Lab.\n\nRISULTATI:\n- Poke: ${results.pokeDiff}mm\n- Inset: ${results.insetDiff}mm\n- Camber: ${next.camber}°\n- Speedo: ${results.speedoDiff}%`;
     await addLog.mutateAsync({ vehicle_id: selectedVehicleId, title: logTitle, description: logDesc, type: 'modification', event_date: new Date().toISOString() });
     showSuccess("Salvato nel Diario di Bordo!");
   };
 
-  // Componente per il profilo della ruota (SVG)
   const WheelProfile = ({ data, color, isNew = false }: { data: any, color: string, isNew?: boolean }) => {
     const rimW = data.width * 15; 
     const tireW = (data.tireW / 25.4) * 15;
     const offset = (data.et - data.spacer) * 0.5;
+    // Il camber viene applicato come rotazione. Invertiamo il segno perché in SVG la rotazione oraria è positiva.
+    // Solitamente il camber negativo inclina la parte superiore verso l'interno.
+    const rotation = data.camber || 0;
 
     return (
-      <g transform={`translate(${-offset}, 0)`}>
+      <g transform={`translate(${-offset}, 0) rotate(${rotation}, 0, 125)`}>
         <path 
           d={`M ${-tireW/2} 10 Q ${-tireW/2} 0 0 0 Q ${tireW/2} 0 ${tireW/2} 10 L ${tireW/2} 240 Q ${tireW/2} 250 0 250 Q ${-tireW/2} 250 ${-tireW/2} 240 Z`}
           fill="none"
@@ -101,12 +103,10 @@ const FitmentCalculator = () => {
 
   return (
     <div className="space-y-12">
-      {/* Visualizer Section - La nuova grafica tecnica */}
       <div className="bg-zinc-950 rounded-[3rem] border border-white/5 p-8 relative overflow-hidden shadow-2xl">
         <div className="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
         
         <div className="relative h-[400px] flex items-center justify-center">
-          {/* Fender Line */}
           <div className="absolute top-0 bottom-0 left-1/2 -translate-x-[120px] border-l-2 border-dashed border-white/20 z-0">
             <span className="absolute top-4 -left-3 text-[7px] font-black uppercase tracking-widest text-zinc-600 rotate-90 whitespace-nowrap">Filo Parafango</span>
           </div>
@@ -127,7 +127,6 @@ const FitmentCalculator = () => {
             </motion.g>
           </svg>
 
-          {/* Labels con padding extra sotto */}
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex gap-12 pb-2">
             <div className="text-center">
               <p className="text-[22px] font-black italic text-white">
@@ -141,7 +140,6 @@ const FitmentCalculator = () => {
         </div>
       </div>
 
-      {/* Input Section - Ripristinata come prima */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-zinc-900/40 backdrop-blur-md border border-white/5 p-8 rounded-[2.5rem] space-y-8">
           <div className="flex items-center gap-3">
@@ -164,14 +162,18 @@ const FitmentCalculator = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
+          <div className="grid grid-cols-3 gap-4 pt-4 border-t border-white/5">
             <div className="space-y-2">
-              <Label className="text-[8px] font-black uppercase text-zinc-500 ml-4">Gomma (Larghezza)</Label>
+              <Label className="text-[8px] font-black uppercase text-zinc-500 ml-4">Gomma (L)</Label>
               <Input type="number" value={current.tireW} onChange={e => setCurrent({...current, tireW: parseFloat(e.target.value) || 0})} className="bg-black/40 border-white/10 rounded-full h-12 text-center font-black italic" />
             </div>
             <div className="space-y-2">
-              <Label className="text-[8px] font-black uppercase text-zinc-500 ml-4">Gomma (Spalla)</Label>
+              <Label className="text-[8px] font-black uppercase text-zinc-500 ml-4">Gomma (S)</Label>
               <Input type="number" value={current.tireA} onChange={e => setCurrent({...current, tireA: parseFloat(e.target.value) || 0})} className="bg-black/40 border-white/10 rounded-full h-12 text-center font-black italic" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[8px] font-black uppercase text-zinc-500 ml-4">Camber (°)</Label>
+              <Input type="number" step="0.1" value={current.camber} onChange={e => setCurrent({...current, camber: parseFloat(e.target.value) || 0})} className="bg-black/40 border-white/10 rounded-full h-12 text-center font-black italic" />
             </div>
           </div>
         </div>
@@ -197,7 +199,7 @@ const FitmentCalculator = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 pt-4 border-t border-black/5">
+          <div className="grid grid-cols-4 gap-3 pt-4 border-t border-black/5">
             <div className="space-y-2">
               <Label className="text-[8px] font-black uppercase text-zinc-700 ml-4">Gomma (L)</Label>
               <Input type="number" value={next.tireW} onChange={e => setNext({...next, tireW: parseFloat(e.target.value) || 0})} className="bg-white border-black/10 rounded-full h-12 text-center font-black italic focus-visible:ring-black/20" />
@@ -207,6 +209,10 @@ const FitmentCalculator = () => {
               <Input type="number" value={next.tireA} onChange={e => setNext({...next, tireA: parseFloat(e.target.value) || 0})} className="bg-white border-black/10 rounded-full h-12 text-center font-black italic focus-visible:ring-black/20" />
             </div>
             <div className="space-y-2">
+              <Label className="text-[8px] font-black uppercase text-zinc-700 ml-4">Camber (°)</Label>
+              <Input type="number" step="0.1" value={next.camber} onChange={e => setNext({...next, camber: parseFloat(e.target.value) || 0})} className="bg-white border-black/10 rounded-full h-12 text-center font-black italic focus-visible:ring-black/20" />
+            </div>
+            <div className="space-y-2">
               <Label className="text-[8px] font-black uppercase text-red-600 ml-4">Distanziale</Label>
               <Input type="number" value={next.spacer} onChange={e => setNext({...next, spacer: parseFloat(e.target.value) || 0})} className="bg-red-50 border-red-200 rounded-full h-12 text-center font-black italic text-red-600 focus-visible:ring-red-200" />
             </div>
@@ -214,7 +220,6 @@ const FitmentCalculator = () => {
         </div>
       </div>
 
-      {/* Advanced Results Summary - Ripristinato */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-zinc-900/50 border border-white/10 p-8 rounded-[2.5rem] relative overflow-hidden">
           <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 italic mb-4">Assetto Esterno</p>
@@ -249,7 +254,6 @@ const FitmentCalculator = () => {
         </div>
       </div>
 
-      {/* Save to Garage Section - Ripristinata */}
       {user && vehicles && vehicles.length > 0 && (
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
