@@ -172,11 +172,11 @@ const CamberHelper = () => {
                 </div>
 
                 {/* 
-                  Visualizzazione sempre coerente: incliniamo il top verso sinistra (-displayAngle) 
-                  per simulare l'effetto stance visivo, indipendentemente dalla ruota misurata.
+                  Visualizzazione sempre coerente: incliniamo il top verso destra (displayAngle) 
+                  per simulare l'effetto camber stance visivo (campanatura negativa), indipendentemente dalla ruota misurata.
                 */}
                 <svg viewBox="-100 -100 200 200" className="w-full h-full max-w-[250px] relative z-10 overflow-visible">
-                  <g style={{ transform: `rotate(${-displayAngle}deg)` }}>
+                  <g style={{ transform: `rotate(${displayAngle}deg)` }}>
                     <defs>
                       <linearGradient id="rim-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
                         <stop offset="0%" stopColor="#444" />
@@ -222,10 +222,10 @@ const CamberHelper = () => {
             <div className="bg-white/5 border border-white/10 p-6 rounded-[2rem] shadow-xl">
               <h4 className="text-[10px] font-black uppercase text-zinc-400 tracking-[0.3em] mb-4">Istruzioni per l'uso</h4>
               <ol className="space-y-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 leading-relaxed">
-                <li className="flex gap-3"><span className="text-white">1.</span> Assicurati che l'auto sia in piano.</li>
-                <li className="flex gap-3"><span className="text-white">2.</span> Se hai una cover irregolare sul telefono, rimuovila.</li>
-                <li className="flex gap-3"><span className="text-white">3.</span> Appoggia il telefono in verticale contro i bordi estremi del cerchio (evitando le razze concave).</li>
-                <li className="flex gap-3"><span className="text-white">4.</span> Non importa su quale lato dell'auto misuri, l'app calcolerà automaticamente i gradi di camber.</li>
+                <li className="flex gap-3"><span className="text-white">1.</span> Assicurati che l'auto sia in piano perfetto.</li>
+                <li className="flex gap-3"><span className="text-white">2.</span> Se hai una cover irregolare sul telefono, rimuovila per una misurazione millimetrica.</li>
+                <li className="flex gap-3"><span className="text-white">3.</span> Appoggia la faccia posteriore o lo schermo del telefono in verticale contro i bordi estremi del cerchio (evitando le razze concave).</li>
+                <li className="flex gap-3"><span className="text-white">4.</span> Usa il tasto "Tara a Zero" appoggiando il telefono su una superficie perfettamente dritta per calibrarlo se noti discrepanze nel sensore nativo.</li>
               </ol>
             </div>
           </motion.div>
