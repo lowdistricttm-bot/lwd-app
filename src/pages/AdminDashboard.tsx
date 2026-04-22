@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar';
 import EmailSettingsModal from '@/components/EmailSettingsModal';
 import AdminNotificationModal from '@/components/AdminNotificationModal';
 import AdminTrophyModal from '@/components/AdminTrophyModal';
+import AdminMysteryBoxModal from '@/components/AdminMysteryBoxModal';
 import { useAdmin } from '@/hooks/use-admin';
 import { useRoleRequests } from '@/hooks/use-role-requests';
 import { 
@@ -22,7 +23,8 @@ import {
   Check,
   X,
   User,
-  Trophy
+  Trophy,
+  Gift
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -34,6 +36,7 @@ const AdminDashboard = () => {
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [isNotifModalOpen, setIsNotifModalOpen] = useState(false);
   const [isTrophyModalOpen, setIsTrophyModalOpen] = useState(false);
+  const [isMysteryModalOpen, setIsMysteryModalOpen] = useState(false);
   const [showRequests, setShowRequests] = useState(false);
 
   if (checkingAdmin) {
@@ -68,6 +71,13 @@ const AdminDashboard = () => {
       action: () => navigate('/admin/applications'),
       show: true,
       badge: pendingAppsCount
+    },
+    {
+      title: "Mystery Box",
+      desc: "Configura la box mensile a stock limitato",
+      icon: Gift,
+      action: () => setIsMysteryModalOpen(true),
+      show: isAdmin || isStaff
     },
     {
       title: "Assegna Trofei",
@@ -201,6 +211,7 @@ const AdminDashboard = () => {
       {isAdmin === true && <EmailSettingsModal isOpen={isEmailModalOpen} onClose={() => setIsEmailModalOpen(false)} />}
       {(isAdmin || isStaff) && <AdminNotificationModal isOpen={isNotifModalOpen} onClose={() => setIsNotifModalOpen(false)} />}
       {(isAdmin || isStaff) && <AdminTrophyModal isOpen={isTrophyModalOpen} onClose={() => setIsTrophyModalOpen(false)} />}
+      {(isAdmin || isStaff) && <AdminMysteryBoxModal isOpen={isMysteryModalOpen} onClose={() => setIsMysteryModalOpen(false)} />}
     </div>
   );
 };

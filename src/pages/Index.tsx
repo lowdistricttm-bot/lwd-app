@@ -10,6 +10,7 @@ import LatestActivities from '@/components/LatestActivities';
 import LatestMeets from '@/components/LatestMeets';
 import LatestMarketplaceItems from '@/components/LatestMarketplaceItems';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
+import MysteryBoxPopup from '@/components/MysteryBoxPopup';
 import { ShoppingBag, Users, Calendar, ArrowRight, Star, Music, Play, ChevronRight, MapPin, Tag, Bell, X, ArrowRightLeft, Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from '@/hooks/use-translation';
@@ -62,8 +63,6 @@ const Index = () => {
 
   return (
     <div className="min-h-full text-white flex flex-col bg-black">
-      {/* Navbar rimossa (ora gestita da App.tsx) */}
-      
       <div className="pt-[calc(4rem+env(safe-area-inset-top))]">
         <Stories />
         <Hero />
@@ -198,6 +197,7 @@ const Index = () => {
       </div>
       
       <PWAInstallPrompt />
+      <MysteryBoxPopup />
 
       {/* Push Notification Prompt */}
       <AnimatePresence>
