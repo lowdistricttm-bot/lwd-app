@@ -22,12 +22,17 @@ const EventCarovane = ({ eventId, eventTitle, currentUserId }: EventCarovaneProp
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedCarovana, setSelectedCarovana] = useState<Carovana | null>(null);
 
-  // Forza il rinfresco quando il componente viene montato o quando si chiude il modal di creazione
+  // Forza il rinfresco quando il componente viene montato
   useEffect(() => {
     refetch();
   }, [eventId, refetch]);
 
-  if (isLoading) return <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-zinc-500" /></div>;
+  if (isLoading) return (
+    <div className="py-20 flex flex-col items-center gap-4">
+      <Loader2 className="animate-spin text-zinc-500" size={32} />
+      <p className="text-[9px] font-black uppercase tracking-widest text-zinc-600">Sincronizzazione carovane...</p>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -44,15 +49,20 @@ const EventCarovane = ({ eventId, eventTitle, currentUserId }: EventCarovaneProp
         </button>
       </div>
 
-      {carovane?.length === 0 ? (
-        <div className="bg-white/5 border border-dashed border-white/10 p-10 text-center rounded-[2rem]">
-          <Car className="mx-auto text-zinc-800 mb-4" size={32} />
-          <p className="text-zinc-500 text-[9px] font-black uppercase tracking-widest italic">Nessuna carovana creata per questo evento.</p>
-          <button onClick={() => setIsCreateOpen(true)} className="mt-4 text-[9px] font-black uppercase text-white border-b border-white/20 pb-0.5">Crea la prima</button>
+      {(!carovane || carovane.length === 0) ? (
+        <div className="bg-white/5 border border-dashed border-white/10 p-12 text-center rounded-[2.5rem]">
+          <Car className="mx-auto text-zinc-800 mb-6" size={48} />
+          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest italic">Nessuna carovana creata per questo evento.</p>
+          <button 
+            onClick={() => setIsCreateOpen(true)} 
+            className="mt-6 bg-white/5 hover:bg-white/10 text-white px-6 py-2 rounded-full text-[9px] font-black uppercase italic border border-white/10 transition-all"
+          >
+            Crea la prima
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {carovane?.map((carovana) => (
+          {carovane.map((carovana) => (
             <motion.div 
               key={carovana.id}
               initial={{ opacity: 0, y: 10 }}
@@ -61,12 +71,12 @@ const EventCarovane = ({ eventId, eventTitle, currentUserId }: EventCarovaneProp
               className="bg-zinc-900/40 backdrop-blur-md border border-white/5 p-5 rounded-[2rem] group hover:border-white/20 transition-all cursor-pointer shadow-xl"
             >
               <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h4 className="text-base font-black italic uppercase tracking-tight text-white group-hover:text-zinc-300 transition-colors">{carovana.title}</h4>
-                  <div className="flex items-center gap-3 mt-2 text-zinc-500">
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-base font-black italic uppercase tracking-tight text-white group-hover:text-zinc-300 transition-colors truncate">{carovana.title}</h4>
+                  <div className="flex flex-wrap items-center gap-3 mt-2 text-zinc-500">
                     <div className="flex items-center gap-1.5">
                       <MapPin size={12} className="text-white" />
-                      <span className="text-[9px] font-black uppercase italic">{carovana.start_location}</span>
+                      <span className="text-[9px] font-black uppercase italic truncate">{carovana.start_location}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Clock size={12} className="text-white" />
@@ -75,7 +85,7 @@ const EventCarovane = ({ eventId, eventTitle, currentUserId }: EventCarovaneProp
                   </div>
                 </div>
                 {carovana.is_joined && (
-                  <span className="bg-white text-black text-[7px] font-black uppercase px-2 py-1 italic rounded-md shadow-lg">UNISCITI</span>
+                  <span className="bg-white text-black text-[7px] font-black uppercase px-2 py-1 italic rounded-md shadow-lg shrink-0 ml-2">UNISCITI</span>
                 )}
               </div>
 
@@ -92,7 +102,9 @@ const EventCarovane = ({ eventId, eventTitle, currentUserId }: EventCarovaneProp
                     {carovana.carovane_partecipanti?.length || 0} Auto in parata
                   </span>
                 </div>
-                <ChevronRight size={16} className="text-zinc-700 group-hover:text-white transition-all" />
+                <div className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-zinc-600 group-hover:text-white transition-colors">
+                  Dettagli <ChevronRight size={14} />
+                </div>
               </div>
             </motion.div>
           ))}
@@ -103,7 +115,7 @@ const EventCarovane = ({ eventId, eventTitle, currentUserId }: EventCarovaneProp
         isOpen={isCreateOpen} 
         onClose={() => {
           setIsCreateOpen(false);
-          refetch(); // Rinfresca dopo la chiusura del modal
+          refetch(); 
         }} 
         eventId={eventId} 
         eventTitle={eventTitle} 
