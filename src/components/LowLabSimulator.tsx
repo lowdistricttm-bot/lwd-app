@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, MoveVertical, RotateCcw, Download, Plus, Trash2, Layers, Check, GripHorizontal, SlidersHorizontal } from 'lucide-react';
+import { Camera, MoveVertical, RotateCcw, Download, Plus, Trash2, Layers, Check, GripHorizontal, SlidersHorizontal, Move } from 'lucide-react';
 import { Button } from './ui/button';
 import { Slider } from './ui/slider';
 import { cn } from '@/lib/utils';
@@ -11,24 +11,23 @@ import { showSuccess } from '@/utils/toast';
 interface WheelOverlay {
   id: string;
   url: string;
-  x: number;
-  y: number;
+  x: number; // Percentuale
+  y: number; // Percentuale
   scale: number;
 }
 
 const WHEEL_OPTIONS = [
-  { id: 'bbs-rs', name: 'BBS RS', url: 'https://www.lowdistrict.it/wp-content/uploads/bbs-rs-wheel.png' },
-  { id: 'jr-jr11', name: 'Japan Racing JR11', url: 'https://www.lowdistrict.it/wp-content/uploads/jr11-wheel.png' },
-  { id: 'jnc-001', name: 'JNC 001', url: 'https://www.lowdistrict.it/wp-content/uploads/jnc-wheel.png' },
-  { id: 'rotiform-tmb', name: 'Rotiform TMB', url: 'https://www.lowdistrict.it/wp-content/uploads/rotiform-wheel.png' },
-  { id: 'work-meister', name: 'Work Meister', url: 'https://www.lowdistrict.it/wp-content/uploads/work-wheel.png' },
-  { id: 'oz-futura', name: 'OZ Futura', url: 'https://www.lowdistrict.it/wp-content/uploads/oz-wheel.png' }
+  { id: 'bbs-rs', name: 'BBS RS Gold', url: 'https://purepng.com/public/uploads/large/purepng.com-bbs-wheel-rimcar-partwheelrimbbs-1215225915141v6v9z.png' },
+  { id: 'jr-jr11', name: 'JR11 Hyper Black', url: 'https://jr-wheels.com/img/towary/1/2021_01/jr11_hyper_black_1.png' },
+  { id: 'jnc-001', name: 'JNC 001 Silver', url: 'https://jncwheels.com/cdn/shop/products/JNC001_Silver_Machined_Lip_1_1024x1024.png?v=1527194444' },
+  { id: 'rotiform-las', name: 'Rotiform LAS-R', url: 'https://www.rotiform.com/images/wheels/LAS-R_Silver_1.png' },
+  { id: 'work-meister', name: 'Work Meister S1', url: 'https://images.squarespace-cdn.com/content/v1/5a0d09999f8dce6969696969/1512414141414-XYZ/Work-Meister-S1-3P.png' }
 ];
 
 const LowLabSimulator = () => {
   const [image, setImage] = useState<string | null>(null);
   const [drop, setDrop] = useState(0);
-  const [cutLine, setCutLine] = useState(60); // Percentuale dall'alto
+  const [cutLine, setCutLine] = useState(65); 
   const [isAdjustingCut, setIsAdjustingCut] = useState(false);
   const [wheels, setWheels] = useState<WheelOverlay[]>([]);
   const [selectedWheelId, setSelectedWheelId] = useState<string | null>(null);
@@ -50,8 +49,8 @@ const LowLabSimulator = () => {
       id: Math.random().toString(36).substr(2, 9),
       url,
       x: 50,
-      y: 70,
-      scale: 0.2
+      y: 65,
+      scale: 0.25
     };
     setWheels([...wheels, newWheel]);
     setSelectedWheelId(newWheel.id);
@@ -59,6 +58,17 @@ const LowLabSimulator = () => {
 
   const updateWheel = (id: string, updates: Partial<WheelOverlay>) => {
     setWheels(wheels.map(w => w.id === id ? { ...w, ...updates } : w));
+  };
+
+  const handleDragEnd = (id: string, info: any) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    
+    // Calcoliamo la nuova posizione in percentuale rispetto al contenitore
+    const x = ((info.point.x - rect.left) / rect.width) * 100;
+    const y = ((info.point.y - rect.top) / rect.height) * 100;
+    
+    updateWheel(id, { x, y });
   };
 
   const removeWheel = (id: string) => {
@@ -82,7 +92,7 @@ const LowLabSimulator = () => {
           <Camera size={32} className="text-zinc-500 group-hover:text-white transition-colors" />
         </div>
         <h3 className="text-xl font-black italic uppercase tracking-tight mb-2">Carica la tua Auto</h3>
-        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Foto laterale consigliata</p>
+        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Usa una foto di profilo laterale</p>
         <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleUpload} />
       </div>
     );
@@ -96,11 +106,11 @@ const LowLabSimulator = () => {
         className="relative aspect-video md:aspect-[21/9] bg-zinc-950 rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl touch-none"
       >
         {/* Layer 1: Static Background (Wheels & Ground) */}
-        <img src={image} className="absolute inset-0 w-full h-full object-contain opacity-40 blur-[2px]" alt="" />
+        <img src={image} className="absolute inset-0 w-full h-full object-contain opacity-30 blur-[4px]" alt="" />
 
         {/* Layer 2: Moving Body */}
         <div 
-          className="absolute inset-0 w-full h-full transition-transform duration-300 ease-out"
+          className="absolute inset-0 w-full h-full transition-transform duration-300 ease-out z-10"
           style={{ 
             transform: `translateY(${drop}px)`,
             clipPath: `inset(0 0 ${100 - cutLine}% 0)` 
@@ -109,9 +119,9 @@ const LowLabSimulator = () => {
           <img src={image} className="w-full h-full object-contain" alt="Car Body" />
         </div>
 
-        {/* Layer 3: Static Bottom (to keep wheels in place if not using overlays) */}
+        {/* Layer 3: Static Bottom (Original Wheels) */}
         <div 
-          className="absolute inset-0 w-full h-full"
+          className="absolute inset-0 w-full h-full z-0"
           style={{ clipPath: `inset(${cutLine}% 0 0 0)` }}
         >
           <img src={image} className="w-full h-full object-contain" alt="Car Wheels" />
@@ -123,12 +133,10 @@ const LowLabSimulator = () => {
             key={w.id}
             drag
             dragMomentum={false}
-            onDrag={(_, info) => {
-              // Logica per aggiornare x e y basata sul trascinamento
-            }}
+            onDragEnd={(_, info) => handleDragEnd(w.id, info)}
             onClick={() => setSelectedWheelId(w.id)}
             className={cn(
-              "absolute z-30 cursor-grab active:cursor-grabbing",
+              "absolute z-20 cursor-move",
               selectedWheelId === w.id && "ring-2 ring-white ring-offset-4 ring-offset-black rounded-full"
             )}
             style={{ 
@@ -138,7 +146,7 @@ const LowLabSimulator = () => {
               transform: 'translate(-50%, -50%)'
             }}
           >
-            <img src={w.url} className="w-full h-full object-contain drop-shadow-2xl" alt="Wheel" />
+            <img src={w.url} className="w-full h-full object-contain drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)]" alt="Wheel" />
           </motion.div>
         ))}
 
@@ -147,31 +155,39 @@ const LowLabSimulator = () => {
           {isAdjustingCut && (
             <motion.div 
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="absolute inset-0 z-40 bg-black/40 backdrop-blur-[2px] flex flex-col items-center justify-center"
+              className="absolute inset-0 z-40 bg-black/60 backdrop-blur-[2px] flex flex-col items-center justify-center"
             >
               <div 
-                className="absolute left-0 right-0 h-0.5 bg-white shadow-[0_0_15px_rgba(255,255,255,0.8)] flex items-center justify-center"
+                className="absolute left-0 right-0 h-0.5 bg-white shadow-[0_0_20px_rgba(255,255,255,1)] flex items-center justify-center"
                 style={{ top: `${cutLine}%` }}
               >
-                <div className="bg-white text-black px-4 py-1 rounded-full text-[8px] font-black uppercase italic -mt-8">
-                  Linea di Taglio (Sopra i cerchi)
+                <div className="bg-white text-black px-4 py-1 rounded-full text-[8px] font-black uppercase italic -mt-10 shadow-2xl">
+                  Trascina lo slider sotto per regolare il taglio
                 </div>
-                <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-xl cursor-ns-resize">
-                  <GripHorizontal size={16} className="text-black rotate-90" />
+                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-2xl">
+                  <GripHorizontal size={20} className="text-black rotate-90" />
                 </div>
               </div>
-              <Button 
-                onClick={() => setIsAdjustingCut(false)}
-                className="mt-32 bg-white text-black rounded-full font-black uppercase italic text-[10px] px-8"
-              >
-                Conferma Posizione
-              </Button>
+              
+              <div className="absolute bottom-20 left-1/2 -translate-x-1/2 w-64 space-y-4">
+                <Slider 
+                  value={[cutLine]} 
+                  min={20} max={90} step={0.5}
+                  onValueChange={(val) => setCutLine(val[0])}
+                />
+                <Button 
+                  onClick={() => setIsAdjustingCut(false)}
+                  className="w-full bg-white text-black rounded-full font-black uppercase italic text-[10px] h-12"
+                >
+                  Conferma Taglio
+                </Button>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Controls Overlay (Floating) */}
-        <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end pointer-events-none">
+        <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end pointer-events-none z-50">
           <div className="flex gap-2 pointer-events-auto">
             <button onClick={reset} className="p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-white hover:text-black transition-all shadow-xl border border-white/10">
               <RotateCcw size={18} />
@@ -205,7 +221,7 @@ const LowLabSimulator = () => {
           <div className="px-2">
             <Slider 
               value={[drop]} 
-              max={100} 
+              max={120} 
               step={1} 
               onValueChange={(val) => setDrop(val[0])}
               className="py-4"
@@ -262,16 +278,16 @@ const LowLabSimulator = () => {
               <div className="flex items-center gap-6">
                 <span className="text-[8px] font-black uppercase text-zinc-400 w-12">Scale</span>
                 <Slider 
-                  value={[wheels.find(w => w.id === selectedWheelId)?.scale || 0.2]} 
-                  min={0.05} max={0.5} step={0.01}
+                  value={[wheels.find(w => w.id === selectedWheelId)?.scale || 0.25]} 
+                  min={0.05} max={0.6} step={0.01}
                   onValueChange={(val) => updateWheel(selectedWheelId, { scale: val[0] })}
                 />
               </div>
               <div className="flex items-center gap-6">
                 <span className="text-[8px] font-black uppercase text-zinc-400 w-12">Pos Y</span>
                 <Slider 
-                  value={[wheels.find(w => w.id === selectedWheelId)?.y || 70]} 
-                  min={0} max={100} step={0.5}
+                  value={[wheels.find(w => w.id === selectedWheelId)?.y || 65]} 
+                  min={0} max={100} step={0.1}
                   onValueChange={(val) => updateWheel(selectedWheelId, { y: val[0] })}
                 />
               </div>
