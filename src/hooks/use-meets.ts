@@ -17,6 +17,8 @@ export interface Meet {
   longitude?: number;
   image_url?: string;
   created_at: string;
+  privacy?: 'public' | 'private';
+  invite_code?: string;
   profiles?: {
     username: string;
     avatar_url: string;
@@ -101,7 +103,11 @@ export const useMeets = () => {
         image_url = await uploadToCloudinary(newMeet.file);
       }
 
-      const { error } = await supabase
+      const invite_code = newMeet.privacy === 'private' 
+        ? 'DISTRICT-' + Math.random().toString(36).substring(2, 10).toUpperCase() 
+        : null;
+
+      const { data: meet, error } = await supabase
         .from('meets')
         .insert([{
           user_id: user.id,
@@ -111,10 +117,19 @@ export const useMeets = () => {
           location: newMeet.location,
           latitude: newMeet.latitude,
           longitude: newMeet.longitude,
-          image_url
-        }]);
+          image_url,
+          privacy: newMeet.privacy,
+          invite_code
+        }])
+        .select()
+        .single();
 
       if (error) throw error;
+      
+      // Auto-partecipazione
+      await supabase.from('meet_participants').insert([{ meet_id: meet.id, user_id: user.id }]);
+      
+      return meet;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['district-meets'] });

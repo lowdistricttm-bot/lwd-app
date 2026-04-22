@@ -20,6 +20,8 @@ export interface Carovana {
   start_time: string;
   route_description: string;
   created_at: string;
+  privacy?: 'public' | 'private';
+  invite_code?: string;
   profiles?: {
     username: string;
     avatar_url: string;
@@ -89,10 +91,15 @@ export const useCarovane = (eventId?: string) => {
       startLocation: string, 
       startTime: string, 
       routeDescription: string,
+      privacy: 'public' | 'private',
       stops: { location: string, arrivalTime: string }[]
     }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Accedi per creare una carovana");
+
+      const invite_code = data.privacy === 'private' 
+        ? 'DISTRICT-' + Math.random().toString(36).substring(2, 10).toUpperCase() 
+        : null;
 
       const { data: carovana, error: cError } = await supabase
         .from('carovane')
@@ -102,7 +109,9 @@ export const useCarovane = (eventId?: string) => {
           title: data.title,
           start_location: data.startLocation,
           start_time: data.startTime,
-          route_description: data.routeDescription
+          route_description: data.routeDescription,
+          privacy: data.privacy,
+          invite_code
         }])
         .select()
         .single();
