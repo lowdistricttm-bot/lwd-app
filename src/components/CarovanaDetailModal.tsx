@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MapPin, Clock, Users, Car, ChevronRight, Loader2, Trash2, Share2, Info, Navigation, Edit3, Lock } from 'lucide-react';
+import { X, MapPin, Clock, Users, Car, ChevronRight, Loader2, Trash2, Share2, Info, Navigation, Edit3, Lock, Radio } from 'lucide-react';
 import { Carovana, useCarovane } from '@/hooks/use-carovane';
 import { useGarage } from '@/hooks/use-garage';
 import { useBodyLock } from '@/hooks/use-body-lock';
@@ -12,6 +12,7 @@ import { it } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { showSuccess } from '@/utils/toast';
+import CruisingMode from './CruisingMode';
 
 interface CarovanaDetailModalProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
   const navigate = useNavigate();
   const { toggleJoin, deleteCarovana } = useCarovane();
   const { vehicles } = useGarage();
+  const [isCruisingOpen, setIsCruisingOpen] = useState(false);
   
   useBodyLock(isOpen);
 
@@ -41,7 +43,6 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
   const handleShare = async () => {
     let shareUrl = `${window.location.origin}/events?carovana_id=${carovana.id}`;
     
-    // Se la carovana è privata, usiamo il link di invito
     if (carovana.privacy === 'private' && carovana.invite_code) {
       shareUrl = `${window.location.origin}/?code=${carovana.invite_code}`;
     }
@@ -125,9 +126,26 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
                       </button>
                     </>
                   )}
-                  <button onClick={onClose} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors"><X size={24} /></button>
+                  <button onClick={onClose} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors shrink-0"><X size={24} /></button>
                 </div>
               </div>
+
+              {/* Cruising Mode Button - Solo se partecipante */}
+              {carovana.is_joined && (
+                <motion.div 
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="pt-2"
+                >
+                  <Button 
+                    onClick={() => setIsCruisingOpen(true)}
+                    className="w-full h-16 rounded-full font-black uppercase italic text-[10px] tracking-widest bg-zinc-900 text-white border border-white/10 hover:bg-white hover:text-black transition-all duration-500 shadow-xl flex items-center justify-center gap-3"
+                  >
+                    <Radio size={20} className="animate-pulse" />
+                    ATTIVA CRUISING MODE (RADIO CB)
+                  </Button>
+                </motion.div>
+              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="bg-white/5 border border-white/10 p-5 rounded-[2rem]">
@@ -162,7 +180,7 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
                     <div className="absolute left-8 top-10 bottom-10 w-[1px] bg-white/10" />
                     {carovana.carovane_tappe.map((stop, i) => (
                       <div key={stop.id} className="flex items-start gap-6 relative z-10">
-                        <div className="w-4 h-4 rounded-full bg-white border-4 border-black mt-1 shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
+                        <div className="w-4 h-4 rounded-full bg-white border-4 border-black mt-1 shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
                         <div className="flex-1">
                           <div className="flex justify-between items-start">
                             <p className="text-sm font-black uppercase italic text-white">{stop.location}</p>
@@ -250,6 +268,13 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
           </motion.div>
         </>
       )}
+
+      <CruisingMode 
+        isOpen={isCruisingOpen} 
+        onClose={() => setIsCruisingOpen(false)} 
+        carovanaId={carovana.id} 
+        carovanaTitle={carovana.title} 
+      />
     </AnimatePresence>
   );
 };
