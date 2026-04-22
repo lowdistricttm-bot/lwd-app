@@ -259,7 +259,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
               <Button 
                 type="submit" 
                 disabled={addVehicle.isPending || updateVehicle.isPending} 
-                className="w-full bg-zinc-900 text-white border border-white/10 rounded-full h-16 font-black uppercase italic tracking-widest shadow-2xl hover:bg-zinc-800 transition-all"
+                className="w-full bg-white text-black hover:bg-zinc-200 rounded-full h-16 font-black uppercase italic tracking-widest shadow-2xl transition-all border-none"
               >
                 {(addVehicle.isPending || updateVehicle.isPending) ? <Loader2 className="animate-spin" /> : editingVehicle ? 'Aggiorna Veicolo' : 'Salva nel Garage'}
               </Button>

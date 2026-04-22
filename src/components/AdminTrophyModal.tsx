@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Trophy, User, Car, Loader2, Send, Search, ShieldCheck, Award, Check } from 'lucide-react';
+import { X, Trophy, User, Car, Loader2, Send, Search, ShieldCheck, Award, Check, AlertCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -18,7 +18,7 @@ interface AdminTrophyModalProps {
 }
 
 const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
-  const { availableTrophies, awardTrophy } = useTrophies();
+  const { availableTrophies, awardTrophy, isLoading: loadingTrophies } = useTrophies();
   const { allUsers } = useAdmin();
   
   const [search, setSearch] = useState('');
@@ -124,26 +124,35 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
                 <div className="space-y-3">
                   <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4 italic">2. Scegli il Premio</Label>
                   <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto no-scrollbar p-1">
-                    {availableTrophies?.map(t => (
-                      <button 
-                        key={t.id} 
-                        type="button" 
-                        onClick={() => setSelectedTrophy(t.id)}
-                        className={cn(
-                          "p-4 rounded-2xl border text-left transition-all flex items-center justify-between group",
-                          selectedTrophy === t.id ? "bg-white text-black border-white" : "bg-white/5 border-white/5 text-zinc-400 hover:bg-white/10"
-                        )}
-                      >
-                        <div className="flex items-center gap-4">
-                          <Trophy size={18} className={cn(selectedTrophy === t.id ? "text-black" : "text-yellow-500")} />
-                          <div>
-                            <p className="text-xs font-black uppercase italic">{t.title}</p>
-                            <p className={cn("text-[8px] font-bold uppercase", selectedTrophy === t.id ? "text-black/60" : "text-zinc-600")}>{t.event_name}</p>
+                    {loadingTrophies ? (
+                      <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-zinc-500" /></div>
+                    ) : availableTrophies && availableTrophies.length > 0 ? (
+                      availableTrophies.map(t => (
+                        <button 
+                          key={t.id} 
+                          type="button" 
+                          onClick={() => setSelectedTrophy(t.id)}
+                          className={cn(
+                            "p-4 rounded-2xl border text-left transition-all flex items-center justify-between group",
+                            selectedTrophy === t.id ? "bg-white text-black border-white" : "bg-white/5 border-white/5 text-zinc-400 hover:bg-white/10"
+                          )}
+                        >
+                          <div className="flex items-center gap-4">
+                            <Trophy size={18} className={cn(selectedTrophy === t.id ? "text-black" : "text-yellow-500")} />
+                            <div>
+                              <p className="text-xs font-black uppercase italic">{t.title}</p>
+                              <p className={cn("text-[8px] font-bold uppercase", selectedTrophy === t.id ? "text-black/60" : "text-zinc-600")}>{t.event_name}</p>
+                            </div>
                           </div>
-                        </div>
-                        {selectedTrophy === t.id && <Check size={18} strokeWidth={3} />}
-                      </button>
-                    ))}
+                          {selectedTrophy === t.id && <Check size={18} strokeWidth={3} />}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="py-10 text-center bg-white/5 rounded-2xl border border-dashed border-white/10">
+                        <AlertCircle className="mx-auto text-zinc-700 mb-2" size={24} />
+                        <p className="text-[10px] font-black uppercase text-zinc-600">Nessun premio configurato nel database.</p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -179,7 +188,7 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
                 <Button 
                   type="submit" 
                   disabled={awardTrophy.isPending || !selectedUser || !selectedTrophy}
-                  className="w-full bg-zinc-900 text-white border border-white/10 hover:bg-zinc-800 h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl mt-4"
+                  className="w-full bg-white text-black hover:bg-zinc-200 h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl mt-4 border-none"
                 >
                   {awardTrophy.isPending ? <Loader2 className="animate-spin" /> : <><Send size={18} className="mr-2 -rotate-12" /> Conferma Assegnazione</>}
                 </Button>
