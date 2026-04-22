@@ -51,9 +51,7 @@ const ProductDetail = () => {
 
   return (
     <div className="min-h-screen bg-transparent text-white pb-32">
-      <Navbar />
-      
-      <main className="pt-24 px-6 max-w-4xl mx-auto">
+      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] px-6 max-w-4xl mx-auto w-full">
         <button 
           onClick={() => navigate(-1)} 
           className="flex items-center gap-2 text-zinc-500 hover:text-white mb-8 uppercase text-[9px] font-black tracking-widest transition-colors"

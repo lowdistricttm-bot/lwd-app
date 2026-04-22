@@ -217,8 +217,7 @@ const Profile = () => {
 
   return (
     <div className="min-h-full text-white flex flex-col bg-transparent">
-      {/* Navbar rimossa (gestita globalmente) */}
-      <main className="pb-32">
+      <main className="pt-[calc(4rem+env(safe-area-inset-top))] pb-32 flex-1 w-full">
         {/* Cover Section */}
         <div className="relative aspect-[2.5/1] md:h-64 md:aspect-auto bg-zinc-900 group/cover">
           <div className="absolute inset-0 overflow-hidden" onClick={() => !isOwnProfile && setLightboxData({ images: [profile?.cover_url || DEFAULT_COVER], index: 0 })}>

@@ -67,8 +67,7 @@ const Bacheca = () => {
 
   return (
     <div className="min-h-full text-white flex flex-col bg-transparent">
-      {/* Navbar rimossa (gestita globalmente) */}
-      <main className="pt-[calc(2rem+env(safe-area-inset-top))] pb-32 px-4 md:px-6 max-w-2xl mx-auto w-full">
+      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-4 md:px-6 max-w-2xl mx-auto w-full">
         <header className="mb-12 flex items-end justify-between">
           <div className="min-w-0 flex-1">
             <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">{t.feed.subtitle}</h2>

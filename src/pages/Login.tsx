@@ -35,9 +35,8 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-      <Navbar />
-      <main className="flex-1 flex items-center justify-center px-6 pt-20 pb-32">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-[380px]">
+      <main className="flex-1 flex items-center justify-center px-6 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 w-full">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-[380px] mx-auto">
           <div className="text-center mb-12">
             <h1 className="text-4xl font-black italic uppercase tracking-tighter mb-3">{t.auth.title}</h1>
             <p className="text-zinc-500 text-[9px] font-black uppercase tracking-[0.4em] leading-relaxed">{t.auth.subtitle}</p>

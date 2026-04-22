@@ -67,9 +67,7 @@ const PostDetail = () => {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-      <Navbar />
-      
-      <main className="flex-1 pt-24 pb-24 px-4 md:px-6 max-w-2xl mx-auto w-full">
+      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-24 px-4 md:px-6 max-w-2xl mx-auto w-full">
         <header className="mb-8">
           <button 
             onClick={() => navigate(-1)}

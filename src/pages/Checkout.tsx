@@ -153,7 +153,6 @@ const Checkout = () => {
   if (isFinished) {
     return (
       <div className="min-h-screen bg-transparent text-white flex flex-col">
-        <Navbar />
         <main className="flex-1 flex flex-col items-center justify-center px-6 py-20 text-center max-w-2xl mx-auto">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
@@ -184,8 +183,7 @@ const Checkout = () => {
 
   return (
     <div className="min-h-screen bg-transparent text-white flex flex-col">
-      <Navbar />
-      <main className="flex-1 pt-24 pb-32 px-6 max-w-4xl mx-auto w-full">
+      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-6 max-w-4xl mx-auto w-full">
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-zinc-500 hover:text-white mb-8 uppercase text-[9px] font-black tracking-widest transition-colors">
           <ChevronLeft size={14} /> Torna al Carrello
         </button>
