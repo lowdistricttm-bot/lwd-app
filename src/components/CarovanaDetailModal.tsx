@@ -73,14 +73,14 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
             animate={{ y: 0 }} 
             exit={{ y: '100%' }} 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[251] bg-zinc-950 border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[92dvh] overflow-y-auto shadow-2xl"
+            className="fixed inset-x-0 bottom-0 z-[251] bg-zinc-950 border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[90dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
             style={{ 
               touchAction: 'pan-y', 
               overscrollBehavior: 'contain' 
             }}
             data-no-swipe="true"
           >
-            <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
+            <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-8 shrink-0" />
             
             <div className="max-w-2xl mx-auto space-y-8 pb-10">
               <div className="flex justify-between items-start">
