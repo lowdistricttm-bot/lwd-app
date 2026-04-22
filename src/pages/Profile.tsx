@@ -205,8 +205,11 @@ const Profile = () => {
   const tabs = [];
   if (!isTargetSubscriber) tabs.push({ id: 'activity', label: t.profile.posts, icon: MessageSquare });
   if (isOwnProfile || !isTargetSubscriber) tabs.push({ id: 'garage', label: t.nav.garage, icon: Car });
+  
+  // Il Marketplace è ora visibile in tutti i profili
+  tabs.push({ id: 'marketplace', label: 'Market', icon: Tag });
+  
   if (isOwnProfile) {
-    tabs.push({ id: 'marketplace', label: 'Market', icon: Tag });
     tabs.push({ id: 'orders', label: t.profile.orders, icon: ShoppingBag });
     tabs.push({ id: 'selections', label: t.profile.selections, icon: ClipboardCheck });
   }

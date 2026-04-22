@@ -2,11 +2,12 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Tag, Euro, User, MessageSquare, Calendar, LayoutGrid, ChevronRight, Info, Camera, Loader2, Trash2 } from 'lucide-react';
+import { X, Tag, Euro, User, MessageSquare, Calendar, LayoutGrid, ChevronRight, Info, Camera, Loader2, Trash2, Star } from 'lucide-react';
 import { MarketplaceItem, MARKETPLACE_CATEGORIES, useMarketplace } from '@/hooks/use-marketplace';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { Button } from './ui/button';
 import ImageLightbox from './ImageLightbox';
+import ReviewSellerModal from './ReviewSellerModal';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -23,6 +24,7 @@ const MarketplaceItemDetailModal = ({ isOpen, onClose, item, isOwnItem, onEdit, 
   const navigate = useNavigate();
   const { updateItemStatus } = useMarketplace();
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   
   useBodyLock(isOpen);
 
@@ -145,7 +147,7 @@ const MarketplaceItemDetailModal = ({ isOpen, onClose, item, isOwnItem, onEdit, 
 
                 {/* Seller Info */}
                 {!isOwnItem && (
-                  <div className="bg-white/5 border border-white/10 p-6 rounded-[2rem] flex items-center justify-between shadow-2xl">
+                  <div className="bg-white/5 border border-white/10 p-6 rounded-[2rem] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xl">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-black rounded-full overflow-hidden border-2 border-white/10">
                         {item.profiles?.avatar_url ? (
@@ -159,12 +161,21 @@ const MarketplaceItemDetailModal = ({ isOpen, onClose, item, isOwnItem, onEdit, 
                         <p className="text-sm font-black uppercase italic tracking-tight text-white">@{item.profiles?.username}</p>
                       </div>
                     </div>
-                    <Button 
-                      onClick={() => navigate(`/profile/${item.seller_id}`)}
-                      className="bg-white text-black hover:bg-zinc-200 rounded-full h-8 px-4 text-[7px] font-black uppercase italic shadow-lg"
-                    >
-                      Profilo
-                    </Button>
+                    <div className="flex gap-2 w-full sm:w-auto">
+                      <Button 
+                        onClick={() => navigate(`/profile/${item.seller_id}`)}
+                        className="flex-1 sm:flex-none bg-white text-black hover:bg-zinc-200 rounded-full h-8 px-4 text-[7px] font-black uppercase italic shadow-lg"
+                      >
+                        Profilo
+                      </Button>
+                      <Button 
+                        onClick={() => setIsReviewModalOpen(true)}
+                        variant="outline"
+                        className="flex-1 sm:flex-none border-white/10 text-white hover:bg-white/10 rounded-full h-8 px-4 text-[7px] font-black uppercase italic shadow-lg"
+                      >
+                        <Star size={10} className="mr-1" /> Valuta
+                      </Button>
+                    </div>
                   </div>
                 )}
 
@@ -231,6 +242,12 @@ const MarketplaceItemDetailModal = ({ isOpen, onClose, item, isOwnItem, onEdit, 
         initialIndex={lightboxData?.index || 0} 
         isOpen={!!lightboxData} 
         onClose={() => setLightboxData(null)} 
+      />
+
+      <ReviewSellerModal 
+        isOpen={isReviewModalOpen} 
+        onClose={() => setIsReviewModalOpen(false)} 
+        sellerId={item?.seller_id} 
       />
     </>
   );
