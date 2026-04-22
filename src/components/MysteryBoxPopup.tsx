@@ -103,7 +103,9 @@ const MysteryBoxPopup = () => {
                   <p className="text-3xl font-black italic tracking-tighter text-white">€ {activeBox.price}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[9px] font-black uppercase text-red-900 tracking-widest mb-1">Solo {activeBox.remaining_quantity} rimaste</p>
+                  <p className="text-[9px] font-black uppercase text-red-500 tracking-widest mb-1 animate-pulse">
+                    Solo {activeBox.remaining_quantity} rimaste
+                  </p>
                   <div className="h-1.5 w-24 bg-white/5 rounded-full overflow-hidden border border-white/5">
                     <motion.div 
                       initial={{ width: 0 }}
