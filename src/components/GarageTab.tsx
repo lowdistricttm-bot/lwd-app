@@ -17,11 +17,11 @@ import TrophyBar from './TrophyBar';
 import RainCheck from './RainCheck';
 import { 
   Plus, Car, Trash2, Camera, Loader2, X, Edit3, Heart, 
-  Gauge, Book, Sparkles, ChevronRight, Calendar, CreditCard, GripVertical,
-  Wrench, ArrowRightLeft, Smartphone
+  Gauge, Book, Sparkles, ChevronRight, Calendar, CreditCard,
+  Wrench, ArrowRightLeft, Smartphone, CloudRain
 } from 'lucide-react';
-import { motion, AnimatePresence, Reorder } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/use-translation';
 import { supabase } from "@/integrations/supabase/client";
@@ -34,18 +34,18 @@ interface MediaItem {
 }
 
 const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProfile?: boolean }) => {
+  const navigate = useNavigate();
   const { vehicles, isLoading, addVehicle, updateVehicle, deleteVehicle, toggleLike } = useGarage(userId);
   const { t } = useTranslation();
   const { role, canVote } = useAdmin(); 
   const { topScored, mostLiked } = useLeaderboards();
-  
-  const isProUser = role && role !== 'subscriber';
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [activeLogbook, setActiveLogbook] = useState<string | null>(null);
   const [activeAnalyzer, setActiveAnalyzer] = useState<{ url: string, id: string } | null>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [isRainCheckOpen, setIsRainCheckOpen] = useState(false);
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [userCity, setUserCity] = useState<string | undefined>(undefined);
@@ -98,16 +98,13 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const remainingSlots = 6 - mediaItems.length;
-    
     if (remainingSlots <= 0) return;
-
     const newItems: MediaItem[] = files.slice(0, remainingSlots).map(file => ({
       id: `new-${Math.random()}-${Date.now()}`,
       type: 'new',
       url: URL.createObjectURL(file),
       file
     }));
-
     setMediaItems(prev => [...prev, ...newItems]);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -120,14 +117,8 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
     e.preventDefault();
     const files = mediaItems.filter(m => m.type === 'new').map(m => m.file!);
     const existingImages = mediaItems.filter(m => m.type === 'existing').map(m => m.url);
-
     if (editingVehicle) {
-      await updateVehicle.mutateAsync({ 
-        id: editingVehicle.id, 
-        ...formData, 
-        files,
-        existingImages 
-      });
+      await updateVehicle.mutateAsync({ id: editingVehicle.id, ...formData, files, existingImages });
     } else {
       await addVehicle.mutateAsync({ ...formData, files });
     }
@@ -144,10 +135,8 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
   const getVehicleRank = (id: string) => {
     const scoreRank = topScored?.findIndex(v => v.id === id);
     if (scoreRank !== undefined && scoreRank !== -1 && scoreRank < 3) return { rank: scoreRank + 1, type: 'score' as const };
-    
     const likeRank = mostLiked?.findIndex(v => v.id === id);
     if (likeRank !== undefined && likeRank !== -1 && likeRank < 3) return { rank: likeRank + 1, type: 'likes' as const };
-    
     return null;
   };
 
@@ -155,9 +144,37 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
 
   return (
     <div className="space-y-8">
-      {isOwnProfile && userCity && (
-        <div className="mb-4">
-          <RainCheck city={userCity} />
+      {/* Sezione Tools Globali */}
+      {isOwnProfile && (
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <Button 
+              onClick={() => navigate('/fitment')}
+              variant="outline"
+              className="h-14 rounded-2xl border-white/10 bg-white/5 text-white hover:bg-white/10 font-black uppercase italic text-[10px] tracking-widest shadow-xl flex flex-col items-center justify-center gap-1"
+            >
+              <ArrowRightLeft size={18} />
+              <span>Fitment Calc</span>
+            </Button>
+            <Button 
+              onClick={() => navigate('/camber')}
+              variant="outline"
+              className="h-14 rounded-2xl border-white/10 bg-white/5 text-white hover:bg-white/10 font-black uppercase italic text-[10px] tracking-widest shadow-xl flex flex-col items-center justify-center gap-1"
+            >
+              <Smartphone size={18} />
+              <span>Camber Helper</span>
+            </Button>
+          </div>
+          
+          {userCity && (
+            <Button 
+              onClick={() => setIsRainCheckOpen(true)}
+              className="w-full h-14 rounded-2xl bg-white text-black hover:bg-zinc-200 font-black uppercase italic text-[10px] tracking-widest shadow-xl flex items-center justify-center gap-3 border-none"
+            >
+              <CloudRain size={20} />
+              <span>Rain-Check: Meteo Detailing</span>
+            </Button>
+          )}
         </div>
       )}
 
@@ -187,7 +204,6 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
           {vehicles?.map((v, i) => {
             const rankInfo = getVehicleRank(v.id);
             const mainImage = v.images?.[0] || v.image_url;
-            
             return (
               <motion.div 
                 key={v.id}
@@ -203,7 +219,6 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-zinc-900"><Car size={64} /></div>
                   )}
-                  
                   <div className="absolute top-5 left-5 flex flex-col gap-2">
                     {rankInfo && <RankBadge rank={rankInfo.rank} type={rankInfo.type} />}
                     <span className="bg-white text-black text-[8px] font-black uppercase px-3 py-1.5 italic rounded-lg shadow-xl">
@@ -215,7 +230,6 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                       </span>
                     )}
                   </div>
-
                   {isOwnProfile && (
                     <div className="absolute top-5 right-5 flex gap-2 opacity-0 group-hover:opacity-100 transition-all translate-y-[-10px] group-hover:translate-y-0">
                       <button onClick={(e) => handleOpenEdit(e, v)} className="p-3 bg-white text-black rounded-full hover:scale-110 transition-all shadow-xl"><Edit3 size={16} /></button>
@@ -223,7 +237,6 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                     </div>
                   )}
                 </div>
-
                 <div className="p-8">
                   <div className="flex justify-between items-start mb-6">
                     <div>
@@ -235,7 +248,6 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                       <span className="text-xs font-black">{v.likes_count || 0}</span>
                     </div>
                   </div>
-
                   <div className="grid grid-cols-2 gap-4 mb-8">
                     <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
                       <p className="text-[7px] font-black uppercase text-zinc-600 mb-1">Anno</p>
@@ -246,7 +258,6 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                       <p className="text-xs font-black italic">{v.license_plate || '---'}</p>
                     </div>
                   </div>
-
                   <div className="flex flex-col gap-3">
                     {isOwnProfile && (
                       <div className="grid grid-cols-2 gap-3">
@@ -297,7 +308,6 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                   <h2 className="text-2xl font-black italic uppercase tracking-tighter">{editingVehicle ? 'Modifica Veicolo' : 'Nuovo Veicolo'}</h2>
                   <button type="button" onClick={() => setIsFormOpen(false)} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors"><X size={24} /></button>
                 </div>
-
                 <div className="space-y-6">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -309,7 +319,6 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                       <Input required value={formData.model} onChange={e => setFormData({...formData, model: e.target.value.toUpperCase()})} className="bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest text-white" placeholder="ES: M3 E46" />
                     </div>
                   </div>
-
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Anno</Label>
@@ -320,7 +329,6 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                       <Input value={formData.license_plate} onChange={e => setFormData({...formData, license_plate: e.target.value.toUpperCase()})} className="bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest text-white" placeholder="AA000BB" />
                     </div>
                   </div>
-
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Tipo Assetto</Label>
                     <div className="flex bg-white/5 p-1 rounded-full border border-white/10">
@@ -329,7 +337,6 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                       ))}
                     </div>
                   </div>
-
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Foto Progetto (Max 6)</Label>
                     <div className="flex flex-wrap gap-3">
@@ -348,14 +355,12 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                     </div>
                     <input type="file" ref={fileInputRef} className="hidden" accept="image/*" multiple onChange={handleFileChange} />
                   </div>
-
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Descrizione Progetto</Label>
                     <div className="bg-white/5 border border-white/10 rounded-[2rem] p-6">
                       <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Descrivi le modifiche, i cerchi, l'assetto..." className="bg-transparent border-none focus-visible:ring-0 p-0 min-h-[120px] text-sm italic text-white placeholder:text-zinc-800 resize-none" />
                     </div>
                   </div>
-
                   <Button type="submit" disabled={addVehicle.isPending || updateVehicle.isPending} className="w-full bg-white text-black hover:bg-zinc-200 h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl mt-4 border-none">
                     {addVehicle.isPending || updateVehicle.isPending ? <Loader2 className="animate-spin" /> : <><Car size={18} className="mr-2" /> {editingVehicle ? 'Aggiorna Veicolo' : 'Salva Veicolo'}</>}
                   </Button>
@@ -379,6 +384,21 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveAnalyzer(null)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-black border border-white/10 w-full max-w-2xl rounded-[3rem] overflow-hidden shadow-2xl">
               <StanceAnalyzer imageUrl={activeAnalyzer.url} vehicleId={activeAnalyzer.id} onClose={() => setActiveAnalyzer(null)} />
+            </motion.div>
+          </div>
+        )}
+
+        {isRainCheckOpen && userCity && (
+          <div className="fixed inset-0 z-[400] flex items-center justify-center p-6">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsRainCheckOpen(false)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative w-full max-w-md">
+              <RainCheck city={userCity} />
+              <button 
+                onClick={() => setIsRainCheckOpen(false)}
+                className="absolute -top-12 right-0 p-2 text-white/50 hover:text-white transition-colors"
+              >
+                <X size={24} />
+              </button>
             </motion.div>
           </div>
         )}
