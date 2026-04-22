@@ -18,10 +18,10 @@ const CamberHelper = () => {
   const currentAngle = useRef(0);
   const animationRef = useRef<number>(0);
 
-  // Algoritmo di smoothing per rendere la lettura ultra-precisa e stabile
+  // Algoritmo di smoothing estremo per rendere la lettura ultra-precisa e stabile senza tremolii
   const updateAngle = () => {
-    // Fattore di interpolazione (0.1 = fluido e stabile, elimina i tremolii del sensore)
-    currentAngle.current += (targetAngle.current - currentAngle.current) * 0.1;
+    // Fattore 0.05 = transizione burrosa, zero microscatti dai sensori
+    currentAngle.current += (targetAngle.current - currentAngle.current) * 0.05;
     setRawAngle(currentAngle.current);
     animationRef.current = requestAnimationFrame(updateAngle);
   };
@@ -36,10 +36,10 @@ const CamberHelper = () => {
   const handleOrientation = (event: DeviceOrientationEvent) => {
     if (event.beta !== null) {
       // Quando il telefono è in verticale (portrait), beta = 90°.
-      // Se si inclina la parte alta verso di te (esterno auto) -> beta scende (es. 85°)
-      // Se si inclina la parte alta lontano da te (interno auto) -> beta sale (es. 95°)
-      // Vogliamo: Top verso di te = Camber Positivo (+). Top lontano = Camber Negativo (-).
-      const angle = 90 - event.beta;
+      // Se lo inclini in avanti (la parte alta si allontana da te verso il passaruota interno), beta sale (>90) -> Camber Negativo.
+      // Se lo inclini indietro (la parte alta viene verso di te/l'esterno), beta scende (<90) -> Camber Positivo.
+      let angle = 90 - event.beta;
+      
       targetAngle.current = angle;
     }
   };
@@ -78,11 +78,13 @@ const CamberHelper = () => {
     };
   }, []);
 
-  // Calcolo dell'angolo finale considerando la tara
-  const displayAngle = rawAngle - offset;
+  // Calcolo dell'angolo finale con tara e blocco massimo a 20 gradi
+  let displayAngle = rawAngle - offset;
+  displayAngle = Math.max(-20, Math.min(20, displayAngle));
+  
   const isNegative = displayAngle < 0;
   
-  // Precisione a due cifre decimali (es. -2.35°)
+  // Precisione a due cifre decimali, formattato in modo pulito
   const formattedAngle = Math.abs(displayAngle).toFixed(2);
 
   return (
@@ -168,7 +170,7 @@ const CamberHelper = () => {
 
               {/* Rappresentazione visiva ruota */}
               <div className="relative h-64 flex items-center justify-center">
-                {/* Linee guida vettura */}
+                {/* Linee guida vettura (Assi) */}
                 <div className="absolute inset-0 flex justify-center pointer-events-none opacity-20">
                   <div className="h-full w-[1px] bg-white border-l border-dashed border-white/50" />
                   <div className="absolute top-1/2 w-full h-[1px] bg-white border-t border-dashed border-white/50" />
@@ -176,29 +178,32 @@ const CamberHelper = () => {
 
                 {/* 
                   Logica visiva: 
-                  -displayAngle fa sì che:
-                  - Camber Positivo (+): Ruota gira in senso antiorario (verso sinistra / esterno)
-                  - Camber Negativo (-): Ruota gira in senso orario (verso destra / interno)
+                  - Se il camber è POSITIVO (+), `displayAngle` è > 0.
+                    La ruota deve puntare verso l'esterno (SINISTRA). CSS `rotate(-deg)` ruota in senso antiorario (verso sinistra).
+                  - Se il camber è NEGATIVO (-), `displayAngle` è < 0.
+                    La ruota deve puntare verso l'interno (DESTRA). CSS `rotate(--deg) = rotate(+deg)` ruota in senso orario (verso destra).
                 */}
-                <svg viewBox="-100 -100 200 200" className="w-full h-full max-w-[250px] relative z-10 overflow-visible" style={{ transform: `rotate(${-displayAngle}deg)` }}>
-                  <defs>
-                    <linearGradient id="rim-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#444" />
-                      <stop offset="50%" stopColor="#222" />
-                      <stop offset="100%" stopColor="#111" />
-                    </linearGradient>
-                  </defs>
-                  
-                  {/* Gomma */}
-                  <rect x="-40" y="-80" width="80" height="160" rx="10" fill="#111" stroke="#222" strokeWidth="4" />
-                  
-                  {/* Cerchio */}
-                  <rect x="-30" y="-60" width="60" height="120" rx="4" fill="url(#rim-gradient)" stroke="#555" strokeWidth="2" />
-                  
-                  {/* Dettagli interni cerchio (Mozzo) */}
-                  <circle cx="0" cy="0" r="12" fill="#000" stroke="#555" strokeWidth="2" />
-                  <circle cx="0" cy="-30" r="4" fill="#000" />
-                  <circle cx="0" cy="30" r="4" fill="#000" />
+                <svg viewBox="-100 -100 200 200" className="w-full h-full max-w-[250px] relative z-10 overflow-visible">
+                  <g style={{ transform: `rotate(${-displayAngle}deg)` }}>
+                    <defs>
+                      <linearGradient id="rim-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#444" />
+                        <stop offset="50%" stopColor="#222" />
+                        <stop offset="100%" stopColor="#111" />
+                      </linearGradient>
+                    </defs>
+                    
+                    {/* Gomma */}
+                    <rect x="-40" y="-80" width="80" height="160" rx="10" fill="#111" stroke="#222" strokeWidth="4" />
+                    
+                    {/* Cerchio */}
+                    <rect x="-30" y="-60" width="60" height="120" rx="4" fill="url(#rim-gradient)" stroke="#555" strokeWidth="2" />
+                    
+                    {/* Dettagli interni cerchio (Mozzo) */}
+                    <circle cx="0" cy="0" r="12" fill="#000" stroke="#555" strokeWidth="2" />
+                    <circle cx="0" cy="-30" r="4" fill="#000" />
+                    <circle cx="0" cy="30" r="4" fill="#000" />
+                  </g>
                 </svg>
               </div>
             </div>
@@ -207,7 +212,7 @@ const CamberHelper = () => {
               <Button 
                 onClick={calibrate}
                 variant="outline"
-                className="h-16 bg-white/5 border-white/10 text-white rounded-2xl flex flex-col items-center justify-center gap-1 hover:bg-white/10 hover:text-white"
+                className="h-16 bg-white/5 border-white/10 text-white rounded-2xl flex flex-col items-center justify-center gap-1 hover:bg-white/10 hover:text-white shadow-xl"
               >
                 <Crosshair size={18} />
                 <span className="text-[9px] font-black uppercase tracking-widest italic">Tara a Zero</span>
@@ -215,14 +220,14 @@ const CamberHelper = () => {
               <Button 
                 onClick={resetCalibration}
                 variant="outline"
-                className="h-16 bg-white/5 border-white/10 text-white rounded-2xl flex flex-col items-center justify-center gap-1 hover:bg-white/10 hover:text-white"
+                className="h-16 bg-white/5 border-white/10 text-white rounded-2xl flex flex-col items-center justify-center gap-1 hover:bg-white/10 hover:text-white shadow-xl"
               >
                 <RefreshCcw size={18} />
                 <span className="text-[9px] font-black uppercase tracking-widest italic">Resetta Tara</span>
               </Button>
             </div>
 
-            <div className="bg-white/5 border border-white/10 p-6 rounded-[2rem]">
+            <div className="bg-white/5 border border-white/10 p-6 rounded-[2rem] shadow-xl">
               <h4 className="text-[10px] font-black uppercase text-zinc-400 tracking-[0.3em] mb-4">Istruzioni per l'uso</h4>
               <ol className="space-y-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 leading-relaxed">
                 <li className="flex gap-3"><span className="text-white">1.</span> Assicurati che l'auto sia in piano perfetto.</li>
