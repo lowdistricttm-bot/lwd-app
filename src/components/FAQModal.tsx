@@ -1,14 +1,21 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { 
   HelpCircle, Car, Calendar, Shield, User, 
-  Camera, MessageSquare, ShieldCheck, Search, ShoppingBag, X, Settings, ClipboardCheck, Bell
+  Camera, MessageSquare, ShieldCheck, Search, ShoppingBag, X, Settings, ClipboardCheck, Bell,
+  GraduationCap, Wrench, Plus, Loader2, BookOpen
 } from 'lucide-react';
 import { useTranslation } from '@/hooks/use-translation';
 import { useAdmin } from '@/hooks/use-admin';
+import { useAcademy, Tutorial } from '@/hooks/use-academy';
+import AcademyTutorialCard from './AcademyTutorialCard';
+import AcademyDetailModal from './AcademyDetailModal';
+import CreateTutorialModal from './CreateTutorialModal';
+import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface FAQModalProps {
   isOpen: boolean;
@@ -17,7 +24,26 @@ interface FAQModalProps {
 
 const FAQModal = ({ isOpen, onClose }: FAQModalProps) => {
   const { language } = useTranslation();
-  const { isAdmin, isStaff, isSupport } = useAdmin();
+  const { isAdmin, isStaff, isSupport, canManage } = useAdmin();
+  const [activeTab, setActiveTab] = useState<'faq' | 'academy'>('faq');
+  const [selectedTutorial, setSelectedTutorial] = useState<Tutorial | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingTutorial, setEditingTutorial] = useState<Tutorial | null>(null);
+  
+  const { tutorials, isLoading, deleteTutorial } = useAcademy();
+
+  const handleDeleteTutorial = (id: string) => {
+    if (confirm("Eliminare definitivamente questo tutorial?")) {
+      deleteTutorial.mutate(id);
+      setSelectedTutorial(null);
+    }
+  };
+
+  const handleEditTutorial = (t: Tutorial) => {
+    setEditingTutorial(t);
+    setSelectedTutorial(null);
+    setIsCreateModalOpen(true);
+  };
 
   const adminFaqs = [
     {
@@ -54,7 +80,7 @@ const FAQModal = ({ isOpen, onClose }: FAQModalProps) => {
         {
           q: language === 'it' ? "Invio Notifiche Globali" : "Sending Global Notifications",
           a: language === 'it'
-            ? "Usa il 'Centro Notifiche' per inviare annunci importanti a tutta la community o avvisi mirati a singoli utenti. Puoi scegliere tra diversi livelli di urgenza (Info, Avviso, Importante)."
+            ? "Usa il 'Centro Notifiche' per inviare annunci importanti a tutta la community o avvisi mirati a singoli utenti. Puoi scegliere tra diversi diversi livelli di urgenza (Info, Avviso, Importante)."
             : "Use the 'Notification Center' to send important announcements to the entire community or targeted alerts to individual users. You can choose between different urgency levels (Info, Warning, Important)."
         }
       ]
@@ -146,113 +172,209 @@ const FAQModal = ({ isOpen, onClose }: FAQModalProps) => {
   ];
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-black border-white/10 text-white max-w-2xl max-h-[85vh] overflow-y-auto rounded-[2.5rem] p-0 shadow-2xl">
-        <div className="p-8 pb-4 sticky top-0 bg-black/90 backdrop-blur-md z-10 border-b border-white/5 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white text-black rounded-2xl flex items-center justify-center shadow-xl">
-              <HelpCircle size={24} />
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="bg-black border-white/10 text-white max-w-2xl max-h-[85vh] overflow-y-auto rounded-[2.5rem] p-0 shadow-2xl">
+          <div className="p-8 pb-4 sticky top-0 bg-black/90 backdrop-blur-md z-10 border-b border-white/5">
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white text-black rounded-2xl flex items-center justify-center shadow-xl">
+                  <HelpCircle size={24} />
+                </div>
+                <DialogTitle className="text-2xl font-black italic uppercase tracking-tighter">
+                  {language === 'it' ? "Centro Assistenza" : "Help Center"}
+                </DialogTitle>
+              </div>
+              <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full transition-colors">
+                <X size={24} className="text-zinc-500" />
+              </button>
             </div>
-            <DialogTitle className="text-2xl font-black italic uppercase tracking-tighter">
-              {language === 'it' ? "Centro Assistenza" : "Help Center"}
-            </DialogTitle>
+
+            <div className="flex bg-white/5 p-1 rounded-full border border-white/10">
+              <button 
+                onClick={() => setActiveTab('faq')}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-2 py-3 rounded-full text-[10px] font-black uppercase italic transition-all",
+                  activeTab === 'faq' ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-white"
+                )}
+              >
+                <HelpCircle size={14} /> FAQ
+              </button>
+              <button 
+                onClick={() => setActiveTab('academy')}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-2 py-3 rounded-full text-[10px] font-black uppercase italic transition-all",
+                  activeTab === 'academy' ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-white"
+                )}
+              >
+                <GraduationCap size={14} /> Stance Academy
+              </button>
+            </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full transition-colors">
-            <X size={24} className="text-zinc-500" />
-          </button>
-        </div>
 
-        <div className="p-8 pt-4 space-y-10">
-          {/* Pannello Admin */}
-          {isAdmin && adminFaqs.map((cat, idx) => (
-            <div key={`admin-${idx}`} className="space-y-4">
-              <div className="flex items-center gap-2 px-2">
-                <cat.icon size={14} className="text-red-500" />
-                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-red-500 italic">{cat.category}</h3>
-              </div>
-              <Accordion type="single" collapsible className="space-y-2">
-                {cat.items.map((item, i) => (
-                  <AccordionItem key={i} value={`admin-item-${i}`} className="border border-red-500/20 bg-red-500/5 rounded-2xl px-6 overflow-hidden">
-                    <AccordionTrigger className="hover:no-underline py-4 text-[11px] font-black uppercase italic text-left">
-                      {item.q}
-                    </AccordionTrigger>
-                    <AccordionContent className="text-zinc-400 text-[10px] font-medium leading-relaxed pb-4">
-                      {item.a}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </div>
-          ))}
+          <div className="p-8 pt-4 space-y-10">
+            <AnimatePresence mode="wait">
+              {activeTab === 'faq' ? (
+                <motion.div 
+                  key="faq-tab"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  className="space-y-10"
+                >
+                  {/* Pannello Admin */}
+                  {isAdmin && adminFaqs.map((cat, idx) => (
+                    <div key={`admin-${idx}`} className="space-y-4">
+                      <div className="flex items-center gap-2 px-2">
+                        <cat.icon size={14} className="text-red-500" />
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-red-500 italic">{cat.category}</h3>
+                      </div>
+                      <Accordion type="single" collapsible className="space-y-2">
+                        {cat.items.map((item, i) => (
+                          <AccordionItem key={i} value={`admin-item-${i}`} className="border border-red-500/20 bg-red-500/5 rounded-2xl px-6 overflow-hidden">
+                            <AccordionTrigger className="hover:no-underline py-4 text-[11px] font-black uppercase italic text-left">
+                              {item.q}
+                            </AccordionTrigger>
+                            <AccordionContent className="text-zinc-400 text-[10px] font-medium leading-relaxed pb-4">
+                              {item.a}
+                            </AccordionContent>
+                          </AccordionItem>
+                        ))}
+                      </Accordion>
+                    </div>
+                  ))}
 
-          {/* Pannello Staff */}
-          {isStaff && staffFaqs.map((cat, idx) => (
-            <div key={`staff-${idx}`} className="space-y-4">
-              <div className="flex items-center gap-2 px-2">
-                <cat.icon size={14} className="text-orange-500" />
-                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-500 italic">{cat.category}</h3>
-              </div>
-              <Accordion type="single" collapsible className="space-y-2">
-                {cat.items.map((item, i) => (
-                  <AccordionItem key={i} value={`staff-item-${i}`} className="border border-orange-500/20 bg-orange-500/5 rounded-2xl px-6 overflow-hidden">
-                    <AccordionTrigger className="hover:no-underline py-4 text-[11px] font-black uppercase italic text-left">
-                      {item.q}
-                    </AccordionTrigger>
-                    <AccordionContent className="text-zinc-400 text-[10px] font-medium leading-relaxed pb-4">
-                      {item.a}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </div>
-          ))}
+                  {/* Pannello Staff */}
+                  {isStaff && staffFaqs.map((cat, idx) => (
+                    <div key={`staff-${idx}`} className="space-y-4">
+                      <div className="flex items-center gap-2 px-2">
+                        <cat.icon size={14} className="text-orange-500" />
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-500 italic">{cat.category}</h3>
+                      </div>
+                      <Accordion type="single" collapsible className="space-y-2">
+                        {cat.items.map((item, i) => (
+                          <AccordionItem key={i} value={`staff-item-${i}`} className="border border-orange-500/20 bg-orange-500/5 rounded-2xl px-6 overflow-hidden">
+                            <AccordionTrigger className="hover:no-underline py-4 text-[11px] font-black uppercase italic text-left">
+                              {item.q}
+                            </AccordionTrigger>
+                            <AccordionContent className="text-zinc-400 text-[10px] font-medium leading-relaxed pb-4">
+                              {item.a}
+                            </AccordionContent>
+                          </AccordionItem>
+                        ))}
+                      </Accordion>
+                    </div>
+                  ))}
 
-          {/* Pannello Support */}
-          {isSupport && supportFaqs.map((cat, idx) => (
-            <div key={`support-${idx}`} className="space-y-4">
-              <div className="flex items-center gap-2 px-2">
-                <cat.icon size={14} className="text-blue-400" />
-                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-400 italic">{cat.category}</h3>
-              </div>
-              <Accordion type="single" collapsible className="space-y-2">
-                {cat.items.map((item, i) => (
-                  <AccordionItem key={i} value={`support-item-${i}`} className="border border-blue-400/20 bg-blue-400/5 rounded-2xl px-6 overflow-hidden">
-                    <AccordionTrigger className="hover:no-underline py-4 text-[11px] font-black uppercase italic text-left">
-                      {item.q}
-                    </AccordionTrigger>
-                    <AccordionContent className="text-zinc-400 text-[10px] font-medium leading-relaxed pb-4">
-                      {item.a}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </div>
-          ))}
+                  {/* Pannello Support */}
+                  {isSupport && supportFaqs.map((cat, idx) => (
+                    <div key={`support-${idx}`} className="space-y-4">
+                      <div className="flex items-center gap-2 px-2">
+                        <cat.icon size={14} className="text-blue-400" />
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-400 italic">{cat.category}</h3>
+                      </div>
+                      <Accordion type="single" collapsible className="space-y-2">
+                        {cat.items.map((item, i) => (
+                          <AccordionItem key={i} value={`support-item-${i}`} className="border border-blue-400/20 bg-blue-400/5 rounded-2xl px-6 overflow-hidden">
+                            <AccordionTrigger className="hover:no-underline py-4 text-[11px] font-black uppercase italic text-left">
+                              {item.q}
+                            </AccordionTrigger>
+                            <AccordionContent className="text-zinc-400 text-[10px] font-medium leading-relaxed pb-4">
+                              {item.a}
+                            </AccordionContent>
+                          </AccordionItem>
+                        ))}
+                      </Accordion>
+                    </div>
+                  ))}
 
-          {/* FAQ Pubbliche */}
-          {publicFaqs.map((cat, idx) => (
-            <div key={`pub-${idx}`} className="space-y-4">
-              <div className="flex items-center gap-2 px-2">
-                <cat.icon size={14} className="text-zinc-500" />
-                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 italic">{cat.category}</h3>
-              </div>
-              <Accordion type="single" collapsible className="space-y-2">
-                {cat.items.map((item, i) => (
-                  <AccordionItem key={i} value={`pub-${idx}-${i}`} className="border border-white/5 bg-white/5 rounded-2xl px-6 overflow-hidden">
-                    <AccordionTrigger className="hover:no-underline py-4 text-[11px] font-black uppercase italic text-left">
-                      {item.q}
-                    </AccordionTrigger>
-                    <AccordionContent className="text-zinc-400 text-[10px] font-medium leading-relaxed pb-4">
-                      {item.a}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </div>
-          ))}
-        </div>
-      </DialogContent>
-    </Dialog>
+                  {/* FAQ Pubbliche */}
+                  {publicFaqs.map((cat, idx) => (
+                    <div key={`pub-${idx}`} className="space-y-4">
+                      <div className="flex items-center gap-2 px-2">
+                        <cat.icon size={14} className="text-zinc-500" />
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 italic">{cat.category}</h3>
+                      </div>
+                      <Accordion type="single" collapsible className="space-y-2">
+                        {cat.items.map((item, i) => (
+                          <AccordionItem key={i} value={`pub-${idx}-${i}`} className="border border-white/5 bg-white/5 rounded-2xl px-6 overflow-hidden">
+                            <AccordionTrigger className="hover:no-underline py-4 text-[11px] font-black uppercase italic text-left">
+                              {item.q}
+                            </AccordionTrigger>
+                            <AccordionContent className="text-zinc-400 text-[10px] font-medium leading-relaxed pb-4">
+                              {item.a}
+                            </AccordionContent>
+                          </AccordionItem>
+                        ))}
+                      </Accordion>
+                    </div>
+                  ))}
+                </motion.div>
+              ) : (
+                <motion.div 
+                  key="academy-tab"
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  className="space-y-8"
+                >
+                  <div className="flex justify-between items-center px-2">
+                    <div>
+                      <h3 className="text-xl font-black italic uppercase tracking-tighter">Wiki Tecnica</h3>
+                      <p className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Impara dai migliori del District</p>
+                    </div>
+                    {canManage && (
+                      <button 
+                        onClick={() => { setEditingTutorial(null); setIsCreateModalOpen(true); }}
+                        className="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 transition-all shadow-lg"
+                      >
+                        <Plus size={20} />
+                      </button>
+                    )}
+                  </div>
+
+                  {isLoading ? (
+                    <div className="py-20 flex justify-center"><Loader2 className="animate-spin text-zinc-500" /></div>
+                  ) : tutorials.length === 0 ? (
+                    <div className="bg-white/5 border border-dashed border-white/10 p-12 text-center rounded-[2.5rem]">
+                      <Wrench className="mx-auto text-zinc-800 mb-6" size={48} />
+                      <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest italic">L'Academy è in fase di allestimento.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {tutorials.map((tutorial) => (
+                        <AcademyTutorialCard 
+                          key={tutorial.id} 
+                          tutorial={tutorial} 
+                          onClick={() => setSelectedTutorial(tutorial)} 
+                        />
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {selectedTutorial && (
+        <AcademyDetailModal 
+          isOpen={!!selectedTutorial} 
+          onClose={() => setSelectedTutorial(null)} 
+          tutorial={selectedTutorial}
+          canManage={canManage}
+          onEdit={handleEditTutorial}
+          onDelete={handleDeleteTutorial}
+        />
+      )}
+
+      <CreateTutorialModal 
+        isOpen={isCreateModalOpen} 
+        onClose={() => setIsCreateModalOpen(false)} 
+        editTutorial={editingTutorial} 
+      />
+    </>
   );
 };
 
