@@ -58,24 +58,43 @@ export const useTrophies = (userId?: string) => {
     enabled: !!userId
   });
 
-  const awardTrophy = useMutation({
-    mutationFn: async (data: { userId: string, trophyId: string, vehicleId?: string }) => {
-      const { error } = await supabase
+  const createAndAwardTrophy = useMutation({
+    mutationFn: async (data: { 
+      userId: string, 
+      vehicleId?: string,
+      title: string,
+      eventName: string,
+      category: string 
+    }) => {
+      // 1. Crea il trofeo nel catalogo
+      const { data: newTrophy, error: tError } = await supabase
+        .from('trophies')
+        .insert([{
+          title: data.title.toUpperCase(),
+          event_name: data.eventName.toUpperCase(),
+          category: data.category,
+          description: `Premio assegnato durante ${data.eventName}`
+        }])
+        .select()
+        .single();
+
+      if (tError) throw tError;
+
+      // 2. Assegnalo all'utente
+      const { error: aError } = await supabase
         .from('user_trophies')
         .insert([{
           user_id: data.userId,
-          trophy_id: data.trophyId,
+          trophy_id: newTrophy.id,
           vehicle_id: data.vehicleId || null
         }]);
 
-      if (error) {
-        if (error.code === '23505') throw new Error("Questo utente ha già ricevuto questo trofeo per questo veicolo.");
-        throw error;
-      }
+      if (aError) throw aError;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['user-trophies', variables.userId] });
-      showSuccess("Trofeo assegnato con successo!");
+      queryClient.invalidateQueries({ queryKey: ['available-trophies'] });
+      showSuccess("Premio creato e assegnato!");
     },
     onError: (err: any) => showError(err.message)
   });
@@ -96,7 +115,7 @@ export const useTrophies = (userId?: string) => {
     availableTrophies, 
     userTrophies, 
     isLoading: loadingAvailable || loadingUserTrophies,
-    awardTrophy,
+    createAndAwardTrophy,
     revokeTrophy
   };
 };

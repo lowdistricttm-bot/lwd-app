@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Award, Star, ShieldCheck } from 'lucide-react';
+import { Trophy, Award, Star, ShieldCheck, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface TrophyBadgeProps {
@@ -12,8 +12,23 @@ interface TrophyBadgeProps {
 }
 
 const TrophyBadge = ({ trophy, size = 'md', showDetails = false }: TrophyBadgeProps) => {
-  const isGold = trophy.category?.includes('best') || trophy.category === 'of_show';
+  const category = trophy.category || 'gold_trophy';
   
+  const getStyle = () => {
+    if (category.startsWith('gold')) return "from-yellow-200 via-yellow-500 to-yellow-700 border-yellow-300/50 text-black";
+    if (category.startsWith('silver')) return "from-zinc-200 via-zinc-400 to-zinc-600 border-zinc-300/50 text-black";
+    if (category.startsWith('bronze')) return "from-orange-300 via-orange-600 to-orange-800 border-orange-400/50 text-white";
+    return "from-zinc-800 via-zinc-900 to-black border-white/10 text-white";
+  };
+
+  const getIcon = (s: number) => {
+    if (category.includes('award')) return <Award size={s} strokeWidth={2.5} />;
+    if (category.includes('star')) return <Star size={s} strokeWidth={2.5} />;
+    if (category.includes('shield')) return <ShieldCheck size={s} strokeWidth={2.5} />;
+    if (category.includes('zap')) return <Zap size={s} strokeWidth={2.5} />;
+    return <Trophy size={s} strokeWidth={2.5} />;
+  };
+
   const sizes = {
     xs: "w-12 h-12",
     sm: "w-16 h-16",
@@ -34,13 +49,10 @@ const TrophyBadge = ({ trophy, size = 'md', showDetails = false }: TrophyBadgePr
       className="flex flex-col items-center gap-2 group"
     >
       <div className={cn(
-        "relative rounded-full flex items-center justify-center shadow-2xl transition-all duration-700",
+        "relative rounded-full flex items-center justify-center shadow-2xl transition-all duration-700 bg-gradient-to-br border-2",
         sizes[size],
-        isGold 
-          ? "bg-gradient-to-br from-yellow-200 via-yellow-500 to-yellow-700 border-2 border-yellow-300/50" 
-          : "bg-gradient-to-br from-zinc-300 via-zinc-500 to-zinc-700 border-2 border-zinc-400/50"
+        getStyle()
       )}>
-        {/* Effetto Lucentezza */}
         <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-white/20 to-transparent opacity-50" />
         <motion.div 
           animate={{ x: ['-100%', '100%'] }}
@@ -48,13 +60,10 @@ const TrophyBadge = ({ trophy, size = 'md', showDetails = false }: TrophyBadgePr
           className="absolute inset-0 w-1/2 h-full bg-white/20 skew-x-12 blur-md pointer-events-none"
         />
 
-        <div className="relative z-10 text-black drop-shadow-lg">
-          {trophy.category === 'best_fitment' ? <Award size={iconSizes[size]} strokeWidth={2.5} /> :
-           trophy.category === 'best_static' ? <ShieldCheck size={iconSizes[size]} strokeWidth={2.5} /> :
-           <Trophy size={iconSizes[size]} strokeWidth={2.5} />}
+        <div className="relative z-10 drop-shadow-lg">
+          {getIcon(iconSizes[size])}
         </div>
 
-        {/* Incastonatura */}
         <div className="absolute -inset-1 border border-white/10 rounded-full pointer-events-none" />
       </div>
 

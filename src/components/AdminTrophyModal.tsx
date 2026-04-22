@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Trophy, User as UserIcon, Car, Loader2, Send, Search, ShieldCheck, Award, Check, AlertCircle } from 'lucide-react';
+import { X, Trophy, User as UserIcon, Car, Loader2, Send, Search, ShieldCheck, Award, Check, Star, Zap, Palette } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -17,19 +17,30 @@ interface AdminTrophyModalProps {
   onClose: () => void;
 }
 
-// Lista esatta dei titoli ammessi
-const OFFICIAL_TROPHY_TITLES = ['BEST OF SHOW', 'BEST WHEELS', 'BEST LIMBO'];
+const CATEGORIES = [
+  { id: 'gold_trophy', label: 'Oro / Trofeo', icon: Trophy, color: 'text-yellow-500' },
+  { id: 'silver_award', label: 'Argento / Award', icon: Award, color: 'text-zinc-400' },
+  { id: 'bronze_star', label: 'Bronzo / Stella', icon: Star, color: 'text-orange-600' },
+  { id: 'dark_shield', label: 'Dark / Scudo', icon: ShieldCheck, color: 'text-zinc-600' },
+  { id: 'gold_zap', label: 'Special / Zap', icon: Zap, color: 'text-yellow-400' }
+];
 
 const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
-  const { availableTrophies, awardTrophy, isLoading: loadingTrophies } = useTrophies();
+  const { createAndAwardTrophy, isLoading: loadingTrophies } = useTrophies();
   const { allUsers } = useAdmin();
   
   const [search, setSearch] = useState('');
   const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [selectedTrophy, setSelectedTrophy] = useState<string>('');
-  const [selectedVehicle, setSelectedVehicle] = useState<string>('');
   const [userVehicles, setUserVehicles] = useState<any[]>([]);
   const [loadingVehicles, setLoadingVehicles] = useState(false);
+
+  // Form per nuovo trofeo
+  const [formData, setFormData] = useState({
+    title: '',
+    eventName: '',
+    category: 'gold_trophy',
+    vehicleId: ''
+  });
 
   useBodyLock(isOpen);
 
@@ -43,7 +54,7 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
         });
     } else {
       setUserVehicles([]);
-      setSelectedVehicle('');
+      setFormData(prev => ({ ...prev, vehicleId: '' }));
     }
   }, [selectedUser]);
 
@@ -52,37 +63,16 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
     u.first_name?.toLowerCase().includes(search.toLowerCase())
   ).slice(0, 6) || [];
 
-  // Filtro migliorato: usiamo trim() per ignorare spazi accidentali nel DB
-  const activeTrophies = React.useMemo(() => {
-    if (!availableTrophies) return [];
-    
-    const seen = new Set();
-    return availableTrophies
-      .filter(t => {
-        const cleanTitle = t.title.toUpperCase().trim();
-        return OFFICIAL_TROPHY_TITLES.includes(cleanTitle);
-      })
-      .filter(t => {
-        const title = t.title.toUpperCase().trim();
-        if (seen.has(title)) return false;
-        seen.add(title);
-        return true;
-      })
-      .sort((a, b) => {
-        const titleA = a.title.toUpperCase().trim();
-        const titleB = b.title.toUpperCase().trim();
-        return OFFICIAL_TROPHY_TITLES.indexOf(titleA) - OFFICIAL_TROPHY_TITLES.indexOf(titleB);
-      });
-  }, [availableTrophies]);
-
   const handleAward = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedUser || !selectedTrophy) return;
+    if (!selectedUser || !formData.title || !formData.eventName) return;
 
-    await awardTrophy.mutateAsync({
+    await createAndAwardTrophy.mutateAsync({
       userId: selectedUser.id,
-      trophyId: selectedTrophy,
-      vehicleId: selectedVehicle || undefined
+      title: formData.title,
+      eventName: formData.eventName,
+      category: formData.category,
+      vehicleId: formData.vehicleId || undefined
     });
     
     onClose();
@@ -98,7 +88,7 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[301] bg-zinc-950 border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[90dvh] overflow-y-auto shadow-2xl"
+            className="fixed inset-x-0 bottom-0 z-[301] bg-zinc-950 border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[94dvh] overflow-y-auto shadow-2xl"
             style={{ touchAction: 'pan-y', overscrollBehavior: 'contain' }}
           >
             <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
@@ -106,14 +96,14 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
             <form onSubmit={handleAward} className="max-w-2xl mx-auto space-y-8 pb-10">
               <div className="flex justify-between items-center">
                 <div>
-                  <h2 className="text-2xl font-black italic uppercase tracking-tighter">Assegna Trofeo</h2>
-                  <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 mt-1">Riconoscimento ufficiale District</p>
+                  <h2 className="text-2xl font-black italic uppercase tracking-tighter">Crea & Assegna Premio</h2>
+                  <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 mt-1">Personalizza il riconoscimento ufficiale</p>
                 </div>
                 <button type="button" onClick={onClose} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors"><X size={24} /></button>
               </div>
 
-              <div className="space-y-6">
-                {/* Ricerca Utente */}
+              <div className="space-y-8">
+                {/* 1. Vincitore */}
                 <div className="space-y-3">
                   <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4 italic">1. Seleziona Vincitore</Label>
                   {selectedUser ? (
@@ -146,43 +136,45 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
                   )}
                 </div>
 
-                {/* Selezione Trofeo */}
-                <div className="space-y-3">
-                  <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4 italic">2. Scegli il Premio</Label>
-                  <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto no-scrollbar p-1">
-                    {loadingTrophies ? (
-                      <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-zinc-500" /></div>
-                    ) : activeTrophies.length > 0 ? (
-                      activeTrophies.map(t => (
+                {/* 2. Dettagli Premio */}
+                <div className="space-y-6 animate-in fade-in duration-500">
+                  <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4 italic">2. Dettagli del Premio</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[8px] font-black uppercase text-zinc-600 ml-4">Titolo Premio</Label>
+                      <Input required placeholder="ES: BEST LIMBO" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className={inputClass} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[8px] font-black uppercase text-zinc-600 ml-4">Nome Evento</Label>
+                      <Input required placeholder="ES: LOW DISTRICT SHOW" value={formData.eventName} onChange={e => setFormData({...formData, eventName: e.target.value})} className={inputClass} />
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label className="text-[8px] font-black uppercase text-zinc-600 ml-4">Stile & Icona</Label>
+                    <div className="grid grid-cols-1 gap-2">
+                      {CATEGORIES.map(cat => (
                         <button 
-                          key={t.id} 
+                          key={cat.id} 
                           type="button" 
-                          onClick={() => setSelectedTrophy(t.id)}
+                          onClick={() => setFormData({...formData, category: cat.id})}
                           className={cn(
                             "p-4 rounded-2xl border text-left transition-all flex items-center justify-between group",
-                            selectedTrophy === t.id ? "bg-white text-black border-white" : "bg-white/5 border-white/5 text-zinc-400 hover:bg-white/10"
+                            formData.category === cat.id ? "bg-white text-black border-white" : "bg-white/5 border-white/5 text-zinc-400 hover:bg-white/10"
                           )}
                         >
                           <div className="flex items-center gap-4">
-                            <Trophy size={18} className={cn(selectedTrophy === t.id ? "text-black" : "text-yellow-500")} />
-                            <div>
-                              <p className="text-xs font-black uppercase italic">{t.title}</p>
-                              <p className={cn("text-[8px] font-bold uppercase", selectedTrophy === t.id ? "text-black/60" : "text-zinc-600")}>{t.event_name}</p>
-                            </div>
+                            <cat.icon size={18} className={cn(formData.category === cat.id ? "text-black" : cat.color)} />
+                            <span className="text-xs font-black uppercase italic">{cat.label}</span>
                           </div>
-                          {selectedTrophy === t.id && <Check size={18} strokeWidth={3} />}
+                          {formData.category === cat.id && <Check size={18} strokeWidth={3} />}
                         </button>
-                      ))
-                    ) : (
-                      <div className="py-10 text-center bg-white/5 rounded-2xl border border-dashed border-white/10">
-                        <AlertCircle className="mx-auto text-zinc-700 mb-2" size={24} />
-                        <p className="text-[10px] font-black uppercase text-zinc-600">Nessun premio attivo trovato.</p>
-                      </div>
-                    )}
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                {/* Selezione Veicolo */}
+                {/* 3. Veicolo */}
                 {selectedUser && (
                   <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
                     <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4 italic">3. Collega al Veicolo (Opzionale)</Label>
@@ -194,10 +186,10 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
                           <button 
                             key={v.id} 
                             type="button" 
-                            onClick={() => setSelectedVehicle(v.id)}
+                            onClick={() => setFormData({...formData, vehicleId: v.id})}
                             className={cn(
                               "p-3 rounded-xl border text-left transition-all flex items-center gap-3",
-                              selectedVehicle === v.id ? "bg-white text-black border-white" : "bg-white/5 border-white/5 text-zinc-400 hover:bg-white/10"
+                              formData.vehicleId === v.id ? "bg-white text-black border-white" : "bg-white/5 border-white/5 text-zinc-400 hover:bg-white/10"
                             )}
                           >
                             <Car size={14} />
@@ -213,10 +205,10 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
 
                 <Button 
                   type="submit" 
-                  disabled={awardTrophy.isPending || !selectedUser || !selectedTrophy}
+                  disabled={createAndAwardTrophy.isPending || !selectedUser || !formData.title || !formData.eventName}
                   className="w-full bg-white text-black hover:bg-zinc-200 h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl mt-4 border-none"
                 >
-                  {awardTrophy.isPending ? <Loader2 className="animate-spin" /> : <><Send size={18} className="mr-2 -rotate-12" /> Conferma Assegnazione</>}
+                  {createAndAwardTrophy.isPending ? <Loader2 className="animate-spin" /> : <><Send size={18} className="mr-2 -rotate-12" /> Crea e Assegna Premio</>}
                 </Button>
               </div>
             </form>
