@@ -48,6 +48,36 @@ const DEFAULT_TUTORIALS: Tutorial[] = [
     image_url: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=1966&auto=format&fit=crop',
     created_at: new Date().toISOString(),
     profiles: { username: 'Low District Staff', avatar_url: '' }
+  },
+  {
+    id: 'def-3',
+    author_id: 'system',
+    title: 'ROLLING DEI PARAFANGHI (FENDER ROLLING)',
+    content: 'Quando il fitment diventa aggressivo, lo spazio tra gomma e lamiera si riduce a zero. Il rolling consiste nel ripiegare il bordo interno del parafango per evitare tagli alla gomma. È fondamentale scaldare bene la vernice con una pistola termica per evitare che si crepi durante l\'operazione con il roller.',
+    category: 'bodywork',
+    image_url: 'https://images.unsplash.com/photo-1530046339160-ce3e5b0c7a2f?q=80&w=2070&auto=format&fit=crop',
+    created_at: new Date().toISOString(),
+    profiles: { username: 'Low District Staff', avatar_url: '' }
+  },
+  {
+    id: 'def-4',
+    author_id: 'system',
+    title: 'INTRODUZIONE AL CAMBER NEGATIVO',
+    content: 'Il camber non è solo estetica, ma tecnica. Un angolo negativo permette di far rientrare la parte superiore della ruota all\'interno del passaruota, permettendo setup più larghi. Attenzione però: un camber eccessivo riduce l\'impronta a terra e accelera l\'usura interna degli pneumatici.',
+    category: 'mechanics',
+    image_url: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?q=80&w=1974&auto=format&fit=crop',
+    created_at: new Date().toISOString(),
+    profiles: { username: 'Low District Staff', avatar_url: '' }
+  },
+  {
+    id: 'def-5',
+    author_id: 'system',
+    title: 'DETAILING: LA PREPARAZIONE PER IL SHOW',
+    content: 'Un progetto stance deve brillare. La tecnica dei due secchi è la base per evitare graffi (swirls). Usa un decontaminante ferroso per i cerchi e una cera di alta qualità o un sigillante ceramico per esaltare le linee della carrozzeria sotto le luci degli eventi.',
+    category: 'bodywork',
+    image_url: 'https://images.unsplash.com/photo-1607860108855-64acf2078ed9?q=80&w=2071&auto=format&fit=crop',
+    created_at: new Date().toISOString(),
+    profiles: { username: 'Low District Staff', avatar_url: '' }
   }
 ];
 
@@ -74,7 +104,6 @@ export const useAcademy = (categoryFilter: string = 'all') => {
         if (error) throw error;
 
         // Uniamo i dati del DB con quelli di default
-        // I dati del DB (i tuoi tutorial) appaiono per primi
         const combined = [...(dbData || []), ...DEFAULT_TUTORIALS];
 
         if (categoryFilter !== 'all') {
