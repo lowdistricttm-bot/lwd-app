@@ -4,12 +4,12 @@ import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Info, ArrowRightLeft, ChevronRight, Gauge, MoveHorizontal, Plus } from 'lucide-react';
+import { Info, ArrowRightLeft, Gauge, MoveHorizontal, Plus, Maximize2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const FitmentCalculator = () => {
-  const [current, setCurrent] = useState({ width: 8.5, et: 35 });
-  const [next, setNext] = useState({ width: 9.5, et: 22 });
+  const [current, setCurrent] = useState({ width: 8.5, et: 35, diameter: 18 });
+  const [next, setNext] = useState({ width: 9.5, et: 22, diameter: 19 });
 
   const results = useMemo(() => {
     const currentPoke = (current.width * 25.4) / 2 - current.et;
@@ -19,30 +19,35 @@ const FitmentCalculator = () => {
     const nextInset = (next.width * 25.4) / 2 + next.et;
 
     return {
-      poke: (nextPoke - currentPoke).toFixed(1),
-      inset: (nextInset - currentInset).toFixed(1)
+      poke: nextPoke - currentPoke,
+      inset: nextInset - currentInset,
+      diameterDiff: next.diameter - current.diameter
     };
   }, [current, next]);
 
-  const pokeVal = parseFloat(results.poke);
-  const insetVal = parseFloat(results.inset);
+  const pokeVal = results.poke;
+  const insetVal = results.inset;
 
   return (
     <div className="space-y-10">
       {/* Visual Comparison */}
-      <div className="relative h-64 bg-zinc-950 rounded-[2.5rem] border border-white/5 overflow-hidden flex items-center justify-center shadow-2xl">
+      <div className="relative h-80 bg-zinc-950 rounded-[2.5rem] border border-white/5 overflow-hidden flex items-center justify-center shadow-2xl">
         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
         
         {/* Fender Line */}
-        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-48 h-1 bg-white/20 rounded-full z-10">
+        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-64 h-1 bg-white/20 rounded-full z-10">
           <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-[8px] font-black uppercase tracking-widest text-zinc-600">Passaruota</div>
         </div>
 
         <div className="relative w-full flex justify-center items-center gap-12">
           {/* Current Wheel (Ghost) */}
           <motion.div 
-            className="absolute w-32 h-40 border-2 border-dashed border-white/10 rounded-xl flex items-center justify-center"
-            style={{ x: -current.et / 2 }}
+            className="absolute border-2 border-dashed border-white/10 rounded-xl flex items-center justify-center"
+            style={{ 
+              x: -current.et / 2,
+              width: current.width * 12,
+              height: current.diameter * 10
+            }}
           >
             <span className="text-[7px] font-black uppercase text-zinc-700 rotate-90">OEM SETUP</span>
           </motion.div>
@@ -51,15 +56,16 @@ const FitmentCalculator = () => {
           <motion.div 
             animate={{ 
               x: -next.et / 2,
-              width: next.width * 15,
+              width: next.width * 12,
+              height: next.diameter * 10,
               scale: 1
             }}
-            className="relative h-44 bg-white text-black rounded-xl flex flex-col items-center justify-center shadow-[0_0_50px_rgba(255,255,255,0.1)] border border-white/20"
+            className="relative bg-white text-black rounded-xl flex flex-col items-center justify-center shadow-[0_0_50px_rgba(255,255,255,0.1)] border border-white/20"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-white via-zinc-200 to-zinc-400 rounded-xl" />
             <div className="relative z-10 flex flex-col items-center">
-              <span className="text-[9px] font-black italic leading-none">{next.width}J</span>
-              <span className="text-[7px] font-bold opacity-60">ET{next.et}</span>
+              <span className="text-[10px] font-black italic leading-none">{next.diameter}"</span>
+              <span className="text-[8px] font-bold opacity-60">{next.width}J ET{next.et}</span>
             </div>
             
             {/* Poke Indicator */}
@@ -68,13 +74,13 @@ const FitmentCalculator = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className={cn(
-                  "absolute -bottom-8 flex flex-col items-center",
+                  "absolute -bottom-10 flex flex-col items-center",
                   pokeVal > 0 ? "text-green-400" : "text-red-400"
                 )}
               >
                 <div className="flex items-center gap-1">
                   <MoveHorizontal size={10} />
-                  <span className="text-[10px] font-black italic">{Math.abs(pokeVal)}mm</span>
+                  <span className="text-[10px] font-black italic">{Math.abs(pokeVal).toFixed(1)}mm</span>
                 </div>
                 <span className="text-[6px] font-black uppercase tracking-widest">
                   {pokeVal > 0 ? 'Più Sporgente' : 'Più Rientrante'}
@@ -96,7 +102,16 @@ const FitmentCalculator = () => {
             <h4 className="text-[10px] font-black uppercase tracking-widest italic">Cerchio Attuale</h4>
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-2">
+              <Label className="text-[8px] font-black uppercase text-zinc-500 ml-4">Diametro</Label>
+              <Input 
+                type="number" 
+                value={current.diameter} 
+                onChange={e => setCurrent({...current, diameter: parseFloat(e.target.value) || 0})}
+                className="bg-black/40 border-white/10 rounded-full h-12 px-4 font-black italic text-center"
+              />
+            </div>
             <div className="space-y-2">
               <Label className="text-[8px] font-black uppercase text-zinc-500 ml-4">Canale (J)</Label>
               <Input 
@@ -104,7 +119,7 @@ const FitmentCalculator = () => {
                 step="0.5"
                 value={current.width} 
                 onChange={e => setCurrent({...current, width: parseFloat(e.target.value) || 0})}
-                className="bg-black/40 border-white/10 rounded-full h-12 px-6 font-black italic"
+                className="bg-black/40 border-white/10 rounded-full h-12 px-4 font-black italic text-center"
               />
             </div>
             <div className="space-y-2">
@@ -113,7 +128,7 @@ const FitmentCalculator = () => {
                 type="number" 
                 value={current.et} 
                 onChange={e => setCurrent({...current, et: parseFloat(e.target.value) || 0})}
-                className="bg-black/40 border-white/10 rounded-full h-12 px-6 font-black italic"
+                className="bg-black/40 border-white/10 rounded-full h-12 px-4 font-black italic text-center"
               />
             </div>
           </div>
@@ -128,7 +143,16 @@ const FitmentCalculator = () => {
             <h4 className="text-[10px] font-black uppercase tracking-widest italic">Nuovo Cerchio</h4>
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-2">
+              <Label className="text-[8px] font-black uppercase text-zinc-700 ml-4">Diametro</Label>
+              <Input 
+                type="number" 
+                value={next.diameter} 
+                onChange={e => setNext({...next, diameter: parseFloat(e.target.value) || 0})}
+                className="bg-white border-black/10 rounded-full h-12 px-4 font-black italic text-center focus-visible:ring-black/20"
+              />
+            </div>
             <div className="space-y-2">
               <Label className="text-[8px] font-black uppercase text-zinc-700 ml-4">Canale (J)</Label>
               <Input 
@@ -136,7 +160,7 @@ const FitmentCalculator = () => {
                 step="0.5"
                 value={next.width} 
                 onChange={e => setNext({...next, width: parseFloat(e.target.value) || 0})}
-                className="bg-white border-black/10 rounded-full h-12 px-6 font-black italic focus-visible:ring-black/20"
+                className="bg-white border-black/10 rounded-full h-12 px-4 font-black italic text-center focus-visible:ring-black/20"
               />
             </div>
             <div className="space-y-2">
@@ -145,7 +169,7 @@ const FitmentCalculator = () => {
                 type="number" 
                 value={next.et} 
                 onChange={e => setNext({...next, et: parseFloat(e.target.value) || 0})}
-                className="bg-white border-black/10 rounded-full h-12 px-6 font-black italic focus-visible:ring-black/20"
+                className="bg-white border-black/10 rounded-full h-12 px-4 font-black italic text-center focus-visible:ring-black/20"
               />
             </div>
           </div>
@@ -158,7 +182,7 @@ const FitmentCalculator = () => {
           <ArrowRightLeft size={120} />
         </div>
         
-        <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-8">
+        <div className="relative z-10 grid grid-cols-1 sm:grid-cols-3 gap-8">
           <div className="space-y-2">
             <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 italic">Esterno (Poke)</p>
             <div className="flex items-baseline gap-2">
@@ -166,15 +190,11 @@ const FitmentCalculator = () => {
                 "text-4xl font-black italic tracking-tighter",
                 pokeVal > 0 ? "text-white" : "text-zinc-500"
               )}>
-                {pokeVal > 0 ? `+${pokeVal}` : pokeVal} <span className="text-sm">mm</span>
+                {pokeVal > 0 ? `+${pokeVal.toFixed(1)}` : pokeVal.toFixed(1)} <span className="text-sm">mm</span>
               </span>
             </div>
             <p className="text-[10px] font-bold text-zinc-400 uppercase leading-tight">
-              {pokeVal > 0 
-                ? `Il cerchio sporgerà di ${pokeVal}mm in più verso l'esterno.` 
-                : pokeVal < 0 
-                ? `Il cerchio rientrerà di ${Math.abs(pokeVal)}mm verso l'interno.`
-                : "Nessun cambiamento sulla sporgenza esterna."}
+              {pokeVal > 0 ? 'Sporgenza aumentata' : pokeVal < 0 ? 'Rientro aumentato' : 'Invariato'}
             </p>
           </div>
 
@@ -185,15 +205,23 @@ const FitmentCalculator = () => {
                 "text-4xl font-black italic tracking-tighter",
                 insetVal > 0 ? "text-red-400" : "text-zinc-500"
               )}>
-                {insetVal > 0 ? `+${insetVal}` : insetVal} <span className="text-sm">mm</span>
+                {insetVal > 0 ? `+${insetVal.toFixed(1)}` : insetVal.toFixed(1)} <span className="text-sm">mm</span>
               </span>
             </div>
             <p className="text-[10px] font-bold text-zinc-400 uppercase leading-tight">
-              {insetVal > 0 
-                ? `Perderai ${insetVal}mm di spazio interno verso l'ammortizzatore.` 
-                : insetVal < 0 
-                ? `Guadagnerai ${Math.abs(insetVal)}mm di spazio interno.`
-                : "Nessun cambiamento nell'ingombro interno."}
+              {insetVal > 0 ? 'Meno spazio interno' : 'Più spazio interno'}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 italic">Diametro</p>
+            <div className="flex items-baseline gap-2">
+              <span className="text-4xl font-black italic tracking-tighter text-white">
+                {results.diameterDiff > 0 ? `+${results.diameterDiff}` : results.diameterDiff} <span className="text-sm">"</span>
+              </span>
+            </div>
+            <p className="text-[10px] font-bold text-zinc-400 uppercase leading-tight">
+              Differenza di diametro totale
             </p>
           </div>
         </div>
