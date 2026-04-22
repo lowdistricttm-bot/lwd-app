@@ -2,54 +2,81 @@
 
 import { useEffect } from 'react';
 
+// Contatore globale per gestire modal annidati
+let lockCount = 0;
+let originalStyles: any = null;
+let lastScrollY = 0;
+
 /**
  * Hook per bloccare lo scroll del body in modo definitivo su mobile
- * e gestire il riposizionamento dei layout senza scatti.
+ * Gestisce correttamente il ripristino del touch e della posizione di scroll.
  */
 export const useBodyLock = (isOpen: boolean) => {
   useEffect(() => {
     if (!isOpen) return;
 
-    // Salviamo la posizione attuale dello scroll
-    const scrollY = window.scrollY;
-    
-    // Salviamo gli stili originali per ripristinarli
-    const originalStyle = {
-      overflow: document.body.style.overflow,
-      position: document.body.style.position,
-      top: document.body.style.top,
-      width: document.body.style.width,
-      height: document.body.style.height,
-      paddingRight: document.body.style.paddingRight
-    };
+    // Incrementiamo il contatore dei blocchi attivi
+    lockCount++;
 
-    // Calcoliamo la scrollbar width per evitare il "salto" orizzontale su desktop
-    const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+    // Se è il primo blocco, salviamo gli stili originali
+    if (lockCount === 1) {
+      lastScrollY = window.scrollY;
+      
+      originalStyles = {
+        overflow: document.body.style.overflow,
+        position: document.body.style.position,
+        top: document.body.style.top,
+        width: document.body.style.width,
+        height: document.body.style.height,
+        paddingRight: document.body.style.paddingRight,
+        touchAction: document.body.style.touchAction,
+        pointerEvents: document.body.style.pointerEvents
+      };
 
-    // BLOCCO TOTALE: Usiamo position fixed per "congelare" il body nella posizione attuale
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = '100%';
-    document.body.style.height = '100%';
-    document.body.style.overflow = 'hidden';
-    if (scrollBarWidth > 0) {
-      document.body.style.paddingRight = `${scrollBarWidth}px`;
+      const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+
+      // Applichiamo il blocco "congelando" la posizione attuale
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${lastScrollY}px`;
+      document.body.style.width = '100%';
+      document.body.style.height = '100%';
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none'; // Previene gesture di sistema interferenti
+      
+      if (scrollBarWidth > 0) {
+        document.body.style.paddingRight = `${scrollBarWidth}px`;
+      }
     }
 
     return () => {
-      // RIPRISTINO: Rimuoviamo il blocco fixed e torniamo alla posizione originale
-      document.body.style.position = originalStyle.position;
-      document.body.style.top = originalStyle.top;
-      document.body.style.width = originalStyle.width;
-      document.body.style.height = originalStyle.height;
-      document.body.style.overflow = originalStyle.overflow;
-      document.body.style.paddingRight = originalStyle.paddingRight;
+      // Decrementiamo al termine
+      lockCount--;
 
-      // Riportiamo l'utente dove si trovava prima dell'apertura del modal
-      // Usiamo requestAnimationFrame per assicurarci che il layout sia pronto
-      requestAnimationFrame(() => {
-        window.scrollTo(0, scrollY);
-      });
+      // Ripristiniamo solo se non ci sono altri modal aperti
+      if (lockCount <= 0) {
+        lockCount = 0; // Sicurezza
+        
+        if (originalStyles) {
+          document.body.style.position = originalStyles.position;
+          document.body.style.top = originalStyles.top;
+          document.body.style.width = originalStyles.width;
+          document.body.style.height = originalStyles.height;
+          document.body.style.overflow = originalStyles.overflow;
+          document.body.style.paddingRight = originalStyles.paddingRight;
+          document.body.style.touchAction = originalStyles.touchAction;
+          document.body.style.pointerEvents = originalStyles.pointerEvents;
+        }
+
+        // Forza il ripristino immediato della posizione di scroll
+        window.scrollTo(0, lastScrollY);
+        
+        // Pulizia per sicurezza nel prossimo frame
+        requestAnimationFrame(() => {
+          if (lockCount === 0) {
+            window.scrollTo(0, lastScrollY);
+          }
+        });
+      }
     };
   }, [isOpen]);
 };

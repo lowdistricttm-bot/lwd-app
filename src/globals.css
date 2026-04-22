@@ -45,7 +45,6 @@ html, body {
   margin: 0;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
-  overscroll-behavior-y: none;
 }
 
 body {
@@ -53,6 +52,7 @@ body {
   font-family: 'Inter', sans-serif;
   min-height: 100vh;
   min-height: 100dvh;
+  /* Rimosso overscroll-behavior-y: none per evitare conflitti con il sistema di blocco body */
 }
 
 #root {
