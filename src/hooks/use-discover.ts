@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { Vehicle } from './use-garage';
 
-// Ruoli autorizzati a comparire nella sezione veicoli/showroom
+// Ruoli autorizzati a comparire nella sezione veicoli/showroom e membri
 const AUTHORIZED_ROLES = ['admin', 'staff', 'support', 'member', 'subscriber_plus'];
 
 export const useDiscover = (searchQuery: string = "") => {
@@ -41,6 +41,7 @@ export const useDiscover = (searchQuery: string = "") => {
         return [];
       }
 
+      // Filtriamo i veicoli in base al ruolo del proprietario
       const filteredData = (data || [])
         .filter((v: any) => v.profiles && AUTHORIZED_ROLES.includes(v.profiles.role))
         .map((v: any) => ({
@@ -63,6 +64,7 @@ export const useDiscover = (searchQuery: string = "") => {
         .from('profiles')
         .select('id, username, avatar_url, role, is_admin')
         .ilike('username', `%${searchQuery}%`)
+        .in('role', AUTHORIZED_ROLES) // Filtro ruoli applicato alla ricerca utenti
         .limit(10);
 
       if (error) throw error;
@@ -74,10 +76,10 @@ export const useDiscover = (searchQuery: string = "") => {
   const { data: newMembers } = useQuery({
     queryKey: ['discover-new-members'],
     queryFn: async () => {
-      // Rimosso il filtro .in('role', AUTHORIZED_ROLES) per mostrare TUTTI i nuovi utenti
       const { data, error } = await supabase
         .from('profiles')
         .select('id, username, avatar_url, role, is_admin, updated_at')
+        .in('role', AUTHORIZED_ROLES) // Filtro ruoli applicato ai nuovi membri
         .order('updated_at', { ascending: false })
         .limit(12);
       
