@@ -124,7 +124,7 @@ const Navbar = () => {
 
       <nav 
         className={cn(
-          "fixed left-0 right-0 z-50 bg-black/60 backdrop-blur-2xl border-b border-white/5 touch-none select-none transition-transform duration-300 ease-in-out",
+          "fixed left-0 right-0 z-50 bg-black border-b border-white/5 touch-none select-none transition-transform duration-300 ease-in-out",
           isVisible ? "translate-y-0" : "-translate-y-full"
         )}
         style={{ top: 'env(safe-area-inset-top)' }}
