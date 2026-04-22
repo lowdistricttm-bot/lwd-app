@@ -274,30 +274,30 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
       {/* Garage Tools - visibili solo nel proprio garage */}
       {isOwnProfile && !isFormOpen && (
         <div className="mb-10">
-          <div className="flex items-center gap-2 mb-6">
+          <div className="flex items-center gap-2 mb-4">
             <Wrench size={12} className="text-zinc-500" />
             <h3 className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 italic">
               Garage Tools
             </h3>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Link to="/fitment" className="bg-white/5 backdrop-blur-2xl border border-white/10 p-6 rounded-[2rem] hover:border-white/20 transition-all group flex items-center gap-5 shadow-xl">
-              <div className="w-14 h-14 bg-black rounded-2xl flex items-center justify-center border border-white/10 group-hover:border-white/30 transition-all shadow-xl shrink-0">
-                <ArrowRightLeft size={20} className="text-white" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Link to="/fitment" className="bg-white/5 backdrop-blur-2xl border border-white/10 p-4 rounded-[1.5rem] hover:border-white/20 transition-all group flex items-center gap-4 shadow-xl">
+              <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center border border-white/10 group-hover:border-white/30 transition-all shadow-xl shrink-0">
+                <ArrowRightLeft size={16} className="text-white" />
               </div>
-              <div>
-                <h4 className="text-base font-black italic uppercase tracking-tight text-white">Wheel Lab</h4>
-                <p className="text-[8px] text-zinc-400 font-bold uppercase tracking-widest mt-1">Calcola offset e sporgenza</p>
+              <div className="flex flex-col justify-center">
+                <h4 className="text-sm font-black italic uppercase tracking-tight text-white mb-0.5">Wheel Lab</h4>
+                <p className="text-[8px] text-zinc-400 font-bold uppercase tracking-widest">Calcola offset e sporgenza</p>
               </div>
             </Link>
             
-            <Link to="/camber" className="bg-white/5 backdrop-blur-2xl border border-white/10 p-6 rounded-[2rem] hover:border-white/20 transition-all group flex items-center gap-5 shadow-xl">
-              <div className="w-14 h-14 bg-black rounded-2xl flex items-center justify-center border border-white/10 group-hover:border-white/30 transition-all shadow-xl shrink-0">
-                <Smartphone size={20} className="text-white" />
+            <Link to="/camber" className="bg-white/5 backdrop-blur-2xl border border-white/10 p-4 rounded-[1.5rem] hover:border-white/20 transition-all group flex items-center gap-4 shadow-xl">
+              <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center border border-white/10 group-hover:border-white/30 transition-all shadow-xl shrink-0">
+                <Smartphone size={16} className="text-white" />
               </div>
-              <div>
-                <h4 className="text-base font-black italic uppercase tracking-tight text-white">Camber Helper</h4>
-                <p className="text-[8px] text-zinc-400 font-bold uppercase tracking-widest mt-1">Misura l'inclinazione</p>
+              <div className="flex flex-col justify-center">
+                <h4 className="text-sm font-black italic uppercase tracking-tight text-white mb-0.5">Camber Helper</h4>
+                <p className="text-[8px] text-zinc-400 font-bold uppercase tracking-widest">Misura l'inclinazione</p>
               </div>
             </Link>
           </div>
