@@ -55,8 +55,19 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
     deleteNotification.mutate(id);
   };
 
-  const getAdminStyles = (type: string) => {
-    switch (type) {
+  const getAdminStyles = (n: Notification) => {
+    // Caso specifico per le nuove candidature (notifiche staff)
+    if (n.type === 'admin_info' && n.application_id) {
+      return { 
+        icon: ClipboardCheck, 
+        color: 'text-emerald-400', 
+        bg: 'bg-emerald-500/10', 
+        border: 'border-emerald-500/20', 
+        label: 'SELEZIONE' 
+      };
+    }
+
+    switch (n.type) {
       case 'admin_info': return { icon: Megaphone, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', label: 'ANNUNCIO' };
       case 'admin_warning': return { icon: AlertTriangle, color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/20', label: 'AVVISO' };
       case 'admin_important': return { icon: Zap, color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20', label: 'IMPORTANTE' };
@@ -157,7 +168,7 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
                 </div>
               ) : (
                 notifications?.map((n) => {
-                  const adminStyles = getAdminStyles(n.type);
+                  const adminStyles = getAdminStyles(n);
                   const isAdminType = !!adminStyles;
 
                   return (
