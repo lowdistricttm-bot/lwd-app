@@ -11,7 +11,7 @@ import LatestActivities from '@/components/LatestActivities';
 import LatestMeets from '@/components/LatestMeets';
 import LatestMarketplaceItems from '@/components/LatestMarketplaceItems';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
-import { ShoppingBag, Users, Calendar, ArrowRight, Star, Music, Play, ChevronRight, MapPin, Tag, Bell, X, ArrowRightLeft } from 'lucide-react';
+import { ShoppingBag, Users, Calendar, ArrowRight, Star, Music, Play, ChevronRight, MapPin, Tag, Bell, X, ArrowRightLeft, Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from '@/hooks/use-translation';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
@@ -39,11 +39,11 @@ const Index = () => {
       label: 'Entra nel Feed'
     },
     { 
-      icon: MapPin, 
-      title: 'DISTRICT MEET', 
-      desc: 'Incontri spontanei e raduni della community.',
-      href: '/meets',
-      label: 'Vedi Incontri'
+      icon: Trophy, 
+      title: 'CLASSIFICHE', 
+      desc: 'Scopri i migliori progetti e scala la Hall of Fame.',
+      href: '/leaderboards',
+      label: 'Vedi Classifiche'
     },
     { 
       icon: Tag, 
