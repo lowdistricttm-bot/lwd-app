@@ -14,6 +14,7 @@ import StanceAnalyzer from './StanceAnalyzer';
 import VehicleDetailModal from './VehicleDetailModal';
 import RankBadge from './RankBadge';
 import TrophyBar from './TrophyBar';
+import RainCheck from './RainCheck';
 import { 
   Plus, Car, Trash2, Camera, Loader2, X, Edit3, Heart, 
   Gauge, Book, Sparkles, ChevronRight, Calendar, CreditCard, GripVertical,
@@ -47,6 +48,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [userCity, setUserCity] = useState<string | undefined>(undefined);
   
   const [formData, setFormData] = useState({ 
     brand: '', model: '', year: '', license_plate: '', 
@@ -59,8 +61,13 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setCurrentUserId(user?.id || null);
+      if (user && isOwnProfile) {
+        supabase.from('profiles').select('city').eq('id', user.id).maybeSingle().then(({ data }) => {
+          if (data?.city) setUserCity(data.city);
+        });
+      }
     });
-  }, []);
+  }, [isOwnProfile]);
 
   const handleOpenAdd = () => {
     setEditingVehicle(null);
@@ -148,6 +155,12 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
 
   return (
     <div className="space-y-8">
+      {isOwnProfile && userCity && (
+        <div className="mb-4">
+          <RainCheck city={userCity} />
+        </div>
+      )}
+
       <div className="flex justify-between items-center">
         <h3 className="text-xl font-black italic uppercase tracking-tighter">
           {isOwnProfile ? "Il Mio Garage" : "Garage"}
@@ -162,304 +175,214 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
         )}
       </div>
 
-      <AnimatePresence>
-        {isFormOpen && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="bg-black/60 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/10 shadow-2xl mb-8">
-            <div className="flex justify-between items-center mb-8">
-              <h4 className="text-lg font-black italic uppercase">{editingVehicle ? 'Modifica Veicolo' : 'Nuovo Progetto'}</h4>
-              <button onClick={() => setIsFormOpen(false)} className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors"><X size={20} /></button>
-            </div>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Marca</Label>
-                  <Input required placeholder="ES: BMW" value={formData.brand} onChange={e => setFormData({...formData, brand: e.target.value.toUpperCase()})} className="bg-white/5 border-white/10 rounded-full h-12 px-6 font-bold text-white" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Modello</Label>
-                  <Input required placeholder="ES: M3 E46" value={formData.model} onChange={e => setFormData({...formData, model: e.target.value.toUpperCase()})} className="bg-white/5 border-white/10 rounded-full h-12 px-6 font-bold text-white" />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Anno</Label>
-                  <Input placeholder="ES: 2003" value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} className="bg-white/5 border-white/10 rounded-full h-12 px-6 font-bold text-white" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Targa</Label>
-                  <Input placeholder="ES: AA000BB" value={formData.license_plate} onChange={e => setFormData({...formData, license_plate: e.target.value.toUpperCase()})} className="bg-white/5 border-white/10 rounded-full h-12 px-6 font-bold text-white" />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Tipo Assetto</Label>
-                <select 
-                  value={formData.suspension_type} 
-                  onChange={e => setFormData({...formData, suspension_type: e.target.value})}
-                  className="w-full bg-black border border-white/10 rounded-full h-12 px-6 text-xs font-bold appearance-none text-white focus:outline-none focus:border-white/30"
-                >
-                  <option value="STATIC">STATIC</option>
-                  <option value="AIR">AIR</option>
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Descrizione Progetto</Label>
-                <Textarea placeholder="Racconta la storia del tuo veicolo..." value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="bg-white/5 border-white/10 rounded-[1.5rem] min-h-[100px] p-6 text-sm italic text-white placeholder:text-zinc-600 resize-none" />
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between px-4">
-                  <Label className="text-[9px] font-black uppercase text-zinc-500">Foto Progetto (Max 6)</Label>
-                  <span className="text-[8px] font-black uppercase text-zinc-600 italic">Trascina per ordinare</span>
-                </div>
-                
-                <Reorder.Group 
-                  axis="x" 
-                  values={mediaItems} 
-                  onReorder={setMediaItems}
-                  className="flex flex-wrap gap-3"
-                >
-                  {mediaItems.map((item, index) => (
-                    <Reorder.Item 
-                      key={item.id} 
-                      value={item}
-                      className="relative w-20 h-20 rounded-xl overflow-hidden border border-white/10 group cursor-grab active:cursor-grabbing"
-                    >
-                      <img src={item.url} className="w-full h-full object-cover" alt="" />
-                      {index === 0 && (
-                        <div className="absolute top-0 left-0 right-0 bg-white text-black text-[6px] font-black uppercase py-0.5 text-center">
-                          Principale
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <GripVertical size={14} className="text-white" />
-                      </div>
-                      <button 
-                        type="button" 
-                        onClick={() => removeItem(item.id)}
-                        className="absolute top-1 right-1 p-1 bg-black/60 text-white rounded-full hover:bg-red-600 transition-colors z-10"
-                      >
-                        <X size={10} />
-                      </button>
-                    </Reorder.Item>
-                  ))}
-
-                  {mediaItems.length < 6 && (
-                    <button 
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()} 
-                      className="w-20 h-20 border-2 border-dashed border-white/10 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition-all group"
-                    >
-                      <Camera size={20} className="text-zinc-600 group-hover:text-white transition-colors" />
-                    </button>
-                  )}
-                </Reorder.Group>
-                <input type="file" ref={fileInputRef} className="hidden" multiple accept="image/*" onChange={handleFileChange} />
-              </div>
-              
-              <Button 
-                type="submit" 
-                disabled={addVehicle.isPending || updateVehicle.isPending} 
-                className="w-full bg-white text-black hover:bg-zinc-200 rounded-full h-16 font-black uppercase italic tracking-widest shadow-2xl transition-all border-none"
-              >
-                {(addVehicle.isPending || updateVehicle.isPending) ? <Loader2 className="animate-spin" /> : editingVehicle ? 'Aggiorna Veicolo' : 'Salva nel Garage'}
-              </Button>
-            </form>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Garage Tools - visibili solo nel proprio garage */}
-      {isOwnProfile && !isFormOpen && (
-        <div className="mb-10">
-          <div className="flex items-center gap-2 mb-4">
-            <Wrench size={12} className="text-zinc-500" />
-            <h3 className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 italic">
-              Garage Tools
-            </h3>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Link to="/fitment" className="w-full bg-zinc-900/40 backdrop-blur-md border border-white/5 p-3.5 flex items-center justify-between group hover:bg-zinc-800/60 hover:border-white/20 transition-all duration-500 text-left rounded-2xl shadow-xl">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-8 h-8 bg-white/5 rounded-xl flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all duration-500 shrink-0">
-                  <ArrowRightLeft size={14} className="group-hover:scale-110 transition-transform" />
-                </div>
-                <div className="min-w-0 flex flex-col justify-center">
-                  <h3 className="text-[10px] font-black italic uppercase tracking-widest text-white truncate leading-none mb-0.5">FITMENT CALCULATOR</h3>
-                  <p className="text-[7px] font-bold uppercase tracking-widest text-zinc-500 group-hover:text-zinc-400 transition-colors truncate leading-none">Calcola offset e sporgenza</p>
-                </div>
-              </div>
-              <ChevronRight size={16} className="text-zinc-700 group-hover:text-white transition-all translate-x-[-4px] group-hover:translate-x-0 shrink-0" />
-            </Link>
+      {vehicles?.length === 0 ? (
+        <div className="bg-zinc-900/20 border border-dashed border-white/10 p-16 text-center rounded-[3rem]">
+          <Car className="mx-auto text-zinc-800 mb-6" size={48} />
+          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest italic">
+            {isOwnProfile ? "Il tuo garage è vuoto. Aggiungi il tuo primo progetto!" : "Questo utente non ha ancora aggiunto veicoli."}
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {vehicles?.map((v, i) => {
+            const rankInfo = getVehicleRank(v.id);
+            const mainImage = v.images?.[0] || v.image_url;
             
-            <Link to="/camber" className="w-full bg-zinc-900/40 backdrop-blur-md border border-white/5 p-3.5 flex items-center justify-between group hover:bg-zinc-800/60 hover:border-white/20 transition-all duration-500 text-left rounded-2xl shadow-xl">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-8 h-8 bg-white/5 rounded-xl flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all duration-500 shrink-0">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:scale-110 transition-transform">
-                    <g transform="rotate(15 12 12)">
-                      <rect x="5" y="2" width="14" height="20" rx="3" />
-                      <line x1="5" y1="8" x2="19" y2="8" />
-                      <line x1="5" y1="16" x2="19" y2="16" />
-                    </g>
-                  </svg>
+            return (
+              <motion.div 
+                key={v.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                onClick={() => setSelectedVehicle(v)}
+                className="bg-zinc-900/40 backdrop-blur-md border border-white/5 rounded-[2.5rem] overflow-hidden group hover:border-white/20 transition-all duration-500 cursor-pointer shadow-2xl"
+              >
+                <div className="aspect-video relative overflow-hidden bg-zinc-950">
+                  {mainImage ? (
+                    <img src={mainImage} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-1000 group-hover:scale-110" alt="" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-zinc-900"><Car size={64} /></div>
+                  )}
+                  
+                  <div className="absolute top-5 left-5 flex flex-col gap-2">
+                    {rankInfo && <RankBadge rank={rankInfo.rank} type={rankInfo.type} />}
+                    <span className="bg-white text-black text-[8px] font-black uppercase px-3 py-1.5 italic rounded-lg shadow-xl">
+                      {v.suspension_type}
+                    </span>
+                    {v.stance_score && (
+                      <span className="bg-black/60 backdrop-blur-md text-white text-[8px] font-black uppercase px-3 py-1.5 italic rounded-lg border border-white/10 flex items-center gap-1.5">
+                        <Sparkles size={10} /> {v.stance_score}
+                      </span>
+                    )}
+                  </div>
+
+                  {isOwnProfile && (
+                    <div className="absolute top-5 right-5 flex gap-2 opacity-0 group-hover:opacity-100 transition-all translate-y-[-10px] group-hover:translate-y-0">
+                      <button onClick={(e) => handleOpenEdit(e, v)} className="p-3 bg-white text-black rounded-full hover:scale-110 transition-all shadow-xl"><Edit3 size={16} /></button>
+                      <button onClick={(e) => handleDelete(e, v.id)} className="p-3 bg-red-600 text-white rounded-full hover:scale-110 transition-all shadow-xl"><Trash2 size={16} /></button>
+                    </div>
+                  )}
                 </div>
-                <div className="min-w-0 flex flex-col justify-center">
-                  <h3 className="text-[10px] font-black italic uppercase tracking-widest text-white truncate leading-none mb-0.5">CAMBER HELPER</h3>
-                  <p className="text-[7px] font-bold uppercase tracking-widest text-zinc-500 group-hover:text-zinc-400 transition-colors truncate leading-none">Misura l'inclinazione</p>
+
+                <div className="p-8">
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <h4 className="text-2xl font-black italic uppercase tracking-tighter leading-none mb-1">{v.brand}</h4>
+                      <p className="text-sm font-black uppercase italic text-zinc-500">{v.model}</p>
+                    </div>
+                    <div className="flex items-center gap-2 text-red-500">
+                      <Heart size={16} fill="currentColor" />
+                      <span className="text-xs font-black">{v.likes_count || 0}</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-8">
+                    <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
+                      <p className="text-[7px] font-black uppercase text-zinc-600 mb-1">Anno</p>
+                      <p className="text-xs font-black italic">{v.year || 'N/A'}</p>
+                    </div>
+                    <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
+                      <p className="text-[7px] font-black uppercase text-zinc-600 mb-1">Targa</p>
+                      <p className="text-xs font-black italic">{v.license_plate || '---'}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3">
+                    {isOwnProfile && (
+                      <div className="grid grid-cols-2 gap-3">
+                        <Button 
+                          onClick={(e) => { e.stopPropagation(); setActiveLogbook(v.id); }}
+                          variant="outline"
+                          className="h-12 rounded-full border-white/10 text-white hover:bg-white/5 font-black uppercase italic text-[9px] tracking-widest"
+                        >
+                          <Book size={14} className="mr-2" /> Diario
+                        </Button>
+                        <Button 
+                          onClick={(e) => { e.stopPropagation(); setActiveAnalyzer({ url: mainImage || '', id: v.id }); }}
+                          className="h-12 rounded-full bg-white text-black hover:bg-zinc-200 font-black uppercase italic text-[9px] tracking-widest shadow-xl"
+                        >
+                          <Sparkles size={14} className="mr-2" /> Analizza
+                        </Button>
+                      </div>
+                    )}
+                    <Button 
+                      onClick={() => setSelectedVehicle(v)}
+                      variant="ghost"
+                      className="w-full h-10 text-zinc-500 hover:text-white text-[8px] font-black uppercase tracking-[0.3em] italic"
+                    >
+                      Vedi Dettagli Progetto <ChevronRight size={12} className="ml-1" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-              <ChevronRight size={16} className="text-zinc-700 group-hover:text-white transition-all translate-x-[-4px] group-hover:translate-x-0 shrink-0" />
-            </Link>
-          </div>
+              </motion.div>
+            );
+          })}
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {vehicles?.map((vehicle) => {
-          const isPublic = vehicle.profiles?.license_plate_privacy === 'public';
-          const canSeePlate = isOwnProfile || canVote || isPublic;
-          const mainImage = vehicle.images?.[0] || vehicle.image_url;
-          const rankInfo = getVehicleRank(vehicle.id);
-          
-          const latestTrophy = vehicle.user_trophies && vehicle.user_trophies.length > 0
-            ? [...vehicle.user_trophies].sort((a, b) => new Date(b.awarded_at).getTime() - new Date(a.awarded_at).getTime())[0]
-            : null;
-
-          return (
+      {/* Modals */}
+      <AnimatePresence>
+        {isFormOpen && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsFormOpen(false)} className="fixed inset-0 bg-black/80 z-[250] touch-none" />
             <motion.div 
-              key={vehicle.id} 
-              onClick={() => setSelectedVehicle(vehicle)}
-              className="bg-zinc-900/40 backdrop-blur-md border border-white/5 rounded-[2.5rem] overflow-hidden group hover:border-white/20 transition-all duration-500 shadow-2xl cursor-pointer flex flex-col"
+              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} 
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-x-0 bottom-0 z-[251] bg-black border-t border-white/10 p-6 rounded-t-[2.5rem] h-[92dvh] overflow-y-auto shadow-2xl"
+              style={{ overscrollBehavior: 'contain', paddingTop: 'calc(2rem + env(safe-area-inset-top))' }}
             >
-              <div className="aspect-video relative overflow-hidden bg-zinc-950 shrink-0">
-                {mainImage ? (
-                  <img src={mainImage} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-1000 group-hover:scale-110" alt={vehicle.model} />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-black text-zinc-800"><Car size={64} /></div>
-                )}
-                
-                <div className="absolute top-5 left-5 flex flex-col gap-2">
-                  {rankInfo && <RankBadge rank={rankInfo.rank} type={rankInfo.type} />}
-                  {latestTrophy && <TrophyBar trophy={latestTrophy.trophies} />}
-                  <span className="bg-black/80 backdrop-blur-md text-white border border-white/10 text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full shadow-2xl w-fit">
-                    {vehicle.suspension_type}
-                  </span>
-                  {vehicle.stance_score && (
-                    <div className="bg-black/60 backdrop-blur-md text-white border border-white/20 text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full flex items-center gap-1.5 shadow-xl w-fit">
-                      <Sparkles size={10} /> LOW SCORE: {vehicle.stance_score}
+              <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-8 shrink-0" />
+              <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-8 pb-10">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-black italic uppercase tracking-tighter">{editingVehicle ? 'Modifica Veicolo' : 'Nuovo Veicolo'}</h2>
+                  <button type="button" onClick={() => setIsFormOpen(false)} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors"><X size={24} /></button>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Marca</Label>
+                      <Input required value={formData.brand} onChange={e => setFormData({...formData, brand: e.target.value.toUpperCase()})} className="bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest text-white" placeholder="ES: BMW" />
                     </div>
-                  )}
-                </div>
-
-                <div className="absolute top-5 right-5 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  {isOwnProfile && isProUser && (
-                    <>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); setActiveAnalyzer({ url: mainImage || '', id: vehicle.id }); }} 
-                        className="p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-white hover:text-black transition-all shadow-xl"
-                        title="Low Score Analyzer"
-                      >
-                        <Sparkles size={18} />
-                      </button>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); setActiveLogbook(vehicle.id); }} 
-                        className="p-3 bg-black/60 backdrop-blur-md text-white rounded-full hover:bg-white hover:text-black transition-all shadow-xl"
-                        title="Diario di Bordo"
-                      >
-                        <Book size={18} />
-                      </button>
-                    </>
-                  )}
-                </div>
-
-                <div className="absolute bottom-5 right-5">
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); toggleLike.mutate(vehicle.id); }}
-                    className={cn(
-                      "flex items-center gap-2 px-3 py-1.5 backdrop-blur-md border rounded-full transition-all",
-                      vehicle.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-black/40 border-white/10 text-white hover:bg-white/20"
-                    )}
-                  >
-                    <Heart size={12} fill={vehicle.is_liked ? "currentColor" : "none"} />
-                    <span className="text-[9px] font-black">{vehicle.likes_count || 0}</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-6 md:p-8 flex flex-col flex-1">
-                <div className="flex justify-between items-start mb-6">
-                  <div className="space-y-3 min-w-0 pr-4">
-                    <h4 className="text-2xl font-black italic uppercase tracking-tighter leading-none truncate">{vehicle.brand} {vehicle.model}</h4>
-                    
-                    <div className="flex flex-col gap-2.5">
-                      <div className="flex items-center gap-3 text-zinc-500 flex-wrap">
-                        <span className="text-[10px] font-black uppercase tracking-widest italic flex items-center gap-1.5">
-                          <Calendar size={12} className="text-white" /> {vehicle.year || 'N/A'}
-                        </span>
-                        <span className="text-zinc-600">•</span>
-                        <span className="text-[10px] font-black uppercase tracking-widest italic flex items-center gap-1.5">
-                          <Gauge size={12} className="text-white" /> {vehicle.suspension_type}
-                        </span>
-                      </div>
-
-                      {vehicle.license_plate && canSeePlate && (
-                        <div className="flex items-center gap-2 bg-white/10 text-white border border-white/10 px-2.5 py-1 rounded-lg w-fit shadow-lg">
-                          <CreditCard size={12} />
-                          <span className="text-[10px] font-black uppercase italic tracking-widest">{vehicle.license_plate}</span>
-                        </div>
-                      )}
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Modello</Label>
+                      <Input required value={formData.model} onChange={e => setFormData({...formData, model: e.target.value.toUpperCase()})} className="bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest text-white" placeholder="ES: M3 E46" />
                     </div>
                   </div>
-                  
-                  {isOwnProfile && (
-                    <div className="flex gap-2 shrink-0">
-                      <button onClick={(e) => handleOpenEdit(e, vehicle)} className="p-2.5 bg-white/5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 transition-all">
-                        <Edit3 size={16} />
-                      </button>
-                      <button onClick={(e) => handleDelete(e, vehicle.id)} className="p-2.5 bg-white/5 rounded-xl text-zinc-400 hover:text-red-500 hover:bg-red-500/10 transition-all">
-                        <Trash2 size={16} />
-                      </button>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Anno</Label>
+                      <Input value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} className="bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest text-white" placeholder="2004" />
                     </div>
-                  )}
-                </div>
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Targa</Label>
+                      <Input value={formData.license_plate} onChange={e => setFormData({...formData, license_plate: e.target.value.toUpperCase()})} className="bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest text-white" placeholder="AA000BB" />
+                    </div>
+                  </div>
 
-                {vehicle.description && (
-                  <p className="text-xs text-zinc-400 italic leading-relaxed line-clamp-3 mb-6">
-                    {vehicle.description}
-                  </p>
-                )}
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Tipo Assetto</Label>
+                    <div className="flex bg-white/5 p-1 rounded-full border border-white/10">
+                      {['STATIC', 'AIR'].map(type => (
+                        <button key={type} type="button" onClick={() => setFormData({...formData, suspension_type: type})} className={cn("flex-1 py-3 rounded-full text-[10px] font-black uppercase italic transition-all", formData.suspension_type === type ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-zinc-300")}>{type}</button>
+                      ))}
+                    </div>
+                  </div>
 
-                <div className="pt-6 border-t border-white/5 flex justify-end items-center mt-auto">
-                  <button 
-                    className="text-[9px] font-black uppercase tracking-widest text-white italic flex items-center gap-2 group"
-                  >
-                    Dettagli Progetto <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                  </button>
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Foto Progetto (Max 6)</Label>
+                    <div className="flex flex-wrap gap-3">
+                      {mediaItems.map((item) => (
+                        <div key={item.id} className="relative w-24 h-24 bg-black border border-white/10 rounded-2xl overflow-hidden shadow-xl">
+                          <img src={item.url} className="w-full h-full object-cover" alt="" />
+                          <button type="button" onClick={() => removeItem(item.id)} className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 text-white rounded-full hover:bg-red-600 transition-colors"><X size={12} /></button>
+                        </div>
+                      ))}
+                      {mediaItems.length < 6 && (
+                        <button type="button" onClick={() => fileInputRef.current?.click()} className="w-24 h-24 bg-white/5 border-2 border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center hover:border-white/30 transition-all group">
+                          <Camera size={24} className="text-zinc-600 group-hover:text-white mb-1" />
+                          <span className="text-[7px] font-black uppercase text-zinc-600">Aggiungi</span>
+                        </button>
+                      )}
+                    </div>
+                    <input type="file" ref={fileInputRef} className="hidden" accept="image/*" multiple onChange={handleFileChange} />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Descrizione Progetto</Label>
+                    <div className="bg-white/5 border border-white/10 rounded-[2rem] p-6">
+                      <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Descrivi le modifiche, i cerchi, l'assetto..." className="bg-transparent border-none focus-visible:ring-0 p-0 min-h-[120px] text-sm italic text-white placeholder:text-zinc-800 resize-none" />
+                    </div>
+                  </div>
+
+                  <Button type="submit" disabled={addVehicle.isPending || updateVehicle.isPending} className="w-full bg-white text-black hover:bg-zinc-200 h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl mt-4 border-none">
+                    {addVehicle.isPending || updateVehicle.isPending ? <Loader2 className="animate-spin" /> : <><Car size={18} className="mr-2" /> {editingVehicle ? 'Aggiorna Veicolo' : 'Salva Veicolo'}</>}
+                  </Button>
                 </div>
-              </div>
+              </form>
             </motion.div>
-          );
-        })}
+          </>
+        )}
 
-        {vehicles?.length === 0 && (
-          <div className="col-span-full py-24 text-center bg-zinc-900/20 border border-dashed border-white/10 rounded-[3rem]">
-            <Car size={48} className="mx-auto text-zinc-800 mb-6" />
-            <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Il garage è vuoto. Inizia a caricare i tuoi progetti.</p>
-            {isOwnProfile && (
-              <Button 
-                onClick={handleOpenAdd} 
-                className="mt-8 bg-white text-black rounded-full px-8 h-12 font-black uppercase italic hover:bg-zinc-200 transition-all border-none"
-              >
-                Aggiungi Veicolo
-              </Button>
-            )}
+        {activeLogbook && (
+          <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveLogbook(null)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-black border border-white/10 w-full max-w-2xl h-[80vh] rounded-[3rem] overflow-hidden shadow-2xl p-8">
+              <VehicleLogbook vehicleId={activeLogbook} onClose={() => setActiveLogbook(null)} />
+            </motion.div>
           </div>
         )}
-      </div>
 
-      <AnimatePresence>
+        {activeAnalyzer && (
+          <div className="fixed inset-0 z-[400] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveAnalyzer(null)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-black border border-white/10 w-full max-w-2xl rounded-[3rem] overflow-hidden shadow-2xl">
+              <StanceAnalyzer imageUrl={activeAnalyzer.url} vehicleId={activeAnalyzer.id} onClose={() => setActiveAnalyzer(null)} />
+            </motion.div>
+          </div>
+        )}
+
         {selectedVehicle && (
           <VehicleDetailModal 
             isOpen={!!selectedVehicle} 
@@ -470,30 +393,9 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
             currentUserId={currentUserId}
           />
         )}
-        {activeLogbook && (
-          <div className="fixed inset-0 z-[400] flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveLogbook(null)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-black border border-white/10 w-full max-w-2xl max-h-[85vh] rounded-[3rem] p-8 overflow-hidden shadow-2xl">
-              <VehicleLogbook vehicleId={activeLogbook} onClose={() => setActiveLogbook(null)} />
-            </motion.div>
-          </div>
-        )}
-        {activeAnalyzer && (
-          <div className="fixed inset-0 z-[400] flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveAnalyzer(null)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-black border border-white/10 w-full max-w-2xl rounded-[3rem] overflow-hidden shadow-2xl">
-              <StanceAnalyzer imageUrl={activeAnalyzer.url} vehicleId={activeAnalyzer.id} onClose={() => setActiveAnalyzer(null)} />
-            </motion.div>
-          </div>
-        )}
       </AnimatePresence>
 
-      <ImageLightbox 
-        images={lightboxData?.images || []} 
-        initialIndex={lightboxData?.index || 0} 
-        isOpen={!!lightboxData} 
-        onClose={() => setLightboxData(null)} 
-      />
+      <ImageLightbox images={lightboxData?.images || []} initialIndex={lightboxData?.index || 0} isOpen={!!lightboxData} onClose={() => setLightboxData(null)} />
     </div>
   );
 };
