@@ -34,9 +34,9 @@ const BottomNav = () => {
       className="fixed bottom-0 left-0 right-0 z-[999] bg-black border-t border-white/10 select-none touch-none"
       data-no-swipe="true"
       style={{ 
-        height: '56px',
-        minHeight: '56px',
-        maxHeight: '56px',
+        height: '45px',
+        minHeight: '45px',
+        maxHeight: '45px',
         paddingBottom: '0px',
         marginBottom: '0px',
         WebkitUserSelect: 'none',
@@ -65,7 +65,7 @@ const BottomNav = () => {
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
               >
                 <item.icon 
-                  size={22} 
+                  size={20} 
                   strokeWidth={isActive ? 2.2 : 1.8} 
                 />
               </motion.div>
