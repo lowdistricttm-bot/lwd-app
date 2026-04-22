@@ -27,7 +27,7 @@ const AcademyDetailModal = ({ isOpen, onClose, tutorial, canManage, onEdit, onDe
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[300] flex items-end md:items-center justify-center p-0 md:p-6 pointer-events-none">
+        <div className="fixed inset-0 z-[1000] flex items-end md:items-center justify-center p-0 md:p-6 pointer-events-none">
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
             onClick={onClose} className="absolute inset-0 bg-black/90 pointer-events-auto touch-none" 

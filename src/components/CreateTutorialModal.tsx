@@ -81,11 +81,11 @@ const CreateTutorialModal = ({ isOpen, onClose, editTutorial }: CreateTutorialMo
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/80 z-[400] touch-none" />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/80 z-[1000] touch-none" />
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[401] bg-black border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[94dvh] overflow-y-auto shadow-2xl"
+            className="fixed inset-x-0 bottom-0 z-[1001] bg-black border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[94dvh] overflow-y-auto shadow-2xl"
             style={{ touchAction: 'pan-y', overscrollBehavior: 'contain', paddingTop: 'calc(2rem + env(safe-area-inset-top))' }}
           >
             <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />

@@ -34,22 +34,28 @@ export const useAcademy = (categoryFilter: string = 'all') => {
   const { data: tutorials = [], isLoading } = useQuery({
     queryKey: ['academy-tutorials', categoryFilter],
     queryFn: async () => {
-      let query = supabase
-        .from('academy_tutorials')
-        .select(`
-          *,
-          profiles:author_id (username, avatar_url)
-        `)
-        .order('created_at', { ascending: false });
+      try {
+        let query = supabase
+          .from('academy_tutorials')
+          .select(`
+            *,
+            profiles:author_id (username, avatar_url)
+          `)
+          .order('created_at', { ascending: false });
 
-      if (categoryFilter !== 'all') {
-        query = query.eq('category', categoryFilter);
+        if (categoryFilter !== 'all') {
+          query = query.eq('category', categoryFilter);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+        return data as Tutorial[];
+      } catch (err) {
+        console.error("[Academy] Errore caricamento:", err);
+        return []; // Restituisce array vuoto per fermare lo spinner se la tabella non esiste
       }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as Tutorial[];
-    }
+    },
+    retry: 1
   });
 
   const createTutorial = useMutation({
