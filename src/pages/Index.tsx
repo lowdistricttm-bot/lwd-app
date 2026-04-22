@@ -39,11 +39,11 @@ const Index = () => {
       label: 'Entra nel Feed'
     },
     { 
-      icon: ArrowRightLeft, 
-      title: 'FITMENT LAB', 
-      desc: 'Calcola lo spostamento dei tuoi nuovi cerchi con precisione.',
-      href: '/fitment',
-      label: 'Apri Calcolatore'
+      icon: MapPin, 
+      title: 'DISTRICT MEET', 
+      desc: 'Incontri spontanei e raduni della community.',
+      href: '/meets',
+      label: 'Vedi Incontri'
     },
     { 
       icon: Tag, 
