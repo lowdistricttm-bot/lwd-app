@@ -355,14 +355,14 @@ const Profile = () => {
       </main>
 
       <AlertDialog open={isUsernameNoticeOpen} onOpenChange={setIsUsernameNoticeOpen}>
-        <AlertDialogContent className="bg-zinc-950 border-white/10 rounded-[2rem]">
+        <AlertDialogContent className="bg-black border border-white/10 rounded-[2rem] shadow-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white font-black uppercase italic">{t.profile.usernameNoticeTitle}</AlertDialogTitle>
             <AlertDialogDescription className="text-zinc-500 text-xs font-bold uppercase leading-relaxed">{t.profile.usernameNoticeDesc}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
             <AlertDialogAction onClick={() => window.location.href = 'mailto:info@lowdistrict.it'} className="rounded-full bg-white text-black hover:bg-zinc-200 font-black uppercase italic text-[10px] w-full h-12 transition-all">{t.profile.contactAdmin}</AlertDialogAction>
-            <AlertDialogCancel className="rounded-full border-white/10 text-white hover:bg-white/5 font-black uppercase italic text-[10px] w-full h-12 mt-0 transition-all">{t.feed.cancel}</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-full border border-white/10 text-white hover:bg-white/5 font-black uppercase italic text-[10px] w-full h-12 mt-0 transition-all">{t.feed.cancel}</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

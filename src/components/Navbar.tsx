@@ -165,7 +165,7 @@ const Navbar = () => {
       </nav>
 
       {isSearchOpen && (
-        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-2xl flex flex-col p-6 pt-[calc(2rem+env(safe-area-inset-top))] touch-none">
+        <div className="fixed inset-0 z-[100] bg-black flex flex-col p-6 pt-[calc(2rem+env(safe-area-inset-top))] touch-none">
           <div className="flex justify-end mb-12">
             <button onClick={() => setIsSearchOpen(false)} className="p-3 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-all">
               <X size={28} />
@@ -182,7 +182,7 @@ const Navbar = () => {
       <NotificationDrawer isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
 
       <AlertDialog open={isRestrictedOpen} onOpenChange={setIsRestrictedOpen}>
-        <AlertDialogContent className="bg-black/60 backdrop-blur-2xl border-white/10 rounded-[2rem]">
+        <AlertDialogContent className="bg-black border border-white/10 rounded-[2rem] shadow-2xl">
           <AlertDialogHeader>
             <div className="flex justify-center mb-4">
               <div className="w-16 h-16 bg-white/5 border border-white/10 flex items-center justify-center rounded-2xl rotate-12">

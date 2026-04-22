@@ -216,16 +216,16 @@ const Messages = () => {
       </main>
 
       <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
-        <AlertDialogContent className="bg-black/60 backdrop-blur-2xl border-white/10 rounded-[2rem]">
+        <AlertDialogContent className="bg-black border border-white/10 rounded-[2rem] shadow-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white font-black uppercase italic">{t.messages.deleteConv}</AlertDialogTitle>
             <AlertDialogDescription className="text-zinc-400 text-xs font-bold uppercase">{t.messages.deleteConvDesc}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex flex-col gap-2">
-            <AlertDialogAction onClick={handleDelete} className="rounded-full bg-white text-black font-black uppercase italic text-[10px] h-12 hover:bg-zinc-200 focus-visible:ring-0 focus-visible:ring-offset-0">
+            <AlertDialogAction onClick={handleDelete} className="rounded-full bg-white text-black font-black uppercase italic text-[10px] h-12 hover:bg-zinc-200 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-xl">
               Elimina
             </AlertDialogAction>
-            <AlertDialogCancel className="rounded-full border-white/10 text-white bg-transparent hover:bg-white/10 font-black uppercase italic text-[10px] h-12 mt-0 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0">
+            <AlertDialogCancel className="rounded-full border border-white/10 text-white bg-transparent hover:bg-white/10 font-black uppercase italic text-[10px] h-12 mt-0 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0">
               Annulla
             </AlertDialogCancel>
           </AlertDialogFooter>

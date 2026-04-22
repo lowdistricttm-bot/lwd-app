@@ -344,7 +344,7 @@ const Meets = () => {
       )}
 
       <AlertDialog open={isLocationAlertOpen} onOpenChange={setIsLocationAlertOpen}>
-        <AlertDialogContent className="bg-zinc-950 border-white/10 rounded-[2rem]">
+        <AlertDialogContent className="bg-black border border-white/10 rounded-[2rem] shadow-2xl">
           <AlertDialogHeader>
             <div className="flex justify-center mb-4">
               <div className="w-16 h-16 bg-white/5 border border-white/10 flex items-center justify-center rounded-2xl rotate-12">
@@ -363,7 +363,7 @@ const Meets = () => {
             >
               Vai al Profilo
             </AlertDialogAction>
-            <AlertDialogCancel className="rounded-full border-white/10 text-white hover:bg-white/5 font-black uppercase italic text-[10px] w-full h-14 mt-0 transition-all">
+            <AlertDialogCancel className="rounded-full border border-white/10 text-white hover:bg-white/5 font-black uppercase italic text-[10px] w-full h-14 mt-0 transition-all">
               Chiudi
             </AlertDialogCancel>
           </AlertDialogFooter>
