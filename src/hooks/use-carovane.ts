@@ -77,7 +77,8 @@ export const useCarovane = (eventId?: string) => {
         carovane_tappe: (c.carovane_tappe || []).sort((a: any, b: any) => a.order_index - b.order_index),
         is_joined: user ? c.carovane_partecipanti?.some((p: any) => p.user_id === user.id) : false
       })) as Carovana[];
-    }
+    },
+    staleTime: 0 // Assicura che i dati siano sempre considerati freschi per il refetch
   });
 
   const createCarovana = useMutation({
@@ -133,8 +134,10 @@ export const useCarovane = (eventId?: string) => {
 
       return carovana;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      // Invalida sia la lista generale che quella specifica dell'evento per aggiornamento immediato
       queryClient.invalidateQueries({ queryKey: ['carovane'] });
+      queryClient.invalidateQueries({ queryKey: ['carovane', variables.eventId] });
       showSuccess("Carovana creata! Run to the show!");
     },
     onError: (err: any) => showError(err.message)
@@ -164,9 +167,9 @@ export const useCarovane = (eventId?: string) => {
         return 'joined';
       }
     },
-    onSuccess: (res) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['carovane'] });
-      showSuccess(res === 'joined' ? "Ti sei unito alla carovana!" : "Hai lasciato la carovana.");
+      showSuccess("Stato partecipazione aggiornato!");
     },
     onError: (err: any) => showError(err.message)
   });
