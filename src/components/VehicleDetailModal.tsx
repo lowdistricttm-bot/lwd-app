@@ -12,6 +12,7 @@ import { Button } from './ui/button';
 import ImageLightbox from './ImageLightbox';
 import VehicleStats from './VehicleStats';
 import RankBadge from './RankBadge';
+import TrophyBadge from './TrophyBadge';
 
 interface VehicleDetailModalProps {
   isOpen: boolean;
@@ -96,6 +97,15 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicle, isOwnProfile, onLike, cu
                     <X size={24} />
                   </button>
                 </div>
+
+                {/* Trophies Section */}
+                {vehicle.trophies && vehicle.trophies.length > 0 && (
+                  <div className="flex flex-wrap gap-3 py-2">
+                    {vehicle.trophies.map((t: any) => (
+                      <TrophyBadge key={t.id} type={t.trophy_type} eventName={t.event_name} size="md" />
+                    ))}
+                  </div>
+                )}
 
                 <div className="space-y-4">
                   <div 

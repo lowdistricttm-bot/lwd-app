@@ -12,10 +12,12 @@ import ImageLightbox from './ImageLightbox';
 import VehicleLogbook from './VehicleLogbook';
 import StanceAnalyzer from './StanceAnalyzer';
 import VehicleDetailModal from './VehicleDetailModal';
+import AwardTrophyModal from './AwardTrophyModal';
 import RankBadge from './RankBadge';
+import TrophyBadge from './TrophyBadge';
 import { 
   Plus, Car, Trash2, Camera, Loader2, X, Edit3, Heart, 
-  Gauge, Book, Sparkles, ChevronRight, Calendar, CreditCard, GripVertical 
+  Gauge, Book, Sparkles, ChevronRight, Calendar, CreditCard, GripVertical, Trophy 
 } from 'lucide-react';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -32,7 +34,7 @@ interface MediaItem {
 const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProfile?: boolean }) => {
   const { vehicles, isLoading, addVehicle, updateVehicle, deleteVehicle, toggleLike } = useGarage(userId);
   const { t } = useTranslation();
-  const { role, canVote } = useAdmin(); 
+  const { role, isAdmin, canVote } = useAdmin(); 
   const { topScored, mostLiked } = useLeaderboards();
   
   const isProUser = role && role !== 'subscriber';
@@ -42,6 +44,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
   const [activeLogbook, setActiveLogbook] = useState<string | null>(null);
   const [activeAnalyzer, setActiveAnalyzer] = useState<{ url: string, id: string } | null>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [awardTrophyTarget, setAwardTrophyTarget] = useState<Vehicle | null>(null);
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   
@@ -294,6 +297,15 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                 </div>
 
                 <div className="absolute top-5 right-5 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  {isAdmin && (
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setAwardTrophyTarget(vehicle); }} 
+                      className="p-3 bg-yellow-500/80 backdrop-blur-md text-black rounded-full hover:bg-yellow-400 transition-all shadow-xl"
+                      title="Assegna Trofeo"
+                    >
+                      <Trophy size={18} />
+                    </button>
+                  )}
                   {isOwnProfile && isProUser && (
                     <>
                       <button 
@@ -329,6 +341,15 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
               </div>
 
               <div className="p-8">
+                {/* Trophies Preview */}
+                {vehicle.trophies && vehicle.trophies.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {vehicle.trophies.map((t: any) => (
+                      <TrophyBadge key={t.id} type={t.trophy_type} eventName={t.event_name} size="sm" />
+                    ))}
+                  </div>
+                )}
+
                 <div className="flex justify-between items-start mb-6">
                   <div className="space-y-3">
                     <h4 className="text-2xl font-black italic uppercase tracking-tighter leading-none">{vehicle.brand} {vehicle.model}</h4>
@@ -401,6 +422,14 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
             isOwnProfile={isOwnProfile}
             onLike={(id) => toggleLike.mutate(id)}
             currentUserId={currentUserId}
+          />
+        )}
+        {awardTrophyTarget && (
+          <AwardTrophyModal 
+            isOpen={!!awardTrophyTarget} 
+            onClose={() => setAwardTrophyTarget(null)} 
+            vehicleId={awardTrophyTarget.id} 
+            vehicleName={`${awardTrophyTarget.brand} ${awardTrophyTarget.model}`} 
           />
         )}
         {activeLogbook && (
