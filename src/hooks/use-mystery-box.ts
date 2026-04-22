@@ -15,6 +15,7 @@ export interface MysteryBox {
   included_product_ids: number[];
   has_golden_ticket: boolean;
   is_active: boolean;
+  created_at: string;
 }
 
 export const useMysteryBox = () => {
@@ -29,6 +30,8 @@ export const useMysteryBox = () => {
         .eq('is_active', true)
         .gt('expires_at', new Date().toISOString())
         .gt('remaining_quantity', 0)
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (error) return null;
@@ -36,24 +39,69 @@ export const useMysteryBox = () => {
     }
   });
 
-  const createOrUpdateBox = useMutation({
+  const { data: allBoxes } = useQuery({
+    queryKey: ['all-mystery-boxes'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('mystery_boxes')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as MysteryBox[];
+    }
+  });
+
+  const createBox = useMutation({
     mutationFn: async (boxData: Partial<MysteryBox>) => {
-      // Disattiva eventuali box precedenti
-      await supabase.from('mystery_boxes').update({ is_active: false }).eq('is_active', true);
+      // Disattiva eventuali box precedenti se la nuova è attiva
+      if (boxData.is_active) {
+        await supabase.from('mystery_boxes').update({ is_active: false }).eq('is_active', true);
+      }
 
       const { error } = await supabase
         .from('mystery_boxes')
         .insert([{
           ...boxData,
-          remaining_quantity: boxData.total_quantity,
-          is_active: true
+          remaining_quantity: boxData.total_quantity
         }]);
 
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['active-mystery-box'] });
-      showSuccess("Mystery Box attivata con successo!");
+      queryClient.invalidateQueries({ queryKey: ['all-mystery-boxes'] });
+      showSuccess("Mystery Box creata!");
+    },
+    onError: (err: any) => showError(err.message)
+  });
+
+  const updateBox = useMutation({
+    mutationFn: async (boxData: Partial<MysteryBox>) => {
+      const { id, ...updateData } = boxData;
+      const { error } = await supabase
+        .from('mystery_boxes')
+        .update(updateData)
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['active-mystery-box'] });
+      queryClient.invalidateQueries({ queryKey: ['all-mystery-boxes'] });
+      showSuccess("Mystery Box aggiornata!");
+    },
+    onError: (err: any) => showError(err.message)
+  });
+
+  const deleteBox = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('mystery_boxes').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['active-mystery-box'] });
+      queryClient.invalidateQueries({ queryKey: ['all-mystery-boxes'] });
+      showSuccess("Mystery Box eliminata.");
     },
     onError: (err: any) => showError(err.message)
   });
@@ -75,5 +123,5 @@ export const useMysteryBox = () => {
     }
   });
 
-  return { activeBox, isLoading, createOrUpdateBox, purchaseBox };
+  return { activeBox, allBoxes, isLoading, createBox, updateBox, deleteBox, purchaseBox };
 };
