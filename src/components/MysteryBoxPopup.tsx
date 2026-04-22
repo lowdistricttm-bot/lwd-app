@@ -137,7 +137,7 @@ const MysteryBoxPopup = () => {
 
               <Button 
                 onClick={handleAddToCart}
-                className="w-full bg-zinc-900 text-white hover:bg-zinc-800 h-16 rounded-full font-black uppercase italic tracking-widest shadow-2xl transition-all flex items-center justify-center gap-3 border border-white/5"
+                className="w-full bg-zinc-900 text-white hover:bg-zinc-800 h-16 rounded-full font-black uppercase italic text-[10px] tracking-[0.2em] shadow-2xl transition-all flex items-center justify-center gap-3 border border-white/5"
               >
                 <ShoppingCart size={20} />
                 Aggiungi al Carrello
