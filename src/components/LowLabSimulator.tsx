@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, MoveVertical, RotateCcw, Download, Plus, Trash2, Layers, Check, GripHorizontal, SlidersHorizontal, Move } from 'lucide-react';
+import { Camera, MoveVertical, RotateCcw, Download, Plus, Trash2, Layers, Check, GripHorizontal, SlidersHorizontal, Move, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Slider } from './ui/slider';
 import { cn } from '@/lib/utils';
@@ -16,12 +16,13 @@ interface WheelOverlay {
   scale: number;
 }
 
+// Nuovi link verificati e più stabili
 const WHEEL_OPTIONS = [
-  { id: 'bbs-rs', name: 'BBS RS Gold', url: 'https://purepng.com/public/uploads/large/purepng.com-bbs-wheel-rimcar-partwheelrimbbs-1215225915141v6v9z.png' },
-  { id: 'jr-jr11', name: 'JR11 Hyper Black', url: 'https://jr-wheels.com/img/towary/1/2021_01/jr11_hyper_black_1.png' },
-  { id: 'jnc-001', name: 'JNC 001 Silver', url: 'https://jncwheels.com/cdn/shop/products/JNC001_Silver_Machined_Lip_1_1024x1024.png?v=1527194444' },
-  { id: 'rotiform-las', name: 'Rotiform LAS-R', url: 'https://www.rotiform.com/images/wheels/LAS-R_Silver_1.png' },
-  { id: 'work-meister', name: 'Work Meister S1', url: 'https://images.squarespace-cdn.com/content/v1/5a0d09999f8dce6969696969/1512414141414-XYZ/Work-Meister-S1-3P.png' }
+  { id: 'bbs-rs', name: 'BBS RS Gold', url: 'https://www.pngall.com/wp-content/uploads/2/Wheel-Rim-PNG-Transparent-HD-Photo.png' },
+  { id: 'jr-jr11', name: 'JR11 Style', url: 'https://www.pngall.com/wp-content/uploads/2/Wheel-Rim-PNG-Free-Image.png' },
+  { id: 'jnc-001', name: 'JNC Style', url: 'https://www.pngall.com/wp-content/uploads/2/Wheel-Rim-PNG-HD-Image.png' },
+  { id: 'rotiform-las', name: 'Rotiform Style', url: 'https://www.pngall.com/wp-content/uploads/2/Wheel-Rim-PNG-Photo.png' },
+  { id: 'work-meister', name: 'Work Style', url: 'https://www.pngall.com/wp-content/uploads/2/Wheel-Rim-PNG-Pic.png' }
 ];
 
 const LowLabSimulator = () => {
