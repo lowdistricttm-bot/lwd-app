@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Trophy, User, Car, Loader2, Send, Search, ShieldCheck, Award } from 'lucide-react';
+import { X, Trophy, User, Car, Loader2, Send, Search, ShieldCheck, Award, Check } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -62,7 +62,7 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
     onClose();
   };
 
-  const inputClass = "bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest focus-visible:ring-white/20 transition-all";
+  const inputClass = "bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest focus-visible:ring-white/20 transition-all placeholder:text-zinc-700";
 
   return (
     <AnimatePresence>
@@ -89,16 +89,16 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
               <div className="space-y-6">
                 {/* Ricerca Utente */}
                 <div className="space-y-3">
-                  <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">1. Seleziona Vincitore</Label>
+                  <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4 italic">1. Seleziona Vincitore</Label>
                   {selectedUser ? (
-                    <div className="bg-white text-black p-4 rounded-2xl flex items-center justify-between shadow-xl">
+                    <div className="bg-zinc-900 border border-white/10 p-4 rounded-2xl flex items-center justify-between shadow-xl">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-200">
-                          {selectedUser.avatar_url ? <img src={selectedUser.avatar_url} className="w-full h-full object-cover" /> : <User size={20} className="m-auto h-full" />}
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-black border border-white/10">
+                          {selectedUser.avatar_url ? <img src={selectedUser.avatar_url} className="w-full h-full object-cover" /> : <User size={20} className="m-auto h-full text-zinc-700" />}
                         </div>
-                        <span className="text-sm font-black uppercase italic">@{selectedUser.username}</span>
+                        <span className="text-sm font-black uppercase italic text-white">@{selectedUser.username}</span>
                       </div>
-                      <button type="button" onClick={() => setSelectedUser(null)} className="p-2 hover:bg-black/5 rounded-full"><X size={16} /></button>
+                      <button type="button" onClick={() => setSelectedUser(null)} className="p-2 bg-white/5 rounded-full hover:bg-red-500/20 transition-colors"><X size={16} /></button>
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -110,9 +110,9 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
                         {filteredUsers.map(u => (
                           <button key={u.id} type="button" onClick={() => setSelectedUser(u)} className="p-3 bg-white/5 border border-white/5 rounded-xl flex items-center gap-3 hover:bg-white/10 transition-all">
                             <div className="w-8 h-8 rounded-full overflow-hidden bg-zinc-800 shrink-0">
-                              {u.avatar_url ? <img src={u.avatar_url} className="w-full h-full object-cover" /> : <User size={14} className="m-auto h-full" />}
+                              {u.avatar_url ? <img src={u.avatar_url} className="w-full h-full object-cover" /> : <User size={14} className="m-auto h-full text-zinc-700" />}
                             </div>
-                            <span className="text-[10px] font-black uppercase italic truncate">{u.username}</span>
+                            <span className="text-[10px] font-black uppercase italic truncate text-zinc-400">{u.username}</span>
                           </button>
                         ))}
                       </div>
@@ -122,8 +122,8 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
 
                 {/* Selezione Trofeo */}
                 <div className="space-y-3">
-                  <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">2. Scegli il Premio</Label>
-                  <div className="grid grid-cols-1 gap-2">
+                  <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4 italic">2. Scegli il Premio</Label>
+                  <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto no-scrollbar p-1">
                     {availableTrophies?.map(t => (
                       <button 
                         key={t.id} 
@@ -131,17 +131,17 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
                         onClick={() => setSelectedTrophy(t.id)}
                         className={cn(
                           "p-4 rounded-2xl border text-left transition-all flex items-center justify-between group",
-                          selectedTrophy === t.id ? "bg-white border-white text-black" : "bg-white/5 border-white/5 text-zinc-400 hover:bg-white/10"
+                          selectedTrophy === t.id ? "bg-white text-black border-white" : "bg-white/5 border-white/5 text-zinc-400 hover:bg-white/10"
                         )}
                       >
                         <div className="flex items-center gap-4">
                           <Trophy size={18} className={cn(selectedTrophy === t.id ? "text-black" : "text-yellow-500")} />
                           <div>
                             <p className="text-xs font-black uppercase italic">{t.title}</p>
-                            <p className="text-[8px] font-bold uppercase opacity-60">{t.event_name}</p>
+                            <p className={cn("text-[8px] font-bold uppercase", selectedTrophy === t.id ? "text-black/60" : "text-zinc-600")}>{t.event_name}</p>
                           </div>
                         </div>
-                        {selectedTrophy === t.id && <ShieldCheck size={18} />}
+                        {selectedTrophy === t.id && <Check size={18} strokeWidth={3} />}
                       </button>
                     ))}
                   </div>
@@ -150,7 +150,7 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
                 {/* Selezione Veicolo */}
                 {selectedUser && (
                   <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
-                    <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">3. Collega al Veicolo (Opzionale)</Label>
+                    <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4 italic">3. Collega al Veicolo (Opzionale)</Label>
                     {loadingVehicles ? (
                       <Loader2 className="animate-spin mx-auto text-zinc-500" />
                     ) : userVehicles.length > 0 ? (
@@ -162,7 +162,7 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
                             onClick={() => setSelectedVehicle(v.id)}
                             className={cn(
                               "p-3 rounded-xl border text-left transition-all flex items-center gap-3",
-                              selectedVehicle === v.id ? "bg-white border-white text-black" : "bg-white/5 border-white/5 text-zinc-400 hover:bg-white/10"
+                              selectedVehicle === v.id ? "bg-white text-black border-white" : "bg-white/5 border-white/5 text-zinc-400 hover:bg-white/10"
                             )}
                           >
                             <Car size={14} />
@@ -179,7 +179,7 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
                 <Button 
                   type="submit" 
                   disabled={awardTrophy.isPending || !selectedUser || !selectedTrophy}
-                  className="w-full bg-white text-black hover:bg-zinc-200 h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl mt-4"
+                  className="w-full bg-zinc-900 text-white border border-white/10 hover:bg-zinc-800 h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl mt-4"
                 >
                   {awardTrophy.isPending ? <Loader2 className="animate-spin" /> : <><Send size={18} className="mr-2 -rotate-12" /> Conferma Assegnazione</>}
                 </Button>

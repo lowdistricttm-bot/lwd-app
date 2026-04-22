@@ -150,7 +150,10 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
           {isOwnProfile ? "Il Mio Garage" : "Garage"}
         </h3>
         {isOwnProfile && (
-          <Button onClick={handleOpenAdd} className="bg-white text-black rounded-full h-10 px-6 font-black uppercase italic text-[10px] shadow-xl hover:scale-105 transition-all">
+          <Button 
+            onClick={handleOpenAdd} 
+            className="bg-zinc-900 text-white border border-white/10 rounded-full h-10 px-6 font-black uppercase italic text-[10px] shadow-xl hover:bg-zinc-800 transition-all"
+          >
             <Plus size={16} className="mr-2" /> Aggiungi
           </Button>
         )}
@@ -204,7 +207,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
               </div>
 
               <div className="space-y-4">
-                <div className="flex justify-between items-center px-4">
+                <div className="flex items-center justify-between px-4">
                   <Label className="text-[9px] font-black uppercase text-zinc-500">Foto Progetto (Max 6)</Label>
                   <span className="text-[8px] font-black uppercase text-zinc-600 italic">Trascina per ordinare</span>
                 </div>
@@ -253,7 +256,11 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                 <input type="file" ref={fileInputRef} className="hidden" multiple accept="image/*" onChange={handleFileChange} />
               </div>
               
-              <Button type="submit" disabled={addVehicle.isPending || updateVehicle.isPending} className="w-full bg-white text-black rounded-full h-16 font-black uppercase italic tracking-widest shadow-2xl">
+              <Button 
+                type="submit" 
+                disabled={addVehicle.isPending || updateVehicle.isPending} 
+                className="w-full bg-zinc-900 text-white border border-white/10 rounded-full h-16 font-black uppercase italic tracking-widest shadow-2xl hover:bg-zinc-800 transition-all"
+              >
                 {(addVehicle.isPending || updateVehicle.isPending) ? <Loader2 className="animate-spin" /> : editingVehicle ? 'Aggiorna Veicolo' : 'Salva nel Garage'}
               </Button>
             </form>
@@ -283,7 +290,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                 
                 <div className="absolute top-5 left-5 flex flex-col gap-2">
                   {rankInfo && <RankBadge rank={rankInfo.rank} type={rankInfo.type} />}
-                  <span className="bg-white/90 backdrop-blur-md text-black text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full shadow-2xl w-fit">
+                  <span className="bg-zinc-900/80 backdrop-blur-md text-white border border-white/10 text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full shadow-2xl w-fit">
                     {vehicle.suspension_type}
                   </span>
                   {vehicle.stance_score && (
@@ -345,7 +352,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                       </div>
 
                       {vehicle.license_plate && canSeePlate && (
-                        <div className="flex items-center gap-2 bg-white text-black px-2.5 py-1 rounded-lg w-fit shadow-lg">
+                        <div className="flex items-center gap-2 bg-zinc-800 text-white border border-white/10 px-2.5 py-1 rounded-lg w-fit shadow-lg">
                           <CreditCard size={12} />
                           <span className="text-[10px] font-black uppercase italic tracking-widest">{vehicle.license_plate}</span>
                         </div>
@@ -387,7 +394,14 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
           <div className="col-span-full py-24 text-center bg-zinc-900/20 border border-dashed border-white/10 rounded-[3rem]">
             <Car size={48} className="mx-auto text-zinc-800 mb-6" />
             <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Il garage è vuoto. Inizia a caricare i tuoi progetti.</p>
-            {isOwnProfile && <Button onClick={handleOpenAdd} className="mt-8 bg-white text-black rounded-full px-8 h-12 font-black uppercase italic">Aggiungi Veicolo</Button>}
+            {isOwnProfile && (
+              <Button 
+                onClick={handleOpenAdd} 
+                className="mt-8 bg-zinc-900 text-white border border-white/10 rounded-full px-8 h-12 font-black uppercase italic hover:bg-zinc-800 transition-all"
+              >
+                Aggiungi Veicolo
+              </Button>
+            )}
           </div>
         )}
       </div>
