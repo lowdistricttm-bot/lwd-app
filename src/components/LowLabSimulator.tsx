@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, MoveVertical, RotateCcw, Download, Sparkles, Loader2, Target, Ruler } from 'lucide-react';
+import { Camera, MoveVertical, RotateCcw, Sparkles, Target, Ruler, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { Slider } from './ui/slider';
 import { Label } from './ui/label';
@@ -60,16 +60,25 @@ const LowLabSimulator = () => {
     showSuccess("Simulatore resettato.");
   };
 
-  // Funzione per generare la maschera CSS corretta
-  // Usa "destination-out" logico: disegnamo due cerchi trasparenti su uno sfondo nero
+  /**
+   * Logica della Maschera:
+   * Vogliamo che il livello superiore (la scocca che si muove) sia TRASPARENTE dove ci sono le ruote.
+   * Usiamo radial-gradient per creare due cerchi trasparenti su uno sfondo nero (opaco).
+   */
   const getMaskStyle = () => {
     if (!image) return {};
+    
+    // Creiamo la stringa della maschera: due gradienti radiali trasparenti
+    const mask = `
+      radial-gradient(circle ${wheels.front.r}% at ${wheels.front.x}% ${wheels.front.y}%, transparent 98%, black 100%),
+      radial-gradient(circle ${wheels.rear.r}% at ${wheels.rear.x}% ${wheels.rear.y}%, transparent 98%, black 100%)
+    `;
+
     return {
-      WebkitMaskImage: `radial-gradient(circle ${wheels.front.r}% at ${wheels.front.x}% ${wheels.front.y}%, transparent 98%, black 100%), 
-                        radial-gradient(circle ${wheels.rear.r}% at ${wheels.rear.x}% ${wheels.rear.y}%, transparent 98%, black 100%)`,
-      maskImage: `radial-gradient(circle ${wheels.front.r}% at ${wheels.front.x}% ${wheels.front.y}%, transparent 98%, black 100%), 
-                  radial-gradient(circle ${wheels.rear.r}% at ${wheels.rear.x}% ${wheels.rear.y}%, transparent 98%, black 100%)`,
-      WebkitMaskComposite: 'destination-in',
+      WebkitMaskImage: mask,
+      maskImage: mask,
+      // 'intersect' assicura che dove i gradienti si sovrappongono, rimanga la trasparenza
+      WebkitMaskComposite: 'source-in, xor', 
       maskComposite: 'intersect',
       backgroundImage: `url(${image})`,
       backgroundSize: 'contain',
@@ -100,26 +109,28 @@ const LowLabSimulator = () => {
         ref={containerRef}
         className="relative aspect-video md:aspect-[21/9] bg-zinc-950 rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl touch-none select-none"
       >
-        {/* LIVELLO 1: RUOTE (Fisse sullo sfondo) */}
+        {/* LIVELLO 1: BACKGROUND STATICO (Contiene le ruote originali che non si muovono) */}
         <div 
-          className="absolute inset-0 w-full h-full z-0 opacity-40"
+          className="absolute inset-0 w-full h-full z-0"
           style={{ 
             backgroundImage: `url(${image})`,
             backgroundSize: 'contain',
             backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat'
+            backgroundRepeat: 'no-repeat',
+            opacity: 0.9 // Leggera trasparenza per profondità
           }}
         />
 
-        {/* LIVELLO 2: SCOCCA (Si muove e ha i buchi) */}
+        {/* LIVELLO 2: SCOCCA MOBILE (Questa è l'immagine che scende) */}
+        {/* Ha i "buchi" dove ci sono le ruote, quindi scendendo copre le ruote del livello sotto */}
         <motion.div 
           className="absolute inset-0 w-full h-full z-20"
           animate={{ y: drop }}
-          transition={{ type: 'spring', damping: 40, stiffness: 150 }}
+          transition={{ type: 'spring', damping: 30, stiffness: 100 }}
           style={getMaskStyle()}
         />
 
-        {/* LIVELLO 3: MIRINI (Solo per calibrazione) */}
+        {/* LIVELLO 3: MIRINI (Solo per calibrazione, visibili solo a drop 0) */}
         <div className="absolute inset-0 z-40 pointer-events-none">
           <AnimatePresence>
             {drop === 0 && (
@@ -188,7 +199,7 @@ const LowLabSimulator = () => {
               <span className="text-3xl font-black italic text-white">-{Math.round(drop / 1.2)}<span className="text-xs ml-1">mm</span></span>
             </div>
           </div>
-          <Slider value={[drop]} max={120} onValueChange={(val) => setDrop(val[0])} className="py-4" />
+          <Slider value={[drop]} max={150} onValueChange={(val) => setDrop(val[0])} className="py-4" />
         </div>
 
         <div className="bg-white/5 border border-white/10 p-6 rounded-[2.5rem] space-y-6 shadow-2xl">
