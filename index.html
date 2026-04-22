@@ -36,6 +36,9 @@
   </head>
 
   <body>
+    <!-- Blocco Safe Area Globale e Assoluto (z-index massimo) -->
+    <div style="position: fixed; top: 0; left: 0; right: 0; height: env(safe-area-inset-top); background-color: #000; z-index: 2147483647; pointer-events: none;"></div>
+    
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

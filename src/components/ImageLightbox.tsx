@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Download, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAdmin } from '@/hooks/use-admin';
@@ -70,7 +71,9 @@ const ImageLightbox = ({ images, initialIndex, isOpen, onClose }: ImageLightboxP
     }
   };
 
-  return (
+  // Usiamo createPortal per uscire dal contenitore della pagina ed evitare 
+  // che la bottom bar o la navbar sovrascrivano lo z-index.
+  return createPortal(
     <AnimatePresence>
       {isOpen && images.length > 0 && (
         <motion.div
@@ -78,11 +81,11 @@ const ImageLightbox = ({ images, initialIndex, isOpen, onClose }: ImageLightboxP
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 z-[300] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 md:p-10 touch-none"
+          className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 md:p-10 touch-none"
         >
-          {/* Header Controls - Calcolato con safe-area */}
+          {/* Header Controls - Calcolato per stare sotto la Safe Area */}
           <div 
-            className="absolute right-6 flex items-center gap-4 z-[310]"
+            className="absolute right-6 flex items-center gap-4 z-[10000]"
             style={{ top: 'calc(1.5rem + env(safe-area-inset-top))' }}
           >
             <span className="text-[10px] font-black text-white/40 uppercase tracking-widest mr-4">
@@ -110,13 +113,13 @@ const ImageLightbox = ({ images, initialIndex, isOpen, onClose }: ImageLightboxP
             <>
               <button
                 onClick={handlePrev}
-                className="hidden md:flex absolute left-6 p-4 bg-white/5 hover:bg-white text-white hover:text-black rounded-full transition-all z-[310]"
+                className="hidden md:flex absolute left-6 p-4 bg-white/5 hover:bg-white text-white hover:text-black rounded-full transition-all z-[10000]"
               >
                 <ChevronLeft size={32} />
               </button>
               <button
                 onClick={handleNext}
-                className="hidden md:flex absolute right-6 p-4 bg-white/5 hover:bg-white text-white hover:text-black rounded-full transition-all z-[310]"
+                className="hidden md:flex absolute right-6 p-4 bg-white/5 hover:bg-white text-white hover:text-black rounded-full transition-all z-[10000]"
               >
                 <ChevronRight size={32} />
               </button>
@@ -152,7 +155,8 @@ const ImageLightbox = ({ images, initialIndex, isOpen, onClose }: ImageLightboxP
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
 

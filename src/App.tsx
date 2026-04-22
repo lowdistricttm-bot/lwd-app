@@ -44,16 +44,6 @@ const AppContent = () => {
   
   return (
     <>
-      {/* 
-        Sfondo solido nero globale per la Status Bar di iOS. 
-        Avendo z-[99999] rimarrà sempre in primo piano, impedendo a QUALSIASI modal,
-        cassetto o pagina di finire dietro l'orario o la batteria.
-      */}
-      <div 
-        className="fixed top-0 left-0 right-0 z-[99999] bg-black pointer-events-none" 
-        style={{ height: 'env(safe-area-inset-top)' }} 
-      />
-
       {/* Header Fisso Globale (gestisce da solo il suo nascondimento) */}
       <Navbar />
       
