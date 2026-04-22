@@ -57,25 +57,25 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicle, isOwnProfile, onLike, cu
     <>
       <AnimatePresence>
         {isOpen && (
-          <>
+          <div className="fixed inset-0 z-[200] flex items-end md:items-center justify-center p-0 md:p-6 pointer-events-none">
             <motion.div 
               initial={{ opacity: 0 }} 
               animate={{ opacity: 1 }} 
               exit={{ opacity: 0 }} 
               onClick={onClose} 
-              className="fixed inset-0 bg-black/80 z-[200] touch-none" 
+              className="absolute inset-0 bg-black/80 pointer-events-auto touch-none" 
             />
             <motion.div 
-              initial={{ y: '100%' }} 
-              animate={{ y: 0 }} 
-              exit={{ y: '100%' }} 
+              initial={{ y: '100%', opacity: 0 }} 
+              animate={{ y: 0, opacity: 1 }} 
+              exit={{ y: '100%', opacity: 0 }} 
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-x-0 bottom-0 z-[201] bg-black border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[92dvh] overflow-y-auto shadow-2xl"
-              style={{ touchAction: 'pan-y', overscrollBehavior: 'contain' }}
+              className="relative w-full max-h-[92dvh] md:max-h-[85vh] md:max-w-2xl bg-black border-t md:border border-white/10 p-6 rounded-t-[2.5rem] md:rounded-[2.5rem] overflow-y-auto shadow-2xl pointer-events-auto"
+              style={{ overscrollBehavior: 'contain' }}
             >
-              <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
+              <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0 md:hidden" />
               
-              <div className="max-w-2xl mx-auto space-y-8 pb-[calc(4rem+env(safe-area-inset-bottom))]">
+              <div className="space-y-8 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-6">
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -104,7 +104,7 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicle, isOwnProfile, onLike, cu
                       {vehicle.brand} {vehicle.model}
                     </h3>
                   </div>
-                  <button onClick={onClose} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors">
+                  <button onClick={onClose} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors shrink-0">
                     <X size={24} />
                   </button>
                 </div>
@@ -215,7 +215,7 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicle, isOwnProfile, onLike, cu
                 </div>
               </div>
             </motion.div>
-          </>
+          </div>
         )}
       </AnimatePresence>
 

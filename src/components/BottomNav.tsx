@@ -31,20 +31,16 @@ const BottomNav = () => {
 
   return (
     <div 
-      className="fixed bottom-0 left-0 right-0 z-[999] bg-black border-t border-white/10 select-none touch-none"
+      className="fixed bottom-0 left-0 right-0 z-[999] bg-black border-t border-white/10 select-none touch-none md:bottom-6 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-fit md:rounded-full md:border md:bg-black/80 md:backdrop-blur-xl md:px-6 md:shadow-2xl md:py-2 transition-all duration-300"
       data-no-swipe="true"
       style={{ 
-        height: '38px',
         minHeight: '38px',
-        maxHeight: '38px',
-        paddingBottom: '0px',
-        marginBottom: '0px',
         WebkitUserSelect: 'none',
         touchAction: 'none'
       }}
     >
       <div 
-        className="relative flex items-center justify-around h-full w-full max-w-2xl mx-auto px-1 sm:px-2"
+        className="relative flex items-center justify-around h-full w-full md:w-auto md:gap-8 max-w-2xl mx-auto px-1 sm:px-2 py-2 md:py-0"
       >
         {items.map((item, i) => {
           const isActive = activeIndex === i;
@@ -54,7 +50,7 @@ const BottomNav = () => {
               to={item.href}
               className={cn(
                 "flex-1 flex flex-col items-center justify-center h-full relative z-10 transition-colors duration-300",
-                isActive ? "text-white" : "text-zinc-600"
+                isActive ? "text-white" : "text-zinc-600 hover:text-zinc-400"
               )}
               onClick={() => triggerHaptic(10)}
             >

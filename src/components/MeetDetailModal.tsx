@@ -60,26 +60,26 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
+        <div className="fixed inset-0 z-[200] flex items-end md:items-center justify-center p-0 md:p-6 pointer-events-none">
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
-            onClick={onClose} className="fixed inset-0 bg-black/80 z-[200] touch-none" 
+            onClick={onClose} className="absolute inset-0 bg-black/80 pointer-events-auto touch-none" 
           />
           <motion.div 
-            initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} 
+            initial={{ y: '100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: '100%', opacity: 0 }} 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[201] bg-black border-t border-white/10 p-6 rounded-t-[2.5rem] h-[100dvh] overflow-y-auto shadow-2xl"
+            className="relative w-full max-h-[100dvh] md:max-h-[85vh] md:max-w-2xl bg-black border-t md:border border-white/10 p-6 rounded-t-[2.5rem] md:rounded-[2.5rem] overflow-y-auto shadow-2xl pointer-events-auto"
             style={{ 
               touchAction: 'pan-y', 
               overscrollBehavior: 'contain',
               paddingTop: 'calc(2rem + env(safe-area-inset-top))'
             }}
           >
-            <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
+            <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0 md:hidden" />
             
-            <div className="max-w-2xl mx-auto space-y-8 pb-10">
+            <div className="space-y-8 pb-10">
               <div className="flex justify-between items-start">
-                <div className="space-y-2">
+                <div className="space-y-2 pr-4">
                   <div className="flex gap-2">
                     <span className="bg-white text-black text-[8px] font-black uppercase px-2 py-1 italic rounded-lg shadow-lg">
                       INCONTRO COMMUNITY
@@ -94,7 +94,7 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
                     {meet.title}
                   </h3>
                 </div>
-                <button onClick={onClose} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors">
+                <button onClick={onClose} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors shrink-0">
                   <X size={24} />
                 </button>
               </div>
@@ -156,7 +156,7 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
                             <div className="w-full h-full flex items-center justify-center text-zinc-700"><User size={16} /></div>
                           )}
                         </div>
-                        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-white text-black text-[7px] font-black uppercase px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-white text-black text-[7px] font-black uppercase px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
                           {p.profiles?.username}
                         </div>
                       </button>
@@ -203,7 +203,7 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
                       "flex-1 h-16 rounded-full font-black uppercase italic text-[10px] tracking-widest transition-all shadow-xl flex items-center justify-center gap-3 border",
                       meet.is_participating 
                         ? "bg-zinc-800 text-white border-white/10 hover:bg-red-600 hover:border-red-600" 
-                        : "bg-white text-black border-white hover:bg-zinc-200"
+                        : "bg-white text-black border-white hover:bg-zinc-200 hover:scale-105"
                     )}
                   >
                     {toggleParticipation.isPending ? (
@@ -218,7 +218,7 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
                   <Button 
                     onClick={handleOpenMap}
                     variant="outline"
-                    className="flex-1 h-16 rounded-full font-black uppercase italic text-[10px] tracking-widest border-white/10 text-white hover:bg-white/5 flex items-center justify-center gap-3"
+                    className="flex-1 h-16 rounded-full font-black uppercase italic text-[10px] tracking-widest border-white/10 text-white hover:bg-white/5 flex items-center justify-center gap-3 hover:scale-105 transition-transform"
                   >
                     <Navigation size={18} />
                     PORTAMI LÌ
@@ -235,7 +235,7 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
               </div>
             </div>
           </motion.div>
-        </>
+        </div>
       )}
     </AnimatePresence>
   );

@@ -120,7 +120,7 @@ const Navbar = () => {
         style={{ top: 'env(safe-area-inset-top)' }}
         data-no-swipe="true"
       >
-        <div className="h-16 px-6 flex items-center justify-between">
+        <div className="h-16 px-6 flex items-center justify-between max-w-7xl mx-auto w-full">
           <div className="flex-1 flex items-center gap-1">
             <button onClick={() => setIsSearchOpen(true)} className="p-2.5 text-zinc-400 hover:text-white transition-colors rounded-full hover:bg-white/5">
               <Search size={20} />
@@ -166,12 +166,12 @@ const Navbar = () => {
 
       {isSearchOpen && (
         <div className="fixed inset-0 z-[100] bg-black flex flex-col p-6 pt-[calc(2rem+env(safe-area-inset-top))] touch-none">
-          <div className="flex justify-end mb-12">
+          <div className="flex justify-end mb-12 max-w-7xl mx-auto w-full">
             <button onClick={() => setIsSearchOpen(false)} className="p-3 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-all">
               <X size={28} />
             </button>
           </div>
-          <form onSubmit={handleSearch} className="max-w-2xl mx-auto w-full">
+          <form onSubmit={handleSearch} className="max-w-4xl mx-auto w-full mt-10">
             <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-4 italic">Cerca nel District</h2>
             <Input placeholder="COSA STAI CERCANDO?" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-transparent border-none text-4xl md:text-6xl font-black uppercase italic tracking-tighter p-0 h-auto focus-visible:ring-0 placeholder:text-zinc-900" />
           </form>

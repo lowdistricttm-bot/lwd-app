@@ -130,7 +130,7 @@ const Events = () => {
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent">
       <Navbar />
-      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-6 max-w-4xl mx-auto w-full">
+      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-6 max-w-7xl mx-auto w-full">
         <header className="mb-12 flex items-end justify-between">
           <div className="min-w-0 flex-1">
             <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">{t.events.subtitle}</h2>
@@ -144,7 +144,7 @@ const Events = () => {
         {eventsLoading || appsLoading || authLoading || loadingDirectCarovana ? (
           <div className="flex justify-center py-20"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>
         ) : (
-          <div className="space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {events?.map((event) => {
               const existingApp = userApps?.find(app => app.event_id === event.id);
               const getStatusText = () => {
@@ -154,51 +154,49 @@ const Events = () => {
               };
 
               return (
-                <motion.div key={event.id} className="bg-black border border-white/10 rounded-[2.5rem] overflow-hidden group hover:border-white/20 transition-all duration-500">
-                  <div className="flex flex-col md:flex-row">
-                    {event.image_url && (
-                      <div className="md:w-56 h-56 md:h-auto shrink-0 overflow-hidden">
-                        <img src={event.image_url} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt={event.title} />
-                      </div>
-                    )}
-                    <div className="flex-1 p-8 flex flex-col items-center justify-center text-center gap-8 min-w-0">
-                      <div className="space-y-4 w-full">
-                        <span className={cn(
-                          "text-[8px] font-black uppercase px-3 py-1 italic rounded-full inline-flex items-center gap-1.5 transition-all duration-300 border border-white/5",
-                          existingApp?.status === 'pending' ? "bg-zinc-800 text-zinc-400" : 
-                          existingApp?.status === 'approved' ? "bg-white text-black" : 
-                          existingApp?.status === 'rejected' ? "bg-zinc-700 text-white" :
-                          event.status === 'open' ? "bg-green-600 text-white" : 
-                          event.status === 'closed' ? "bg-red-600 text-white" :
-                          event.status === 'soon' ? "bg-white text-black animate-pulse" :
-                          "bg-zinc-800 text-zinc-400"
-                        )}>
-                          {existingApp ? <Clock size={10} /> : <Calendar size={10} />}
-                          {existingApp ? `${t.events.manageApp.status}: ${existingApp.status.toUpperCase()}` : getStatusText()}
-                        </span>
-                        
-                        <div className="w-full overflow-x-auto no-scrollbar">
-                          <h3 className="text-[clamp(18px,4vw,24px)] md:text-2xl font-black italic uppercase tracking-tight whitespace-nowrap px-1">
-                            {event.title}
-                          </h3>
-                        </div>
-
-                        <div className="flex flex-wrap justify-center gap-6 text-[10px] font-black uppercase text-zinc-500">
-                          <span className="flex items-center gap-1.5"><MapPin size={14} /> {event.location}</span>
-                          <span className="flex items-center gap-1.5"><Calendar size={14} /> {formatDateRange(event.date, event.end_date)}</span>
-                        </div>
-                      </div>
+                <motion.div key={event.id} className="bg-black border border-white/10 rounded-[2.5rem] overflow-hidden group hover:border-white/20 transition-all duration-500 flex flex-col">
+                  {event.image_url && (
+                    <div className="w-full h-56 md:h-64 shrink-0 overflow-hidden">
+                      <img src={event.image_url} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt={event.title} />
+                    </div>
+                  )}
+                  <div className="flex-1 p-8 flex flex-col items-center justify-center text-center gap-8 min-w-0">
+                    <div className="space-y-4 w-full">
+                      <span className={cn(
+                        "text-[8px] font-black uppercase px-3 py-1 italic rounded-full inline-flex items-center gap-1.5 transition-all duration-300 border border-white/5",
+                        existingApp?.status === 'pending' ? "bg-zinc-800 text-zinc-400" : 
+                        existingApp?.status === 'approved' ? "bg-white text-black" : 
+                        existingApp?.status === 'rejected' ? "bg-zinc-700 text-white" :
+                        event.status === 'open' ? "bg-green-600 text-white" : 
+                        event.status === 'closed' ? "bg-red-600 text-white" :
+                        event.status === 'soon' ? "bg-white text-black animate-pulse" :
+                        "bg-zinc-800 text-zinc-400"
+                      )}>
+                        {existingApp ? <Clock size={10} /> : <Calendar size={10} />}
+                        {existingApp ? `${t.events.manageApp.status}: ${existingApp.status.toUpperCase()}` : getStatusText()}
+                      </span>
                       
-                      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
-                        <button onClick={() => { setViewingEvent(event); setActiveViewTab('info'); }} className={cn(btnBaseClass, "bg-white/10 border-white/10 text-white hover:bg-white/20")}>{t.events.viewEvent} <ChevronRight size={14} /></button>
-                        {existingApp ? (
-                          <button onClick={() => setManageApp(existingApp)} className={cn(btnBaseClass, "bg-zinc-800 text-white border-white/10 hover:bg-zinc-700")}>{t.events.manage} <Settings2 size={14} /></button>
-                        ) : (
-                          <button onClick={() => { if(!user) navigate('/login'); else setSelectedEvent(event); }} disabled={event.status !== 'open'} className={cn(btnBaseClass, event.status === 'open' ? "bg-white text-black border-white/20 hover:scale-105" : "bg-zinc-900 text-zinc-600 cursor-not-allowed border-transparent")}>
-                            {!user && <Lock size={12} />} {t.events.apply} <ChevronRight size={14} />
-                          </button>
-                        )}
+                      <div className="w-full overflow-x-auto no-scrollbar">
+                        <h3 className="text-[clamp(18px,4vw,24px)] md:text-2xl font-black italic uppercase tracking-tight whitespace-nowrap px-1">
+                          {event.title}
+                        </h3>
                       </div>
+
+                      <div className="flex flex-wrap justify-center gap-6 text-[10px] font-black uppercase text-zinc-500">
+                        <span className="flex items-center gap-1.5"><MapPin size={14} /> {event.location}</span>
+                        <span className="flex items-center gap-1.5"><Calendar size={14} /> {formatDateRange(event.date, event.end_date)}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full mt-auto">
+                      <button onClick={() => { setViewingEvent(event); setActiveViewTab('info'); }} className={cn(btnBaseClass, "bg-white/10 border-white/10 text-white hover:bg-white/20")}>{t.events.viewEvent} <ChevronRight size={14} /></button>
+                      {existingApp ? (
+                        <button onClick={() => setManageApp(existingApp)} className={cn(btnBaseClass, "bg-zinc-800 text-white border-white/10 hover:bg-zinc-700")}>{t.events.manage} <Settings2 size={14} /></button>
+                      ) : (
+                        <button onClick={() => { if(!user) navigate('/login'); else setSelectedEvent(event); }} disabled={event.status !== 'open'} className={cn(btnBaseClass, event.status === 'open' ? "bg-white text-black border-white/20 hover:scale-105" : "bg-zinc-900 text-zinc-600 cursor-not-allowed border-transparent")}>
+                          {!user && <Lock size={12} />} {t.events.apply} <ChevronRight size={14} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </motion.div>
@@ -231,7 +229,7 @@ const Events = () => {
                 animate={{ y: 0 }} 
                 exit={{ y: '100%' }} 
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="fixed inset-x-0 bottom-0 z-[151] bg-black border-t border-white/10 p-6 pb-12 rounded-t-[2.5rem] h-[100dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+                className="fixed inset-x-0 bottom-0 md:mx-auto md:max-w-2xl md:border-x md:border-t md:border-white/10 z-[151] bg-black border-t border-white/10 p-6 pb-12 rounded-t-[2.5rem] h-[100dvh] md:h-[90dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
                 style={{ 
                   overscrollBehavior: 'contain',
                   paddingTop: 'calc(2rem + env(safe-area-inset-top))'
@@ -348,7 +346,7 @@ const Events = () => {
                 animate={{ y: 0 }} 
                 exit={{ y: '100%' }} 
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="fixed inset-x-0 bottom-0 z-[151] bg-black border-t border-white/10 p-6 pb-12 rounded-t-[2.5rem] h-[100dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+                className="fixed inset-x-0 bottom-0 md:mx-auto md:max-w-2xl md:border-x md:border-t md:border-white/10 z-[151] bg-black border-t border-white/10 p-6 pb-12 rounded-t-[2.5rem] h-[100dvh] md:h-[90dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
                 style={{ 
                   overscrollBehavior: 'contain',
                   paddingTop: 'calc(2rem + env(safe-area-inset-top))'

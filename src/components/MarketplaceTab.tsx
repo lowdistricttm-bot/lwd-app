@@ -54,14 +54,14 @@ const MarketplaceTab = ({ userId, isOwnProfile }: { userId: string, isOwnProfile
           <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Non hai ancora pubblicato annunci nel Marketplace.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {items?.map((item) => (
             <motion.div 
               key={item.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               onClick={() => setSelectedItem(item)}
-              className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 p-4 rounded-[2rem] group hover:border-white/20 transition-all cursor-pointer"
+              className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 p-4 rounded-[2rem] group hover:border-white/20 transition-all cursor-pointer flex flex-col"
             >
               <div className="flex gap-5">
                 <div className="w-24 h-24 bg-zinc-950 rounded-2xl overflow-hidden shrink-0 border border-white/5">
@@ -74,7 +74,7 @@ const MarketplaceTab = ({ userId, isOwnProfile }: { userId: string, isOwnProfile
                 
                 <div className="flex-1 min-w-0 flex flex-col justify-center">
                   <div className="flex justify-between items-start mb-1">
-                    <h4 className="text-sm font-black italic uppercase truncate pr-4">{item.title}</h4>
+                    <h4 className="text-sm font-black italic uppercase truncate pr-4 text-white">{item.title}</h4>
                     <span className="text-xs font-black italic text-white shrink-0">{item.price} €</span>
                   </div>
                   <p className="text-[8px] font-bold uppercase text-zinc-500 tracking-widest mb-3">

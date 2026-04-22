@@ -316,14 +316,13 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {vehicles?.map((vehicle) => {
           const isPublic = vehicle.profiles?.license_plate_privacy === 'public';
           const canSeePlate = isOwnProfile || canVote || isPublic;
           const mainImage = vehicle.images?.[0] || vehicle.image_url;
           const rankInfo = getVehicleRank(vehicle.id);
           
-          // Prendi solo l'ultimo trofeo assegnato
           const latestTrophy = vehicle.user_trophies && vehicle.user_trophies.length > 0
             ? [...vehicle.user_trophies].sort((a, b) => new Date(b.awarded_at).getTime() - new Date(a.awarded_at).getTime())[0]
             : null;
@@ -332,9 +331,9 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
             <motion.div 
               key={vehicle.id} 
               onClick={() => setSelectedVehicle(vehicle)}
-              className="bg-white/5 backdrop-blur-md border border-white/10 rounded-[2.5rem] overflow-hidden group hover:border-white/20 transition-all duration-500 shadow-2xl cursor-pointer"
+              className="bg-zinc-900/40 backdrop-blur-md border border-white/5 rounded-[2.5rem] overflow-hidden group hover:border-white/20 transition-all duration-500 shadow-2xl cursor-pointer flex flex-col"
             >
-              <div className="aspect-video relative overflow-hidden">
+              <div className="aspect-video relative overflow-hidden bg-zinc-950 shrink-0">
                 {mainImage ? (
                   <img src={mainImage} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-1000 group-hover:scale-110" alt={vehicle.model} />
                 ) : (
@@ -343,12 +342,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                 
                 <div className="absolute top-5 left-5 flex flex-col gap-2">
                   {rankInfo && <RankBadge rank={rankInfo.rank} type={rankInfo.type} />}
-                  
-                  {/* Ultimo Trofeo come barra orizzontale */}
-                  {latestTrophy && (
-                    <TrophyBar trophy={latestTrophy.trophies} />
-                  )}
-
+                  {latestTrophy && <TrophyBar trophy={latestTrophy.trophies} />}
                   <span className="bg-black/80 backdrop-blur-md text-white border border-white/10 text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full shadow-2xl w-fit">
                     {vehicle.suspension_type}
                   </span>
@@ -384,23 +378,23 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                   <button 
                     onClick={(e) => { e.stopPropagation(); toggleLike.mutate(vehicle.id); }}
                     className={cn(
-                      "flex items-center gap-2 px-4 py-2 backdrop-blur-md border rounded-full transition-all shadow-2xl",
+                      "flex items-center gap-2 px-3 py-1.5 backdrop-blur-md border rounded-full transition-all",
                       vehicle.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-black/40 border-white/10 text-white hover:bg-white/20"
                     )}
                   >
-                    <Heart size={14} fill={vehicle.is_liked ? "currentColor" : "none"} />
-                    <span className="text-[10px] font-black">{vehicle.likes_count || 0}</span>
+                    <Heart size={12} fill={vehicle.is_liked ? "currentColor" : "none"} />
+                    <span className="text-[9px] font-black">{vehicle.likes_count || 0}</span>
                   </button>
                 </div>
               </div>
 
-              <div className="p-8">
+              <div className="p-6 md:p-8 flex flex-col flex-1">
                 <div className="flex justify-between items-start mb-6">
-                  <div className="space-y-3">
-                    <h4 className="text-2xl font-black italic uppercase tracking-tighter leading-none">{vehicle.brand} {vehicle.model}</h4>
+                  <div className="space-y-3 min-w-0 pr-4">
+                    <h4 className="text-2xl font-black italic uppercase tracking-tighter leading-none truncate">{vehicle.brand} {vehicle.model}</h4>
                     
                     <div className="flex flex-col gap-2.5">
-                      <div className="flex items-center gap-3 text-zinc-500">
+                      <div className="flex items-center gap-3 text-zinc-500 flex-wrap">
                         <span className="text-[10px] font-black uppercase tracking-widest italic flex items-center gap-1.5">
                           <Calendar size={12} className="text-white" /> {vehicle.year || 'N/A'}
                         </span>
@@ -420,7 +414,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                   </div>
                   
                   {isOwnProfile && (
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 shrink-0">
                       <button onClick={(e) => handleOpenEdit(e, vehicle)} className="p-2.5 bg-white/5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 transition-all">
                         <Edit3 size={16} />
                       </button>
@@ -437,7 +431,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                   </p>
                 )}
 
-                <div className="pt-6 border-t border-white/5 flex justify-end items-center">
+                <div className="pt-6 border-t border-white/5 flex justify-end items-center mt-auto">
                   <button 
                     className="text-[9px] font-black uppercase tracking-widest text-white italic flex items-center gap-2 group"
                   >
@@ -450,7 +444,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
         })}
 
         {vehicles?.length === 0 && (
-          <div className="col-span-full py-24 text-center bg-white/5 border border-dashed border-white/10 rounded-[3rem]">
+          <div className="col-span-full py-24 text-center bg-zinc-900/20 border border-dashed border-white/10 rounded-[3rem]">
             <Car size={48} className="mx-auto text-zinc-800 mb-6" />
             <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Il garage è vuoto. Inizia a caricare i tuoi progetti.</p>
             {isOwnProfile && (

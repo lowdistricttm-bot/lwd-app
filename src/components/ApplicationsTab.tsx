@@ -38,7 +38,7 @@ const ApplicationsTab = () => {
           <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest italic">Non hai ancora inviato candidature per gli eventi.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {applications?.map((app: any, i: number) => (
             <motion.div 
               key={app.id}
@@ -46,9 +46,9 @@ const ApplicationsTab = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
               onClick={() => setSelectedApp(app)}
-              className="bg-zinc-900/40 backdrop-blur-md border border-white/5 overflow-hidden rounded-[2rem] group hover:border-white/20 transition-all duration-500 cursor-pointer shadow-xl"
+              className="bg-zinc-900/40 backdrop-blur-md border border-white/5 overflow-hidden rounded-[2rem] group hover:border-white/20 transition-all duration-500 cursor-pointer shadow-xl flex flex-col"
             >
-              <div className="p-6 flex flex-col md:flex-row gap-6 items-center">
+              <div className="p-6 flex flex-col md:flex-row gap-6 items-center flex-1">
                 {/* Veicolo Preview */}
                 <div className="w-full md:w-32 aspect-video md:aspect-square shrink-0 rounded-2xl overflow-hidden bg-zinc-950 border border-white/5 relative">
                   {app.vehicles?.image_url ? (
