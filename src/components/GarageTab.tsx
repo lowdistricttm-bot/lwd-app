@@ -281,30 +281,36 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
             </h3>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Link to="/fitment" className="bg-white/5 backdrop-blur-2xl border border-white/10 p-4 rounded-[1.5rem] hover:border-white/20 transition-all group flex items-center gap-4 shadow-xl">
-              <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center border border-white/10 group-hover:border-white/30 transition-all shadow-xl shrink-0">
-                <ArrowRightLeft size={16} className="text-white" />
+            <Link to="/fitment" className="w-full bg-zinc-900/40 backdrop-blur-md border border-white/5 p-3.5 flex items-center justify-between group hover:bg-zinc-800/60 hover:border-white/20 transition-all duration-500 text-left rounded-2xl shadow-xl">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-8 h-8 bg-white/5 rounded-xl flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all duration-500 shrink-0">
+                  <ArrowRightLeft size={14} className="group-hover:scale-110 transition-transform" />
+                </div>
+                <div className="min-w-0 flex flex-col justify-center">
+                  <h3 className="text-[10px] font-black italic uppercase tracking-widest text-white truncate leading-none mb-0.5">FITMENT CALCULATOR</h3>
+                  <p className="text-[7px] font-bold uppercase tracking-widest text-zinc-500 group-hover:text-zinc-400 transition-colors truncate leading-none">Calcola offset e sporgenza</p>
+                </div>
               </div>
-              <div className="flex flex-col justify-center">
-                <h4 className="text-sm font-black italic uppercase tracking-tight text-white mb-0.5">FITMENT CALCULATOR</h4>
-                <p className="text-[8px] text-zinc-400 font-bold uppercase tracking-widest">Calcola offset e sporgenza</p>
-              </div>
+              <ChevronRight size={16} className="text-zinc-700 group-hover:text-white transition-all translate-x-[-4px] group-hover:translate-x-0 shrink-0" />
             </Link>
             
-            <Link to="/camber" className="bg-white/5 backdrop-blur-2xl border border-white/10 p-4 rounded-[1.5rem] hover:border-white/20 transition-all group flex items-center gap-4 shadow-xl">
-              <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center border border-white/10 group-hover:border-white/30 transition-all shadow-xl shrink-0">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                  <g transform="rotate(15 12 12)">
-                    <rect x="5" y="2" width="14" height="20" rx="3" />
-                    <line x1="5" y1="8" x2="19" y2="8" />
-                    <line x1="5" y1="16" x2="19" y2="16" />
-                  </g>
-                </svg>
+            <Link to="/camber" className="w-full bg-zinc-900/40 backdrop-blur-md border border-white/5 p-3.5 flex items-center justify-between group hover:bg-zinc-800/60 hover:border-white/20 transition-all duration-500 text-left rounded-2xl shadow-xl">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-8 h-8 bg-white/5 rounded-xl flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all duration-500 shrink-0">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:scale-110 transition-transform">
+                    <g transform="rotate(15 12 12)">
+                      <rect x="5" y="2" width="14" height="20" rx="3" />
+                      <line x1="5" y1="8" x2="19" y2="8" />
+                      <line x1="5" y1="16" x2="19" y2="16" />
+                    </g>
+                  </svg>
+                </div>
+                <div className="min-w-0 flex flex-col justify-center">
+                  <h3 className="text-[10px] font-black italic uppercase tracking-widest text-white truncate leading-none mb-0.5">CAMBER HELPER</h3>
+                  <p className="text-[7px] font-bold uppercase tracking-widest text-zinc-500 group-hover:text-zinc-400 transition-colors truncate leading-none">Misura l'inclinazione</p>
+                </div>
               </div>
-              <div className="flex flex-col justify-center">
-                <h4 className="text-sm font-black italic uppercase tracking-tight text-white mb-0.5">CAMBER HELPER</h4>
-                <p className="text-[8px] text-zinc-400 font-bold uppercase tracking-widest">Misura l'inclinazione</p>
-              </div>
+              <ChevronRight size={16} className="text-zinc-700 group-hover:text-white transition-all translate-x-[-4px] group-hover:translate-x-0 shrink-0" />
             </Link>
           </div>
         </div>
