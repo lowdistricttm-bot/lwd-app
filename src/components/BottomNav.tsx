@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Home, ShoppingBag, MessageSquare, User, Calendar, MapPin, Compass } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -8,6 +8,12 @@ import { motion } from 'framer-motion';
 
 const BottomNav = () => {
   const location = useLocation();
+  const [isIOS, setIsIOS] = useState(false);
+
+  useEffect(() => {
+    const checkIOS = /iPhone|iPad|iPod/.test(window.navigator.userAgent);
+    setIsIOS(checkIOS);
+  }, []);
   
   if (location.pathname.startsWith('/chat/')) return null;
 
@@ -29,8 +35,9 @@ const BottomNav = () => {
     }
   };
 
-  // Altezza fissa 56px ignorando la safe area
-  const navHeight = "56px";
+  // Altezza fissa hardcoded per iOS ignorando env(safe-area-inset-bottom)
+  const navHeight = isIOS ? "90px" : "56px";
+  const pb = isIOS ? "34px" : "0px";
 
   return (
     <div 
@@ -38,6 +45,7 @@ const BottomNav = () => {
       data-no-swipe="true"
       style={{ 
         height: navHeight,
+        paddingBottom: pb,
         WebkitUserSelect: 'none',
         touchAction: 'none'
       }}

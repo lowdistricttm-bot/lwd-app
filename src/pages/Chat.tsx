@@ -142,8 +142,9 @@ const Chat = () => {
 
   if (loadingChat || authLoading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
-  // Altezza fissa 56px ignorando la safe area
-  const inputBarHeight = "56px";
+  // Altezza fissa ignorando env(safe-area-inset-bottom)
+  const inputBarHeight = isIOS ? "90px" : "56px";
+  const pb = isIOS ? "34px" : "0px";
 
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent" style={{ height: '100dvh' }}>
@@ -319,6 +320,7 @@ const Chat = () => {
         className="fixed bottom-0 left-0 right-0 bg-black border-t border-white/10 z-50"
         style={{ 
           height: inputBarHeight,
+          paddingBottom: pb,
           marginBottom: '0px'
         }}
       >
