@@ -23,6 +23,10 @@ export interface Vehicle {
   is_liked?: boolean;
   stance_score?: number; // Aggiunto punteggio AI
   profiles?: {
+    username?: string;
+    avatar_url?: string;
+    role?: string;
+    is_admin?: boolean;
     license_plate_privacy?: string;
   };
 }

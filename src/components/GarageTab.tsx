@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useGarage, Vehicle } from '@/hooks/use-garage';
 import { useAdmin } from '@/hooks/use-admin';
+import { useLeaderboards } from '@/hooks/use-leaderboards';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -11,6 +12,7 @@ import ImageLightbox from './ImageLightbox';
 import VehicleLogbook from './VehicleLogbook';
 import StanceAnalyzer from './StanceAnalyzer';
 import VehicleDetailModal from './VehicleDetailModal';
+import RankBadge from './RankBadge';
 import { 
   Plus, Car, Trash2, Camera, Loader2, X, Edit3, Heart, 
   Gauge, Book, Sparkles, ChevronRight, Calendar, CreditCard, GripVertical 
@@ -31,6 +33,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
   const { vehicles, isLoading, addVehicle, updateVehicle, deleteVehicle, toggleLike } = useGarage(userId);
   const { t } = useTranslation();
   const { role, canVote } = useAdmin(); 
+  const { topScored, mostLiked } = useLeaderboards();
   
   const isProUser = role && role !== 'subscriber';
   
@@ -47,12 +50,13 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
     suspension_type: 'STATIC', description: '' 
   });
   
-  // Stato unificato per gestire l'ordine di foto vecchie e nuove
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => setCurrentUserId(user?.id || null));
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setCurrentUserId(user?.id || null);
+    });
   }, []);
 
   const handleOpenAdd = () => {
@@ -72,7 +76,6 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
       description: v.description || '' 
     });
     
-    // Popoliamo la lista media con le immagini esistenti
     const existing: MediaItem[] = (v.images || []).map((url, i) => ({
       id: `existing-${i}-${Date.now()}`,
       type: 'existing',
@@ -105,8 +108,6 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Separiamo i file nuovi dagli URL esistenti mantenendo l'ordine scelto dall'utente
     const files = mediaItems.filter(m => m.type === 'new').map(m => m.file!);
     const existingImages = mediaItems.filter(m => m.type === 'existing').map(m => m.url);
 
@@ -128,6 +129,16 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
     if (confirm("Sei sicuro di voler rimuovere questo veicolo dal tuo garage?")) {
       await deleteVehicle.mutateAsync(id);
     }
+  };
+
+  const getVehicleRank = (id: string) => {
+    const scoreRank = topScored?.findIndex(v => v.id === id);
+    if (scoreRank !== undefined && scoreRank !== -1 && scoreRank < 3) return { rank: scoreRank + 1, type: 'score' as const };
+    
+    const likeRank = mostLiked?.findIndex(v => v.id === id);
+    if (likeRank !== undefined && likeRank !== -1 && likeRank < 3) return { rank: likeRank + 1, type: 'likes' as const };
+    
+    return null;
   };
 
   if (isLoading) return <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div>;
@@ -211,18 +222,14 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                       className="relative w-20 h-20 rounded-xl overflow-hidden border border-white/10 group cursor-grab active:cursor-grabbing"
                     >
                       <img src={item.url} className="w-full h-full object-cover" alt="" />
-                      
-                      {/* Badge Foto Principale */}
                       {index === 0 && (
                         <div className="absolute top-0 left-0 right-0 bg-white text-black text-[6px] font-black uppercase py-0.5 text-center">
                           Principale
                         </div>
                       )}
-
                       <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <GripVertical size={14} className="text-white" />
                       </div>
-
                       <button 
                         type="button" 
                         onClick={() => removeItem(item.id)}
@@ -259,6 +266,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
           const isPublic = vehicle.profiles?.license_plate_privacy === 'public';
           const canSeePlate = isOwnProfile || canVote || isPublic;
           const mainImage = vehicle.images?.[0] || vehicle.image_url;
+          const rankInfo = getVehicleRank(vehicle.id);
 
           return (
             <motion.div 
@@ -273,8 +281,8 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                   <div className="w-full h-full flex items-center justify-center bg-zinc-950 text-zinc-800"><Car size={64} /></div>
                 )}
                 
-                {/* Top Left Badges */}
                 <div className="absolute top-5 left-5 flex flex-col gap-2">
+                  {rankInfo && <RankBadge rank={rankInfo.rank} type={rankInfo.type} />}
                   <span className="bg-white/90 backdrop-blur-md text-black text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full shadow-2xl w-fit">
                     {vehicle.suspension_type}
                   </span>
@@ -285,7 +293,6 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                   )}
                 </div>
 
-                {/* Top Right Actions */}
                 <div className="absolute top-5 right-5 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   {isOwnProfile && isProUser && (
                     <>

@@ -2,14 +2,16 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Car, Calendar, Gauge, Heart, CreditCard, Info, ChevronRight, Sparkles } from 'lucide-react';
+import { X, Car, Calendar, Gauge, Heart, CreditCard, Info, ChevronRight, Sparkles, Trophy } from 'lucide-react';
 import { Vehicle } from '@/hooks/use-garage';
 import { useAdmin } from '@/hooks/use-admin';
+import { useLeaderboards } from '@/hooks/use-leaderboards';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 import ImageLightbox from './ImageLightbox';
 import VehicleStats from './VehicleStats';
+import RankBadge from './RankBadge';
 
 interface VehicleDetailModalProps {
   isOpen: boolean;
@@ -22,6 +24,7 @@ interface VehicleDetailModalProps {
 
 const VehicleDetailModal = ({ isOpen, onClose, vehicle, isOwnProfile, onLike, currentUserId }: VehicleDetailModalProps) => {
   const { canVote } = useAdmin();
+  const { topScored, mostLiked } = useLeaderboards();
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
   
   useBodyLock(isOpen);
@@ -31,6 +34,18 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicle, isOwnProfile, onLike, cu
   const isPublic = vehicle.profiles?.license_plate_privacy === 'public';
   const canSeePlate = isOwnProfile || canVote || isPublic;
   const allImages = vehicle.images || (vehicle.image_url ? [vehicle.image_url] : []);
+
+  const getVehicleRank = () => {
+    const scoreRank = topScored?.findIndex(v => v.id === vehicle.id);
+    if (scoreRank !== undefined && scoreRank !== -1 && scoreRank < 3) return { rank: scoreRank + 1, type: 'score' as const };
+    
+    const likeRank = mostLiked?.findIndex(v => v.id === vehicle.id);
+    if (likeRank !== undefined && likeRank !== -1 && likeRank < 3) return { rank: likeRank + 1, type: 'likes' as const };
+    
+    return null;
+  };
+
+  const rankInfo = getVehicleRank();
 
   return (
     <>
@@ -57,7 +72,8 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicle, isOwnProfile, onLike, cu
               <div className="max-w-2xl mx-auto space-y-8 pb-[calc(4rem+env(safe-area-inset-bottom))]">
                 <div className="flex justify-between items-start">
                   <div>
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      {rankInfo && <RankBadge rank={rankInfo.rank} type={rankInfo.type} showLabel={true} />}
                       <span className="bg-white text-black text-[8px] font-black uppercase px-2 py-1 italic rounded-lg shadow-lg">
                         {vehicle.suspension_type}
                       </span>

@@ -1,19 +1,22 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { useDiscover } from '@/hooks/use-discover';
 import { useGarage, Vehicle } from '@/hooks/use-garage';
 import { useAdmin } from '@/hooks/use-admin';
 import { usePresence } from '@/hooks/use-presence';
-import { Loader2, Car, Search, LayoutGrid, StretchHorizontal, User, ChevronRight, ShieldCheck, Sparkles, Users, Heart, Gauge, Calendar, CreditCard } from 'lucide-react';
+import { useLeaderboards } from '@/hooks/use-leaderboards';
+import { Loader2, Car, Search, LayoutGrid, StretchHorizontal, User, ChevronRight, ShieldCheck, Sparkles, Users, Heart, Gauge, Calendar, CreditCard, Trophy, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import VehicleDetailModal from '@/components/VehicleDetailModal';
 import StanceAnalyzer from '@/components/StanceAnalyzer';
+import RankBadge from '@/components/RankBadge';
 import { useTranslation } from '@/hooks/use-translation';
 import { supabase } from "@/integrations/supabase/client";
+import useEmblaCarousel from 'embla-carousel-react';
 
 const Discover = () => {
   const navigate = useNavigate();
@@ -21,6 +24,7 @@ const Discover = () => {
   const { t } = useTranslation();
   const { canVote } = useAdmin();
   const { isUserOnline } = usePresence();
+  const { topScored, mostLiked } = useLeaderboards();
   
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
@@ -28,6 +32,9 @@ const Discover = () => {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [stanceVehicle, setStanceVehicle] = useState<Vehicle | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  const [emblaScoreRef] = useEmblaCarousel({ align: 'start', containScroll: 'trimSnaps', dragFree: true });
+  const [emblaLikeRef] = useEmblaCarousel({ align: 'start', containScroll: 'trimSnaps', dragFree: true });
 
   const stanceId = searchParams.get('stance_id');
 
@@ -40,7 +47,6 @@ const Discover = () => {
     supabase.auth.getUser().then(({ data: { user } }) => setCurrentUserId(user?.id || null));
   }, []);
 
-  // Gestione link condiviso Stance Score
   useEffect(() => {
     if (stanceId) {
       const fetchStanceVehicle = async () => {
@@ -54,7 +60,6 @@ const Discover = () => {
           setStanceVehicle(data as Vehicle);
         }
         
-        // Puliamo l'URL dopo aver caricato
         const newParams = new URLSearchParams(searchParams);
         newParams.delete('stance_id');
         setSearchParams(newParams, { replace: true });
@@ -72,6 +77,17 @@ const Discover = () => {
 
   const handleOpenProject = (vehicle: any) => {
     setSelectedVehicle(vehicle as Vehicle);
+  };
+
+  // Helper per trovare il rank di un veicolo
+  const getVehicleRank = (id: string) => {
+    const scoreRank = topScored?.findIndex(v => v.id === id);
+    if (scoreRank !== undefined && scoreRank !== -1 && scoreRank < 3) return { rank: scoreRank + 1, type: 'score' as const };
+    
+    const likeRank = mostLiked?.findIndex(v => v.id === id);
+    if (likeRank !== undefined && likeRank !== -1 && likeRank < 3) return { rank: likeRank + 1, type: 'likes' as const };
+    
+    return null;
   };
 
   return (
@@ -128,6 +144,70 @@ const Discover = () => {
             </div>
           </div>
         </header>
+
+        {/* SEZIONE TOP 5 LOW SCORE */}
+        {!debouncedSearch && topScored && topScored.length > 0 && (
+          <section className="mb-14">
+            <div className="flex justify-between items-end mb-6">
+              <h3 className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 flex items-center gap-2 italic">
+                <Trophy size={12} className="text-yellow-500" /> Top 5 Low Score
+              </h3>
+              <Link to="/leaderboards" className="text-[8px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors flex items-center gap-1">
+                Classifica Completa <ArrowRight size={10} />
+              </Link>
+            </div>
+            <div className="embla overflow-hidden cursor-grab active:cursor-grabbing" ref={emblaScoreRef}>
+              <div className="embla__container flex gap-4">
+                {topScored.slice(0, 5).map((v, i) => (
+                  <div key={v.id} onClick={() => handleOpenProject(v)} className="embla__slide flex-[0_0_70%] sm:flex-[0_0_40%] md:flex-[0_0_25%] min-w-0 bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-[2rem] overflow-hidden group cursor-pointer">
+                    <div className="aspect-video relative overflow-hidden">
+                      <img src={v.images?.[0] || v.image_url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-700 group-hover:scale-110" alt="" />
+                      <div className="absolute top-3 left-3">
+                        <RankBadge rank={i + 1} type="score" />
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <p className="text-[10px] font-black uppercase italic truncate">{v.brand} {v.model}</p>
+                      <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest mt-1">@{v.profiles?.username}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* SEZIONE TOP 5 COMMUNITY LIKE */}
+        {!debouncedSearch && mostLiked && mostLiked.length > 0 && (
+          <section className="mb-14">
+            <div className="flex justify-between items-end mb-6">
+              <h3 className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 flex items-center gap-2 italic">
+                <Heart size={12} className="text-red-500" /> Top 5 Community Like
+              </h3>
+              <Link to="/leaderboards" className="text-[8px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors flex items-center gap-1">
+                Classifica Completa <ArrowRight size={10} />
+              </Link>
+            </div>
+            <div className="embla overflow-hidden cursor-grab active:cursor-grabbing" ref={emblaLikeRef}>
+              <div className="embla__container flex gap-4">
+                {mostLiked.slice(0, 5).map((v, i) => (
+                  <div key={v.id} onClick={() => handleOpenProject(v)} className="embla__slide flex-[0_0_70%] sm:flex-[0_0_40%] md:flex-[0_0_25%] min-w-0 bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-[2rem] overflow-hidden group cursor-pointer">
+                    <div className="aspect-video relative overflow-hidden">
+                      <img src={v.images?.[0] || v.image_url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-700 group-hover:scale-110" alt="" />
+                      <div className="absolute top-3 left-3">
+                        <RankBadge rank={i + 1} type="likes" />
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <p className="text-[10px] font-black uppercase italic truncate">{v.brand} {v.model}</p>
+                      <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest mt-1">@{v.profiles?.username}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         <AnimatePresence>
           {debouncedSearch && users && users.length > 0 && (
@@ -225,6 +305,7 @@ const Discover = () => {
                   const isPublic = vehicle.profiles?.license_plate_privacy === 'public';
                   const isOwn = currentUserId === vehicle.user_id;
                   const canSeePlate = isOwn || canVote || isPublic;
+                  const rankInfo = getVehicleRank(vehicle.id);
                   
                   return (
                     <motion.div 
@@ -256,6 +337,7 @@ const Discover = () => {
                         )}
                         
                         <div className="absolute top-5 left-5 flex flex-col gap-2">
+                          {rankInfo && <RankBadge rank={rankInfo.rank} type={rankInfo.type} />}
                           <span className="bg-white/90 backdrop-blur-md text-black text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full shadow-2xl w-fit">
                             {vehicle.suspension_type}
                           </span>
