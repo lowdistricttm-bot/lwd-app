@@ -53,8 +53,12 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[201] bg-zinc-950 border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[90dvh] overflow-y-auto shadow-2xl"
-            style={{ touchAction: 'pan-y', overscrollBehavior: 'contain' }}
+            className="fixed inset-x-0 bottom-0 z-[201] bg-zinc-950 border-t border-white/10 p-6 rounded-t-[2.5rem] h-[100dvh] overflow-y-auto shadow-2xl"
+            style={{ 
+              touchAction: 'pan-y', 
+              overscrollBehavior: 'contain',
+              paddingTop: 'calc(2rem + env(safe-area-inset-top))'
+            }}
           >
             <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
             
@@ -119,7 +123,7 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
                   <div className="flex flex-wrap gap-3">
                     {participants.map((p, i) => (
                       <button 
-                        key={i}
+                        key={i} 
                         onClick={() => { onClose(); navigate(`/profile/${p.user_id}`); }}
                         className="group relative"
                       >
