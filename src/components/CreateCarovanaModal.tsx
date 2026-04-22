@@ -50,12 +50,24 @@ const CreateCarovanaModal = ({ isOpen, onClose, eventId, eventTitle }: CreateCar
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] touch-none" />
           <motion.div 
-            initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            onClick={onClose} 
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] touch-none" 
+          />
+          <motion.div 
+            initial={{ y: '100%' }} 
+            animate={{ y: 0 }} 
+            exit={{ y: '100%' }} 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[201] bg-zinc-950 border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[90dvh] overflow-y-auto shadow-2xl"
-            style={{ touchAction: 'pan-y', overscrollBehavior: 'contain' }}
+            className="fixed inset-x-0 bottom-0 z-[1001] bg-zinc-950 border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[92dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.8)]"
+            style={{ 
+              touchAction: 'pan-y', 
+              overscrollBehavior: 'contain',
+              paddingBottom: 'calc(2rem + env(safe-area-inset-bottom))'
+            }}
           >
             <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
             
