@@ -55,7 +55,7 @@ const DEFAULT_TUTORIALS: Tutorial[] = [
     title: 'ROLLING DEI PARAFANGHI (FENDER ROLLING)',
     content: 'Quando il fitment diventa aggressivo, lo spazio tra gomma e lamiera si riduce a zero. Il rolling consiste nel ripiegare il bordo interno del parafango per evitare tagli alla gomma. È fondamentale scaldare bene la vernice con una pistola termica per evitare che si crepi durante l\'operazione con il roller.',
     category: 'bodywork',
-    image_url: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=2070&auto=format&fit=crop',
+    image_url: 'https://images.unsplash.com/photo-1530046339160-ce3e5b0c7a2f?q=80&w=2070&auto=format&fit=crop',
     created_at: new Date().toISOString(),
     profiles: { username: 'Low District Staff', avatar_url: '' }
   },
@@ -112,17 +112,36 @@ export const useAcademy = (categoryFilter: string = 'all') => {
           profiles: Array.isArray(t.profiles) ? t.profiles[0] : t.profiles
         }));
 
-        const filteredDefaults = DEFAULT_TUTORIALS.filter(def => 
-          !formattedDbData.some(db => db.title.toUpperCase() === def.title.toUpperCase())
-        );
+        // Utilizziamo una Map per garantire l'unicità per titolo (case-insensitive e senza spazi extra)
+        // Inseriamo prima quelli di default, poi sovrascriviamo con quelli del DB se hanno lo stesso titolo
+        const tutorialMap = new Map<string, Tutorial>();
 
-        const combined = [...formattedDbData, ...filteredDefaults];
+        // 1. Carichiamo i default
+        DEFAULT_TUTORIALS.forEach(t => {
+          tutorialMap.set(t.title.trim().toUpperCase(), t);
+        });
+
+        // 2. Sovrascriviamo con quelli del DB (hanno la precedenza)
+        formattedDbData.forEach(t => {
+          tutorialMap.set(t.title.trim().toUpperCase(), t);
+        });
+
+        let combined = Array.from(tutorialMap.values());
+
+        // Ordiniamo: prima quelli del DB (per data), poi quelli di default
+        combined.sort((a, b) => {
+          const aIsDefault = a.id.startsWith('def-');
+          const bIsDefault = b.id.startsWith('def-');
+          if (aIsDefault && !bIsDefault) return 1;
+          if (!aIsDefault && bIsDefault) return -1;
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
 
         if (categoryFilter !== 'all') {
           return combined.filter(t => t.category === categoryFilter);
         }
 
-        return combined as Tutorial[];
+        return combined;
       } catch (err) {
         console.error("[Academy] Errore caricamento:", err);
         return DEFAULT_TUTORIALS;
