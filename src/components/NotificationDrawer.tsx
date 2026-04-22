@@ -28,6 +28,12 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
     }
     onClose();
     
+    // Navigazione specifica per notifiche staff su candidature
+    if (n.type === 'admin_info' && n.application_id) {
+      navigate('/admin/applications');
+      return;
+    }
+
     if (n.type === 'like' || n.type === 'comment') {
       if (n.post_id) navigate(`/post/${n.post_id}`);
       else navigate('/bacheca');
