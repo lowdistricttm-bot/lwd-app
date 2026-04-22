@@ -14,6 +14,13 @@ const SwipeNavigation = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
+      const target = e.target as HTMLElement;
+      // Ignora se il tocco inizia su elementi con data-no-swipe (Navbar, BottomNav)
+      if (target.closest('[data-no-swipe="true"]')) {
+        touchStart.current = null;
+        return;
+      }
+
       touchStart.current = {
         x: e.touches[0].clientX,
         y: e.touches[0].clientY,
@@ -39,7 +46,7 @@ const SwipeNavigation = ({ children }: { children: React.ReactNode }) => {
       if (Math.abs(deltaX) > Math.abs(deltaY) * HORIZONTAL_RATIO && Math.abs(deltaX) > SWIPE_THRESHOLD) {
         
         const target = e.target as HTMLElement;
-        // Aggiunto controllo per evitare swipe navigation se siamo dentro il visualizzatore storie
+        // Aggiunto controllo per evitare swipe navigation se siamo dentro il visualizzatore storie o barre fisse
         const isRestricted = target.closest('.no-scrollbar, .embla, [data-no-swipe="true"], input, textarea, [role="dialog"]');
         
         if (!isRestricted) {

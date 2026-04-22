@@ -72,7 +72,10 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-black/60 backdrop-blur-2xl border-b border-white/5 pt-[env(safe-area-inset-top)]">
+      <nav 
+        className="fixed top-0 left-0 right-0 z-50 bg-black/60 backdrop-blur-2xl border-b border-white/5 pt-[env(safe-area-inset-top)] touch-none select-none"
+        data-no-swipe="true"
+      >
         <div className="h-16 px-6 flex items-center justify-between">
           <div className="flex-1 flex items-center gap-1">
             <button onClick={() => setIsSearchOpen(true)} className="p-2.5 text-zinc-400 hover:text-white transition-colors rounded-full hover:bg-white/5">

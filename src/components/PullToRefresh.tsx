@@ -20,6 +20,13 @@ const PullToRefresh = () => {
       return;
     }
 
+    const target = e.target as HTMLElement;
+    // Ignora se il tocco inizia sulla Navbar o BottomNav
+    if (target.closest('[data-no-swipe="true"]')) {
+      isPulling.current = false;
+      return;
+    }
+
     if (window.scrollY <= 5) {
       startY.current = e.touches[0].pageY;
       isPulling.current = true;
