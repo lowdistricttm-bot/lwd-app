@@ -55,7 +55,27 @@ const DEFAULT_TUTORIALS: Tutorial[] = [
     title: 'ROLLING DEI PARAFANGHI (FENDER ROLLING)',
     content: 'Quando il fitment diventa aggressivo, lo spazio tra gomma e lamiera si riduce a zero. Il rolling consiste nel ripiegare il bordo interno del parafango per evitare tagli alla gomma. È fondamentale scaldare bene la vernice con una pistola termica per evitare che si crepi durante l\'operazione con il roller.',
     category: 'bodywork',
-    image_url: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=2070&auto=format&fit=crop',
+    image_url: 'https://images.unsplash.com/photo-1530046339160-ce3e5b0c7a2f?q=80&w=2070&auto=format&fit=crop',
+    created_at: new Date().toISOString(),
+    profiles: { username: 'Low District Staff', avatar_url: '' }
+  },
+  {
+    id: 'def-4',
+    author_id: 'system',
+    title: 'INTRODUZIONE AL CAMBER NEGATIVO',
+    content: 'Il camber non è solo estetica, ma tecnica. Un angolo negativo permette di far rientrare la parte superiore della ruota all\'interno del passaruota, permettendo setup più larghi. Attenzione però: un camber eccessivo riduce l\'impronta a terra e accelera l\'usura interna degli pneumatici.',
+    category: 'mechanics',
+    image_url: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?q=80&w=1974&auto=format&fit=crop',
+    created_at: new Date().toISOString(),
+    profiles: { username: 'Low District Staff', avatar_url: '' }
+  },
+  {
+    id: 'def-5',
+    author_id: 'system',
+    title: 'DETAILING: LA PREPARAZIONE PER IL SHOW',
+    content: 'Un progetto stance deve brillare. La tecnica dei due secchi è la base per evitare graffi (swirls). Usa un decontaminante ferroso per i cerchi e una cera di alta qualità o un sigillante ceramico per esaltare le linee della carrozzeria sotto le luci degli eventi.',
+    category: 'bodywork',
+    image_url: 'https://images.unsplash.com/photo-1607860108855-64acf2078ed9?q=80&w=2071&auto=format&fit=crop',
     created_at: new Date().toISOString(),
     profiles: { username: 'Low District Staff', avatar_url: '' }
   }
@@ -68,7 +88,6 @@ export const useAcademy = (categoryFilter: string = 'all') => {
     queryKey: ['academy-tutorials', categoryFilter],
     queryFn: async () => {
       try {
-        // Query semplificata che si affida alla relazione FK corretta
         let query = supabase
           .from('academy_tutorials')
           .select(`
@@ -86,19 +105,20 @@ export const useAcademy = (categoryFilter: string = 'all') => {
 
         const { data: dbData, error } = await query;
         
-        if (error) {
-          console.error("[Academy] Errore database:", error);
-          throw error;
-        }
+        if (error) throw error;
 
-        // Formattazione dati per gestire il possibile array restituito da Supabase per le join
         const formattedDbData = (dbData || []).map((t: any) => ({
           ...t,
           profiles: Array.isArray(t.profiles) ? t.profiles[0] : t.profiles
         }));
 
-        // Uniamo i dati del DB con quelli di default
-        const combined = [...formattedDbData, ...DEFAULT_TUTORIALS];
+        // Filtriamo i tutorial di default: se un tutorial con lo stesso titolo 
+        // esiste già nel DB (caricato dall'utente), non mostriamo quello di default.
+        const filteredDefaults = DEFAULT_TUTORIALS.filter(def => 
+          !formattedDbData.some(db => db.title.toUpperCase() === def.title.toUpperCase())
+        );
+
+        const combined = [...formattedDbData, ...filteredDefaults];
 
         if (categoryFilter !== 'all') {
           return combined.filter(t => t.category === categoryFilter);
@@ -106,12 +126,11 @@ export const useAcademy = (categoryFilter: string = 'all') => {
 
         return combined as Tutorial[];
       } catch (err) {
-        console.error("[Academy] Errore critico caricamento:", err);
-        // In caso di errore restituiamo almeno quelli di default per non rompere la UI
+        console.error("[Academy] Errore caricamento:", err);
         return DEFAULT_TUTORIALS;
       }
     },
-    staleTime: 1000 * 60 * 5, // 5 minuti di cache
+    staleTime: 1000 * 60 * 5,
     retry: 1
   });
 
