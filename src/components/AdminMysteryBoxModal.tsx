@@ -128,7 +128,7 @@ const AdminMysteryBoxModal = ({ isOpen, onClose }: AdminMysteryBoxModalProps) =>
 
               {view === 'list' ? (
                 <div className="space-y-6">
-                  <Button onClick={handleOpenCreate} className="w-full bg-white text-black h-14 rounded-full font-black uppercase italic tracking-widest shadow-xl">
+                  <Button onClick={handleOpenCreate} className="w-full bg-zinc-900 text-white border border-white/5 h-14 rounded-full font-black uppercase italic tracking-widest shadow-xl hover:bg-zinc-800">
                     <Plus size={18} className="mr-2" /> Crea Nuova Campagna
                   </Button>
 
@@ -142,7 +142,7 @@ const AdminMysteryBoxModal = ({ isOpen, onClose }: AdminMysteryBoxModalProps) =>
                           <div className="flex items-center gap-3 mb-1">
                             <h4 className="text-sm font-black italic uppercase text-white truncate">{box.title}</h4>
                             {box.is_active && (
-                              <span className="bg-green-500 text-black text-[7px] font-black uppercase px-2 py-0.5 rounded-full">Attiva</span>
+                              <span className="bg-zinc-800 text-zinc-400 border border-white/5 text-[7px] font-black uppercase px-2 py-0.5 rounded-full">Attiva</span>
                             )}
                           </div>
                           <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest">
@@ -151,7 +151,7 @@ const AdminMysteryBoxModal = ({ isOpen, onClose }: AdminMysteryBoxModalProps) =>
                         </div>
                         <div className="flex gap-2 ml-4">
                           <button onClick={() => handleOpenEdit(box)} className="p-3 bg-white/5 text-zinc-400 rounded-full hover:bg-white hover:text-black transition-all"><Edit3 size={16} /></button>
-                          <button onClick={() => handleDelete(box.id)} className="p-3 bg-red-500/10 text-red-500 rounded-full hover:bg-red-600 hover:text-white transition-all"><Trash2 size={16} /></button>
+                          <button onClick={() => handleDelete(box.id)} className="p-3 bg-red-900/20 text-red-500 rounded-full hover:bg-red-600 hover:text-white transition-all"><Trash2 size={16} /></button>
                         </div>
                       </div>
                     ))}
@@ -204,7 +204,7 @@ const AdminMysteryBoxModal = ({ isOpen, onClose }: AdminMysteryBoxModalProps) =>
                             onClick={() => toggleProduct(p.id)}
                             className={cn(
                               "p-3 rounded-xl border text-left transition-all flex items-center justify-between",
-                              selectedProducts.includes(p.id) ? "bg-white text-black border-white" : "bg-white/5 border-white/5 text-zinc-400"
+                              selectedProducts.includes(p.id) ? "bg-zinc-800 text-white border-white/20" : "bg-white/5 border-white/5 text-zinc-500"
                             )}
                           >
                             <span className="text-[10px] font-black uppercase italic truncate" dangerouslySetInnerHTML={{ __html: p.name }} />
@@ -216,17 +216,17 @@ const AdminMysteryBoxModal = ({ isOpen, onClose }: AdminMysteryBoxModalProps) =>
 
                     <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-2xl">
                       <div className="flex items-center gap-3">
-                        <Ticket size={20} className="text-yellow-500" />
+                        <Ticket size={20} className="text-zinc-700" />
                         <div>
                           <p className="text-[10px] font-black uppercase italic">Golden Ticket</p>
-                          <p className="text-[8px] font-bold text-zinc-500 uppercase">Includi possibilità di ingresso gratuito</p>
+                          <p className="text-[8px] font-bold text-zinc-600 uppercase">Includi possibilità di ingresso gratuito</p>
                         </div>
                       </div>
                       <input 
                         type="checkbox" 
                         checked={formData.has_golden_ticket} 
                         onChange={e => setFormData({...formData, has_golden_ticket: e.target.checked})}
-                        className="w-6 h-6 rounded-full border-white/10 bg-black checked:bg-white"
+                        className="w-6 h-6 rounded-full border-white/10 bg-black checked:bg-zinc-800"
                       />
                     </div>
 
@@ -242,7 +242,7 @@ const AdminMysteryBoxModal = ({ isOpen, onClose }: AdminMysteryBoxModalProps) =>
                       <Button 
                         type="submit" 
                         disabled={createBox.isPending || updateBox.isPending}
-                        className="flex-[2] bg-white text-black hover:bg-zinc-200 h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl border-none"
+                        className="flex-[2] bg-zinc-900 text-white border border-white/5 hover:bg-zinc-800 h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl"
                       >
                         {createBox.isPending || updateBox.isPending ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> {editingId ? 'Salva Modifiche' : 'Attiva Mystery Box'}</>}
                       </Button>
