@@ -39,11 +39,11 @@ const Index = () => {
       label: 'Entra nel Feed'
     },
     { 
-      icon: Trophy, 
-      title: 'CLASSIFICHE', 
-      desc: 'Scopri i migliori progetti e scala la Hall of Fame.',
-      href: '/leaderboards',
-      label: 'Vedi Classifiche'
+      icon: MapPin, 
+      title: 'DISTRICT MEET', 
+      desc: 'Incontri spontanei e raduni della community.',
+      href: '/meets',
+      label: 'Vedi Incontri'
     },
     { 
       icon: Tag, 
