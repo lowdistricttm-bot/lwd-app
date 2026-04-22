@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import Footer from '@/components/Footer';
 import Stories from '@/components/Stories';
@@ -62,10 +61,10 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen text-white flex flex-col bg-black">
-      <Navbar />
+    <div className="min-h-full text-white flex flex-col bg-black">
+      {/* Navbar rimossa (ora gestita da App.tsx) */}
       
-      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top))]">
+      <div className="pt-[calc(4rem+env(safe-area-inset-top))]">
         <Stories />
         <Hero />
         
@@ -195,9 +194,9 @@ const Index = () => {
             </motion.div>
           </div>
         </section>
-      </main>
+        <Footer />
+      </div>
       
-      <Footer />
       <PWAInstallPrompt />
 
       {/* Push Notification Prompt */}

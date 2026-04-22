@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar from '@/components/Navbar';
 import FeedPost from '@/components/FeedPost';
 import CreatePostModal from '@/components/CreatePostModal';
 import { useSocialFeed } from '@/hooks/use-social-feed';
@@ -11,7 +10,6 @@ import { useAuth } from '@/hooks/use-auth';
 import { useRoleRequests } from '@/hooks/use-role-requests';
 import { Loader2, Plus, AlertCircle, LogIn, RefreshCw, ShieldAlert, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
 import {
@@ -68,9 +66,9 @@ const Bacheca = () => {
   };
 
   return (
-    <div className="min-h-screen text-white flex flex-col bg-transparent">
-      <Navbar />
-      <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-4 md:px-6 max-w-2xl mx-auto w-full">
+    <div className="min-h-full text-white flex flex-col bg-transparent">
+      {/* Navbar rimossa (gestita globalmente) */}
+      <main className="pt-[calc(2rem+env(safe-area-inset-top))] pb-32 px-4 md:px-6 max-w-2xl mx-auto w-full">
         <header className="mb-12 flex items-end justify-between">
           <div className="min-w-0 flex-1">
             <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">{t.feed.subtitle}</h2>

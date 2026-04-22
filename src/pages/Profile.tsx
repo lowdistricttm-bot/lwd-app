@@ -3,7 +3,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
-import Navbar from '@/components/Navbar';
 import GarageTab from '@/components/GarageTab';
 import ApplicationsTab from '@/components/ApplicationsTab';
 import MarketplaceTab from '@/components/MarketplaceTab';
@@ -198,35 +197,7 @@ const Profile = () => {
     }
   };
 
-  const translateOrderStatus = (status: string) => {
-    const map: Record<string, string> = {
-      'pending': 'In attesa di pagamento',
-      'processing': 'In lavorazione',
-      'on-hold': 'In sospeso',
-      'completed': 'Completato',
-      'cancelled': 'Annullato',
-      'refunded': 'Rimborsato',
-      'failed': 'Fallito',
-      'checkout-draft': 'Bozza'
-    };
-    return (map[status] || status).toUpperCase();
-  };
-
-  const getTrackingInfo = (order: any) => {
-    const meta = order.meta_data || [];
-    const official = meta.find((m: any) => m.key === '_wc_shipment_tracking_items');
-    if (official && Array.isArray(official.value) && official.value.length > 0) {
-      const item = official.value[0];
-      return { number: item.tracking_number, provider: item.tracking_provider, url: item.custom_tracking_link || item.tracking_link };
-    }
-    const yithCode = meta.find((m: any) => m.key === '_ywto_tracking_code' || m.key === 'ywto_tracking_code')?.value;
-    const yithCarrier = meta.find((m: any) => m.key === '_ywto_carrier_name' || m.key === 'ywto_carrier_name')?.value;
-    const yithUrl = meta.find((m: any) => m.key === '_ywto_tracking_url' || m.key === 'ywto_tracking_url')?.value;
-    if (yithCode) return { number: yithCode, provider: yithCarrier, url: yithUrl };
-    return null;
-  };
-
-  if (loading || authLoading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
+  if (loading || authLoading) return <div className="min-h-full bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
   const userRole = profile?.role || 'subscriber';
   const isTargetSubscriber = userRole === 'subscriber';
@@ -245,9 +216,9 @@ const Profile = () => {
   const userPosts = posts?.filter(p => p.user_id === targetUserId) || [];
 
   return (
-    <div className="min-h-screen text-white flex flex-col bg-transparent">
-      <Navbar />
-      <main className="flex-1 pb-32 pt-[calc(4rem+env(safe-area-inset-top))]">
+    <div className="min-h-full text-white flex flex-col bg-transparent">
+      {/* Navbar rimossa (gestita globalmente) */}
+      <main className="pb-32">
         {/* Cover Section */}
         <div className="relative aspect-[2.5/1] md:h-64 md:aspect-auto bg-zinc-900 group/cover">
           <div className="absolute inset-0 overflow-hidden" onClick={() => !isOwnProfile && setLightboxData({ images: [profile?.cover_url || DEFAULT_COVER], index: 0 })}>
@@ -306,7 +277,6 @@ const Profile = () => {
                 <div className="flex flex-col items-center"><span className="text-xl font-black italic tracking-tighter leading-none mb-1">{userPosts.length}</span><span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">{t.profile.posts}</span></div>
               </div>
 
-              {/* Upgrade Section for Subscribers */}
               {isOwnProfile && userRole === 'subscriber' && (
                 <div className="w-full max-w-md mb-8">
                   {myRequest && myRequest.status === 'pending' ? (
@@ -348,9 +318,7 @@ const Profile = () => {
           </div>
 
           <div className="mt-4">
-            {/* Sezione Trofei Digitali */}
             {targetUserId && <TrophySection userId={targetUserId} />}
-
             {!isTargetSubscriber && targetUserId && <HighlightsBar userId={targetUserId} isOwnProfile={isOwnProfile} />}
 
             <div className="flex bg-zinc-900/50 backdrop-blur-md rounded-full p-1 mb-6 border border-white/5 overflow-x-auto no-scrollbar">
@@ -375,7 +343,7 @@ const Profile = () => {
                 {activeTab === 'orders' && (
                   <motion.div key="orders" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                     <h3 className="text-lg font-black italic uppercase mb-4">{t.profile.orders}</h3>
-                    {loadingOrders ? <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div> : orders?.length > 0 ? <div className="space-y-3">{orders.map((order: any) => { const tracking = getTrackingInfo(order); const totalItems = order.line_items.reduce((acc: number, item: any) => acc + item.quantity, 0); return <div key={order.id} onClick={() => setSelectedOrder(order)} className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 p-5 rounded-2xl group hover:border-white/20 transition-all shadow-xl cursor-pointer"><div className="flex flex-col md:flex-row justify-between gap-3"><div className="space-y-1.5"><div className="flex items-center gap-2"><span className="bg-white text-black text-[7px] font-black uppercase px-1.5 py-0.5 italic rounded-full">#{order.id}</span><span className={cn("text-[7px] font-black uppercase px-1.5 py-0.5 italic rounded-full text-white", order.status === 'completed' && "bg-green-600", order.status === 'pending' && "bg-blue-600", order.status === 'on-hold' && "bg-orange-500", !['completed', 'pending', 'on-hold'].includes(order.status) && "bg-zinc-800")}>{translateOrderStatus(order.status)}</span></div><h4 className="text-xs font-black italic uppercase tracking-tight">{totalItems} {totalItems === 1 ? 'Prodotto' : 'Prodotti'}</h4><p className="text-[8px] text-zinc-500 font-bold uppercase">Effettuato il {new Date(order.date_created).toLocaleDateString('it-IT')}</p></div><div className="text-right flex flex-col justify-center"><p className="text-[7px] font-black uppercase text-zinc-600 tracking-widest mb-0.5">{t.checkout.total}</p><p className="text-xl font-black italic tracking-tighter">{order.total} €</p></div></div>{tracking && <div className="mt-4 p-4 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-500"><div className="flex items-center gap-3"><div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center text-white"><Truck size={16} /></div><div><p className="text-[7px] font-black uppercase text-zinc-500 tracking-widest">Tracking {tracking.provider || 'Spedizione'}</p>{tracking.url ? <a href={tracking.url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-[10px] font-black uppercase italic text-white tracking-tight hover:text-zinc-300 transition-colors flex items-center gap-1">{tracking.number} <ExternalLink size={8} className="opacity-50" /></a> : <p className="text-[10px] font-black uppercase italic text-white tracking-tight">{tracking.number}</p>}</div></div>{tracking.url && <a href={tracking.url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="flex items-center gap-1.5 bg-white text-black px-3 py-1.5 rounded-full text-[8px] font-black uppercase italic hover:bg-zinc-200 transition-all shadow-lg">Segui <ExternalLink size={10} /></a>}</div>}</div>; })}</div> : <div className="text-center py-20 opacity-20"><ShoppingBag className="mx-auto text-zinc-800 mb-4" size={40} /><p className="text-zinc-500 text-[9px] font-bold uppercase tracking-widest">{t.profile.noOrders}</p></div>}
+                    {loadingOrders ? <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div> : orders?.length > 0 ? <div className="space-y-3">{orders.map((order: any) => { const totalItems = order.line_items.reduce((acc: number, item: any) => acc + item.quantity, 0); return <div key={order.id} onClick={() => setSelectedOrder(order)} className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 p-5 rounded-2xl group hover:border-white/20 transition-all shadow-xl cursor-pointer"><div className="flex flex-col md:flex-row justify-between gap-3"><div className="space-y-1.5"><div className="flex items-center gap-2"><span className="bg-white text-black text-[7px] font-black uppercase px-1.5 py-0.5 italic rounded-full">#{order.id}</span><span className={cn("text-[7px] font-black uppercase px-1.5 py-0.5 italic rounded-full text-white", order.status === 'completed' && "bg-green-600", order.status === 'pending' && "bg-blue-600", order.status === 'on-hold' && "bg-orange-500", !['completed', 'pending', 'on-hold'].includes(order.status) && "bg-zinc-800")}>ORDINE</span></div><h4 className="text-xs font-black italic uppercase tracking-tight">{totalItems} {totalItems === 1 ? 'Prodotto' : 'Prodotti'}</h4><p className="text-[8px] text-zinc-500 font-bold uppercase">Effettuato il {new Date(order.date_created).toLocaleDateString('it-IT')}</p></div><div className="text-right flex flex-col justify-center"><p className="text-[7px] font-black uppercase text-zinc-600 tracking-widest mb-0.5">{t.checkout.total}</p><p className="text-xl font-black italic tracking-tighter">{order.total} €</p></div></div></div>; })}</div> : <div className="text-center py-20 opacity-20"><ShoppingBag className="mx-auto text-zinc-800 mb-4" size={40} /><p className="text-zinc-500 text-[9px] font-bold uppercase tracking-widest">{t.profile.noOrders}</p></div>}
                   </motion.div>
                 )}
                 {activeTab === 'selections' && <motion.div key="selections" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}><ApplicationsTab /></motion.div>}
@@ -396,40 +364,6 @@ const Profile = () => {
           <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
             <AlertDialogAction onClick={() => window.location.href = 'mailto:info@lowdistrict.it'} className="rounded-full bg-white text-black hover:bg-zinc-200 font-black uppercase italic text-[10px] w-full h-12 transition-all">{t.profile.contactAdmin}</AlertDialogAction>
             <AlertDialogCancel className="rounded-full border-white/10 text-white hover:bg-white/5 font-black uppercase italic text-[10px] w-full h-12 mt-0 transition-all">{t.feed.cancel}</AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog open={isRestrictedOpen} onOpenChange={setIsRestrictedOpen}>
-        <AlertDialogContent className="bg-black/60 backdrop-blur-2xl border-white/10 rounded-[2rem]">
-          <AlertDialogHeader>
-            <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-white/5 border border-white/10 flex items-center justify-center rounded-2xl rotate-12">
-                <ShieldAlert size={32} className="text-white -rotate-12" />
-              </div>
-            </div>
-            <AlertDialogTitle className="text-white font-black uppercase italic text-center">Accesso Limitato</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-400 text-xs font-bold uppercase leading-relaxed text-center">
-              I messaggi privati sono una funzione esclusiva riservata ai membri ufficiali del District e agli Iscritti+.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
-            <button 
-              onClick={handleUpgradeRequest}
-              disabled={sendRequest.isPending}
-              className="rounded-full bg-white text-black hover:bg-zinc-200 font-black uppercase italic text-[10px] w-full h-14 transition-all flex items-center justify-center gap-2 shadow-xl"
-            >
-              {sendRequest.isPending ? <Loader2 className="animate-spin" size={14} /> : <><Sparkles size={14} /> {myRequest && myRequest.status === 'pending' ? 'Vedi Stato Richiesta' : 'Richiedi Upgrade ISCRITTO+'}</>}
-            </button>
-            <AlertDialogAction 
-              onClick={() => window.open('https://www.lowdistrict.it/selection-lwdstrct/', '_blank')} 
-              className="rounded-full bg-white/10 border border-white/10 text-white hover:bg-white/20 font-black uppercase italic text-[10px] w-full h-14 transition-all"
-            >
-              Invia Selezione Ufficiale
-            </AlertDialogAction>
-            <AlertDialogCancel className="rounded-full border-white/10 text-white hover:bg-white/5 font-black uppercase italic text-[10px] w-full h-14 mt-0 transition-all">
-              Chiudi
-            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

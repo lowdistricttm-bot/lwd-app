@@ -14,6 +14,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import BackgroundDecoration from "@/components/BackgroundDecoration";
 import SwipeNavigation from "@/components/SwipeNavigation";
 import BottomNav from "@/components/BottomNav";
+import Navbar from "@/components/Navbar";
 import Index from "./pages/Index";
 import Bacheca from "./pages/Bacheca";
 import Discover from "./pages/Discover";
@@ -44,35 +45,44 @@ const AppContent = () => {
   
   return (
     <>
+      {/* Header Fisso Globale */}
+      <Navbar />
+      
       <SwipeNavigation>
         <BackgroundDecoration />
         <PullToRefresh />
         <SpotifyPlayer />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/bacheca" element={<Bacheca />} />
-          <Route path="/discover" element={<Discover />} />
-          <Route path="/shop" element={<Shop />} />
-          <Route path="/product/:id" element={<ProductDetail />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/profile/:userId" element={<Profile />} />
-          <Route path="/post/:postId" element={<PostDetail />} />
-          <Route path="/events" element={<Events />} />
-          <Route path="/meets" element={<Meets />} />
-          <Route path="/messages" element={<Messages />} />
-          <Route path="/chat/:userId" element={<Chat />} />
-          <Route path="/marketplace" element={<Marketplace />} />
-          <Route path="/fitment" element={<FitmentTool />} />
-          <Route path="/lowlab" element={<LowLab />} />
-          <Route path="/leaderboards" element={<Leaderboards />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/applications" element={<AdminApplications />} />
-          <Route path="/admin/users" element={<AdminUsers />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        
+        {/* Contenitore di scorrimento principale - Native Feel */}
+        <main className="app-content-area">
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/bacheca" element={<Bacheca />} />
+            <Route path="/discover" element={<Discover />} />
+            <Route path="/shop" element={<Shop />} />
+            <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/:userId" element={<Profile />} />
+            <Route path="/post/:postId" element={<PostDetail />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/meets" element={<Meets />} />
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/chat/:userId" element={<Chat />} />
+            <Route path="/marketplace" element={<Marketplace />} />
+            <Route path="/fitment" element={<FitmentTool />} />
+            <Route path="/lowlab" element={<LowLab />} />
+            <Route path="/leaderboards" element={<Leaderboards />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/applications" element={<AdminApplications />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </main>
       </SwipeNavigation>
+
+      {/* Navigazione Inferiore Fissa Globale */}
       <BottomNav />
     </>
   );
