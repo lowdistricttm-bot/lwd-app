@@ -17,7 +17,7 @@ interface AdminTrophyModalProps {
   onClose: () => void;
 }
 
-// Definiamo i 3 trofei ufficiali ammessi
+// Definiamo i 3 trofei ufficiali ammessi nell'ordine di visualizzazione desiderato
 const OFFICIAL_TROPHY_TITLES = ['BEST OF SHOW', 'BEST WHEELS', 'BEST LIMBO'];
 
 const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
@@ -52,7 +52,7 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
     u.first_name?.toLowerCase().includes(search.toLowerCase())
   ).slice(0, 6) || [];
 
-  // Filtriamo i trofei per mostrare SOLO i 3 richiesti e rimuovere eventuali duplicati per titolo
+  // Filtriamo e ordiniamo i trofei in base all'array OFFICIAL_TROPHY_TITLES
   const activeTrophies = React.useMemo(() => {
     if (!availableTrophies) return [];
     
@@ -64,6 +64,9 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
         if (seen.has(title)) return false;
         seen.add(title);
         return true;
+      })
+      .sort((a, b) => {
+        return OFFICIAL_TROPHY_TITLES.indexOf(a.title.toUpperCase()) - OFFICIAL_TROPHY_TITLES.indexOf(b.title.toUpperCase());
       });
   }, [availableTrophies]);
 
