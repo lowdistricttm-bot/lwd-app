@@ -71,8 +71,6 @@ const ImageLightbox = ({ images, initialIndex, isOpen, onClose }: ImageLightboxP
     }
   };
 
-  // Usiamo createPortal per uscire dal contenitore della pagina ed evitare 
-  // che la bottom bar o la navbar sovrascrivano lo z-index.
   return createPortal(
     <AnimatePresence>
       {isOpen && images.length > 0 && (
@@ -81,9 +79,9 @@ const ImageLightbox = ({ images, initialIndex, isOpen, onClose }: ImageLightboxP
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 md:p-10 touch-none"
+          className="fixed inset-0 z-[9999] bg-black flex items-center justify-center p-4 md:p-10 touch-none"
         >
-          {/* Header Controls - Calcolato per stare sotto la Safe Area */}
+          {/* Header Controls - Calcolato con safe-area */}
           <div 
             className="absolute right-6 flex items-center gap-4 z-[10000]"
             style={{ top: 'calc(1.5rem + env(safe-area-inset-top))' }}

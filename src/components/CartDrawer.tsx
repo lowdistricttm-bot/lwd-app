@@ -34,14 +34,14 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] touch-none"
+            className="fixed inset-0 bg-black/80 z-[100] touch-none"
           />
           <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-black/60 backdrop-blur-2xl border-l border-white/10 z-[101] flex flex-col shadow-2xl pt-[env(safe-area-inset-top)]"
+            className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-black border-l border-white/10 z-[101] flex flex-col shadow-2xl pt-[env(safe-area-inset-top)]"
             style={{ 
               touchAction: 'pan-y',
               overscrollBehavior: 'contain' 
@@ -66,7 +66,7 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
               ) : (
                 items.map((item) => (
                   <div key={`${item.id}-${item.variationId}`} className="flex gap-4 group">
-                    <div className="w-20 h-24 bg-black/40 border border-white/5 shrink-0 overflow-hidden rounded-xl">
+                    <div className="w-20 h-24 bg-white/5 border border-white/5 shrink-0 overflow-hidden rounded-xl">
                       <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -74,7 +74,7 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                       {item.size && <p className="text-[10px] text-zinc-500 font-bold uppercase mb-2">Taglia: {item.size}</p>}
                       
                       <div className="flex items-center justify-between mt-4">
-                        <div className="flex items-center border border-white/10 bg-black/40 rounded-full overflow-hidden">
+                        <div className="flex items-center border border-white/10 bg-white/5 rounded-full overflow-hidden">
                           <button 
                             onClick={() => updateQuantity(item.id, item.variationId, item.quantity - 1)}
                             className="w-8 h-8 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
@@ -107,7 +107,7 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
             </div>
 
             {items.length > 0 && (
-              <div className="p-6 border-t border-white/5 bg-black/40 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+              <div className="p-6 border-t border-white/5 bg-white/5 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
                 <div className="flex justify-between items-end mb-6">
                   <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Totale Parziale</span>
                   <span className="text-2xl font-black tracking-tighter italic">{total.toFixed(2)} €</span>

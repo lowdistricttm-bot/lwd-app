@@ -76,14 +76,14 @@ const EditPostModal = ({ isOpen, onClose, post }: EditPostModalProps) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150] touch-none"
+            className="fixed inset-0 bg-black/80 z-[150] touch-none"
           />
           <motion.div 
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[151] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[90dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            className="fixed inset-x-0 bottom-0 z-[151] bg-black border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[90dvh] overflow-y-auto shadow-2xl"
             style={{ 
               touchAction: 'pan-y',
               overscrollBehavior: 'contain'
@@ -107,7 +107,7 @@ const EditPostModal = ({ isOpen, onClose, post }: EditPostModalProps) => {
               />
 
               {previewUrl && (
-                <div className="relative aspect-video bg-zinc-900 overflow-hidden border border-white/5 rounded-[1.5rem]">
+                <div className="relative aspect-video bg-white/5 overflow-hidden border border-white/5 rounded-[1.5rem]">
                   {previewUrl.match(/\.(mp4|webm|ogg|mov)$/i) ? (
                     <video src={previewUrl} className="w-full h-full object-cover" controls />
                   ) : (
@@ -116,7 +116,7 @@ const EditPostModal = ({ isOpen, onClose, post }: EditPostModalProps) => {
                   <button 
                     type="button"
                     onClick={handleRemoveImage}
-                    className="absolute top-4 right-4 p-2 bg-black/60 text-white hover:bg-red-600 transition-colors rounded-full backdrop-blur-md"
+                    className="absolute top-4 right-4 p-2 bg-black text-white hover:bg-red-600 transition-colors rounded-full border border-white/10"
                   >
                     <Trash2 size={18} />
                   </button>
@@ -135,7 +135,7 @@ const EditPostModal = ({ isOpen, onClose, post }: EditPostModalProps) => {
                   <button 
                     type="button" 
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-12 h-12 bg-white/5 border border-white/10 text-zinc-400 rounded-full flex items-center justify-center hover:text-white hover:bg-white/10 transition-all shrink-0 backdrop-blur-md"
+                    className="w-12 h-12 bg-white/5 border border-white/10 text-zinc-400 rounded-full flex items-center justify-center hover:text-white hover:bg-white/10 transition-all shrink-0"
                   >
                     <Camera size={20} />
                   </button>
@@ -144,7 +144,7 @@ const EditPostModal = ({ isOpen, onClose, post }: EditPostModalProps) => {
                 <Button 
                   type="submit"
                   disabled={updatePost.isPending}
-                  className="bg-white text-black hover:bg-zinc-200 hover:scale-[1.02] active:scale-[0.98] px-10 h-12 rounded-full font-black uppercase italic tracking-widest transition-all duration-300 shadow-xl"
+                  className="bg-white text-black hover:bg-zinc-200 hover:scale-[1.02] active:scale-[0.98] px-10 h-12 rounded-full font-black uppercase italic tracking-widest transition-all duration-300 shadow-xl border-none"
                 >
                   {updatePost.isPending ? <Loader2 className="animate-spin" /> : 'Salva Modifiche'}
                 </Button>

@@ -217,7 +217,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
   const roleLabel = isHighlight ? 'RACCOLTA' : (t.profile.roles[userStories.role] || t.profile.roles.member);
   
-  // Altezza fissa 0px per spingere tutto al bordo
   const modalBottomOffset = "0px";
 
   return createPortal(
@@ -227,16 +226,11 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[9999] bg-black flex items-center justify-center overflow-hidden touch-none"
     >
-      {/* Background Blur forzato a coprire tutto lo schermo */}
-      <div className="absolute inset-0 z-0 opacity-70 blur-[60px] scale-125">
-        <img src={currentStory.image_url} className="w-full h-full object-cover" alt="" />
-      </div>
-
-      <div className="relative w-full h-full md:h-[85vh] md:w-[420px] md:aspect-[9/16] bg-transparent md:bg-black/40 md:rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl md:border md:border-white/10 z-10">
+      <div className="relative w-full h-full md:h-[85vh] md:w-[420px] md:aspect-[9/16] bg-black md:rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl md:border md:border-white/10 z-10">
         
         <div className="absolute top-[calc(0.5rem+env(safe-area-inset-top))] md:top-6 left-4 right-4 z-50 flex gap-1.5">
           {userStories.items.map((_, i) => (
-            <div key={i} className="h-1 flex-1 bg-white/30 rounded-full overflow-hidden backdrop-blur-md">
+            <div key={i} className="h-1 flex-1 bg-white/30 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-white transition-all duration-100 ease-linear shadow-[0_0_10px_rgba(255,255,255,0.8)]"
                 style={{ width: i === currentIndex ? `${progress}%` : i < currentIndex ? '100%' : '0%' }}
@@ -247,7 +241,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
         <div className="absolute top-[calc(2rem+env(safe-area-inset-top))] md:top-12 left-4 right-4 z-50 flex items-center justify-between">
           <button onClick={handleProfileClick} className="flex items-center gap-3 group text-left">
-            <div className="w-10 h-10 rounded-full border-2 border-white/40 shadow-lg overflow-hidden bg-zinc-900 group-hover:border-white transition-all">
+            <div className="w-10 h-10 rounded-full border-2 border-white/40 shadow-lg overflow-hidden bg-black group-hover:border-white transition-all">
               {userStories.avatar_url && <img src={userStories.avatar_url} className="w-full h-full object-cover" alt="" />}
             </div>
             <div className="flex flex-col drop-shadow-md">
@@ -258,11 +252,11 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           
           <div className="flex items-center gap-1">
             {isVideo && (
-              <button onClick={toggleMute} className="p-2 text-white hover:text-zinc-300 drop-shadow-lg transition-all bg-black/20 backdrop-blur-md rounded-full">
+              <button onClick={toggleMute} className="p-2 text-white hover:text-zinc-300 drop-shadow-lg transition-all bg-black/40 rounded-full">
                 {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
               </button>
             )}
-            <button onClick={onClose} className="p-2 text-white hover:text-zinc-300 transition-all drop-shadow-lg bg-black/20 backdrop-blur-md rounded-full ml-2"><X size={24} /></button>
+            <button onClick={onClose} className="p-2 text-white hover:text-zinc-300 transition-all drop-shadow-lg bg-black/40 rounded-full ml-2"><X size={24} /></button>
           </div>
         </div>
 
@@ -273,7 +267,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
         </div>
 
         {/* Main Content (Image/Video) */}
-        <div className="absolute inset-0 flex items-center justify-center bg-transparent z-10">
+        <div className="absolute inset-0 flex items-center justify-center bg-black z-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentStory.id}
@@ -317,9 +311,9 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </AnimatePresence>
         </div>
 
-        {/* Footer Interaction Area - Spostato nel gradiente nero estremo */}
+        {/* Footer Interaction Area */}
         <div 
-          className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black via-black/60 to-transparent pt-32 pointer-events-none"
+          className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black via-black/80 to-transparent pt-32 pointer-events-none"
         >
           <div 
             className="px-4 flex w-full max-w-md mx-auto items-end pointer-events-auto pb-1" 
@@ -328,22 +322,22 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
               <div className="flex items-center justify-between w-full gap-2 mb-1">
                 {!isHighlight && (
                   <>
-                    <button onClick={() => setShowViewers(true)} className="flex-1 h-10 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all shadow-xl">
+                    <button onClick={() => setShowViewers(true)} className="flex-1 h-10 rounded-full bg-black/60 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all shadow-xl">
                       <Eye size={18} className="text-white" />
                     </button>
-                    <button onClick={() => setIsMentionModalOpen(true)} className="flex-1 h-10 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all shadow-xl">
+                    <button onClick={() => setIsMentionModalOpen(true)} className="flex-1 h-10 rounded-full bg-black/60 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all shadow-xl">
                       <AtSign size={18} className="text-white" />
                     </button>
-                    <button onClick={() => setIsHighlightModalOpen(true)} className="flex-1 h-10 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all shadow-xl">
+                    <button onClick={() => setIsHighlightModalOpen(true)} className="flex-1 h-10 rounded-full bg-black/60 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all shadow-xl">
                       <Star size={18} className="text-white" />
                     </button>
-                    <button onClick={handleDelete} className="flex-1 h-10 rounded-full bg-black/40 backdrop-blur-xl border border-red-500/30 flex items-center justify-center hover:bg-red-500/20 transition-all shadow-xl">
+                    <button onClick={handleDelete} className="flex-1 h-10 rounded-full bg-black/60 border border-red-500/30 flex items-center justify-center hover:bg-red-500/20 transition-all shadow-xl">
                       <Trash2 size={18} className="text-red-500" />
                     </button>
                   </>
                 )}
                 {isHighlight && (
-                  <button onClick={handleRemoveFromHighlight} className="w-full h-12 rounded-full bg-black/40 backdrop-blur-xl border border-red-500/30 flex items-center justify-center gap-2 hover:bg-red-500/20 transition-all shadow-xl">
+                  <button onClick={handleRemoveFromHighlight} className="w-full h-12 rounded-full bg-black/60 border border-red-500/30 flex items-center justify-center gap-2 hover:bg-red-500/20 transition-all shadow-xl">
                     <BookmarkX size={18} className="text-red-500" />
                     <span className="text-[10px] font-black uppercase tracking-widest text-red-500">Rimuovi</span>
                   </button>
@@ -358,7 +352,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                     onChange={(e) => setReplyText(e.target.value)} 
                     onFocus={() => videoRef.current?.pause()} 
                     onBlur={() => videoRef.current?.play()} 
-                    className="bg-black/40 backdrop-blur-xl border border-white/20 rounded-full h-10 px-5 text-[11px] font-bold uppercase tracking-widest text-white placeholder:text-white/70 focus-visible:ring-white/40 shadow-xl" 
+                    className="bg-black/60 border border-white/20 rounded-full h-10 px-5 text-[11px] font-bold uppercase tracking-widest text-white placeholder:text-white/70 focus-visible:ring-white/40 shadow-xl" 
                   />
                   <AnimatePresence>
                     {replyText.trim() && (
@@ -379,13 +373,13 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                     whileTap={{ scale: 1.4 }}
                     onClick={handleLike} 
                     className={cn(
-                      "w-10 h-10 rounded-full flex items-center justify-center transition-all border shadow-xl backdrop-blur-xl", 
-                      currentStory.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-black/40 border-white/20 text-white hover:bg-white/20 hover:scale-105"
+                      "w-10 h-10 rounded-full flex items-center justify-center transition-all border shadow-xl", 
+                      currentStory.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-black/60 border-white/20 text-white hover:bg-white/20 hover:scale-105"
                     )}
                   >
                     <Heart size={18} fill={currentStory.is_liked ? "currentColor" : "none"} />
                   </motion.button>
-                  <button onClick={handleShareClick} className="w-10 h-10 bg-black/40 backdrop-blur-xl border border-white/20 text-white rounded-full flex items-center justify-center hover:bg-white/20 hover:scale-105 transition-all shadow-xl">
+                  <button onClick={handleShareClick} className="w-10 h-10 bg-black/60 border border-white/20 text-white rounded-full flex items-center justify-center hover:bg-white/20 hover:scale-105 transition-all shadow-xl">
                     <Send size={18} className="-rotate-12 mr-0.5" />
                   </button>
                 </div>
@@ -397,13 +391,13 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
         <AnimatePresence>
           {showViewers && (
             <>
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowViewers(false)} className="absolute inset-0 bg-black/60 backdrop-blur-sm z-[60]" />
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowViewers(false)} className="absolute inset-0 bg-black/80 z-[60]" />
               <motion.div 
                 initial={{ y: '100%' }} 
                 animate={{ y: 0 }} 
                 exit={{ y: '100%' }} 
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }} 
-                className="absolute inset-x-0 z-[61] bg-zinc-950 border border-white/10 rounded-[2.5rem] max-h-[60%] flex flex-col pb-10 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]" 
+                className="absolute inset-x-0 z-[61] bg-black border-t border-white/10 rounded-t-[2.5rem] max-h-[60%] flex flex-col pb-10 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]" 
                 style={{ 
                   touchAction: 'pan-y',
                   bottom: modalBottomOffset 
@@ -419,9 +413,9 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                     <div className="text-center py-10 opacity-30"><Eye size={40} className="mx-auto mb-2" /><p className="text-[10px] font-black uppercase tracking-widest">Nessuna visualizzazione</p></div>
                   ) : (
                     views?.map((view: any) => (
-                      <button key={view.id} onClick={() => { onClose(); navigate(`/profile/${view.user_id}`); }} className="w-full flex items-center justify-between p-3 bg-zinc-900/40 border border-white/5 rounded-2xl hover:bg-zinc-900 transition-all group">
+                      <button key={view.id} onClick={() => { onClose(); navigate(`/profile/${view.user_id}`); }} className="w-full flex items-center justify-between p-3 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all group">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-zinc-800 rounded-full overflow-hidden border border-white/10 group-hover:border-white transition-colors">{view.profiles?.avatar_url ? <img src={view.profiles.avatar_url} className="w-full h-full object-cover" alt="" /> : <div className="w-full h-full flex items-center justify-center text-zinc-700"><User size={20} /></div>}</div>
+                          <div className="w-10 h-10 bg-black rounded-full overflow-hidden border border-white/10 group-hover:border-white transition-colors">{view.profiles?.avatar_url ? <img src={view.profiles.avatar_url} className="w-full h-full object-cover" alt="" /> : <div className="w-full h-full flex items-center justify-center text-zinc-700"><User size={20} /></div>}</div>
                           <span className="text-xs font-black italic uppercase text-zinc-300 group-hover:text-white transition-colors">{view.profiles?.username}</span>
                         </div>
                         <span className="text-[8px] font-bold text-zinc-600 uppercase">{new Date(view.viewed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -435,8 +429,8 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
         </AnimatePresence>
       </div>
 
-      <button onClick={handlePrev} className="hidden md:flex fixed left-[calc(50%-320px)] top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-[10000] text-white transition-all border border-white/10 backdrop-blur-md shadow-2xl"><ChevronLeft size={32} /></button>
-      <button onClick={handleNext} className="hidden md:flex fixed right-[calc(50%-320px)] top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-[10000] text-white transition-all border border-white/10 backdrop-blur-md shadow-2xl"><ChevronRight size={32} /></button>
+      <button onClick={handlePrev} className="hidden md:flex fixed left-[calc(50%-320px)] top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-[10000] text-white transition-all border border-white/10 shadow-2xl"><ChevronLeft size={32} /></button>
+      <button onClick={handleNext} className="hidden md:flex fixed right-[calc(50%-320px)] top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 hover:bg-white/20 rounded-full z-[10000] text-white transition-all border border-white/10 shadow-2xl"><ChevronRight size={32} /></button>
 
       <ShareStoryModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} storyUrl={currentStory.image_url} authorName={userStories.username} bottomOffset={modalBottomOffset} />
       {currentUserId && <HighlightModal isOpen={isHighlightModalOpen} onClose={() => setIsHighlightModalOpen(false)} story={currentStory} userId={currentUserId} bottomOffset={modalBottomOffset} />}

@@ -60,14 +60,14 @@ const CreatePostModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }} 
             onClick={onClose} 
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] touch-none" 
+            className="fixed inset-0 bg-black/80 z-[1000] touch-none" 
           />
           <motion.div 
             initial={{ y: '100%' }} 
             animate={{ y: 0 }} 
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[1001] bg-zinc-950 border-t border-white/10 p-6 pb-15 rounded-t-[2.5rem] max-h-[92dvh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.8)]"
+            className="fixed inset-x-0 bottom-0 z-[1001] bg-black border-t border-white/10 p-6 pb-15 rounded-t-[2.5rem] max-h-[92dvh] flex flex-col shadow-2xl"
             style={{ 
               touchAction: 'pan-y',
               overscrollBehavior: 'contain'
@@ -94,13 +94,13 @@ const CreatePostModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
               {previews.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {previews.map((url, i) => (
-                    <div key={i} className="relative aspect-square bg-black/40 rounded-[1.5rem] overflow-hidden border border-white/5 group">
+                    <div key={i} className="relative aspect-square bg-white/5 rounded-[1.5rem] overflow-hidden border border-white/5 group">
                       <img src={url} alt="Preview" className="w-full h-full object-cover" />
-                      <button type="button" onClick={() => removeFile(i)} className="absolute top-2 right-2 p-2 bg-black/60 text-white hover:bg-red-600 transition-all rounded-full backdrop-blur-md"><Trash2 size={14} /></button>
+                      <button type="button" onClick={() => removeFile(i)} className="absolute top-2 right-2 p-2 bg-black text-white hover:bg-red-600 transition-all rounded-full border border-white/10"><Trash2 size={14} /></button>
                     </div>
                   ))}
                   {previews.length < 10 && (
-                    <button type="button" onClick={() => fileInputRef.current?.click()} className="aspect-square border-2 border-dashed border-white/5 bg-white/5 rounded-[1.5rem] flex flex-col items-center justify-center text-zinc-600 hover:border-white/20 hover:text-white transition-all group">
+                    <button type="button" onClick={() => fileInputRef.current?.click()} className="aspect-square border-2 border-dashed border-white/10 bg-white/5 rounded-[1.5rem] flex flex-col items-center justify-center text-zinc-600 hover:border-white/20 hover:text-white transition-all group">
                       <Plus size={24} className="mb-1 group-hover:scale-110 transition-transform" />
                       <span className="text-[8px] font-black uppercase tracking-widest">Aggiungi</span>
                     </button>
@@ -111,7 +111,7 @@ const CreatePostModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
               <div className="flex items-center justify-between pt-6 border-t border-white/5 mt-auto">
                 <div className="flex gap-3">
                   <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" multiple onChange={handleFileChange} />
-                  <button type="button" onClick={() => fileInputRef.current?.click()} className="w-12 h-12 bg-white/5 border border-white/10 text-zinc-400 rounded-full flex items-center justify-center hover:text-white hover:bg-white/10 transition-all shrink-0 backdrop-blur-md"><Camera size={20} /></button>
+                  <button type="button" onClick={() => fileInputRef.current?.click()} className="w-12 h-12 bg-white/5 border border-white/10 text-zinc-400 rounded-full flex items-center justify-center hover:text-white hover:bg-white/10 transition-all shrink-0"><Camera size={20} /></button>
                 </div>
                 <Button type="submit" disabled={(!content.trim() && selectedFiles.length === 0) || createPost.isPending} className="bg-white text-black hover:bg-zinc-200 hover:scale-[1.02] active:scale-[0.98] px-10 h-12 rounded-full font-black uppercase italic tracking-widest transition-all duration-300 shadow-xl shadow-white/5 border-none">
                   {createPost.isPending ? <Loader2 className="animate-spin" size={20} /> : <span className="flex items-center gap-2">Pubblica <Send size={16} className="-rotate-12" /></span>}

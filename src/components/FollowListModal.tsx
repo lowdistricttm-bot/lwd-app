@@ -40,14 +40,14 @@ const FollowListModal = ({ isOpen, onClose, userId, username, type }: FollowList
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }} 
             onClick={onClose} 
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] touch-none" 
+            className="fixed inset-0 bg-black/80 z-[1000] touch-none" 
           />
           <motion.div 
             initial={{ y: '100%' }} 
             animate={{ y: 0 }} 
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[1001] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[85dvh] flex flex-col shadow-2xl"
+            className="fixed inset-x-0 bottom-0 z-[1001] bg-black border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[85dvh] flex flex-col shadow-2xl"
             style={{ 
               touchAction: 'pan-y',
               overscrollBehavior: 'contain'
@@ -79,10 +79,10 @@ const FollowListModal = ({ isOpen, onClose, userId, username, type }: FollowList
                       onClose(); 
                       navigate(`/profile/${user.id}`); 
                     }} 
-                    className="w-full flex items-center justify-between p-4 bg-white/5 backdrop-blur-md border border-white/5 rounded-[1.5rem] hover:bg-white/10 transition-all group"
+                    className="w-full flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-[1.5rem] hover:bg-white/10 transition-all group"
                   >
                     <div className="flex items-center gap-4 min-w-0">
-                      <div className="w-12 h-12 bg-black/40 rounded-full overflow-hidden border border-white/10 group-hover:border-white transition-colors shrink-0">
+                      <div className="w-12 h-12 bg-black rounded-full overflow-hidden border border-white/10 group-hover:border-white transition-colors shrink-0">
                         {user.avatar_url ? (
                           <img src={user.avatar_url} className="w-full h-full object-cover" alt={user.username} />
                         ) : (
