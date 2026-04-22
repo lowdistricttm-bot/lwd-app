@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Info, Gauge, MoveHorizontal, Plus, Zap, AlertTriangle, Ruler, Save, Car, Loader2, CheckCircle2 } from 'lucide-react';
+import { Info, Gauge, MoveHorizontal, Plus, Zap, AlertTriangle, Ruler, Save, Car, Loader2, CheckCircle2, ArrowRight, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useGarage } from '@/hooks/use-garage';
 import { useVehicleLogs } from '@/hooks/use-vehicle-logs';
@@ -14,30 +14,17 @@ import { showSuccess, showError } from '@/utils/toast';
 
 const FitmentCalculator = () => {
   const { user } = useAuth();
-  const { vehicles, isLoading: loadingVehicles } = useGarage();
+  const { vehicles } = useGarage();
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>('');
   
-  // Setup Iniziale (OEM o Attuale)
   const [current, setCurrent] = useState({ 
-    width: 8.5, 
-    et: 35, 
-    diameter: 18,
-    tireW: 225,
-    tireA: 40,
-    spacer: 0
+    width: 8.5, et: 35, diameter: 18, tireW: 225, tireA: 40, spacer: 0
   });
 
-  // Setup Desiderato (Nuovo)
   const [next, setNext] = useState({ 
-    width: 9.5, 
-    et: 22, 
-    diameter: 19,
-    tireW: 235,
-    tireA: 35,
-    spacer: 12
+    width: 9.5, et: 22, diameter: 19, tireW: 235, tireA: 35, spacer: 12
   });
 
-  // Hook per il logbook
   const { addLog } = useVehicleLogs(selectedVehicleId || undefined);
 
   useEffect(() => {
@@ -53,283 +40,220 @@ const FitmentCalculator = () => {
     const totalDiameter = (data.diameter * 25.4) + (tireSidewall * 2);
     const poke = (rimWidthMm / 2) - data.et + data.spacer;
     const inset = (rimWidthMm / 2) + data.et - data.spacer;
-    return { totalDiameter, poke, inset, circumference: totalDiameter * Math.PI };
+    return { totalDiameter, poke, inset, rimWidthMm };
   };
 
   const results = useMemo(() => {
     const c = calc(current);
     const n = calc(next);
-
-    const speedoDiff = ((n.circumference - c.circumference) / c.circumference) * 100;
-    
     return {
       pokeDiff: (n.poke - c.poke).toFixed(1),
       insetDiff: (n.inset - c.inset).toFixed(1),
       diameterDiff: (n.totalDiameter - c.totalDiameter).toFixed(1),
-      speedoDiff: speedoDiff.toFixed(2),
-      actualSpeed: (100 + (100 * (speedoDiff / 100))).toFixed(1)
     };
   }, [current, next]);
 
   const pokeVal = parseFloat(results.pokeDiff);
-  const insetVal = parseFloat(results.insetDiff);
-  const diamVal = parseFloat(results.diameterDiff);
 
   const handleSaveToGarage = async () => {
-    if (!selectedVehicleId) {
-      showError("Seleziona un veicolo dal tuo garage");
-      return;
-    }
-
+    if (!selectedVehicleId) { showError("Seleziona un veicolo"); return; }
     const logTitle = `FITMENT: ${next.width}J ET${next.et} (${next.tireW}/${next.tireA} R${next.diameter})`;
-    const logDesc = `Configurazione calcolata nel Wheel Lab.\n\n` +
-                    `SPECIFICHE:\n` +
-                    `- Cerchio: ${next.width}J ET${next.et}\n` +
-                    `- Gomma: ${next.tireW}/${next.tireA} R${next.diameter}\n` +
-                    `- Distanziale: ${next.spacer}mm\n\n` +
-                    `RISULTATI RISPETTO AL SETUP PRECEDENTE:\n` +
-                    `- Sporgenza (Poke): ${results.pokeDiff}mm\n` +
-                    `- Ingombro Interno (Inset): ${results.insetDiff}mm\n` +
-                    `- Variazione Diametro: ${results.diameterDiff}mm\n` +
-                    `- Errore Tachimetro: ${results.speedoDiff}%`;
+    const logDesc = `Configurazione calcolata nel Wheel Lab.\n\nRISULTATI:\n- Poke: ${results.pokeDiff}mm\n- Inset: ${results.insetDiff}mm`;
+    await addLog.mutateAsync({ vehicle_id: selectedVehicleId, title: logTitle, description: logDesc, type: 'modification', event_date: new Date().toISOString() });
+  };
 
-    try {
-      await addLog.mutateAsync({
-        vehicle_id: selectedVehicleId,
-        title: logTitle,
-        description: logDesc,
-        type: 'modification',
-        event_date: new Date().toISOString()
-      });
-      showSuccess("Configurazione salvata nel Diario di Bordo!");
-    } catch (err) {
-      showError("Errore durante il salvataggio");
-    }
+  // Componente per il profilo della ruota (SVG)
+  const WheelProfile = ({ data, color, isNew = false }: { data: any, color: string, isNew?: boolean }) => {
+    const rimW = data.width * 15; // Scaling per visualizzazione
+    const tireW = (data.tireW / 25.4) * 15;
+    const offset = (data.et - data.spacer) * 0.5;
+
+    return (
+      <g transform={`translate(${-offset}, 0)`}>
+        {/* Pneumatico */}
+        <path 
+          d={`M ${-tireW/2} 10 Q ${-tireW/2} 0 0 0 Q ${tireW/2} 0 ${tireW/2} 10 L ${tireW/2} 240 Q ${tireW/2} 250 0 250 Q ${-tireW/2} 250 ${-tireW/2} 240 Z`}
+          fill="none"
+          stroke={color}
+          strokeWidth="2"
+          opacity={isNew ? 1 : 0.3}
+        />
+        {/* Cerchio */}
+        <path 
+          d={`M ${-rimW/2} 30 L ${rimW/2} 30 L ${rimW/2} 220 L ${-rimW/2} 220 Z`}
+          fill={isNew ? `${color}20` : "none"}
+          stroke={color}
+          strokeWidth="1.5"
+          opacity={isNew ? 0.8 : 0.2}
+        />
+        {/* Canale/Razze (Semplificato) */}
+        <path 
+          d={`M 0 30 L 0 220 M ${-rimW/2} 125 L ${rimW/2} 125`}
+          stroke={color}
+          strokeWidth="1"
+          opacity={isNew ? 0.4 : 0.1}
+        />
+      </g>
+    );
   };
 
   return (
-    <div className="space-y-12">
-      {/* Visual Simulation - Aumentata altezza a 480px */}
-      <div className="relative h-[480px] bg-zinc-950 rounded-[3rem] border border-white/5 overflow-hidden flex items-center justify-center shadow-2xl">
-        <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
-        
-        {/* Fender Line */}
-        <div className="absolute top-12 left-1/2 -translate-x-1/2 w-64 h-1.5 bg-white/20 rounded-full z-10">
-          <div className="absolute -top-7 left-1/2 -translate-x-1/2 text-[8px] font-black uppercase tracking-widest text-zinc-600">Linea Passaruota</div>
-        </div>
+    <div className="space-y-10 pb-20">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-black italic uppercase tracking-tighter">Calcolatore Fitment Avanzato</h2>
+        <button className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10 text-[9px] font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-all">
+          <Info size={14} /> Info
+        </button>
+      </div>
 
-        {/* Wheel Container - Spostato leggermente in alto con -mt-12 */}
-        <div className="relative w-full flex justify-center items-center -mt-12">
-          {/* Current Wheel Outline */}
-          <div 
-            className="absolute border-2 border-dashed border-white/5 rounded-[2rem] flex items-center justify-center opacity-20"
-            style={{ 
-              width: current.width * 12 + 40,
-              height: 260,
-              x: -(current.et - current.spacer) / 2
-            }}
-          >
-            <span className="text-[8px] font-black uppercase text-zinc-500 rotate-90">ORIGINALE</span>
-          </div>
-
-          {/* New Wheel & Tire Simulation */}
-          <motion.div 
-            animate={{ 
-              x: -(next.et - next.spacer) / 2,
-              width: next.width * 12 + 40,
-              scale: 1
-            }}
-            className="relative h-[280px] bg-white/5 border border-white/20 rounded-[2.5rem] flex flex-col items-center justify-center shadow-[0_0_60px_rgba(255,255,255,0.05)]"
-          >
-            {/* Tire Part */}
-            <div className="absolute inset-0 border-[12px] border-zinc-900 rounded-[2.5rem]" />
-            
-            {/* Rim Part */}
-            <div className="relative z-10 flex flex-col items-center bg-white text-black p-4 rounded-2xl shadow-2xl">
-              <span className="text-xs font-black italic leading-none">{next.diameter}"</span>
-              <span className="text-[8px] font-bold opacity-60">{next.width}J ET{next.et}</span>
-              {next.spacer > 0 && <span className="text-[7px] font-black text-red-600 mt-1">+{next.spacer}mm Spacer</span>}
+      {/* Input Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Ruota Attuale */}
+        <div className="bg-zinc-900/40 backdrop-blur-md border border-white/5 p-6 rounded-[2rem] space-y-6">
+          <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 text-center italic">Ruota Attuale</h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase">Diametro:</span>
+              <select value={current.diameter} onChange={e => setCurrent({...current, diameter: parseInt(e.target.value)})} className="bg-transparent font-black italic text-sm outline-none">
+                {[15,16,17,18,19,20,21,22].map(v => <option key={v} value={v}>{v}"</option>)}
+              </select>
             </div>
-
-            {/* Indicators - Ora hanno molto più spazio sotto */}
-            <div className="absolute -bottom-24 flex flex-col items-center gap-1 w-64">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase">Canale:</span>
+              <select value={current.width} onChange={e => setCurrent({...current, width: parseFloat(e.target.value)})} className="bg-transparent font-black italic text-sm outline-none">
+                {[7,7.5,8,8.5,9,9.5,10,10.5,11,12].map(v => <option key={v} value={v}>{v}J</option>)}
+              </select>
+            </div>
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase">ET (Offset):</span>
               <div className="flex items-center gap-2">
-                <MoveHorizontal size={14} className={cn(pokeVal > 0 ? "text-green-400" : "text-red-400")} />
-                <span className="text-3xl font-black italic tracking-tighter text-white">{Math.abs(pokeVal)}mm</span>
+                <span className="text-zinc-600 text-xs font-black">+</span>
+                <input type="number" value={current.et} onChange={e => setCurrent({...current, et: parseInt(e.target.value) || 0})} className="w-12 bg-transparent font-black italic text-sm outline-none text-right" />
               </div>
-              <span className={cn(
-                "text-[10px] font-black uppercase tracking-[0.2em] italic",
-                pokeVal > 0 ? "text-green-400" : "text-red-400"
-              )}>
-                {pokeVal > 0 ? 'PIÙ SPORGENTE' : 'PIÙ RIENTRANTE'}
-              </span>
             </div>
-          </motion.div>
-        </div>
-      </div>
-
-      {/* Input Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-zinc-900/40 backdrop-blur-md border border-white/5 p-8 rounded-[2.5rem] space-y-8">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-zinc-800 rounded-2xl flex items-center justify-center text-zinc-500"><Gauge size={20} /></div>
-            <h4 className="text-xs font-black uppercase tracking-widest italic">Setup Attuale</h4>
-          </div>
-          
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label className="text-[8px] font-black uppercase text-zinc-500 ml-4">Diametro</Label>
-              <Input type="number" value={current.diameter} onChange={e => setCurrent({...current, diameter: parseFloat(e.target.value) || 0})} className="bg-black/40 border-white/10 rounded-full h-12 text-center font-black italic" />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-[8px] font-black uppercase text-zinc-500 ml-4">Canale (J)</Label>
-              <Input type="number" step="0.5" value={current.width} onChange={e => setCurrent({...current, width: parseFloat(e.target.value) || 0})} className="bg-black/40 border-white/10 rounded-full h-12 text-center font-black italic" />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-[8px] font-black uppercase text-zinc-500 ml-4">Offset (ET)</Label>
-              <Input type="number" value={current.et} onChange={e => setCurrent({...current, et: parseFloat(e.target.value) || 0})} className="bg-black/40 border-white/10 rounded-full h-12 text-center font-black italic" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
-            <div className="space-y-2">
-              <Label className="text-[8px] font-black uppercase text-zinc-500 ml-4">Gomma (Larghezza)</Label>
-              <Input type="number" value={current.tireW} onChange={e => setCurrent({...current, tireW: parseFloat(e.target.value) || 0})} className="bg-black/40 border-white/10 rounded-full h-12 text-center font-black italic" />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-[8px] font-black uppercase text-zinc-500 ml-4">Gomma (Spalla)</Label>
-              <Input type="number" value={current.tireA} onChange={e => setCurrent({...current, tireA: parseFloat(e.target.value) || 0})} className="bg-black/40 border-white/10 rounded-full h-12 text-center font-black italic" />
+            <div className="pt-2">
+              <p className="text-[8px] font-black text-zinc-600 uppercase mb-2">Pneumatico</p>
+              <div className="bg-black/20 rounded-xl p-3 text-xs font-black italic text-zinc-400">
+                {current.tireW}/{current.tireA} R{current.diameter}
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white text-black p-8 rounded-[2.5rem] shadow-2xl space-y-8">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-black rounded-2xl flex items-center justify-center text-white"><Plus size={20} /></div>
-            <h4 className="text-xs font-black uppercase tracking-widest italic">Nuovo Setup</h4>
-          </div>
-          
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label className="text-[8px] font-black uppercase text-zinc-700 ml-4">Diametro</Label>
-              <Input type="number" value={next.diameter} onChange={e => setNext({...next, diameter: parseFloat(e.target.value) || 0})} className="bg-white border-black/10 rounded-full h-12 text-center font-black italic focus-visible:ring-black/20" />
+        {/* Nuova Ruota */}
+        <div className="bg-zinc-900/60 backdrop-blur-md border border-emerald-500/20 p-6 rounded-[2rem] space-y-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-[50px] -mr-16 -mt-16" />
+          <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500 text-center italic">Nuova Ruota</h3>
+          <div className="space-y-4 relative z-10">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase">Diametro:</span>
+              <select value={next.diameter} onChange={e => setNext({...next, diameter: parseInt(e.target.value)})} className="bg-transparent font-black italic text-sm outline-none text-emerald-400">
+                {[15,16,17,18,19,20,21,22].map(v => <option key={v} value={v}>{v}"</option>)}
+              </select>
             </div>
-            <div className="space-y-2">
-              <Label className="text-[8px] font-black uppercase text-zinc-700 ml-4">Canale (J)</Label>
-              <Input type="number" step="0.5" value={next.width} onChange={e => setNext({...next, width: parseFloat(e.target.value) || 0})} className="bg-white border-black/10 rounded-full h-12 text-center font-black italic focus-visible:ring-black/20" />
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase">Canale:</span>
+              <select value={next.width} onChange={e => setNext({...next, width: parseFloat(e.target.value)})} className="bg-transparent font-black italic text-sm outline-none text-emerald-400">
+                {[7,7.5,8,8.5,9,9.5,10,10.5,11,12].map(v => <option key={v} value={v}>{v}J</option>)}
+              </select>
             </div>
-            <div className="space-y-2">
-              <Label className="text-[8px] font-black uppercase text-zinc-700 ml-4">Offset (ET)</Label>
-              <Input type="number" value={next.et} onChange={e => setNext({...next, et: parseFloat(e.target.value) || 0})} className="bg-white border-black/10 rounded-full h-12 text-center font-black italic focus-visible:ring-black/20" />
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase">ET (Offset):</span>
+              <div className="flex items-center gap-2">
+                <span className="text-emerald-900 text-xs font-black">+</span>
+                <input type="number" value={next.et} onChange={e => setNext({...next, et: parseInt(e.target.value) || 0})} className="w-12 bg-transparent font-black italic text-sm outline-none text-right text-emerald-400" />
+              </div>
             </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4 pt-4 border-t border-black/5">
-            <div className="space-y-2">
-              <Label className="text-[8px] font-black uppercase text-zinc-700 ml-4">Gomma (L)</Label>
-              <Input type="number" value={next.tireW} onChange={e => setNext({...next, tireW: parseFloat(e.target.value) || 0})} className="bg-white border-black/10 rounded-full h-12 text-center font-black italic focus-visible:ring-black/20" />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-[8px] font-black uppercase text-zinc-700 ml-4">Gomma (S)</Label>
-              <Input type="number" value={next.tireA} onChange={e => setNext({...next, tireA: parseFloat(e.target.value) || 0})} className="bg-white border-black/10 rounded-full h-12 text-center font-black italic focus-visible:ring-black/20" />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-[8px] font-black uppercase text-red-600 ml-4">Distanziale</Label>
-              <Input type="number" value={next.spacer} onChange={e => setNext({...next, spacer: parseFloat(e.target.value) || 0})} className="bg-red-50 border-red-200 rounded-full h-12 text-center font-black italic text-red-600 focus-visible:ring-red-200" />
+            <div className="pt-2">
+              <p className="text-[8px] font-black text-emerald-900 uppercase mb-2">Pneumatico</p>
+              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 text-xs font-black italic text-emerald-400 flex justify-between items-center">
+                {next.tireW}/{next.tireA} R{next.diameter}
+                <ChevronDown size={14} className="opacity-40" />
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Advanced Results Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-zinc-900/50 border border-white/10 p-8 rounded-[2.5rem] relative overflow-hidden">
-          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 italic mb-4">Assetto Esterno</p>
-          <div className="flex items-baseline gap-2">
-            <span className={cn("text-5xl font-black italic tracking-tighter", pokeVal > 0 ? "text-white" : "text-zinc-600")}>
-              {pokeVal > 0 ? `+${pokeVal}` : pokeVal} <span className="text-sm">mm</span>
-            </span>
+      {/* Visualizer Section */}
+      <div className="bg-zinc-950 rounded-[3rem] border border-white/5 p-8 relative overflow-hidden shadow-2xl">
+        <div className="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
+        
+        <div className="relative h-[350px] flex items-center justify-center">
+          {/* Fender Line */}
+          <div className="absolute top-0 bottom-0 left-1/2 -translate-x-[120px] border-l-2 border-dashed border-white/20 z-0">
+            <span className="absolute top-4 -left-3 text-[7px] font-black uppercase tracking-widest text-zinc-600 rotate-90 whitespace-nowrap">Filo Parafango</span>
           </div>
-          <p className="text-[10px] font-bold text-zinc-400 uppercase mt-4 leading-tight">Sporgenza totale calcolata inclusi distanziali.</p>
-        </div>
 
-        <div className="bg-zinc-900/50 border border-white/10 p-8 rounded-[2.5rem] relative overflow-hidden">
-          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 italic mb-4">Diametro Totale</p>
-          <div className="flex items-baseline gap-2">
-            <span className={cn("text-5xl font-black italic tracking-tighter", Math.abs(diamVal) > 10 ? "text-orange-500" : "text-white")}>
-              {diamVal > 0 ? `+${diamVal}` : diamVal} <span className="text-sm">mm</span>
-            </span>
-          </div>
-          <p className="text-[10px] font-bold text-zinc-400 uppercase mt-4 leading-tight">Variazione dell'altezza totale della ruota finita.</p>
-        </div>
+          <svg width="100%" height="100%" viewBox="-200 0 400 300" className="relative z-10">
+            <WheelProfile data={current} color="#ef4444" />
+            <WheelProfile data={next} color="#10b981" isNew={true} />
+            
+            {/* Measurement Scale */}
+            <g transform="translate(0, 280)">
+              <line x1="-150" y1="0" x2="150" y2="0" stroke="white" strokeWidth="0.5" opacity="0.2" />
+              {[-100, -50, 0, 50, 100].map(x => (
+                <line key={x} x1={x} y1="-3" x2={x} y2="3" stroke="white" strokeWidth="0.5" opacity="0.2" />
+              ))}
+            </g>
 
-        <div className="bg-zinc-900/50 border border-white/10 p-8 rounded-[2.5rem] relative overflow-hidden">
-          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 italic mb-4">Errore Tachimetro</p>
-          <div className="flex items-baseline gap-2">
-            <span className={cn("text-5xl font-black italic tracking-tighter", Math.abs(parseFloat(results.speedoDiff)) > 3 ? "text-red-500" : "text-green-400")}>
-              {results.speedoDiff}%
-            </span>
+            {/* Arrow Indicator */}
+            <motion.g animate={{ x: -(next.et - next.spacer) * 0.5 }}>
+              <path d="M -10 270 L 10 270 L 0 260 Z" fill="white" />
+            </motion.g>
+          </svg>
+
+          {/* Labels */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-12">
+            <div className="text-center">
+              <p className="text-[18px] font-black italic text-emerald-400">+{Math.abs(pokeVal)}mm</p>
+              <p className="text-[7px] font-black uppercase text-zinc-600 tracking-widest">Esterno</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[18px] font-black italic text-zinc-400">{results.insetDiff}mm</p>
+              <p className="text-[7px] font-black uppercase text-zinc-600 tracking-widest">Interno</p>
+            </div>
           </div>
-          <p className="text-[10px] font-bold text-zinc-400 uppercase mt-4 leading-tight">
-            A 100 km/h indicati, la velocità reale sarà di <span className="text-white">{results.actualSpeed} km/h</span>.
-          </p>
         </div>
       </div>
 
-      {/* Save to Garage Section */}
-      {user && vehicles && vehicles.length > 0 && (
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white/5 border border-white/10 p-8 rounded-[3rem] shadow-2xl"
+      {/* Results Summary */}
+      <div className="space-y-6">
+        <div className="text-center">
+          <h4 className="text-lg font-black italic uppercase tracking-tight">
+            Risultato: <span className="text-emerald-400">+{Math.abs(pokeVal)}mm Verso l'esterno</span>
+          </h4>
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex items-start gap-3 bg-emerald-500/5 border border-emerald-500/10 p-4 rounded-2xl">
+            <CheckCircle2 size={16} className="text-emerald-500 shrink-0 mt-0.5" />
+            <p className="text-[10px] font-bold text-zinc-300 uppercase leading-relaxed">
+              La nuova ruota sporgerà di <span className="text-white font-black">{Math.abs(pokeVal)}mm</span> in più rispetto all'attuale.
+            </p>
+          </div>
+          <div className="flex items-start gap-3 bg-amber-500/5 border border-amber-500/10 p-4 rounded-2xl">
+            <AlertTriangle size={16} className="text-amber-500 shrink-0 mt-0.5" />
+            <p className="text-[10px] font-bold text-zinc-300 uppercase leading-relaxed">
+              Verificare spazio interno/esterno e possibile necessità di camber o modifiche parafango.
+            </p>
+          </div>
+          <div className="flex items-start gap-3 bg-amber-500/5 border border-amber-500/10 p-4 rounded-2xl">
+            <AlertTriangle size={16} className="text-amber-500 shrink-0 mt-0.5" />
+            <p className="text-[10px] font-bold text-zinc-300 uppercase leading-relaxed">
+              Verificare compatibilità pinze freno con il nuovo disegno del cerchio.
+            </p>
+          </div>
+        </div>
+
+        <Button 
+          onClick={handleSaveToGarage}
+          className="w-full bg-white text-black hover:bg-zinc-200 h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl"
         >
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white text-black rounded-2xl flex items-center justify-center shadow-xl">
-                <Car size={24} />
-              </div>
-              <div>
-                <h4 className="text-lg font-black italic uppercase tracking-tight">Salva nel Garage</h4>
-                <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">Archivia questa configurazione nel Diario di Bordo</p>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto">
-              <div className="relative flex-1 sm:w-64">
-                <select 
-                  value={selectedVehicleId}
-                  onChange={(e) => setSelectedVehicleId(e.target.value)}
-                  className="w-full bg-black/40 border border-white/10 rounded-full h-14 px-6 text-[10px] font-black uppercase italic appearance-none focus:border-white/30 transition-all"
-                >
-                  {vehicles.map(v => (
-                    <option key={v.id} value={v.id}>{v.brand} {v.model}</option>
-                  ))}
-                </select>
-                <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">
-                  <Car size={14} />
-                </div>
-              </div>
-
-              <Button 
-                onClick={handleSaveToGarage}
-                disabled={addLog.isPending}
-                className="bg-white text-black hover:bg-zinc-200 h-14 px-10 rounded-full font-black uppercase italic text-[10px] tracking-widest transition-all shadow-xl"
-              >
-                {addLog.isPending ? <Loader2 className="animate-spin" /> : <><Save size={16} className="mr-2" /> Salva Configurazione</>}
-              </Button>
-            </div>
-          </div>
-        </motion.div>
-      )}
-
-      {Math.abs(parseFloat(results.speedoDiff)) > 3 && (
-        <div className="flex items-center gap-4 bg-red-500/10 border border-red-500/20 p-6 rounded-[2rem]">
-          <AlertTriangle className="text-red-500 shrink-0" size={24} />
-          <p className="text-[10px] font-black uppercase text-red-500 leading-relaxed italic">
-            Attenzione: La differenza di diametro supera il 3%. Questo potrebbe causare problemi ai sistemi ABS/ESP.
-          </p>
-        </div>
-      )}
+          Salva nel Garage
+        </Button>
+      </div>
     </div>
   );
 };
