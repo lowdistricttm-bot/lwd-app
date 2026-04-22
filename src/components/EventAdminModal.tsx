@@ -108,7 +108,7 @@ const EventAdminModal = ({ isOpen, onClose, event }: EventAdminModalProps) => {
             animate={{ y: 0 }} 
             exit={{ y: '100%' }} 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[201] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 rounded-t-[2.5rem] h-[100dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            className="fixed inset-x-0 bottom-0 z-[201] bg-zinc-950 border-t border-white/10 p-6 rounded-t-[2.5rem] h-[100dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
             style={{ 
               touchAction: 'pan-y',
               overscrollBehavior: 'contain',
@@ -138,8 +138,8 @@ const EventAdminModal = ({ isOpen, onClose, event }: EventAdminModalProps) => {
                   </div>
                 </div>
 
-                {/* Date */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Date - Impilate su mobile */}
+                <div className="space-y-6">
                   <div className="space-y-2">
                     <Label className={labelClass}>Data Inizio</Label>
                     <div className="relative">
@@ -170,7 +170,7 @@ const EventAdminModal = ({ isOpen, onClose, event }: EventAdminModalProps) => {
                   <Label className={labelClass}>Locandina Evento</Label>
                   <div 
                     onClick={() => fileInputRef.current?.click()}
-                    className="aspect-video border-2 border-dashed border-white/10 rounded-[2rem] flex flex-col items-center justify-center cursor-pointer hover:border-white/30 transition-all bg-white/5 overflow-hidden relative group"
+                    className="aspect-video border-2 border-dashed border-white/10 rounded-[2rem] flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition-all bg-white/5 overflow-hidden relative group"
                   >
                     {previewUrl ? (
                       <>
