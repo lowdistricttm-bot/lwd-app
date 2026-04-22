@@ -29,7 +29,7 @@ export interface Vehicle {
     is_admin?: boolean;
     license_plate_privacy?: string;
   };
-  user_trophies?: any[]; // Aggiunto per i premi
+  user_trophies?: any[];
 }
 
 export const useGarage = (targetUserId?: string) => {
@@ -54,6 +54,7 @@ export const useGarage = (targetUserId?: string) => {
           vehicle_likes (user_id),
           user_trophies (
             id,
+            awarded_at,
             trophies (*)
           )
         `)

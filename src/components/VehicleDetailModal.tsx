@@ -12,7 +12,7 @@ import { Button } from './ui/button';
 import ImageLightbox from './ImageLightbox';
 import VehicleStats from './VehicleStats';
 import RankBadge from './RankBadge';
-import TrophyBadge from './TrophyBadge';
+import TrophyBar from './TrophyBar';
 
 interface VehicleDetailModalProps {
   isOpen: boolean;
@@ -35,7 +35,11 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicle, isOwnProfile, onLike, cu
   const isPublic = vehicle.profiles?.license_plate_privacy === 'public';
   const canSeePlate = isOwnProfile || canVote || isPublic;
   const allImages = vehicle.images || (vehicle.image_url ? [vehicle.image_url] : []);
-  const vehicleTrophies = vehicle.user_trophies || [];
+  
+  // Prendi solo l'ultimo trofeo assegnato
+  const latestTrophy = vehicle.user_trophies && vehicle.user_trophies.length > 0
+    ? [...vehicle.user_trophies].sort((a, b) => new Date(b.awarded_at).getTime() - new Date(a.awarded_at).getTime())[0]
+    : null;
 
   const getVehicleRank = () => {
     const scoreRank = topScored?.findIndex(v => v.id === vehicle.id);
@@ -77,10 +81,10 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicle, isOwnProfile, onLike, cu
                     <div className="flex items-center gap-2 mb-2 flex-wrap">
                       {rankInfo && <RankBadge rank={rankInfo.rank} type={rankInfo.type} showLabel={true} />}
                       
-                      {/* Trofei nel modal */}
-                      {vehicleTrophies.map((ut: any) => (
-                        <TrophyBadge key={ut.id} trophy={ut.trophies} size="xs" showDetails={true} />
-                      ))}
+                      {/* Ultimo Trofeo come barra orizzontale */}
+                      {latestTrophy && (
+                        <TrophyBar trophy={latestTrophy.trophies} />
+                      )}
 
                       <span className="bg-white text-black text-[8px] font-black uppercase px-2 py-1 italic rounded-lg shadow-lg">
                         {vehicle.suspension_type}
