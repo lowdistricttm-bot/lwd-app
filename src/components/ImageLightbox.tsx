@@ -80,8 +80,11 @@ const ImageLightbox = ({ images, initialIndex, isOpen, onClose }: ImageLightboxP
           onClick={onClose}
           className="fixed inset-0 z-[300] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 md:p-10 touch-none"
         >
-          {/* Header Controls */}
-          <div className="absolute top-6 right-6 flex items-center gap-4 z-[310]">
+          {/* Header Controls - Calcolato con safe-area */}
+          <div 
+            className="absolute right-6 flex items-center gap-4 z-[310]"
+            style={{ top: 'calc(1.5rem + env(safe-area-inset-top))' }}
+          >
             <span className="text-[10px] font-black text-white/40 uppercase tracking-widest mr-4">
               {currentIndex + 1} / {images.length}
             </span>
