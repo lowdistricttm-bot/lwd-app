@@ -8,7 +8,7 @@ import { useGarage, Vehicle } from '@/hooks/use-garage';
 import { useAdmin } from '@/hooks/use-admin';
 import { usePresence } from '@/hooks/use-presence';
 import { useLeaderboards } from '@/hooks/use-leaderboards';
-import { Loader2, Car, Search, LayoutGrid, StretchHorizontal, User, ChevronRight, ShieldCheck, Sparkles, Users, Heart, Gauge, Calendar, CreditCard, Trophy, ArrowRight, Wrench, ArrowRightLeft, Smartphone } from 'lucide-react';
+import { Loader2, Car, Search, LayoutGrid, StretchHorizontal, User, ChevronRight, ShieldCheck, Sparkles, Users, Heart, Gauge, Calendar, CreditCard, Trophy, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import VehicleDetailModal from '@/components/VehicleDetailModal';
@@ -174,35 +174,6 @@ const Discover = () => {
                   </span>
                 </button>
               ))}
-            </div>
-          </section>
-        )}
-
-        {!debouncedSearch && (
-          <section className="mb-14">
-            <h3 className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 flex items-center gap-2 italic mb-6">
-              <Wrench size={12} /> Garage Tools
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Link to="/fitment" className="bg-white/5 backdrop-blur-2xl border border-white/10 p-6 rounded-[2rem] hover:border-white/20 transition-all group flex items-center gap-5 shadow-xl">
-                <div className="w-14 h-14 bg-black rounded-2xl flex items-center justify-center border border-white/10 group-hover:border-white/30 transition-all shadow-xl shrink-0">
-                  <ArrowRightLeft size={20} className="text-white" />
-                </div>
-                <div>
-                  <h4 className="text-base font-black italic uppercase tracking-tight text-white">Wheel Lab</h4>
-                  <p className="text-[8px] text-zinc-400 font-bold uppercase tracking-widest mt-1">Calcola offset e sporgenza</p>
-                </div>
-              </Link>
-              
-              <Link to="/camber" className="bg-white/5 backdrop-blur-2xl border border-white/10 p-6 rounded-[2rem] hover:border-white/20 transition-all group flex items-center gap-5 shadow-xl">
-                <div className="w-14 h-14 bg-black rounded-2xl flex items-center justify-center border border-white/10 group-hover:border-white/30 transition-all shadow-xl shrink-0">
-                  <Smartphone size={20} className="text-white" />
-                </div>
-                <div>
-                  <h4 className="text-base font-black italic uppercase tracking-tight text-white">Camber Helper</h4>
-                  <p className="text-[8px] text-zinc-400 font-bold uppercase tracking-widest mt-1">Misura l'inclinazione in tempo reale</p>
-                </div>
-              </Link>
             </div>
           </section>
         )}

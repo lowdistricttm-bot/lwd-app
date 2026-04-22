@@ -16,9 +16,11 @@ import RankBadge from './RankBadge';
 import TrophyBar from './TrophyBar';
 import { 
   Plus, Car, Trash2, Camera, Loader2, X, Edit3, Heart, 
-  Gauge, Book, Sparkles, ChevronRight, Calendar, CreditCard, GripVertical 
+  Gauge, Book, Sparkles, ChevronRight, Calendar, CreditCard, GripVertical,
+  Wrench, ArrowRightLeft, Smartphone
 } from 'lucide-react';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/use-translation';
 import { supabase } from "@/integrations/supabase/client";
@@ -162,7 +164,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
 
       <AnimatePresence>
         {isFormOpen && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="bg-black/60 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/10 shadow-2xl">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="bg-black/60 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/10 shadow-2xl mb-8">
             <div className="flex justify-between items-center mb-8">
               <h4 className="text-lg font-black italic uppercase">{editingVehicle ? 'Modifica Veicolo' : 'Nuovo Progetto'}</h4>
               <button onClick={() => setIsFormOpen(false)} className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors"><X size={20} /></button>
@@ -268,6 +270,39 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Garage Tools - visibili solo nel proprio garage */}
+      {isOwnProfile && !isFormOpen && (
+        <div className="mb-10">
+          <div className="flex items-center gap-2 mb-6">
+            <Wrench size={12} className="text-zinc-500" />
+            <h3 className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 italic">
+              Garage Tools
+            </h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Link to="/fitment" className="bg-white/5 backdrop-blur-2xl border border-white/10 p-6 rounded-[2rem] hover:border-white/20 transition-all group flex items-center gap-5 shadow-xl">
+              <div className="w-14 h-14 bg-black rounded-2xl flex items-center justify-center border border-white/10 group-hover:border-white/30 transition-all shadow-xl shrink-0">
+                <ArrowRightLeft size={20} className="text-white" />
+              </div>
+              <div>
+                <h4 className="text-base font-black italic uppercase tracking-tight text-white">Wheel Lab</h4>
+                <p className="text-[8px] text-zinc-400 font-bold uppercase tracking-widest mt-1">Calcola offset e sporgenza</p>
+              </div>
+            </Link>
+            
+            <Link to="/camber" className="bg-white/5 backdrop-blur-2xl border border-white/10 p-6 rounded-[2rem] hover:border-white/20 transition-all group flex items-center gap-5 shadow-xl">
+              <div className="w-14 h-14 bg-black rounded-2xl flex items-center justify-center border border-white/10 group-hover:border-white/30 transition-all shadow-xl shrink-0">
+                <Smartphone size={20} className="text-white" />
+              </div>
+              <div>
+                <h4 className="text-base font-black italic uppercase tracking-tight text-white">Camber Helper</h4>
+                <p className="text-[8px] text-zinc-400 font-bold uppercase tracking-widest mt-1">Misura l'inclinazione</p>
+              </div>
+            </Link>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {vehicles?.map((vehicle) => {
