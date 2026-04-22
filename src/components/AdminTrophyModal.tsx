@@ -17,7 +17,7 @@ interface AdminTrophyModalProps {
   onClose: () => void;
 }
 
-// Definiamo i 3 trofei ufficiali ammessi nell'ordine di visualizzazione desiderato
+// Lista esatta dei titoli ammessi
 const OFFICIAL_TROPHY_TITLES = ['BEST OF SHOW', 'BEST WHEELS', 'BEST LIMBO'];
 
 const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
@@ -52,21 +52,26 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
     u.first_name?.toLowerCase().includes(search.toLowerCase())
   ).slice(0, 6) || [];
 
-  // Filtriamo e ordiniamo i trofei in base all'array OFFICIAL_TROPHY_TITLES
+  // Filtro migliorato: usiamo trim() per ignorare spazi accidentali nel DB
   const activeTrophies = React.useMemo(() => {
     if (!availableTrophies) return [];
     
     const seen = new Set();
     return availableTrophies
-      .filter(t => OFFICIAL_TROPHY_TITLES.includes(t.title.toUpperCase()))
       .filter(t => {
-        const title = t.title.toUpperCase();
+        const cleanTitle = t.title.toUpperCase().trim();
+        return OFFICIAL_TROPHY_TITLES.includes(cleanTitle);
+      })
+      .filter(t => {
+        const title = t.title.toUpperCase().trim();
         if (seen.has(title)) return false;
         seen.add(title);
         return true;
       })
       .sort((a, b) => {
-        return OFFICIAL_TROPHY_TITLES.indexOf(a.title.toUpperCase()) - OFFICIAL_TROPHY_TITLES.indexOf(b.title.toUpperCase());
+        const titleA = a.title.toUpperCase().trim();
+        const titleB = b.title.toUpperCase().trim();
+        return OFFICIAL_TROPHY_TITLES.indexOf(titleA) - OFFICIAL_TROPHY_TITLES.indexOf(titleB);
       });
   }, [availableTrophies]);
 
