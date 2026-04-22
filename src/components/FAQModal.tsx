@@ -6,7 +6,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { 
   HelpCircle, Car, Calendar, Shield, User, 
   Camera, MessageSquare, ShieldCheck, Settings, 
-  GraduationCap, Wrench, Plus, Loader2, X, Info
+  GraduationCap, Wrench, Plus, Loader2, X, Info,
+  ShoppingBag, Zap, AlertTriangle, Heart, ClipboardCheck
 } from 'lucide-react';
 import { useTranslation } from '@/hooks/use-translation';
 import { useAdmin } from '@/hooks/use-admin';
@@ -25,7 +26,7 @@ interface FAQModalProps {
 
 const FAQModal = ({ isOpen, onClose }: FAQModalProps) => {
   const { language } = useTranslation();
-  const { isAdmin, isStaff, isSupport, canManage } = useAdmin();
+  const { isAdmin, isStaff, isSupport, canManage, canVote } = useAdmin();
   const [activeTab, setActiveTab] = useState<'faq' | 'academy'>('faq');
   const [selectedTutorial, setSelectedTutorial] = useState<Tutorial | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -52,17 +53,50 @@ const FAQModal = ({ isOpen, onClose }: FAQModalProps) => {
     setIsCreateModalOpen(true);
   };
 
-  // FAQ Data (Admin, Staff, Support, Public)
+  // --- DATA FAQ RIPRISTINATA ---
+
   const adminFaqs = [
     {
-      category: language === 'it' ? "PANNELLO AMMINISTRAZIONE" : "ADMIN PANEL",
+      category: "PANNELLO AMMINISTRAZIONE",
       icon: ShieldCheck,
       items: [
         {
-          q: language === 'it' ? "Come gestisco i ruoli dei membri?" : "How do I manage member roles?",
-          a: language === 'it' 
-            ? "Dalla Dashboard Admin, vai su 'Gestione Membri'. Qui puoi cercare qualsiasi utente e cambiare il suo grado. I ruoli Admin sono protetti e gestiti via database."
-            : "From the Admin Dashboard, go to 'Member Management'. Here you can search for any user and change their rank. Admin roles are protected and managed via database."
+          q: "Come gestisco i ruoli dei membri?",
+          a: "Dalla Dashboard Admin, vai su 'Gestione Membri'. Qui puoi cercare qualsiasi utente e cambiare il suo grado. I ruoli Admin sono protetti e gestiti via database."
+        },
+        {
+          q: "Posso eliminare post o commenti inappropriati?",
+          a: "Sì, come Admin hai il controllo totale. Puoi eliminare qualsiasi contenuto direttamente dal feed o dalla bacheca cliccando sui tre puntini del post."
+        }
+      ]
+    }
+  ];
+
+  const staffFaqs = [
+    {
+      category: "GESTIONE SELEZIONI",
+      icon: ClipboardCheck,
+      items: [
+        {
+          q: "Come approvo una candidatura?",
+          a: "Nella sezione 'Selezioni' della Dashboard, espandi una pratica e clicca su 'APPROVA'. L'utente riceverà automaticamente una notifica e una mail ufficiale."
+        },
+        {
+          q: "Cosa succede se rifiuto un progetto?",
+          a: "L'utente riceverà una notifica di rifiuto. Potrà candidarsi di nuovo per lo stesso evento solo se elimini la sua candidatura precedente."
+        }
+      ]
+    }
+  ];
+
+  const supportFaqs = [
+    {
+      category: "SUPPORTO TECNICO",
+      icon: Wrench,
+      items: [
+        {
+          q: "Come aiuto un utente che non vede i suoi ordini?",
+          a: "Assicurati che l'email del suo profilo Supabase corrisponda a quella usata sul sito WordPress. Il sistema sincronizza gli ordini basandosi sull'email e sul WP ID."
         }
       ]
     }
@@ -70,14 +104,40 @@ const FAQModal = ({ isOpen, onClose }: FAQModalProps) => {
 
   const publicFaqs = [
     {
-      category: language === 'it' ? "EVENTI & SELEZIONI" : "EVENTS & SELECTIONS",
+      category: "EVENTI & SELEZIONI",
       icon: Calendar,
       items: [
         {
-          q: language === 'it' ? "Dove vedo le mie candidature inviate?" : "Where can I see my sent applications?",
-          a: language === 'it'
-            ? "Puoi monitorare lo stato di tutte le tue candidature direttamente dal tuo Profilo Personale, nella tab 'Le mie selezioni' (icona della cartella)."
-            : "You can monitor the status of all your applications directly from your Personal Profile, in the 'My Selections' tab (folder icon)."
+          q: "Come invio la mia candidatura per un evento?",
+          a: "Vai nella sezione 'Eventi', scegli l'evento attivo e clicca su 'Invia Selezione'. Dovrai selezionare un'auto dal tuo garage e caricare almeno 3 foto degli interni."
+        },
+        {
+          q: "Dove vedo lo stato della mia selezione?",
+          a: "Nel tuo Profilo, clicca sull'icona della cartella (Le mie selezioni). Lì vedrai se la tua pratica è in attesa, approvata o negata."
+        }
+      ]
+    },
+    {
+      category: "GARAGE & TOOLS",
+      icon: Car,
+      items: [
+        {
+          q: "Cos'è il Low Score?",
+          a: "È un punteggio calcolato dalla nostra AI che analizza l'assetto e il fitment della tua auto. Più il progetto è 'Low' e preciso, più alto sarà il punteggio."
+        },
+        {
+          q: "Come funziona il Camber Helper?",
+          a: "Appoggia il telefono contro il cerchio. Lo strumento userà il giroscopio per misurare l'inclinazione esatta. Ricorda di tararlo su una superficie piana prima dell'uso."
+        }
+      ]
+    },
+    {
+      category: "SHOP & ORDINI",
+      icon: ShoppingBag,
+      items: [
+        {
+          q: "Come posso pagare i miei ordini?",
+          a: "Dopo aver confermato l'ordine nell'app, verrai indirizzato su WhatsApp per completare il pagamento con lo Staff. Accettiamo i principali metodi digitali."
         }
       ]
     }
@@ -136,6 +196,7 @@ const FAQModal = ({ isOpen, onClose }: FAQModalProps) => {
                   exit={{ opacity: 0, y: -10 }}
                   className="space-y-10"
                 >
+                  {/* FAQ ADMIN */}
                   {isAdmin && adminFaqs.map((cat, idx) => (
                     <div key={`admin-${idx}`} className="space-y-4">
                       <div className="flex items-center gap-2 px-2">
@@ -157,6 +218,51 @@ const FAQModal = ({ isOpen, onClose }: FAQModalProps) => {
                     </div>
                   ))}
 
+                  {/* FAQ STAFF */}
+                  {(isAdmin || isStaff) && staffFaqs.map((cat, idx) => (
+                    <div key={`staff-${idx}`} className="space-y-4">
+                      <div className="flex items-center gap-2 px-2">
+                        <cat.icon size={14} className="text-blue-400" />
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-400 italic">{cat.category}</h3>
+                      </div>
+                      <Accordion type="single" collapsible className="space-y-2">
+                        {cat.items.map((item, i) => (
+                          <AccordionItem key={i} value={`staff-item-${i}`} className="border border-blue-500/20 bg-blue-500/5 rounded-2xl px-6 overflow-hidden">
+                            <AccordionTrigger className="hover:no-underline py-4 text-[11px] font-black uppercase italic text-left">
+                              {item.q}
+                            </AccordionTrigger>
+                            <AccordionContent className="text-zinc-400 text-[10px] font-medium leading-relaxed pb-4">
+                              {item.a}
+                            </AccordionContent>
+                          </AccordionItem>
+                        ))}
+                      </Accordion>
+                    </div>
+                  ))}
+
+                  {/* FAQ SUPPORT */}
+                  {(isAdmin || isStaff || isSupport) && supportFaqs.map((cat, idx) => (
+                    <div key={`support-${idx}`} className="space-y-4">
+                      <div className="flex items-center gap-2 px-2">
+                        <cat.icon size={14} className="text-amber-500" />
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-500 italic">{cat.category}</h3>
+                      </div>
+                      <Accordion type="single" collapsible className="space-y-2">
+                        {cat.items.map((item, i) => (
+                          <AccordionItem key={i} value={`support-item-${i}`} className="border border-amber-500/20 bg-amber-500/5 rounded-2xl px-6 overflow-hidden">
+                            <AccordionTrigger className="hover:no-underline py-4 text-[11px] font-black uppercase italic text-left">
+                              {item.q}
+                            </AccordionTrigger>
+                            <AccordionContent className="text-zinc-400 text-[10px] font-medium leading-relaxed pb-4">
+                              {item.a}
+                            </AccordionContent>
+                          </AccordionItem>
+                        ))}
+                      </Accordion>
+                    </div>
+                  ))}
+
+                  {/* FAQ PUBBLICHE */}
                   {publicFaqs.map((cat, idx) => (
                     <div key={`pub-${idx}`} className="space-y-4">
                       <div className="flex items-center gap-2 px-2">
