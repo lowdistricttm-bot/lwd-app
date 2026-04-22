@@ -11,7 +11,7 @@ import LatestActivities from '@/components/LatestActivities';
 import LatestMeets from '@/components/LatestMeets';
 import LatestMarketplaceItems from '@/components/LatestMarketplaceItems';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt';
-import { ShoppingBag, Users, Calendar, ArrowRight, Star, Music, Play, ChevronRight, MapPin, Tag, Bell, X } from 'lucide-react';
+import { ShoppingBag, Users, Calendar, ArrowRight, Star, Music, Play, ChevronRight, MapPin, Tag, Bell, X, ArrowRightLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from '@/hooks/use-translation';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
@@ -30,7 +30,6 @@ const Index = () => {
     }
   }, [user, permission]);
 
-  // Definiamo i tab in modo sicuro, gestendo l'eventuale assenza temporanea di t.home
   const navigationTabs = [
     { 
       icon: Users, 
@@ -40,11 +39,11 @@ const Index = () => {
       label: 'Entra nel Feed'
     },
     { 
-      icon: MapPin, 
-      title: 'MEETS', 
-      desc: 'Incontri spontanei e raduni della community.',
-      href: '/meets',
-      label: 'Vedi Incontri'
+      icon: ArrowRightLeft, 
+      title: 'FITMENT LAB', 
+      desc: 'Calcola lo spostamento dei tuoi nuovi cerchi con precisione.',
+      href: '/fitment',
+      label: 'Apri Calcolatore'
     },
     { 
       icon: Tag, 

@@ -31,6 +31,7 @@ import Messages from "./pages/Messages";
 import Chat from "./pages/Chat";
 import PostDetail from "./pages/PostDetail";
 import Marketplace from "./pages/Marketplace";
+import FitmentTool from "./pages/FitmentTool";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,6 +62,7 @@ const AppContent = () => {
           <Route path="/messages" element={<Messages />} />
           <Route path="/chat/:userId" element={<Chat />} />
           <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/fitment" element={<FitmentTool />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/applications" element={<AdminApplications />} />
           <Route path="/admin/users" element={<AdminUsers />} />
