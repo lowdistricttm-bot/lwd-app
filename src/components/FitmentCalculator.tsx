@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Info, Gauge, MoveHorizontal, Plus, Zap, AlertTriangle, Ruler, Save, Car, Loader2, CheckCircle2, ChevronDown } from 'lucide-react';
+import { Gauge, Plus, Save, Car, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useGarage } from '@/hooks/use-garage';
 import { useVehicleLogs } from '@/hooks/use-vehicle-logs';
@@ -100,12 +100,13 @@ const FitmentCalculator = () => {
   };
 
   return (
-    <div className="space-y-12">
-      <div className="bg-zinc-950 rounded-[3rem] border border-white/5 p-8 relative overflow-hidden shadow-2xl">
+    <div className="space-y-10">
+      {/* Box Visualizzazione (Ottimizzato per Mobile) */}
+      <div className="bg-zinc-950 rounded-[2.5rem] border border-white/5 p-6 relative overflow-hidden shadow-2xl">
         <div className="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
         
-        <div className="relative h-[400px] flex items-center justify-center">
-          <div className="absolute top-0 bottom-0 left-1/2 -translate-x-[120px] border-l-2 border-dashed border-white/20 z-0">
+        <div className="relative h-[320px] flex items-center justify-center">
+          <div className="absolute top-0 bottom-0 left-1/2 -translate-x-[100px] border-l-2 border-dashed border-white/20 z-0">
             <span className="absolute top-4 -left-3 text-[7px] font-black uppercase tracking-widest text-zinc-600 rotate-90 whitespace-nowrap">Filo Parafango</span>
           </div>
 
@@ -125,9 +126,9 @@ const FitmentCalculator = () => {
             </motion.g>
           </svg>
 
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex gap-12 pb-2">
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex gap-12 pb-4">
             <div className="text-center">
-              <p className="text-[22px] font-black italic text-white">
+              <p className="text-[22px] font-black italic text-white leading-none mb-1">
                 {pokeVal > 0 ? `+${pokeVal}` : pokeVal}mm
               </p>
               <p className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">
@@ -138,117 +139,136 @@ const FitmentCalculator = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-zinc-900/40 backdrop-blur-md border border-white/5 p-8 rounded-[2.5rem] space-y-8">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-zinc-800 rounded-2xl flex items-center justify-center text-zinc-500"><Gauge size={20} /></div>
-            <h4 className="text-xs font-black uppercase tracking-widest italic">Setup Attuale</h4>
+      {/* Input Form Formattati in colonna */}
+      <div className="space-y-6">
+        
+        {/* Setup Attuale */}
+        <div className="bg-zinc-900/40 backdrop-blur-md border border-white/5 p-6 rounded-[2.5rem] space-y-6">
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <div className="w-8 h-8 bg-zinc-800 rounded-xl flex items-center justify-center text-zinc-500">
+              <Gauge size={16} />
+            </div>
+            <h4 className="text-[11px] font-black uppercase tracking-widest italic">Setup Attuale</h4>
           </div>
           
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-2">
             <div className="space-y-2">
-              <Label className="text-[8px] font-black uppercase text-zinc-500 ml-4">Diametro</Label>
-              <Input type="number" value={current.diameter} onChange={e => setCurrent({...current, diameter: parseFloat(e.target.value) || 0})} className="bg-black/40 border-white/10 rounded-full h-12 text-center font-black italic" />
+              <Label className="text-[8px] font-black uppercase text-zinc-500 ml-2">Diam.</Label>
+              <Input type="number" value={current.diameter} onChange={e => setCurrent({...current, diameter: parseFloat(e.target.value) || 0})} className="bg-black/40 border-white/10 rounded-full h-11 px-2 text-center font-black italic text-xs text-white" />
             </div>
             <div className="space-y-2">
-              <Label className="text-[8px] font-black uppercase text-zinc-500 ml-4">Canale (J)</Label>
-              <Input type="number" step="0.5" value={current.width} onChange={e => setCurrent({...current, width: parseFloat(e.target.value) || 0})} className="bg-black/40 border-white/10 rounded-full h-12 text-center font-black italic" />
+              <Label className="text-[8px] font-black uppercase text-zinc-500 ml-2">Canale</Label>
+              <Input type="number" step="0.5" value={current.width} onChange={e => setCurrent({...current, width: parseFloat(e.target.value) || 0})} className="bg-black/40 border-white/10 rounded-full h-11 px-2 text-center font-black italic text-xs text-white" />
             </div>
             <div className="space-y-2">
-              <Label className="text-[8px] font-black uppercase text-zinc-500 ml-4">Offset (ET)</Label>
-              <Input type="number" value={current.et} onChange={e => setCurrent({...current, et: parseFloat(e.target.value) || 0})} className="bg-black/40 border-white/10 rounded-full h-12 text-center font-black italic" />
+              <Label className="text-[8px] font-black uppercase text-zinc-500 ml-2">ET</Label>
+              <Input type="number" value={current.et} onChange={e => setCurrent({...current, et: parseFloat(e.target.value) || 0})} className="bg-black/40 border-white/10 rounded-full h-11 px-2 text-center font-black italic text-xs text-white" />
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 pt-4 border-t border-white/5">
+          <div className="grid grid-cols-3 gap-2 pt-4 border-t border-white/5">
             <div className="space-y-2">
-              <Label className="text-[8px] font-black uppercase text-zinc-500 ml-4">Gomma (L)</Label>
-              <Input type="number" value={current.tireW} onChange={e => setCurrent({...current, tireW: parseFloat(e.target.value) || 0})} className="bg-black/40 border-white/10 rounded-full h-12 text-center font-black italic" />
+              <Label className="text-[8px] font-black uppercase text-zinc-500 ml-2">Gomma L.</Label>
+              <Input type="number" value={current.tireW} onChange={e => setCurrent({...current, tireW: parseFloat(e.target.value) || 0})} className="bg-black/40 border-white/10 rounded-full h-11 px-2 text-center font-black italic text-xs text-white" />
             </div>
             <div className="space-y-2">
-              <Label className="text-[8px] font-black uppercase text-zinc-500 ml-4">Gomma (S)</Label>
-              <Input type="number" value={current.tireA} onChange={e => setCurrent({...current, tireA: parseFloat(e.target.value) || 0})} className="bg-black/40 border-white/10 rounded-full h-12 text-center font-black italic" />
+              <Label className="text-[8px] font-black uppercase text-zinc-500 ml-2">Gomma S.</Label>
+              <Input type="number" value={current.tireA} onChange={e => setCurrent({...current, tireA: parseFloat(e.target.value) || 0})} className="bg-black/40 border-white/10 rounded-full h-11 px-2 text-center font-black italic text-xs text-white" />
             </div>
             <div className="space-y-2">
-              <Label className="text-[8px] font-black uppercase text-zinc-500 ml-4">Camber (°)</Label>
-              <Input type="number" step="0.1" value={current.camber} onChange={e => setCurrent({...current, camber: parseFloat(e.target.value) || 0})} className="bg-black/40 border-white/10 rounded-full h-12 text-center font-black italic" />
+              <Label className="text-[8px] font-black uppercase text-zinc-500 ml-2">Camber</Label>
+              <Input type="number" step="0.1" value={current.camber} onChange={e => setCurrent({...current, camber: parseFloat(e.target.value) || 0})} className="bg-black/40 border-white/10 rounded-full h-11 px-2 text-center font-black italic text-xs text-white" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white text-black p-8 rounded-[2.5rem] shadow-2xl space-y-8">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-black rounded-2xl flex items-center justify-center text-white"><Plus size={20} /></div>
-            <h4 className="text-xs font-black uppercase tracking-widest italic">Nuovo Setup</h4>
+        {/* Nuovo Setup */}
+        <div className="bg-white text-black p-6 rounded-[2.5rem] shadow-2xl space-y-6">
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <div className="w-8 h-8 bg-black rounded-xl flex items-center justify-center text-white">
+              <Plus size={16} />
+            </div>
+            <h4 className="text-[11px] font-black uppercase tracking-widest italic">Nuovo Setup</h4>
           </div>
           
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-2">
             <div className="space-y-2">
-              <Label className="text-[8px] font-black uppercase text-zinc-700 ml-4">Diametro</Label>
-              <Input type="number" value={next.diameter} onChange={e => setNext({...next, diameter: parseFloat(e.target.value) || 0})} className="bg-white border-black/10 rounded-full h-12 text-center font-black italic focus-visible:ring-black/20" />
+              <Label className="text-[8px] font-black uppercase text-zinc-700 ml-2">Diam.</Label>
+              <Input type="number" value={next.diameter} onChange={e => setNext({...next, diameter: parseFloat(e.target.value) || 0})} className="bg-white border-black/10 rounded-full h-11 px-2 text-center font-black italic text-xs focus-visible:ring-black/20 text-black" />
             </div>
             <div className="space-y-2">
-              <Label className="text-[8px] font-black uppercase text-zinc-700 ml-4">Canale (J)</Label>
-              <Input type="number" step="0.5" value={next.width} onChange={e => setNext({...next, width: parseFloat(e.target.value) || 0})} className="bg-white border-black/10 rounded-full h-12 text-center font-black italic focus-visible:ring-black/20" />
+              <Label className="text-[8px] font-black uppercase text-zinc-700 ml-2">Canale</Label>
+              <Input type="number" step="0.5" value={next.width} onChange={e => setNext({...next, width: parseFloat(e.target.value) || 0})} className="bg-white border-black/10 rounded-full h-11 px-2 text-center font-black italic text-xs focus-visible:ring-black/20 text-black" />
             </div>
             <div className="space-y-2">
-              <Label className="text-[8px] font-black uppercase text-zinc-700 ml-4">Offset (ET)</Label>
-              <Input type="number" value={next.et} onChange={e => setNext({...next, et: parseFloat(e.target.value) || 0})} className="bg-white border-black/10 rounded-full h-12 text-center font-black italic focus-visible:ring-black/20" />
+              <Label className="text-[8px] font-black uppercase text-zinc-700 ml-2">ET</Label>
+              <Input type="number" value={next.et} onChange={e => setNext({...next, et: parseFloat(e.target.value) || 0})} className="bg-white border-black/10 rounded-full h-11 px-2 text-center font-black italic text-xs focus-visible:ring-black/20 text-black" />
             </div>
           </div>
 
-          <div className="grid grid-cols-4 gap-3 pt-4 border-t border-black/5">
+          <div className="grid grid-cols-2 gap-2 pt-4 border-t border-black/5">
             <div className="space-y-2">
-              <Label className="text-[8px] font-black uppercase text-zinc-700 ml-4">Gomma (L)</Label>
-              <Input type="number" value={next.tireW} onChange={e => setNext({...next, tireW: parseFloat(e.target.value) || 0})} className="bg-white border-black/10 rounded-full h-12 text-center font-black italic focus-visible:ring-black/20" />
+              <Label className="text-[8px] font-black uppercase text-zinc-700 ml-2">Gomma L.</Label>
+              <Input type="number" value={next.tireW} onChange={e => setNext({...next, tireW: parseFloat(e.target.value) || 0})} className="bg-white border-black/10 rounded-full h-11 px-2 text-center font-black italic text-xs focus-visible:ring-black/20 text-black" />
             </div>
             <div className="space-y-2">
-              <Label className="text-[8px] font-black uppercase text-zinc-700 ml-4">Gomma (S)</Label>
-              <Input type="number" value={next.tireA} onChange={e => setNext({...next, tireA: parseFloat(e.target.value) || 0})} className="bg-white border-black/10 rounded-full h-12 text-center font-black italic focus-visible:ring-black/20" />
+              <Label className="text-[8px] font-black uppercase text-zinc-700 ml-2">Gomma S.</Label>
+              <Input type="number" value={next.tireA} onChange={e => setNext({...next, tireA: parseFloat(e.target.value) || 0})} className="bg-white border-black/10 rounded-full h-11 px-2 text-center font-black italic text-xs focus-visible:ring-black/20 text-black" />
             </div>
             <div className="space-y-2">
-              <Label className="text-[8px] font-black uppercase text-zinc-700 ml-4">Camber (°)</Label>
-              <Input type="number" step="0.1" value={next.camber} onChange={e => setNext({...next, camber: parseFloat(e.target.value) || 0})} className="bg-white border-black/10 rounded-full h-12 text-center font-black italic focus-visible:ring-black/20" />
+              <Label className="text-[8px] font-black uppercase text-zinc-700 ml-2">Camber</Label>
+              <Input type="number" step="0.1" value={next.camber} onChange={e => setNext({...next, camber: parseFloat(e.target.value) || 0})} className="bg-white border-black/10 rounded-full h-11 px-2 text-center font-black italic text-xs focus-visible:ring-black/20 text-black" />
             </div>
             <div className="space-y-2">
-              <Label className="text-[8px] font-black uppercase text-red-600 ml-4">Distanziale</Label>
-              <Input type="number" value={next.spacer} onChange={e => setNext({...next, spacer: parseFloat(e.target.value) || 0})} className="bg-red-50 border-red-200 rounded-full h-12 text-center font-black italic text-red-600 focus-visible:ring-red-200" />
+              <Label className="text-[8px] font-black uppercase text-red-600 ml-2">Distanziale</Label>
+              <Input type="number" value={next.spacer} onChange={e => setNext({...next, spacer: parseFloat(e.target.value) || 0})} className="bg-red-50 border-red-200 rounded-full h-11 px-2 text-center font-black italic text-xs text-red-600 focus-visible:ring-red-200" />
             </div>
           </div>
         </div>
+
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-zinc-900/50 border border-white/10 p-8 rounded-[2.5rem] relative overflow-hidden">
-          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 italic mb-4">Assetto Esterno</p>
-          <div className="flex items-baseline gap-2">
-            <span className={cn("text-5xl font-black italic tracking-tighter", pokeVal > 0 ? "text-white" : "text-zinc-600")}>
-              {pokeVal > 0 ? `+${pokeVal}` : pokeVal} <span className="text-sm">mm</span>
-            </span>
+      {/* Cards Risultati */}
+      <div className="space-y-4">
+        <div className="bg-zinc-900/50 border border-white/10 p-5 rounded-[2rem] flex items-center justify-between shadow-lg">
+          <div className="flex-1 pr-4">
+            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 italic mb-1">Assetto Esterno</p>
+            <p className="text-[8px] font-bold text-zinc-400 uppercase leading-tight">Sporgenza totale calcolata inclusi distanziali.</p>
           </div>
-          <p className="text-[10px] font-bold text-zinc-400 uppercase mt-4 leading-tight">Sporgenza totale calcolata inclusi distanziali.</p>
+          <div className="flex items-baseline gap-1">
+            <span className={cn("text-3xl font-black italic tracking-tighter", pokeVal > 0 ? "text-white" : "text-zinc-600")}>
+              {pokeVal > 0 ? `+${pokeVal}` : pokeVal}
+            </span>
+            <span className="text-[10px] font-black text-zinc-500">mm</span>
+          </div>
         </div>
 
-        <div className="bg-zinc-900/50 border border-white/10 p-8 rounded-[2.5rem] relative overflow-hidden">
-          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 italic mb-4">Diametro Totale</p>
-          <div className="flex items-baseline gap-2">
-            <span className={cn("text-5xl font-black italic tracking-tighter", Math.abs(parseFloat(results.diameterDiff)) > 10 ? "text-orange-500" : "text-white")}>
-              {parseFloat(results.diameterDiff) > 0 ? `+${results.diameterDiff}` : results.diameterDiff} <span className="text-sm">mm</span>
-            </span>
+        <div className="bg-zinc-900/50 border border-white/10 p-5 rounded-[2rem] flex items-center justify-between shadow-lg">
+          <div className="flex-1 pr-4">
+            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 italic mb-1">Diametro Totale</p>
+            <p className="text-[8px] font-bold text-zinc-400 uppercase leading-tight">Variazione dell'altezza totale della ruota finita.</p>
           </div>
-          <p className="text-[10px] font-bold text-zinc-400 uppercase mt-4 leading-tight">Variazione dell'altezza totale della ruota finita.</p>
+          <div className="flex items-baseline gap-1">
+            <span className={cn("text-3xl font-black italic tracking-tighter", Math.abs(parseFloat(results.diameterDiff)) > 10 ? "text-orange-500" : "text-white")}>
+              {parseFloat(results.diameterDiff) > 0 ? `+${results.diameterDiff}` : results.diameterDiff}
+            </span>
+            <span className="text-[10px] font-black text-zinc-500">mm</span>
+          </div>
         </div>
 
-        <div className="bg-zinc-900/50 border border-white/10 p-8 rounded-[2.5rem] relative overflow-hidden">
-          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 italic mb-4">Errore Tachimetro</p>
-          <div className="flex items-baseline gap-2">
-            <span className={cn("text-5xl font-black italic tracking-tighter", Math.abs(parseFloat(results.speedoDiff)) > 3 ? "text-red-500" : "text-green-400")}>
-              {results.speedoDiff}%
-            </span>
+        <div className="bg-zinc-900/50 border border-white/10 p-5 rounded-[2rem] flex items-center justify-between shadow-lg">
+          <div className="flex-1 pr-4">
+            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 italic mb-1">Errore Tachimetro</p>
+            <p className="text-[8px] font-bold text-zinc-400 uppercase leading-tight">
+              A 100km/h indicati, andrai a <span className="text-white">{results.actualSpeed}</span>.
+            </p>
           </div>
-          <p className="text-[10px] font-bold text-zinc-400 uppercase mt-4 leading-tight">
-            A 100 km/h indicati, la velocità reale sarà di <span className="text-white">{results.actualSpeed} km/h</span>.
-          </p>
+          <div className="flex items-baseline gap-1">
+            <span className={cn("text-3xl font-black italic tracking-tighter", Math.abs(parseFloat(results.speedoDiff)) > 3 ? "text-red-500" : "text-green-400")}>
+              {results.speedoDiff}
+            </span>
+            <span className="text-[10px] font-black text-zinc-500">%</span>
+          </div>
         </div>
       </div>
 
@@ -256,43 +276,41 @@ const FitmentCalculator = () => {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white/5 border border-white/10 p-8 rounded-[3rem] shadow-2xl"
+          className="bg-white/5 border border-white/10 p-6 rounded-[2.5rem] shadow-2xl text-center space-y-6"
         >
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white text-black rounded-2xl flex items-center justify-center shadow-xl">
-                <Car size={24} />
-              </div>
-              <div>
-                <h4 className="text-lg font-black italic uppercase tracking-tight">Salva nel Garage</h4>
-                <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">Archivia questa configurazione nel Diario di Bordo</p>
-              </div>
+          <div className="flex justify-center">
+            <div className="w-12 h-12 bg-white text-black rounded-2xl flex items-center justify-center shadow-xl">
+              <Car size={24} />
             </div>
+          </div>
+          <div>
+            <h4 className="text-lg font-black italic uppercase tracking-tight mb-1">Salva Configurazione</h4>
+            <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">Archivia nel Diario di Bordo</p>
+          </div>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto">
-              <div className="relative flex-1 sm:w-64">
-                <select 
-                  value={selectedVehicleId}
-                  onChange={(e) => setSelectedVehicleId(e.target.value)}
-                  className="w-full bg-black/40 border border-white/10 rounded-full h-14 px-6 text-[10px] font-black uppercase italic appearance-none focus:border-white/30 transition-all"
-                >
-                  {vehicles.map(v => (
-                    <option key={v.id} value={v.id}>{v.brand} {v.model}</option>
-                  ))}
-                </select>
-                <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">
-                  <Car size={14} />
-                </div>
-              </div>
-
-              <Button 
-                onClick={handleSaveToGarage}
-                disabled={addLog.isPending}
-                className="bg-white text-black hover:bg-zinc-200 h-14 px-10 rounded-full font-black uppercase italic text-[10px] tracking-widest transition-all shadow-xl"
+          <div className="space-y-4 w-full">
+            <div className="relative w-full">
+              <select 
+                value={selectedVehicleId}
+                onChange={(e) => setSelectedVehicleId(e.target.value)}
+                className="w-full bg-black/40 border border-white/10 rounded-full h-14 px-6 text-[10px] font-black uppercase italic appearance-none focus:border-white/30 transition-all text-white"
               >
-                {addLog.isPending ? <Loader2 className="animate-spin" /> : <><Save size={16} className="mr-2" /> Salva Configurazione</>}
-              </Button>
+                {vehicles.map(v => (
+                  <option key={v.id} value={v.id}>{v.brand} {v.model}</option>
+                ))}
+              </select>
+              <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">
+                <Car size={14} />
+              </div>
             </div>
+
+            <Button 
+              onClick={handleSaveToGarage}
+              disabled={addLog.isPending}
+              className="w-full bg-white text-black hover:bg-zinc-200 h-14 rounded-full font-black uppercase italic text-[10px] tracking-widest transition-all shadow-xl"
+            >
+              {addLog.isPending ? <Loader2 className="animate-spin" /> : <><Save size={16} className="mr-2" /> Salva nel Garage</>}
+            </Button>
           </div>
         </motion.div>
       )}
