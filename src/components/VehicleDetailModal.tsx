@@ -12,6 +12,7 @@ import { Button } from './ui/button';
 import ImageLightbox from './ImageLightbox';
 import VehicleStats from './VehicleStats';
 import RankBadge from './RankBadge';
+import TrophyBadge from './TrophyBadge';
 
 interface VehicleDetailModalProps {
   isOpen: boolean;
@@ -34,6 +35,7 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicle, isOwnProfile, onLike, cu
   const isPublic = vehicle.profiles?.license_plate_privacy === 'public';
   const canSeePlate = isOwnProfile || canVote || isPublic;
   const allImages = vehicle.images || (vehicle.image_url ? [vehicle.image_url] : []);
+  const vehicleTrophies = vehicle.user_trophies || [];
 
   const getVehicleRank = () => {
     const scoreRank = topScored?.findIndex(v => v.id === vehicle.id);
@@ -74,6 +76,12 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicle, isOwnProfile, onLike, cu
                   <div>
                     <div className="flex items-center gap-2 mb-2 flex-wrap">
                       {rankInfo && <RankBadge rank={rankInfo.rank} type={rankInfo.type} showLabel={true} />}
+                      
+                      {/* Trofei nel modal */}
+                      {vehicleTrophies.map((ut: any) => (
+                        <TrophyBadge key={ut.id} trophy={ut.trophies} size="xs" showDetails={true} />
+                      ))}
+
                       <span className="bg-white text-black text-[8px] font-black uppercase px-2 py-1 italic rounded-lg shadow-lg">
                         {vehicle.suspension_type}
                       </span>

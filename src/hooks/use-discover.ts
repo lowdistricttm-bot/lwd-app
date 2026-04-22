@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { Vehicle } from './use-garage';
 
-// Ruoli autorizzati a comparire nella sezione veicoli/showroom e membri
 const AUTHORIZED_ROLES = ['admin', 'staff', 'support', 'member', 'subscriber_plus'];
 
 export const useDiscover = (searchQuery: string = "") => {
@@ -24,7 +23,11 @@ export const useDiscover = (searchQuery: string = "") => {
             is_admin,
             license_plate_privacy
           ),
-          vehicle_likes (user_id)
+          vehicle_likes (user_id),
+          user_trophies (
+            id,
+            trophies (*)
+          )
         `)
         .order('created_at', { ascending: false });
 
@@ -41,7 +44,6 @@ export const useDiscover = (searchQuery: string = "") => {
         return [];
       }
 
-      // Filtriamo i veicoli in base al ruolo del proprietario
       const filteredData = (data || [])
         .filter((v: any) => v.profiles && AUTHORIZED_ROLES.includes(v.profiles.role))
         .map((v: any) => ({
@@ -64,7 +66,7 @@ export const useDiscover = (searchQuery: string = "") => {
         .from('profiles')
         .select('id, username, avatar_url, role, is_admin')
         .ilike('username', `%${searchQuery}%`)
-        .in('role', AUTHORIZED_ROLES) // Filtro ruoli applicato alla ricerca utenti
+        .in('role', AUTHORIZED_ROLES)
         .limit(20);
 
       if (error) throw error;
@@ -76,7 +78,6 @@ export const useDiscover = (searchQuery: string = "") => {
   const { data: newMembers } = useQuery({
     queryKey: ['discover-new-members'],
     queryFn: async () => {
-      // Rimosso il .limit(12) per mostrare TUTTI i membri autorizzati
       const { data, error } = await supabase
         .from('profiles')
         .select('id, username, avatar_url, role, is_admin, updated_at')

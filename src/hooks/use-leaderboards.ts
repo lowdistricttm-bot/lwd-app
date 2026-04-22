@@ -13,7 +13,11 @@ export const useLeaderboards = () => {
         .select(`
           *,
           profiles:user_id (username, avatar_url, role),
-          vehicle_likes (user_id)
+          vehicle_likes (user_id),
+          user_trophies (
+            id,
+            trophies (*)
+          )
         `)
         .not('stance_score', 'is', null)
         .order('stance_score', { ascending: false })
@@ -35,7 +39,11 @@ export const useLeaderboards = () => {
         .select(`
           *,
           profiles:user_id (username, avatar_url, role),
-          vehicle_likes (user_id)
+          vehicle_likes (user_id),
+          user_trophies (
+            id,
+            trophies (*)
+          )
         `)
         .limit(100);
 

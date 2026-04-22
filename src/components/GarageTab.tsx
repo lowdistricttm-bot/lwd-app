@@ -13,6 +13,7 @@ import VehicleLogbook from './VehicleLogbook';
 import StanceAnalyzer from './StanceAnalyzer';
 import VehicleDetailModal from './VehicleDetailModal';
 import RankBadge from './RankBadge';
+import TrophyBadge from './TrophyBadge';
 import { 
   Plus, Car, Trash2, Camera, Loader2, X, Edit3, Heart, 
   Gauge, Book, Sparkles, ChevronRight, Calendar, CreditCard, GripVertical 
@@ -274,6 +275,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
           const canSeePlate = isOwnProfile || canVote || isPublic;
           const mainImage = vehicle.images?.[0] || vehicle.image_url;
           const rankInfo = getVehicleRank(vehicle.id);
+          const vehicleTrophies = vehicle.user_trophies || [];
 
           return (
             <motion.div 
@@ -290,6 +292,16 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                 
                 <div className="absolute top-5 left-5 flex flex-col gap-2">
                   {rankInfo && <RankBadge rank={rankInfo.rank} type={rankInfo.type} />}
+                  
+                  {/* Trofei del veicolo sulla scheda */}
+                  {vehicleTrophies.length > 0 && (
+                    <div className="flex gap-1.5">
+                      {vehicleTrophies.map((ut: any) => (
+                        <TrophyBadge key={ut.id} trophy={ut.trophies} size="xs" />
+                      ))}
+                    </div>
+                  )}
+
                   <span className="bg-zinc-900/80 backdrop-blur-md text-white border border-white/10 text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full shadow-2xl w-fit">
                     {vehicle.suspension_type}
                   </span>

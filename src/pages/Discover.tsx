@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import VehicleDetailModal from '@/components/VehicleDetailModal';
 import StanceAnalyzer from '@/components/StanceAnalyzer';
 import RankBadge from '@/components/RankBadge';
+import TrophyBadge from '@/components/TrophyBadge';
 import { useTranslation } from '@/hooks/use-translation';
 import { supabase } from "@/integrations/supabase/client";
 import useEmblaCarousel from 'embla-carousel-react';
@@ -79,7 +80,6 @@ const Discover = () => {
     setSelectedVehicle(vehicle as Vehicle);
   };
 
-  // Helper per trovare il rank di un veicolo
   const getVehicleRank = (id: string) => {
     const scoreRank = topScored?.findIndex(v => v.id === id);
     if (scoreRank !== undefined && scoreRank !== -1 && scoreRank < 3) return { rank: scoreRank + 1, type: 'score' as const };
@@ -145,7 +145,6 @@ const Discover = () => {
           </div>
         </header>
 
-        {/* SEZIONE NUOVI NEL DISTRICT - TORNATA IN CIMA */}
         {!debouncedSearch && newMembers && newMembers.length > 0 && (
           <section className="mb-14">
             <h3 className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 flex items-center gap-2 italic mb-6">
@@ -179,7 +178,6 @@ const Discover = () => {
           </section>
         )}
 
-        {/* SEZIONE TOP 5 LOW SCORE */}
         {!debouncedSearch && topScored && topScored.length > 0 && (
           <section className="mb-14">
             <div className="flex justify-between items-end mb-6">
@@ -211,7 +209,6 @@ const Discover = () => {
           </section>
         )}
 
-        {/* SEZIONE TOP 5 COMMUNITY LIKE */}
         {!debouncedSearch && mostLiked && mostLiked.length > 0 && (
           <section className="mb-14">
             <div className="flex justify-between items-end mb-6">
@@ -307,6 +304,7 @@ const Discover = () => {
                   const isOwn = currentUserId === vehicle.user_id;
                   const canSeePlate = isOwn || canVote || isPublic;
                   const rankInfo = getVehicleRank(vehicle.id);
+                  const vehicleTrophies = vehicle.user_trophies || [];
                   
                   return (
                     <motion.div 
@@ -339,6 +337,16 @@ const Discover = () => {
                         
                         <div className="absolute top-5 left-5 flex flex-col gap-2">
                           {rankInfo && <RankBadge rank={rankInfo.rank} type={rankInfo.type} />}
+                          
+                          {/* Trofei del veicolo sulla scheda */}
+                          {vehicleTrophies.length > 0 && (
+                            <div className="flex gap-1.5">
+                              {vehicleTrophies.map((ut: any) => (
+                                <TrophyBadge key={ut.id} trophy={ut.trophies} size="xs" />
+                              ))}
+                            </div>
+                          )}
+
                           <span className="bg-white/90 backdrop-blur-md text-black text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full shadow-2xl w-fit">
                             {vehicle.suspension_type}
                           </span>
