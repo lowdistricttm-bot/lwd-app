@@ -69,8 +69,8 @@ const EmailSettingsModal = ({ isOpen, onClose }: EmailSettingsModalProps) => {
   if (!isAdmin && isOpen) {
     return (
       <AnimatePresence>
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[250] touch-none" />
-        <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed inset-x-0 bottom-0 z-[251] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-8 rounded-t-[2rem] flex flex-col items-center justify-center py-20">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/80 z-[250] touch-none" />
+        <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed inset-x-0 bottom-0 z-[251] bg-black border-t border-white/10 p-8 rounded-t-[2rem] flex flex-col items-center justify-center py-20">
           <ShieldAlert size={48} className="text-zinc-800 mb-4" />
           <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Accesso riservato agli amministratori</p>
           <Button onClick={onClose} className="mt-6 bg-white text-black hover:bg-zinc-200 rounded-full font-black uppercase italic px-8 h-12 transition-all shadow-xl">Chiudi</Button>
@@ -83,11 +83,11 @@ const EmailSettingsModal = ({ isOpen, onClose }: EmailSettingsModalProps) => {
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[250] touch-none" />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/80 z-[250] touch-none" />
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[251] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[90dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            className="fixed inset-x-0 bottom-0 z-[251] bg-black border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[90dvh] overflow-y-auto shadow-2xl"
             style={{ 
               touchAction: 'pan-y',
               overscrollBehavior: 'contain'
@@ -121,7 +121,7 @@ const EmailSettingsModal = ({ isOpen, onClose }: EmailSettingsModalProps) => {
               ) : (
                 <div className="space-y-12">
                   {templates.map((template) => (
-                    <div key={template.id} className="space-y-6 p-6 border border-white/5 bg-black/20 rounded-[2rem]">
+                    <div key={template.id} className="space-y-6 p-6 border border-white/5 bg-white/5 rounded-[2rem]">
                       <div className="flex items-center gap-3 mb-2">
                         <div className={cn(
                           "w-2 h-2 rounded-full",
@@ -137,7 +137,7 @@ const EmailSettingsModal = ({ isOpen, onClose }: EmailSettingsModalProps) => {
                         <Input 
                           value={template.subject} 
                           onChange={e => updateLocalTemplate(template.type, 'subject', e.target.value)}
-                          className="bg-black/40 border-white/10 rounded-full h-12 px-6 text-sm font-bold"
+                          className="bg-black border-white/10 rounded-full h-12 px-6 text-sm font-bold text-white"
                         />
                       </div>
 
@@ -146,7 +146,7 @@ const EmailSettingsModal = ({ isOpen, onClose }: EmailSettingsModalProps) => {
                         <Textarea 
                           value={template.body} 
                           onChange={e => updateLocalTemplate(template.type, 'body', e.target.value)}
-                          className="bg-black/40 border-white/10 rounded-[1.5rem] min-h-[200px] text-sm leading-relaxed p-6"
+                          className="bg-black border-white/10 rounded-[1.5rem] min-h-[200px] text-sm leading-relaxed p-6 text-white"
                         />
                       </div>
 

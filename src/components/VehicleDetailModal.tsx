@@ -63,14 +63,14 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicle, isOwnProfile, onLike, cu
               animate={{ opacity: 1 }} 
               exit={{ opacity: 0 }} 
               onClick={onClose} 
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] touch-none" 
+              className="fixed inset-0 bg-black/80 z-[200] touch-none" 
             />
             <motion.div 
               initial={{ y: '100%' }} 
               animate={{ y: 0 }} 
               exit={{ y: '100%' }} 
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-x-0 bottom-0 z-[201] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[92dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+              className="fixed inset-x-0 bottom-0 z-[201] bg-black border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[92dvh] overflow-y-auto shadow-2xl"
               style={{ touchAction: 'pan-y', overscrollBehavior: 'contain' }}
             >
               <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
@@ -90,12 +90,12 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicle, isOwnProfile, onLike, cu
                         {vehicle.suspension_type}
                       </span>
                       {vehicle.is_main && (
-                        <span className="bg-zinc-800 text-zinc-400 text-[8px] font-black uppercase px-2 py-1 italic rounded-lg border border-white/5">
+                        <span className="bg-white/10 text-zinc-400 text-[8px] font-black uppercase px-2 py-1 italic rounded-lg border border-white/5">
                           PROGETTO ATTIVO
                         </span>
                       )}
                       {vehicle.stance_score && (
-                        <span className="bg-black/60 text-white border border-white/20 text-[8px] font-black uppercase px-2 py-1 italic rounded-lg flex items-center gap-1.5">
+                        <span className="bg-white/10 text-white border border-white/20 text-[8px] font-black uppercase px-2 py-1 italic rounded-lg flex items-center gap-1.5">
                           <Sparkles size={10} /> LOW SCORE: {vehicle.stance_score}
                         </span>
                       )}
@@ -111,7 +111,7 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicle, isOwnProfile, onLike, cu
 
                 <div className="space-y-4">
                   <div 
-                    className="aspect-video bg-zinc-950 rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl cursor-pointer group"
+                    className="aspect-video bg-black rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl cursor-pointer group"
                     onClick={() => setLightboxData({ images: allImages, index: 0 })}
                   >
                     {allImages[0] ? (
@@ -126,7 +126,7 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicle, isOwnProfile, onLike, cu
                       {allImages.slice(1, 5).map((img, idx) => (
                         <div 
                           key={idx} 
-                          className="aspect-square bg-zinc-900 rounded-2xl overflow-hidden border border-white/5 cursor-pointer relative group"
+                          className="aspect-square bg-black rounded-2xl overflow-hidden border border-white/5 cursor-pointer relative group"
                           onClick={() => setLightboxData({ images: allImages, index: idx + 1 })}
                         >
                           <img src={img} className="w-full h-full object-cover group-hover:opacity-80 transition-opacity" alt="" />
@@ -142,14 +142,14 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicle, isOwnProfile, onLike, cu
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white/5 border border-white/10 p-5 rounded-[2rem] backdrop-blur-md">
+                  <div className="bg-white/5 border border-white/10 p-5 rounded-[2rem]">
                     <p className="text-[8px] font-black uppercase text-zinc-500 tracking-[0.3em] italic mb-2">Anno Progetto</p>
                     <div className="flex items-center gap-2 text-white">
                       <Calendar size={14} className="text-zinc-400" />
                       <span className="text-sm font-black uppercase italic">{vehicle.year || 'N/A'}</span>
                     </div>
                   </div>
-                  <div className="bg-white/5 border border-white/10 p-5 rounded-[2rem] backdrop-blur-md">
+                  <div className="bg-white/5 border border-white/10 p-5 rounded-[2rem]">
                     <p className="text-[8px] font-black uppercase text-zinc-500 tracking-[0.3em] italic mb-2">Assetto</p>
                     <div className="flex items-center gap-2 text-white">
                       <Gauge size={14} className="text-zinc-400" />

@@ -34,7 +34,6 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
   const [userVehicles, setUserVehicles] = useState<any[]>([]);
   const [loadingVehicles, setLoadingVehicles] = useState(false);
 
-  // Form per nuovo trofeo
   const [formData, setFormData] = useState({
     title: '',
     eventName: '',
@@ -78,17 +77,17 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
     onClose();
   };
 
-  const inputClass = "bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest focus-visible:ring-white/20 transition-all placeholder:text-zinc-700";
+  const inputClass = "bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest focus-visible:ring-white/20 transition-all placeholder:text-zinc-700 text-white";
 
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[300] touch-none" />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/80 z-[300] touch-none" />
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[301] bg-zinc-950 border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[94dvh] overflow-y-auto shadow-2xl"
+            className="fixed inset-x-0 bottom-0 z-[301] bg-black border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[94dvh] overflow-y-auto shadow-2xl"
             style={{ touchAction: 'pan-y', overscrollBehavior: 'contain' }}
           >
             <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
@@ -107,14 +106,14 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
                 <div className="space-y-3">
                   <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4 italic">1. Seleziona Vincitore</Label>
                   {selectedUser ? (
-                    <div className="bg-zinc-900 border border-white/10 p-4 rounded-2xl flex items-center justify-between shadow-xl">
+                    <div className="bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center justify-between shadow-xl">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full overflow-hidden bg-black border border-white/10">
                           {selectedUser.avatar_url ? <img src={selectedUser.avatar_url} className="w-full h-full object-cover" /> : <UserIcon size={20} className="m-auto h-full text-zinc-700" />}
                         </div>
                         <span className="text-sm font-black uppercase italic text-white">@{selectedUser.username}</span>
                       </div>
-                      <button type="button" onClick={() => setSelectedUser(null)} className="p-2 bg-white/5 rounded-full hover:bg-red-500/20 transition-colors"><X size={16} /></button>
+                      <button type="button" onClick={() => setSelectedUser(null)} className="p-2 bg-white/10 rounded-full hover:bg-red-500/20 transition-colors"><X size={16} /></button>
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -125,7 +124,7 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
                       <div className="grid grid-cols-2 gap-2">
                         {filteredUsers.map(u => (
                           <button key={u.id} type="button" onClick={() => setSelectedUser(u)} className="p-3 bg-white/5 border border-white/5 rounded-xl flex items-center gap-3 hover:bg-white/10 transition-all">
-                            <div className="w-8 h-8 rounded-full overflow-hidden bg-zinc-800 shrink-0">
+                            <div className="w-8 h-8 rounded-full overflow-hidden bg-black shrink-0">
                               {u.avatar_url ? <img src={u.avatar_url} className="w-full h-full object-cover" /> : <UserIcon size={14} className="m-auto h-full text-zinc-700" />}
                             </div>
                             <span className="text-[10px] font-black uppercase italic truncate text-zinc-400">{u.username}</span>

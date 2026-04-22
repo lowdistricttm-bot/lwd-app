@@ -81,14 +81,14 @@ const ShareStoryModal = ({ isOpen, onClose, storyUrl, authorName, bottomOffset =
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }} 
             onClick={onClose} 
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[300] touch-none" 
+            className="fixed inset-0 bg-black/80 z-[300] touch-none" 
           />
           <motion.div 
             initial={{ y: '100%' }} 
             animate={{ y: 0 }} 
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 z-[301] bg-black/60 backdrop-blur-2xl border border-white/10 p-6 rounded-[2.5rem] max-h-[80dvh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            className="fixed inset-x-0 z-[301] bg-black border-t border-white/10 p-6 rounded-[2.5rem] max-h-[80dvh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
             style={{ 
               touchAction: 'pan-y',
               overscrollBehavior: 'contain',
@@ -113,7 +113,7 @@ const ShareStoryModal = ({ isOpen, onClose, storyUrl, authorName, bottomOffset =
                 placeholder="CERCA MEMBRI..." 
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="bg-white/5 border-white/10 rounded-full h-14 pl-12 font-black uppercase text-xs tracking-widest focus-visible:ring-white/20 placeholder:text-zinc-600 backdrop-blur-md text-white"
+                className="bg-white/5 border-white/10 rounded-full h-14 pl-12 font-black uppercase text-xs tracking-widest focus-visible:ring-white/20 placeholder:text-zinc-600 text-white"
               />
             </div>
 
@@ -125,9 +125,9 @@ const ShareStoryModal = ({ isOpen, onClose, storyUrl, authorName, bottomOffset =
                 </div>
               ) : (
                 results.map((user) => (
-                  <div key={user.id} className="flex items-center justify-between p-4 bg-white/5 backdrop-blur-md border border-white/5 rounded-[1.5rem] group hover:bg-white/10 transition-all">
+                  <div key={user.id} className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-[1.5rem] group hover:bg-white/10 transition-all">
                     <div className="flex items-center gap-4 min-w-0">
-                      <div className="w-12 h-12 bg-black/40 rounded-full overflow-hidden border border-white/10 shrink-0">
+                      <div className="w-12 h-12 bg-black rounded-full overflow-hidden border border-white/10 shrink-0">
                         {user.avatar_url ? <img src={user.avatar_url} className="w-full h-full object-cover" /> : <User size={20} className="m-auto h-full text-zinc-600" />}
                       </div>
                       <div className="min-w-0">

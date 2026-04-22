@@ -161,7 +161,7 @@ const Discover = () => {
                     "w-16 h-16 rounded-full p-[2px] border-2 transition-all duration-500",
                     isUserOnline(member.id) ? "border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]" : "border-white/10"
                   )}>
-                    <div className="w-full h-full rounded-full overflow-hidden bg-zinc-950">
+                    <div className="w-full h-full rounded-full overflow-hidden bg-black">
                       {member.avatar_url ? (
                         <img src={member.avatar_url} className="w-full h-full object-cover" alt="" />
                       ) : (
@@ -191,7 +191,7 @@ const Discover = () => {
             <div className="embla overflow-hidden cursor-grab active:cursor-grabbing" ref={emblaScoreRef}>
               <div className="embla__container flex gap-4">
                 {topScored.slice(0, 5).map((v, i) => (
-                  <div key={v.id} onClick={() => handleOpenProject(v)} className="embla__slide flex-[0_0_70%] sm:flex-[0_0_40%] md:flex-[0_0_25%] min-w-0 bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-[2rem] overflow-hidden group cursor-pointer">
+                  <div key={v.id} onClick={() => handleOpenProject(v)} className="embla__slide flex-[0_0_70%] sm:flex-[0_0_40%] md:flex-[0_0_25%] min-w-0 bg-white/5 backdrop-blur-xl border border-white/5 rounded-[2rem] overflow-hidden group cursor-pointer">
                     <div className="aspect-video relative overflow-hidden">
                       <img src={v.images?.[0] || v.image_url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-700 group-hover:scale-110" alt="" />
                       <div className="absolute top-3 left-3">
@@ -222,7 +222,7 @@ const Discover = () => {
             <div className="embla overflow-hidden cursor-grab active:cursor-grabbing" ref={emblaLikeRef}>
               <div className="embla__container flex gap-4">
                 {mostLiked.slice(0, 5).map((v, i) => (
-                  <div key={v.id} onClick={() => handleOpenProject(v)} className="embla__slide flex-[0_0_70%] sm:flex-[0_0_40%] md:flex-[0_0_25%] min-w-0 bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-[2rem] overflow-hidden group cursor-pointer">
+                  <div key={v.id} onClick={() => handleOpenProject(v)} className="embla__slide flex-[0_0_70%] sm:flex-[0_0_40%] md:flex-[0_0_25%] min-w-0 bg-white/5 backdrop-blur-xl border border-white/5 rounded-[2rem] overflow-hidden group cursor-pointer">
                     <div className="aspect-video relative overflow-hidden">
                       <img src={v.images?.[0] || v.image_url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-700 group-hover:scale-110" alt="" />
                       <div className="absolute top-3 left-3">
@@ -261,7 +261,7 @@ const Discover = () => {
                       "w-24 h-24 rounded-full p-[3px] border-2 transition-all duration-500",
                       isUserOnline(user.id) ? "border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.3)]" : "border-white/10"
                     )}>
-                      <div className="w-full h-full rounded-full overflow-hidden bg-zinc-900">
+                      <div className="w-full h-full rounded-full overflow-hidden bg-black">
                         {user.avatar_url ? (
                           <img src={user.avatar_url} className="w-full h-full object-cover" alt="" />
                         ) : (
@@ -320,7 +320,7 @@ const Discover = () => {
                     >
                       <div 
                         className={cn(
-                          "bg-zinc-950 relative overflow-hidden cursor-pointer shrink-0",
+                          "bg-black relative overflow-hidden cursor-pointer shrink-0",
                           viewMode === 'grid' ? "aspect-[4/5]" : "aspect-video md:w-80"
                         )}
                         onClick={() => handleOpenProject(vehicle)}
@@ -421,7 +421,7 @@ const Discover = () => {
                               className="flex items-center gap-4 hover:opacity-70 transition-opacity group/user text-left min-w-0"
                             >
                               <div className={cn(
-                                "w-10 h-10 bg-zinc-800 rounded-full overflow-hidden border-2 transition-all duration-500",
+                                "w-10 h-10 bg-black rounded-full overflow-hidden border-2 transition-all duration-500",
                                 isUserOnline(vehicle.user_id) ? "border-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]" : "border-white/10"
                               )}>
                                 {vehicle.profiles?.avatar_url ? (
@@ -475,7 +475,7 @@ const Discover = () => {
         {stanceVehicle && (
           <div className="fixed inset-0 z-[400] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setStanceVehicle(null)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-zinc-950 border border-white/10 w-full max-w-2xl rounded-[3rem] overflow-hidden shadow-2xl">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-black border border-white/10 w-full max-w-2xl rounded-[3rem] overflow-hidden shadow-2xl">
               <StanceAnalyzer 
                 imageUrl={stanceVehicle.images?.[0] || stanceVehicle.image_url || ''} 
                 vehicleId={stanceVehicle.id} 

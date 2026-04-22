@@ -44,12 +44,12 @@ const ManageApplicationModal = ({ isOpen, onClose, application }: ManageApplicat
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }} 
             onClick={onClose} 
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150] touch-none" 
+            className="fixed inset-0 bg-black/80 z-[150] touch-none" 
           />
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[151] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[85dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            className="fixed inset-x-0 bottom-0 z-[151] bg-black border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[85dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
             style={{ 
               touchAction: 'pan-y',
               overscrollBehavior: 'contain'
@@ -97,7 +97,7 @@ const ManageApplicationModal = ({ isOpen, onClose, application }: ManageApplicat
                   <div className="bg-white/5 border border-white/5 p-6 space-y-4 rounded-[1.5rem]">
                     <h4 className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Veicolo Candidato</h4>
                     <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 bg-zinc-800 border border-white/10 overflow-hidden shrink-0 rounded-xl">
+                      <div className="w-16 h-16 bg-black border border-white/10 overflow-hidden shrink-0 rounded-xl">
                         {application.vehicles?.image_url ? (
                           <img src={application.vehicles.image_url} className="w-full h-full object-cover" alt="Veicolo" />
                         ) : (

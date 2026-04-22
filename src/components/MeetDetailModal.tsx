@@ -48,12 +48,12 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
         <>
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
-            onClick={onClose} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] touch-none" 
+            onClick={onClose} className="fixed inset-0 bg-black/80 z-[200] touch-none" 
           />
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[201] bg-zinc-950 border-t border-white/10 p-6 rounded-t-[2.5rem] h-[100dvh] overflow-y-auto shadow-2xl"
+            className="fixed inset-x-0 bottom-0 z-[201] bg-black border-t border-white/10 p-6 rounded-t-[2.5rem] h-[100dvh] overflow-y-auto shadow-2xl"
             style={{ 
               touchAction: 'pan-y', 
               overscrollBehavior: 'contain',
@@ -84,7 +84,7 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
               )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-white/5 border border-white/10 p-5 rounded-[2rem] backdrop-blur-md">
+                <div className="bg-white/5 border border-white/10 p-5 rounded-[2rem]">
                   <p className="text-[8px] font-black uppercase text-zinc-500 tracking-[0.3em] italic mb-2">Data e Ora</p>
                   <div className="flex items-center gap-3 text-white">
                     <Calendar size={16} className="text-zinc-400" />
@@ -100,7 +100,7 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
                   </div>
                 </div>
 
-                <div className="bg-white/5 border border-white/10 p-5 rounded-[2rem] backdrop-blur-md">
+                <div className="bg-white/5 border border-white/10 p-5 rounded-[2rem]">
                   <p className="text-[8px] font-black uppercase text-zinc-500 tracking-[0.3em] italic mb-2">Luogo Ritrovo</p>
                   <div className="flex items-start gap-3 text-white">
                     <MapPin size={16} className="text-zinc-400 mt-0.5" />
@@ -127,7 +127,7 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
                         onClick={() => { onClose(); navigate(`/profile/${p.user_id}`); }}
                         className="group relative"
                       >
-                        <div className="w-10 h-10 rounded-full border-2 border-white/10 overflow-hidden bg-zinc-900 group-hover:border-white transition-all">
+                        <div className="w-10 h-10 rounded-full border-2 border-white/10 overflow-hidden bg-black group-hover:border-white transition-all">
                           {p.profiles?.avatar_url ? (
                             <img src={p.profiles.avatar_url} className="w-full h-full object-cover" alt={p.profiles.username} />
                           ) : (
@@ -147,7 +147,7 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
 
               <div className="bg-white/5 border border-white/10 p-6 rounded-[2rem] flex items-center justify-between shadow-2xl">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-zinc-900 rounded-full overflow-hidden border-2 border-white/10">
+                  <div className="w-12 h-12 bg-black rounded-full overflow-hidden border-2 border-white/10">
                     {meet.profiles?.avatar_url ? (
                       <img src={meet.profiles.avatar_url} className="w-full h-full object-cover" alt="" />
                     ) : (

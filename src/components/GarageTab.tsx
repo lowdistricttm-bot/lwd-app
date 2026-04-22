@@ -153,7 +153,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
         {isOwnProfile && (
           <Button 
             onClick={handleOpenAdd} 
-            className="bg-zinc-900 text-white border border-white/10 rounded-full h-10 px-6 font-black uppercase italic text-[10px] shadow-xl hover:bg-zinc-800 transition-all"
+            className="bg-white/10 text-white border border-white/10 rounded-full h-10 px-6 font-black uppercase italic text-[10px] shadow-xl hover:bg-white/20 transition-all"
           >
             <Plus size={16} className="mr-2" /> Aggiungi
           </Button>
@@ -162,7 +162,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
 
       <AnimatePresence>
         {isFormOpen && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="bg-zinc-900/60 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/10 shadow-2xl">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="bg-black/60 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/10 shadow-2xl">
             <div className="flex justify-between items-center mb-8">
               <h4 className="text-lg font-black italic uppercase">{editingVehicle ? 'Modifica Veicolo' : 'Nuovo Progetto'}</h4>
               <button onClick={() => setIsFormOpen(false)} className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors"><X size={20} /></button>
@@ -171,22 +171,22 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Marca</Label>
-                  <Input required placeholder="ES: BMW" value={formData.brand} onChange={e => setFormData({...formData, brand: e.target.value.toUpperCase()})} className="bg-black/40 border-white/5 rounded-full h-12 px-6 font-bold" />
+                  <Input required placeholder="ES: BMW" value={formData.brand} onChange={e => setFormData({...formData, brand: e.target.value.toUpperCase()})} className="bg-white/5 border-white/10 rounded-full h-12 px-6 font-bold text-white" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Modello</Label>
-                  <Input required placeholder="ES: M3 E46" value={formData.model} onChange={e => setFormData({...formData, model: e.target.value.toUpperCase()})} className="bg-black/40 border-white/5 rounded-full h-12 px-6 font-bold" />
+                  <Input required placeholder="ES: M3 E46" value={formData.model} onChange={e => setFormData({...formData, model: e.target.value.toUpperCase()})} className="bg-white/5 border-white/10 rounded-full h-12 px-6 font-bold text-white" />
                 </div>
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Anno</Label>
-                  <Input placeholder="ES: 2003" value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} className="bg-black/40 border-white/5 rounded-full h-12 px-6 font-bold" />
+                  <Input placeholder="ES: 2003" value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} className="bg-white/5 border-white/10 rounded-full h-12 px-6 font-bold text-white" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Targa</Label>
-                  <Input placeholder="ES: AA000BB" value={formData.license_plate} onChange={e => setFormData({...formData, license_plate: e.target.value.toUpperCase()})} className="bg-black/40 border-white/5 rounded-full h-12 px-6 font-bold" />
+                  <Input placeholder="ES: AA000BB" value={formData.license_plate} onChange={e => setFormData({...formData, license_plate: e.target.value.toUpperCase()})} className="bg-white/5 border-white/10 rounded-full h-12 px-6 font-bold text-white" />
                 </div>
               </div>
 
@@ -195,7 +195,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                 <select 
                   value={formData.suspension_type} 
                   onChange={e => setFormData({...formData, suspension_type: e.target.value})}
-                  className="w-full bg-black/40 border border-white/5 rounded-full h-12 px-6 text-xs font-bold appearance-none"
+                  className="w-full bg-black border border-white/10 rounded-full h-12 px-6 text-xs font-bold appearance-none text-white focus:outline-none focus:border-white/30"
                 >
                   <option value="STATIC">STATIC</option>
                   <option value="AIR">AIR</option>
@@ -204,7 +204,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
 
               <div className="space-y-2">
                 <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Descrizione Progetto</Label>
-                <Textarea placeholder="Racconta la storia del tuo veicolo..." value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="bg-black/40 border-white/5 rounded-[1.5rem] min-h-[100px] p-6 text-sm italic" />
+                <Textarea placeholder="Racconta la storia del tuo veicolo..." value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="bg-white/5 border-white/10 rounded-[1.5rem] min-h-[100px] p-6 text-sm italic text-white placeholder:text-zinc-600 resize-none" />
               </div>
 
               <div className="space-y-4">
@@ -285,13 +285,13 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
             <motion.div 
               key={vehicle.id} 
               onClick={() => setSelectedVehicle(vehicle)}
-              className="bg-zinc-900/40 backdrop-blur-md border border-white/5 rounded-[2.5rem] overflow-hidden group hover:border-white/20 transition-all duration-500 shadow-2xl cursor-pointer"
+              className="bg-white/5 backdrop-blur-md border border-white/10 rounded-[2.5rem] overflow-hidden group hover:border-white/20 transition-all duration-500 shadow-2xl cursor-pointer"
             >
               <div className="aspect-video relative overflow-hidden">
                 {mainImage ? (
                   <img src={mainImage} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-1000 group-hover:scale-110" alt={vehicle.model} />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-zinc-950 text-zinc-800"><Car size={64} /></div>
+                  <div className="w-full h-full flex items-center justify-center bg-black text-zinc-800"><Car size={64} /></div>
                 )}
                 
                 <div className="absolute top-5 left-5 flex flex-col gap-2">
@@ -302,7 +302,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                     <TrophyBar trophy={latestTrophy.trophies} />
                   )}
 
-                  <span className="bg-zinc-900/80 backdrop-blur-md text-white border border-white/10 text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full shadow-2xl w-fit">
+                  <span className="bg-black/80 backdrop-blur-md text-white border border-white/10 text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full shadow-2xl w-fit">
                     {vehicle.suspension_type}
                   </span>
                   {vehicle.stance_score && (
@@ -357,14 +357,14 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                         <span className="text-[10px] font-black uppercase tracking-widest italic flex items-center gap-1.5">
                           <Calendar size={12} className="text-white" /> {vehicle.year || 'N/A'}
                         </span>
-                        <span className="text-zinc-800">•</span>
+                        <span className="text-zinc-600">•</span>
                         <span className="text-[10px] font-black uppercase tracking-widest italic flex items-center gap-1.5">
                           <Gauge size={12} className="text-white" /> {vehicle.suspension_type}
                         </span>
                       </div>
 
                       {vehicle.license_plate && canSeePlate && (
-                        <div className="flex items-center gap-2 bg-zinc-800 text-white border border-white/10 px-2.5 py-1 rounded-lg w-fit shadow-lg">
+                        <div className="flex items-center gap-2 bg-white/10 text-white border border-white/10 px-2.5 py-1 rounded-lg w-fit shadow-lg">
                           <CreditCard size={12} />
                           <span className="text-[10px] font-black uppercase italic tracking-widest">{vehicle.license_plate}</span>
                         </div>
@@ -403,13 +403,13 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
         })}
 
         {vehicles?.length === 0 && (
-          <div className="col-span-full py-24 text-center bg-zinc-900/20 border border-dashed border-white/10 rounded-[3rem]">
+          <div className="col-span-full py-24 text-center bg-white/5 border border-dashed border-white/10 rounded-[3rem]">
             <Car size={48} className="mx-auto text-zinc-800 mb-6" />
             <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Il garage è vuoto. Inizia a caricare i tuoi progetti.</p>
             {isOwnProfile && (
               <Button 
                 onClick={handleOpenAdd} 
-                className="mt-8 bg-zinc-900 text-white border border-white/10 rounded-full px-8 h-12 font-black uppercase italic hover:bg-zinc-800 transition-all"
+                className="mt-8 bg-white text-black rounded-full px-8 h-12 font-black uppercase italic hover:bg-zinc-200 transition-all border-none"
               >
                 Aggiungi Veicolo
               </Button>
@@ -432,7 +432,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
         {activeLogbook && (
           <div className="fixed inset-0 z-[400] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveLogbook(null)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-zinc-950 border border-white/10 w-full max-w-2xl max-h-[85vh] rounded-[3rem] p-8 overflow-hidden shadow-2xl">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-black border border-white/10 w-full max-w-2xl max-h-[85vh] rounded-[3rem] p-8 overflow-hidden shadow-2xl">
               <VehicleLogbook vehicleId={activeLogbook} onClose={() => setActiveLogbook(null)} />
             </motion.div>
           </div>
@@ -440,7 +440,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
         {activeAnalyzer && (
           <div className="fixed inset-0 z-[400] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveAnalyzer(null)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-zinc-950 border border-white/10 w-full max-w-2xl rounded-[3rem] overflow-hidden shadow-2xl">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-black border border-white/10 w-full max-w-2xl rounded-[3rem] overflow-hidden shadow-2xl">
               <StanceAnalyzer imageUrl={activeAnalyzer.url} vehicleId={activeAnalyzer.id} onClose={() => setActiveAnalyzer(null)} />
             </motion.div>
           </div>

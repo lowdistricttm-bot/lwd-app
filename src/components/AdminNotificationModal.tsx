@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Bell, Users, User, Loader2, Send, Search, ShieldAlert, Megaphone, AlertTriangle, Zap } from 'lucide-react';
 import { Button } from './ui/button';
@@ -59,14 +59,14 @@ const AdminNotificationModal = ({ isOpen, onClose }: AdminNotificationModalProps
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }} 
             onClick={onClose} 
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] touch-none" 
+            className="fixed inset-0 bg-black/80 z-[200] touch-none" 
           />
           <motion.div 
             initial={{ y: '100%' }} 
             animate={{ y: 0 }} 
             exit={{ y: '100%' }} 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[201] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[90dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            className="fixed inset-x-0 bottom-0 z-[201] bg-black border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[90dvh] overflow-y-auto shadow-2xl"
             style={{ touchAction: 'pan-y', overscrollBehavior: 'contain' }}
           >
             <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
@@ -84,7 +84,7 @@ const AdminNotificationModal = ({ isOpen, onClose }: AdminNotificationModalProps
                 {/* Tipo Notifica */}
                 <div className="space-y-3">
                   <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest ml-4">Genere Notifica</Label>
-                  <div className="grid grid-cols-3 gap-2 bg-zinc-900/50 p-1 rounded-full border border-white/5">
+                  <div className="grid grid-cols-3 gap-2 bg-white/5 p-1 rounded-full border border-white/5">
                     {typeOptions.map((opt) => (
                       <button 
                         key={opt.id}
@@ -105,7 +105,7 @@ const AdminNotificationModal = ({ isOpen, onClose }: AdminNotificationModalProps
                 {/* Destinatario */}
                 <div className="space-y-3">
                   <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest ml-4">Destinatario</Label>
-                  <div className="flex bg-zinc-900/50 p-1 rounded-full border border-white/5">
+                  <div className="flex bg-white/5 p-1 rounded-full border border-white/5">
                     <button 
                       type="button"
                       onClick={() => setTarget('all')}
@@ -137,7 +137,7 @@ const AdminNotificationModal = ({ isOpen, onClose }: AdminNotificationModalProps
                         placeholder="CERCA USERNAME..." 
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="bg-white/5 border-white/10 rounded-full h-12 pl-12 text-[10px] font-black uppercase tracking-widest"
+                        className="bg-white/5 border-white/10 rounded-full h-12 pl-12 text-[10px] font-black uppercase tracking-widest text-white"
                       />
                     </div>
                     
@@ -152,7 +152,7 @@ const AdminNotificationModal = ({ isOpen, onClose }: AdminNotificationModalProps
                             target === u.id ? "bg-white border-white text-black" : "bg-white/5 border-white/5 text-zinc-400 hover:bg-white/10"
                           )}
                         >
-                          <div className="w-6 h-6 rounded-full overflow-hidden bg-zinc-800 shrink-0">
+                          <div className="w-6 h-6 rounded-full overflow-hidden bg-black shrink-0">
                             {u.avatar_url ? <img src={u.avatar_url} className="w-full h-full object-cover" /> : <User size={12} className="m-auto h-full" />}
                           </div>
                           <span className="text-[9px] font-black uppercase italic truncate">{u.username || 'Utente'}</span>
@@ -178,7 +178,7 @@ const AdminNotificationModal = ({ isOpen, onClose }: AdminNotificationModalProps
                 <Button 
                   type="submit" 
                   disabled={sendAdminNotification.isPending || !message.trim() || (target !== 'all' && !target)}
-                  className="w-full bg-white text-black hover:bg-zinc-200 h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl shadow-white/10"
+                  className="w-full bg-white text-black hover:bg-zinc-200 h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl mt-4 border-none"
                 >
                   {sendAdminNotification.isPending ? <Loader2 className="animate-spin" /> : <><Send size={18} className="mr-2 -rotate-12" /> Invia Notifica</>}
                 </Button>

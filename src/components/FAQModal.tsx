@@ -147,8 +147,8 @@ const FAQModal = ({ isOpen, onClose }: FAQModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-zinc-950 border-white/10 text-white max-w-2xl max-h-[85vh] overflow-y-auto rounded-[2.5rem] p-0 shadow-2xl">
-        <div className="p-8 pb-4 sticky top-0 bg-zinc-950/90 backdrop-blur-md z-10 border-b border-white/5 flex justify-between items-center">
+      <DialogContent className="bg-black border-white/10 text-white max-w-2xl max-h-[85vh] overflow-y-auto rounded-[2.5rem] p-0 shadow-2xl">
+        <div className="p-8 pb-4 sticky top-0 bg-black/90 backdrop-blur-md z-10 border-b border-white/5 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-white text-black rounded-2xl flex items-center justify-center shadow-xl">
               <HelpCircle size={24} />

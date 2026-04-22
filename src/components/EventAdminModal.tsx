@@ -90,7 +90,7 @@ const EventAdminModal = ({ isOpen, onClose, event }: EventAdminModalProps) => {
   };
 
   const labelClass = "text-[9px] font-black uppercase text-zinc-500 tracking-[0.3em] italic ml-4 mb-2 block";
-  const inputClass = "bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest focus-visible:ring-white/20 transition-all placeholder:text-zinc-700 w-full max-w-full";
+  const inputClass = "bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest focus-visible:ring-white/20 transition-all placeholder:text-zinc-700 w-full max-w-full text-white";
 
   return (
     <AnimatePresence>
@@ -101,14 +101,14 @@ const EventAdminModal = ({ isOpen, onClose, event }: EventAdminModalProps) => {
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }} 
             onClick={onClose} 
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] touch-none" 
+            className="fixed inset-0 bg-black/80 z-[200] touch-none" 
           />
           <motion.div 
             initial={{ y: '100%' }} 
             animate={{ y: 0 }} 
             exit={{ y: '100%' }} 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[201] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 rounded-t-[2.5rem] h-[100dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            className="fixed inset-x-0 bottom-0 z-[201] bg-black border-t border-white/10 p-6 rounded-t-[2.5rem] h-[100dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
             style={{ 
               touchAction: 'pan-y',
               overscrollBehavior: 'contain',
@@ -226,7 +226,7 @@ const EventAdminModal = ({ isOpen, onClose, event }: EventAdminModalProps) => {
                     <select 
                       value={formData.status} 
                       onChange={e => setFormData({...formData, status: e.target.value})}
-                      className={cn(inputClass, "w-full pl-12 appearance-none bg-zinc-900")}
+                      className={cn(inputClass, "w-full pl-12 appearance-none bg-black")}
                     >
                       <option value="open">ISCRIZIONI APERTE</option>
                       <option value="closed">ISCRIZIONI CHIUSE</option>
@@ -238,7 +238,7 @@ const EventAdminModal = ({ isOpen, onClose, event }: EventAdminModalProps) => {
                 <Button 
                   type="submit" 
                   disabled={createEvent.isPending || updateEvent.isPending}
-                  className="w-full bg-white text-black hover:bg-zinc-200 hover:scale-[1.02] active:scale-[0.98] h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl shadow-white/10 mt-4 border-none"
+                  className="w-full bg-white text-black hover:bg-zinc-200 hover:scale-[1.02] active:scale-[0.98] h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl mt-4 border-none"
                 >
                   {(createEvent.isPending || updateEvent.isPending) ? <Loader2 className="animate-spin" /> : <><Save size={18} className="mr-2" /> Salva Evento</>}
                 </Button>

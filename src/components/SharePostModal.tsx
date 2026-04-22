@@ -80,11 +80,11 @@ const SharePostModal = ({ isOpen, onClose, postId, postImageUrl, postContent }: 
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[1000] touch-none" />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/80 z-[1000] touch-none" />
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[1001] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[85dvh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            className="fixed inset-x-0 bottom-0 z-[1001] bg-black border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[85dvh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
             style={{ 
               touchAction: 'pan-y',
               overscrollBehavior: 'contain'
@@ -100,16 +100,16 @@ const SharePostModal = ({ isOpen, onClose, postId, postImageUrl, postContent }: 
             </div>
             <div className="relative mb-8">
               <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
-              <Input placeholder="CERCA MEMBRI..." value={search} onChange={(e) => setSearch(e.target.value)} className="bg-white/5 border-white/10 rounded-full h-14 pl-12 font-black uppercase text-xs tracking-widest focus-visible:ring-white/20 placeholder:text-zinc-600 backdrop-blur-md text-white" />
+              <Input placeholder="CERCA MEMBRI..." value={search} onChange={(e) => setSearch(e.target.value)} className="bg-white/5 border-white/10 rounded-full h-14 pl-12 font-black uppercase text-xs tracking-widest focus-visible:ring-white/20 placeholder:text-zinc-600 text-white" />
             </div>
             <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar pb-[calc(4rem+env(safe-area-inset-bottom))]" style={{ overscrollBehavior: 'contain' }}>
               {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4"><Loader2 className="animate-spin text-zinc-500" size={32} /><p className="text-[8px] font-black uppercase tracking-widest text-zinc-600">Ricerca...</p></div>
               ) : results.length > 0 ? (
                 results.map((user) => (
-                  <div key={user.id} className="flex items-center justify-between p-4 bg-white/5 backdrop-blur-md border border-white/5 rounded-[1.5rem] group hover:bg-white/10 transition-all">
+                  <div key={user.id} className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-[1.5rem] group hover:bg-white/10 transition-all">
                     <div className="flex items-center gap-4 min-w-0">
-                      <div className="w-12 h-12 bg-black/40 rounded-full overflow-hidden border border-white/10 shrink-0">{user.avatar_url ? <img src={user.avatar_url} className="w-full h-full object-cover" alt="" /> : <div className="w-full h-full flex items-center justify-center text-zinc-500"><User size={20} /></div>}</div>
+                      <div className="w-12 h-12 bg-black rounded-full overflow-hidden border border-white/10 shrink-0">{user.avatar_url ? <img src={user.avatar_url} className="w-full h-full object-cover" alt="" /> : <div className="w-full h-full flex items-center justify-center text-zinc-500"><User size={20} /></div>}</div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-black italic uppercase truncate text-white">{user.username}</span>

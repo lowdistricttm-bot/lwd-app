@@ -91,9 +91,9 @@ const StanceAnalyzer = ({ imageUrl, vehicleId, onClose, autoStart = false }: Sta
   };
 
   return (
-    <div className="flex flex-col h-full max-h-[90vh] overflow-y-auto no-scrollbar relative bg-zinc-950">
+    <div className="flex flex-col h-full max-h-[90vh] overflow-y-auto no-scrollbar relative bg-black">
       {/* Header */}
-      <div className="p-6 md:p-8 flex justify-between items-center sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-md">
+      <div className="p-6 md:p-8 flex justify-between items-center sticky top-0 z-50 bg-black/90 backdrop-blur-md border-b border-white/5">
         <h3 className="text-xl md:text-2xl font-black italic uppercase tracking-tighter whitespace-nowrap">
           Low Score Analyzer
         </h3>
@@ -106,7 +106,7 @@ const StanceAnalyzer = ({ imageUrl, vehicleId, onClose, autoStart = false }: Sta
       </div>
 
       {/* Aumentato il padding inferiore da pb-10 a pb-24 */}
-      <div className="px-6 md:px-8 pb-24 space-y-8">
+      <div className="px-6 md:px-8 pb-24 pt-8 space-y-8">
         {/* Immagine con Scansione */}
         <div className="relative w-full aspect-video rounded-[2rem] overflow-hidden border border-white/10 bg-black shadow-2xl">
           <img 
@@ -138,7 +138,7 @@ const StanceAnalyzer = ({ imageUrl, vehicleId, onClose, autoStart = false }: Sta
                   className="absolute inset-0 bg-white/5 backdrop-blur-[2px] z-10"
                 />
                 <div className="absolute inset-0 flex items-center justify-center z-30">
-                  <div className="bg-black/60 backdrop-blur-md px-6 py-3 rounded-full border border-white/10 flex items-center gap-3">
+                  <div className="bg-black/80 backdrop-blur-md px-6 py-3 rounded-full border border-white/10 flex items-center gap-3">
                     <Loader2 className="animate-spin text-white" size={18} />
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Analisi in corso...</span>
                   </div>
@@ -164,7 +164,7 @@ const StanceAnalyzer = ({ imageUrl, vehicleId, onClose, autoStart = false }: Sta
               animate={{ opacity: 1, y: 0 }} 
               className="space-y-8"
             >
-              <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/10 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+              <div className="bg-white/5 border border-white/10 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
                 <div className="absolute -right-10 -bottom-10 opacity-5 rotate-12 text-white"><Gauge size={180} /></div>
                 
                 <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
@@ -198,11 +198,11 @@ const StanceAnalyzer = ({ imageUrl, vehicleId, onClose, autoStart = false }: Sta
                 {/* Tasto Condividi reso più chiaro e visibile */}
                 <Button 
                   onClick={handleShare}
-                  className="flex-1 bg-white/20 border border-white/30 text-white hover:bg-white/30 rounded-full h-14 font-black uppercase italic text-[10px] tracking-widest transition-all shadow-lg backdrop-blur-md"
+                  className="flex-1 bg-white/10 border border-white/20 text-white hover:bg-white/20 rounded-full h-14 font-black uppercase italic text-[10px] tracking-widest transition-all shadow-lg backdrop-blur-md"
                 >
                   <Share2 size={16} className="mr-2" /> Condividi Report
                 </Button>
-                <Button onClick={onClose} className="flex-1 bg-white text-black rounded-full h-14 font-black uppercase italic text-[10px] tracking-widest shadow-xl hover:bg-zinc-200 transition-all">
+                <Button onClick={onClose} className="flex-1 bg-white text-black rounded-full h-14 font-black uppercase italic text-[10px] tracking-widest shadow-xl hover:bg-zinc-200 transition-all border-none">
                   <CheckCircle2 size={16} className="mr-2" /> Chiudi Report
                 </Button>
               </div>

@@ -51,12 +51,12 @@ const OrderDetailModal = ({ isOpen, onClose, order }: OrderDetailModalProps) => 
         <>
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={onClose} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[200] touch-none" 
+            onClick={onClose} className="fixed inset-0 bg-black/80 z-[200] touch-none" 
           />
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[201] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[90dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            className="fixed inset-x-0 bottom-0 z-[201] bg-black border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[90dvh] overflow-y-auto shadow-2xl"
             style={{ 
               touchAction: 'pan-y',
               overscrollBehavior: 'contain'
@@ -75,7 +75,7 @@ const OrderDetailModal = ({ isOpen, onClose, order }: OrderDetailModalProps) => 
                       order.status === 'completed' && "bg-green-600",
                       order.status === 'pending' && "bg-blue-600",
                       order.status === 'on-hold' && "bg-orange-500",
-                      !['completed', 'pending', 'on-hold'].includes(order.status) && "bg-zinc-800"
+                      !['completed', 'pending', 'on-hold'].includes(order.status) && "bg-white/10"
                     )}>
                       {translateStatus(order.status)}
                     </span>
@@ -118,7 +118,7 @@ const OrderDetailModal = ({ isOpen, onClose, order }: OrderDetailModalProps) => 
                 <div className="bg-white/5 border border-white/5 rounded-[2rem] overflow-hidden">
                   {order.line_items.map((item: any, idx: number) => (
                     <div key={idx} className={cn("p-5 flex gap-4", idx !== order.line_items.length - 1 && "border-b border-white/5")}>
-                      <div className="w-16 h-20 bg-black/40 rounded-xl overflow-hidden shrink-0 border border-white/5">
+                      <div className="w-16 h-20 bg-black rounded-xl overflow-hidden shrink-0 border border-white/5">
                         {item.image?.src ? (
                           <img src={item.image.src} className="w-full h-full object-cover" alt="" />
                         ) : (

@@ -104,17 +104,17 @@ const CreateMarketplaceItemModal = ({ isOpen, onClose, editItem }: CreateMarketp
     onClose();
   };
 
-  const inputClass = "bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest focus-visible:ring-white/20 transition-all placeholder:text-zinc-700";
+  const inputClass = "bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest focus-visible:ring-white/20 transition-all placeholder:text-zinc-700 text-white";
 
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] touch-none" />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/80 z-[200] touch-none" />
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[201] bg-zinc-950 border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[92dvh] overflow-y-auto shadow-2xl"
+            className="fixed inset-x-0 bottom-0 z-[201] bg-black border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[92dvh] overflow-y-auto shadow-2xl"
             style={{ touchAction: 'pan-y', overscrollBehavior: 'contain' }}
           >
             <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
@@ -156,7 +156,7 @@ const CreateMarketplaceItemModal = ({ isOpen, onClose, editItem }: CreateMarketp
                       <select 
                         value={formData.category} 
                         onChange={e => setFormData({...formData, category: e.target.value})}
-                        className={cn(inputClass, "w-full pl-12 appearance-none bg-zinc-900")}
+                        className={cn(inputClass, "w-full pl-12 appearance-none bg-black")}
                       >
                         {MARKETPLACE_CATEGORIES.map(cat => (
                           <option key={cat.id} value={cat.id}>{cat.label.toUpperCase()}</option>
@@ -171,7 +171,7 @@ const CreateMarketplaceItemModal = ({ isOpen, onClose, editItem }: CreateMarketp
                   <div className="flex flex-wrap gap-3">
                     {/* Existing Images */}
                     {existingImages.map((url, i) => (
-                      <div key={`existing-${i}`} className="relative w-24 h-24 bg-zinc-900 border border-white/10 rounded-2xl overflow-hidden shadow-xl">
+                      <div key={`existing-${i}`} className="relative w-24 h-24 bg-black border border-white/10 rounded-2xl overflow-hidden shadow-xl">
                         <img src={url} className="w-full h-full object-cover" alt="Existing" />
                         <button type="button" onClick={() => removeExistingImage(i)} className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 text-white rounded-full hover:bg-red-600 transition-colors"><X size={12} /></button>
                       </div>
@@ -179,7 +179,7 @@ const CreateMarketplaceItemModal = ({ isOpen, onClose, editItem }: CreateMarketp
                     
                     {/* New Previews */}
                     {previews.map((url, i) => (
-                      <div key={`new-${i}`} className="relative w-24 h-24 bg-zinc-900 border border-white/10 rounded-2xl overflow-hidden shadow-xl">
+                      <div key={`new-${i}`} className="relative w-24 h-24 bg-black border border-white/10 rounded-2xl overflow-hidden shadow-xl">
                         <img src={url} className="w-full h-full object-cover" alt="Preview" />
                         <button type="button" onClick={() => removeNewFile(i)} className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 text-white rounded-full hover:bg-red-600 transition-colors"><X size={12} /></button>
                       </div>
@@ -215,7 +215,7 @@ const CreateMarketplaceItemModal = ({ isOpen, onClose, editItem }: CreateMarketp
                 <Button 
                   type="submit" 
                   disabled={createItem.isPending || updateItem.isPending || (existingImages.length === 0 && selectedFiles.length === 0)}
-                  className="w-full bg-white text-black hover:bg-zinc-200 h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl mt-4"
+                  className="w-full bg-white text-black hover:bg-zinc-200 h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl mt-4 border-none"
                 >
                   {createItem.isPending || updateItem.isPending ? (
                     <Loader2 className="animate-spin" />

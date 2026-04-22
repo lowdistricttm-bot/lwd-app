@@ -45,14 +45,14 @@ const MarketplaceItemDetailModal = ({ isOpen, onClose, item, isOwnItem, onEdit, 
               animate={{ opacity: 1 }} 
               exit={{ opacity: 0 }} 
               onClick={onClose} 
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] touch-none" 
+              className="fixed inset-0 bg-black/80 z-[250] touch-none" 
             />
             <motion.div 
               initial={{ y: '100%' }} 
               animate={{ y: 0 }} 
               exit={{ y: '100%' }} 
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-x-0 bottom-0 z-[251] bg-zinc-950 border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[92dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.8)]"
+              className="fixed inset-x-0 bottom-0 z-[251] bg-black border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[92dvh] overflow-y-auto shadow-2xl"
               style={{ touchAction: 'pan-y', overscrollBehavior: 'contain' }}
             >
               <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
@@ -80,7 +80,7 @@ const MarketplaceItemDetailModal = ({ isOpen, onClose, item, isOwnItem, onEdit, 
                 {/* Gallery */}
                 <div className="space-y-4">
                   <div 
-                    className="aspect-square bg-zinc-950 rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl cursor-pointer group"
+                    className="aspect-square bg-black rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl cursor-pointer group"
                     onClick={() => setLightboxData({ images: allImages, index: 0 })}
                   >
                     {allImages[0] ? (
@@ -95,7 +95,7 @@ const MarketplaceItemDetailModal = ({ isOpen, onClose, item, isOwnItem, onEdit, 
                       {allImages.slice(1, 5).map((img, idx) => (
                         <div 
                           key={idx} 
-                          className="aspect-square bg-zinc-900 rounded-2xl overflow-hidden border border-white/5 cursor-pointer relative group"
+                          className="aspect-square bg-black rounded-2xl overflow-hidden border border-white/5 cursor-pointer relative group"
                           onClick={() => setLightboxData({ images: allImages, index: idx + 1 })}
                         >
                           <img src={img} className="w-full h-full object-cover group-hover:opacity-80 transition-opacity" alt="" />
@@ -112,14 +112,14 @@ const MarketplaceItemDetailModal = ({ isOpen, onClose, item, isOwnItem, onEdit, 
 
                 {/* Info Grid */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white/5 border border-white/10 p-5 rounded-[2rem] backdrop-blur-md">
+                  <div className="bg-white/5 border border-white/10 p-5 rounded-[2rem]">
                     <p className="text-[8px] font-black uppercase text-zinc-500 tracking-[0.3em] italic mb-2">Prezzo Richiesto</p>
                     <div className="flex items-center gap-2 text-white">
                       <Euro size={14} className="text-zinc-400" />
                       <span className="text-xl font-black italic">{item.price}</span>
                     </div>
                   </div>
-                  <div className="bg-white/5 border border-white/10 p-5 rounded-[2rem] backdrop-blur-md">
+                  <div className="bg-white/5 border border-white/10 p-5 rounded-[2rem]">
                     <p className="text-[8px] font-black uppercase text-zinc-500 tracking-[0.3em] italic mb-2">Data Annuncio</p>
                     <div className="flex items-center gap-2 text-white">
                       <Calendar size={14} className="text-zinc-400" />
@@ -130,11 +130,11 @@ const MarketplaceItemDetailModal = ({ isOpen, onClose, item, isOwnItem, onEdit, 
                   </div>
                 </div>
 
-                {/* Seller Info - Uniformato allo stile iOS Dark */}
+                {/* Seller Info */}
                 {!isOwnItem && (
-                  <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-[2rem] flex items-center justify-between shadow-2xl">
+                  <div className="bg-white/5 border border-white/10 p-6 rounded-[2rem] flex items-center justify-between shadow-2xl">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-zinc-900 rounded-full overflow-hidden border-2 border-white/10">
+                      <div className="w-12 h-12 bg-black rounded-full overflow-hidden border-2 border-white/10">
                         {item.profiles?.avatar_url ? (
                           <img src={item.profiles.avatar_url} className="w-full h-full object-cover" alt="" />
                         ) : (
@@ -160,8 +160,8 @@ const MarketplaceItemDetailModal = ({ isOpen, onClose, item, isOwnItem, onEdit, 
                   <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.4em] italic flex items-center gap-2">
                     <Info size={12} /> Descrizione Oggetto
                   </h4>
-                  <div className="bg-white/5 border border-white/5 p-6 rounded-[2rem] relative overflow-hidden">
-                    <p className="text-sm font-medium italic text-zinc-200 leading-relaxed whitespace-pre-wrap relative z-10">
+                  <div className="bg-white/5 border border-white/5 p-6 rounded-[2rem]">
+                    <p className="text-sm font-medium italic text-zinc-200 leading-relaxed whitespace-pre-wrap">
                       {item.description}
                     </p>
                   </div>

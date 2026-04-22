@@ -65,7 +65,7 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }} 
             onClick={onClose} 
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] touch-none"
+            className="fixed inset-0 bg-black/80 z-[250] touch-none"
             data-no-swipe="true"
           />
           <motion.div 
@@ -73,7 +73,7 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
             animate={{ y: 0 }} 
             exit={{ y: '100%' }} 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[251] bg-zinc-950 border-t border-white/10 p-6 rounded-t-[2.5rem] h-[100dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            className="fixed inset-x-0 bottom-0 z-[251] bg-black border-t border-white/10 p-6 rounded-t-[2.5rem] h-[100dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
             style={{ 
               touchAction: 'pan-y', 
               overscrollBehavior: 'contain',
@@ -115,7 +115,7 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-white/5 border border-white/10 p-5 rounded-[2rem] backdrop-blur-md">
+                <div className="bg-white/5 border border-white/10 p-5 rounded-[2rem]">
                   <p className="text-[8px] font-black uppercase text-zinc-500 tracking-[0.3em] italic mb-2">Partenza</p>
                   <div className="flex items-center gap-3 text-white mb-2">
                     <MapPin size={16} className="text-zinc-400" />
@@ -129,10 +129,10 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
                   </div>
                 </div>
 
-                <div className="bg-white/5 border border-white/10 p-5 rounded-[2rem] backdrop-blur-md">
+                <div className="bg-white/5 border border-white/10 p-5 rounded-[2rem]">
                   <p className="text-[8px] font-black uppercase text-zinc-500 tracking-[0.3em] italic mb-2">Organizzatore</p>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-900 border border-white/10">
+                    <div className="w-10 h-10 rounded-full overflow-hidden bg-black border border-white/10">
                       {carovana.profiles?.avatar_url ? <img src={carovana.profiles.avatar_url} className="w-full h-full object-cover" /> : <Users size={20} className="m-auto h-full text-zinc-700" />}
                     </div>
                     <span className="text-sm font-black uppercase italic text-white">@{carovana.profiles?.username}</span>
@@ -147,7 +147,7 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
                     <div className="absolute left-8 top-10 bottom-10 w-[1px] bg-white/10" />
                     {carovana.carovane_tappe.map((stop, i) => (
                       <div key={stop.id} className="flex items-start gap-6 relative z-10">
-                        <div className="w-4 h-4 rounded-full bg-white border-4 border-zinc-900 mt-1 shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
+                        <div className="w-4 h-4 rounded-full bg-white border-4 border-black mt-1 shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
                         <div className="flex-1">
                           <div className="flex justify-between items-start">
                             <p className="text-sm font-black uppercase italic text-white">{stop.location}</p>
@@ -169,7 +169,7 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {participants.map((p, i) => (
                     <div key={i} className="bg-white/5 border border-white/5 p-4 rounded-2xl flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-900 border border-white/10">
+                      <div className="w-10 h-10 rounded-full overflow-hidden bg-black border border-white/10">
                         {p.profiles?.avatar_url ? <img src={p.profiles.avatar_url} className="w-full h-full object-cover" /> : <Users size={16} className="m-auto h-full text-zinc-700" />}
                       </div>
                       <div className="min-w-0">

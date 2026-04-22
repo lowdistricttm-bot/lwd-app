@@ -49,14 +49,14 @@ const HighlightModal = ({ isOpen, onClose, story, userId, bottomOffset = '0px' }
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }}
             onClick={onClose} 
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[400] touch-none" 
+            className="fixed inset-0 bg-black/80 z-[400] touch-none" 
           />
           <motion.div 
             initial={{ y: '100%' }} 
             animate={{ y: 0 }} 
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 z-[401] bg-black/60 backdrop-blur-2xl border border-white/10 p-5 pb-10 rounded-[2.5rem] max-h-[60dvh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            className="fixed inset-x-0 z-[401] bg-black border-t border-white/10 p-5 pb-10 rounded-[2.5rem] max-h-[60dvh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
             style={{ 
               touchAction: 'pan-y',
               overscrollBehavior: 'contain',
@@ -74,7 +74,7 @@ const HighlightModal = ({ isOpen, onClose, story, userId, bottomOffset = '0px' }
               {isCreating ? (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
                   <div className="flex justify-center">
-                    <div className="w-24 h-24 rounded-full border-2 border-white/20 overflow-hidden bg-zinc-900">
+                    <div className="w-24 h-24 rounded-full border-2 border-white/20 overflow-hidden bg-black">
                       <img src={story.image_url} className="w-full h-full object-cover" alt="Cover" />
                     </div>
                   </div>
@@ -82,10 +82,10 @@ const HighlightModal = ({ isOpen, onClose, story, userId, bottomOffset = '0px' }
                     placeholder="NOME RACCOLTA" 
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value.toUpperCase())}
-                    className="bg-black/40 border-white/10 rounded-full h-14 text-center font-black uppercase tracking-widest"
+                    className="bg-white/5 border-white/10 rounded-full h-14 text-center font-black uppercase tracking-widest text-white"
                   />
                   <div className="flex gap-3">
-                    <Button onClick={() => setIsCreating(false)} variant="outline" className="flex-1 border-white/10 rounded-full h-12 font-black uppercase italic">Annulla</Button>
+                    <Button onClick={() => setIsCreating(false)} variant="outline" className="flex-1 border-white/10 rounded-full h-12 font-black uppercase italic text-white hover:bg-white/5">Annulla</Button>
                     <Button onClick={handleCreate} disabled={createHighlight.isPending} className="flex-1 bg-white text-black rounded-full h-12 font-black uppercase italic">
                       {createHighlight.isPending ? <Loader2 className="animate-spin" /> : 'Aggiungi'}
                     </Button>
@@ -97,7 +97,7 @@ const HighlightModal = ({ isOpen, onClose, story, userId, bottomOffset = '0px' }
                     onClick={() => setIsCreating(true)}
                     className="flex flex-col items-center gap-2 group"
                   >
-                    <div className="w-20 h-20 rounded-full border-2 border-dashed border-white/20 flex items-center justify-center group-hover:border-white transition-all">
+                    <div className="w-20 h-20 rounded-full border-2 border-dashed border-white/20 flex items-center justify-center group-hover:border-white transition-all bg-white/5">
                       <Plus size={24} className="text-zinc-500 group-hover:text-white" />
                     </div>
                     <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Nuova</span>
@@ -109,9 +109,9 @@ const HighlightModal = ({ isOpen, onClose, story, userId, bottomOffset = '0px' }
                       onClick={() => handleSelect(h.id)}
                       className="flex flex-col items-center gap-2 group"
                     >
-                      <div className="w-20 h-20 rounded-full border-2 border-white/10 overflow-hidden bg-zinc-900 group-hover:border-white transition-all relative">
+                      <div className="w-20 h-20 rounded-full border-2 border-white/10 overflow-hidden bg-black group-hover:border-white transition-all relative">
                         <img src={h.cover_url} className="w-full h-full object-cover" alt={h.title} />
-                        {addToHighlight.isPending && <div className="absolute inset-0 bg-black/60 flex items-center justify-center"><Loader2 className="animate-spin text-white" size={16} /></div>}
+                        {addToHighlight.isPending && <div className="absolute inset-0 bg-black/80 flex items-center justify-center"><Loader2 className="animate-spin text-white" size={16} /></div>}
                       </div>
                       <span className="text-[8px] font-black uppercase tracking-widest text-zinc-300 truncate w-full text-center">{h.title}</span>
                     </button>

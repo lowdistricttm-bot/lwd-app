@@ -63,12 +63,12 @@ const AddMentionModal = ({ isOpen, onClose, storyId, storyUrl, existingMentions,
         <>
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={onClose} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] touch-none" 
+            onClick={onClose} className="fixed inset-0 bg-black/80 z-[1000] touch-none" 
           />
           <motion.div 
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 z-[1001] bg-zinc-950 border border-white/10 p-6 rounded-[2.5rem] max-h-[90dvh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.8)]"
+            className="fixed inset-x-0 z-[1001] bg-black border-t border-white/10 p-6 rounded-[2.5rem] max-h-[90dvh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.8)]"
             style={{ 
               touchAction: 'pan-y',
               overscrollBehavior: 'contain',
@@ -91,7 +91,7 @@ const AddMentionModal = ({ isOpen, onClose, storyId, storyUrl, existingMentions,
                 placeholder="CERCA USERNAME..." 
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="bg-white/5 border-white/10 rounded-full h-12 pl-12 text-[10px] font-black uppercase tracking-widest focus-visible:ring-white/20"
+                className="bg-white/5 border-white/10 rounded-full h-12 pl-12 text-[10px] font-black uppercase tracking-widest focus-visible:ring-white/20 text-white"
               />
             </div>
 
@@ -112,7 +112,7 @@ const AddMentionModal = ({ isOpen, onClose, storyId, storyUrl, existingMentions,
                       )}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-zinc-800 rounded-full overflow-hidden">
+                        <div className="w-10 h-10 bg-black rounded-full overflow-hidden border border-white/10">
                           {user.avatar_url ? <img src={user.avatar_url} className="w-full h-full object-cover" /> : <User size={20} className="m-auto h-full text-zinc-700" />}
                         </div>
                         <span className="text-xs font-black italic uppercase text-zinc-300 group-hover:text-white transition-colors">

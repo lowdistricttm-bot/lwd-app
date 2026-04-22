@@ -26,7 +26,6 @@ interface StoryViewerProps {
   currentUserId: string | null;
 }
 
-// Stato persistente per il volume
 let globalMuteState = false;
 
 const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: StoryViewerProps) => {
@@ -43,7 +42,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   const [isMentionModalOpen, setIsMentionModalOpen] = useState(false);
   const [showViewers, setShowViewers] = useState(false);
   const [isMediaLoading, setIsMediaLoading] = useState(true);
-  const [isIOS, setIsIOS] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const { deleteStory, recordView, toggleStoryLike } = useStories();
@@ -51,11 +49,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   const { sendMessage } = useMessages(allStories[userIndex]?.user_id);
   
   useBodyLock(true);
-
-  useEffect(() => {
-    const checkIOS = /iPhone|iPad|iPod/.test(window.navigator.userAgent);
-    setIsIOS(checkIOS);
-  }, []);
 
   const userStories = allStories[userIndex];
   const currentStory = userStories?.items[currentIndex];
@@ -267,7 +260,18 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
         </div>
 
         {/* Main Content (Image/Video) */}
-        <div className="absolute inset-0 flex items-center justify-center bg-black z-10">
+        <div className="absolute inset-0 flex items-center justify-center bg-black z-10 overflow-hidden">
+          
+          {/* Blurred Background effect restored for Stories */}
+          <div className="absolute inset-0 z-0 pointer-events-none">
+            <img 
+              src={currentStory.image_url} 
+              className="w-full h-full object-cover blur-[40px] opacity-40 scale-125" 
+              alt="Blurred background" 
+            />
+            <div className="absolute inset-0 bg-black/40" />
+          </div>
+
           <AnimatePresence mode="wait">
             <motion.div
               key={currentStory.id}
@@ -275,7 +279,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 1.05 }}
               transition={{ duration: 0.2 }}
-              className="w-full h-full flex items-center justify-center"
+              className="w-full h-full flex items-center justify-center relative z-10"
             >
               {isMediaLoading && (
                 <div className="absolute inset-0 flex items-center justify-center z-10">
@@ -322,22 +326,22 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
               <div className="flex items-center justify-between w-full gap-2 mb-1">
                 {!isHighlight && (
                   <>
-                    <button onClick={() => setShowViewers(true)} className="flex-1 h-10 rounded-full bg-black/60 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all shadow-xl">
+                    <button onClick={() => setShowViewers(true)} className="flex-1 h-10 rounded-full bg-black border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all shadow-xl">
                       <Eye size={18} className="text-white" />
                     </button>
-                    <button onClick={() => setIsMentionModalOpen(true)} className="flex-1 h-10 rounded-full bg-black/60 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all shadow-xl">
+                    <button onClick={() => setIsMentionModalOpen(true)} className="flex-1 h-10 rounded-full bg-black border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all shadow-xl">
                       <AtSign size={18} className="text-white" />
                     </button>
-                    <button onClick={() => setIsHighlightModalOpen(true)} className="flex-1 h-10 rounded-full bg-black/60 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all shadow-xl">
+                    <button onClick={() => setIsHighlightModalOpen(true)} className="flex-1 h-10 rounded-full bg-black border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all shadow-xl">
                       <Star size={18} className="text-white" />
                     </button>
-                    <button onClick={handleDelete} className="flex-1 h-10 rounded-full bg-black/60 border border-red-500/30 flex items-center justify-center hover:bg-red-500/20 transition-all shadow-xl">
+                    <button onClick={handleDelete} className="flex-1 h-10 rounded-full bg-black border border-red-500/30 flex items-center justify-center hover:bg-red-500/20 transition-all shadow-xl">
                       <Trash2 size={18} className="text-red-500" />
                     </button>
                   </>
                 )}
                 {isHighlight && (
-                  <button onClick={handleRemoveFromHighlight} className="w-full h-12 rounded-full bg-black/60 border border-red-500/30 flex items-center justify-center gap-2 hover:bg-red-500/20 transition-all shadow-xl">
+                  <button onClick={handleRemoveFromHighlight} className="w-full h-12 rounded-full bg-black border border-red-500/30 flex items-center justify-center gap-2 hover:bg-red-500/20 transition-all shadow-xl">
                     <BookmarkX size={18} className="text-red-500" />
                     <span className="text-[10px] font-black uppercase tracking-widest text-red-500">Rimuovi</span>
                   </button>
@@ -352,7 +356,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                     onChange={(e) => setReplyText(e.target.value)} 
                     onFocus={() => videoRef.current?.pause()} 
                     onBlur={() => videoRef.current?.play()} 
-                    className="bg-black/60 border border-white/20 rounded-full h-10 px-5 text-[11px] font-bold uppercase tracking-widest text-white placeholder:text-white/70 focus-visible:ring-white/40 shadow-xl" 
+                    className="bg-black border border-white/20 rounded-full h-10 px-5 text-[11px] font-bold uppercase tracking-widest text-white placeholder:text-white/70 focus-visible:ring-white/40 shadow-xl" 
                   />
                   <AnimatePresence>
                     {replyText.trim() && (
@@ -374,12 +378,12 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                     onClick={handleLike} 
                     className={cn(
                       "w-10 h-10 rounded-full flex items-center justify-center transition-all border shadow-xl", 
-                      currentStory.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-black/60 border-white/20 text-white hover:bg-white/20 hover:scale-105"
+                      currentStory.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-black border-white/20 text-white hover:bg-white/20 hover:scale-105"
                     )}
                   >
                     <Heart size={18} fill={currentStory.is_liked ? "currentColor" : "none"} />
                   </motion.button>
-                  <button onClick={handleShareClick} className="w-10 h-10 bg-black/60 border border-white/20 text-white rounded-full flex items-center justify-center hover:bg-white/20 hover:scale-105 transition-all shadow-xl">
+                  <button onClick={handleShareClick} className="w-10 h-10 bg-black border border-white/20 text-white rounded-full flex items-center justify-center hover:bg-white/20 hover:scale-105 transition-all shadow-xl">
                     <Send size={18} className="-rotate-12 mr-0.5" />
                   </button>
                 </div>

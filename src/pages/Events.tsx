@@ -224,13 +224,13 @@ const Events = () => {
 
           {viewingEvent && (
             <>
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setViewingEvent(null)} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150] touch-none" />
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setViewingEvent(null)} className="fixed inset-0 bg-black/80 z-[150] touch-none" />
               <motion.div 
                 initial={{ y: '100%' }} 
                 animate={{ y: 0 }} 
                 exit={{ y: '100%' }} 
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="fixed inset-x-0 bottom-0 z-[151] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 pb-12 rounded-t-[2.5rem] h-[100dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+                className="fixed inset-x-0 bottom-0 z-[151] bg-black border-t border-white/10 p-6 pb-12 rounded-t-[2.5rem] h-[100dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
                 style={{ 
                   overscrollBehavior: 'contain',
                   paddingTop: 'calc(2rem + env(safe-area-inset-top))'
@@ -277,19 +277,19 @@ const Events = () => {
                         className="space-y-10"
                       >
                         {viewingEvent.image_url && (
-                          <div className="aspect-video bg-zinc-950 rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl">
+                          <div className="aspect-video bg-black rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl">
                             <img src={viewingEvent.image_url} className="w-full h-full object-cover" alt={viewingEvent.title} />
                           </div>
                         )}
 
                         <div className="grid grid-cols-2 gap-4">
-                          <div className="bg-white/5 border border-white/10 p-6 rounded-[2rem] backdrop-blur-md">
+                          <div className="bg-white/5 border border-white/10 p-6 rounded-[2rem]">
                             <p className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.3em] italic mb-2">{t.events.date}</p>
                             <p className="text-sm font-black uppercase italic text-white tracking-tight">
                               {formatDateRange(viewingEvent.date, viewingEvent.end_date)}
                             </p>
                           </div>
-                          <div className="bg-white/5 border border-white/10 p-6 rounded-[2rem] backdrop-blur-md">
+                          <div className="bg-white/5 border border-white/10 p-6 rounded-[2rem]">
                             <p className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.3em] italic mb-2">{t.events.location}</p>
                             <p className="text-sm font-black uppercase italic text-white tracking-tight">
                               {viewingEvent.location}
@@ -340,13 +340,13 @@ const Events = () => {
 
           {selectedEvent && (
             <>
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedEvent(null)} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150] touch-none" />
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedEvent(null)} className="fixed inset-0 bg-black/80 z-[150] touch-none" />
               <motion.div 
                 initial={{ y: '100%' }} 
                 animate={{ y: 0 }} 
                 exit={{ y: '100%' }} 
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="fixed inset-x-0 bottom-0 z-[151] bg-black/60 backdrop-blur-2xl border-t border-white/10 p-6 pb-12 rounded-t-[2.5rem] h-[100dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+                className="fixed inset-x-0 bottom-0 z-[151] bg-black border-t border-white/10 p-6 pb-12 rounded-t-[2.5rem] h-[100dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
                 style={{ 
                   overscrollBehavior: 'contain',
                   paddingTop: 'calc(2rem + env(safe-area-inset-top))'
@@ -370,35 +370,35 @@ const Events = () => {
                         <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest ml-4">{t.events.form.name}</Label>
                         <div className="relative">
                           <UserIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
-                          <Input required value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} className="bg-white/5 border-white/10 rounded-full h-14 pl-12 font-bold text-xs tracking-widest focus-visible:ring-white/20" />
+                          <Input required value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} className="bg-white/5 border-white/10 rounded-full h-14 pl-12 font-bold text-xs tracking-widest focus-visible:ring-white/20 text-white" />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest ml-4">{t.events.form.email}</Label>
                         <div className="relative">
                           <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
-                          <Input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="bg-white/5 border-white/10 rounded-full h-14 pl-12 font-bold text-xs tracking-widest focus-visible:ring-white/20" />
+                          <Input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="bg-white/5 border-white/10 rounded-full h-14 pl-12 font-bold text-xs tracking-widest focus-visible:ring-white/20 text-white" />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest ml-4">{t.events.form.phone}</Label>
                         <div className="relative">
                           <Phone className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
-                          <Input required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="bg-white/5 border-white/10 rounded-full h-14 pl-12 font-bold text-xs tracking-widest focus-visible:ring-white/20" />
+                          <Input required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="bg-white/5 border-white/10 rounded-full h-14 pl-12 font-bold text-xs tracking-widest focus-visible:ring-white/20 text-white" />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest ml-4">{t.events.form.city}</Label>
                         <div className="relative">
                           <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
-                          <Input required value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} className="bg-white/5 border-white/10 rounded-full h-14 pl-12 font-bold text-xs tracking-widest focus-visible:ring-white/20" />
+                          <Input required value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} className="bg-white/5 border-white/10 rounded-full h-14 pl-12 font-bold text-xs tracking-widest focus-visible:ring-white/20 text-white" />
                         </div>
                       </div>
                       <div className="space-y-2 md:col-span-2">
                         <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest ml-4">{t.events.form.instagram}</Label>
                         <div className="relative">
                           <Instagram className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
-                          <Input required value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})} placeholder="@username" className="bg-white/5 border-white/10 rounded-full h-14 pl-12 font-bold text-xs tracking-widest focus-visible:ring-white/20" />
+                          <Input required value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})} placeholder="@username" className="bg-white/5 border-white/10 rounded-full h-14 pl-12 font-bold text-xs tracking-widest focus-visible:ring-white/20 text-white" />
                         </div>
                       </div>
                     </div>
@@ -423,10 +423,10 @@ const Events = () => {
                               onClick={() => setFormData({...formData, vehicleId: v.id})}
                               className={cn(
                                 "relative rounded-[1.5rem] overflow-hidden cursor-pointer border-2 transition-all duration-500 group",
-                                isSelected ? "border-white shadow-[0_0_20px_rgba(255,255,255,0.2)]" : "border-white/5 hover:border-white/20 bg-zinc-900/50"
+                                isSelected ? "border-white shadow-[0_0_20px_rgba(255,255,255,0.2)]" : "border-white/5 hover:border-white/20 bg-black"
                               )}
                             >
-                              <div className="aspect-video relative bg-zinc-950">
+                              <div className="aspect-video relative bg-black">
                                 {image ? (
                                   <img src={image} className={cn("w-full h-full object-cover transition-all duration-700", isSelected ? "opacity-100 scale-110" : "opacity-40 grayscale group-hover:grayscale-0")} alt="" />
                                 ) : (
@@ -476,7 +476,7 @@ const Events = () => {
                     
                     <div className="flex flex-wrap gap-3">
                       {interiorPreviews.map((url, i) => (
-                        <div key={i} className="relative w-24 h-24 bg-zinc-900 border border-white/10 rounded-2xl overflow-hidden shadow-xl animate-in zoom-in duration-300">
+                        <div key={i} className="relative w-24 h-24 bg-black border border-white/10 rounded-2xl overflow-hidden shadow-xl animate-in zoom-in duration-300">
                           <img src={url} className="w-full h-full object-cover" alt="Interior preview" />
                           <button type="button" onClick={() => {
                             const newFiles = [...interiorFiles]; newFiles.splice(i, 1);
@@ -509,7 +509,7 @@ const Events = () => {
                   <Button 
                     type="submit" 
                     disabled={applyToEvent.isPending || interiorFiles.length < 3 || !formData.vehicleId} 
-                    className="w-full bg-white text-black hover:bg-zinc-200 hover:scale-[1.02] active:scale-[0.98] h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl shadow-white/10 mt-4 mb-10"
+                    className="w-full bg-white text-black hover:bg-zinc-200 hover:scale-[1.02] active:scale-[0.98] h-16 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl shadow-white/10 mt-4 mb-10 border-none"
                   >
                     {applyToEvent.isPending ? <Loader2 className="animate-spin" /> : t.events.form.submit}
                   </Button>
