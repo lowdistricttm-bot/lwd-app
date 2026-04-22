@@ -65,7 +65,7 @@ export const useDiscover = (searchQuery: string = "") => {
         .select('id, username, avatar_url, role, is_admin')
         .ilike('username', `%${searchQuery}%`)
         .in('role', AUTHORIZED_ROLES) // Filtro ruoli applicato alla ricerca utenti
-        .limit(10);
+        .limit(20);
 
       if (error) throw error;
       return data;
@@ -76,12 +76,12 @@ export const useDiscover = (searchQuery: string = "") => {
   const { data: newMembers } = useQuery({
     queryKey: ['discover-new-members'],
     queryFn: async () => {
+      // Rimosso il .limit(12) per mostrare TUTTI i membri autorizzati
       const { data, error } = await supabase
         .from('profiles')
         .select('id, username, avatar_url, role, is_admin, updated_at')
-        .in('role', AUTHORIZED_ROLES) // Filtro ruoli applicato ai nuovi membri
-        .order('updated_at', { ascending: false })
-        .limit(12);
+        .in('role', AUTHORIZED_ROLES)
+        .order('updated_at', { ascending: false });
       
       if (error) return [];
       return data;
