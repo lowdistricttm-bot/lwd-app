@@ -28,6 +28,30 @@ export const ACADEMY_CATEGORIES = [
   { id: 'static', label: 'Assetti Statici' }
 ];
 
+// Tutorial di default mostrati se il database è vuoto
+const DEFAULT_TUTORIALS: Tutorial[] = [
+  {
+    id: 'def-1',
+    author_id: 'system',
+    title: 'GUIDA AL FITMENT PERFETTO',
+    content: 'Il fitment è l\'anima dello stance. Per ottenere un risultato "flush", devi calcolare millimetricamente il rapporto tra canale del cerchio ed ET. In questa guida vedremo come usare i distanziali per portare il labbro del cerchio a filo del parafango senza toccare.',
+    category: 'wheels',
+    image_url: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=2070&auto=format&fit=crop',
+    created_at: new Date().toISOString(),
+    profiles: { username: 'Low District Staff', avatar_url: '' }
+  },
+  {
+    id: 'def-2',
+    author_id: 'system',
+    title: 'MANUTENZIONE ASSETTI AD ARIA',
+    content: 'Gli assetti air-ride richiedono una cura particolare, specialmente in inverno. È fondamentale spurgare regolarmente la condensa dal serbatoio per evitare che l\'umidità ghiacci nelle valvole. Controlla sempre le linee d\'aria per eventuali sfregamenti.',
+    category: 'air-suspension',
+    image_url: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=1966&auto=format&fit=crop',
+    created_at: new Date().toISOString(),
+    profiles: { username: 'Low District Staff', avatar_url: '' }
+  }
+];
+
 export const useAcademy = (categoryFilter: string = 'all') => {
   const queryClient = useQueryClient();
 
@@ -48,14 +72,23 @@ export const useAcademy = (categoryFilter: string = 'all') => {
         }
 
         const { data, error } = await query;
+        
         if (error) throw error;
+
+        // Se il database è vuoto, restituiamo i tutorial di default
+        if (!data || data.length === 0) {
+          return categoryFilter === 'all' 
+            ? DEFAULT_TUTORIALS 
+            : DEFAULT_TUTORIALS.filter(t => t.category === categoryFilter);
+        }
+
         return data as Tutorial[];
       } catch (err) {
         console.error("[Academy] Errore caricamento:", err);
-        return []; // Restituisce array vuoto per fermare lo spinner se la tabella non esiste
+        return DEFAULT_TUTORIALS; // Fallback in caso di errore tabella
       }
     },
-    retry: 1
+    staleTime: 1000 * 60 * 5
   });
 
   const createTutorial = useMutation({
