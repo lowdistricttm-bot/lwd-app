@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from 'react';
-import { useUserMarketplace, MarketplaceItem, useMarketplace, useSellerReviews } from '@/hooks/use-marketplace';
-import { Loader2, Tag, Euro, Edit3, Trash2, ChevronRight, ShoppingBag, Plus, Star, MessageSquare, User } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useUserMarketplace, MarketplaceItem, useMarketplace, useSellerReviews, useReviewSeller } from '@/hooks/use-marketplace';
+import { Loader2, Tag, Euro, Edit3, Trash2, ChevronRight, ShoppingBag, Plus, Star, MessageSquare, User, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from './ui/button';
 import MarketplaceItemDetailModal from './MarketplaceItemDetailModal';
@@ -10,14 +10,16 @@ import CreateMarketplaceItemModal from './CreateMarketplaceItemModal';
 import ReviewSellerModal from './ReviewSellerModal';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, differenceInDays } from 'date-fns';
 import { it } from 'date-fns/locale';
+import { supabase } from "@/integrations/supabase/client";
 
 const MarketplaceTab = ({ userId, isOwnProfile }: { userId: string, isOwnProfile: boolean }) => {
   const navigate = useNavigate();
   const { data: items, isLoading: loadingItems } = useUserMarketplace(userId);
   const { data: reviews, isLoading: loadingReviews } = useSellerReviews(userId);
   const { deleteItem } = useMarketplace();
+  const { deleteReview } = useReviewSeller();
   
   const [mainTab, setMainTab] = useState<'listings' | 'reviews'>('listings');
   const [statusTab, setStatusTab] = useState<'active' | 'sold'>('active');
@@ -25,6 +27,11 @@ const MarketplaceTab = ({ userId, isOwnProfile }: { userId: string, isOwnProfile
   const [editingItem, setEditingItem] = useState<MarketplaceItem | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => setCurrentUserId(user?.id || null));
+  }, []);
 
   const activeItems = items?.filter(i => !i.status || i.status === 'active') || [];
   const soldItems = items?.filter(i => i.status === 'sold') || [];
@@ -63,6 +70,12 @@ const MarketplaceTab = ({ userId, isOwnProfile }: { userId: string, isOwnProfile
     setEditingItem(item);
     setSelectedItem(null);
     setIsCreateModalOpen(true);
+  };
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (confirm("Vuoi eliminare definitivamente la tua recensione?")) {
+      await deleteReview.mutateAsync({ reviewId, sellerId: userId });
+    }
   };
 
   if (isLoading) return <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div>;
@@ -212,39 +225,60 @@ const MarketplaceTab = ({ userId, isOwnProfile }: { userId: string, isOwnProfile
               </div>
             ) : (
               <div className="space-y-4">
-                {reviews?.map((review) => (
-                  <div key={review.id} className="bg-white/5 border border-white/5 rounded-[2rem] p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex items-center gap-4">
-                        <div 
-                          className="w-10 h-10 rounded-full bg-black border border-white/10 overflow-hidden cursor-pointer"
-                          onClick={() => navigate(`/profile/${review.reviewer_id}`)}
-                        >
-                          {review.reviewer?.avatar_url ? (
-                            <img src={review.reviewer.avatar_url} className="w-full h-full object-cover" />
-                          ) : (
-                            <User size={16} className="m-auto h-full text-zinc-600" />
-                          )}
-                        </div>
-                        <div>
-                          <p 
-                            className="text-[10px] font-black uppercase italic tracking-widest cursor-pointer hover:text-zinc-300 transition-colors"
+                {reviews?.map((review) => {
+                  const isReviewer = currentUserId === review.reviewer_id;
+                  const daysSince = differenceInDays(new Date(), new Date(review.created_at));
+                  const canDelete = isReviewer && daysSince <= 15;
+
+                  return (
+                    <div key={review.id} className="bg-white/5 border border-white/5 rounded-[2rem] p-6 relative group/rev">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-center gap-4">
+                          <div 
+                            className="w-10 h-10 rounded-full bg-black border border-white/10 overflow-hidden cursor-pointer"
                             onClick={() => navigate(`/profile/${review.reviewer_id}`)}
                           >
-                            {review.reviewer?.username}
-                          </p>
-                          <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">
-                            {formatDistanceToNow(new Date(review.created_at), { addSuffix: true, locale: it })}
-                          </p>
+                            {review.reviewer?.avatar_url ? (
+                              <img src={review.reviewer.avatar_url} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-zinc-600"><User size={16} className="m-auto h-full" /></div>
+                            )}
+                          </div>
+                          <div>
+                            <p 
+                              className="text-[10px] font-black uppercase italic tracking-widest cursor-pointer hover:text-zinc-300 transition-colors"
+                              onClick={() => navigate(`/profile/${review.reviewer_id}`)}
+                            >
+                              {review.reviewer?.username}
+                            </p>
+                            <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">
+                              {formatDistanceToNow(new Date(review.created_at), { addSuffix: true, locale: it })}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          {renderStars(review.rating)}
+                          {canDelete && (
+                            <button 
+                              onClick={() => handleDeleteReview(review.id)}
+                              className="flex items-center gap-1.5 text-[8px] font-black uppercase text-red-500 hover:text-red-400 transition-colors bg-red-500/10 px-2 py-1 rounded-md"
+                            >
+                              <Trash2 size={10} /> Elimina
+                            </button>
+                          )}
+                          {isReviewer && !canDelete && (
+                            <div className="flex items-center gap-1 text-[7px] font-bold text-zinc-600 uppercase italic">
+                              <Clock size={8} /> Limite 15gg superato
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <div>{renderStars(review.rating)}</div>
+                      {review.comment && (
+                        <p className="text-xs text-zinc-300 italic leading-relaxed">{review.comment}</p>
+                      )}
                     </div>
-                    {review.comment && (
-                      <p className="text-xs text-zinc-300 italic leading-relaxed">{review.comment}</p>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </motion.div>

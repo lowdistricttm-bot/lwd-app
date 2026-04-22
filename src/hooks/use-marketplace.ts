@@ -70,7 +70,6 @@ export const useMarketplace = (categoryFilter: string = 'all') => {
       const { data, error } = await query;
       
       if (error) {
-        // Gestione silenziosa degli errori di interruzione del browser
         if (error.message?.includes('AbortError') || error.message?.includes('Lock broken')) {
           return [];
         }
@@ -263,7 +262,7 @@ export const useSellerReviews = (sellerId?: string) => {
 export const useReviewSeller = () => {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  const submitReview = useMutation({
     mutationFn: async ({ sellerId, rating, comment }: { sellerId: string, rating: number, comment: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Devi accedere per recensire");
@@ -285,4 +284,21 @@ export const useReviewSeller = () => {
     },
     onError: (err: any) => showError(err.message)
   });
+
+  const deleteReview = useMutation({
+    mutationFn: async ({ reviewId, sellerId }: { reviewId: string, sellerId: string }) => {
+      const { error } = await supabase
+        .from('seller_reviews')
+        .delete()
+        .eq('id', reviewId);
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['seller-reviews', variables.sellerId] });
+      showSuccess("Recensione eliminata.");
+    },
+    onError: (err: any) => showError(err.message)
+  });
+
+  return { submitReview, deleteReview };
 };

@@ -18,7 +18,7 @@ interface ReviewSellerModalProps {
 const ReviewSellerModal = ({ isOpen, onClose, sellerId }: ReviewSellerModalProps) => {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
-  const { mutateAsync: submitReview, isPending } = useReviewSeller();
+  const { submitReview } = useReviewSeller();
 
   useBodyLock(isOpen);
 
@@ -26,7 +26,7 @@ const ReviewSellerModal = ({ isOpen, onClose, sellerId }: ReviewSellerModalProps
     e.preventDefault();
     if (rating < 1 || rating > 5) return;
     try {
-      await submitReview({ sellerId, rating, comment });
+      await submitReview.mutateAsync({ sellerId, rating, comment });
       setComment('');
       setRating(5);
       onClose();
@@ -83,10 +83,10 @@ const ReviewSellerModal = ({ isOpen, onClose, sellerId }: ReviewSellerModalProps
 
                 <Button 
                   type="submit" 
-                  disabled={isPending}
+                  disabled={submitReview.isPending}
                   className="w-full bg-white text-black hover:bg-zinc-200 h-14 rounded-full font-black uppercase italic tracking-[0.2em] transition-all duration-500 shadow-2xl mt-4 border-none"
                 >
-                  {isPending ? <Loader2 className="animate-spin" /> : <><Send size={18} className="mr-2 -rotate-12" /> Salva Valutazione</>}
+                  {submitReview.isPending ? <Loader2 className="animate-spin" /> : <><Send size={18} className="mr-2 -rotate-12" /> Salva Valutazione</>}
                 </Button>
               </div>
             </form>
