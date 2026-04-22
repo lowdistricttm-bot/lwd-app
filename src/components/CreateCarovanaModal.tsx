@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MapPin, Clock, Plus, Trash2, Loader2, Send, Type, Save } from 'lucide-react';
+import { X, MapPin, Clock, Plus, Trash2, Loader2, Send, Type, Save, Lock, Globe } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -25,7 +25,8 @@ const CreateCarovanaModal = ({ isOpen, onClose, eventId, eventTitle, editCarovan
     title: '',
     startLocation: '',
     startTime: '',
-    routeDescription: ''
+    routeDescription: '',
+    privacy: 'public' as 'public' | 'private'
   });
   const [stops, setStops] = useState<{ location: string, arrivalTime: string }[]>([]);
 
@@ -35,14 +36,15 @@ const CreateCarovanaModal = ({ isOpen, onClose, eventId, eventTitle, editCarovan
         title: editCarovana.title,
         startLocation: editCarovana.start_location,
         startTime: new Date(editCarovana.start_time).toISOString().slice(0, 16),
-        routeDescription: editCarovana.route_description || ''
+        routeDescription: editCarovana.route_description || '',
+        privacy: editCarovana.privacy || 'public'
       });
       setStops(editCarovana.carovane_tappe?.map(s => ({
         location: s.location,
         arrivalTime: s.arrival_time ? new Date(s.arrival_time).toISOString().slice(0, 16) : ''
       })) || []);
     } else {
-      setFormData({ title: '', startLocation: '', startTime: '', routeDescription: '' });
+      setFormData({ title: '', startLocation: '', startTime: '', routeDescription: '', privacy: 'public' });
       setStops([]);
     }
   }, [editCarovana, isOpen]);
@@ -116,6 +118,44 @@ const CreateCarovanaModal = ({ isOpen, onClose, eventId, eventTitle, editCarovan
                     <Input required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value.toUpperCase()})} className={cn(inputClass, "pl-12")} placeholder="ES: CREW MILANO SUD" />
                   </div>
                 </div>
+
+                {/* Switch Privacy */}
+                {!editCarovana && (
+                  <div className="space-y-3">
+                    <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Modalità Privacy</Label>
+                    <div className="flex bg-white/5 p-1 rounded-full border border-white/10">
+                      <button 
+                        type="button"
+                        onClick={() => setFormData({...formData, privacy: 'public'})}
+                        className={cn(
+                          "flex-1 flex items-center justify-center gap-2 py-3 rounded-full text-[10px] font-black uppercase italic transition-all",
+                          formData.privacy === 'public' ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-zinc-300"
+                        )}
+                      >
+                        <Globe size={14} /> Pubblica
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => setFormData({...formData, privacy: 'private'})}
+                        className={cn(
+                          "flex-1 flex items-center justify-center gap-2 py-3 rounded-full text-[10px] font-black uppercase italic transition-all",
+                          formData.privacy === 'private' ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-zinc-300"
+                        )}
+                      >
+                        <Lock size={14} /> Privata
+                      </button>
+                    </div>
+                    {formData.privacy === 'private' && (
+                      <motion.p 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest px-4 leading-relaxed mt-2"
+                      >
+                        Questa carovana sarà invisibile nella pagina dell'evento. Otterrai un link segreto per invitare solo chi vuoi tu.
+                      </motion.p>
+                    )}
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">

@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, MapPin, Camera, Loader2, Send, Type } from 'lucide-react';
+import { X, Calendar, MapPin, Camera, Loader2, Send, Type, Lock, Globe } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -26,7 +26,8 @@ const CreateMeetModal = ({ isOpen, onClose }: CreateMeetModalProps) => {
     date: '',
     location: '',
     latitude: null as number | null,
-    longitude: null as number | null
+    longitude: null as number | null,
+    privacy: 'public' as 'public' | 'private'
   });
   
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -114,6 +115,42 @@ const CreateMeetModal = ({ isOpen, onClose }: CreateMeetModalProps) => {
                     <Type className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" size={16} />
                     <Input required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value.toUpperCase()})} className={cn(inputClass, "pl-12")} placeholder="ES: COFFEE & CARS MILANO" />
                   </div>
+                </div>
+
+                {/* Switch Privacy */}
+                <div className="space-y-3">
+                  <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Modalità Privacy</Label>
+                  <div className="flex bg-white/5 p-1 rounded-full border border-white/10">
+                    <button 
+                      type="button"
+                      onClick={() => setFormData({...formData, privacy: 'public'})}
+                      className={cn(
+                        "flex-1 flex items-center justify-center gap-2 py-3 rounded-full text-[10px] font-black uppercase italic transition-all",
+                        formData.privacy === 'public' ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-zinc-300"
+                      )}
+                    >
+                      <Globe size={14} /> Pubblico
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => setFormData({...formData, privacy: 'private'})}
+                      className={cn(
+                        "flex-1 flex items-center justify-center gap-2 py-3 rounded-full text-[10px] font-black uppercase italic transition-all",
+                        formData.privacy === 'private' ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-zinc-300"
+                      )}
+                    >
+                      <Lock size={14} /> Privato
+                    </button>
+                  </div>
+                  {formData.privacy === 'private' && (
+                    <motion.p 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest px-4 leading-relaxed mt-2"
+                    >
+                      L'incontro sarà invisibile sulla mappa. Solo chi riceverà il link d'invito potrà vedere i dettagli e partecipare. Perfetto per incontri segreti!
+                    </motion.p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

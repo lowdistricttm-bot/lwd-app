@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MapPin, Clock, Users, Car, ChevronRight, Loader2, Trash2, Share2, Info, Navigation, Edit3 } from 'lucide-react';
+import { X, MapPin, Clock, Users, Car, ChevronRight, Loader2, Trash2, Share2, Info, Navigation, Edit3, Lock } from 'lucide-react';
 import { Carovana, useCarovane } from '@/hooks/use-carovane';
 import { useGarage } from '@/hooks/use-garage';
 import { useBodyLock } from '@/hooks/use-body-lock';
@@ -39,10 +39,18 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
   };
 
   const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/events?carovana_id=${carovana.id}`;
+    let shareUrl = `${window.location.origin}/events?carovana_id=${carovana.id}`;
+    
+    // Se la carovana è privata, usiamo il link di invito
+    if (carovana.privacy === 'private' && carovana.invite_code) {
+      shareUrl = `${window.location.origin}/?code=${carovana.invite_code}`;
+    }
+
     const shareData = {
       title: carovana.title,
-      text: `Unisciti alla mia carovana per l'evento! Partenza da ${carovana.start_location}`,
+      text: carovana.privacy === 'private'
+        ? `Unisciti alla mia carovana segreta! Partenza da ${carovana.start_location}`
+        : `Unisciti alla mia carovana per l'evento! Partenza da ${carovana.start_location}`,
       url: shareUrl
     };
     
@@ -51,7 +59,7 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
         await navigator.share(shareData);
       } else {
         await navigator.clipboard.writeText(shareUrl);
-        showSuccess("Link carovana copiato!");
+        showSuccess(carovana.privacy === 'private' ? "Link di invito segreto copiato!" : "Link carovana copiato!");
       }
     } catch (err) {}
   };
@@ -86,9 +94,16 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
             <div className="max-w-2xl mx-auto space-y-8 pb-10">
               <div className="flex justify-between items-start">
                 <div className="space-y-2">
-                  <span className="bg-white text-black text-[8px] font-black uppercase px-2 py-1 italic rounded-lg shadow-lg">
-                    RUN TO THE SHOW
-                  </span>
+                  <div className="flex gap-2">
+                    <span className="bg-white text-black text-[8px] font-black uppercase px-2 py-1 italic rounded-lg shadow-lg">
+                      RUN TO THE SHOW
+                    </span>
+                    {carovana.privacy === 'private' && (
+                      <span className="bg-zinc-800 text-zinc-400 text-[8px] font-black uppercase px-2 py-1 italic rounded-lg flex items-center gap-1">
+                        <Lock size={10} /> PRIVATA
+                      </span>
+                    )}
+                  </div>
                   <h3 className="text-3xl font-black italic uppercase tracking-tighter leading-tight">
                     {carovana.title}
                   </h3>
@@ -220,7 +235,7 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
                     variant="outline"
                     className="flex-1 h-14 rounded-full font-black uppercase italic text-[9px] tracking-widest border-white/10 text-white hover:bg-white/5 flex items-center justify-center gap-2"
                   >
-                    <Navigation size={16} /> NAVIGA AL MEETING
+                    <Navigation size={16} /> NAVIGA ALLA PARTENZA
                   </Button>
                   <Button 
                     onClick={handleShare}

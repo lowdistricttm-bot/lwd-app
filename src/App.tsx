@@ -8,6 +8,7 @@ import { LanguageProvider } from "@/hooks/use-translation";
 import { useProfileSync } from "@/hooks/use-profile-sync";
 import { PresenceProvider } from "@/hooks/use-presence";
 import { AuthProvider } from "@/hooks/use-auth";
+import { useInviteHandler } from "@/hooks/use-invite-handler";
 import PullToRefresh from "@/components/PullToRefresh";
 import SpotifyPlayer from "@/components/SpotifyPlayer";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -41,6 +42,7 @@ const queryClient = new QueryClient();
 const AppContent = () => {
   useNotificationListener();
   useProfileSync();
+  useInviteHandler();
   
   return (
     <>

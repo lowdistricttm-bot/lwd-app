@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MapPin, Calendar, Clock, User, Info, Navigation, Share2, Users, CheckCircle2, Loader2 } from 'lucide-react';
+import { X, MapPin, Calendar, Clock, User, Info, Navigation, Share2, Users, CheckCircle2, Loader2, Lock } from 'lucide-react';
 import { Meet, useMeets } from '@/hooks/use-meets';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { Button } from './ui/button';
@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { showSuccess } from '@/utils/toast';
 
 interface MeetDetailModalProps {
   isOpen: boolean;
@@ -30,13 +31,27 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
   };
 
   const handleShare = async () => {
+    let url = window.location.href;
+    
+    // Se l'incontro è privato, usiamo il link di invito
+    if (meet.privacy === 'private' && meet.invite_code) {
+      url = `${window.location.origin}/?code=${meet.invite_code}`;
+    }
+    
     const shareData = {
       title: meet.title,
-      text: `Partecipa al meet "${meet.title}" a ${meet.location}!`,
-      url: window.location.href
+      text: meet.privacy === 'private' 
+        ? `Sei stato invitato al meet privato "${meet.title}" a ${meet.location}!`
+        : `Partecipa al meet "${meet.title}" a ${meet.location}!`,
+      url: url
     };
+
     try {
       if (navigator.share) await navigator.share(shareData);
+      else {
+        await navigator.clipboard.writeText(url);
+        showSuccess(meet.privacy === 'private' ? "Link di invito segreto copiato!" : "Link copiato!");
+      }
     } catch (err) {}
   };
 
@@ -65,9 +80,16 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
             <div className="max-w-2xl mx-auto space-y-8 pb-10">
               <div className="flex justify-between items-start">
                 <div className="space-y-2">
-                  <span className="bg-white text-black text-[8px] font-black uppercase px-2 py-1 italic rounded-lg shadow-lg">
-                    INCONTRO COMMUNITY
-                  </span>
+                  <div className="flex gap-2">
+                    <span className="bg-white text-black text-[8px] font-black uppercase px-2 py-1 italic rounded-lg shadow-lg">
+                      INCONTRO COMMUNITY
+                    </span>
+                    {meet.privacy === 'private' && (
+                      <span className="bg-zinc-800 text-zinc-400 text-[8px] font-black uppercase px-2 py-1 italic rounded-lg flex items-center gap-1">
+                        <Lock size={10} /> PRIVATO
+                      </span>
+                    )}
+                  </div>
                   <h3 className="text-3xl font-black italic uppercase tracking-tighter leading-tight">
                     {meet.title}
                   </h3>
