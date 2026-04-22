@@ -216,9 +216,9 @@ const AdminMysteryBoxModal = ({ isOpen, onClose }: AdminMysteryBoxModalProps) =>
 
                     <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-2xl">
                       <div className="flex items-center gap-3">
-                        <Ticket size={20} className="text-zinc-700" />
+                        <Ticket size={20} className="text-yellow-500" />
                         <div>
-                          <p className="text-[10px] font-black uppercase italic">Golden Ticket</p>
+                          <p className="text-[10px] font-black uppercase italic text-yellow-500">Golden Ticket</p>
                           <p className="text-[8px] font-bold text-zinc-600 uppercase">Includi possibilità di ingresso gratuito</p>
                         </div>
                       </div>
