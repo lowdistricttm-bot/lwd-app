@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, MessageSquare, User, MoreHorizontal, Send, Loader2, CornerDownRight, Trash2, Camera, X, Share2 } from 'lucide-react';
+import { Heart, MessageSquare, User, MoreHorizontal, Send, Loader2, CornerDownRight, Trash2, Camera, X, Share2, Edit3 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Post, useSocialFeed } from '@/hooks/use-social-feed';
@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import ImageLightbox from './ImageLightbox';
 import SharePostModal from './SharePostModal';
 import LikesModal from './LikesModal';
+import EditPostModal from './EditPostModal';
 import VideoPlayer from './VideoPlayer';
 import { Link, useNavigate } from 'react-router-dom';
 import { showSuccess, showError } from '@/utils/toast';
@@ -143,6 +144,7 @@ const FeedPost = ({ post }: { post: Post }) => {
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isLikesModalOpen, setIsLikesModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [showHeartPop, setShowHeartPop] = useState(false);
   const commentFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -225,6 +227,12 @@ const FeedPost = ({ post }: { post: Post }) => {
     }
   };
 
+  const handleDeletePost = () => {
+    if (confirm(language === 'it' ? "Sei sicuro di voler eliminare questo post?" : "Are you sure you want to delete this post?")) {
+      deletePost.mutate(post.id);
+    }
+  };
+
   const isAuthor = currentUserId === post.user_id;
   const mainComments = post.comments?.filter(c => !c.parent_id) || [];
   const images = post.images || [];
@@ -262,7 +270,10 @@ const FeedPost = ({ post }: { post: Post }) => {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-zinc-900 border-white/10 rounded-2xl p-2">
-                <DropdownMenuItem onClick={() => deletePost.mutate(post.id)} className="text-[9px] font-black uppercase tracking-widest italic text-red-400 focus:bg-red-500/10 focus:text-red-400 cursor-pointer rounded-xl py-3 px-4">
+                <DropdownMenuItem onClick={() => setIsEditModalOpen(true)} className="text-[9px] font-black uppercase tracking-widest italic text-white focus:bg-white/10 focus:text-white cursor-pointer rounded-xl py-3 px-4 mb-1">
+                  <Edit3 size={14} className="mr-2" /> Modifica Post
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDeletePost} className="text-[9px] font-black uppercase tracking-widest italic text-red-400 focus:bg-red-500/10 focus:text-red-400 cursor-pointer rounded-xl py-3 px-4">
                   <Trash2 size={14} className="mr-2" /> Elimina Post
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -528,6 +539,14 @@ const FeedPost = ({ post }: { post: Post }) => {
         onClose={() => setIsLikesModalOpen(false)}
         likes={likedBy}
       />
+
+      {isAuthor && (
+        <EditPostModal 
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          post={post}
+        />
+      )}
     </>
   );
 };
