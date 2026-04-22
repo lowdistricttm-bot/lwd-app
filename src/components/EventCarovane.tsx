@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCarovane, Carovana } from '@/hooks/use-carovane';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Clock, Users, Plus, ChevronRight, Loader2, Car } from 'lucide-react';
@@ -18,9 +18,14 @@ interface EventCarovaneProps {
 }
 
 const EventCarovane = ({ eventId, eventTitle, currentUserId }: EventCarovaneProps) => {
-  const { carovane, isLoading } = useCarovane(eventId);
+  const { carovane, isLoading, refetch } = useCarovane(eventId);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedCarovana, setSelectedCarovana] = useState<Carovana | null>(null);
+
+  // Forza il rinfresco quando il componente viene montato o quando si chiude il modal di creazione
+  useEffect(() => {
+    refetch();
+  }, [eventId, refetch]);
 
   if (isLoading) return <div className="py-10 flex justify-center"><Loader2 className="animate-spin text-zinc-500" /></div>;
 
@@ -96,7 +101,10 @@ const EventCarovane = ({ eventId, eventTitle, currentUserId }: EventCarovaneProp
 
       <CreateCarovanaModal 
         isOpen={isCreateOpen} 
-        onClose={() => setIsCreateOpen(false)} 
+        onClose={() => {
+          setIsCreateOpen(false);
+          refetch(); // Rinfresca dopo la chiusura del modal
+        }} 
         eventId={eventId} 
         eventTitle={eventTitle} 
       />

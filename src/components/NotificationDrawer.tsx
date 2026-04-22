@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Bell, Heart, MessageSquare, ClipboardCheck, User, Loader2, Trash2, Calendar, Car, UserPlus, ShieldCheck, Megaphone, AlertTriangle, Zap, MapPin } from 'lucide-react';
+import { X, Bell, Heart, MessageSquare, ClipboardCheck, User, Loader2, Trash2, Calendar, Car, UserPlus, ShieldCheck, Megaphone, AlertTriangle, Zap, MapPin, Truck } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/use-notifications';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { formatDistanceToNow } from 'date-fns';
@@ -47,6 +47,8 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
       navigate(`/profile/${n.actor_id}`);
     } else if (n.type === 'meet_new') {
       navigate('/meets');
+    } else if (n.type === 'carovana_nearby') {
+      navigate('/events'); // Porta alla pagina eventi dove si vedono le carovane
     }
   };
 
@@ -84,6 +86,7 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
       case 'application_status': return <ClipboardCheck size={14} className="text-green-500" />;
       case 'follow': return <UserPlus size={14} className="text-indigo-500" />;
       case 'meet_new': return <MapPin size={14} className="text-orange-500" />;
+      case 'carovana_nearby': return <Truck size={14} className="text-blue-400" />;
       default: return <Bell size={14} />;
     }
   };
@@ -112,6 +115,8 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
             <span className="font-black text-orange-400"> {n.meets?.title}</span>
           </>
         );
+      case 'carovana_nearby':
+        return n.content || 'Una carovana passerà vicino a te!';
       default: return n.content || 'Nuova notifica';
     }
   };
