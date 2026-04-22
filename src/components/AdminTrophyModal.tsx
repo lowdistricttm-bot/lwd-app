@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Trophy, User, Car, Loader2, Send, Search, ShieldCheck, Award, Check, AlertCircle } from 'lucide-react';
+import { X, Trophy, User as UserIcon, Car, Loader2, Send, Search, ShieldCheck, Award, Check, AlertCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
