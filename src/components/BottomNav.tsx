@@ -34,9 +34,9 @@ const BottomNav = () => {
       className="fixed bottom-0 left-0 right-0 z-[999] bg-black border-t border-white/10 select-none touch-none"
       data-no-swipe="true"
       style={{ 
-        height: '35px',
-        minHeight: '35px',
-        maxHeight: '35px',
+        height: '38px',
+        minHeight: '38px',
+        maxHeight: '38px',
         paddingBottom: '0px',
         marginBottom: '0px',
         WebkitUserSelect: 'none',

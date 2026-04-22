@@ -142,8 +142,8 @@ const Chat = () => {
 
   if (loadingChat || authLoading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
-  // Altezza fissa 35px ignorando la safe area
-  const inputBarHeight = "35px";
+  // Altezza fissa 38px ignorando la safe area
+  const inputBarHeight = "38px";
 
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent" style={{ height: '100dvh' }}>
