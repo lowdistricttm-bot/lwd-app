@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MapPin, Clock, Users, Car, ChevronRight, Loader2, Trash2, Share2, Info, Navigation } from 'lucide-react';
-import { Convoy, useConvoys } from '@/hooks/use-convoys';
+import { Carovana, useCarovane } from '@/hooks/use-carovane';
 import { useGarage } from '@/hooks/use-garage';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { Button } from './ui/button';
@@ -12,35 +12,34 @@ import { it } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 
-interface ConvoyDetailModalProps {
+interface CarovanaDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
-  convoy: Convoy;
+  carovana: Carovana;
   currentUserId: string | null;
 }
 
-const ConvoyDetailModal = ({ isOpen, onClose, convoy, currentUserId }: ConvoyDetailModalProps) => {
+const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId }: CarovanaDetailModalProps) => {
   const navigate = useNavigate();
-  const { toggleJoin, deleteConvoy } = useConvoys();
+  const { toggleJoin, deleteCarovana } = useCarovane();
   const { vehicles } = useGarage();
-  const [isJoining, setIsJoining] = useState(false);
   
   useBodyLock(isOpen);
 
-  if (!convoy) return null;
+  if (!carovana) return null;
 
-  const isCreator = currentUserId === convoy.creator_id;
-  const participants = convoy.convoy_participants || [];
+  const isCreator = currentUserId === carovana.creator_id;
+  const participants = carovana.carovane_partecipanti || [];
 
   const handleJoin = async () => {
     const mainVehicle = vehicles?.find(v => v.is_main) || vehicles?.[0];
-    await toggleJoin.mutateAsync({ convoyId: convoy.id, vehicleId: mainVehicle?.id });
+    await toggleJoin.mutateAsync({ carovanaId: carovana.id, vehicleId: mainVehicle?.id });
   };
 
   const handleShare = async () => {
     const shareData = {
-      title: convoy.title,
-      text: `Unisciti al mio convoglio per l'evento! Partenza da ${convoy.start_location}`,
+      title: carovana.title,
+      text: `Unisciti alla mia carovana per l'evento! Partenza da ${carovana.start_location}`,
       url: window.location.href
     };
     try {
@@ -68,12 +67,12 @@ const ConvoyDetailModal = ({ isOpen, onClose, convoy, currentUserId }: ConvoyDet
                     RUN TO THE SHOW
                   </span>
                   <h3 className="text-3xl font-black italic uppercase tracking-tighter leading-tight">
-                    {convoy.title}
+                    {carovana.title}
                   </h3>
                 </div>
                 <div className="flex gap-2">
                   {isCreator && (
-                    <button onClick={() => { if(confirm("Eliminare convoglio?")) { deleteConvoy.mutate(convoy.id); onClose(); } }} className="p-2 bg-red-500/10 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all"><Trash2 size={20} /></button>
+                    <button onClick={() => { if(confirm("Eliminare carovana?")) { deleteCarovana.mutate(carovana.id); onClose(); } }} className="p-2 bg-red-500/10 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all"><Trash2 size={20} /></button>
                   )}
                   <button onClick={onClose} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors"><X size={24} /></button>
                 </div>
@@ -84,12 +83,12 @@ const ConvoyDetailModal = ({ isOpen, onClose, convoy, currentUserId }: ConvoyDet
                   <p className="text-[8px] font-black uppercase text-zinc-500 tracking-[0.3em] italic mb-2">Partenza</p>
                   <div className="flex items-center gap-3 text-white mb-2">
                     <MapPin size={16} className="text-zinc-400" />
-                    <span className="text-sm font-black uppercase italic">{convoy.start_location}</span>
+                    <span className="text-sm font-black uppercase italic">{carovana.start_location}</span>
                   </div>
                   <div className="flex items-center gap-3 text-white">
                     <Clock size={16} className="text-zinc-400" />
                     <span className="text-sm font-black uppercase italic">
-                      {format(new Date(convoy.start_time), 'dd MMM - HH:mm', { locale: it }).toUpperCase()}
+                      {format(new Date(carovana.start_time), 'dd MMM - HH:mm', { locale: it }).toUpperCase()}
                     </span>
                   </div>
                 </div>
@@ -98,20 +97,19 @@ const ConvoyDetailModal = ({ isOpen, onClose, convoy, currentUserId }: ConvoyDet
                   <p className="text-[8px] font-black uppercase text-zinc-500 tracking-[0.3em] italic mb-2">Organizzatore</p>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-900 border border-white/10">
-                      {convoy.profiles?.avatar_url ? <img src={convoy.profiles.avatar_url} className="w-full h-full object-cover" /> : <Users size={20} className="m-auto h-full text-zinc-700" />}
+                      {carovana.profiles?.avatar_url ? <img src={carovana.profiles.avatar_url} className="w-full h-full object-cover" /> : <Users size={20} className="m-auto h-full text-zinc-700" />}
                     </div>
-                    <span className="text-sm font-black uppercase italic text-white">@{convoy.profiles?.username}</span>
+                    <span className="text-sm font-black uppercase italic text-white">@{carovana.profiles?.username}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Timeline Tappe */}
-              {convoy.convoy_stops && convoy.convoy_stops.length > 0 && (
+              {carovana.carovane_tappe && carovana.carovane_tappe.length > 0 && (
                 <div className="space-y-4">
                   <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.4em] italic ml-4">Tappe del Viaggio</h4>
                   <div className="bg-white/5 border border-white/5 p-6 rounded-[2.5rem] space-y-6 relative">
                     <div className="absolute left-8 top-10 bottom-10 w-[1px] bg-white/10" />
-                    {convoy.convoy_stops.map((stop, i) => (
+                    {carovana.carovane_tappe.map((stop, i) => (
                       <div key={stop.id} className="flex items-start gap-6 relative z-10">
                         <div className="w-4 h-4 rounded-full bg-white border-4 border-zinc-900 mt-1 shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
                         <div className="flex-1">
@@ -130,7 +128,6 @@ const ConvoyDetailModal = ({ isOpen, onClose, convoy, currentUserId }: ConvoyDet
                 </div>
               )}
 
-              {/* Partecipanti */}
               <div className="space-y-4">
                 <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.4em] italic ml-4">Partecipanti ({participants.length})</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -148,14 +145,14 @@ const ConvoyDetailModal = ({ isOpen, onClose, convoy, currentUserId }: ConvoyDet
                 </div>
               </div>
 
-              {convoy.route_description && (
+              {carovana.route_description && (
                 <div className="space-y-3 px-2">
                   <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.4em] italic flex items-center gap-2">
                     <Info size={12} /> Info Percorso
                   </h4>
                   <div className="bg-white/5 border border-white/5 p-6 rounded-[2rem]">
                     <p className="text-sm font-medium italic text-zinc-200 leading-relaxed whitespace-pre-wrap">
-                      {convoy.route_description}
+                      {carovana.route_description}
                     </p>
                   </div>
                 </div>
@@ -167,23 +164,23 @@ const ConvoyDetailModal = ({ isOpen, onClose, convoy, currentUserId }: ConvoyDet
                   disabled={toggleJoin.isPending}
                   className={cn(
                     "h-16 rounded-full font-black uppercase italic text-[10px] tracking-widest transition-all shadow-xl flex items-center justify-center gap-3 border",
-                    convoy.is_joined 
+                    carovana.is_joined 
                       ? "bg-zinc-800 text-white border-white/10 hover:bg-red-600 hover:border-red-600" 
                       : "bg-white text-black border-white hover:bg-zinc-200"
                   )}
                 >
                   {toggleJoin.isPending ? (
                     <Loader2 className="animate-spin" size={18} />
-                  ) : convoy.is_joined ? (
-                    <>ABBANDONA CONVOGLIO</>
+                  ) : carovana.is_joined ? (
+                    <>ABBANDONA CAROVANA</>
                   ) : (
-                    <>UNISCITI AL CONVOGLIO</>
+                    <>UNISCITI ALLA CAROVANA</>
                   )}
                 </Button>
                 
                 <div className="flex gap-3">
                   <Button 
-                    onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(convoy.start_location)}`, '_blank')}
+                    onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(carovana.start_location)}`, '_blank')}
                     variant="outline"
                     className="flex-1 h-14 rounded-full font-black uppercase italic text-[9px] tracking-widest border-white/10 text-white hover:bg-white/5 flex items-center justify-center gap-2"
                   >
@@ -206,4 +203,4 @@ const ConvoyDetailModal = ({ isOpen, onClose, convoy, currentUserId }: ConvoyDet
   );
 };
 
-export default ConvoyDetailModal;
+export default CarovanaDetailModal;

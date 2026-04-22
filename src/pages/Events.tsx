@@ -19,7 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { showError } from '@/utils/toast';
 import EventAdminModal from '@/components/EventAdminModal';
 import ManageApplicationModal from '@/components/ManageApplicationModal';
-import EventConvoys from '@/components/EventConvoys';
+import EventCarovane from '@/components/EventCarovane';
 import { useTranslation } from '@/hooks/use-translation';
 
 const Events = () => {
@@ -47,7 +47,6 @@ const Events = () => {
 
   const viewEventId = searchParams.get('view');
 
-  // Blocco background per i vari stati modal
   useBodyLock(!!viewingEvent || !!selectedEvent || !!manageApp || isAdminModalOpen);
 
   useEffect(() => {
@@ -203,7 +202,6 @@ const Events = () => {
         )}
 
         <AnimatePresence>
-          {/* Modal Visualizza Evento */}
           {viewingEvent && (
             <>
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setViewingEvent(null)} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150] touch-none" />
@@ -225,7 +223,6 @@ const Events = () => {
                     <button onClick={() => setViewingEvent(null)} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors"><X size={24} /></button>
                   </div>
 
-                  {/* Tabs per Info vs Convogli */}
                   <div className="flex bg-white/5 p-1 rounded-full border border-white/10">
                     <button 
                       onClick={() => setActiveViewTab('info')}
@@ -243,7 +240,7 @@ const Events = () => {
                         activeViewTab === 'convoys' ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-white"
                       )}
                     >
-                      <Truck size={14} /> Convogli
+                      <Truck size={14} /> Carovane
                     </button>
                   </div>
 
@@ -305,7 +302,7 @@ const Events = () => {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
                       >
-                        <EventConvoys 
+                        <EventCarovane 
                           eventId={viewingEvent.id} 
                           eventTitle={viewingEvent.title} 
                           currentUserId={user?.id || null} 
@@ -318,7 +315,6 @@ const Events = () => {
             </>
           )}
 
-          {/* Modal Invia Selezione / Apply */}
           {selectedEvent && (
             <>
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedEvent(null)} className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150] touch-none" />
@@ -341,7 +337,6 @@ const Events = () => {
                 </div>
 
                 <form onSubmit={handleApply} className="max-w-2xl mx-auto space-y-10 pb-10">
-                  {/* Sezione Dati Personali */}
                   <div className="space-y-6">
                     <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.4em] italic ml-4">Dati Candidato</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -383,7 +378,6 @@ const Events = () => {
                     </div>
                   </div>
 
-                  {/* Sezione Veicolo */}
                   <div className="space-y-6">
                     <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.4em] italic ml-4">{t.events.form.selectVehicle}</h4>
                     {vehicles?.length === 0 ? (
@@ -434,7 +428,6 @@ const Events = () => {
                     )}
                   </div>
 
-                  {/* Sezione Modifiche */}
                   <div className="space-y-4">
                     <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest ml-4">Modifiche Principali</Label>
                     <div className="bg-white/5 border border-white/10 rounded-[2rem] p-6">
@@ -447,7 +440,6 @@ const Events = () => {
                     </div>
                   </div>
 
-                  {/* Sezione Foto Interni */}
                   <div className="space-y-6">
                     <div className="flex items-center justify-between px-4">
                       <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-widest">{t.events.form.interiorPhotos}</Label>

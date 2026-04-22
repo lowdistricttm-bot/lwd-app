@@ -4,14 +4,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { showError, showSuccess } from '@/utils/toast';
 
-export interface ConvoyStop {
+export interface CarovanaTappa {
   id: string;
   location: string;
   arrival_time: string;
   order_index: number;
 }
 
-export interface Convoy {
+export interface Carovana {
   id: string;
   event_id: string;
   creator_id: string;
@@ -24,8 +24,8 @@ export interface Convoy {
     username: string;
     avatar_url: string;
   };
-  convoy_stops?: ConvoyStop[];
-  convoy_participants?: {
+  carovane_tappe?: CarovanaTappa[];
+  carovane_partecipanti?: {
     user_id: string;
     profiles: {
       username: string;
@@ -39,21 +39,21 @@ export interface Convoy {
   is_joined?: boolean;
 }
 
-export const useConvoys = (eventId?: string) => {
+export const useCarovane = (eventId?: string) => {
   const queryClient = useQueryClient();
 
-  const { data: convoys, isLoading, refetch } = useQuery({
-    queryKey: ['convoys', eventId],
+  const { data: carovane, isLoading, refetch } = useQuery({
+    queryKey: ['carovane', eventId],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       let query = supabase
-        .from('convoys')
+        .from('carovane')
         .select(`
           *,
           profiles:creator_id (username, avatar_url),
-          convoy_stops (*),
-          convoy_participants (
+          carovane_tappe (*),
+          carovane_partecipanti (
             user_id,
             profiles:user_id (username, avatar_url),
             vehicles:vehicle_id (brand, model)
@@ -67,20 +67,20 @@ export const useConvoys = (eventId?: string) => {
 
       const { data, error } = await query;
       if (error) {
-        console.error("[Convoys] Error fetching:", error);
+        console.error("[Carovane] Error fetching:", error);
         return [];
       }
 
       return (data || []).map((c: any) => ({
         ...c,
         profiles: Array.isArray(c.profiles) ? c.profiles[0] : c.profiles,
-        convoy_stops: (c.convoy_stops || []).sort((a: any, b: any) => a.order_index - b.order_index),
-        is_joined: user ? c.convoy_participants?.some((p: any) => p.user_id === user.id) : false
-      })) as Convoy[];
+        carovane_tappe: (c.carovane_tappe || []).sort((a: any, b: any) => a.order_index - b.order_index),
+        is_joined: user ? c.carovane_partecipanti?.some((p: any) => p.user_id === user.id) : false
+      })) as Carovana[];
     }
   });
 
-  const createConvoy = useMutation({
+  const createCarovana = useMutation({
     mutationFn: async (data: { 
       eventId: string, 
       title: string, 
@@ -90,10 +90,10 @@ export const useConvoys = (eventId?: string) => {
       stops: { location: string, arrivalTime: string }[]
     }) => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Accedi per creare un convoglio");
+      if (!user) throw new Error("Accedi per creare una carovana");
 
-      const { data: convoy, error: cError } = await supabase
-        .from('convoys')
+      const { data: carovana, error: cError } = await supabase
+        .from('carovane')
         .insert([{
           event_id: data.eventId,
           creator_id: user.id,
@@ -109,16 +109,15 @@ export const useConvoys = (eventId?: string) => {
 
       if (data.stops.length > 0) {
         const stops = data.stops.map((s, i) => ({
-          convoy_id: convoy.id,
+          carovana_id: carovana.id,
           location: s.location,
           arrival_time: s.arrivalTime || null,
           order_index: i
         }));
-        const { error: sError } = await supabase.from('convoy_stops').insert(stops);
+        const { error: sError } = await supabase.from('carovane_tappe').insert(stops);
         if (sError) throw sError;
       }
 
-      // Auto-join creator
       const { data: mainVehicle } = await supabase
         .from('vehicles')
         .select('id')
@@ -126,39 +125,39 @@ export const useConvoys = (eventId?: string) => {
         .eq('is_main', true)
         .maybeSingle();
 
-      await supabase.from('convoy_participants').insert([{
-        convoy_id: convoy.id,
+      await supabase.from('carovane_partecipanti').insert([{
+        carovana_id: carovana.id,
         user_id: user.id,
         vehicle_id: mainVehicle?.id || null
       }]);
 
-      return convoy;
+      return carovana;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['convoys'] });
-      showSuccess("Convoglio creato! Run to the show!");
+      queryClient.invalidateQueries({ queryKey: ['carovane'] });
+      showSuccess("Carovana creata! Run to the show!");
     },
     onError: (err: any) => showError(err.message)
   });
 
   const toggleJoin = useMutation({
-    mutationFn: async ({ convoyId, vehicleId }: { convoyId: string, vehicleId?: string }) => {
+    mutationFn: async ({ carovanaId, vehicleId }: { carovanaId: string, vehicleId?: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Accedi per unirti");
 
       const { data: existing } = await supabase
-        .from('convoy_participants')
+        .from('carovane_partecipanti')
         .select('id')
-        .eq('convoy_id', convoyId)
+        .eq('carovana_id', carovanaId)
         .eq('user_id', user.id)
         .maybeSingle();
 
       if (existing) {
-        await supabase.from('convoy_participants').delete().eq('id', existing.id);
+        await supabase.from('carovane_partecipanti').delete().eq('id', existing.id);
         return 'left';
       } else {
-        await supabase.from('convoy_participants').insert([{
-          convoy_id: convoyId,
+        await supabase.from('carovane_partecipanti').insert([{
+          carovana_id: carovanaId,
           user_id: user.id,
           vehicle_id: vehicleId || null
         }]);
@@ -166,22 +165,22 @@ export const useConvoys = (eventId?: string) => {
       }
     },
     onSuccess: (res) => {
-      queryClient.invalidateQueries({ queryKey: ['convoys'] });
-      showSuccess(res === 'joined' ? "Ti sei unito al convoglio!" : "Hai lasciato il convoglio.");
+      queryClient.invalidateQueries({ queryKey: ['carovane'] });
+      showSuccess(res === 'joined' ? "Ti sei unito alla carovana!" : "Hai lasciato la carovana.");
     },
     onError: (err: any) => showError(err.message)
   });
 
-  const deleteConvoy = useMutation({
+  const deleteCarovana = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('convoys').delete().eq('id', id);
+      const { error } = await supabase.from('carovane').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['convoys'] });
-      showSuccess("Convoglio eliminato.");
+      queryClient.invalidateQueries({ queryKey: ['carovane'] });
+      showSuccess("Carovana eliminata.");
     }
   });
 
-  return { convoys, isLoading, createConvoy, toggleJoin, deleteConvoy, refetch };
+  return { carovane, isLoading, createCarovana, toggleJoin, deleteCarovana, refetch };
 };
