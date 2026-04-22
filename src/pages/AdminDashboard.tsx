@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import EmailSettingsModal from '@/components/EmailSettingsModal';
 import AdminNotificationModal from '@/components/AdminNotificationModal';
+import AdminTrophyModal from '@/components/AdminTrophyModal';
 import { useAdmin } from '@/hooks/use-admin';
 import { useRoleRequests } from '@/hooks/use-role-requests';
 import { 
@@ -20,7 +21,8 @@ import {
   Sparkles,
   Check,
   X,
-  User
+  User,
+  Trophy
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -31,6 +33,7 @@ const AdminDashboard = () => {
   const { allRequests, loadingAll, handleRequest } = useRoleRequests();
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [isNotifModalOpen, setIsNotifModalOpen] = useState(false);
+  const [isTrophyModalOpen, setIsTrophyModalOpen] = useState(false);
   const [showRequests, setShowRequests] = useState(false);
 
   if (checkingAdmin) {
@@ -65,6 +68,13 @@ const AdminDashboard = () => {
       action: () => navigate('/admin/applications'),
       show: true,
       badge: pendingAppsCount
+    },
+    {
+      title: "Assegna Trofei",
+      desc: "Premia i vincitori degli eventi fisici con badge digitali",
+      icon: Trophy,
+      action: () => setIsTrophyModalOpen(true),
+      show: isAdmin || isStaff
     },
     {
       title: "Richieste Upgrade",
@@ -134,7 +144,7 @@ const AdminDashboard = () => {
                     )}
                   </div>
                   <div>
-                    <h3 className="text-lg font-black uppercase italic tracking-tight">{item.title}</h3>
+                    <h3 className="text-lg font-black italic uppercase tracking-tight">{item.title}</h3>
                     <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 group-hover:text-zinc-400 mt-1 transition-colors">{item.desc}</p>
                   </div>
                 </div>
@@ -192,6 +202,7 @@ const AdminDashboard = () => {
 
       {isAdmin === true && <EmailSettingsModal isOpen={isEmailModalOpen} onClose={() => setIsEmailModalOpen(false)} />}
       {(isAdmin || isStaff) && <AdminNotificationModal isOpen={isNotifModalOpen} onClose={() => setIsNotifModalOpen(false)} />}
+      {(isAdmin || isStaff) && <AdminTrophyModal isOpen={isTrophyModalOpen} onClose={() => setIsTrophyModalOpen(false)} />}
     </div>
   );
 };

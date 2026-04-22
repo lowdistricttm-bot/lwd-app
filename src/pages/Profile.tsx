@@ -16,6 +16,7 @@ import HighlightsBar from '@/components/HighlightsBar';
 import FollowButton from '@/components/FollowButton';
 import FollowListModal from '@/components/FollowListModal';
 import OrderDetailModal from '@/components/OrderDetailModal';
+import TrophySection from '@/components/TrophySection';
 import { useSocialFeed } from '@/hooks/use-social-feed';
 import { useAdmin } from '@/hooks/use-admin';
 import { usePresence } from '@/hooks/use-presence';
@@ -347,6 +348,9 @@ const Profile = () => {
           </div>
 
           <div className="mt-4">
+            {/* Sezione Trofei Digitali */}
+            {targetUserId && <TrophySection userId={targetUserId} />}
+
             {!isTargetSubscriber && targetUserId && <HighlightsBar userId={targetUserId} isOwnProfile={isOwnProfile} />}
 
             <div className="flex bg-zinc-900/50 backdrop-blur-md rounded-full p-1 mb-6 border border-white/5 overflow-x-auto no-scrollbar">
