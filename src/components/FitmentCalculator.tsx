@@ -1,13 +1,22 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useMemo, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Info, Gauge, MoveHorizontal, Plus, Zap, AlertTriangle, Ruler } from 'lucide-react';
+import { Info, Gauge, MoveHorizontal, Plus, Zap, AlertTriangle, Ruler, Save, Car, Loader2, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useGarage } from '@/hooks/use-garage';
+import { useVehicleLogs } from '@/hooks/use-vehicle-logs';
+import { useAuth } from '@/hooks/use-auth';
+import { Button } from './ui/button';
+import { showSuccess, showError } from '@/utils/toast';
 
 const FitmentCalculator = () => {
+  const { user } = useAuth();
+  const { vehicles, isLoading: loadingVehicles } = useGarage();
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string>('');
+  
   // Setup Iniziale (OEM o Attuale)
   const [current, setCurrent] = useState({ 
     width: 8.5, 
@@ -27,6 +36,16 @@ const FitmentCalculator = () => {
     tireA: 35,
     spacer: 12
   });
+
+  // Hook per il logbook (lo inizializziamo con l'ID selezionato)
+  const { addLog } = useVehicleLogs(selectedVehicleId || undefined);
+
+  useEffect(() => {
+    if (vehicles && vehicles.length > 0 && !selectedVehicleId) {
+      const main = vehicles.find(v => v.is_main) || vehicles[0];
+      setSelectedVehicleId(main.id);
+    }
+  }, [vehicles, selectedVehicleId]);
 
   const calc = (data: typeof current) => {
     const rimWidthMm = data.width * 25.4;
@@ -56,19 +75,49 @@ const FitmentCalculator = () => {
   const insetVal = parseFloat(results.insetDiff);
   const diamVal = parseFloat(results.diameterDiff);
 
+  const handleSaveToGarage = async () => {
+    if (!selectedVehicleId) {
+      showError("Seleziona un veicolo dal tuo garage");
+      return;
+    }
+
+    const logTitle = `FITMENT: ${next.width}J ET${next.et} (${next.tireW}/${next.tireA} R${next.diameter})`;
+    const logDesc = `Configurazione calcolata nel Wheel Lab.\n\n` +
+                    `SPECIFICHE:\n` +
+                    `- Cerchio: ${next.width}J ET${next.et}\n` +
+                    `- Gomma: ${next.tireW}/${next.tireA} R${next.diameter}\n` +
+                    `- Distanziale: ${next.spacer}mm\n\n` +
+                    `RISULTATI RISPETTO AL SETUP PRECEDENTE:\n` +
+                    `- Sporgenza (Poke): ${results.pokeDiff}mm\n` +
+                    `- Ingombro Interno (Inset): ${results.insetDiff}mm\n` +
+                    `- Variazione Diametro: ${results.diameterDiff}mm\n` +
+                    `- Errore Tachimetro: ${results.speedoDiff}%`;
+
+    try {
+      await addLog.mutateAsync({
+        vehicle_id: selectedVehicleId,
+        title: logTitle,
+        description: logDesc,
+        type: 'modification',
+        event_date: new Date().toISOString()
+      });
+      showSuccess("Configurazione salvata nel Diario di Bordo!");
+    } catch (err) {
+      showError("Errore durante il salvataggio");
+    }
+  };
+
   return (
     <div className="space-y-12">
-      {/* Visual Simulation - Aumentata altezza e sistemati margini */}
+      {/* Visual Simulation */}
       <div className="relative h-[420px] bg-zinc-950 rounded-[3rem] border border-white/5 overflow-hidden flex items-center justify-center shadow-2xl">
         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
         
-        {/* Fender Line */}
         <div className="absolute top-12 left-1/2 -translate-x-1/2 w-64 h-1.5 bg-white/20 rounded-full z-10">
           <div className="absolute -top-7 left-1/2 -translate-x-1/2 text-[8px] font-black uppercase tracking-widest text-zinc-600">Linea Passaruota</div>
         </div>
 
         <div className="relative w-full flex justify-center items-center pt-4">
-          {/* Current Wheel Outline */}
           <div 
             className="absolute border-2 border-dashed border-white/5 rounded-[2rem] flex items-center justify-center opacity-20"
             style={{ 
@@ -80,7 +129,6 @@ const FitmentCalculator = () => {
             <span className="text-[8px] font-black uppercase text-zinc-500 rotate-90">ORIGINALE</span>
           </div>
 
-          {/* New Wheel & Tire Simulation */}
           <motion.div 
             animate={{ 
               x: -(next.et - next.spacer) / 2,
@@ -89,17 +137,13 @@ const FitmentCalculator = () => {
             }}
             className="relative h-[280px] bg-white/5 border border-white/20 rounded-[2.5rem] flex flex-col items-center justify-center shadow-[0_0_60px_rgba(255,255,255,0.05)]"
           >
-            {/* Tire Part */}
             <div className="absolute inset-0 border-[12px] border-zinc-900 rounded-[2.5rem]" />
-            
-            {/* Rim Part */}
             <div className="relative z-10 flex flex-col items-center bg-white text-black p-4 rounded-2xl shadow-2xl">
               <span className="text-xs font-black italic leading-none">{next.diameter}"</span>
               <span className="text-[8px] font-bold opacity-60">{next.width}J ET{next.et}</span>
               {next.spacer > 0 && <span className="text-[7px] font-black text-red-600 mt-1">+{next.spacer}mm Spacer</span>}
             </div>
 
-            {/* Indicators - Riposizionati per visibilità ottimale */}
             <div className="absolute -bottom-20 flex flex-col items-center gap-1 w-64">
               <div className="flex items-center gap-2">
                 <MoveHorizontal size={14} className={cn(pokeVal > 0 ? "text-green-400" : "text-red-400")} />
@@ -118,7 +162,6 @@ const FitmentCalculator = () => {
 
       {/* Input Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Current Setup Card */}
         <div className="bg-zinc-900/40 backdrop-blur-md border border-white/5 p-8 rounded-[2.5rem] space-y-8">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-zinc-800 rounded-2xl flex items-center justify-center text-zinc-500"><Gauge size={20} /></div>
@@ -152,7 +195,6 @@ const FitmentCalculator = () => {
           </div>
         </div>
 
-        {/* Next Setup Card */}
         <div className="bg-white text-black p-8 rounded-[2.5rem] shadow-2xl space-y-8">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-black rounded-2xl flex items-center justify-center text-white"><Plus size={20} /></div>
@@ -225,6 +267,52 @@ const FitmentCalculator = () => {
           </p>
         </div>
       </div>
+
+      {/* Save to Garage Section */}
+      {user && vehicles && vehicles.length > 0 && (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/5 border border-white/10 p-8 rounded-[3rem] shadow-2xl"
+        >
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white text-black rounded-2xl flex items-center justify-center shadow-xl">
+                <Car size={24} />
+              </div>
+              <div>
+                <h4 className="text-lg font-black italic uppercase tracking-tight">Salva nel Garage</h4>
+                <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">Archivia questa configurazione nel Diario di Bordo</p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto">
+              <div className="relative flex-1 sm:w-64">
+                <select 
+                  value={selectedVehicleId}
+                  onChange={(e) => setSelectedVehicleId(e.target.value)}
+                  className="w-full bg-black/40 border border-white/10 rounded-full h-14 px-6 text-[10px] font-black uppercase italic appearance-none focus:border-white/30 transition-all"
+                >
+                  {vehicles.map(v => (
+                    <option key={v.id} value={v.id}>{v.brand} {v.model}</option>
+                  ))}
+                </select>
+                <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">
+                  <Car size={14} />
+                </div>
+              </div>
+
+              <Button 
+                onClick={handleSaveToGarage}
+                disabled={addLog.isPending}
+                className="bg-white text-black hover:bg-zinc-200 h-14 px-10 rounded-full font-black uppercase italic text-[10px] tracking-widest transition-all shadow-xl"
+              >
+                {addLog.isPending ? <Loader2 className="animate-spin" /> : <><Save size={16} className="mr-2" /> Salva Configurazione</>}
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {Math.abs(parseFloat(results.speedoDiff)) > 3 && (
         <div className="flex items-center gap-4 bg-red-500/10 border border-red-500/20 p-6 rounded-[2rem]">
