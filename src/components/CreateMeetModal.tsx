@@ -118,8 +118,7 @@ const CreateMeetModal = ({ isOpen, onClose }: CreateMeetModalProps) => {
                   </div>
                 </div>
 
-                {/* Campi impilati su mobile */}
-                <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Data e Ora</Label>
                     <div className="relative">

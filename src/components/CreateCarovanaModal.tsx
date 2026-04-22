@@ -117,8 +117,7 @@ const CreateCarovanaModal = ({ isOpen, onClose, eventId, eventTitle, editCarovan
                   </div>
                 </div>
 
-                {/* Campi partenza e ora impilati */}
-                <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Punto di Partenza</Label>
                     <div className="relative">
@@ -141,14 +140,14 @@ const CreateCarovanaModal = ({ isOpen, onClose, eventId, eventTitle, editCarovan
                     <button type="button" onClick={addStop} className="text-[9px] font-black uppercase text-white bg-white/10 px-3 py-1 rounded-full hover:bg-white hover:text-black transition-all">Aggiungi</button>
                   </div>
                   
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {stops.map((stop, i) => (
-                      <div key={i} className="flex gap-3 items-start animate-in slide-in-from-left-2">
-                        <div className="flex-1 space-y-2">
+                      <div key={i} className="flex gap-3 items-center animate-in slide-in-from-left-2">
+                        <div className="flex-1 grid grid-cols-2 gap-2">
                           <Input placeholder="LUOGO" value={stop.location} onChange={e => updateStop(i, 'location', e.target.value.toUpperCase())} className="bg-white/5 border-white/10 rounded-full h-10 px-4 text-[10px] font-bold" />
                           <Input type="datetime-local" value={stop.arrivalTime} onChange={e => updateStop(i, 'arrivalTime', e.target.value)} className="bg-white/5 border-white/10 rounded-full h-10 px-4 text-[10px] font-bold" />
                         </div>
-                        <button type="button" onClick={() => removeStop(i)} className="p-2 text-zinc-600 hover:text-red-500 mt-2"><Trash2 size={16} /></button>
+                        <button type="button" onClick={() => removeStop(i)} className="p-2 text-zinc-600 hover:text-red-500"><Trash2 size={16} /></button>
                       </div>
                     ))}
                   </div>
