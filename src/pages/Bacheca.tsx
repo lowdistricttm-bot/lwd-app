@@ -111,9 +111,10 @@ const Bacheca = () => {
             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{t.feed.syncing}</p>
           </div>
         ) : posts && posts.length > 0 ? (
-          <div className="columns-1 md:columns-2 lg:columns-3 gap-6">
+          /* Contenitore limitato a max-w-2xl centrato con post impilati uno sotto l'altro */
+          <div className="max-w-2xl mx-auto flex flex-col gap-6 w-full">
             {posts.map((post) => (
-              <div key={post.id} className="break-inside-avoid mb-6">
+              <div key={post.id}>
                 <FeedPost post={post} />
               </div>
             ))}
