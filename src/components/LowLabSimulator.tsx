@@ -18,6 +18,8 @@ interface WheelOverlay {
 
 const WHEEL_OPTIONS = [
   { id: 'bbs-rs', name: 'BBS RS', url: 'https://www.lowdistrict.it/wp-content/uploads/bbs-rs-wheel.png' },
+  { id: 'jr-jr11', name: 'Japan Racing JR11', url: 'https://www.lowdistrict.it/wp-content/uploads/jr11-wheel.png' },
+  { id: 'jnc-001', name: 'JNC 001', url: 'https://www.lowdistrict.it/wp-content/uploads/jnc-wheel.png' },
   { id: 'rotiform-tmb', name: 'Rotiform TMB', url: 'https://www.lowdistrict.it/wp-content/uploads/rotiform-wheel.png' },
   { id: 'work-meister', name: 'Work Meister', url: 'https://www.lowdistrict.it/wp-content/uploads/work-wheel.png' },
   { id: 'oz-futura', name: 'OZ Futura', url: 'https://www.lowdistrict.it/wp-content/uploads/oz-wheel.png' }
@@ -276,13 +278,12 @@ const LowLabSimulator = () => {
             </div>
 
             <div className="flex gap-3 shrink-0">
-              <Button 
+              <button 
                 onClick={() => removeWheel(selectedWheelId)}
-                variant="destructive"
-                className="w-12 h-12 rounded-full p-0 flex items-center justify-center shadow-xl"
+                className="w-12 h-12 bg-red-500 text-white rounded-full flex items-center justify-center shadow-xl hover:bg-red-600 transition-colors"
               >
                 <Trash2 size={18} />
-              </Button>
+              </button>
               <Button 
                 onClick={() => setSelectedWheelId(null)}
                 className="bg-black text-white hover:bg-zinc-800 rounded-full h-12 px-8 font-black uppercase italic text-[10px] shadow-xl"
