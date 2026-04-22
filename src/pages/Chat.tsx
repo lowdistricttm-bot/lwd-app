@@ -142,9 +142,6 @@ const Chat = () => {
 
   if (loadingChat || authLoading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
-  // Altezza fissa 56px ignorando la safe area
-  const inputBarHeight = "56px";
-
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent" style={{ height: '100dvh' }}>
       <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-2xl border-b border-white/10 pt-[env(safe-area-inset-top)]">
@@ -187,8 +184,7 @@ const Chat = () => {
 
       <main 
         ref={scrollRef} 
-        className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] px-6 overflow-y-auto space-y-6 custom-scrollbar overflow-x-hidden"
-        style={{ paddingBottom: inputBarHeight }}
+        className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] px-6 overflow-y-auto space-y-6 custom-scrollbar overflow-x-hidden pb-[84px]"
       >
         {chatMessages?.map((msg) => {
           const isMe = msg.sender_id === currentUser?.id;
@@ -315,13 +311,7 @@ const Chat = () => {
         })}
       </main>
 
-      <div 
-        className="fixed bottom-0 left-0 right-0 bg-black border-t border-white/10 z-50"
-        style={{ 
-          height: inputBarHeight,
-          marginBottom: '0px'
-        }}
-      >
+      <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-white/10 z-50 h-[68px]">
         <div className="max-w-2xl mx-auto h-full relative">
           {previews.length > 0 && (
             <div className="absolute bottom-full left-0 right-0 p-4 flex gap-2 overflow-x-auto no-scrollbar bg-black/40 backdrop-blur-md border-t border-white/5">
@@ -360,9 +350,9 @@ const Chat = () => {
             <button 
               type="button" 
               onClick={() => fileInputRef.current?.click()} 
-              className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/20 transition-all shrink-0"
+              className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/20 transition-all shrink-0"
             >
-              <Camera size={16} />
+              <Camera size={18} />
             </button>
 
             <div className="flex-1">
@@ -370,7 +360,7 @@ const Chat = () => {
                 placeholder="Messaggio" 
                 value={message} 
                 onChange={(e) => setMessage(e.target.value)} 
-                className="bg-white/5 border-white/10 rounded-full h-8 px-4 font-medium text-[11px] focus-visible:ring-0 text-white placeholder:text-zinc-600" 
+                className="bg-white/5 border-white/10 rounded-full h-10 px-5 font-medium text-[11px] focus-visible:ring-0 text-white placeholder:text-zinc-600" 
               />
             </div>
             
@@ -378,14 +368,14 @@ const Chat = () => {
               type="submit" 
               disabled={sendMessage.isPending || (!message.trim() && selectedFiles.length === 0)} 
               className={cn(
-                "w-8 h-8 rounded-full flex items-center justify-center transition-all shrink-0 disabled:opacity-30 shadow-lg",
+                "w-10 h-10 rounded-full flex items-center justify-center transition-all shrink-0 disabled:opacity-30 shadow-lg",
                 (message.trim() || selectedFiles.length > 0) ? "bg-white text-black" : "bg-white/10 text-zinc-500"
               )}
             >
               {sendMessage.isPending ? (
-                <Loader2 size={14} className="animate-spin" />
+                <Loader2 size={16} className="animate-spin" />
               ) : (
-                <Send size={14} strokeWidth={2.5} className="-rotate-12" />
+                <Send size={16} strokeWidth={2.5} className="-rotate-12" />
               )}
             </button>
           </form>
