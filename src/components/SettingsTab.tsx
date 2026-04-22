@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from './ui/button';
 import { useTranslation, Language } from '@/hooks/use-translation';
 import FAQModal from './FAQModal';
+import AcademyModal from './AcademyModal';
 import { useRoleRequests } from '@/hooks/use-role-requests';
 import { useAdmin } from '@/hooks/use-admin';
 import { 
@@ -24,7 +25,8 @@ import {
   EyeOff,
   CheckCircle2,
   Sparkles,
-  Clock
+  Clock,
+  GraduationCap
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import {
@@ -43,6 +45,7 @@ const SettingsTab = () => {
   const [loading, setLoading] = useState(true);
   const [platePrivacy, setPlatePrivacy] = useState('private');
   const [isFAQOpen, setIsFAQOpen] = useState(false);
+  const [isAcademyOpen, setIsAcademyOpen] = useState(false);
 
   const isSubscriber = role === 'subscriber';
 
@@ -162,7 +165,7 @@ const SettingsTab = () => {
       ]
     },
     {
-      title: "Supporto / FAQ",
+      title: "Supporto & Wiki",
       items: [
         { 
           icon: HelpCircle, 
@@ -170,6 +173,13 @@ const SettingsTab = () => {
           desc: language === 'it' ? "FAQ e Supporto Staff" : "FAQ and Staff Support",
           onClick: () => setIsFAQOpen(true),
           iconBg: "bg-amber-500"
+        },
+        { 
+          icon: GraduationCap, 
+          label: "Stance Academy", 
+          desc: language === 'it' ? "Wiki tecnica e tutorial" : "Technical wiki and tutorials",
+          onClick: () => setIsAcademyOpen(true),
+          iconBg: "bg-emerald-500"
         }
       ]
     }
@@ -337,6 +347,7 @@ const SettingsTab = () => {
       </div>
 
       <FAQModal isOpen={isFAQOpen} onClose={() => setIsFAQOpen(false)} />
+      <AcademyModal isOpen={isAcademyOpen} onClose={() => setIsAcademyOpen(false)} />
     </div>
   );
 };
