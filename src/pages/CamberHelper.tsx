@@ -18,9 +18,10 @@ const CamberHelper = () => {
   const currentAngle = useRef(0);
   const animationRef = useRef<number>(0);
 
-  // Funzione di interpolazione (smoothing) per stabilizzare la lettura
+  // Algoritmo di smoothing per rendere la lettura ultra-precisa e stabile
   const updateAngle = () => {
-    currentAngle.current += (targetAngle.current - currentAngle.current) * 0.15;
+    // Fattore di interpolazione (0.1 = fluido e stabile, elimina i tremolii del sensore)
+    currentAngle.current += (targetAngle.current - currentAngle.current) * 0.1;
     setRawAngle(currentAngle.current);
     animationRef.current = requestAnimationFrame(updateAngle);
   };
@@ -34,16 +35,16 @@ const CamberHelper = () => {
 
   const handleOrientation = (event: DeviceOrientationEvent) => {
     if (event.beta !== null) {
-      // Considerando che l'utente tiene il telefono in verticale.
-      // 90 gradi = telefono perfettamente dritto
-      // Sottraiamo 90 per avere lo "0" come punto di verticale perfetta.
-      const angle = event.beta - 90;
+      // Quando il telefono è in verticale (portrait), beta = 90°.
+      // Se si inclina la parte alta verso di te (esterno auto) -> beta scende (es. 85°)
+      // Se si inclina la parte alta lontano da te (interno auto) -> beta sale (es. 95°)
+      // Vogliamo: Top verso di te = Camber Positivo (+). Top lontano = Camber Negativo (-).
+      const angle = 90 - event.beta;
       targetAngle.current = angle;
     }
   };
 
   const requestAccess = async () => {
-    // Richiesta permessi specifica per iOS 13+
     if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
       try {
         const permissionState = await (DeviceOrientationEvent as any).requestPermission();
@@ -58,7 +59,6 @@ const CamberHelper = () => {
         setHasPermission(false);
       }
     } else {
-      // Per Android o browser che non richiedono l'interazione esplicita
       window.addEventListener('deviceorientation', handleOrientation);
       setHasPermission(true);
     }
@@ -72,17 +72,18 @@ const CamberHelper = () => {
     setOffset(0);
   };
 
-  // Fermiamo l'ascolto quando il componente viene smontato
   useEffect(() => {
     return () => {
       window.removeEventListener('deviceorientation', handleOrientation);
     };
   }, []);
 
-  // Il calcolo finale: valore grezzo meno la tara
+  // Calcolo dell'angolo finale considerando la tara
   const displayAngle = rawAngle - offset;
   const isNegative = displayAngle < 0;
-  const formattedAngle = Math.abs(displayAngle).toFixed(1);
+  
+  // Precisione a due cifre decimali (es. -2.35°)
+  const formattedAngle = Math.abs(displayAngle).toFixed(2);
 
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent">
@@ -99,7 +100,13 @@ const CamberHelper = () => {
           
           <div className="flex items-center gap-4 mb-2">
             <div className="w-10 h-10 bg-white text-black rounded-2xl flex items-center justify-center shadow-xl rotate-12">
-              <Smartphone size={20} className="-rotate-12" />
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="-rotate-12">
+                <g transform="rotate(15 12 12)">
+                  <rect x="5" y="2" width="14" height="20" rx="3" />
+                  <line x1="5" y1="8" x2="19" y2="8" />
+                  <line x1="5" y1="16" x2="19" y2="16" />
+                </g>
+              </svg>
             </div>
             <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] italic">Garage Tools</h2>
           </div>
@@ -118,7 +125,7 @@ const CamberHelper = () => {
             <div>
               <h3 className="text-xl font-black italic uppercase mb-2">Inizializza Sensori</h3>
               <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 leading-relaxed">
-                Questo strumento utilizza il giroscopio del tuo telefono per calcolare l'inclinazione del cerchio. È necessario consentire l'accesso ai sensori di movimento.
+                Questo strumento utilizza i sensori ultra-precisi del tuo telefono per calcolare l'inclinazione millimetrica del cerchio. È necessario consentire l'accesso al giroscopio.
               </p>
             </div>
             <Button 
@@ -155,7 +162,7 @@ const CamberHelper = () => {
                   "text-[10px] font-black uppercase tracking-widest mt-2",
                   isNegative ? "text-red-500" : displayAngle > 0 ? "text-blue-500" : "text-zinc-500"
                 )}>
-                  {isNegative ? 'Camber Negativo' : displayAngle > 0 ? 'Camber Positivo' : 'Zero Camber'}
+                  {isNegative ? 'Camber Negativo (Interno)' : displayAngle > 0 ? 'Camber Positivo (Esterno)' : 'Zero Camber'}
                 </p>
               </div>
 
@@ -167,7 +174,13 @@ const CamberHelper = () => {
                   <div className="absolute top-1/2 w-full h-[1px] bg-white border-t border-dashed border-white/50" />
                 </div>
 
-                <svg viewBox="-100 -100 200 200" className="w-full h-full max-w-[250px] relative z-10 overflow-visible transition-transform ease-out" style={{ transform: `rotate(${displayAngle}deg)` }}>
+                {/* 
+                  Logica visiva: 
+                  -displayAngle fa sì che:
+                  - Camber Positivo (+): Ruota gira in senso antiorario (verso sinistra / esterno)
+                  - Camber Negativo (-): Ruota gira in senso orario (verso destra / interno)
+                */}
+                <svg viewBox="-100 -100 200 200" className="w-full h-full max-w-[250px] relative z-10 overflow-visible" style={{ transform: `rotate(${-displayAngle}deg)` }}>
                   <defs>
                     <linearGradient id="rim-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
                       <stop offset="0%" stopColor="#444" />
@@ -212,10 +225,10 @@ const CamberHelper = () => {
             <div className="bg-white/5 border border-white/10 p-6 rounded-[2rem]">
               <h4 className="text-[10px] font-black uppercase text-zinc-400 tracking-[0.3em] mb-4">Istruzioni per l'uso</h4>
               <ol className="space-y-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 leading-relaxed">
-                <li className="flex gap-3"><span className="text-white">1.</span> Assicurati che l'auto sia in piano.</li>
-                <li className="flex gap-3"><span className="text-white">2.</span> Se hai una cover irregolare sul telefono, rimuovila per una maggiore precisione.</li>
-                <li className="flex gap-3"><span className="text-white">3.</span> Appoggia la faccia posteriore o lo schermo del telefono in verticale contro i bordi del cerchio (evitando le razze).</li>
-                <li className="flex gap-3"><span className="text-white">4.</span> Usa il tasto "Tara a Zero" appoggiando il telefono su una superficie perfettamente dritta se noti discrepanze nel sensore nativo.</li>
+                <li className="flex gap-3"><span className="text-white">1.</span> Assicurati che l'auto sia in piano perfetto.</li>
+                <li className="flex gap-3"><span className="text-white">2.</span> Se hai una cover irregolare sul telefono, rimuovila per una misurazione millimetrica.</li>
+                <li className="flex gap-3"><span className="text-white">3.</span> Appoggia la faccia posteriore o lo schermo del telefono in verticale contro i bordi estremi del cerchio (evitando le razze concave).</li>
+                <li className="flex gap-3"><span className="text-white">4.</span> Usa il tasto "Tara a Zero" appoggiando il telefono su una superficie perfettamente dritta per calibrarlo se noti discrepanze nel sensore nativo.</li>
               </ol>
             </div>
           </motion.div>
