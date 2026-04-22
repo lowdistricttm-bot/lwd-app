@@ -24,6 +24,7 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId }: Carov
   const { toggleJoin, deleteCarovana } = useCarovane();
   const { vehicles } = useGarage();
   
+  // Blocca lo scroll del body in modo definitivo
   useBodyLock(isOpen);
 
   if (!carovana) return null;
@@ -51,12 +52,25 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId }: Carov
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] touch-none" />
           <motion.div 
-            initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            onClick={onClose} 
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[250] touch-none"
+            data-no-swipe="true"
+          />
+          <motion.div 
+            initial={{ y: '100%' }} 
+            animate={{ y: 0 }} 
+            exit={{ y: '100%' }} 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed inset-x-0 bottom-0 z-[251] bg-zinc-950 border-t border-white/10 p-6 rounded-t-[2.5rem] max-h-[92dvh] overflow-y-auto shadow-2xl"
-            style={{ touchAction: 'pan-y', overscrollBehavior: 'contain' }}
+            style={{ 
+              touchAction: 'pan-y', 
+              overscrollBehavior: 'contain' 
+            }}
+            data-no-swipe="true"
           >
             <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
             

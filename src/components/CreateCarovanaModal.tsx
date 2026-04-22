@@ -28,6 +28,7 @@ const CreateCarovanaModal = ({ isOpen, onClose, eventId, eventTitle }: CreateCar
   });
   const [stops, setStops] = useState<{ location: string, arrivalTime: string }[]>([]);
 
+  // Blocca lo scroll del body
   useBodyLock(isOpen);
 
   const addStop = () => setStops([...stops, { location: '', arrivalTime: '' }]);
@@ -55,7 +56,8 @@ const CreateCarovanaModal = ({ isOpen, onClose, eventId, eventTitle }: CreateCar
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }} 
             onClick={onClose} 
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] touch-none" 
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] touch-none"
+            data-no-swipe="true"
           />
           <motion.div 
             initial={{ y: '100%' }} 
@@ -68,6 +70,7 @@ const CreateCarovanaModal = ({ isOpen, onClose, eventId, eventTitle }: CreateCar
               overscrollBehavior: 'contain',
               paddingBottom: 'calc(2rem + env(safe-area-inset-bottom))'
             }}
+            data-no-swipe="true"
           >
             <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0" />
             
