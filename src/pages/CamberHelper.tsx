@@ -76,9 +76,9 @@ const CamberHelper = () => {
 
   // Calcolo dell'angolo assoluto:
   // Assumiamo che la ruota sia sempre in "Camber Negativo" per le auto stance.
-  // Limitiamo a un massimo di 20 gradi assoluti.
+  // Limitiamo a un massimo di 10 gradi assoluti come richiesto.
   let displayAngle = Math.abs(rawAngle - offset);
-  displayAngle = Math.min(20, displayAngle);
+  displayAngle = Math.min(10, displayAngle);
   
   // Precisione a due cifre decimali
   const formattedAngle = displayAngle.toFixed(2);
