@@ -176,7 +176,7 @@ const SettingsTab = () => {
         },
         { 
           icon: GraduationCap, 
-          label: "Stance Academy", 
+          label: "Low Academy", 
           desc: language === 'it' ? "Wiki tecnica e tutorial" : "Technical wiki and tutorials",
           onClick: () => setIsAcademyOpen(true),
           iconBg: "bg-emerald-500"

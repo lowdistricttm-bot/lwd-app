@@ -55,7 +55,7 @@ const DEFAULT_TUTORIALS: Tutorial[] = [
     title: 'ROLLING DEI PARAFANGHI (FENDER ROLLING)',
     content: 'Quando il fitment diventa aggressivo, lo spazio tra gomma e lamiera si riduce a zero. Il rolling consiste nel ripiegare il bordo interno del parafango per evitare tagli alla gomma. È fondamentale scaldare bene la vernice con una pistola termica per evitare che si crepi durante l\'operazione con il roller.',
     category: 'bodywork',
-    image_url: 'https://images.unsplash.com/photo-1530046339160-ce3e5b0c7a2f?q=80&w=2070&auto=format&fit=crop',
+    image_url: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=2070&auto=format&fit=crop',
     created_at: new Date().toISOString(),
     profiles: { username: 'Low District Staff', avatar_url: '' }
   },
@@ -112,8 +112,6 @@ export const useAcademy = (categoryFilter: string = 'all') => {
           profiles: Array.isArray(t.profiles) ? t.profiles[0] : t.profiles
         }));
 
-        // Filtriamo i tutorial di default: se un tutorial con lo stesso titolo 
-        // esiste già nel DB (caricato dall'utente), non mostriamo quello di default.
         const filteredDefaults = DEFAULT_TUTORIALS.filter(def => 
           !formattedDbData.some(db => db.title.toUpperCase() === def.title.toUpperCase())
         );
@@ -159,7 +157,7 @@ export const useAcademy = (categoryFilter: string = 'all') => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['academy-tutorials'] });
-      showSuccess("Tutorial pubblicato in Academy!");
+      showSuccess("Tutorial pubblicato in Low Academy!");
     },
     onError: (err: any) => showError(err.message)
   });

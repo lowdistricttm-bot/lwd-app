@@ -94,7 +94,7 @@ const CreateTutorialModal = ({ isOpen, onClose, editTutorial }: CreateTutorialMo
               <div className="flex justify-between items-center">
                 <div>
                   <h2 className="text-2xl font-black italic uppercase tracking-tighter">
-                    {editTutorial ? 'Modifica Tutorial' : 'Nuovo Tutorial Academy'}
+                    {editTutorial ? 'Modifica Tutorial' : 'Nuovo Tutorial Low Academy'}
                   </h2>
                   <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 mt-1">Condividi la tua conoscenza tecnica</p>
                 </div>

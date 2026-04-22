@@ -73,7 +73,7 @@ const AcademyModal = ({ isOpen, onClose }: AcademyModalProps) => {
                       <GraduationCap size={24} />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-black italic uppercase tracking-tighter">Stance Academy</h2>
+                      <h2 className="text-2xl font-black italic uppercase tracking-tighter">Low Academy</h2>
                       <p className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Wiki Tecnica Low District</p>
                     </div>
                   </div>

@@ -48,7 +48,7 @@ const AcademyDetailModal = ({ isOpen, onClose, tutorial, canManage, onEdit, onDe
               <div className="flex justify-between items-start">
                 <div className="space-y-2">
                   <span className="bg-white text-black text-[8px] font-black uppercase px-2 py-1 italic rounded-lg shadow-lg">
-                    STANCE ACADEMY • {categoryLabel.toUpperCase()}
+                    LOW ACADEMY • {categoryLabel.toUpperCase()}
                   </span>
                   <h3 className="text-3xl md:text-4xl font-black italic uppercase tracking-tighter leading-tight">
                     {tutorial.title}
