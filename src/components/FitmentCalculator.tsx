@@ -227,7 +227,7 @@ const FitmentCalculator = () => {
         <div className="flex items-center gap-4 bg-red-500/10 border border-red-500/20 p-6 rounded-[2rem]">
           <AlertTriangle className="text-red-500 shrink-0" size={24} />
           <p className="text-[10px] font-black uppercase text-red-500 leading-relaxed italic">
-            Attenzione: La differenza di diametro supera il 3%. Questo potrebbe causare problemi ai sistemi ABS/ESP e rendere il veicolo non conforme alle normative stradali.
+            Attenzione: La differenza di diametro supera il 3%. Questo potrebbe causare problemi ai sistemi ABS/ESP.
           </p>
         </div>
       )}
