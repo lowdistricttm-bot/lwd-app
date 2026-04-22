@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useGarage, Vehicle } from '@/hooks/use-garage';
 import { useAdmin } from '@/hooks/use-admin';
 import { useLeaderboards } from '@/hooks/use-leaderboards';
+import { useWeather } from '@/hooks/use-weather';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -18,7 +19,7 @@ import RainCheck from './RainCheck';
 import { 
   Plus, Car, Trash2, Camera, Loader2, X, Edit3, Heart, 
   Gauge, Book, Sparkles, ChevronRight, Calendar, CreditCard,
-  Wrench, ArrowRightLeft, Smartphone, CloudRain
+  Wrench, ArrowRightLeft, Smartphone, CloudRain, Sun, Cloud
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -49,6 +50,8 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [userCity, setUserCity] = useState<string | undefined>(undefined);
+  
+  const { data: weather } = useWeather(userCity);
   
   const [formData, setFormData] = useState({ 
     brand: '', model: '', year: '', license_plate: '', 
@@ -140,6 +143,13 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
     return null;
   };
 
+  const WeatherIcon = () => {
+    if (!weather) return <CloudRain size={18} />;
+    if (weather.canWash) return <Sun size={18} className="text-yellow-400" />;
+    if (weather.currentCondition === 'Rainy') return <CloudRain size={18} className="text-blue-400" />;
+    return <Cloud size={18} className="text-zinc-400" />;
+  };
+
   if (isLoading) return <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div>;
 
   return (
@@ -169,9 +179,18 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
           {userCity && (
             <Button 
               onClick={() => setIsRainCheckOpen(true)}
-              className="w-full h-14 rounded-2xl bg-white text-black hover:bg-zinc-200 font-black uppercase italic text-[10px] tracking-widest shadow-xl flex items-center justify-center gap-3 border-none"
+              variant="outline"
+              className="w-full h-14 rounded-2xl border-white/10 bg-white/5 text-white hover:bg-white/10 font-black uppercase italic text-[10px] tracking-widest shadow-xl flex flex-col items-center justify-center gap-1"
             >
-              <CloudRain size={20} />
+              <motion.div
+                animate={{ 
+                  scale: [1, 1.1, 1],
+                  rotate: weather?.canWash ? [0, 10, -10, 0] : 0
+                }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <WeatherIcon />
+              </motion.div>
               <span>Rain-Check: Meteo Detailing</span>
             </Button>
           )}
