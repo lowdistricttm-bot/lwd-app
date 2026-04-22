@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { useLeaderboards } from '@/hooks/use-leaderboards';
+import { useGarage, Vehicle } from '@/hooks/use-garage';
 import LeaderboardCard from '@/components/LeaderboardCard';
+import VehicleDetailModal from '@/components/VehicleDetailModal';
 import { 
   Trophy, 
   Sparkles, 
@@ -16,11 +18,21 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from "@/integrations/supabase/client";
 
 const Leaderboards = () => {
   const navigate = useNavigate();
   const { topScored, mostLiked, isLoading } = useLeaderboards();
+  const { toggleLike } = useGarage();
   const [activeTab, setActiveTab] = useState<'score' | 'likes'>('score');
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setCurrentUserId(user?.id || null);
+    });
+  }, []);
 
   return (
     <div className="min-h-screen text-white flex flex-col bg-transparent">
@@ -96,7 +108,13 @@ const Leaderboards = () => {
                   className="space-y-3"
                 >
                   {topScored?.map((v, i) => (
-                    <LeaderboardCard key={v.id} vehicle={v} rank={i + 1} type="score" />
+                    <LeaderboardCard 
+                      key={v.id} 
+                      vehicle={v} 
+                      rank={i + 1} 
+                      type="score" 
+                      onSelect={(veh) => setSelectedVehicle(veh as Vehicle)}
+                    />
                   ))}
                   {topScored?.length === 0 && (
                     <div className="text-center py-20 opacity-20">
@@ -114,7 +132,13 @@ const Leaderboards = () => {
                   className="space-y-3"
                 >
                   {mostLiked?.map((v, i) => (
-                    <LeaderboardCard key={v.id} vehicle={v} rank={i + 1} type="likes" />
+                    <LeaderboardCard 
+                      key={v.id} 
+                      vehicle={v} 
+                      rank={i + 1} 
+                      type="likes" 
+                      onSelect={(veh) => setSelectedVehicle(veh as Vehicle)}
+                    />
                   ))}
                   {mostLiked?.length === 0 && (
                     <div className="text-center py-20 opacity-20">
@@ -128,6 +152,19 @@ const Leaderboards = () => {
           </div>
         )}
       </main>
+
+      <AnimatePresence>
+        {selectedVehicle && (
+          <VehicleDetailModal 
+            isOpen={!!selectedVehicle} 
+            onClose={() => setSelectedVehicle(null)} 
+            vehicle={selectedVehicle}
+            isOwnProfile={currentUserId === selectedVehicle.user_id}
+            onLike={(id) => toggleLike.mutate(id)}
+            currentUserId={currentUserId}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -4,16 +4,15 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, Heart, Sparkles, ChevronRight, User, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useNavigate } from 'react-router-dom';
 
 interface LeaderboardCardProps {
   vehicle: any;
   rank: number;
   type: 'score' | 'likes';
+  onSelect: (vehicle: any) => void;
 }
 
-const LeaderboardCard = ({ vehicle, rank, type }: LeaderboardCardProps) => {
-  const navigate = useNavigate();
+const LeaderboardCard = ({ vehicle, rank, type, onSelect }: LeaderboardCardProps) => {
   
   const getRankStyles = (r: number) => {
     switch(r) {
@@ -32,7 +31,7 @@ const LeaderboardCard = ({ vehicle, rank, type }: LeaderboardCardProps) => {
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: rank * 0.05 }}
-      onClick={() => navigate(`/profile/${vehicle.user_id}`)}
+      onClick={() => onSelect(vehicle)}
       className={cn(
         "relative flex items-center gap-4 p-4 rounded-[2rem] border transition-all duration-500 group cursor-pointer",
         styles.bg,
