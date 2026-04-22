@@ -29,11 +29,15 @@ const BottomNav = () => {
     }
   };
 
+  // Altezza fissa 56px ignorando la safe area
+  const navHeight = "56px";
+
   return (
     <div 
-      className="fixed bottom-0 left-0 right-0 z-[999] bg-black border-t border-white/10 select-none touch-none h-[68px]"
+      className="fixed bottom-0 left-0 right-0 z-[999] bg-black border-t border-white/10 select-none touch-none"
       data-no-swipe="true"
       style={{ 
+        height: navHeight,
         WebkitUserSelect: 'none',
         touchAction: 'none'
       }}
