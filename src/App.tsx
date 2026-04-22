@@ -44,7 +44,7 @@ const AppContent = () => {
   
   return (
     <>
-      {/* Header Fisso Globale */}
+      {/* Header Fisso Globale (gestisce da solo il suo nascondimento) */}
       <Navbar />
       
       <SwipeNavigation>
@@ -53,7 +53,7 @@ const AppContent = () => {
         <SpotifyPlayer />
         
         {/* Contenitore di scorrimento principale - Native Feel */}
-        <main className="app-content-area">
+        <main id="scroll-container" className="app-content-area">
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/bacheca" element={<Bacheca />} />

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Search, ShoppingBag, X, Send, Bell, ShieldAlert, Sparkles, Loader2 } from 'lucide-react';
 import Logo from './Logo';
 import { useCart } from '@/hooks/use-cart';
@@ -13,6 +13,7 @@ import { useRoleRequests } from '@/hooks/use-role-requests';
 import CartDrawer from './CartDrawer';
 import NotificationDrawer from './NotificationDrawer';
 import { Input } from './ui/input';
+import { cn } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,11 +26,15 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const Navbar = () => {
-  const [isSearchOpen, setIsSearchOpen] = React.useState(false);
-  const [isCartOpen, setIsCartOpen] = React.useState(false);
-  const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isRestrictedOpen, setIsRestrictedOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = React.useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Stati per la gestione dello scroll
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(0);
   
   const { items } = useCart();
   const { unreadCount: unreadMessages } = useMessages();
@@ -37,11 +42,46 @@ const Navbar = () => {
   const { role } = useAdmin();
   const { myRequest, sendRequest } = useRoleRequests();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const isSubscriber = role === 'subscriber';
 
-  // Blocco background per la ricerca
   useBodyLock(isSearchOpen);
+
+  // Mostra sempre la navbar al cambio di pagina
+  useEffect(() => {
+    setIsVisible(true);
+  }, [location.pathname]);
+
+  // Logica di hide/show durante lo scorrimento
+  useEffect(() => {
+    const container = document.getElementById('scroll-container');
+    if (!container) return;
+
+    const handleScroll = () => {
+      const currentScrollY = container.scrollTop;
+      
+      // Protezione per il rimbalzo iOS (rubber-banding) all'inizio pagina
+      if (currentScrollY <= 0) {
+        setIsVisible(true);
+        lastScrollY.current = currentScrollY;
+        return;
+      }
+
+      if (currentScrollY > lastScrollY.current && currentScrollY > 80) {
+        // Scroll verso il basso
+        setIsVisible(false);
+      } else if (currentScrollY < lastScrollY.current) {
+        // Scroll verso l'alto
+        setIsVisible(true);
+      }
+      
+      lastScrollY.current = currentScrollY;
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +113,10 @@ const Navbar = () => {
   return (
     <>
       <nav 
-        className="fixed top-0 left-0 right-0 z-50 bg-black/60 backdrop-blur-2xl border-b border-white/5 pt-[env(safe-area-inset-top)] touch-none select-none"
+        className={cn(
+          "fixed top-0 left-0 right-0 z-50 bg-black/60 backdrop-blur-2xl border-b border-white/5 pt-[env(safe-area-inset-top)] touch-none select-none transition-transform duration-300 ease-in-out",
+          isVisible ? "translate-y-0" : "-translate-y-full"
+        )}
         data-no-swipe="true"
       >
         <div className="h-16 px-6 flex items-center justify-between">

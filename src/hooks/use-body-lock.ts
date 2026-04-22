@@ -18,9 +18,10 @@ export const useBodyLock = (isOpen: boolean) => {
     // Incrementiamo il contatore dei blocchi attivi
     lockCount++;
 
-    // Se è il primo blocco, salviamo gli stili originali
+    // Se è il primo blocco, salviamo gli stili originali e la posizione del nuovo contenitore interno
     if (lockCount === 1) {
-      lastScrollY = window.scrollY;
+      const scrollContainer = document.getElementById('scroll-container');
+      lastScrollY = scrollContainer ? scrollContainer.scrollTop : window.scrollY;
       
       originalStyles = {
         overflow: document.body.style.overflow,
@@ -30,21 +31,27 @@ export const useBodyLock = (isOpen: boolean) => {
         height: document.body.style.height,
         paddingRight: document.body.style.paddingRight,
         touchAction: document.body.style.touchAction,
-        pointerEvents: document.body.style.pointerEvents
+        pointerEvents: document.body.style.pointerEvents,
+        containerOverflow: scrollContainer ? scrollContainer.style.overflow : ''
       };
 
       const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
 
-      // Applichiamo il blocco "congelando" la posizione attuale
+      // Applichiamo il blocco al body
       document.body.style.position = 'fixed';
       document.body.style.top = `-${lastScrollY}px`;
       document.body.style.width = '100%';
       document.body.style.height = '100%';
       document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none'; // Previene gesture di sistema interferenti
+      document.body.style.touchAction = 'none';
       
       if (scrollBarWidth > 0) {
         document.body.style.paddingRight = `${scrollBarWidth}px`;
+      }
+
+      // Blocchiamo anche il contenitore di scorrimento interno
+      if (scrollContainer) {
+        scrollContainer.style.overflow = 'hidden';
       }
     }
 
@@ -55,6 +62,7 @@ export const useBodyLock = (isOpen: boolean) => {
       // Ripristiniamo solo se non ci sono altri modal aperti
       if (lockCount <= 0) {
         lockCount = 0; // Sicurezza
+        const scrollContainer = document.getElementById('scroll-container');
         
         if (originalStyles) {
           document.body.style.position = originalStyles.position;
@@ -65,15 +73,24 @@ export const useBodyLock = (isOpen: boolean) => {
           document.body.style.paddingRight = originalStyles.paddingRight;
           document.body.style.touchAction = originalStyles.touchAction;
           document.body.style.pointerEvents = originalStyles.pointerEvents;
+          
+          if (scrollContainer) {
+            scrollContainer.style.overflow = originalStyles.containerOverflow;
+          }
         }
 
         // Forza il ripristino immediato della posizione di scroll
-        window.scrollTo(0, lastScrollY);
+        if (scrollContainer) {
+          scrollContainer.scrollTo(0, lastScrollY);
+        } else {
+          window.scrollTo(0, lastScrollY);
+        }
         
         // Pulizia per sicurezza nel prossimo frame
         requestAnimationFrame(() => {
           if (lockCount === 0) {
-            window.scrollTo(0, lastScrollY);
+            if (scrollContainer) scrollContainer.scrollTo(0, lastScrollY);
+            else window.scrollTo(0, lastScrollY);
           }
         });
       }
