@@ -330,9 +330,16 @@ const Profile = () => {
               <AnimatePresence mode="wait">
                 {activeTab === 'activity' && (
                   <motion.div key="activity" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="text-lg font-black italic uppercase">{isOwnProfile ? t.profile.myPosts : t.profile.posts}</h3>
-                      {isOwnProfile && <Button onClick={() => setIsPostModalOpen(true)} className="bg-white text-black hover:scale-105 rounded-full text-[9px] font-black uppercase italic tracking-widest h-9 px-5 shadow-lg shadow-white/20"><Plus size={12} className="mr-2" /> {t.feed.newPost}</Button>}
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-xl font-black italic uppercase tracking-tighter">{isOwnProfile ? t.profile.myPosts : t.profile.posts}</h3>
+                      {isOwnProfile && (
+                        <Button 
+                          onClick={() => setIsPostModalOpen(true)} 
+                          className="bg-white/10 text-white border border-white/10 rounded-full h-10 px-6 font-black uppercase italic text-[10px] shadow-xl hover:bg-white/20 transition-all flex items-center"
+                        >
+                          <Plus size={16} className="mr-2" /> {t.feed.newPost}
+                        </Button>
+                      )}
                     </div>
                     {loadingPosts && !userPosts.length ? <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-zinc-500" /></div> : userPosts.length > 0 ? <div className="grid grid-cols-3 gap-1 md:gap-4">{userPosts.map((post) => <ProfilePostGridItem key={post.id} post={post} />)}</div> : <div className="text-center py-20 opacity-20"><MessageSquare className="mx-auto text-zinc-800 mb-4" size={40} /><p className="text-zinc-500 text-[9px] font-bold uppercase tracking-widest">{isOwnProfile ? t.profile.noPosts : t.feed.noPosts}</p></div>}
                   </motion.div>

@@ -155,9 +155,9 @@ const ProfileInfoTab = ({ profile, isOwnProfile, onUpdate }: ProfileInfoTabProps
         {isOwnProfile && (
           <button 
             onClick={() => setIsEditing(true)}
-            className="bg-white/10 backdrop-blur-md border border-white/10 hover:bg-white hover:text-black rounded-full font-black uppercase italic text-[10px] tracking-widest h-10 px-6 transition-all flex items-center gap-2"
+            className="bg-white/10 text-white border border-white/10 rounded-full h-10 px-6 font-black uppercase italic text-[10px] shadow-xl hover:bg-white/20 transition-all flex items-center"
           >
-            <Edit3 size={14} /> Modifica
+            <Edit3 size={16} className="mr-2" /> Modifica
           </button>
         )}
       </div>

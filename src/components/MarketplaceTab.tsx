@@ -41,7 +41,7 @@ const MarketplaceTab = ({ userId, isOwnProfile }: { userId: string, isOwnProfile
         {isOwnProfile && (
           <Button 
             onClick={() => { setEditingItem(null); setIsCreateModalOpen(true); }}
-            className="bg-white text-black rounded-full h-10 px-6 font-black uppercase italic text-[10px] shadow-xl hover:scale-105 transition-all"
+            className="bg-white/10 text-white border border-white/10 rounded-full h-10 px-6 font-black uppercase italic text-[10px] shadow-xl hover:bg-white/20 transition-all"
           >
             <Plus size={16} className="mr-2" /> Nuovo Annuncio
           </Button>
