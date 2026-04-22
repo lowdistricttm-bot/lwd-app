@@ -27,7 +27,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const { isAdmin, isStaff, isSupport, canVote, checkingAdmin, role } = useAdmin();
+  const { isAdmin, isStaff, isSupport, canVote, checkingAdmin, role, allApplications } = useAdmin();
   const { allRequests, loadingAll, handleRequest } = useRoleRequests();
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [isNotifModalOpen, setIsNotifModalOpen] = useState(false);
@@ -53,6 +53,8 @@ const AdminDashboard = () => {
     );
   }
 
+  const pendingAppsCount = allApplications?.filter((a: any) => a.status === 'pending').length || 0;
+
   const menuItems = [
     {
       title: "Gestione Selezioni",
@@ -61,7 +63,8 @@ const AdminDashboard = () => {
         : "Visualizza e vota le candidature agli eventi",
       icon: ClipboardCheck,
       action: () => navigate('/admin/applications'),
-      show: true
+      show: true,
+      badge: pendingAppsCount
     },
     {
       title: "Richieste Upgrade",
