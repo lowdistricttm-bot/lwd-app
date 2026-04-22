@@ -18,7 +18,7 @@ const CamberHelper = () => {
   const currentAngle = useRef(0);
   const animationRef = useRef<number>(0);
 
-  // Algoritmo di smoothing estremo per rendere la lettura ultra-precisa e stabile senza tremolii
+  // Algoritmo di smoothing estremo per rendere la lettura ultra-precisa e stabile
   const updateAngle = () => {
     currentAngle.current += (targetAngle.current - currentAngle.current) * 0.05;
     setRawAngle(currentAngle.current);
@@ -74,9 +74,9 @@ const CamberHelper = () => {
     };
   }, []);
 
-  // Calcolo dell'angolo assoluto: nello stance ci interessa solo l'entità dell'inclinazione.
-  // Usiamo Math.abs() per avere sempre un valore positivo, indipendentemente se misuriamo la ruota DX o SX.
-  // Limitiamo a un massimo di 20 gradi.
+  // Calcolo dell'angolo assoluto:
+  // Assumiamo che la ruota sia sempre in "Camber Negativo" per le auto stance.
+  // Limitiamo a un massimo di 20 gradi assoluti.
   let displayAngle = Math.abs(rawAngle - offset);
   displayAngle = Math.min(20, displayAngle);
   
@@ -152,14 +152,16 @@ const CamberHelper = () => {
               
               <div className="text-center mb-8 relative z-10">
                 <div className="flex items-baseline justify-center gap-1">
+                  {/* Prefisso negativo forzato per lo stile stance */}
+                  <span className="text-4xl font-black text-red-500">{displayAngle > 0.1 ? '-' : ''}</span>
                   <span className="text-7xl font-black italic tracking-tighter tabular-nums">{formattedAngle}</span>
                   <span className="text-4xl font-black">°</span>
                 </div>
                 <p className={cn(
                   "text-[10px] font-black uppercase tracking-widest mt-2",
-                  displayAngle > 0.5 ? "text-white" : "text-zinc-500"
+                  displayAngle > 0.1 ? "text-red-500" : "text-zinc-500"
                 )}>
-                  {displayAngle > 0.5 ? 'Gradi di Camber' : 'Ruota Dritta (0°)'}
+                  {displayAngle > 0.1 ? 'Camber Negativo (Stance)' : 'Ruota Dritta (0°)'}
                 </p>
               </div>
 
@@ -172,8 +174,8 @@ const CamberHelper = () => {
                 </div>
 
                 {/* 
-                  Visualizzazione sempre coerente: incliniamo il top verso destra (displayAngle) 
-                  per simulare l'effetto camber stance visivo (campanatura negativa), indipendentemente dalla ruota misurata.
+                  Visualizzazione: Ruotiamo la SVG usando "displayAngle" positivo 
+                  in modo che la parte superiore si inclini verso l'interno (destra) simulando il camber negativo.
                 */}
                 <svg viewBox="-100 -100 200 200" className="w-full h-full max-w-[250px] relative z-10 overflow-visible">
                   <g style={{ transform: `rotate(${displayAngle}deg)` }}>
@@ -224,8 +226,8 @@ const CamberHelper = () => {
               <ol className="space-y-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500 leading-relaxed">
                 <li className="flex gap-3"><span className="text-white">1.</span> Assicurati che l'auto sia in piano perfetto.</li>
                 <li className="flex gap-3"><span className="text-white">2.</span> Se hai una cover irregolare sul telefono, rimuovila per una misurazione millimetrica.</li>
-                <li className="flex gap-3"><span className="text-white">3.</span> Appoggia la faccia posteriore o lo schermo del telefono in verticale contro i bordi estremi del cerchio (evitando le razze concave).</li>
-                <li className="flex gap-3"><span className="text-white">4.</span> Usa il tasto "Tara a Zero" appoggiando il telefono su una superficie perfettamente dritta per calibrarlo se noti discrepanze nel sensore nativo.</li>
+                <li className="flex gap-3"><span className="text-white">3.</span> Appoggia il telefono in verticale contro i bordi estremi del cerchio (evitando le razze concave).</li>
+                <li className="flex gap-3"><span className="text-white">4.</span> Non importa su quale lato dell'auto misuri, l'app calcolerà automaticamente i gradi di camber.</li>
               </ol>
             </div>
           </motion.div>
