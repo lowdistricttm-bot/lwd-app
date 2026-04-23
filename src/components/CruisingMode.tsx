@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, X, Users, Radio, AlertTriangle, Info, Volume2, ShieldAlert, Zap, User } from 'lucide-react';
+import { Mic, MicOff, Power, Users, Radio, AlertTriangle, Info, Volume2, ShieldAlert, Zap, User } from 'lucide-react';
 import { useCruising } from '@/hooks/use-cruising';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { useTranslation } from '@/hooks/use-translation';
@@ -134,8 +134,13 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
                 <p className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Channel: {carovanaTitle}</p>
               </div>
             </div>
-            <button onClick={handleClose} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors">
-              <X size={24} />
+            
+            {/* Pulsante Power stile iOS */}
+            <button 
+              onClick={handleClose} 
+              className="w-10 h-10 bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-red-600/20 transition-all hover:bg-red-500 active:scale-95"
+            >
+              <Power size={20} strokeWidth={2.5} />
             </button>
           </div>
 
