@@ -125,12 +125,12 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
                       getAlertColor(lastAlert.type)
                     )}
                   >
-                    <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center shrink-0 animate-bounce">
+                    <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center shrink-0 animate-bounce">
                       {getAlertIcon(lastAlert.type)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[10px] font-black uppercase tracking-widest text-white/70 mb-1">Alert da @{lastAlert.sender}</p>
-                      <h4 className="text-4xl font-black uppercase italic text-white tracking-[0.1em] leading-tight truncate">
+                      <h4 className="text-3xl font-black uppercase italic text-white tracking-[0.1em] leading-none whitespace-nowrap">
                         {lastAlert.message}
                       </h4>
                     </div>
