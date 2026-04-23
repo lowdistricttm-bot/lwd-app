@@ -1,8 +1,8 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MapPin, Calendar, Clock, User, Info, Navigation, Share2, Users, CheckCircle2, Loader2, Lock } from 'lucide-react';
+import { X, MapPin, Calendar, Clock, User, Info, Navigation, Share2, Users, CheckCircle2, Loader2, Lock, Radio } from 'lucide-react';
 import { Meet, useMeets } from '@/hooks/use-meets';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { Button } from './ui/button';
@@ -11,6 +11,7 @@ import { it } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { showSuccess } from '@/utils/toast';
+import CruisingMode from './CruisingMode';
 
 interface MeetDetailModalProps {
   isOpen: boolean;
@@ -21,6 +22,8 @@ interface MeetDetailModalProps {
 const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
   const navigate = useNavigate();
   const { toggleParticipation } = useMeets();
+  const [isRadioOpen, setIsRadioOpen] = useState(false);
+  
   useBodyLock(isOpen);
 
   if (!meet) return null;
@@ -195,12 +198,23 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
               </div>
 
               <div className="pt-6 flex flex-col gap-4">
+                {/* Pulsante Radio CB - Visibile solo se l'utente partecipa */}
+                {meet.is_participating && (
+                  <Button 
+                    onClick={() => setIsRadioOpen(true)}
+                    className="w-full h-16 rounded-full font-black uppercase italic text-[10px] tracking-widest bg-orange-600 text-white border-orange-500 hover:bg-orange-500 hover:scale-105 transition-all shadow-xl flex items-center justify-center gap-3 mb-2"
+                  >
+                    <Radio size={18} className="animate-pulse" />
+                    ATTIVA RADIO CB (CONVOGLIO)
+                  </Button>
+                )}
+
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button 
                     onClick={() => toggleParticipation.mutate(meet.id)}
                     disabled={toggleParticipation.isPending}
                     className={cn(
-                      "flex-1 h-16 rounded-full font-black uppercase italic text-[10px] tracking-widest transition-all shadow-xl flex items-center justify-center gap-3 border",
+                      "flex-1 h-16 rounded-full font-black uppercase italic text-[10px] tracking-widest transition-all duration-500 shadow-xl flex items-center justify-center gap-3 border",
                       meet.is_participating 
                         ? "bg-zinc-800 text-white border-white/10 hover:bg-red-600 hover:border-red-600" 
                         : "bg-white text-black border-white hover:bg-zinc-200 hover:scale-105"
@@ -233,6 +247,14 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
                   <Share2 size={16} /> CONDIVIDI INCONTRO
                 </Button>
               </div>
+
+              {/* Componente Cruising Mode */}
+              <CruisingMode 
+                isOpen={isRadioOpen} 
+                onClose={() => setIsRadioOpen(false)} 
+                carovanaId={meet.id} 
+                carovanaTitle={meet.title} 
+              />
             </div>
           </motion.div>
         </div>
