@@ -108,6 +108,23 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
                 </div>
               )}
 
+              {/* Cruising Mode Button - Spostato sopra a tutte le card */}
+              {meet.is_participating && (
+                <motion.div 
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="pt-2"
+                >
+                  <Button 
+                    onClick={() => setIsRadioOpen(true)}
+                    className="w-full h-16 rounded-full font-black uppercase italic text-[10px] tracking-widest bg-zinc-900 text-white border border-white/10 hover:bg-white hover:text-black transition-all duration-500 shadow-xl flex items-center justify-center gap-3"
+                  >
+                    <Radio size={20} className="animate-pulse" />
+                    ATTIVA CRUISING MODE (RADIO CB)
+                  </Button>
+                </motion.div>
+              )}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="bg-white/5 border border-white/10 p-5 rounded-[2rem]">
                   <p className="text-[8px] font-black uppercase text-zinc-500 tracking-[0.3em] italic mb-2">Data e Ora</p>
@@ -198,17 +215,6 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
               </div>
 
               <div className="pt-6 flex flex-col gap-4">
-                {/* Pulsante Radio CB - Visibile solo se l'utente partecipa */}
-                {meet.is_participating && (
-                  <Button 
-                    onClick={() => setIsRadioOpen(true)}
-                    className="w-full h-16 rounded-full font-black uppercase italic text-[10px] tracking-widest bg-orange-600 text-white border-orange-500 hover:bg-orange-500 hover:scale-105 transition-all shadow-xl flex items-center justify-center gap-3 mb-2"
-                  >
-                    <Radio size={18} className="animate-pulse" />
-                    ATTIVA RADIO CB (CONVOGLIO)
-                  </Button>
-                )}
-
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button 
                     onClick={() => toggleParticipation.mutate(meet.id)}
