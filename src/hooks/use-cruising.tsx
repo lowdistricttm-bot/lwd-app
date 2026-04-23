@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { playRogerBeep, playAlertSound } from '@/utils/sound';
+import { playRogerBeep, playAlertSound, speakAlert } from '@/utils/sound';
 
 interface CruisingUnit {
   id: string;
@@ -11,11 +11,18 @@ interface CruisingUnit {
   carName?: string;
 }
 
+export interface RoadAlert {
+  type: string;
+  message: string;
+  sender: string;
+}
+
 interface CruisingContextType {
   isActive: boolean;
   isSpeaking: boolean;
   units: CruisingUnit[];
   activeCarovanaId: string | null;
+  lastAlert: RoadAlert | null;
   joinChannel: (carovanaId: string, username: string, carName?: string) => Promise<void>;
   leaveChannel: () => void;
   toggleMic: (speaking: boolean) => void;
@@ -30,6 +37,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const [units, setUnits] = useState<CruisingUnit[]>([]);
   const [activeCarovanaId, setActiveCarovanaId] = useState<string | null>(null);
   const [currentUsername, setCurrentUsername] = useState<string>('');
+  const [lastAlert, setLastAlert] = useState<RoadAlert | null>(null);
 
   const peerRef = useRef<any>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -49,7 +57,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const joinChannel = useCallback(async (carovanaId: string, username: string, carName?: string) => {
     if (isActive) leaveChannel();
 
-    // Recuperiamo la classe Peer caricata globalmente dal CDN
     const PeerClass = (window as any).Peer;
     if (!PeerClass) {
       console.error("[Cruising] PeerJS non caricato correttamente dal CDN.");
@@ -86,6 +93,17 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
           })
           .on('broadcast', { event: 'speaking_state' }, ({ payload }) => {
             setUnits(prev => prev.map(u => u.username === payload.username ? { ...u, isSpeaking: payload.isSpeaking } : u));
+          })
+          .on('broadcast', { event: 'road_alert' }, ({ payload }) => {
+            // Se l'alert arriva da qualcun altro, riproducilo
+            if (payload.sender !== username) {
+              playAlertSound();
+              // Supporto vocale per non dover guardare lo schermo
+              speakAlert(`Attenzione. ${payload.message}. Segnalato da ${payload.sender}`);
+              
+              setLastAlert({ type: payload.type, message: payload.message, sender: payload.sender });
+              setTimeout(() => setLastAlert(null), 8000);
+            }
           })
           .subscribe((status) => {
             if (status === 'SUBSCRIBED') {
@@ -130,7 +148,9 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   }, [currentUsername]);
 
   const sendAlert = useCallback((type: string, message: string) => {
+    // Chi invia sente comunque l'audio di feedback
     playAlertSound();
+    
     channelRef.current?.send({
       type: 'broadcast',
       event: 'road_alert',
@@ -140,7 +160,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
   return (
     <CruisingContext.Provider value={{ 
-      isActive, isSpeaking, units, activeCarovanaId,
+      isActive, isSpeaking, units, activeCarovanaId, lastAlert,
       joinChannel, leaveChannel, toggleMic, sendAlert 
     }}>
       {children}

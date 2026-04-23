@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, X, Users, Radio, AlertTriangle, Info, Truck, Volume2, ShieldAlert } from 'lucide-react';
+import { Mic, MicOff, X, Users, Radio, AlertTriangle, Info, Truck, Volume2, ShieldAlert, Zap } from 'lucide-react';
 import { useCruising } from '@/hooks/use-cruising';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { cn } from '@/lib/utils';
@@ -18,10 +18,9 @@ interface CruisingModeProps {
 const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingModeProps) => {
   const [user, setUser] = useState<any>(null);
   const [carName, setCarName] = useState<string>('');
-  const [lastAlert, setLastAlert] = useState<{ message: string, sender: string } | null>(null);
 
   const { 
-    isActive, isSpeaking, units, activeCarovanaId,
+    isActive, isSpeaking, units, lastAlert,
     joinChannel, toggleMic, sendAlert 
   } = useCruising();
 
@@ -45,21 +44,29 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
     }
   }, [isOpen, isActive, user, carovanaId, carName, joinChannel]);
 
-  useEffect(() => {
-    const channel = supabase.channel(`cruising-alerts-${carovanaId}`);
-    channel.on('broadcast', { event: 'road_alert' }, ({ payload }) => {
-      setLastAlert({ message: payload.message, sender: payload.sender });
-      setTimeout(() => setLastAlert(null), 5000);
-    }).subscribe();
-    
-    return () => { supabase.removeChannel(channel); };
-  }, [carovanaId]);
-
   const alerts = [
     { id: 'bump', label: 'DOSSO!', icon: ShieldAlert, color: 'bg-orange-600', msg: 'Attenzione: Dosso alto rilevato!' },
     { id: 'police', label: 'PATTUGLIA', icon: AlertTriangle, color: 'bg-blue-600', msg: 'Segnalata pattuglia sul percorso.' },
     { id: 'stop', label: 'SOSTA', icon: Info, color: 'bg-zinc-700', msg: 'Richiesta sosta tecnica al prossimo autogrill.' }
   ];
+
+  const getAlertIcon = (type: string) => {
+    switch(type) {
+      case 'bump': return <ShieldAlert size={32} />;
+      case 'police': return <AlertTriangle size={32} />;
+      case 'stop': return <Info size={32} />;
+      default: return <Zap size={32} />;
+    }
+  };
+
+  const getAlertColor = (type: string) => {
+    switch(type) {
+      case 'bump': return "bg-orange-600 shadow-orange-500/40";
+      case 'police': return "bg-blue-600 shadow-blue-500/40";
+      case 'stop': return "bg-zinc-700 shadow-white/10";
+      default: return "bg-red-600";
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -70,8 +77,23 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[1000] bg-black flex flex-col touch-none select-none"
         >
+          {/* Background Ambient Effect per gli Alert */}
+          <AnimatePresence>
+            {lastAlert && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className={cn(
+                  "absolute inset-0 z-0 opacity-20 blur-[100px] transition-all duration-500",
+                  getAlertColor(lastAlert.type)
+                )}
+              />
+            )}
+          </AnimatePresence>
+
           {/* Header */}
-          <div className="p-6 flex items-center justify-between border-b border-white/10 bg-zinc-900/50 backdrop-blur-xl pt-[calc(1.5rem+env(safe-area-inset-top))]">
+          <div className="relative z-10 p-6 flex items-center justify-between border-b border-white/10 bg-zinc-900/50 backdrop-blur-xl pt-[calc(1.5rem+env(safe-area-inset-top))]">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white text-black rounded-2xl flex items-center justify-center shadow-xl animate-pulse">
                 <Radio size={20} />
@@ -87,23 +109,45 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
           </div>
 
           {/* Main Display */}
-          <div className="flex-1 p-6 flex flex-col gap-8 overflow-y-auto no-scrollbar">
-            <AnimatePresence>
-              {lastAlert && (
-                <motion.div 
-                  initial={{ y: -50, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: -50, opacity: 0 }}
-                  className="bg-orange-600 text-white p-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-white/20"
-                >
-                  <ShieldAlert size={24} className="shrink-0 animate-bounce" />
-                  <div>
-                    <p className="text-[8px] font-black uppercase tracking-widest opacity-80">Segnalazione da @{lastAlert.sender}</p>
-                    <p className="text-xs font-black uppercase italic">{lastAlert.message}</p>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+          <div className="relative z-10 flex-1 p-6 flex flex-col gap-8 overflow-y-auto no-scrollbar">
+            
+            {/* Visual Alert Area */}
+            <div className="min-h-[120px] flex flex-col justify-center">
+              <AnimatePresence mode="wait">
+                {lastAlert ? (
+                  <motion.div 
+                    key="active-alert"
+                    initial={{ scale: 0.8, opacity: 0, y: 20 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 1.1, opacity: 0, y: -20 }}
+                    className={cn(
+                      "w-full p-6 rounded-[2.5rem] shadow-2xl flex items-center gap-6 border-2 border-white/20",
+                      getAlertColor(lastAlert.type)
+                    )}
+                  >
+                    <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center shrink-0 animate-bounce">
+                      {getAlertIcon(lastAlert.type)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-white/70 mb-1">Alert da @{lastAlert.sender}</p>
+                      <h4 className="text-2xl font-black uppercase italic text-white tracking-tighter leading-tight truncate">
+                        {lastAlert.message}
+                      </h4>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div 
+                    key="idle-state"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex flex-col items-center justify-center text-center opacity-30 py-8"
+                  >
+                    <Radio size={48} className="text-zinc-600 mb-4" />
+                    <p className="text-[9px] font-black uppercase tracking-[0.4em]">In attesa di segnalazioni...</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             <div className="space-y-4">
               <div className="flex items-center justify-between px-2">
@@ -178,7 +222,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
           </div>
 
           {/* PTT Button Area */}
-          <div className="p-10 pb-[calc(2.5rem+env(safe-area-inset-bottom))] bg-zinc-900/80 backdrop-blur-2xl border-t border-white/10 flex flex-col items-center gap-6">
+          <div className="relative z-10 p-10 pb-[calc(2.5rem+env(safe-area-inset-bottom))] bg-zinc-900/80 backdrop-blur-2xl border-t border-white/10 flex flex-col items-center gap-6">
             <div className="flex flex-col items-center gap-2">
               <div className={cn(
                 "px-4 py-1 rounded-full text-[8px] font-black uppercase tracking-[0.3em] italic transition-all",

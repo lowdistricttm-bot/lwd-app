@@ -37,3 +37,21 @@ export const playAlertSound = async () => {
   audio.volume = 0.6;
   audio.play().catch(() => {});
 };
+
+/**
+ * Legge un testo ad alta voce usando la sintesi vocale del browser.
+ */
+export const speakAlert = (text: string) => {
+  if (!('speechSynthesis' in window)) return;
+  
+  // Interrompi eventuali messaggi in corso
+  window.speechSynthesis.cancel();
+  
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'it-IT';
+  utterance.pitch = 1.1;
+  utterance.rate = 1.0;
+  utterance.volume = 1.0;
+  
+  window.speechSynthesis.speak(utterance);
+};
