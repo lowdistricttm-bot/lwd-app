@@ -47,6 +47,7 @@ const SettingsTab = () => {
   const [isFAQOpen, setIsFAQOpen] = useState(false);
   const [isAcademyOpen, setIsAcademyOpen] = useState(false);
 
+  // Il banner deve essere visibile solo per il ruolo base 'subscriber'
   const isSubscriber = role === 'subscriber';
 
   useEffect(() => {
@@ -294,7 +295,7 @@ const SettingsTab = () => {
           </div>
         ))}
 
-        {/* Sezione Upgrade per Iscritti */}
+        {/* Sezione Upgrade per Iscritti - Appare solo se il ruolo è 'subscriber' */}
         {isSubscriber && (
           <div className="space-y-3">
             <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.3em] italic ml-4">

@@ -106,8 +106,8 @@ const Profile = () => {
     }
     
     if (!activeTab) {
-      const role = profileData?.role || 'subscriber';
-      if (role === 'subscriber') {
+      const currentRole = profileData?.role || 'subscriber';
+      if (currentRole === 'subscriber') {
         setActiveTab(isOwnProfile ? 'garage' : 'profile');
       } else {
         setActiveTab('activity');
@@ -202,11 +202,13 @@ const Profile = () => {
   const userRole = profile?.role || 'subscriber';
   const isTargetSubscriber = userRole === 'subscriber';
 
+  // Determiniamo se mostrare il banner pubblicitario per il proprio profilo
+  const showUpgradeBanner = isOwnProfile && role === 'subscriber';
+
   const tabs = [];
   if (!isTargetSubscriber) tabs.push({ id: 'activity', label: t.profile.posts, icon: MessageSquare });
   if (isOwnProfile || !isTargetSubscriber) tabs.push({ id: 'garage', label: t.nav.garage, icon: Car });
   
-  // Il Marketplace è ora visibile in tutti i profili
   tabs.push({ id: 'marketplace', label: 'Market', icon: Tag });
   
   if (isOwnProfile) {
@@ -279,7 +281,8 @@ const Profile = () => {
                 <div className="flex flex-col items-center"><span className="text-xl font-black italic tracking-tighter leading-none mb-1">{userPosts.length}</span><span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">{t.profile.posts}</span></div>
               </div>
 
-              {isOwnProfile && userRole === 'subscriber' && (
+              {/* Banner Pubblicitario Upgrade - Visibile solo se l'utente è attualmente 'subscriber' */}
+              {showUpgradeBanner && (
                 <div className="w-full max-w-md mb-8">
                   {myRequest && myRequest.status === 'pending' ? (
                     <div className="bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center justify-between">
