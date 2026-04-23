@@ -127,7 +127,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
               </div>
             </div>
             
-            {/* Pulsante Power - Solo bordi rossi e icona */}
+            {/* Pulsante Power con contorno rosso fine */}
             <button 
               onClick={handleClose} 
               className="w-10 h-10 border border-red-500 text-red-500 bg-transparent rounded-full flex items-center justify-center transition-all hover:bg-red-500/10 active:scale-95"
@@ -245,42 +245,51 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
             </div>
           </div>
 
-          {/* PTT Button Area (con controlli laterali) */}
-          <div className="relative z-10 pt-6 pb-[calc(2.5rem+env(safe-area-inset-bottom))] bg-zinc-900/80 backdrop-blur-2xl border-t border-white/10 flex flex-col items-center gap-6">
-            <div className={cn(
-              "px-4 py-1 rounded-full text-[8px] font-black uppercase tracking-[0.3em] italic transition-all",
-              isSpeaking ? "bg-orange-600 text-black animate-pulse" : "bg-zinc-800 text-zinc-500"
-            )}>
-              {isSpeaking ? 'ON AIR' : 'STANDBY'}
+          {/* PTT Button Area con Alert Laterali */}
+          <div className="relative z-10 pt-6 pb-[calc(2.5rem+env(safe-area-inset-bottom))] bg-zinc-900/80 backdrop-blur-2xl border-t border-white/10 flex flex-col items-center justify-center min-h-[220px]">
+            
+            {/* Segnalazioni Rapide - Lato Sinistro */}
+            <div className="absolute left-6 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-20">
+              <button
+                onClick={() => sendAlert('bump', 'ATTENZIONE DOSSO')}
+                className="flex flex-col items-center gap-1 group"
+              >
+                <div className="w-10 h-10 rounded-full border border-orange-500/30 bg-orange-500/10 flex items-center justify-center group-active:scale-95 transition-all">
+                  <ShieldAlert size={16} className="text-orange-500" />
+                </div>
+                <span className="text-[7px] font-black uppercase tracking-widest text-zinc-400">Dosso</span>
+              </button>
+
+              <button
+                onClick={() => sendAlert('police', 'ATTENZIONE PATTUGLIA')}
+                className="flex flex-col items-center gap-1 group"
+              >
+                <div className="w-10 h-10 rounded-full border border-blue-500/30 bg-blue-500/10 flex items-center justify-center group-active:scale-95 transition-all">
+                  <AlertTriangle size={16} className="text-blue-500" />
+                </div>
+                <span className="text-[7px] font-black uppercase tracking-widest text-zinc-400">Pattuglia</span>
+              </button>
+
+              <button
+                onClick={() => sendAlert('stop', 'RICHIESTA SOSTA')}
+                className="flex flex-col items-center gap-1 group"
+              >
+                <div className="w-10 h-10 rounded-full border border-zinc-500/30 bg-zinc-500/10 flex items-center justify-center group-active:scale-95 transition-all">
+                  <Info size={16} className="text-zinc-400" />
+                </div>
+                <span className="text-[7px] font-black uppercase tracking-widest text-zinc-400">Sosta</span>
+              </button>
             </div>
 
-            {/* Layout PTT e Segnalazioni */}
-            <div className="w-full flex items-center justify-between px-6 max-w-[400px] mx-auto">
-              
-              {/* Sinistra: Dosso e Pattuglia */}
-              <div className="flex flex-col justify-between h-32 gap-3">
-                <button
-                  onClick={() => sendAlert('bump', 'ATTENZIONE DOSSO')}
-                  className="flex flex-col items-center gap-1.5 group"
-                >
-                  <div className="w-12 h-12 rounded-full border border-orange-500/30 bg-orange-500/10 flex items-center justify-center group-active:scale-95 transition-all">
-                    <ShieldAlert size={20} className="text-orange-500" />
-                  </div>
-                  <span className="text-[8px] font-black uppercase tracking-widest text-zinc-400">Dosso</span>
-                </button>
-
-                <button
-                  onClick={() => sendAlert('police', 'ATTENZIONE PATTUGLIA')}
-                  className="flex flex-col items-center gap-1.5 group"
-                >
-                  <div className="w-12 h-12 rounded-full border border-blue-500/30 bg-blue-500/10 flex items-center justify-center group-active:scale-95 transition-all">
-                    <AlertTriangle size={20} className="text-blue-500" />
-                  </div>
-                  <span className="text-[8px] font-black uppercase tracking-widest text-zinc-400">Pattuglia</span>
-                </button>
+            {/* Centro: PTT */}
+            <div className="flex flex-col items-center gap-6">
+              <div className={cn(
+                "px-4 py-1 rounded-full text-[8px] font-black uppercase tracking-[0.3em] italic transition-all",
+                isSpeaking ? "bg-orange-600 text-black animate-pulse" : "bg-zinc-800 text-zinc-500"
+              )}>
+                {isSpeaking ? 'ON AIR' : 'STANDBY'}
               </div>
 
-              {/* Centro: PTT */}
               <motion.button
                 onMouseDown={() => toggleMic(true)}
                 onMouseUp={() => toggleMic(false)}
@@ -298,24 +307,11 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
                 <span className="text-[10px] font-black uppercase tracking-widest">PTT</span>
               </motion.button>
 
-              {/* Destra: Sosta */}
-              <div className="flex flex-col justify-center h-32">
-                <button
-                  onClick={() => sendAlert('stop', 'RICHIESTA SOSTA')}
-                  className="flex flex-col items-center gap-1.5 group"
-                >
-                  <div className="w-12 h-12 rounded-full border border-zinc-500/30 bg-zinc-500/10 flex items-center justify-center group-active:scale-95 transition-all">
-                    <Info size={20} className="text-zinc-400" />
-                  </div>
-                  <span className="text-[8px] font-black uppercase tracking-widest text-zinc-400">Sosta</span>
-                </button>
-              </div>
-
+              <p className="text-[8px] font-bold uppercase text-zinc-600 tracking-widest text-center max-w-[200px]">
+                Tieni premuto per parlare. Rilascia per chiudere.
+              </p>
             </div>
-
-            <p className="text-[8px] font-bold uppercase text-zinc-600 tracking-widest text-center max-w-[220px]">
-              Tieni premuto per parlare con il convoglio. Rilascia per chiudere la comunicazione.
-            </p>
+            
           </div>
         </motion.div>
       )}
