@@ -47,8 +47,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const audioElementsRef = useRef<Map<string, HTMLAudioElement>>(new Map());
 
   const playRemoteStream = useCallback((presenceId: string, remoteStream: MediaStream) => {
-    console.log(`[Cruising] Ricevuto stream da: ${presenceId}`);
-    
+    // Rimuoviamo eventuali vecchi elementi audio per questo peer
     if (audioElementsRef.current.has(presenceId)) {
       const oldAudio = audioElementsRef.current.get(presenceId);
       oldAudio?.pause();
@@ -58,14 +57,10 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     const audio = new Audio();
     audio.srcObject = remoteStream;
     audio.autoplay = true;
-    
-    // Forza la riproduzione
-    const playPromise = audio.play();
-    if (playPromise !== undefined) {
-      playPromise.catch(err => {
-        console.warn(`[Cruising] Autoplay bloccato per ${presenceId}, riprovo al prossimo tocco.`, err);
-      });
-    }
+    // Importante: su mobile l'audio deve essere "giocato" subito
+    audio.play().catch(err => {
+      console.warn(`[Cruising] Autoplay blocked for peer ${presenceId}:`, err);
+    });
     
     audioElementsRef.current.set(presenceId, audio);
   }, []);
@@ -75,6 +70,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     if (streamRef.current) streamRef.current.getTracks().forEach(track => track.stop());
     if (channelRef.current) supabase.removeChannel(channelRef.current);
     
+    // Pulisce tutti gli elementi audio
     audioElementsRef.current.forEach(audio => {
       audio.pause();
       audio.srcObject = null;
@@ -88,6 +84,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   }, []);
 
   const joinChannel = useCallback(async (carovanaId: string, username: string, avatarUrl: string, role: string, carName?: string) => {
+    // Sblocca l'audio prima di iniziare
     await unlockAudio();
 
     if (isActive) leaveChannel();
@@ -107,20 +104,9 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       stream.getAudioTracks().forEach(track => track.enabled = false);
 
       const peerId = `lwd-${carovanaId}-${username.replace(/\s+/g, '-')}-${Math.random().toString(36).substring(2, 6)}`;
-      
-      // Configurazione con STUN Servers per superare i firewall mobili
-      const peer = new PeerClass(peerId, {
-        config: {
-          iceServers: [
-            { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' },
-            { urls: 'stun:stun2.l.google.com:19302' }
-          ]
-        }
-      });
+      const peer = new PeerClass(peerId);
 
       peer.on('open', (id: string) => {
-        console.log(`[Cruising] Peer aperto con ID: ${id}`);
         setIsActive(true);
         setActiveCarovanaId(carovanaId);
         setCurrentUsername(username);
@@ -150,7 +136,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
                   isSpeaking: false
                 });
 
-                // Se non siamo già connessi, chiamiamo l'unità
+                // Se non siamo già connessi a questo peer, chiamiamolo
                 if (peerRef.current && !peerRef.current.connections[presenceId]) {
                   const call = peerRef.current.call(presenceId, streamRef.current!);
                   call.on('stream', (remoteStream: MediaStream) => {
@@ -188,19 +174,10 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       });
 
       peer.on('call', (call: any) => {
-        console.log(`[Cruising] Ricezione chiamata da: ${call.peer}`);
         call.answer(streamRef.current!);
         call.on('stream', (remoteStream: MediaStream) => {
           playRemoteStream(call.peer, remoteStream);
         });
-      });
-
-      peer.on('error', (err: any) => {
-        console.error('[Cruising] PeerJS Error:', err.type);
-        if (err.type === 'network' || err.type === 'disconnected') {
-          // Tentativo di riconnessione silenzioso
-          setTimeout(() => joinChannel(carovanaId, username, avatarUrl, role, carName), 3000);
-        }
       });
 
       peerRef.current = peer;
@@ -211,10 +188,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
   const toggleMic = useCallback((speaking: boolean) => {
     if (!streamRef.current) return;
-    
-    // Sblocca l'audio ad ogni pressione del tasto
-    if (speaking) unlockAudio();
-
     streamRef.current.getAudioTracks().forEach(track => track.enabled = speaking);
     setIsSpeaking(speaking);
 

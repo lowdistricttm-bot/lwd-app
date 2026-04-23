@@ -47,27 +47,18 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
 
   useEffect(() => {
     if (isOpen && !isActive && profile) {
-      joinChannel(
-        carovanaId, 
-        profile.username || 'Unit', 
-        profile.avatar_url || '', 
-        profile.role || 'member',
-        carName
-      );
+      // Lo sblocco audio avviene già dentro joinChannel, ma lo chiamiamo anche qui per sicurezza
+      unlockAudio().then(() => {
+        joinChannel(
+          carovanaId, 
+          profile.username || 'Unit', 
+          profile.avatar_url || '', 
+          profile.role || 'member',
+          carName
+        );
+      });
     }
   }, [isOpen, isActive, profile, carovanaId, carName, joinChannel]);
-
-  const handlePTTStart = async (e: React.MouseEvent | React.TouchEvent) => {
-    if (e.cancelable) e.preventDefault();
-    // Sblocca l'audio ad ogni interazione
-    await unlockAudio();
-    toggleMic(true);
-  };
-
-  const handlePTTEnd = (e: React.MouseEvent | React.TouchEvent) => {
-    if (e.cancelable) e.preventDefault();
-    toggleMic(false);
-  };
 
   const alerts = [
     { id: 'bump', label: 'DOSSO', icon: ShieldAlert, color: 'bg-orange-600', msg: 'ATTENZIONE DOSSO' },
@@ -279,10 +270,10 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
             </div>
 
             <motion.button
-              onMouseDown={handlePTTStart}
-              onMouseUp={handlePTTEnd}
-              onTouchStart={handlePTTStart}
-              onTouchEnd={handlePTTEnd}
+              onMouseDown={() => toggleMic(true)}
+              onMouseUp={() => toggleMic(false)}
+              onTouchStart={(e) => { e.preventDefault(); toggleMic(true); }}
+              onTouchEnd={(e) => { e.preventDefault(); toggleMic(false); }}
               whileTap={{ scale: 0.9 }}
               className={cn(
                 "w-32 h-32 rounded-full flex flex-col items-center justify-center gap-2 transition-all duration-300 shadow-2xl border-4",
