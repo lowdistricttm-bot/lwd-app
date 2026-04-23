@@ -20,7 +20,7 @@ interface MeetDetailModalProps {
 }
 
 const WalkieTalkieIcon = ({ className }: { className?: string }) => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M9 10v8a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2Z" />
     <path d="M12 12v3" />
     <path d="M11 6V3" />
@@ -45,7 +45,6 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
   const handleShare = async () => {
     let url = window.location.href;
     
-    // Se l'incontro è privato, usiamo il link di invito
     if (meet.privacy === 'private' && meet.invite_code) {
       url = `${window.location.origin}/?code=${meet.invite_code}`;
     }
@@ -117,18 +116,25 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
                 </div>
               )}
 
-              {/* Cruising Mode Button - Arancione con Walkie Talkie */}
+              {/* Cruising Mode Button - Arancione Glass con Animazione Pulsante */}
               {meet.is_participating && (
                 <motion.div 
                   initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
+                  animate={{ 
+                    scale: [1, 1.02, 1],
+                    opacity: 1 
+                  }}
+                  transition={{
+                    scale: { repeat: Infinity, duration: 2, ease: "easeInOut" },
+                    opacity: { duration: 0.5 }
+                  }}
                   className="pt-2"
                 >
                   <Button 
                     onClick={() => setIsRadioOpen(true)}
-                    className="w-full h-16 rounded-full font-black uppercase italic text-[10px] tracking-widest bg-orange-600 text-white border-orange-500 hover:bg-orange-500 hover:scale-[1.02] transition-all duration-500 shadow-xl flex items-center justify-center gap-3"
+                    className="w-full h-20 rounded-full font-black uppercase italic text-[11px] tracking-widest bg-orange-600/80 backdrop-blur-xl text-white border border-orange-400/30 hover:bg-orange-500 transition-all duration-500 shadow-[0_0_30px_rgba(234,88,12,0.3)] flex items-center justify-center gap-4"
                   >
-                    <WalkieTalkieIcon className="animate-pulse" />
+                    <WalkieTalkieIcon className="drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
                     WALKIE-TALKIE (RADIO CB)
                   </Button>
                 </motion.div>
@@ -263,7 +269,6 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
                 </Button>
               </div>
 
-              {/* Componente Cruising Mode */}
               <CruisingMode 
                 isOpen={isRadioOpen} 
                 onClose={() => setIsRadioOpen(false)} 

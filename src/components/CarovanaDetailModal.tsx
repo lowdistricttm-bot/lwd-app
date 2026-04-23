@@ -23,7 +23,7 @@ interface CarovanaDetailModalProps {
 }
 
 const WalkieTalkieIcon = ({ className }: { className?: string }) => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M9 10v8a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2Z" />
     <path d="M12 12v3" />
     <path d="M11 6V3" />
@@ -45,7 +45,6 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
   const participants = carovana.carovane_partecipanti || [];
 
   const handleJoin = async () => {
-    // Seleziona automaticamente il veicolo principale o il primo disponibile
     const mainVehicle = vehicles?.find(v => v.is_main) || vehicles?.[0];
     await toggleJoin.mutateAsync({ carovanaId: carovana.id, vehicleId: mainVehicle?.id });
   };
@@ -53,7 +52,6 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
   const handleShare = async () => {
     let shareUrl = `${window.location.origin}/events?carovana_id=${carovana.id}`;
     
-    // Se la carovana è privata, usiamo il link con il codice di invito
     if (carovana.privacy === 'private' && carovana.invite_code) {
       shareUrl = `${window.location.origin}/?code=${carovana.invite_code}`;
     }
@@ -93,7 +91,7 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
             animate={{ y: 0 }} 
             exit={{ y: '100%' }} 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[251] bg-black border-t border-white/10 p-6 rounded-t-[2.5rem] h-[100dvh] overflow-y-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            className="fixed inset-x-0 bottom-0 z-[251] bg-black border-t border-white/10 p-6 rounded-t-[2.5rem] h-[100dvh] overflow-y-auto shadow-2xl"
             style={{ 
               touchAction: 'pan-y', 
               overscrollBehavior: 'contain',
@@ -141,18 +139,25 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
                 </div>
               </div>
 
-              {/* Cruising Mode Button - Arancione con Walkie Talkie */}
+              {/* Cruising Mode Button - Arancione Glass con Animazione Pulsante */}
               {carovana.is_joined && (
                 <motion.div 
                   initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
+                  animate={{ 
+                    scale: [1, 1.02, 1],
+                    opacity: 1 
+                  }}
+                  transition={{
+                    scale: { repeat: Infinity, duration: 2, ease: "easeInOut" },
+                    opacity: { duration: 0.5 }
+                  }}
                   className="pt-2"
                 >
                   <Button 
                     onClick={() => setIsCruisingOpen(true)}
-                    className="w-full h-16 rounded-full font-black uppercase italic text-[10px] tracking-widest bg-orange-600 text-white border-orange-500 hover:bg-orange-500 hover:scale-[1.02] transition-all duration-500 shadow-xl flex items-center justify-center gap-3"
+                    className="w-full h-20 rounded-full font-black uppercase italic text-[11px] tracking-widest bg-orange-600/80 backdrop-blur-xl text-white border border-orange-400/30 hover:bg-orange-500 transition-all duration-500 shadow-[0_0_30px_rgba(234,88,12,0.3)] flex items-center justify-center gap-4"
                   >
-                    <WalkieTalkieIcon className="animate-pulse" />
+                    <WalkieTalkieIcon className="drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
                     WALKIE-TALKIE (RADIO CB)
                   </Button>
                 </motion.div>
