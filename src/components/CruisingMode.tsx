@@ -57,9 +57,9 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
   }, [isOpen, isActive, profile, carovanaId, carName, joinChannel]);
 
   const alerts = [
-    { id: 'bump', label: 'DOSSO!', icon: ShieldAlert, color: 'bg-orange-600', msg: 'ATTENZIONE: DOSSO IN ARRIVO' },
-    { id: 'police', label: 'PATTUGLIA', icon: AlertTriangle, color: 'bg-blue-600', msg: 'ATTENZIONE: PATTUGLIA SEGNALATA' },
-    { id: 'stop', label: 'SOSTA', icon: Info, color: 'bg-zinc-700', msg: 'RICHIESTA SOSTA TECNICA' }
+    { id: 'bump', label: 'DOSSO', icon: ShieldAlert, color: 'bg-orange-600', msg: 'DOSSO' },
+    { id: 'police', label: 'PATTUGLIA', icon: AlertTriangle, color: 'bg-blue-600', msg: 'PATTUGLIA' },
+    { id: 'stop', label: 'SOSTA', icon: Info, color: 'bg-zinc-700', msg: 'SOSTA' }
   ];
 
   const getAlertIcon = (type: string) => {
@@ -147,7 +147,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[10px] font-black uppercase tracking-widest text-white/70 mb-1">Alert da @{lastAlert.sender}</p>
-                      <h4 className="text-2xl font-black uppercase italic text-white tracking-tight leading-tight">
+                      <h4 className="text-3xl font-black uppercase italic text-white tracking-tight leading-tight">
                         {lastAlert.message}
                       </h4>
                     </div>
