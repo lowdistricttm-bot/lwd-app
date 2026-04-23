@@ -160,11 +160,18 @@ export const useAcademy = (categoryFilter: string = 'all') => {
       queryClient.invalidateQueries({ queryKey: ['academy-tutorials'] });
       showSuccess("Tutorial pubblicato in Low Academy!");
     },
-    onError: (err: any) => showError(err.message)
+    onError: (err: any) => {
+      console.error("[Academy] Create Error:", err);
+      showError(err.message || "Errore durante la creazione");
+    }
   });
 
   const updateTutorial = useMutation({
     mutationFn: async (data: { id: string, title: string, content: string, category: string, video_url?: string }) => {
+      if (data.id.startsWith('def-')) {
+        throw new Error("I tutorial di sistema non possono essere modificati.");
+      }
+
       const { error } = await supabase
         .from('academy_tutorials')
         .update({
@@ -182,17 +189,28 @@ export const useAcademy = (categoryFilter: string = 'all') => {
       queryClient.invalidateQueries({ queryKey: ['academy-tutorials'] });
       showSuccess("Tutorial aggiornato!");
     },
-    onError: (err: any) => showError(err.message)
+    onError: (err: any) => {
+      console.error("[Academy] Update Error:", err);
+      showError(err.message || "Errore durante l'aggiornamento");
+    }
   });
 
   const deleteTutorial = useMutation({
     mutationFn: async (id: string) => {
+      if (id.startsWith('def-')) {
+        throw new Error("I tutorial di sistema non possono essere eliminati.");
+      }
+
       const { error } = await supabase.from('academy_tutorials').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['academy-tutorials'] });
       showSuccess("Tutorial rimosso.");
+    },
+    onError: (err: any) => {
+      console.error("[Academy] Delete Error:", err);
+      showError(err.message || "Errore durante l'eliminazione");
     }
   });
 

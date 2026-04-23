@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, BookOpen, User, Calendar, Play, Trash2, Edit3, ChevronLeft } from 'lucide-react';
+import { X, BookOpen, User, Calendar, Play, Trash2, Edit3, ChevronLeft, ShieldAlert } from 'lucide-react';
 import { Tutorial, ACADEMY_CATEGORIES } from '@/hooks/use-academy';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { Button } from './ui/button';
@@ -23,6 +23,7 @@ const AcademyDetailModal = ({ isOpen, onClose, tutorial, canManage, onEdit, onDe
   if (!tutorial) return null;
 
   const categoryLabel = ACADEMY_CATEGORIES.find(c => c.id === tutorial.category)?.label || tutorial.category;
+  const isSystem = tutorial.id.startsWith('def-');
 
   return (
     <AnimatePresence>
@@ -50,12 +51,12 @@ const AcademyDetailModal = ({ isOpen, onClose, tutorial, canManage, onEdit, onDe
                   <span className="bg-white text-black text-[8px] font-black uppercase px-2 py-1 italic rounded-lg shadow-lg">
                     LOW ACADEMY • {categoryLabel.toUpperCase()}
                   </span>
-                  <h3 className="text-3xl md:text-4xl font-black italic uppercase tracking-tighter leading-tight">
+                  <h3 className="text-3xl md:text-4xl font-black italic uppercase tracking-tighter leading-none">
                     {tutorial.title}
                   </h3>
                 </div>
                 <div className="flex gap-2">
-                  {canManage && (
+                  {canManage && !isSystem && (
                     <>
                       <button onClick={() => onEdit(tutorial)} className="p-2 bg-white/5 text-zinc-400 rounded-full hover:bg-white hover:text-black transition-all"><Edit3 size={20} /></button>
                       <button onClick={() => onDelete(tutorial.id)} className="p-2 bg-red-500/10 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all"><Trash2 size={20} /></button>
@@ -64,6 +65,13 @@ const AcademyDetailModal = ({ isOpen, onClose, tutorial, canManage, onEdit, onDe
                   <button onClick={onClose} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors shrink-0"><X size={24} /></button>
                 </div>
               </div>
+
+              {isSystem && (
+                <div className="bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center gap-3">
+                  <ShieldAlert size={16} className="text-zinc-500" />
+                  <p className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Tutorial di Sistema: Non modificabile</p>
+                </div>
+              )}
 
               <div className="flex items-center justify-between p-6 bg-white/5 border border-white/10 rounded-[2rem] shadow-2xl">
                 <div className="flex items-center gap-4">
