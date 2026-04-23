@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { playRogerBeep, playAlertSound } from '@/utils/sound';
-import Peer from 'peerjs';
 
 interface CruisingUnit {
   id: string;
@@ -32,7 +31,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const [activeCarovanaId, setActiveCarovanaId] = useState<string | null>(null);
   const [currentUsername, setCurrentUsername] = useState<string>('');
 
-  const peerRef = useRef<Peer | null>(null);
+  const peerRef = useRef<any>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const channelRef = useRef<any>(null);
 
@@ -50,16 +49,21 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const joinChannel = useCallback(async (carovanaId: string, username: string, carName?: string) => {
     if (isActive) leaveChannel();
 
+    // Recuperiamo la classe Peer caricata globalmente dal CDN
+    const PeerClass = (window as any).Peer;
+    if (!PeerClass) {
+      console.error("[Cruising] PeerJS non caricato correttamente dal CDN.");
+      return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       stream.getAudioTracks().forEach(track => track.enabled = false);
 
-      const peer = new Peer(`lwd-${carovanaId}-${username.replace(/\s+/g, '-')}`, {
-        debug: 1
-      });
+      const peer = new PeerClass(`lwd-${carovanaId}-${username.replace(/\s+/g, '-')}`);
 
-      peer.on('open', (id) => {
+      peer.on('open', (id: string) => {
         setIsActive(true);
         setActiveCarovanaId(carovanaId);
         setCurrentUsername(username);
@@ -71,7 +75,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
               if (prev.find(u => u.id === payload.id)) return prev;
               if (peerRef.current && payload.id !== peerRef.current.id) {
                 const call = peerRef.current.call(payload.id, streamRef.current!);
-                call.on('stream', (remoteStream) => {
+                call.on('stream', (remoteStream: MediaStream) => {
                   const audio = new Audio();
                   audio.srcObject = remoteStream;
                   audio.play();
@@ -96,9 +100,9 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
         channelRef.current = channel;
       });
 
-      peer.on('call', (call) => {
+      peer.on('call', (call: any) => {
         call.answer(streamRef.current!);
-        call.on('stream', (remoteStream) => {
+        call.on('stream', (remoteStream: MediaStream) => {
           const audio = new Audio();
           audio.srcObject = remoteStream;
           audio.play();
