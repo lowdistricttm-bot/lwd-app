@@ -262,7 +262,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
         {/* Main Content (Image/Video) */}
         <div className="absolute inset-0 flex items-center justify-center bg-black z-10 overflow-hidden">
           
-          {/* Blurred Background effect restored for Stories */}
+          {/* Blurred Background effect */}
           <div className="absolute inset-0 z-0 pointer-events-none">
             <img 
               src={currentStory.image_url} 
@@ -376,14 +376,14 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                   <motion.button 
                     whileTap={{ scale: 1.4 }}
                     onClick={handleLike} 
-                    disabled={currentStory.is_liked || toggleStoryLike.isPending}
+                    disabled={currentStory.is_liked}
                     className={cn(
                       "w-10 h-10 rounded-full flex items-center justify-center transition-all border shadow-xl", 
                       currentStory.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-black border-white/20 text-white hover:bg-white/20 hover:scale-105",
-                      (currentStory.is_liked || toggleStoryLike.isPending) && "cursor-default"
+                      currentStory.is_liked && "cursor-default"
                     )}
                   >
-                    {toggleStoryLike.isPending ? <Loader2 size={14} className="animate-spin" /> : <Heart size={18} fill={currentStory.is_liked ? "currentColor" : "none"} />}
+                    <Heart size={18} fill={currentStory.is_liked ? "currentColor" : "none"} />
                   </motion.button>
                   <button onClick={handleShareClick} className="w-10 h-10 bg-black border border-white/20 text-white rounded-full flex items-center justify-center hover:bg-white/20 hover:scale-105 transition-all shadow-xl">
                     <Send size={18} className="-rotate-12 mr-0.5" />
