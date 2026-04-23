@@ -84,7 +84,7 @@ const LatestActivities = () => {
 
                 return (
                   <motion.div 
-                    key={post.id}
+                    key={`latest-post-${post.id}-${i}`}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
@@ -92,7 +92,6 @@ const LatestActivities = () => {
                     onClick={() => navigate(`/post/${post.id}`)}
                     className="embla__slide flex-[0_0_85%] sm:flex-[0_0_45%] md:flex-[0_0_32%] min-w-0 bg-zinc-900/40 backdrop-blur-xl border border-white/5 hover:border-white/10 transition-all group flex flex-col rounded-[2.5rem] shadow-2xl"
                   >
-                    {/* Header Post */}
                     <div className="p-5 flex items-center gap-3">
                       <div className="w-10 h-10 bg-zinc-800 rounded-full overflow-hidden border border-white/10 shrink-0">
                         {post.profiles?.avatar_url ? (
@@ -108,7 +107,6 @@ const LatestActivities = () => {
                       </div>
                     </div>
 
-                    {/* Media Preview - Ingrandito e Quadrato */}
                     <div className="px-4">
                       <div className="aspect-square bg-black relative overflow-hidden rounded-[2rem] border border-white/5">
                         {firstMedia ? (
@@ -130,7 +128,6 @@ const LatestActivities = () => {
                       </div>
                     </div>
 
-                    {/* Footer Post - Separatore e Stats */}
                     <div className="p-5 pt-4">
                       <div className="flex items-center gap-5 pt-4 border-t border-white/5">
                         <div className="flex items-center gap-2 text-zinc-500">

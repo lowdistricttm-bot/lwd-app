@@ -139,12 +139,12 @@ const Messages = () => {
           <div className="text-center py-20 bg-zinc-900/20 border border-white/5 rounded-[2rem] max-w-2xl mx-auto"><MessageSquare className="mx-auto text-zinc-800 mb-6" size={48} strokeWidth={1.5} /><p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{t.messages.noConvs}</p></div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {conversations?.map((conv: any) => {
+            {conversations?.map((conv: any, index: number) => {
               const isUnread = !conv.lastMessage.is_read && conv.lastMessage.receiver_id === currentUserId;
               
               return (
                 <div 
-                  key={conv.otherId} 
+                  key={`conv-${conv.otherId}-${index}`} 
                   className="relative rounded-[1.5rem] bg-zinc-900 overflow-hidden"
                 >
                   <div className="absolute inset-0 flex items-center justify-end px-6">

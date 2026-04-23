@@ -94,8 +94,6 @@ const Meets = () => {
   const handleCreateClose = (newMeet?: Meet) => {
     setIsCreateModalOpen(false);
     if (newMeet) {
-      // Se è stato creato un nuovo incontro, lo impostiamo come selezionato 
-      // per aprire automaticamente la modale di dettaglio da cui può essere condiviso
       setSelectedMeet(newMeet);
     }
   };
@@ -239,9 +237,9 @@ const Meets = () => {
                       </p>
                     </div>
                   ) : (
-                    filteredMeets?.map((meet) => (
+                    filteredMeets?.map((meet, i) => (
                       <motion.div 
-                        key={meet.id} 
+                        key={`meet-${meet.id}-${i}`} 
                         onClick={() => setSelectedMeet(meet)}
                         className="bg-zinc-900/40 backdrop-blur-md border border-white/5 rounded-[2.5rem] overflow-hidden group hover:border-white/20 transition-all duration-500 shadow-2xl cursor-pointer"
                       >
@@ -287,11 +285,10 @@ const Meets = () => {
                             </div>
                           </div>
 
-                          {/* Preview Partecipanti */}
                           <div className="flex items-center gap-3 mb-8">
                             <div className="flex -space-x-2">
-                              {meet.participants?.slice(0, 4).map((p, i) => (
-                                <div key={i} className="w-6 h-6 rounded-full border-2 border-black bg-zinc-800 overflow-hidden">
+                              {meet.participants?.slice(0, 4).map((p, j) => (
+                                <div key={`participant-${p.user_id}-${j}`} className="w-6 h-6 rounded-full border-2 border-black bg-zinc-800 overflow-hidden">
                                   {p.profiles?.avatar_url ? <img src={p.profiles.avatar_url} className="w-full h-full object-cover" /> : <User size={10} className="m-auto h-full" />}
                                 </div>
                               ))}

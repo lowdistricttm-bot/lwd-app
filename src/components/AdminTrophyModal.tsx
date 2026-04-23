@@ -102,7 +102,6 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
               </div>
 
               <div className="space-y-8">
-                {/* 1. Vincitore */}
                 <div className="space-y-3">
                   <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4 italic">1. Seleziona Vincitore</Label>
                   {selectedUser ? (
@@ -122,8 +121,8 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
                         <Input placeholder="CERCA USERNAME..." value={search} onChange={(e) => setSearch(e.target.value)} className={cn(inputClass, "pl-12")} />
                       </div>
                       <div className="grid grid-cols-2 gap-2">
-                        {filteredUsers.map(u => (
-                          <button key={u.id} type="button" onClick={() => setSelectedUser(u)} className="p-3 bg-white/5 border border-white/5 rounded-xl flex items-center gap-3 hover:bg-white/10 transition-all">
+                        {filteredUsers.map((u, index) => (
+                          <button key={`trophy-user-${u.id}-${index}`} type="button" onClick={() => setSelectedUser(u)} className="p-3 bg-white/5 border border-white/5 rounded-xl flex items-center gap-3 hover:bg-white/10 transition-all">
                             <div className="w-8 h-8 rounded-full overflow-hidden bg-black shrink-0">
                               {u.avatar_url ? <img src={u.avatar_url} className="w-full h-full object-cover" /> : <UserIcon size={14} className="m-auto h-full text-zinc-700" />}
                             </div>
@@ -135,7 +134,6 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
                   )}
                 </div>
 
-                {/* 2. Dettagli Premio */}
                 <div className="space-y-6 animate-in fade-in duration-500">
                   <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4 italic">2. Dettagli del Premio</Label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -173,7 +171,6 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
                   </div>
                 </div>
 
-                {/* 3. Veicolo */}
                 {selectedUser && (
                   <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
                     <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4 italic">3. Collega al Veicolo (Opzionale)</Label>
@@ -183,7 +180,7 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
                       <div className="grid grid-cols-2 gap-2">
                         {userVehicles.map(v => (
                           <button 
-                            key={v.id} 
+                            key={`veh-link-${v.id}`} 
                             type="button" 
                             onClick={() => setFormData({...formData, vehicleId: v.id})}
                             className={cn(

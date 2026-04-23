@@ -151,9 +151,9 @@ const Discover = () => {
               <Sparkles size={12} /> Nuovi nel District
             </h3>
             <div className="flex gap-6 overflow-x-auto no-scrollbar pb-4">
-              {newMembers.map((member) => (
+              {newMembers.map((member, i) => (
                 <button 
-                  key={member.id}
+                  key={`new-member-${member.id}-${i}`}
                   onClick={() => navigate(`/profile/${member.id}`)}
                   className="flex flex-col items-center gap-3 shrink-0 group"
                 >
@@ -191,7 +191,7 @@ const Discover = () => {
             <div className="embla overflow-hidden cursor-grab active:cursor-grabbing" ref={emblaScoreRef}>
               <div className="embla__container flex gap-4">
                 {topScored.slice(0, 5).map((v, i) => (
-                  <div key={v.id} onClick={() => handleOpenProject(v)} className="embla__slide flex-[0_0_70%] sm:flex-[0_0_40%] md:flex-[0_0_25%] min-w-0 bg-white/5 backdrop-blur-xl border border-white/5 rounded-[2rem] overflow-hidden group cursor-pointer">
+                  <div key={`score-${v.id}-${i}`} onClick={() => handleOpenProject(v)} className="embla__slide flex-[0_0_70%] sm:flex-[0_0_40%] md:flex-[0_0_25%] min-w-0 bg-white/5 backdrop-blur-xl border border-white/5 rounded-[2rem] overflow-hidden group cursor-pointer">
                     <div className="aspect-video relative overflow-hidden">
                       <img src={v.images?.[0] || v.image_url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-700 group-hover:scale-110" alt="" />
                       <div className="absolute top-3 left-3">
@@ -222,7 +222,7 @@ const Discover = () => {
             <div className="embla overflow-hidden cursor-grab active:cursor-grabbing" ref={emblaLikeRef}>
               <div className="embla__container flex gap-4">
                 {mostLiked.slice(0, 5).map((v, i) => (
-                  <div key={v.id} onClick={() => handleOpenProject(v)} className="embla__slide flex-[0_0_70%] sm:flex-[0_0_40%] md:flex-[0_0_25%] min-w-0 bg-white/5 backdrop-blur-xl border border-white/5 rounded-[2rem] overflow-hidden group cursor-pointer">
+                  <div key={`liked-${v.id}-${i}`} onClick={() => handleOpenProject(v)} className="embla__slide flex-[0_0_70%] sm:flex-[0_0_40%] md:flex-[0_0_25%] min-w-0 bg-white/5 backdrop-blur-xl border border-white/5 rounded-[2rem] overflow-hidden group cursor-pointer">
                     <div className="aspect-video relative overflow-hidden">
                       <img src={v.images?.[0] || v.image_url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-700 group-hover:scale-110" alt="" />
                       <div className="absolute top-3 left-3">
@@ -251,9 +251,9 @@ const Discover = () => {
                 <Users size={12} /> Membri Trovati
               </h3>
               <div className="flex gap-6 overflow-x-auto no-scrollbar pb-4">
-                {users.map((user) => (
+                {users.map((user, i) => (
                   <button 
-                    key={user.id}
+                    key={`search-user-${user.id}-${i}`}
                     onClick={() => navigate(`/profile/${user.id}`)}
                     className="flex flex-col items-center gap-3 shrink-0 group"
                   >
@@ -308,7 +308,7 @@ const Discover = () => {
                   
                   return (
                     <motion.div 
-                      key={vehicle.id}
+                      key={`vehicle-${vehicle.id}-${i}`}
                       layout
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -337,16 +337,13 @@ const Discover = () => {
                         
                         <div className="absolute top-5 left-5 flex flex-col gap-2">
                           {rankInfo && <RankBadge rank={rankInfo.rank} type={rankInfo.type} />}
-                          
-                          {/* Trofei del veicolo sulla scheda */}
                           {vehicleTrophies.length > 0 && (
                             <div className="flex gap-1.5">
                               {vehicleTrophies.map((ut: any) => (
-                                <TrophyBadge key={ut.id} trophy={ut.trophies} size="xs" />
+                                <TrophyBadge key={`trophy-${ut.id}`} trophy={ut.trophies} size="xs" />
                               ))}
                             </div>
                           )}
-
                           <span className="bg-white/90 backdrop-blur-md text-black text-[8px] font-black uppercase px-3 py-1.5 italic rounded-full shadow-2xl w-fit">
                             {vehicle.suspension_type}
                           </span>
