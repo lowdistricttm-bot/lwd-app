@@ -50,7 +50,7 @@ const LatestMarketplaceItems = () => {
             <div className="embla__container flex gap-4">
               {latestItems.map((item, i) => (
                 <motion.div 
-                  key={`latest-market-${item.id}-${i}`}
+                  key={item.id}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}

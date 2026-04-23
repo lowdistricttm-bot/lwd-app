@@ -96,9 +96,9 @@ const AdminApplications = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {displayedApps.map((app: any, i: number) => (
+            {displayedApps.map((app: any) => (
               <AdminApplicationCard 
-                key={`admin-app-${app.id}-${i}`} 
+                key={app.id} 
                 app={app} 
                 onUpdateStatus={(id, status) => updateStatus.mutate({ id, status })}
                 isUpdating={updateStatus.isPending}

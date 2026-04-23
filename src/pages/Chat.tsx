@@ -142,6 +142,7 @@ const Chat = () => {
 
   if (loadingChat || authLoading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
+  // Altezza fissa 38px ignorando la safe area
   const inputBarHeight = "38px";
 
   return (
@@ -189,7 +190,7 @@ const Chat = () => {
         className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] px-6 overflow-y-auto space-y-6 custom-scrollbar overflow-x-hidden"
         style={{ paddingBottom: inputBarHeight }}
       >
-        {chatMessages?.map((msg, i) => {
+        {chatMessages?.map((msg) => {
           const isMe = msg.sender_id === currentUser?.id;
           const isMention = msg.content.includes('Ti ha menzionato');
           const isSharedPost = msg.content.includes('Ti ha inviato un post');
@@ -207,7 +208,7 @@ const Chat = () => {
           }
 
           return (
-            <div key={`msg-${msg.id}-${i}`} className={cn("flex w-full", isMe ? "justify-end" : "justify-start")}>
+            <div key={msg.id} className={cn("flex w-full", isMe ? "justify-end" : "justify-start")}>
               <div className="relative max-w-[85%] w-fit">
                 
                 <div className={cn(
@@ -329,7 +330,7 @@ const Chat = () => {
           {previews.length > 0 && (
             <div className="absolute bottom-full left-0 right-0 p-4 flex gap-2 overflow-x-auto no-scrollbar bg-black/40 backdrop-blur-md border-t border-white/5">
               {previews.map((url, i) => (
-                <div key={`preview-${i}`} className="relative w-16 h-16 shrink-0 bg-zinc-900 border border-white/10 rounded-xl overflow-hidden">
+                <div key={i} className="relative w-16 h-16 shrink-0 bg-zinc-900 border border-white/10 rounded-xl overflow-hidden">
                   {selectedFiles[i]?.type.startsWith('video/') ? (
                     <video src={url} className="w-full h-full object-cover" />
                   ) : (
