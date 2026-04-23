@@ -19,13 +19,23 @@ import RainCheck from './RainCheck';
 import { 
   Plus, Car, Trash2, Camera, Loader2, X, Edit3, Heart, 
   Gauge, Book, Sparkles, ChevronRight, Calendar, CreditCard,
-  Wrench, ArrowRightLeft, Smartphone, CloudRain, Sun, Cloud
+  Wrench, ArrowRightLeft, Smartphone, CloudRain, Sun, Cloud, MapPin
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/use-translation';
 import { supabase } from "@/integrations/supabase/client";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface MediaItem {
   id: string;
@@ -47,6 +57,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
   const [activeAnalyzer, setActiveAnalyzer] = useState<{ url: string, id: string } | null>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [isRainCheckOpen, setIsRainCheckOpen] = useState(false);
+  const [isLocationAlertOpen, setIsLocationAlertOpen] = useState(false);
   const [lightboxData, setLightboxData] = useState<{ images: string[], index: number } | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [userCity, setUserCity] = useState<string | undefined>(undefined);
@@ -135,6 +146,14 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
     }
   };
 
+  const handleRainCheckClick = () => {
+    if (!userCity) {
+      setIsLocationAlertOpen(true);
+      return;
+    }
+    setIsRainCheckOpen(true);
+  };
+
   const getVehicleRank = (id: string) => {
     const scoreRank = topScored?.findIndex(v => v.id === id);
     if (scoreRank !== undefined && scoreRank !== -1 && scoreRank < 3) return { rank: scoreRank + 1, type: 'score' as const };
@@ -176,24 +195,22 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
             </Button>
           </div>
           
-          {userCity && (
-            <Button 
-              onClick={() => setIsRainCheckOpen(true)}
-              variant="outline"
-              className="w-full h-14 rounded-2xl border-white/10 bg-white/5 text-white hover:bg-white/10 font-black uppercase italic text-[10px] tracking-widest shadow-xl flex flex-col items-center justify-center gap-1"
+          <Button 
+            onClick={handleRainCheckClick}
+            variant="outline"
+            className="w-full h-14 rounded-2xl border-white/10 bg-white/5 text-white hover:bg-white/10 font-black uppercase italic text-[10px] tracking-widest shadow-xl flex flex-col items-center justify-center gap-1"
+          >
+            <motion.div
+              animate={{ 
+                scale: weather?.canWash ? [1, 1.1, 1] : 1,
+                rotate: weather?.canWash ? [0, 10, -10, 0] : 0
+              }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             >
-              <motion.div
-                animate={{ 
-                  scale: [1, 1.1, 1],
-                  rotate: weather?.canWash ? [0, 10, -10, 0] : 0
-                }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <WeatherIcon />
-              </motion.div>
-              <span>Rain-Check: Meteo Detailing</span>
-            </Button>
-          )}
+              <WeatherIcon />
+            </motion.div>
+            <span>Rain-Check: Meteo Detailing</span>
+          </Button>
         </div>
       )}
 
@@ -331,21 +348,21 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Marca</Label>
-                      <Input required value={formData.brand} onChange={e => setFormData({...formData, brand: e.target.value.toUpperCase()})} className="bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest text-white" placeholder="ES: BMW" />
+                      <Input required value={formData.brand} onChange={e => setFormData({...formData, brand: e.target.value.toUpperCase()})} className="bg-white/5 border border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest text-white" placeholder="ES: BMW" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Modello</Label>
-                      <Input required value={formData.model} onChange={e => setFormData({...formData, model: e.target.value.toUpperCase()})} className="bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest text-white" placeholder="ES: M3 E46" />
+                      <Input required value={formData.model} onChange={e => setFormData({...formData, model: e.target.value.toUpperCase()})} className="bg-white/5 border border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest text-white" placeholder="ES: M3 E46" />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Anno</Label>
-                      <Input value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} className="bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest text-white" placeholder="2004" />
+                      <Input value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} className="bg-white/5 border border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest text-white" placeholder="2004" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[9px] font-black uppercase text-zinc-500 ml-4">Targa</Label>
-                      <Input value={formData.license_plate} onChange={e => setFormData({...formData, license_plate: e.target.value.toUpperCase()})} className="bg-white/5 border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest text-white" placeholder="AA000BB" />
+                      <Input value={formData.license_plate} onChange={e => setFormData({...formData, license_plate: e.target.value.toUpperCase()})} className="bg-white/5 border border-white/10 rounded-full h-14 px-6 font-bold text-xs tracking-widest text-white" placeholder="AA000BB" />
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -433,6 +450,33 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
           />
         )}
       </AnimatePresence>
+
+      <AlertDialog open={isLocationAlertOpen} onOpenChange={setIsLocationAlertOpen}>
+        <AlertDialogContent className="bg-black border border-white/10 rounded-[2rem] shadow-2xl">
+          <AlertDialogHeader>
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-white/5 border border-white/10 flex items-center justify-center rounded-2xl rotate-12">
+                <MapPin size={32} className="text-white -rotate-12" />
+              </div>
+            </div>
+            <AlertDialogTitle className="text-white font-black uppercase italic text-center">Città non impostata</AlertDialogTitle>
+            <AlertDialogDescription className="text-zinc-400 text-xs font-bold uppercase leading-relaxed text-center">
+              Per usare il Rain-Check e ricevere i consigli sul lavaggio, devi prima impostare la tua città nel profilo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
+            <AlertDialogAction 
+              onClick={() => { setIsLocationAlertOpen(false); navigate('/profile?tab=profile'); }} 
+              className="rounded-full bg-white text-black hover:bg-zinc-200 font-black uppercase italic text-[10px] w-full h-14 transition-all"
+            >
+              Vai al Profilo
+            </AlertDialogAction>
+            <AlertDialogCancel className="rounded-full border border-white/10 text-white hover:bg-white/5 font-black uppercase italic text-[10px] w-full h-14 mt-0 transition-all">
+              Chiudi
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <ImageLightbox images={lightboxData?.images || []} initialIndex={lightboxData?.index || 0} isOpen={!!lightboxData} onClose={() => setLightboxData(null)} />
     </div>
