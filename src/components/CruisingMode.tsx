@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, X, Users, Radio, AlertTriangle, Info, Volume2, ShieldAlert, Zap, User, LogOut, Power } from 'lucide-react';
+import { Mic, MicOff, X, Users, Radio, AlertTriangle, Info, Volume2, ShieldAlert, Zap, User } from 'lucide-react';
 import { useCruising } from '@/hooks/use-cruising';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { useTranslation } from '@/hooks/use-translation';
@@ -24,7 +24,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
 
   const { 
     isActive, isSpeaking, units, lastAlert,
-    joinChannel, leaveChannel, toggleMic, sendAlert 
+    joinChannel, toggleMic, sendAlert 
   } = useCruising();
 
   useBodyLock(isOpen);
@@ -59,6 +59,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
 
   const handlePTTStart = async (e: React.MouseEvent | React.TouchEvent) => {
     if (e.cancelable) e.preventDefault();
+    // Sblocca l'audio ad ogni interazione
     await unlockAudio();
     toggleMic(true);
   };
@@ -66,11 +67,6 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
   const handlePTTEnd = (e: React.MouseEvent | React.TouchEvent) => {
     if (e.cancelable) e.preventDefault();
     toggleMic(false);
-  };
-
-  const handleDisconnect = () => {
-    leaveChannel();
-    onClose();
   };
 
   const alerts = [
@@ -137,18 +133,9 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
                 <p className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Channel: {carovanaTitle}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button 
-                onClick={handleDisconnect}
-                className="p-2.5 bg-red-500/10 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all border border-red-500/20"
-                title="Disconnetti"
-              >
-                <Power size={20} />
-              </button>
-              <button onClick={onClose} className="p-2.5 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors">
-                <X size={24} />
-              </button>
-            </div>
+            <button onClick={onClose} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors">
+              <X size={24} />
+            </button>
           </div>
 
           {/* Main Display */}

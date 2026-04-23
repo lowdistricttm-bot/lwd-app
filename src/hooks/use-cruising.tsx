@@ -47,7 +47,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const audioElementsRef = useRef<Map<string, HTMLAudioElement>>(new Map());
 
   const playRemoteStream = useCallback((presenceId: string, remoteStream: MediaStream) => {
-    console.log(`[Cruising] Tentativo riproduzione stream da: ${presenceId}`);
+    console.log(`[Cruising] Ricevuto stream da: ${presenceId}`);
     
     if (audioElementsRef.current.has(presenceId)) {
       const oldAudio = audioElementsRef.current.get(presenceId);
@@ -59,39 +59,22 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     audio.srcObject = remoteStream;
     audio.autoplay = true;
     
+    // Forza la riproduzione
     const playPromise = audio.play();
     if (playPromise !== undefined) {
       playPromise.catch(err => {
-        console.warn(`[Cruising] Autoplay bloccato per ${presenceId}.`, err);
+        console.warn(`[Cruising] Autoplay bloccato per ${presenceId}, riprovo al prossimo tocco.`, err);
       });
     }
     
     audioElementsRef.current.set(presenceId, audio);
   }, []);
 
-  const leaveChannel = useCallback(async () => {
-    console.log("[Cruising] Chiusura totale sessione e pulizia canali...");
+  const leaveChannel = useCallback(() => {
+    if (peerRef.current) peerRef.current.destroy();
+    if (streamRef.current) streamRef.current.getTracks().forEach(track => track.stop());
+    if (channelRef.current) supabase.removeChannel(channelRef.current);
     
-    // 1. Chiudi PeerJS
-    if (peerRef.current) {
-      peerRef.current.disconnect();
-      peerRef.current.destroy();
-      peerRef.current = null;
-    }
-
-    // 2. Ferma il microfono
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-
-    // 3. Rimuovi canale Supabase
-    if (channelRef.current) {
-      await supabase.removeChannel(channelRef.current);
-      channelRef.current = null;
-    }
-    
-    // 4. Ferma tutti gli audio degli altri
     audioElementsRef.current.forEach(audio => {
       audio.pause();
       audio.srcObject = null;
@@ -107,10 +90,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const joinChannel = useCallback(async (carovanaId: string, username: string, avatarUrl: string, role: string, carName?: string) => {
     await unlockAudio();
 
-    // Se siamo già in un canale, facciamo un reset totale prima di entrare nel nuovo
-    if (isActive || activeCarovanaId) {
-      await leaveChannel();
-    }
+    if (isActive) leaveChannel();
 
     const PeerClass = (window as any).Peer;
     if (!PeerClass) return;
@@ -126,21 +106,21 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       streamRef.current = stream;
       stream.getAudioTracks().forEach(track => track.enabled = false);
 
-      // ID Sessione unico per evitare conflitti con vecchie sessioni "zombie"
-      const sessionId = Math.random().toString(36).substring(2, 8);
-      const peerId = `lwd-${carovanaId}-${username.replace(/\s+/g, '-')}-${sessionId}`;
+      const peerId = `lwd-${carovanaId}-${username.replace(/\s+/g, '-')}-${Math.random().toString(36).substring(2, 6)}`;
       
+      // Configurazione con STUN Servers per superare i firewall mobili
       const peer = new PeerClass(peerId, {
         config: {
           iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' }
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' }
           ]
         }
       });
 
       peer.on('open', (id: string) => {
-        console.log(`[Cruising] Nuova sessione aperta: ${id}`);
+        console.log(`[Cruising] Peer aperto con ID: ${id}`);
         setIsActive(true);
         setActiveCarovanaId(carovanaId);
         setCurrentUsername(username);
@@ -170,6 +150,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
                   isSpeaking: false
                 });
 
+                // Se non siamo già connessi, chiamiamo l'unità
                 if (peerRef.current && !peerRef.current.connections[presenceId]) {
                   const call = peerRef.current.call(presenceId, streamRef.current!);
                   call.on('stream', (remoteStream: MediaStream) => {
@@ -207,6 +188,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       });
 
       peer.on('call', (call: any) => {
+        console.log(`[Cruising] Ricezione chiamata da: ${call.peer}`);
         call.answer(streamRef.current!);
         call.on('stream', (remoteStream: MediaStream) => {
           playRemoteStream(call.peer, remoteStream);
@@ -215,9 +197,9 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
       peer.on('error', (err: any) => {
         console.error('[Cruising] PeerJS Error:', err.type);
-        if (err.type === 'peer-unavailable') {
-          // Rimuoviamo l'unità che non risponde
-          setUnits(prev => prev.filter(u => !u.id.includes(err.peer)));
+        if (err.type === 'network' || err.type === 'disconnected') {
+          // Tentativo di riconnessione silenzioso
+          setTimeout(() => joinChannel(carovanaId, username, avatarUrl, role, carName), 3000);
         }
       });
 
@@ -225,11 +207,12 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     } catch (err) {
       console.error('[Cruising] Error:', err);
     }
-  }, [isActive, activeCarovanaId, leaveChannel, playRemoteStream]);
+  }, [isActive, leaveChannel, playRemoteStream]);
 
   const toggleMic = useCallback((speaking: boolean) => {
     if (!streamRef.current) return;
     
+    // Sblocca l'audio ad ogni pressione del tasto
     if (speaking) unlockAudio();
 
     streamRef.current.getAudioTracks().forEach(track => track.enabled = speaking);
@@ -252,13 +235,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       payload: { type, message, sender: currentUsername }
     });
   }, [currentUsername]);
-
-  // Cleanup automatico se il provider viene smontato
-  useEffect(() => {
-    return () => {
-      leaveChannel();
-    };
-  }, [leaveChannel]);
 
   return (
     <CruisingContext.Provider value={{ 
