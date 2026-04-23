@@ -81,7 +81,7 @@ export const useAcademy = (categoryFilter: string = 'all') => {
     queryKey: ['academy-tutorials', categoryFilter],
     queryFn: async () => {
       try {
-        let query = supabase
+        const { data: dbData, error } = await supabase
           .from('academy_tutorials')
           .select(`
             *,
@@ -92,31 +92,36 @@ export const useAcademy = (categoryFilter: string = 'all') => {
           `)
           .order('created_at', { ascending: false });
 
-        if (categoryFilter !== 'all') {
-          query = query.eq('category', categoryFilter);
-        }
-
-        const { data: dbData, error } = await query;
-        
         if (error) throw error;
 
-        const formattedDbData = (dbData || []).map((t: any) => ({
-          ...t,
-          profiles: Array.isArray(t.profiles) ? t.profiles[0] : t.profiles
-        }));
-
+        // Usiamo una Map per ID per garantire l'unicità assoluta delle chiavi React
         const tutorialMap = new Map<string, Tutorial>();
 
-        DEFAULT_TUTORIALS.forEach(t => {
-          tutorialMap.set(t.title.trim().toUpperCase(), t);
-        });
+        // 1. Carichiamo i default
+        DEFAULT_TUTORIALS.forEach(t => tutorialMap.set(t.id, t));
 
-        formattedDbData.forEach(t => {
-          tutorialMap.set(t.title.trim().toUpperCase(), t);
+        // 2. Carichiamo i dati dal DB (sovrascrivono se l'ID coincide, ma i DB ID sono UUID)
+        (dbData || []).forEach((t: any) => {
+          const formatted = {
+            ...t,
+            profiles: Array.isArray(t.profiles) ? t.profiles[0] : t.profiles
+          };
+          
+          // Se esiste già un tutorial con lo stesso TITOLO, preferiamo quello del DB
+          const existingByTitle = Array.from(tutorialMap.values()).find(
+            item => item.title.trim().toUpperCase() === t.title.trim().toUpperCase()
+          );
+          
+          if (existingByTitle) {
+            tutorialMap.delete(existingByTitle.id);
+          }
+          
+          tutorialMap.set(t.id, formatted);
         });
 
         let combined = Array.from(tutorialMap.values());
 
+        // Ordinamento: prima i nuovi, poi i default
         combined.sort((a, b) => {
           const aIsDefault = a.id.startsWith('def-');
           const bIsDefault = b.id.startsWith('def-');
@@ -136,7 +141,6 @@ export const useAcademy = (categoryFilter: string = 'all') => {
       }
     },
     staleTime: 1000 * 60 * 5,
-    retry: 1
   });
 
   const createTutorial = useMutation({
@@ -158,19 +162,14 @@ export const useAcademy = (categoryFilter: string = 'all') => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['academy-tutorials'] });
-      showSuccess("Tutorial pubblicato in Low Academy!");
+      showSuccess("Tutorial pubblicato!");
     },
-    onError: (err: any) => {
-      console.error("[Academy] Create Error:", err);
-      showError(err.message || "Errore durante la creazione");
-    }
+    onError: (err: any) => showError(err.message)
   });
 
   const updateTutorial = useMutation({
     mutationFn: async (data: { id: string, title: string, content: string, category: string, video_url?: string }) => {
-      if (data.id.startsWith('def-')) {
-        throw new Error("I tutorial di sistema non possono essere modificati.");
-      }
+      if (data.id.startsWith('def-')) throw new Error("Tutorial di sistema non modificabile");
 
       const { error } = await supabase
         .from('academy_tutorials')
@@ -189,18 +188,12 @@ export const useAcademy = (categoryFilter: string = 'all') => {
       queryClient.invalidateQueries({ queryKey: ['academy-tutorials'] });
       showSuccess("Tutorial aggiornato!");
     },
-    onError: (err: any) => {
-      console.error("[Academy] Update Error:", err);
-      showError(err.message || "Errore durante l'aggiornamento");
-    }
+    onError: (err: any) => showError(err.message)
   });
 
   const deleteTutorial = useMutation({
     mutationFn: async (id: string) => {
-      if (id.startsWith('def-')) {
-        throw new Error("I tutorial di sistema non possono essere eliminati.");
-      }
-
+      if (id.startsWith('def-')) throw new Error("Tutorial di sistema non eliminabile");
       const { error } = await supabase.from('academy_tutorials').delete().eq('id', id);
       if (error) throw error;
     },
@@ -208,10 +201,7 @@ export const useAcademy = (categoryFilter: string = 'all') => {
       queryClient.invalidateQueries({ queryKey: ['academy-tutorials'] });
       showSuccess("Tutorial rimosso.");
     },
-    onError: (err: any) => {
-      console.error("[Academy] Delete Error:", err);
-      showError(err.message || "Errore durante l'eliminazione");
-    }
+    onError: (err: any) => showError(err.message)
   });
 
   return { tutorials, isLoading, createTutorial, updateTutorial, deleteTutorial };

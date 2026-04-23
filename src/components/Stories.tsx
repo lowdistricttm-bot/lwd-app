@@ -40,7 +40,6 @@ const Stories = () => {
     }
   }, [currentUser]);
 
-  // Solo il ruolo 'subscriber' base ha restrizioni, 'subscriber_plus' ha permessi completi
   const isSubscriber = role === 'subscriber';
   const myStoriesGroup: any = (stories as any[])?.find((group: any) => group.user_id === currentUser?.id);
   const otherStories: any[] = (stories as any[])?.filter((group: any) => group.user_id !== currentUser?.id) || [];
@@ -112,8 +111,10 @@ const Stories = () => {
 
         {otherStories.map((userGroup: any, index: number) => {
           const actualIndex = myStoriesGroup ? index + 1 : index;
+          // Usiamo user_id come chiave, con un fallback unico se mancante
+          const key = userGroup.user_id || `story-group-${index}`;
           return (
-            <button key={userGroup.user_id} onClick={() => handleStoryClick(actualIndex)} className="flex flex-col items-center gap-2 shrink-0">
+            <button key={key} onClick={() => handleStoryClick(actualIndex)} className="flex flex-col items-center gap-2 shrink-0">
               <div className="w-16 h-16 rounded-full p-[2.5px] bg-gradient-to-tr from-zinc-700 via-zinc-400 to-white">
                 <div className="w-full h-full rounded-full border-[2.5px] border-black overflow-hidden bg-zinc-900">
                   {userGroup.avatar_url ? <img src={userGroup.avatar_url} className="w-full h-full object-cover" /> : <User size={24} className="m-auto text-zinc-700" />}
