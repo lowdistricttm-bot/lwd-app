@@ -36,6 +36,7 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
   const participants = carovana.carovane_partecipanti || [];
 
   const handleJoin = async () => {
+    // Seleziona automaticamente il veicolo principale o il primo disponibile
     const mainVehicle = vehicles?.find(v => v.is_main) || vehicles?.[0];
     await toggleJoin.mutateAsync({ carovanaId: carovana.id, vehicleId: mainVehicle?.id });
   };
@@ -43,6 +44,7 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
   const handleShare = async () => {
     let shareUrl = `${window.location.origin}/events?carovana_id=${carovana.id}`;
     
+    // Se la carovana è privata, usiamo il link con il codice di invito
     if (carovana.privacy === 'private' && carovana.invite_code) {
       shareUrl = `${window.location.origin}/?code=${carovana.invite_code}`;
     }
