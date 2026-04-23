@@ -44,6 +44,16 @@ interface MediaItem {
   file?: File;
 }
 
+// Icona personalizzata per il Camber Helper (Ruota inclinata)
+const CamberIcon = ({ className }: { className?: string }) => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <g transform="rotate(-15 12 12)">
+      <rect x="8" y="2" width="8" height="20" rx="1.5" />
+      <rect x="10" y="5" width="4" height="14" rx="0.5" opacity="0.4" />
+    </g>
+  </svg>
+);
+
 const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProfile?: boolean }) => {
   const navigate = useNavigate();
   const { vehicles, isLoading, addVehicle, updateVehicle, deleteVehicle, toggleLike } = useGarage(userId);
@@ -190,7 +200,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
               variant="outline"
               className="h-14 rounded-2xl border-white/10 bg-white/5 text-white hover:bg-white/10 font-black uppercase italic text-[10px] tracking-widest shadow-xl flex flex-col items-center justify-center gap-1"
             >
-              <Smartphone size={18} />
+              <CamberIcon />
               <span>Camber Helper</span>
             </Button>
           </div>
