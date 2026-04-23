@@ -44,12 +44,12 @@ interface MediaItem {
   file?: File;
 }
 
-// Icona personalizzata per il Camber Helper (Ruota inclinata verso destra in alto)
+// Icona personalizzata per il Camber Helper (Ruota spessa inclinata verso destra in alto)
 const CamberIcon = ({ className }: { className?: string }) => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <g transform="rotate(15 12 12)">
-      <rect x="8" y="2" width="8" height="20" rx="1.5" />
-      <rect x="10" y="5" width="4" height="14" rx="0.5" opacity="0.4" />
+      <rect x="6" y="2" width="12" height="20" rx="2" />
+      <rect x="9" y="5" width="6" height="14" rx="1" opacity="0.4" />
     </g>
   </svg>
 );
