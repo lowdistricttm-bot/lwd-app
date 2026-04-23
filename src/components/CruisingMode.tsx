@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, X, Users, Radio, AlertTriangle, Info, Volume2, ShieldAlert, Zap, User, Power } from 'lucide-react';
+import { Mic, MicOff, X, Users, Radio, AlertTriangle, Info, Volume2, ShieldAlert, Zap, User, LogOut, Power } from 'lucide-react';
 import { useCruising } from '@/hooks/use-cruising';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { useTranslation } from '@/hooks/use-translation';
@@ -23,7 +23,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
   const [carName, setCarName] = useState<string>('');
 
   const { 
-    isActive, isSpeaking, units, activeCarovanaId, lastAlert,
+    isActive, isSpeaking, units, lastAlert,
     joinChannel, leaveChannel, toggleMic, sendAlert 
   } = useCruising();
 
@@ -45,10 +45,8 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
     });
   }, []);
 
-  // Effetto per gestire l'ingresso nel canale corretto
   useEffect(() => {
-    if (isOpen && profile) {
-      // Se siamo già attivi ma su un ID diverso, joinChannel farà l'hard reset
+    if (isOpen && !isActive && profile) {
       joinChannel(
         carovanaId, 
         profile.username || 'Unit', 
@@ -57,7 +55,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
         carName
       );
     }
-  }, [isOpen, profile, carovanaId, carName, joinChannel]);
+  }, [isOpen, isActive, profile, carovanaId, carName, joinChannel]);
 
   const handlePTTStart = async (e: React.MouseEvent | React.TouchEvent) => {
     if (e.cancelable) e.preventDefault();

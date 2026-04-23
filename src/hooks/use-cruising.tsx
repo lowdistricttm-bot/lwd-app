@@ -47,7 +47,8 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const audioElementsRef = useRef<Map<string, HTMLAudioElement>>(new Map());
 
   const playRemoteStream = useCallback((presenceId: string, remoteStream: MediaStream) => {
-    // Rimuoviamo eventuali residui audio per questo specifico peer
+    console.log(`[Cruising] Tentativo riproduzione stream da: ${presenceId}`);
+    
     if (audioElementsRef.current.has(presenceId)) {
       const oldAudio = audioElementsRef.current.get(presenceId);
       oldAudio?.pause();
@@ -69,28 +70,28 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   }, []);
 
   const leaveChannel = useCallback(async () => {
-    console.log(`[Cruising] Chiusura canale isolato: ${activeCarovanaId}`);
+    console.log("[Cruising] Chiusura totale sessione e pulizia canali...");
     
-    // 1. Distruggi istanza PeerJS
+    // 1. Chiudi PeerJS
     if (peerRef.current) {
       peerRef.current.disconnect();
       peerRef.current.destroy();
       peerRef.current = null;
     }
 
-    // 2. Ferma hardware microfono
+    // 2. Ferma il microfono
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
 
-    // 3. Disiscrizione totale dal canale Supabase
+    // 3. Rimuovi canale Supabase
     if (channelRef.current) {
       await supabase.removeChannel(channelRef.current);
       channelRef.current = null;
     }
     
-    // 4. Svuota tutti i flussi audio attivi
+    // 4. Ferma tutti gli audio degli altri
     audioElementsRef.current.forEach(audio => {
       audio.pause();
       audio.srcObject = null;
@@ -101,19 +102,15 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     setUnits([]);
     setActiveCarovanaId(null);
     setIsSpeaking(false);
-    setLastAlert(null);
-  }, [activeCarovanaId]);
+  }, []);
 
   const joinChannel = useCallback(async (carovanaId: string, username: string, avatarUrl: string, role: string, carName?: string) => {
-    // Se stiamo cercando di entrare in un canale diverso da quello attivo, facciamo un reset totale
-    if (activeCarovanaId && activeCarovanaId !== carovanaId) {
-      console.log("[Cruising] Cambio canale rilevato. Eseguo Hard Reset.");
+    await unlockAudio();
+
+    // Se siamo già in un canale, facciamo un reset totale prima di entrare nel nuovo
+    if (isActive || activeCarovanaId) {
       await leaveChannel();
     }
-
-    if (isActive && activeCarovanaId === carovanaId) return;
-
-    await unlockAudio();
 
     const PeerClass = (window as any).Peer;
     if (!PeerClass) return;
@@ -129,7 +126,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       streamRef.current = stream;
       stream.getAudioTracks().forEach(track => track.enabled = false);
 
-      // ID Sessione unico basato su UUID dell'evento per isolamento totale
+      // ID Sessione unico per evitare conflitti con vecchie sessioni "zombie"
       const sessionId = Math.random().toString(36).substring(2, 8);
       const peerId = `lwd-${carovanaId}-${username.replace(/\s+/g, '-')}-${sessionId}`;
       
@@ -143,13 +140,12 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       });
 
       peer.on('open', (id: string) => {
-        console.log(`[Cruising] Sessione isolata aperta: ${id}`);
+        console.log(`[Cruising] Nuova sessione aperta: ${id}`);
         setIsActive(true);
         setActiveCarovanaId(carovanaId);
         setCurrentUsername(username);
         
-        // Canale Supabase segregato per ID
-        const channel = supabase.channel(`cruising-v2-${carovanaId}`, {
+        const channel = supabase.channel(`cruising-${carovanaId}`, {
           config: {
             presence: {
               key: id,
@@ -174,7 +170,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
                   isSpeaking: false
                 });
 
-                // Connessione P2P solo se non già esistente
                 if (peerRef.current && !peerRef.current.connections[presenceId]) {
                   const call = peerRef.current.call(presenceId, streamRef.current!);
                   call.on('stream', (remoteStream: MediaStream) => {
@@ -212,12 +207,17 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       });
 
       peer.on('call', (call: any) => {
-        // Accetta chiamate solo se provengono dallo stesso namespace (stesso carovanaId)
-        if (call.peer.includes(carovanaId)) {
-          call.answer(streamRef.current!);
-          call.on('stream', (remoteStream: MediaStream) => {
-            playRemoteStream(call.peer, remoteStream);
-          });
+        call.answer(streamRef.current!);
+        call.on('stream', (remoteStream: MediaStream) => {
+          playRemoteStream(call.peer, remoteStream);
+        });
+      });
+
+      peer.on('error', (err: any) => {
+        console.error('[Cruising] PeerJS Error:', err.type);
+        if (err.type === 'peer-unavailable') {
+          // Rimuoviamo l'unità che non risponde
+          setUnits(prev => prev.filter(u => !u.id.includes(err.peer)));
         }
       });
 
@@ -252,6 +252,13 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       payload: { type, message, sender: currentUsername }
     });
   }, [currentUsername]);
+
+  // Cleanup automatico se il provider viene smontato
+  useEffect(() => {
+    return () => {
+      leaveChannel();
+    };
+  }, [leaveChannel]);
 
   return (
     <CruisingContext.Provider value={{ 
