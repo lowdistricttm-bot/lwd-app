@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, X, Users, Radio, AlertTriangle, Info, Volume2, ShieldAlert, Zap, User } from 'lucide-react';
 import { useCruising } from '@/hooks/use-cruising';
@@ -24,7 +25,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
 
   const { 
     isActive, isSpeaking, units, lastAlert,
-    joinChannel, toggleMic, sendAlert 
+    joinChannel, leaveChannel, toggleMic, sendAlert 
   } = useCruising();
 
   useBodyLock(isOpen);
@@ -47,7 +48,6 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
 
   useEffect(() => {
     if (isOpen && !isActive && profile) {
-      // Lo sblocco audio avviene già dentro joinChannel, ma lo chiamiamo anche qui per sicurezza
       unlockAudio().then(() => {
         joinChannel(
           carovanaId, 
@@ -59,6 +59,14 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
       });
     }
   }, [isOpen, isActive, profile, carovanaId, carName, joinChannel]);
+
+  const handleClose = () => {
+    onClose();
+    // Attendiamo la fine dell'animazione prima di distruggere la connessione audio
+    setTimeout(() => {
+      leaveChannel();
+    }, 300);
+  };
 
   const alerts = [
     { id: 'bump', label: 'DOSSO', icon: ShieldAlert, color: 'bg-orange-600', msg: 'ATTENZIONE DOSSO' },
@@ -89,14 +97,16 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
     return (t.profile.roles[roleId] || 'MEMBRO').toUpperCase();
   };
 
-  return (
+  // Renderizziamo tutto all'interno di un Portal per forzarlo al di sopra di qualsiasi stacking context
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[1000] bg-black flex flex-col touch-none select-none"
+          initial={{ y: '100%' }}
+          animate={{ y: 0 }}
+          exit={{ y: '100%' }}
+          transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+          className="fixed inset-0 z-[9999] bg-black flex flex-col touch-none select-none"
         >
           {/* Background Ambient Effect per gli Alert */}
           <AnimatePresence>
@@ -124,7 +134,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
                 <p className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Channel: {carovanaTitle}</p>
               </div>
             </div>
-            <button onClick={onClose} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors">
+            <button onClick={handleClose} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors">
               <X size={24} />
             </button>
           </div>
@@ -292,7 +302,8 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
           </div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
 
