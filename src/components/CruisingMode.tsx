@@ -8,6 +8,7 @@ import { useBodyLock } from '@/hooks/use-body-lock';
 import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
+import { unlockAudio } from '@/utils/sound';
 
 interface CruisingModeProps {
   isOpen: boolean;
@@ -46,20 +47,23 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
 
   useEffect(() => {
     if (isOpen && !isActive && profile) {
-      joinChannel(
-        carovanaId, 
-        profile.username || 'Unit', 
-        profile.avatar_url || '', 
-        profile.role || 'member',
-        carName
-      );
+      // Lo sblocco audio avviene già dentro joinChannel, ma lo chiamiamo anche qui per sicurezza
+      unlockAudio().then(() => {
+        joinChannel(
+          carovanaId, 
+          profile.username || 'Unit', 
+          profile.avatar_url || '', 
+          profile.role || 'member',
+          carName
+        );
+      });
     }
   }, [isOpen, isActive, profile, carovanaId, carName, joinChannel]);
 
   const alerts = [
-    { id: 'bump', label: 'DOSSO', icon: ShieldAlert, color: 'bg-orange-600', msg: 'DOSSO' },
-    { id: 'police', label: 'PATTUGLIA', icon: AlertTriangle, color: 'bg-blue-600', msg: 'PATTUGLIA' },
-    { id: 'stop', label: 'SOSTA', icon: Info, color: 'bg-zinc-700', msg: 'SOSTA' }
+    { id: 'bump', label: 'DOSSO', icon: ShieldAlert, color: 'bg-orange-600', msg: 'ATTENZIONE DOSSO' },
+    { id: 'police', label: 'PATTUGLIA', icon: AlertTriangle, color: 'bg-blue-600', msg: 'ATTENZIONE PATTUGLIA' },
+    { id: 'stop', label: 'SOSTA', icon: Info, color: 'bg-zinc-700', msg: 'RICHIESTA SOSTA' }
   ];
 
   const getAlertIcon = (type: string) => {

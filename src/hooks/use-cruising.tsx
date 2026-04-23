@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { playRogerBeep, playAlertSound, speakAlert } from '@/utils/sound';
+import { playRogerBeep, playAlertSound, speakAlert, unlockAudio } from '@/utils/sound';
 
 interface CruisingUnit {
   id: string;
@@ -44,11 +44,38 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const peerRef = useRef<any>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const channelRef = useRef<any>(null);
+  const audioElementsRef = useRef<Map<string, HTMLAudioElement>>(new Map());
+
+  const playRemoteStream = useCallback((presenceId: string, remoteStream: MediaStream) => {
+    // Rimuoviamo eventuali vecchi elementi audio per questo peer
+    if (audioElementsRef.current.has(presenceId)) {
+      const oldAudio = audioElementsRef.current.get(presenceId);
+      oldAudio?.pause();
+      audioElementsRef.current.delete(presenceId);
+    }
+
+    const audio = new Audio();
+    audio.srcObject = remoteStream;
+    audio.autoplay = true;
+    // Importante: su mobile l'audio deve essere "giocato" subito
+    audio.play().catch(err => {
+      console.warn(`[Cruising] Autoplay blocked for peer ${presenceId}:`, err);
+    });
+    
+    audioElementsRef.current.set(presenceId, audio);
+  }, []);
 
   const leaveChannel = useCallback(() => {
     if (peerRef.current) peerRef.current.destroy();
     if (streamRef.current) streamRef.current.getTracks().forEach(track => track.stop());
     if (channelRef.current) supabase.removeChannel(channelRef.current);
+    
+    // Pulisce tutti gli elementi audio
+    audioElementsRef.current.forEach(audio => {
+      audio.pause();
+      audio.srcObject = null;
+    });
+    audioElementsRef.current.clear();
     
     setIsActive(false);
     setUnits([]);
@@ -57,13 +84,22 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   }, []);
 
   const joinChannel = useCallback(async (carovanaId: string, username: string, avatarUrl: string, role: string, carName?: string) => {
+    // Sblocca l'audio prima di iniziare
+    await unlockAudio();
+
     if (isActive) leaveChannel();
 
     const PeerClass = (window as any).Peer;
     if (!PeerClass) return;
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
       streamRef.current = stream;
       stream.getAudioTracks().forEach(track => track.enabled = false);
 
@@ -100,12 +136,11 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
                   isSpeaking: false
                 });
 
+                // Se non siamo già connessi a questo peer, chiamiamolo
                 if (peerRef.current && !peerRef.current.connections[presenceId]) {
                   const call = peerRef.current.call(presenceId, streamRef.current!);
                   call.on('stream', (remoteStream: MediaStream) => {
-                    const audio = new Audio();
-                    audio.srcObject = remoteStream;
-                    audio.play();
+                    playRemoteStream(presenceId, remoteStream);
                   });
                 }
               }
@@ -141,9 +176,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       peer.on('call', (call: any) => {
         call.answer(streamRef.current!);
         call.on('stream', (remoteStream: MediaStream) => {
-          const audio = new Audio();
-          audio.srcObject = remoteStream;
-          audio.play();
+          playRemoteStream(call.peer, remoteStream);
         });
       });
 
@@ -151,7 +184,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     } catch (err) {
       console.error('[Cruising] Error:', err);
     }
-  }, [isActive, leaveChannel]);
+  }, [isActive, leaveChannel, playRemoteStream]);
 
   const toggleMic = useCallback((speaking: boolean) => {
     if (!streamRef.current) return;
