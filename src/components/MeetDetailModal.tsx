@@ -19,6 +19,15 @@ interface MeetDetailModalProps {
   meet: Meet;
 }
 
+const WalkieTalkieIcon = ({ className }: { className?: string }) => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M9 10v8a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2Z" />
+    <path d="M12 12v3" />
+    <path d="M11 6V3" />
+    <path d="M13 8V5" />
+  </svg>
+);
+
 const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
   const navigate = useNavigate();
   const { toggleParticipation } = useMeets();
@@ -108,7 +117,7 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
                 </div>
               )}
 
-              {/* Cruising Mode Button - Spostato sopra a tutte le card */}
+              {/* Cruising Mode Button - Arancione con Walkie Talkie */}
               {meet.is_participating && (
                 <motion.div 
                   initial={{ scale: 0.9, opacity: 0 }}
@@ -117,10 +126,10 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
                 >
                   <Button 
                     onClick={() => setIsRadioOpen(true)}
-                    className="w-full h-16 rounded-full font-black uppercase italic text-[10px] tracking-widest bg-zinc-900 text-white border border-white/10 hover:bg-white hover:text-black transition-all duration-500 shadow-xl flex items-center justify-center gap-3"
+                    className="w-full h-16 rounded-full font-black uppercase italic text-[10px] tracking-widest bg-orange-600 text-white border-orange-500 hover:bg-orange-500 hover:scale-[1.02] transition-all duration-500 shadow-xl flex items-center justify-center gap-3"
                   >
-                    <Radio size={20} className="animate-pulse" />
-                    ATTIVA CRUISING MODE (RADIO CB)
+                    <WalkieTalkieIcon className="animate-pulse" />
+                    WALKIE-TALKIE (RADIO CB)
                   </Button>
                 </motion.div>
               )}
