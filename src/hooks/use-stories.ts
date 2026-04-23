@@ -159,17 +159,17 @@ export const useStories = () => {
         throw likeError;
       }
 
-      // 2. Invia il messaggio in direct (DM) - Gestito in modo che non blocchi il Like se fallisce
-      try {
-        await supabase.from('messages').insert([{
-          sender_id: user.id,
-          receiver_id: authorId,
-          content: "❤️ Ha messo like alla tua storia",
-          image_url: imageUrl,
-          images: [imageUrl]
-        }]);
-      } catch (msgError) {
-        console.warn("[Stories] Impossibile inviare notifica DM, ma il Like è stato salvato:", msgError);
+      // 2. Invia il messaggio in direct (DM)
+      const { error: msgError } = await supabase.from('messages').insert([{
+        sender_id: user.id,
+        receiver_id: authorId,
+        content: "❤️ Ha messo like alla tua storia",
+        image_url: imageUrl,
+        images: [imageUrl]
+      }]);
+
+      if (msgError) {
+        console.warn("[Stories] Errore invio notifica DM:", msgError);
       }
 
       return 'liked';
@@ -197,11 +197,7 @@ export const useStories = () => {
       if (context?.previousStories) {
         queryClient.setQueryData(['active-stories'], context.previousStories);
       }
-      // Gestione specifica per l'errore di rete Load Failed
-      const errorMsg = err?.message === 'Failed to fetch' || err?.name === 'TypeError'
-        ? "Errore di connessione. Riprova tra un istante."
-        : err;
-      showError(errorMsg);
+      showError(err.message || "Errore durante il like");
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['active-stories'] });
