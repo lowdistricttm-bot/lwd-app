@@ -89,7 +89,7 @@ const Meets = () => {
     return result;
   }, [meets, searchQuery, isFilteringNearMe, userProfile]);
 
-  const canOrganize = role && ['admin', 'staff', 'support', 'member'].includes(role);
+  const canOrganize = role && ['admin', 'staff', 'support', 'member', 'subscriber_plus'].includes(role);
 
   const handleCreateClose = (newMeet?: Meet) => {
     setIsCreateModalOpen(false);
