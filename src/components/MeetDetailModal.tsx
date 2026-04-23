@@ -19,15 +19,6 @@ interface MeetDetailModalProps {
   meet: Meet;
 }
 
-const WalkieTalkieIcon = ({ className }: { className?: string }) => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M9 10v8a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2Z" />
-    <path d="M12 12v3" />
-    <path d="M11 6V3" />
-    <path d="M13 8V5" />
-  </svg>
-);
-
 const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
   const navigate = useNavigate();
   const { toggleParticipation } = useMeets();
@@ -116,7 +107,7 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
                 </div>
               )}
 
-              {/* Cruising Mode Button - Arancione Glass con Animazione Pulsante */}
+              {/* Cruising Mode Button - Arancione Sottile con Testo/Icona Neri */}
               {meet.is_participating && (
                 <motion.div 
                   initial={{ scale: 0.9, opacity: 0 }}
@@ -132,9 +123,9 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
                 >
                   <Button 
                     onClick={() => setIsRadioOpen(true)}
-                    className="w-full h-20 rounded-full font-black uppercase italic text-[11px] tracking-widest bg-orange-600/80 backdrop-blur-xl text-white border border-orange-400/30 hover:bg-orange-500 transition-all duration-500 shadow-[0_0_30px_rgba(234,88,12,0.3)] flex items-center justify-center gap-4"
+                    className="w-full h-14 rounded-full font-black uppercase italic text-[10px] tracking-widest bg-orange-500/90 backdrop-blur-xl text-black border border-orange-400/30 hover:bg-orange-400 transition-all duration-500 shadow-[0_0_30px_rgba(249,115,22,0.2)] flex items-center justify-center gap-3"
                   >
-                    <WalkieTalkieIcon className="drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
+                    <Radio size={22} className="animate-pulse" />
                     WALKIE-TALKIE (RADIO CB)
                   </Button>
                 </motion.div>
