@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, X, Users, Radio, AlertTriangle, Info, Truck, Volume2, ShieldAlert, Zap } from 'lucide-react';
 import { useCruising } from '@/hooks/use-cruising';
 import { useBodyLock } from '@/hooks/use-body-lock';
+import { unlockAudio } from '@/utils/sound'; // Aggiunto import
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -40,6 +41,8 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
 
   useEffect(() => {
     if (isOpen && !isActive && user) {
+      // Sblocca l'audio appena l'utente entra nella modalità
+      unlockAudio();
       joinChannel(carovanaId, user.user_metadata?.username || user.email?.split('@')[0] || 'Unit', carName);
     }
   }, [isOpen, isActive, user, carovanaId, carName, joinChannel]);
@@ -207,7 +210,11 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
                 {alerts.map((alert) => (
                   <button
                     key={alert.id}
-                    onClick={() => sendAlert(alert.id, alert.msg)}
+                    onClick={() => {
+                      // Sblocca ulteriormente l'audio all'invio se necessario
+                      unlockAudio();
+                      sendAlert(alert.id, alert.msg);
+                    }}
                     className={cn(
                       "flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border border-white/5 transition-all active:scale-95",
                       alert.color, "bg-opacity-20 hover:bg-opacity-30"
@@ -233,9 +240,9 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
             </div>
 
             <motion.button
-              onMouseDown={() => toggleMic(true)}
+              onMouseDown={() => { unlockAudio(); toggleMic(true); }}
               onMouseUp={() => toggleMic(false)}
-              onTouchStart={(e) => { e.preventDefault(); toggleMic(true); }}
+              onTouchStart={(e) => { e.preventDefault(); unlockAudio(); toggleMic(true); }}
               onTouchEnd={(e) => { e.preventDefault(); toggleMic(false); }}
               whileTap={{ scale: 0.9 }}
               className={cn(
