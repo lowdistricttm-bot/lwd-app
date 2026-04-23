@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, X, Users, Radio, AlertTriangle, Info, Volume2, ShieldAlert, Zap, User, Power } from 'lucide-react';
 import { useCruising } from '@/hooks/use-cruising';
@@ -113,12 +114,17 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
     return (t.profile.roles[roleId] || 'MEMBRO').toUpperCase();
   };
 
-  return (
+  // Se siamo in un ambiente in cui non esiste document (es. SSR), non renderizziamo
+  if (typeof document === 'undefined') return null;
+
+  // Utilizziamo un Portal per rendere il componente figlio diretto di body.
+  // In questo modo scappa a qualsiasi z-index della modale padre ed è al 100% fullscreen.
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <motion.div 
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[1000] bg-black flex flex-col touch-none select-none"
+          className="fixed inset-0 z-[9999] bg-black flex flex-col touch-none select-none"
         >
           {/* Motore Audio: I tag <audio> sono renderizzati fisicamente nel DOM */}
           <div className="hidden">
@@ -196,7 +202,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
                 <div className={cn("p-4 rounded-2xl border transition-all duration-300 flex items-center justify-between", isSpeaking ? "bg-orange-600 text-black border-orange-500 shadow-[0_0_30px_rgba(249,115,22,0.3)]" : "bg-white/5 border-white/5")}>
                   <div className="flex items-center gap-4">
                     <div className={cn("w-12 h-12 rounded-full overflow-hidden border-2", isSpeaking ? "border-black" : "border-white/10")}>
-                      {profile?.avatar_url ? <img src={profile.avatar_url} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-zinc-800"><User size={20} className="text-zinc-600" /></div>}
+                      {profile?.avatar_url ? <img src={profile.avatar_url} className="w-full h-full object-cover" alt="" /> : <div className="w-full h-full flex items-center justify-center bg-zinc-800"><User size={20} className="text-zinc-600" /></div>}
                     </div>
                     <div>
                       <p className="text-[11px] font-black uppercase italic">@{profile?.username || 'Tu'}</p>
@@ -210,7 +216,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
                   <motion.div key={unit.id} layout className={cn("p-4 rounded-2xl border transition-all duration-300 flex items-center justify-between", unit.isSpeaking ? "bg-orange-600/20 text-orange-500 border-orange-500/30" : "bg-white/5 border-white/5")}>
                     <div className="flex items-center gap-4">
                       <div className={cn("w-12 h-12 rounded-full overflow-hidden border-2", unit.isSpeaking ? "border-orange-500" : "border-white/10")}>
-                        {unit.avatarUrl ? <img src={unit.avatarUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-zinc-800"><User size={20} className="text-zinc-600" /></div>}
+                        {unit.avatarUrl ? <img src={unit.avatarUrl} className="w-full h-full object-cover" alt="" /> : <div className="w-full h-full flex items-center justify-center bg-zinc-800"><User size={20} className="text-zinc-600" /></div>}
                       </div>
                       <div>
                         <p className="text-[11px] font-black uppercase italic">@{unit.username}</p>
@@ -257,10 +263,15 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
               {isSpeaking ? <Mic size={40} /> : <MicOff size={40} />}
               <span className="text-[10px] font-black uppercase tracking-widest">PUSH TO TALK</span>
             </motion.button>
+
+            <p className="text-[8px] font-bold uppercase text-zinc-600 tracking-widest text-center max-w-[200px]">
+              Tieni premuto per parlare con il convoglio. Rilascia per chiudere la comunicazione.
+            </p>
           </div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
 
