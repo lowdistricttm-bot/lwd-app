@@ -58,59 +58,78 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     if (isActive) leaveChannel();
 
     const PeerClass = (window as any).Peer;
-    if (!PeerClass) {
-      console.error("[Cruising] PeerJS non caricato correttamente dal CDN.");
-      return;
-    }
+    if (!PeerClass) return;
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       stream.getAudioTracks().forEach(track => track.enabled = false);
 
-      const peer = new PeerClass(`lwd-${carovanaId}-${username.replace(/\s+/g, '-')}`);
+      // Creiamo un ID unico per PeerJS che includa lo username per facilitare il mapping
+      const peerId = `lwd-${carovanaId}-${username.replace(/\s+/g, '-')}-${Math.random().toString(36).substring(2, 6)}`;
+      const peer = new PeerClass(peerId);
 
       peer.on('open', (id: string) => {
         setIsActive(true);
         setActiveCarovanaId(carovanaId);
         setCurrentUsername(username);
         
-        const channel = supabase.channel(`cruising-${carovanaId}`);
+        const channel = supabase.channel(`cruising-${carovanaId}`, {
+          config: {
+            presence: {
+              key: id, // Usiamo l'ID peer come chiave di presenza
+            },
+          },
+        });
+
         channel
-          .on('broadcast', { event: 'unit_joined' }, ({ payload }) => {
-            setUnits(prev => {
-              if (prev.find(u => u.id === payload.id)) return prev;
-              if (peerRef.current && payload.id !== peerRef.current.id) {
-                const call = peerRef.current.call(payload.id, streamRef.current!);
-                call.on('stream', (remoteStream: MediaStream) => {
-                  const audio = new Audio();
-                  audio.srcObject = remoteStream;
-                  audio.play();
+          .on('presence', { event: 'sync' }, () => {
+            const state = channel.presenceState();
+            const activeUnits: CruisingUnit[] = [];
+            
+            // Trasformiamo lo stato di presenza nella nostra lista di unità
+            Object.keys(state).forEach((presenceId) => {
+              // Escludiamo noi stessi dalla lista delle "altre unità"
+              if (presenceId !== id) {
+                const presenceInfo = state[presenceId][0] as any;
+                activeUnits.push({
+                  id: presenceId,
+                  username: presenceInfo.username,
+                  carName: presenceInfo.carName,
+                  isSpeaking: false
                 });
+
+                // Se non siamo ancora collegati via PeerJS, facciamo la chiamata
+                if (peerRef.current && !peerRef.current.connections[presenceId]) {
+                  const call = peerRef.current.call(presenceId, streamRef.current!);
+                  call.on('stream', (remoteStream: MediaStream) => {
+                    const audio = new Audio();
+                    audio.srcObject = remoteStream;
+                    audio.play();
+                  });
+                }
               }
-              return [...prev, { id: payload.id, username: payload.username, carName: payload.carName, isSpeaking: false }];
             });
+            setUnits(activeUnits);
           })
           .on('broadcast', { event: 'speaking_state' }, ({ payload }) => {
             setUnits(prev => prev.map(u => u.username === payload.username ? { ...u, isSpeaking: payload.isSpeaking } : u));
           })
           .on('broadcast', { event: 'road_alert' }, ({ payload }) => {
-            // Se l'alert arriva da qualcun altro, riproducilo
             if (payload.sender !== username) {
               playAlertSound();
-              // Supporto vocale per non dover guardare lo schermo
               speakAlert(`Attenzione. ${payload.message}. Segnalato da ${payload.sender}`);
-              
               setLastAlert({ type: payload.type, message: payload.message, sender: payload.sender });
               setTimeout(() => setLastAlert(null), 8000);
             }
           })
-          .subscribe((status) => {
+          .subscribe(async (status) => {
             if (status === 'SUBSCRIBED') {
-              channel.send({
-                type: 'broadcast',
-                event: 'unit_joined',
-                payload: { id, username, carName }
+              // Tracciamo la nostra presenza nel canale con i dati del profilo
+              await channel.track({
+                username,
+                carName,
+                joined_at: new Date().toISOString()
               });
             }
           });
@@ -148,9 +167,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   }, [currentUsername]);
 
   const sendAlert = useCallback((type: string, message: string) => {
-    // Chi invia sente comunque l'audio di feedback
     playAlertSound();
-    
     channelRef.current?.send({
       type: 'broadcast',
       event: 'road_alert',
