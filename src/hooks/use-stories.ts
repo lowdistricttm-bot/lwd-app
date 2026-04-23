@@ -147,32 +147,29 @@ export const useStories = () => {
     mutationFn: async ({ storyId, authorId, imageUrl, isCurrentlyLiked }: { storyId: string, authorId: string, imageUrl: string, isCurrentlyLiked: boolean }) => {
       if (!user) throw new Error("Accedi per mettere like");
       
-      // Se ha già il like, non facciamo nulla (il tasto sarà comunque disabilitato in UI)
       if (isCurrentlyLiked) return 'already_liked';
 
-      // 1. Inserisci il like
+      // 1. Inserisci il like nel database
       const { error: likeError } = await supabase
         .from('story_likes')
         .insert([{ story_id: storyId, user_id: user.id }]);
       
       if (likeError) {
-        if (likeError.code === '23505') return 'already_liked'; // Già presente nel DB
+        if (likeError.code === '23505') return 'already_liked';
         throw likeError;
       }
 
-      // 2. Invia il messaggio in direct (DM)
-      console.log("[Stories] Invio DM automatico per like...");
-      const { error: msgError } = await supabase.from('messages').insert([{
-        sender_id: user.id,
-        receiver_id: authorId,
-        content: "❤️ Ha messo like alla tua storia",
-        image_url: imageUrl,
-        images: [imageUrl]
-      }]);
-
-      if (msgError) {
-        console.error("[Stories] Errore invio DM:", msgError);
-        // Non blocchiamo l'utente se il messaggio fallisce ma il like è andato
+      // 2. Invia il messaggio in direct (DM) - Gestito in modo che non blocchi il Like se fallisce
+      try {
+        await supabase.from('messages').insert([{
+          sender_id: user.id,
+          receiver_id: authorId,
+          content: "❤️ Ha messo like alla tua storia",
+          image_url: imageUrl,
+          images: [imageUrl]
+        }]);
+      } catch (msgError) {
+        console.warn("[Stories] Impossibile inviare notifica DM, ma il Like è stato salvato:", msgError);
       }
 
       return 'liked';
@@ -196,11 +193,15 @@ export const useStories = () => {
 
       return { previousStories };
     },
-    onError: (err, variables, context) => {
+    onError: (err: any, variables, context) => {
       if (context?.previousStories) {
         queryClient.setQueryData(['active-stories'], context.previousStories);
       }
-      showError(err);
+      // Gestione specifica per l'errore di rete Load Failed
+      const errorMsg = err?.message === 'Failed to fetch' || err?.name === 'TypeError'
+        ? "Errore di connessione. Riprova tra un istante."
+        : err;
+      showError(errorMsg);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['active-stories'] });
