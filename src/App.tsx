@@ -8,6 +8,7 @@ import { LanguageProvider } from "@/hooks/use-translation";
 import { useProfileSync } from "@/hooks/use-profile-sync";
 import { PresenceProvider } from "@/hooks/use-presence";
 import { AuthProvider } from "@/hooks/use-auth";
+import { CruisingProvider } from "@/hooks/use-cruising";
 import { useInviteHandler } from "@/hooks/use-invite-handler";
 import PullToRefresh from "@/components/PullToRefresh";
 import SpotifyPlayer from "@/components/SpotifyPlayer";
@@ -47,7 +48,6 @@ const AppContent = () => {
   
   return (
     <>
-      {/* Header Fisso Globale (gestisce da solo il suo nascondimento) */}
       <Navbar />
       
       <SwipeNavigation>
@@ -55,7 +55,6 @@ const AppContent = () => {
         <PullToRefresh />
         <SpotifyPlayer />
         
-        {/* Contenitore di scorrimento principale - Native Feel */}
         <main id="scroll-container" className="app-content-area">
           <Routes>
             <Route path="/" element={<Index />} />
@@ -84,7 +83,6 @@ const AppContent = () => {
         </main>
       </SwipeNavigation>
 
-      {/* Navigazione Inferiore Fissa Globale */}
       <BottomNav />
     </>
   );
@@ -95,14 +93,16 @@ const App = () => (
     <AuthProvider>
       <LanguageProvider>
         <PresenceProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-              <ScrollToTop />
-              <AppContent />
-            </BrowserRouter>
-          </TooltipProvider>
+          <CruisingProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                <ScrollToTop />
+                <AppContent />
+              </BrowserRouter>
+            </TooltipProvider>
+          </CruisingProvider>
         </PresenceProvider>
       </LanguageProvider>
     </AuthProvider>
