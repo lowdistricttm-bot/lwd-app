@@ -12,6 +12,7 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    // Rimosso storageKey personalizzato per evitare conflitti di lock nell'iframe di anteprima
+    storageKey: 'lwd-auth-token-v1', // Chiave esplicita per stabilizzare il lock
+    flowType: 'pkce',
   }
 });
