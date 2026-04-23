@@ -27,10 +27,14 @@ export const useAdmin = () => {
     }
   });
 
-  const role = profile?.role || (profile?.is_admin ? 'admin' : 'member');
-  const isAdmin = role === 'admin';
-  const isStaff = role === 'staff';
-  const isSupport = role === 'support';
+  // Logica corretta: isAdmin è vero se il flag è true O se il ruolo è 'admin'
+  const isAdmin = profile?.is_admin === true || profile?.role === 'admin';
+  const isStaff = profile?.role === 'staff';
+  const isSupport = profile?.role === 'support';
+  
+  // Ruolo calcolato per la UI
+  const role = profile?.role || (isAdmin ? 'admin' : 'member');
+  
   const canManage = isAdmin || isStaff;
   const canVote = isAdmin || isStaff || isSupport;
 
