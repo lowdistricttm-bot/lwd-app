@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, X, Users, Radio, AlertTriangle, Info, Volume2, ShieldAlert, Zap, User, Power } from 'lucide-react';
@@ -10,6 +10,38 @@ import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
 import { unlockAudio } from '@/utils/sound';
+
+// Componente speciale che renderizza un <audio> fisico nel DOM. 
+// E' l'unico modo per impedire che iOS muti la conversazione.
+const RemoteAudioPlayer = ({ stream }: { stream: MediaStream }) => {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  
+  useEffect(() => {
+    if (audioRef.current && stream) {
+      audioRef.current.srcObject = stream;
+      
+      const playAudio = async () => {
+        try {
+          await audioRef.current?.play();
+        } catch (e) {
+          console.warn("[Cruising] Autoplay bloccato, in attesa di interazione", e);
+        }
+      };
+      
+      playAudio();
+    }
+  }, [stream]);
+
+  // Tag audio fisicamente presente ma invisibile
+  return (
+    <audio 
+      ref={audioRef} 
+      autoPlay 
+      playsInline 
+      className="absolute w-0 h-0 opacity-0 pointer-events-none" 
+    />
+  );
+};
 
 interface CruisingModeProps {
   isOpen: boolean;
@@ -24,7 +56,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
   const [carName, setCarName] = useState<string>('');
 
   const { 
-    isActive, isSpeaking, units, activeCarovanaId, lastAlert,
+    isActive, isSpeaking, units, activeCarovanaId, lastAlert, remoteStreams,
     joinChannel, leaveChannel, toggleMic, sendAlert 
   } = useCruising();
 
@@ -54,14 +86,14 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
     }
   }, [isOpen, profile, carovanaId, carName, joinChannel, isActive, activeCarovanaId]);
 
-  const handlePTTStart = async (e: React.PointerEvent | React.TouchEvent | React.MouseEvent) => {
-    if (e.cancelable) e.preventDefault();
-    await unlockAudio(); // Forza lo sblocco dei permessi audio al primo tap
+  const handlePTTStart = async (e: React.PointerEvent) => {
+    e.preventDefault();
+    await unlockAudio(); 
     toggleMic(true);
   };
 
-  const handlePTTEnd = (e: React.PointerEvent | React.TouchEvent | React.MouseEvent) => {
-    if (e.cancelable) e.preventDefault();
+  const handlePTTEnd = (e: React.PointerEvent) => {
+    e.preventDefault();
     toggleMic(false);
   };
 
@@ -108,6 +140,13 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           className="fixed inset-0 z-[9999] bg-black flex flex-col touch-none select-none"
         >
+          {/* CONTAINER AUDIO NASCOSTO: Stampa nel DOM gli stream in arrivo */}
+          <div className="absolute opacity-0 pointer-events-none w-0 h-0 overflow-hidden">
+            {Object.entries(remoteStreams).map(([peerId, stream]) => (
+              <RemoteAudioPlayer key={peerId} stream={stream} />
+            ))}
+          </div>
+
           <AnimatePresence>
             {lastAlert && (
               <motion.div 
@@ -228,14 +267,11 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
               </div>
             </div>
 
-            {/* Supporto universale per il Push-To-Talk */}
             <motion.button
               onPointerDown={handlePTTStart}
               onPointerUp={handlePTTEnd}
               onPointerLeave={handlePTTEnd}
               onPointerCancel={handlePTTEnd}
-              onTouchStart={handlePTTStart}
-              onTouchEnd={handlePTTEnd}
               onContextMenu={(e) => e.preventDefault()}
               whileTap={{ scale: 0.9 }}
               className={cn(
@@ -248,7 +284,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
             </motion.button>
 
             <p className="text-[8px] font-bold uppercase text-zinc-600 tracking-widest text-center max-w-[200px]">
-              Tieni premuto per parlare con il convoglio. Rilascia per chiudere la comunicazione.
+              Tieni premuto per parlare con il convoglio. Rilascia per chiudere.
             </p>
           </div>
         </motion.div>
