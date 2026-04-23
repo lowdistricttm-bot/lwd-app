@@ -14,11 +14,13 @@ interface CruisingUnit {
 interface CruisingContextType {
   isActive: boolean;
   isSpeaking: boolean;
+  voxEnabled: boolean;
   units: CruisingUnit[];
   activeCarovanaId: string | null;
   joinChannel: (carovanaId: string, username: string, carName?: string) => Promise<void>;
   leaveChannel: () => void;
   toggleMic: (speaking: boolean) => void;
+  setVoxEnabled: (enabled: boolean) => void;
   sendAlert: (type: string, message: string) => void;
 }
 
@@ -27,6 +29,7 @@ const CruisingContext = createContext<CruisingContextType | undefined>(undefined
 export const CruisingProvider = ({ children }: { children: React.ReactNode }) => {
   const [isActive, setIsActive] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voxEnabled, setVoxEnabled] = useState(false);
   const [units, setUnits] = useState<CruisingUnit[]>([]);
   const [activeCarovanaId, setActiveCarovanaId] = useState<string | null>(null);
   const [currentUsername, setCurrentUsername] = useState<string>('');
@@ -34,27 +37,108 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const peerRef = useRef<any>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const channelRef = useRef<any>(null);
+  
+  // VOX Refs
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const voxTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isVoxTransmitting = useRef(false);
 
   const leaveChannel = useCallback(() => {
     if (peerRef.current) peerRef.current.destroy();
     if (streamRef.current) streamRef.current.getTracks().forEach(track => track.stop());
     if (channelRef.current) supabase.removeChannel(channelRef.current);
+    if (audioContextRef.current) audioContextRef.current.close();
     
     setIsActive(false);
     setUnits([]);
     setActiveCarovanaId(null);
     setIsSpeaking(false);
+    setVoxEnabled(false);
   }, []);
+
+  const toggleMic = useCallback((speaking: boolean) => {
+    if (!streamRef.current) return;
+    
+    // Evitiamo loop se lo stato è già corretto
+    if (streamRef.current.getAudioTracks()[0].enabled === speaking) return;
+
+    streamRef.current.getAudioTracks().forEach(track => track.enabled = speaking);
+    setIsSpeaking(speaking);
+
+    if (!speaking) playRogerBeep();
+
+    channelRef.current?.send({
+      type: 'broadcast',
+      event: 'speaking_state',
+      payload: { username: currentUsername, isSpeaking: speaking }
+    });
+  }, [currentUsername]);
+
+  // Logica VOX: Monitoraggio volume microfono
+  useEffect(() => {
+    if (!voxEnabled || !streamRef.current || !isActive) {
+      if (voxTimeoutRef.current) clearTimeout(voxTimeoutRef.current);
+      if (isVoxTransmitting.current) {
+        isVoxTransmitting.current = false;
+        toggleMic(false);
+      }
+      return;
+    }
+
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const source = audioContext.createMediaStreamSource(streamRef.current);
+    const analyser = audioContext.createAnalyser();
+    analyser.fftSize = 256;
+    source.connect(analyser);
+    
+    audioContextRef.current = audioContext;
+    analyserRef.current = analyser;
+
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    
+    const checkVolume = () => {
+      if (!voxEnabled) return;
+      
+      analyser.getByteFrequencyData(dataArray);
+      let sum = 0;
+      for (let i = 0; i < bufferLength; i++) {
+        sum += dataArray[i];
+      }
+      const average = sum / bufferLength;
+
+      // Soglia di attivazione (regolabile, 35 è un buon default per parlato vicino)
+      if (average > 35) {
+        if (!isVoxTransmitting.current) {
+          isVoxTransmitting.current = true;
+          toggleMic(true);
+        }
+        
+        if (voxTimeoutRef.current) clearTimeout(voxTimeoutRef.current);
+        
+        // "Hang time": tiene il mic aperto per 1.5 secondi dopo l'ultimo suono rilevato
+        voxTimeoutRef.current = setTimeout(() => {
+          isVoxTransmitting.current = false;
+          toggleMic(false);
+        }, 1500);
+      }
+
+      requestAnimationFrame(checkVolume);
+    };
+
+    checkVolume();
+
+    return () => {
+      if (audioContext.state !== 'closed') audioContext.close();
+    };
+  }, [voxEnabled, isActive, toggleMic]);
 
   const joinChannel = useCallback(async (carovanaId: string, username: string, carName?: string) => {
     if (isActive) leaveChannel();
 
-    // Recuperiamo la classe Peer caricata globalmente dal CDN
     const PeerClass = (window as any).Peer;
-    if (!PeerClass) {
-      console.error("[Cruising] PeerJS non caricato correttamente dal CDN.");
-      return;
-    }
+    if (!PeerClass) return;
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -115,20 +199,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     }
   }, [isActive, leaveChannel]);
 
-  const toggleMic = useCallback((speaking: boolean) => {
-    if (!streamRef.current) return;
-    streamRef.current.getAudioTracks().forEach(track => track.enabled = speaking);
-    setIsSpeaking(speaking);
-
-    if (!speaking) playRogerBeep();
-
-    channelRef.current?.send({
-      type: 'broadcast',
-      event: 'speaking_state',
-      payload: { username: currentUsername, isSpeaking: speaking }
-    });
-  }, [currentUsername]);
-
   const sendAlert = useCallback((type: string, message: string) => {
     playAlertSound();
     channelRef.current?.send({
@@ -140,8 +210,8 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
   return (
     <CruisingContext.Provider value={{ 
-      isActive, isSpeaking, units, activeCarovanaId,
-      joinChannel, leaveChannel, toggleMic, sendAlert 
+      isActive, isSpeaking, voxEnabled, units, activeCarovanaId,
+      joinChannel, leaveChannel, toggleMic, setVoxEnabled, sendAlert 
     }}>
       {children}
     </CruisingContext.Provider>
