@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const Navbar = () => {
+  const location = useLocation();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -42,9 +43,9 @@ const Navbar = () => {
   const { role } = useAdmin();
   const { myRequest, sendRequest } = useRoleRequests();
   const navigate = useNavigate();
-  const location = useLocation();
 
-  const isSubscriber = role === 'subscriber';
+  // Nascondi la Navbar nelle pagine di chat
+  if (location.pathname.startsWith('/chat/')) return null;
 
   useBodyLock(isSearchOpen);
 
@@ -93,6 +94,7 @@ const Navbar = () => {
   };
 
   const handleDirectClick = () => {
+    const isSubscriber = role === 'subscriber';
     if (isSubscriber) {
       setIsRestrictedOpen(true);
     } else {
@@ -154,7 +156,7 @@ const Navbar = () => {
               className="p-2.5 text-zinc-400 hover:text-white transition-colors relative rounded-full hover:bg-white/5"
             >
               <Send size={20} className="-rotate-12" />
-              {!isSubscriber && unreadMessages > 0 && (
+              {role !== 'subscriber' && unreadMessages > 0 && (
                 <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-white text-black text-[8px] font-black flex items-center justify-center rounded-full border-2 border-black animate-in zoom-in duration-300">
                   {unreadMessages > 9 ? '9+' : unreadMessages}
                 </span>
@@ -208,7 +210,7 @@ const Navbar = () => {
             >
               Invia Selezione Ufficiale
             </AlertDialogAction>
-            <AlertDialogCancel className="rounded-full border-white/10 text-white hover:bg-white/5 font-black uppercase italic text-[10px] w-full h-14 mt-0 transition-all">
+            <AlertDialogCancel className="rounded-full border border-white/10 text-white hover:bg-white/5 font-black uppercase italic text-[10px] w-full h-14 mt-0 transition-all">
               Chiudi
             </AlertDialogCancel>
           </AlertDialogFooter>
