@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import GarageTab from '@/components/GarageTab';
 import ApplicationsTab from '@/components/ApplicationsTab';
@@ -52,6 +52,7 @@ const DEFAULT_COVER = "https://images.unsplash.com/photo-1618005182384-a83a8bd57
 const Profile = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { t, language } = useTranslation();
   const { role, canVote } = useAdmin();
   const { isUserOnline, getLastSeen } = usePresence();
@@ -105,7 +106,11 @@ const Profile = () => {
       setDbLastSeen(formatDistanceToNow(new Date(profileData.last_seen_at), { addSuffix: true, locale: it }));
     }
     
-    if (!activeTab) {
+    // Gestione Tab Iniziale e Parametri URL
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    } else if (!activeTab) {
       const currentRole = profileData?.role || 'subscriber';
       if (currentRole === 'subscriber') {
         setActiveTab(isOwnProfile ? 'garage' : 'profile');
@@ -114,6 +119,14 @@ const Profile = () => {
       }
     }
   };
+
+  // Effetto per ascoltare il cambio di tab dall'esterno (URL)
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (authLoading) return;
