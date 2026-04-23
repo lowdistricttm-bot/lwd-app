@@ -24,7 +24,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
 
   const { 
     isActive, isSpeaking, units, lastAlert,
-    joinChannel, toggleMic, sendAlert, leaveChannel
+    joinChannel, toggleMic, sendAlert 
   } = useCruising();
 
   useBodyLock(isOpen);
@@ -47,6 +47,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
 
   useEffect(() => {
     if (isOpen && !isActive && profile) {
+      // Lo sblocco audio avviene già dentro joinChannel, ma lo chiamiamo anche qui per sicurezza
       unlockAudio().then(() => {
         joinChannel(
           carovanaId, 
@@ -58,20 +59,6 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
       });
     }
   }, [isOpen, isActive, profile, carovanaId, carName, joinChannel]);
-
-  // Assicura che il canale venga chiuso se il componente viene smontato
-  useEffect(() => {
-    return () => {
-      if (isActive) {
-        leaveChannel();
-      }
-    };
-  }, [isActive, leaveChannel]);
-
-  const handleDisconnect = () => {
-    leaveChannel();
-    onClose();
-  };
 
   const alerts = [
     { id: 'bump', label: 'DOSSO', icon: ShieldAlert, color: 'bg-orange-600', msg: 'ATTENZIONE DOSSO' },
@@ -109,7 +96,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[9999] bg-black flex flex-col touch-none select-none"
+          className="fixed inset-0 z-[1000] bg-black flex flex-col touch-none select-none"
         >
           {/* Background Ambient Effect per gli Alert */}
           <AnimatePresence>
@@ -137,12 +124,8 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
                 <p className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Channel: {carovanaTitle}</p>
               </div>
             </div>
-            <button 
-              onClick={handleDisconnect} 
-              className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white border border-red-500/20 rounded-full transition-all shadow-lg"
-            >
-              <span className="text-[10px] font-black uppercase tracking-widest">Disconnetti</span>
-              <X size={16} />
+            <button onClick={onClose} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors">
+              <X size={24} />
             </button>
           </div>
 
