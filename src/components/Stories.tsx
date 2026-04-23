@@ -111,8 +111,8 @@ const Stories = () => {
 
         {otherStories.map((userGroup: any, index: number) => {
           const actualIndex = myStoriesGroup ? index + 1 : index;
-          // Usiamo user_id come chiave, con un fallback unico se mancante
-          const key = userGroup.user_id || `story-group-${index}`;
+          // Chiave composta per garantire l'univocità assoluta
+          const key = `story-group-${userGroup.user_id || 'unknown'}-${index}`;
           return (
             <button key={key} onClick={() => handleStoryClick(actualIndex)} className="flex flex-col items-center gap-2 shrink-0">
               <div className="w-16 h-16 rounded-full p-[2.5px] bg-gradient-to-tr from-zinc-700 via-zinc-400 to-white">

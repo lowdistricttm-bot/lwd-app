@@ -104,9 +104,9 @@ const AcademyModal = ({ isOpen, onClose }: AcademyModalProps) => {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    {tutorials.map((tutorial) => (
+                    {tutorials.map((tutorial, index) => (
                       <AcademyTutorialCard 
-                        key={tutorial.id} 
+                        key={`tutorial-${tutorial.id}-${index}`} 
                         tutorial={tutorial} 
                         onClick={() => setSelectedTutorial(tutorial)} 
                       />

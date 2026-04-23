@@ -172,12 +172,14 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
                   <p className="text-[10px] font-black uppercase tracking-widest">Nessuna notifica</p>
                 </div>
               ) : (
-                notifications?.map((n) => {
+                notifications?.map((n, index) => {
                   const adminStyles = getAdminStyles(n);
                   const isAdminType = !!adminStyles;
+                  // Chiave composta per garantire l'univocità
+                  const key = `notif-${n.id}-${index}`;
 
                   return (
-                    <div key={n.id} className="relative group">
+                    <div key={key} className="relative group">
                       <button
                         onClick={() => handleNotificationClick(n)}
                         className={cn(
