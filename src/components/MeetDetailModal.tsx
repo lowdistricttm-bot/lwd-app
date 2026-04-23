@@ -242,3 +242,29 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
 };
 
 export default MeetDetailModal;
+
+// 1. Importa i componenti necessari
+import { ..., Radio } from 'lucide-react';
+import CruisingMode from './CruisingMode';
+
+// 2. Aggiungi lo stato per gestire l'apertura della radio
+const [isRadioOpen, setIsRadioOpen] = useState(false);
+
+// 3. Inserisci il pulsante nell'area delle azioni (sopra i pulsanti esistenti)
+{meet.is_participating && (
+  <Button 
+    onClick={() => setIsRadioOpen(true)}
+    className="w-full h-16 rounded-full font-black uppercase italic text-[10px] tracking-widest bg-orange-600 text-white border-orange-500 hover:bg-orange-500 hover:scale-105 transition-all shadow-xl flex items-center justify-center gap-3 mb-2"
+  >
+    <Radio size={18} className="animate-pulse" />
+    ATTIVA RADIO CB (CONVOGLIO)
+  </Button>
+)}
+
+// 4. Renderizza il componente CruisingMode in fondo al modal
+<CruisingMode 
+  isOpen={isRadioOpen} 
+  onClose={() => setIsRadioOpen(false)} 
+  carovanaId={meet.id} 
+  carovanaTitle={meet.title} 
+/>
