@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, Power, Users, Radio, AlertTriangle, Info, Volume2, ShieldAlert, Zap, User } from 'lucide-react';
+import { Mic, MicOff, X, Users, Radio, AlertTriangle, Info, Volume2, ShieldAlert, Zap, User, Power } from 'lucide-react';
 import { useCruising } from '@/hooks/use-cruising';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { useTranslation } from '@/hooks/use-translation';
@@ -67,6 +66,12 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
     }, 300);
   };
 
+  const alerts = [
+    { id: 'bump', label: 'DOSSO', icon: ShieldAlert, bgClass: 'bg-orange-500/10', borderClass: 'border-orange-500/30', iconColor: 'text-orange-500', msg: 'ATTENZIONE DOSSO' },
+    { id: 'police', label: 'PATTUGLIA', icon: AlertTriangle, bgClass: 'bg-blue-500/10', borderClass: 'border-blue-500/30', iconColor: 'text-blue-500', msg: 'ATTENZIONE PATTUGLIA' },
+    { id: 'stop', label: 'SOSTA', icon: Info, bgClass: 'bg-zinc-500/10', borderClass: 'border-zinc-500/30', iconColor: 'text-zinc-400', msg: 'RICHIESTA SOSTA' }
+  ];
+
   const getAlertIcon = (type: string) => {
     switch(type) {
       case 'bump': return <ShieldAlert size={32} />;
@@ -90,7 +95,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
     return (t.profile.roles[roleId] || 'MEMBRO').toUpperCase();
   };
 
-  return createPortal(
+  return (
     <AnimatePresence>
       {isOpen && (
         <motion.div 
@@ -127,7 +132,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
               </div>
             </div>
             
-            {/* Pulsante Power con contorno rosso fine */}
+            {/* Pulsante Power per uscire */}
             <button 
               onClick={handleClose} 
               className="w-10 h-10 border border-red-500 text-red-500 bg-transparent rounded-full flex items-center justify-center transition-all hover:bg-red-500/10 active:scale-95"
@@ -171,7 +176,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
                     className="flex flex-col items-center justify-center text-center opacity-30 py-8"
                   >
                     <Radio size={48} className="text-zinc-600 mb-4" />
-                    <p className="text-[9px] font-black uppercase tracking-[0.4em]">In attesa di segnalazioni...</p>
+                    <p className="text-[9px] font-black uppercase tracking-[0.4em]">In attesa di comunicazioni...</p>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -245,78 +250,62 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
             </div>
           </div>
 
-          {/* PTT Button Area con Alert Laterali */}
-          <div className="relative z-10 pt-6 pb-[calc(2.5rem+env(safe-area-inset-bottom))] bg-zinc-900/80 backdrop-blur-2xl border-t border-white/10 flex flex-col items-center justify-center min-h-[220px]">
+          {/* PTT Button & Quick Alerts Area */}
+          <div className="relative z-10 p-6 pb-[calc(2.5rem+env(safe-area-inset-bottom))] bg-zinc-900/80 backdrop-blur-2xl border-t border-white/10 flex flex-col items-center gap-4">
             
-            {/* Segnalazioni Rapide - Lato Sinistro */}
-            <div className="absolute left-6 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-20">
-              <button
-                onClick={() => sendAlert('bump', 'ATTENZIONE DOSSO')}
-                className="flex flex-col items-center gap-1 group"
-              >
-                <div className="w-10 h-10 rounded-full border border-orange-500/30 bg-orange-500/10 flex items-center justify-center group-active:scale-95 transition-all">
-                  <ShieldAlert size={16} className="text-orange-500" />
-                </div>
-                <span className="text-[7px] font-black uppercase tracking-widest text-zinc-400">Dosso</span>
-              </button>
-
-              <button
-                onClick={() => sendAlert('police', 'ATTENZIONE PATTUGLIA')}
-                className="flex flex-col items-center gap-1 group"
-              >
-                <div className="w-10 h-10 rounded-full border border-blue-500/30 bg-blue-500/10 flex items-center justify-center group-active:scale-95 transition-all">
-                  <AlertTriangle size={16} className="text-blue-500" />
-                </div>
-                <span className="text-[7px] font-black uppercase tracking-widest text-zinc-400">Pattuglia</span>
-              </button>
-
-              <button
-                onClick={() => sendAlert('stop', 'RICHIESTA SOSTA')}
-                className="flex flex-col items-center gap-1 group"
-              >
-                <div className="w-10 h-10 rounded-full border border-zinc-500/30 bg-zinc-500/10 flex items-center justify-center group-active:scale-95 transition-all">
-                  <Info size={16} className="text-zinc-400" />
-                </div>
-                <span className="text-[7px] font-black uppercase tracking-widest text-zinc-400">Sosta</span>
-              </button>
+            <div className={cn(
+              "px-4 py-1 rounded-full text-[8px] font-black uppercase tracking-[0.3em] italic transition-all",
+              isSpeaking ? "bg-orange-600 text-black animate-pulse" : "bg-zinc-800 text-zinc-500"
+            )}>
+              {isSpeaking ? 'ON AIR' : 'STANDBY'}
             </div>
 
-            {/* Centro: PTT */}
-            <div className="flex flex-col items-center gap-6">
-              <div className={cn(
-                "px-4 py-1 rounded-full text-[8px] font-black uppercase tracking-[0.3em] italic transition-all",
-                isSpeaking ? "bg-orange-600 text-black animate-pulse" : "bg-zinc-800 text-zinc-500"
-              )}>
-                {isSpeaking ? 'ON AIR' : 'STANDBY'}
-              </div>
+            <motion.button
+              onMouseDown={() => toggleMic(true)}
+              onMouseUp={() => toggleMic(false)}
+              onTouchStart={(e) => { e.preventDefault(); toggleMic(true); }}
+              onTouchEnd={(e) => { e.preventDefault(); toggleMic(false); }}
+              whileTap={{ scale: 0.9 }}
+              className={cn(
+                "w-28 h-28 rounded-full flex flex-col items-center justify-center gap-2 transition-all duration-300 shadow-2xl border-4 shrink-0",
+                isSpeaking 
+                  ? "bg-orange-600 text-black border-orange-400 scale-110 shadow-[0_0_50px_rgba(249,115,22,0.4)]" 
+                  : "bg-zinc-800 text-zinc-500 border-white/5 hover:bg-zinc-700"
+              )}
+            >
+              {isSpeaking ? <Mic size={32} /> : <MicOff size={32} />}
+              <span className="text-[9px] font-black uppercase tracking-widest">PTT</span>
+            </motion.button>
 
-              <motion.button
-                onMouseDown={() => toggleMic(true)}
-                onMouseUp={() => toggleMic(false)}
-                onTouchStart={(e) => { e.preventDefault(); toggleMic(true); }}
-                onTouchEnd={(e) => { e.preventDefault(); toggleMic(false); }}
-                whileTap={{ scale: 0.9 }}
-                className={cn(
-                  "w-32 h-32 rounded-full flex flex-col items-center justify-center gap-2 transition-all duration-300 shadow-2xl border-4 shrink-0",
-                  isSpeaking 
-                    ? "bg-orange-600 text-black border-orange-400 scale-110 shadow-[0_0_50px_rgba(249,115,22,0.4)]" 
-                    : "bg-zinc-800 text-zinc-500 border-white/5 hover:bg-zinc-700"
-                )}
-              >
-                {isSpeaking ? <Mic size={40} /> : <MicOff size={40} />}
-                <span className="text-[10px] font-black uppercase tracking-widest">PTT</span>
-              </motion.button>
-
+            <div className="flex flex-col items-center gap-4 w-full">
               <p className="text-[8px] font-bold uppercase text-zinc-600 tracking-widest text-center max-w-[200px]">
                 Tieni premuto per parlare. Rilascia per chiudere.
               </p>
+
+              {/* Segnalazioni Rapide Piccole Centrate */}
+              <div className="flex items-center justify-center gap-6 mt-1">
+                {alerts.map((alert) => (
+                  <button
+                    key={alert.id}
+                    onClick={() => sendAlert(alert.id, alert.msg)}
+                    className="flex flex-col items-center gap-1.5 group"
+                  >
+                    <div className={cn(
+                      "w-10 h-10 rounded-full border flex items-center justify-center group-active:scale-95 transition-all shadow-lg",
+                      alert.bgClass, alert.borderClass
+                    )}>
+                      <alert.icon size={16} className={alert.iconColor} />
+                    </div>
+                    <span className="text-[7px] font-black uppercase tracking-widest text-zinc-500">{alert.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
-            
+
           </div>
         </motion.div>
       )}
-    </AnimatePresence>,
-    document.body
+    </AnimatePresence>
   );
 };
 
