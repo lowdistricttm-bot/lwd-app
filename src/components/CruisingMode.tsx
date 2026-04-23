@@ -57,9 +57,9 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
   }, [isOpen, isActive, profile, carovanaId, carName, joinChannel]);
 
   const alerts = [
-    { id: 'bump', label: 'DOSSO!', icon: ShieldAlert, color: 'bg-orange-600', msg: 'DOSSO' },
-    { id: 'police', label: 'PATTUGLIA', icon: AlertTriangle, color: 'bg-blue-600', msg: 'PATTUGLIA' },
-    { id: 'stop', label: 'SOSTA', icon: Info, color: 'bg-zinc-700', msg: 'SOSTA' }
+    { id: 'bump', label: 'DOSSO!', icon: ShieldAlert, color: 'bg-orange-600', msg: 'ATTENZIONE: DOSSO IN ARRIVO' },
+    { id: 'police', label: 'PATTUGLIA', icon: AlertTriangle, color: 'bg-blue-600', msg: 'ATTENZIONE: PATTUGLIA SEGNALATA' },
+    { id: 'stop', label: 'SOSTA', icon: Info, color: 'bg-zinc-700', msg: 'RICHIESTA SOSTA TECNICA' }
   ];
 
   const getAlertIcon = (type: string) => {
@@ -112,7 +112,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
           {/* Header */}
           <div className="relative z-10 p-6 flex items-center justify-between border-b border-white/10 bg-zinc-900/50 backdrop-blur-xl pt-[calc(1.5rem+env(safe-area-inset-top))]">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white text-black rounded-2xl flex items-center justify-center shadow-xl animate-pulse">
+              <div className="w-10 h-10 bg-orange-600 text-black rounded-2xl flex items-center justify-center shadow-xl animate-pulse">
                 <Radio size={20} />
               </div>
               <div>
@@ -147,7 +147,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[10px] font-black uppercase tracking-widest text-white/70 mb-1">Alert da @{lastAlert.sender}</p>
-                      <h4 className="text-3xl font-black uppercase italic text-white tracking-[0.1em] leading-tight truncate">
+                      <h4 className="text-2xl font-black uppercase italic text-white tracking-tight leading-tight">
                         {lastAlert.message}
                       </h4>
                     </div>
@@ -166,6 +166,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
               </AnimatePresence>
             </div>
 
+            {/* Unità in Ascolto */}
             <div className="space-y-4">
               <div className="flex items-center justify-between px-2">
                 <h3 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.4em] italic flex items-center gap-2">
@@ -181,7 +182,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
                 {/* Il Mio Profilo (Tu) */}
                 <div className={cn(
                   "p-4 rounded-2xl border transition-all duration-300 flex items-center justify-between",
-                  isSpeaking ? "bg-white text-black border-white shadow-[0_0_30px_rgba(255,255,255,0.2)]" : "bg-white/5 border-white/5"
+                  isSpeaking ? "bg-orange-600 text-black border-orange-500 shadow-[0_0_30px_rgba(249,115,22,0.3)]" : "bg-white/5 border-white/5"
                 )}>
                   <div className="flex items-center gap-4">
                     <div className={cn("w-12 h-12 rounded-full overflow-hidden border-2", isSpeaking ? "border-black" : "border-white/10")}>
@@ -208,11 +209,11 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
                     layout
                     className={cn(
                       "p-4 rounded-2xl border transition-all duration-300 flex items-center justify-between",
-                      unit.isSpeaking ? "bg-zinc-100 text-black border-white" : "bg-white/5 border-white/5"
+                      unit.isSpeaking ? "bg-orange-600/20 text-orange-500 border-orange-500/30" : "bg-white/5 border-white/5"
                     )}
                   >
                     <div className="flex items-center gap-4">
-                      <div className={cn("w-12 h-12 rounded-full overflow-hidden border-2", unit.isSpeaking ? "border-black" : "border-white/10")}>
+                      <div className={cn("w-12 h-12 rounded-full overflow-hidden border-2", unit.isSpeaking ? "border-orange-500" : "border-white/10")}>
                         {unit.avatarUrl ? (
                           <img src={unit.avatarUrl} className="w-full h-full object-cover" alt="" />
                         ) : (
@@ -221,17 +222,18 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
                       </div>
                       <div>
                         <p className="text-[11px] font-black uppercase italic">@{unit.username}</p>
-                        <p className={cn("text-[9px] font-bold uppercase tracking-widest", unit.isSpeaking ? "text-black/60" : "text-zinc-500")}>
+                        <p className={cn("text-[9px] font-bold uppercase tracking-widest", unit.isSpeaking ? "text-orange-500/60" : "text-zinc-500")}>
                           {getRoleLabel(unit.role)}
                         </p>
                       </div>
                     </div>
-                    {unit.isSpeaking && <Volume2 size={20} className="animate-pulse mr-2" />}
+                    {unit.isSpeaking && <Volume2 size={20} className="animate-pulse mr-2 text-orange-500" />}
                   </motion.div>
                 ))}
               </div>
             </div>
 
+            {/* Segnalazioni Rapide */}
             <div className="space-y-4 mt-auto">
               <h3 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.4em] italic ml-2">Segnalazioni Rapide</h3>
               <div className="grid grid-cols-3 gap-3">
@@ -257,7 +259,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
             <div className="flex flex-col items-center gap-2">
               <div className={cn(
                 "px-4 py-1 rounded-full text-[8px] font-black uppercase tracking-[0.3em] italic transition-all",
-                isSpeaking ? "bg-red-600 text-white animate-pulse" : "bg-zinc-800 text-zinc-500"
+                isSpeaking ? "bg-orange-600 text-black animate-pulse" : "bg-zinc-800 text-zinc-500"
               )}>
                 {isSpeaking ? 'ON AIR' : 'STANDBY'}
               </div>
@@ -272,7 +274,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
               className={cn(
                 "w-32 h-32 rounded-full flex flex-col items-center justify-center gap-2 transition-all duration-300 shadow-2xl border-4",
                 isSpeaking 
-                  ? "bg-white text-black border-white scale-110 shadow-[0_0_50px_rgba(255,255,255,0.3)]" 
+                  ? "bg-orange-600 text-black border-orange-400 scale-110 shadow-[0_0_50px_rgba(249,115,22,0.4)]" 
                   : "bg-zinc-800 text-zinc-500 border-white/5 hover:bg-zinc-700"
               )}
             >
