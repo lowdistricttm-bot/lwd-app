@@ -138,12 +138,12 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   };
 
   const handleLike = async () => {
-    if (isOwner || !currentUserId) return;
+    if (isOwner || !currentUserId || currentStory.is_liked) return;
     toggleStoryLike.mutate({
       storyId: currentStory.id,
       authorId: userStories.user_id,
       imageUrl: currentStory.image_url,
-      isCurrentlyLiked: currentStory.is_liked
+      isCurrentlyLiked: false
     });
   };
 
@@ -376,12 +376,14 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                   <motion.button 
                     whileTap={{ scale: 1.4 }}
                     onClick={handleLike} 
+                    disabled={currentStory.is_liked || toggleStoryLike.isPending}
                     className={cn(
                       "w-10 h-10 rounded-full flex items-center justify-center transition-all border shadow-xl", 
-                      currentStory.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-black border-white/20 text-white hover:bg-white/20 hover:scale-105"
+                      currentStory.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-black border-white/20 text-white hover:bg-white/20 hover:scale-105",
+                      (currentStory.is_liked || toggleStoryLike.isPending) && "cursor-default"
                     )}
                   >
-                    <Heart size={18} fill={currentStory.is_liked ? "currentColor" : "none"} />
+                    {toggleStoryLike.isPending ? <Loader2 size={14} className="animate-spin" /> : <Heart size={18} fill={currentStory.is_liked ? "currentColor" : "none"} />}
                   </motion.button>
                   <button onClick={handleShareClick} className="w-10 h-10 bg-black border border-white/20 text-white rounded-full flex items-center justify-center hover:bg-white/20 hover:scale-105 transition-all shadow-xl">
                     <Send size={18} className="-rotate-12 mr-0.5" />

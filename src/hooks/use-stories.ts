@@ -146,41 +146,38 @@ export const useStories = () => {
   const toggleStoryLike = useMutation({
     mutationFn: async ({ storyId, authorId, imageUrl, isCurrentlyLiked }: { storyId: string, authorId: string, imageUrl: string, isCurrentlyLiked: boolean }) => {
       if (!user) throw new Error("Accedi per mettere like");
+      
+      // Se ha già il like, non facciamo nulla (il tasto sarà comunque disabilitato in UI)
+      if (isCurrentlyLiked) return 'already_liked';
 
-      if (isCurrentlyLiked) {
-        const { error } = await supabase
-          .from('story_likes')
-          .delete()
-          .eq('story_id', storyId)
-          .eq('user_id', user.id);
-        if (error) throw error;
-        return 'unliked';
-      } else {
-        // 1. Inserisci il like
-        const { error: likeError } = await supabase
-          .from('story_likes')
-          .insert([{ story_id: storyId, user_id: user.id }]);
-        
-        if (likeError) throw likeError;
-
-        // 2. Invia il messaggio in direct (DM)
-        console.log("[Stories] Invio DM automatico per like...");
-        const { error: msgError } = await supabase.from('messages').insert([{
-          sender_id: user.id,
-          receiver_id: authorId,
-          content: "❤️ Ha messo like alla tua storia",
-          image_url: imageUrl,
-          images: [imageUrl]
-        }]);
-
-        if (msgError) {
-          console.error("[Stories] Errore invio DM:", msgError);
-        }
-
-        return 'liked';
+      // 1. Inserisci il like
+      const { error: likeError } = await supabase
+        .from('story_likes')
+        .insert([{ story_id: storyId, user_id: user.id }]);
+      
+      if (likeError) {
+        if (likeError.code === '23505') return 'already_liked'; // Già presente nel DB
+        throw likeError;
       }
+
+      // 2. Invia il messaggio in direct (DM)
+      console.log("[Stories] Invio DM automatico per like...");
+      const { error: msgError } = await supabase.from('messages').insert([{
+        sender_id: user.id,
+        receiver_id: authorId,
+        content: "❤️ Ha messo like alla tua storia",
+        image_url: imageUrl,
+        images: [imageUrl]
+      }]);
+
+      if (msgError) {
+        console.error("[Stories] Errore invio DM:", msgError);
+        // Non blocchiamo l'utente se il messaggio fallisce ma il like è andato
+      }
+
+      return 'liked';
     },
-    onMutate: async ({ storyId, isCurrentlyLiked }) => {
+    onMutate: async ({ storyId }) => {
       await queryClient.cancelQueries({ queryKey: ['active-stories'] });
       const previousStories = queryClient.getQueryData(['active-stories']);
 
@@ -190,7 +187,7 @@ export const useStories = () => {
           ...userGroup,
           items: userGroup.items.map((item: any) => {
             if (item.id === storyId) {
-              return { ...item, is_liked: !isCurrentlyLiked };
+              return { ...item, is_liked: true };
             }
             return item;
           })
@@ -256,8 +253,6 @@ export const useStories = () => {
   const recordView = useMutation({
     mutationFn: async (storyId: string) => {
       if (!user) return;
-      
-      // L'upsert ora funzionerà correttamente grazie al vincolo UNIQUE aggiunto via SQL
       await supabase
         .from('story_views')
         .upsert([{ story_id: storyId, user_id: user.id }], { onConflict: 'story_id, user_id' });

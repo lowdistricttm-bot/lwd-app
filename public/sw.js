@@ -1,5 +1,5 @@
-// Service Worker per Low District - Versione v7 (Supabase Bypass Fix)
-const CACHE_NAME = 'low-district-v7';
+// Service Worker per Low District - Versione v8 (Total API Bypass)
+const CACHE_NAME = 'low-district-v8';
 const MEDIA_CACHE = 'low-district-media-v1';
 
 self.addEventListener('install', (event) => {
@@ -26,7 +26,13 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
   // ESCLUSIONE TOTALE API: Non intercettare MAI Supabase o WordPress
-  if (url.hostname.includes('supabase.co') || url.pathname.includes('/wp-json/')) {
+  // Questo risolve l'errore "Failed to fetch" durante le chiamate POST/GET alle API
+  if (
+    url.hostname.includes('supabase.co') || 
+    url.hostname.includes('supabase.net') ||
+    url.pathname.includes('/wp-json/') ||
+    url.pathname.includes('/functions/v1/')
+  ) {
     return; 
   }
 
