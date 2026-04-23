@@ -25,7 +25,6 @@ interface CruisingContextType {
   units: CruisingUnit[];
   activeCarovanaId: string | null;
   lastAlert: RoadAlert | null;
-  remoteStreams: Record<string, MediaStream>;
   joinChannel: (carovanaId: string, username: string, avatarUrl: string, role: string, carName?: string) => Promise<void>;
   leaveChannel: () => void;
   toggleMic: (speaking: boolean) => void;
@@ -41,48 +40,74 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const [activeCarovanaId, setActiveCarovanaId] = useState<string | null>(null);
   const [currentUsername, setCurrentUsername] = useState<string>('');
   const [lastAlert, setLastAlert] = useState<RoadAlert | null>(null);
-  
-  // STATO FONDAMENTALE PER L'AUDIO MOBILE: Manteniamo gli stream nello stato React
-  const [remoteStreams, setRemoteStreams] = useState<Record<string, MediaStream>>({});
 
   const peerRef = useRef<any>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const channelRef = useRef<any>(null);
+  const audioElementsRef = useRef<Map<string, HTMLAudioElement>>(new Map());
 
-  const handleIncomingStream = useCallback((presenceId: string, stream: MediaStream) => {
-    console.log(`[Cruising] Flusso audio stabile ricevuto da: ${presenceId}`);
-    setRemoteStreams(prev => ({ ...prev, [presenceId]: stream }));
+  const playRemoteStream = useCallback((presenceId: string, remoteStream: MediaStream) => {
+    // Rimuoviamo eventuali residui audio per questo specifico peer
+    if (audioElementsRef.current.has(presenceId)) {
+      const oldAudio = audioElementsRef.current.get(presenceId);
+      oldAudio?.pause();
+      audioElementsRef.current.delete(presenceId);
+    }
+
+    const audio = new Audio();
+    audio.srcObject = remoteStream;
+    audio.autoplay = true;
+    
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(err => {
+        console.warn(`[Cruising] Autoplay bloccato per ${presenceId}.`, err);
+      });
+    }
+    
+    audioElementsRef.current.set(presenceId, audio);
   }, []);
 
   const leaveChannel = useCallback(async () => {
-    console.log(`[Cruising] Chiusura sicura canale: ${activeCarovanaId}`);
+    console.log(`[Cruising] Chiusura canale isolato: ${activeCarovanaId}`);
     
+    // 1. Distruggi istanza PeerJS
     if (peerRef.current) {
       peerRef.current.disconnect();
       peerRef.current.destroy();
       peerRef.current = null;
     }
 
+    // 2. Ferma hardware microfono
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
 
+    // 3. Disiscrizione totale dal canale Supabase
     if (channelRef.current) {
       await supabase.removeChannel(channelRef.current);
       channelRef.current = null;
     }
     
+    // 4. Svuota tutti i flussi audio attivi
+    audioElementsRef.current.forEach(audio => {
+      audio.pause();
+      audio.srcObject = null;
+    });
+    audioElementsRef.current.clear();
+    
     setIsActive(false);
     setUnits([]);
-    setRemoteStreams({});
     setActiveCarovanaId(null);
     setIsSpeaking(false);
     setLastAlert(null);
   }, [activeCarovanaId]);
 
   const joinChannel = useCallback(async (carovanaId: string, username: string, avatarUrl: string, role: string, carName?: string) => {
+    // Se stiamo cercando di entrare in un canale diverso da quello attivo, facciamo un reset totale
     if (activeCarovanaId && activeCarovanaId !== carovanaId) {
+      console.log("[Cruising] Cambio canale rilevato. Eseguo Hard Reset.");
       await leaveChannel();
     }
 
@@ -99,36 +124,37 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true
-        },
-        video: false
+        } 
       });
       streamRef.current = stream;
       stream.getAudioTracks().forEach(track => track.enabled = false);
 
-      const sessionId = Math.random().toString(36).substring(2, 10);
+      // ID Sessione unico basato su UUID dell'evento per isolamento totale
+      const sessionId = Math.random().toString(36).substring(2, 8);
       const peerId = `lwd-${carovanaId}-${username.replace(/\s+/g, '-')}-${sessionId}`;
       
       const peer = new PeerClass(peerId, {
-        host: '0.peerjs.com',
-        port: 443,
-        secure: true,
-        debug: 1,
         config: {
           iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:global.stun.twilio.com:3478' } // Fallback ultra-stabile
+            { urls: 'stun:stun1.l.google.com:19302' }
           ]
         }
       });
 
-      peer.on('open', (myPeerId: string) => {
-        console.log(`[Cruising] Radio collegata: ${myPeerId}`);
+      peer.on('open', (id: string) => {
+        console.log(`[Cruising] Sessione isolata aperta: ${id}`);
         setIsActive(true);
         setActiveCarovanaId(carovanaId);
         setCurrentUsername(username);
         
-        const channel = supabase.channel(`cruising-radio-${carovanaId}`, {
-          config: { presence: { key: myPeerId } }
+        // Canale Supabase segregato per ID
+        const channel = supabase.channel(`cruising-v2-${carovanaId}`, {
+          config: {
+            presence: {
+              key: id,
+            },
+          },
         });
 
         channel
@@ -137,7 +163,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
             const activeUnits: CruisingUnit[] = [];
             
             Object.keys(state).forEach((presenceId) => {
-              if (presenceId !== myPeerId) {
+              if (presenceId !== id) {
                 const presenceInfo = state[presenceId][0] as any;
                 activeUnits.push({
                   id: presenceId,
@@ -148,29 +174,16 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
                   isSpeaking: false
                 });
 
-                // ANTI-COLLISIONE: Chiama solo se il tuo ID è "maggiore" dell'altro.
-                // Evita che A e B si chiamino contemporaneamente incrociando i flussi.
-                if (myPeerId > presenceId && peerRef.current && !peerRef.current.connections[presenceId]) {
-                  console.log(`[Cruising] Avvio chiamata verso: ${presenceId}`);
+                // Connessione P2P solo se non già esistente
+                if (peerRef.current && !peerRef.current.connections[presenceId]) {
                   const call = peerRef.current.call(presenceId, streamRef.current!);
                   call.on('stream', (remoteStream: MediaStream) => {
-                    handleIncomingStream(presenceId, remoteStream);
+                    playRemoteStream(presenceId, remoteStream);
                   });
                 }
               }
             });
             setUnits(activeUnits);
-
-            // Pulizia flussi "zombie"
-            setRemoteStreams(prev => {
-              const next = { ...prev };
-              Object.keys(next).forEach(streamId => {
-                if (!state[streamId] && streamId !== myPeerId) {
-                  delete next[streamId];
-                }
-              });
-              return next;
-            });
           })
           .on('broadcast', { event: 'speaking_state' }, ({ payload }) => {
             setUnits(prev => prev.map(u => u.username === payload.username ? { ...u, isSpeaking: payload.isSpeaking } : u));
@@ -199,18 +212,20 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       });
 
       peer.on('call', (call: any) => {
-        console.log(`[Cruising] Rispondo alla chiamata di: ${call.peer}`);
-        call.answer(streamRef.current!);
-        call.on('stream', (remoteStream: MediaStream) => {
-          handleIncomingStream(call.peer, remoteStream);
-        });
+        // Accetta chiamate solo se provengono dallo stesso namespace (stesso carovanaId)
+        if (call.peer.includes(carovanaId)) {
+          call.answer(streamRef.current!);
+          call.on('stream', (remoteStream: MediaStream) => {
+            playRemoteStream(call.peer, remoteStream);
+          });
+        }
       });
 
       peerRef.current = peer;
     } catch (err) {
-      console.error('[Cruising] Errore critico Microfono:', err);
+      console.error('[Cruising] Error:', err);
     }
-  }, [isActive, activeCarovanaId, leaveChannel, handleIncomingStream]);
+  }, [isActive, activeCarovanaId, leaveChannel, playRemoteStream]);
 
   const toggleMic = useCallback((speaking: boolean) => {
     if (!streamRef.current) return;
@@ -238,15 +253,9 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     });
   }, [currentUsername]);
 
-  useEffect(() => {
-    return () => {
-      leaveChannel();
-    };
-  }, [leaveChannel]);
-
   return (
     <CruisingContext.Provider value={{ 
-      isActive, isSpeaking, units, activeCarovanaId, lastAlert, remoteStreams,
+      isActive, isSpeaking, units, activeCarovanaId, lastAlert,
       joinChannel, leaveChannel, toggleMic, sendAlert 
     }}>
       {children}
