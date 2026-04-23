@@ -1,5 +1,5 @@
-// Service Worker per Low District - Versione v6 (API Exclusion & Lock Fix)
-const CACHE_NAME = 'low-district-v6';
+// Service Worker per Low District - Versione v7 (Supabase Bypass Fix)
+const CACHE_NAME = 'low-district-v7';
 const MEDIA_CACHE = 'low-district-media-v1';
 
 self.addEventListener('install', (event) => {
@@ -12,7 +12,6 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME && cacheName !== MEDIA_CACHE) {
-            console.log('[SW] Eliminazione vecchia cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -26,13 +25,12 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // 1. ESCLUSIONE API: Non intercettare mai le chiamate a Supabase o altri endpoint API
-  // Questo previene l'errore "Lock broken by another request with the 'steal' option"
-  if (url.host.includes('supabase.co') || url.pathname.includes('/wp-json/')) {
-    return; // Lascia che la richiesta vada direttamente al network senza passare dal SW
+  // ESCLUSIONE TOTALE API: Non intercettare MAI Supabase o WordPress
+  if (url.hostname.includes('supabase.co') || url.pathname.includes('/wp-json/')) {
+    return; 
   }
 
-  // 2. Strategia Stale-While-Revalidate per Cloudinary (Media)
+  // Strategia Stale-While-Revalidate per Cloudinary
   if (url.host === 'res.cloudinary.com') {
     event.respondWith(
       caches.open(MEDIA_CACHE).then((cache) => {
@@ -42,9 +40,7 @@ self.addEventListener('fetch', (event) => {
               cache.put(event.request, networkResponse.clone());
             }
             return networkResponse;
-          }).catch(() => {
-            // Fallback silenzioso
-          });
+          }).catch(() => {});
           return cachedResponse || fetchPromise;
         });
       })
@@ -52,7 +48,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 3. Strategia Network First per le navigazioni
+  // Network First per navigazione
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request).catch(() => {
@@ -62,10 +58,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 4. Strategia Cache First per gli asset statici locali (JS, CSS, Immagini locali)
-  // Intercettiamo solo file statici per evitare di bloccare richieste dinamiche
+  // Cache First per asset statici
   const isStaticAsset = /\.(js|css|png|jpg|jpeg|svg|woff2|json)$/.test(url.pathname);
-  
   if (isStaticAsset) {
     event.respondWith(
       caches.match(event.request).then((response) => {

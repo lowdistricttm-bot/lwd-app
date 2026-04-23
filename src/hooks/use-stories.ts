@@ -73,7 +73,6 @@ export const useStories = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        // Gestione silenziosa degli errori di interruzione del browser
         if (error.message?.includes('AbortError') || error.message?.includes('Lock broken')) {
           return [];
         }
@@ -157,19 +156,26 @@ export const useStories = () => {
         if (error) throw error;
         return 'unliked';
       } else {
-        const { error } = await supabase
+        // 1. Inserisci il like
+        const { error: likeError } = await supabase
           .from('story_likes')
           .insert([{ story_id: storyId, user_id: user.id }]);
         
-        if (error) throw error;
+        if (likeError) throw likeError;
 
-        await supabase.from('messages').insert([{
+        // 2. Invia il messaggio in direct (DM)
+        console.log("[Stories] Invio DM automatico per like...");
+        const { error: msgError } = await supabase.from('messages').insert([{
           sender_id: user.id,
           receiver_id: authorId,
           content: "❤️ Ha messo like alla tua storia",
           image_url: imageUrl,
           images: [imageUrl]
         }]);
+
+        if (msgError) {
+          console.error("[Stories] Errore invio DM:", msgError);
+        }
 
         return 'liked';
       }
@@ -251,6 +257,7 @@ export const useStories = () => {
     mutationFn: async (storyId: string) => {
       if (!user) return;
       
+      // L'upsert ora funzionerà correttamente grazie al vincolo UNIQUE aggiunto via SQL
       await supabase
         .from('story_views')
         .upsert([{ story_id: storyId, user_id: user.id }], { onConflict: 'story_id, user_id' });
