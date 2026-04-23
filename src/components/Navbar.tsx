@@ -33,7 +33,6 @@ const Navbar = () => {
   const [isRestrictedOpen, setIsRestrictedOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Stati per la gestione dello scroll
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollY = useRef(0);
   
@@ -44,17 +43,12 @@ const Navbar = () => {
   const { myRequest, sendRequest } = useRoleRequests();
   const navigate = useNavigate();
 
-  // Nascondi la Navbar nelle pagine di chat
-  if (location.pathname.startsWith('/chat/')) return null;
-
   useBodyLock(isSearchOpen);
 
-  // Mostra sempre la navbar al cambio di pagina
   useEffect(() => {
     setIsVisible(true);
   }, [location.pathname]);
 
-  // Logica di hide/show durante lo scorrimento
   useEffect(() => {
     const container = document.getElementById('scroll-container');
     if (!container) return;
@@ -62,7 +56,6 @@ const Navbar = () => {
     const handleScroll = () => {
       const currentScrollY = container.scrollTop;
       
-      // Protezione per il rimbalzo iOS (rubber-banding) all'inizio pagina
       if (currentScrollY <= 0) {
         setIsVisible(true);
         lastScrollY.current = currentScrollY;
@@ -70,10 +63,8 @@ const Navbar = () => {
       }
 
       if (currentScrollY > lastScrollY.current && currentScrollY > 80) {
-        // Scroll verso il basso
         setIsVisible(false);
       } else if (currentScrollY < lastScrollY.current) {
-        // Scroll verso l'alto
         setIsVisible(true);
       }
       
@@ -111,6 +102,9 @@ const Navbar = () => {
     await sendRequest.mutateAsync('subscriber_plus');
     setIsRestrictedOpen(false);
   };
+
+  // Nascondi la Navbar nelle pagine di chat - Spostato qui per non rompere gli hook
+  if (location.pathname.startsWith('/chat/')) return null;
 
   return (
     <>

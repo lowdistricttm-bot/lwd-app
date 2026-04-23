@@ -9,8 +9,6 @@ import { motion } from 'framer-motion';
 const BottomNav = () => {
   const location = useLocation();
   
-  if (location.pathname.startsWith('/chat/')) return null;
-
   const items = [
     { icon: Home, label: 'Home', href: '/' },
     { icon: MessageSquare, label: 'Bacheca', href: '/bacheca' },
@@ -28,6 +26,9 @@ const BottomNav = () => {
       navigator.vibrate(intensity);
     }
   };
+
+  // Nascondi la BottomNav nelle pagine di chat
+  if (location.pathname.startsWith('/chat/')) return null;
 
   return (
     <div 
