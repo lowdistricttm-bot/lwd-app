@@ -36,22 +36,19 @@ const RainCheck = ({ city }: { city?: string }) => {
       </div>
 
       <div className="relative z-10 p-8 md:p-10 flex flex-col gap-8">
-        {/* Header Area */}
+        {/* Header Area - Perfezionata */}
         <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <div className={cn(
-              "w-12 h-12 rounded-2xl flex items-center justify-center shadow-2xl bg-white/5 border border-white/10",
+              "w-10 h-10 rounded-xl flex items-center justify-center shadow-2xl bg-white/5 border border-white/10",
               weather.canWash ? "text-yellow-400" : "text-zinc-400"
             )}>
-              <Icon size={24} />
+              <Icon size={20} />
             </div>
-            <div>
-              <h4 className="text-sm font-black uppercase tracking-[0.3em] italic leading-none">Rain-Check</h4>
-              <p className="text-[9px] font-bold uppercase tracking-widest mt-1.5 text-zinc-500">Official Meteo Lab</p>
-            </div>
+            <h4 className="text-[11px] font-black uppercase tracking-[0.3em] italic leading-none">Rain-Check</h4>
           </div>
           
-          <div className="px-4 py-2 rounded-full text-[9px] font-black uppercase italic flex items-center gap-2 border border-white/5 bg-black/40 text-zinc-300 shadow-inner">
+          <div className="px-4 py-2 rounded-full text-[9px] font-black uppercase italic flex items-center gap-2 border border-white/5 bg-black/40 text-zinc-300 shadow-inner shrink-0">
             <MapPin size={12} className="text-zinc-500" /> {weather.city}
           </div>
         </div>
