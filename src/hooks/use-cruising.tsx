@@ -26,6 +26,7 @@ interface CruisingContextType {
   units: CruisingUnit[];
   activeCarovanaId: string | null;
   lastAlert: RoadAlert | null;
+  remoteStreams: Record<string, MediaStream>;
   joinChannel: (carovanaId: string, username: string, avatarUrl: string, role: string, carName?: string) => Promise<void>;
   leaveChannel: () => void;
   toggleMic: (speaking: boolean) => void;
@@ -42,52 +43,21 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const [currentUsername, setCurrentUsername] = useState<string>('');
   const [lastAlert, setLastAlert] = useState<RoadAlert | null>(null);
   
+  const [remoteStreams, setRemoteStreams] = useState<Record<string, MediaStream>>({});
+
   const peerRef = useRef<any>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const channelRef = useRef<any>(null);
-  // Usiamo una mappa per gestire gli elementi audio nativi senza passare per il render di React
   const audioElementsRef = useRef<Map<string, HTMLAudioElement>>(new Map());
 
   const handleIncomingStream = useCallback((presenceId: string, stream: MediaStream) => {
     console.log(`[Cruising] Stream audio ricevuto da: ${presenceId}`);
-    
-    // Rimuoviamo eventuale audio precedente per questo peer
-    if (audioElementsRef.current.has(presenceId)) {
-      const oldAudio = audioElementsRef.current.get(presenceId);
-      oldAudio?.pause();
-      if (oldAudio) oldAudio.srcObject = null;
-      audioElementsRef.current.delete(presenceId);
-    }
-
-    // Creazione diretta dell'oggetto Audio nativo (MOLTO più affidabile per WebRTC su mobile)
-    const audio = new Audio();
-    audio.srcObject = stream;
-    audio.autoplay = true;
-    audio.setAttribute('playsinline', 'true'); // Cruciale per iOS
-    
-    audio.play().catch(e => {
-      console.warn("[Cruising] Autoplay bloccato inizialmente dal browser:", e);
-      // Se bloccato, riproviamo al primo tocco
-      const tryPlay = () => {
-        audio.play().catch(console.error);
-        document.removeEventListener('pointerdown', tryPlay);
-      };
-      document.addEventListener('pointerdown', tryPlay);
-    });
-
-    audioElementsRef.current.set(presenceId, audio);
+    setRemoteStreams(prev => ({ ...prev, [presenceId]: stream }));
   }, []);
 
   const leaveChannel = useCallback(async () => {
     console.log(`[Cruising] Chiusura canale: ${activeCarovanaId}`);
     
-    // Ferma tutti gli audio remoti
-    audioElementsRef.current.forEach(audio => {
-      audio.pause();
-      audio.srcObject = null;
-    });
-    audioElementsRef.current.clear();
-
     if (peerRef.current) {
       peerRef.current.disconnect();
       peerRef.current.destroy();
@@ -106,6 +76,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     
     setIsActive(false);
     setUnits([]);
+    setRemoteStreams({});
     setActiveCarovanaId(null);
     setIsSpeaking(false);
     setLastAlert(null);
@@ -125,6 +96,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     }
 
     try {
+      // 1. Richiesta sicura del microfono
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
@@ -135,11 +107,13 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       });
       
       streamRef.current = stream;
+      // Il microfono parte disabilitato (MUTO)
       stream.getAudioTracks().forEach(track => track.enabled = false);
 
       const sessionId = Math.random().toString(36).substring(2, 8);
       const peerId = `lwd-${carovanaId}-${username.replace(/\s+/g, '-')}-${sessionId}`;
       
+      // 2. Connessione al server STUN/TURN
       const peer = new PeerClass(peerId, {
         host: '0.peerjs.com',
         port: 443,
@@ -153,6 +127,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       });
 
       peer.on('open', (myPeerId: string) => {
+        console.log(`[Cruising] Connesso al server con ID: ${myPeerId}`);
         setIsActive(true);
         setActiveCarovanaId(carovanaId);
         setCurrentUsername(username);
@@ -165,6 +140,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
           .on('presence', { event: 'sync' }, () => {
             const state = channel.presenceState();
             
+            // Usiamo il setter funzionale per non perdere lo stato isSpeaking esistente
             setUnits(prevUnits => {
               const activeUnits: CruisingUnit[] = [];
               
@@ -182,6 +158,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
                     isSpeaking: existingUnit ? existingUnit.isSpeaking : false
                   });
 
+                  // Logica di Anti-Collisione
                   if (myPeerId > presenceId && peerRef.current) {
                     const existingConn = peerRef.current.connections[presenceId];
                     if (!existingConn || existingConn.length === 0) {
@@ -223,6 +200,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       });
 
       peer.on('call', (call: any) => {
+        // Accetta la chiamata solo se appartiene alla stessa stanza
         if (call.peer.includes(carovanaId)) {
           call.answer(streamRef.current!);
           call.on('stream', (remoteStream: MediaStream) => {
@@ -235,13 +213,16 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
     } catch (err) {
       console.error('[Cruising] Errore avvio:', err);
-      showError("Impossibile accedere al microfono. Controlla i permessi.");
+      showError("Impossibile accedere al microfono. Controlla i permessi del tuo dispositivo.");
       leaveChannel();
     }
   }, [isActive, activeCarovanaId, leaveChannel, handleIncomingStream]);
 
   const toggleMic = useCallback((speaking: boolean) => {
-    if (!streamRef.current) return;
+    if (!streamRef.current) {
+      console.warn("[Cruising] Impossibile attivare mic: flusso inesistente");
+      return;
+    }
     
     streamRef.current.getAudioTracks().forEach(track => track.enabled = speaking);
     setIsSpeaking(speaking);
@@ -266,7 +247,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
   return (
     <CruisingContext.Provider value={{ 
-      isActive, isSpeaking, units, activeCarovanaId, lastAlert,
+      isActive, isSpeaking, units, activeCarovanaId, lastAlert, remoteStreams,
       joinChannel, leaveChannel, toggleMic, sendAlert 
     }}>
       {children}
