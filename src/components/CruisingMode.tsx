@@ -11,15 +11,14 @@ import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
 import { unlockAudio } from '@/utils/sound';
 
-// Componente dedicato per agganciare l'audio al DOM fisico
+// Componente dedicato per agganciare l'audio al DOM fisico in modo sicuro
 const RemoteAudioPlayer = ({ stream }: { stream: MediaStream }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   
   useEffect(() => {
     if (audioRef.current && stream) {
       audioRef.current.srcObject = stream;
-      // Forza il play con catch per gestire i limiti mobile
-      audioRef.current.play().catch(e => console.warn("[Cruising] Autoplay bloccato dal browser", e));
+      audioRef.current.play().catch(e => console.warn("[Cruising] Autoplay bloccato", e));
     }
   }, [stream]);
 
@@ -69,14 +68,15 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
     }
   }, [isOpen, profile, carovanaId, carName, joinChannel, isActive, activeCarovanaId]);
 
-  const handlePTTStart = async (e: React.MouseEvent | React.TouchEvent) => {
-    if (e.cancelable) e.preventDefault();
-    await unlockAudio();
+  // Usiamo gli eventi Pointer per una compatibilità assoluta su ogni dispositivo
+  const handlePTTStart = (e: React.PointerEvent) => {
+    e.preventDefault();
+    unlockAudio(); // Non blocchiamo l'esecuzione con await
     toggleMic(true);
   };
 
-  const handlePTTEnd = (e: React.MouseEvent | React.TouchEvent) => {
-    if (e.cancelable) e.preventDefault();
+  const handlePTTEnd = (e: React.PointerEvent) => {
+    e.preventDefault();
     toggleMic(false);
   };
 
@@ -114,11 +114,8 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
     return (t.profile.roles[roleId] || 'MEMBRO').toUpperCase();
   };
 
-  // Se siamo in un ambiente in cui non esiste document (es. SSR), non renderizziamo
   if (typeof document === 'undefined') return null;
 
-  // Utilizziamo un Portal per rendere il componente figlio diretto di body.
-  // In questo modo scappa a qualsiasi z-index della modale padre ed è al 100% fullscreen.
   return createPortal(
     <AnimatePresence>
       {isOpen && (
@@ -126,7 +123,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           className="fixed inset-0 z-[9999] bg-black flex flex-col touch-none select-none"
         >
-          {/* Motore Audio: I tag <audio> sono renderizzati fisicamente nel DOM */}
+          {/* Motore Audio: Elementi fisici nascosti nel DOM */}
           <div className="hidden">
             {Object.entries(remoteStreams).map(([peerId, stream]) => (
               <RemoteAudioPlayer key={peerId} stream={stream} />
@@ -190,27 +187,31 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
             <div className="space-y-4">
               <div className="flex items-center justify-between px-2">
                 <h3 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.4em] italic flex items-center gap-2">
-                  <Users size={12} /> Connessi ({units.length + 1})
+                  <Users size={12} /> Connessi ({units.length + (isActive ? 1 : 0)})
                 </h3>
                 <div className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                  <span className="text-[8px] font-black uppercase text-green-500">Live Network</span>
+                  <div className={cn("w-1.5 h-1.5 rounded-full", isActive ? "bg-green-500 animate-pulse" : "bg-red-500")} />
+                  <span className={cn("text-[8px] font-black uppercase", isActive ? "text-green-500" : "text-red-500")}>
+                    {isActive ? 'Live Network' : 'Disconnesso'}
+                  </span>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-3">
-                <div className={cn("p-4 rounded-2xl border transition-all duration-300 flex items-center justify-between", isSpeaking ? "bg-orange-600 text-black border-orange-500 shadow-[0_0_30px_rgba(249,115,22,0.3)]" : "bg-white/5 border-white/5")}>
-                  <div className="flex items-center gap-4">
-                    <div className={cn("w-12 h-12 rounded-full overflow-hidden border-2", isSpeaking ? "border-black" : "border-white/10")}>
-                      {profile?.avatar_url ? <img src={profile.avatar_url} className="w-full h-full object-cover" alt="" /> : <div className="w-full h-full flex items-center justify-center bg-zinc-800"><User size={20} className="text-zinc-600" /></div>}
+                {isActive && (
+                  <div className={cn("p-4 rounded-2xl border transition-all duration-300 flex items-center justify-between", isSpeaking ? "bg-orange-600 text-black border-orange-500 shadow-[0_0_30px_rgba(249,115,22,0.3)]" : "bg-white/5 border-white/5")}>
+                    <div className="flex items-center gap-4">
+                      <div className={cn("w-12 h-12 rounded-full overflow-hidden border-2", isSpeaking ? "border-black" : "border-white/10")}>
+                        {profile?.avatar_url ? <img src={profile.avatar_url} className="w-full h-full object-cover" alt="" /> : <div className="w-full h-full flex items-center justify-center bg-zinc-800"><User size={20} className="text-zinc-600" /></div>}
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-black uppercase italic">@{profile?.username || 'Tu'}</p>
+                        <p className={cn("text-[9px] font-bold uppercase tracking-widest", isSpeaking ? "text-black/60" : "text-zinc-500")}>{getRoleLabel(profile?.role)}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[11px] font-black uppercase italic">@{profile?.username || 'Tu'}</p>
-                      <p className={cn("text-[9px] font-bold uppercase tracking-widest", isSpeaking ? "text-black/60" : "text-zinc-500")}>{getRoleLabel(profile?.role)}</p>
-                    </div>
+                    {isSpeaking && <div className="flex gap-1 pr-2"><div className="w-1 h-5 bg-black animate-[bounce_0.6s_infinite]" /><div className="w-1 h-5 bg-black animate-[bounce_0.8s_infinite]" /><div className="w-1 h-5 bg-black animate-[bounce_0.5s_infinite]" /></div>}
                   </div>
-                  {isSpeaking && <div className="flex gap-1 pr-2"><div className="w-1 h-5 bg-black animate-[bounce_0.6s_infinite]" /><div className="w-1 h-5 bg-black animate-[bounce_0.8s_infinite]" /><div className="w-1 h-5 bg-black animate-[bounce_0.5s_infinite]" /></div>}
-                </div>
+                )}
 
                 {units.map((unit) => (
                   <motion.div key={unit.id} layout className={cn("p-4 rounded-2xl border transition-all duration-300 flex items-center justify-between", unit.isSpeaking ? "bg-orange-600/20 text-orange-500 border-orange-500/30" : "bg-white/5 border-white/5")}>
@@ -250,13 +251,14 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
             </div>
 
             <motion.button
-              onMouseDown={handlePTTStart}
-              onMouseUp={handlePTTEnd}
-              onTouchStart={handlePTTStart}
-              onTouchEnd={handlePTTEnd}
+              onPointerDown={handlePTTStart}
+              onPointerUp={handlePTTEnd}
+              onPointerLeave={handlePTTEnd}
+              onPointerCancel={handlePTTEnd}
+              onContextMenu={(e) => e.preventDefault()}
               whileTap={{ scale: 0.9 }}
               className={cn(
-                "w-32 h-32 rounded-full flex flex-col items-center justify-center gap-2 transition-all duration-300 shadow-2xl border-4",
+                "w-32 h-32 rounded-full flex flex-col items-center justify-center gap-2 transition-all duration-300 shadow-2xl border-4 outline-none",
                 isSpeaking ? "bg-orange-600 text-black border-orange-400 scale-110 shadow-[0_0_50px_rgba(249,115,22,0.4)]" : "bg-zinc-800 text-zinc-500 border-white/5 hover:bg-zinc-700"
               )}
             >
@@ -265,7 +267,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
             </motion.button>
 
             <p className="text-[8px] font-bold uppercase text-zinc-600 tracking-widest text-center max-w-[200px]">
-              Tieni premuto per parlare con il convoglio. Rilascia per chiudere la comunicazione.
+              Tieni premuto per parlare con il convoglio. Rilascia per chiudere.
             </p>
           </div>
         </motion.div>
