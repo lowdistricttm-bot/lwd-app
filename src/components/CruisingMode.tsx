@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, X, Users, Radio, AlertTriangle, Info, Volume2, ShieldAlert, Zap, User } from 'lucide-react';
+import { Mic, MicOff, Users, Radio, AlertTriangle, Info, Volume2, ShieldAlert, Zap, User, Power } from 'lucide-react';
 import { useCruising } from '@/hooks/use-cruising';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { useTranslation } from '@/hooks/use-translation';
@@ -109,7 +109,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[9999] bg-black flex flex-col touch-none select-none"
+          className="fixed inset-0 z-[99999] bg-black flex flex-col touch-none select-none"
         >
           {/* Background Ambient Effect per gli Alert */}
           <AnimatePresence>
@@ -139,10 +139,10 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
             </div>
             <button 
               onClick={handleDisconnect} 
-              className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white border border-red-500/20 rounded-full transition-all shadow-lg"
+              className="w-12 h-12 flex items-center justify-center bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white border border-red-500/20 rounded-full transition-all shadow-lg"
+              title="Spegni Radio"
             >
-              <span className="text-[10px] font-black uppercase tracking-widest">Disconnetti</span>
-              <X size={16} />
+              <Power size={20} strokeWidth={2.5} />
             </button>
           </div>
 
