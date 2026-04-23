@@ -250,9 +250,15 @@ export const useStories = () => {
   const recordView = useMutation({
     mutationFn: async (storyId: string) => {
       if (!user) return;
-      await supabase
-        .from('story_views')
-        .upsert([{ story_id: storyId, user_id: user.id }], { onConflict: 'story_id, user_id' });
+      try {
+        // Usiamo upsert per registrare la visualizzazione
+        await supabase
+          .from('story_views')
+          .upsert([{ story_id: storyId, user_id: user.id }], { onConflict: 'story_id, user_id' });
+      } catch (err) {
+        // Errore silenzioso per non disturbare l'utente se il tracciamento fallisce
+        console.warn("[Stories] Impossibile registrare visualizzazione:", storyId);
+      }
     }
   });
 

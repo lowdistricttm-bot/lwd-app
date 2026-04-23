@@ -1,5 +1,5 @@
-// Service Worker per Low District - Versione v9 (Enhanced API Bypass)
-const CACHE_NAME = 'low-district-v9';
+// Service Worker per Low District - Versione v10 (Ultra-Bypass API)
+const CACHE_NAME = 'low-district-v10';
 const MEDIA_CACHE = 'low-district-media-v1';
 
 self.addEventListener('install', (event) => {
@@ -25,17 +25,17 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // ESCLUSIONE TOTALE API E SUPABASE
-  // Se la richiesta è diretta a Supabase, WordPress o alle Edge Functions, 
-  // il Service Worker non deve intervenire in alcun modo.
+  // BYPASS TOTALE PER API E SUPABASE
+  // Impedisce al Service Worker di toccare qualsiasi richiesta verso i database o le funzioni
   if (
     url.hostname.includes('supabase.co') || 
     url.hostname.includes('supabase.net') ||
     url.hostname.includes('lowdistrict.it') ||
     url.pathname.includes('/wp-json/') ||
-    url.pathname.includes('/functions/v1/')
+    url.pathname.includes('/functions/v1/') ||
+    event.request.method !== 'GET' // Non cachare mai POST, PUT, DELETE
   ) {
-    return; // Lascia che il browser gestisca la richiesta normalmente
+    return; 
   }
 
   // Strategia Stale-While-Revalidate per Cloudinary (Media)
