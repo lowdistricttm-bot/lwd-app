@@ -24,7 +24,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
 
   const { 
     isActive, isSpeaking, units, lastAlert,
-    joinChannel, toggleMic, sendAlert, leaveChannel
+    joinChannel, toggleMic, sendAlert 
   } = useCruising();
 
   useBodyLock(isOpen);
@@ -59,18 +59,6 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
       });
     }
   }, [isOpen, isActive, profile, carovanaId, carName, joinChannel]);
-
-  // Cleanup effect per disconnettere automaticamente se il componente viene smontato
-  useEffect(() => {
-    return () => {
-      leaveChannel();
-    };
-  }, [leaveChannel]);
-
-  const handleClose = () => {
-    leaveChannel();
-    onClose();
-  };
 
   const alerts = [
     { id: 'bump', label: 'DOSSO', icon: ShieldAlert, color: 'bg-orange-600', msg: 'ATTENZIONE DOSSO' },
@@ -108,7 +96,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[9999] bg-black flex flex-col touch-none select-none"
+          className="fixed inset-0 z-[1000] bg-black flex flex-col touch-none select-none"
         >
           {/* Background Ambient Effect per gli Alert */}
           <AnimatePresence>
@@ -136,12 +124,8 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
                 <p className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Channel: {carovanaTitle}</p>
               </div>
             </div>
-            <button 
-              onClick={handleClose} 
-              className="flex items-center gap-2 px-3 py-2 bg-red-500/20 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-colors border border-red-500/30 shadow-lg"
-            >
-              <span className="text-[9px] font-black uppercase tracking-widest hidden sm:inline">Disconnetti</span>
-              <X size={20} />
+            <button onClick={onClose} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors">
+              <X size={24} />
             </button>
           </div>
 
