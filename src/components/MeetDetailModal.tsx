@@ -1,8 +1,14 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react'; // Aggiunto useState
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MapPin, Calendar, Clock, User, Info, Navigation, Share2, Users, CheckCircle2, Loader2, Lock } from 'lucide-react';
+// Aggiunto Radio alla lista di lucide-react
+import { X, MapPin, Calendar, Clock, User, Info, Navigation, Share2, Users, CheckCircle2, Loader2, Lock, Radio } from 'lucide-react';
+import { Meet, useMeets } from '@/hooks/use-meets';
+import { useBodyLock } from '@/hooks/use-body-lock';
+import { Button } from './ui/button';
+import CruisingMode from './CruisingMode'; // Aggiunto l'import del componente
+User, Info, Navigation, Share2, Users, CheckCircle2, Loader2, Lock } from 'lucide-react';
 import { Meet, useMeets } from '@/hooks/use-meets';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { Button } from './ui/button';
