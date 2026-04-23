@@ -7,6 +7,8 @@ import { playRogerBeep, playAlertSound, speakAlert } from '@/utils/sound';
 interface CruisingUnit {
   id: string;
   username: string;
+  avatarUrl?: string;
+  role?: string;
   isSpeaking: boolean;
   carName?: string;
 }
@@ -23,7 +25,7 @@ interface CruisingContextType {
   units: CruisingUnit[];
   activeCarovanaId: string | null;
   lastAlert: RoadAlert | null;
-  joinChannel: (carovanaId: string, username: string, carName?: string) => Promise<void>;
+  joinChannel: (carovanaId: string, username: string, avatarUrl: string, role: string, carName?: string) => Promise<void>;
   leaveChannel: () => void;
   toggleMic: (speaking: boolean) => void;
   sendAlert: (type: string, message: string) => void;
@@ -54,7 +56,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     setIsSpeaking(false);
   }, []);
 
-  const joinChannel = useCallback(async (carovanaId: string, username: string, carName?: string) => {
+  const joinChannel = useCallback(async (carovanaId: string, username: string, avatarUrl: string, role: string, carName?: string) => {
     if (isActive) leaveChannel();
 
     const PeerClass = (window as any).Peer;
@@ -65,7 +67,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       streamRef.current = stream;
       stream.getAudioTracks().forEach(track => track.enabled = false);
 
-      // Creiamo un ID unico per PeerJS che includa lo username per facilitare il mapping
       const peerId = `lwd-${carovanaId}-${username.replace(/\s+/g, '-')}-${Math.random().toString(36).substring(2, 6)}`;
       const peer = new PeerClass(peerId);
 
@@ -77,7 +78,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
         const channel = supabase.channel(`cruising-${carovanaId}`, {
           config: {
             presence: {
-              key: id, // Usiamo l'ID peer come chiave di presenza
+              key: id,
             },
           },
         });
@@ -87,19 +88,18 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
             const state = channel.presenceState();
             const activeUnits: CruisingUnit[] = [];
             
-            // Trasformiamo lo stato di presenza nella nostra lista di unità
             Object.keys(state).forEach((presenceId) => {
-              // Escludiamo noi stessi dalla lista delle "altre unità"
               if (presenceId !== id) {
                 const presenceInfo = state[presenceId][0] as any;
                 activeUnits.push({
                   id: presenceId,
                   username: presenceInfo.username,
+                  avatarUrl: presenceInfo.avatarUrl,
+                  role: presenceInfo.role,
                   carName: presenceInfo.carName,
                   isSpeaking: false
                 });
 
-                // Se non siamo ancora collegati via PeerJS, facciamo la chiamata
                 if (peerRef.current && !peerRef.current.connections[presenceId]) {
                   const call = peerRef.current.call(presenceId, streamRef.current!);
                   call.on('stream', (remoteStream: MediaStream) => {
@@ -118,16 +118,17 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
           .on('broadcast', { event: 'road_alert' }, ({ payload }) => {
             if (payload.sender !== username) {
               playAlertSound();
-              speakAlert(`Attenzione. ${payload.message}. Segnalato da ${payload.sender}`);
+              speakAlert(`${payload.message}. Segnalato da ${payload.sender}`);
               setLastAlert({ type: payload.type, message: payload.message, sender: payload.sender });
               setTimeout(() => setLastAlert(null), 8000);
             }
           })
           .subscribe(async (status) => {
             if (status === 'SUBSCRIBED') {
-              // Tracciamo la nostra presenza nel canale con i dati del profilo
               await channel.track({
                 username,
+                avatarUrl,
+                role,
                 carName,
                 joined_at: new Date().toISOString()
               });

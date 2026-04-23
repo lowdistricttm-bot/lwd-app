@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, X, Users, Radio, AlertTriangle, Info, Truck, Volume2, ShieldAlert, Zap } from 'lucide-react';
+import { Mic, MicOff, X, Users, Radio, AlertTriangle, Info, Volume2, ShieldAlert, Zap, User } from 'lucide-react';
 import { useCruising } from '@/hooks/use-cruising';
 import { useBodyLock } from '@/hooks/use-body-lock';
+import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -16,7 +17,8 @@ interface CruisingModeProps {
 }
 
 const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingModeProps) => {
-  const [user, setUser] = useState<any>(null);
+  const { t } = useTranslation();
+  const [profile, setProfile] = useState<any>(null);
   const [carName, setCarName] = useState<string>('');
 
   const { 
@@ -28,8 +30,12 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
       if (user) {
+        supabase.from('profiles').select('*').eq('id', user.id).single()
+          .then(({ data }) => {
+            setProfile(data);
+          });
+          
         supabase.from('vehicles').select('brand, model').eq('user_id', user.id).eq('is_main', true).maybeSingle()
           .then(({ data }) => {
             if (data) setCarName(`${data.brand} ${data.model}`);
@@ -39,10 +45,16 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
   }, []);
 
   useEffect(() => {
-    if (isOpen && !isActive && user) {
-      joinChannel(carovanaId, user.user_metadata?.username || user.email?.split('@')[0] || 'Unit', carName);
+    if (isOpen && !isActive && profile) {
+      joinChannel(
+        carovanaId, 
+        profile.username || 'Unit', 
+        profile.avatar_url || '', 
+        profile.role || 'member',
+        carName
+      );
     }
-  }, [isOpen, isActive, user, carovanaId, carName, joinChannel]);
+  }, [isOpen, isActive, profile, carovanaId, carName, joinChannel]);
 
   const alerts = [
     { id: 'bump', label: 'DOSSO!', icon: ShieldAlert, color: 'bg-orange-600', msg: 'DOSSO' },
@@ -66,6 +78,11 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
       case 'stop': return "bg-zinc-700 shadow-white/10";
       default: return "bg-red-600";
     }
+  };
+
+  const getRoleLabel = (roleId?: string) => {
+    if (!roleId) return 'MEMBRO';
+    return (t.profile.roles[roleId] || 'MEMBRO').toUpperCase();
   };
 
   return (
@@ -125,12 +142,12 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
                       getAlertColor(lastAlert.type)
                     )}
                   >
-                    <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center shrink-0 animate-bounce">
+                    <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center shrink-0 animate-bounce">
                       {getAlertIcon(lastAlert.type)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[10px] font-black uppercase tracking-widest text-white/70 mb-1">Alert da @{lastAlert.sender}</p>
-                      <h4 className="text-3xl font-black uppercase italic text-white tracking-[0.1em] leading-none whitespace-nowrap">
+                      <h4 className="text-3xl font-black uppercase italic text-white tracking-[0.1em] leading-tight truncate">
                         {lastAlert.message}
                       </h4>
                     </div>
@@ -161,22 +178,30 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
               </div>
 
               <div className="grid grid-cols-1 gap-3">
+                {/* Il Mio Profilo (Tu) */}
                 <div className={cn(
                   "p-4 rounded-2xl border transition-all duration-300 flex items-center justify-between",
                   isSpeaking ? "bg-white text-black border-white shadow-[0_0_30px_rgba(255,255,255,0.2)]" : "bg-white/5 border-white/5"
                 )}>
-                  <div className="flex items-center gap-3">
-                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", isSpeaking ? "bg-black text-white" : "bg-zinc-800 text-zinc-500")}>
-                      <Truck size={20} />
+                  <div className="flex items-center gap-4">
+                    <div className={cn("w-12 h-12 rounded-full overflow-hidden border-2", isSpeaking ? "border-black" : "border-white/10")}>
+                      {profile?.avatar_url ? (
+                        <img src={profile.avatar_url} className="w-full h-full object-cover" alt="" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-zinc-800"><User size={20} className="text-zinc-600" /></div>
+                      )}
                     </div>
                     <div>
-                      <p className="text-[10px] font-black uppercase italic">@{user?.user_metadata?.username || 'Tu'}</p>
-                      <p className={cn("text-[8px] font-bold uppercase tracking-widest", isSpeaking ? "text-black/60" : "text-zinc-500")}>{carName || 'Il tuo progetto'}</p>
+                      <p className="text-[11px] font-black uppercase italic">@{profile?.username || 'Tu'}</p>
+                      <p className={cn("text-[9px] font-bold uppercase tracking-widest", isSpeaking ? "text-black/60" : "text-zinc-500")}>
+                        {getRoleLabel(profile?.role)}
+                      </p>
                     </div>
                   </div>
-                  {isSpeaking && <div className="flex gap-1"><div className="w-1 h-4 bg-black animate-[bounce_0.6s_infinite]" /><div className="w-1 h-4 bg-black animate-[bounce_0.8s_infinite]" /><div className="w-1 h-4 bg-black animate-[bounce_0.5s_infinite]" /></div>}
+                  {isSpeaking && <div className="flex gap-1 pr-2"><div className="w-1 h-5 bg-black animate-[bounce_0.6s_infinite]" /><div className="w-1 h-5 bg-black animate-[bounce_0.8s_infinite]" /><div className="w-1 h-5 bg-black animate-[bounce_0.5s_infinite]" /></div>}
                 </div>
 
+                {/* Altre Unità */}
                 {units.map((unit) => (
                   <motion.div 
                     key={unit.id}
@@ -186,16 +211,22 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
                       unit.isSpeaking ? "bg-zinc-100 text-black border-white" : "bg-white/5 border-white/5"
                     )}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", unit.isSpeaking ? "bg-black text-white" : "bg-zinc-800 text-zinc-500")}>
-                        <Truck size={20} />
+                    <div className="flex items-center gap-4">
+                      <div className={cn("w-12 h-12 rounded-full overflow-hidden border-2", unit.isSpeaking ? "border-black" : "border-white/10")}>
+                        {unit.avatarUrl ? (
+                          <img src={unit.avatarUrl} className="w-full h-full object-cover" alt="" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-zinc-800"><User size={20} className="text-zinc-600" /></div>
+                        )}
                       </div>
                       <div>
-                        <p className="text-[10px] font-black uppercase italic">@{unit.username}</p>
-                        <p className={cn("text-[8px] font-bold uppercase tracking-widest", unit.isSpeaking ? "text-black/60" : "text-zinc-500")}>{unit.carName || 'Membro District'}</p>
+                        <p className="text-[11px] font-black uppercase italic">@{unit.username}</p>
+                        <p className={cn("text-[9px] font-bold uppercase tracking-widest", unit.isSpeaking ? "text-black/60" : "text-zinc-500")}>
+                          {getRoleLabel(unit.role)}
+                        </p>
                       </div>
                     </div>
-                    {unit.isSpeaking && <Volume2 size={16} className="animate-pulse" />}
+                    {unit.isSpeaking && <Volume2 size={20} className="animate-pulse mr-2" />}
                   </motion.div>
                 ))}
               </div>
