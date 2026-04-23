@@ -95,8 +95,8 @@ const AdminUsers = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredUsers.map((user) => (
-              <div key={user.id} className="bg-zinc-900/40 backdrop-blur-md border border-white/5 p-5 flex items-center justify-between group hover:border-white/20 transition-all rounded-[2rem]">
+            {filteredUsers.map((user, i) => (
+              <div key={`admin-user-${user.id}-${i}`} className="bg-zinc-900/40 backdrop-blur-md border border-white/5 p-5 flex items-center justify-between group hover:border-white/20 transition-all rounded-[2rem]">
                 <div className="flex items-center gap-4 min-w-0">
                   <div className="w-14 h-14 bg-zinc-800 rounded-full overflow-hidden border border-white/10 shrink-0">
                     {user.avatar_url ? (

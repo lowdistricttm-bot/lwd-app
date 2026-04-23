@@ -23,7 +23,6 @@ const EventCarovane = ({ eventId, eventTitle, currentUserId }: EventCarovaneProp
   const [selectedCarovana, setSelectedCarovana] = useState<Carovana | null>(null);
   const [editingCarovana, setEditingCarovana] = useState<Carovana | null>(null);
 
-  // Forza il rinfresco quando il componente viene montato
   useEffect(() => {
     refetch();
   }, [eventId, refetch]);
@@ -39,7 +38,6 @@ const EventCarovane = ({ eventId, eventTitle, currentUserId }: EventCarovaneProp
     setEditingCarovana(null);
     refetch();
     
-    // Apri subito il dettaglio della carovana per consentirne la condivisione
     if (newCarovana) {
       setSelectedCarovana(newCarovana);
     }
@@ -80,9 +78,9 @@ const EventCarovane = ({ eventId, eventTitle, currentUserId }: EventCarovaneProp
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {carovane.map((carovana) => (
+          {carovane.map((carovana, i) => (
             <motion.div 
-              key={carovana.id}
+              key={`carovana-${carovana.id}-${i}`}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               onClick={() => setSelectedCarovana(carovana)}
@@ -110,8 +108,8 @@ const EventCarovane = ({ eventId, eventTitle, currentUserId }: EventCarovaneProp
               <div className="flex items-center justify-between pt-4 border-t border-white/5">
                 <div className="flex items-center gap-3">
                   <div className="flex -space-x-2">
-                    {carovana.carovane_partecipanti?.slice(0, 3).map((p, i) => (
-                      <div key={i} className="w-6 h-6 rounded-full border-2 border-black bg-zinc-800 overflow-hidden">
+                    {carovana.carovane_partecipanti?.slice(0, 3).map((p, j) => (
+                      <div key={`part-${p.user_id}-${j}`} className="w-6 h-6 rounded-full border-2 border-black bg-zinc-800 overflow-hidden">
                         {p.profiles?.avatar_url ? <img src={p.profiles.avatar_url} className="w-full h-full object-cover" /> : <Users size={10} className="m-auto h-full text-zinc-700" />}
                       </div>
                     ))}
