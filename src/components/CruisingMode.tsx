@@ -280,6 +280,8 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
     <p className="text-[8px] font-bold uppercase text-zinc-600 tracking-widest text-center max-w-[200px]">
       Tieni premuto per parlare. Rilascia per chiudere.
     </p>
+
+
               {/* Segnalazioni Rapide - Versione Ingrandita e Distanziata */}
 <div className="flex items-center justify-center gap-10 mt-10"> {/* Aumentato mt da 1 a 8 e gap da 6 a 10 */}
   {alerts.map((alert) => (
