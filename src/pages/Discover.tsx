@@ -283,7 +283,7 @@ const Discover = () => {
         <section>
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 flex items-center gap-2 italic">
-              <Car size={12} /> {debouncedSearch ? "Progetti Corrispondenti" : "Ultimi Progetti Caricati"}
+              <Car size={12} /> {debouncedSearch ? "Progetti Corrispondenti" : "Ultimi Veicoli Caricati"}
             </h3>
           </div>
 
