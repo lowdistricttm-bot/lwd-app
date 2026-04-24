@@ -295,7 +295,14 @@ const Profile = () => {
       {profile?.reputation || 0} REP
     </span>
   </div>
-
+{/* Banner se l'utente è in sfida (opzionale, richiede di caricare la battaglia nel file) */}
+<div className="w-full max-w-md mx-auto mb-6 bg-white/5 border border-yellow-500/20 p-4 rounded-2xl flex items-center justify-between cursor-pointer hover:bg-white/10 transition-all" onClick={() => navigate('/battles')}>
+  <div className="flex items-center gap-3">
+    <Swords size={16} className="text-yellow-500" />
+    <p className="text-[10px] font-black uppercase italic text-yellow-500">In Sfida Oggi!</p>
+  </div>
+  <ChevronRight size={16} className="text-yellow-500" />
+</div>
   {/* Stato Online/Offline */}
   <div className="flex items-center gap-1.5">
     <div className={cn("w-1.5 h-1.5 rounded-full", isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500")} />
