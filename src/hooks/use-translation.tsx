@@ -29,7 +29,7 @@ const translations: Record<Language, any> = {
       officialGear: 'OFFICIAL MERCH',
       viewAll: 'VEDI TUTTO',
       communityActivity: 'COMMUNITY ACTIVITY',
-      districtLive: 'DISTRICT LIVE',
+      districtLive: 'DISTRICT FEED',
       districtMeet: 'DISTRICT MEET',
       upcomingMeets: 'INCONTRI COMMUNITY',
       enterFeed: 'ENTRA NELLA BACHECA',
