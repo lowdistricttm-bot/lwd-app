@@ -166,7 +166,7 @@ const translations: Record<Language, any> = {
       orders: 'ORDINI',
       noOrders: 'NESSUN ORDINE TROVATO.',
       selections: 'SELEZIONI',
-      noSelections: 'NON HAI ANCORA INVIATO CANDIDATURE.',
+      noSelections: 'NON HAI ANCORA INVIATO SELEZIONI.',
       info: 'INFO',
       settings: 'IMPOSTAZIONI',
       editProfile: 'MODIFICA PROFILO',
