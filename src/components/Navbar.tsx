@@ -202,7 +202,7 @@ const Navbar = () => {
               onClick={() => window.open('https://www.lowdistrict.it/selection-lwdstrct/', '_blank')} 
               className="rounded-full bg-white/10 border border-white/10 text-white hover:bg-white/20 font-black uppercase italic text-[10px] w-full h-14 transition-all"
             >
-              Invia Selezione Ufficiale
+              Diventa Membro Ufficiale
             </AlertDialogAction>
             <AlertDialogCancel className="rounded-full border border-white/10 text-white hover:bg-white/5 font-black uppercase italic text-[10px] w-full h-14 mt-0 transition-all">
               Chiudi
