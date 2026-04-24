@@ -1,7 +1,5 @@
 "use client";
-import { 
-  User, Settings, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Share2, Edit2, Truck, ExternalLink, ShieldAlert, Tag, Sparkles, Clock, Trophy // <--- AGGIUNGI TROPHY
-} from 'lucide-react';
+
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -26,9 +24,6 @@ import { useAuth } from '@/hooks/use-auth';
 import { useRoleRequests } from '@/hooks/use-role-requests';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { 
-  User, Settings, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Share2, Edit2, Truck, ExternalLink, ShieldAlert, Tag, Sparkles, Clock
-} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -37,6 +32,11 @@ import { showSuccess, showError } from '@/utils/toast';
 import { useTranslation } from '@/hooks/use-translation';
 import { uploadToCloudinary } from '@/utils/cloudinary';
 import { compressImage, validateVideo } from '@/utils/media';
+import { 
+  User, Settings, Car, MessageSquare, ShoppingBag, Loader2, Camera, 
+  ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Share2, 
+  Edit2, Truck, ExternalLink, ShieldAlert, Tag, Sparkles, Clock, Trophy 
+} from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
