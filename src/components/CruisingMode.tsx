@@ -252,7 +252,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
           </div>
 
  {/* PTT Button & Quick Alerts Area */}
-<div className="relative z-12 pt-10 px-6 pb-[calc(2rem+env(safe-area-inset-bottom))] bg-zinc-900/80 backdrop-blur-2xl border-t border-white/10 flex flex-col items-center gap-12">
+<div className="relative z-10 pt-10 px-6 pb-[calc(2rem+env(safe-area-inset-bottom))] bg-zinc-900/80 backdrop-blur-2xl border-t border-white/10 flex flex-col items-center gap-12">
   
   {/* 1. SEGNALAZIONI RAPIDE (Ora in alto) */}
   <div className="flex items-center justify-center gap-10">
@@ -308,7 +308,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
     </motion.button>
 
     {/* Istruzioni */}
-    <p className="text-[8px] font-bold uppercase text-zinc-600 tracking-widest text-center max-w-[600px]">
+    <p className="text-[8px] font-bold uppercase text-zinc-600 tracking-widest text-center max-w-[400px]">
       Tieni premuto per parlare. Rilascia per chiudere.
     </p>
   </div> {/* Chiude la SEZIONE PTT */}
