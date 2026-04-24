@@ -26,7 +26,7 @@ const translations: Record<Language, any> = {
     },
     home: {
       newDrops: 'NUOVI DROP',
-      officialGear: 'OFFICIAL GEAR',
+      officialGear: 'OFFICIAL MERCH',
       viewAll: 'VEDI TUTTO',
       communityActivity: 'COMMUNITY ACTIVITY',
       districtLive: 'DISTRICT LIVE',
