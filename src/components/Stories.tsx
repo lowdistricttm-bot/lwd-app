@@ -85,6 +85,7 @@ const Stories = () => {
                   "w-16 h-16 rounded-full border-[2.5px] flex items-center justify-center bg-zinc-900 overflow-hidden transition-all",
                   myStoriesGroup ? "border-white" : "border-zinc-800"
                 )}
+                
               >
                 {uploadStory.isPending ? (
                   <Loader2 className="animate-spin text-zinc-400" size={20} />
