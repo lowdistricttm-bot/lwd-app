@@ -81,7 +81,7 @@ const AdminDashboard = () => {
     },
     {
       title: "Richieste Upgrade",
-      desc: `Gestisci le richieste per il ruolo ISCRITTO+ (${allRequests?.length || 0} in attesa)`,
+      desc: `Gestisci le richieste (${allRequests?.length || 0} in attesa)`,
       icon: Sparkles,
       action: () => setShowRequests(!showRequests),
       show: isAdmin || isStaff,
