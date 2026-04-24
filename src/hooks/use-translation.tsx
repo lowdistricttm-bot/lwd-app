@@ -51,7 +51,7 @@ const translations: Record<Language, any> = {
     shop: { 
       title: 'SHOP ONLINE', 
       subtitle: 'OFFICIAL MERCH', 
-      search: 'CERCA NEL DISTRICT', 
+      search: 'CERCA NEL DISTRETTO', 
       searchPlaceholder: 'COSA STAI CERCANDO?',
       results: 'RISULTATI RICERCA',
       all: 'TUTTI',
