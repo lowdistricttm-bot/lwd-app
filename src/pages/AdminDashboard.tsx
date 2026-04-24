@@ -72,7 +72,7 @@ const AdminDashboard = () => {
     {
       title: "Gestione Selezioni",
       desc: isAdmin || isStaff 
-        ? "Approva o rifiuta le candidature agli eventi" 
+        ? "Approva o rifiuta le candidature" 
         : "Visualizza e vota le candidature agli eventi",
       icon: ClipboardCheck,
       action: () => navigate('/admin/applications'),
