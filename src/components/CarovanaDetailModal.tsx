@@ -260,7 +260,7 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
                     variant="outline"
                     className="flex-1 h-14 rounded-full font-black uppercase italic text-[9px] tracking-widest border-white/10 text-white hover:bg-white/5 flex items-center justify-center gap-2"
                   >
-                    <Navigation size={16} /> NAVIGA ALLA PARTENZA
+                    <Navigation size={16} /> VAI ALLA PARTENZA
                   </Button>
                   <Button 
                     onClick={handleShare}
