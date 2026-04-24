@@ -34,21 +34,21 @@ const Index = () => {
     { 
       icon: Users, 
       title: t?.home?.values?.community || 'COMMUNITY', 
-      desc: t?.home?.values?.communityDesc || 'Migliaia di utenti uniti dalla stessa passione.',
+      desc: t?.home?.values?.communityDesc || 'Migliaia di utenti uniti dalla stessa passione',
       href: '/bacheca',
       label: 'Entra nel Feed'
     },
     { 
       icon: MapPin, 
       title: 'DISTRICT MEET', 
-      desc: 'Incontri spontanei e raduni della community.',
+      desc: 'Incontri spontanei e raduni della community',
       href: '/meets',
       label: 'Vedi Incontri'
     },
     { 
       icon: Tag, 
       title: 'MARKETPLACE', 
-      desc: 'Compra e vendi componenti in modo sicuro.',
+      desc: 'Compra e vendi componenti in modo sicuro',
       href: '/marketplace',
       label: 'Vai agli Annunci'
     },
