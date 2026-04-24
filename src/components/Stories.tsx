@@ -87,7 +87,7 @@ const Stories = () => {
   <span className="text-[9px] font-black uppercase italic text-yellow-500 tracking-tighter">Vota</span>
 </div>
         {currentUser && (!isSubscriber || myStoriesGroup) && (
-  <div className="flex flex-col items-center gap-2 shrink-0">
+          <div className="flex flex-col items-center gap-2 shrink-0">
             <div className="relative">
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" multiple onChange={handleFileSelect} />
               <button 
