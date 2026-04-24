@@ -37,9 +37,9 @@ const translations: Record<Language, any> = {
         community: 'COMMUNITY',
         communityDesc: 'Migliaia di utenti uniti dalla stessa passione',
         quality: 'QUALITÀ',
-        qualityDesc: 'Merchandising e drop in edizione limitata.',
+        qualityDesc: 'Merchandising e drop in edizione limitata',
         events: 'EVENTI',
-        eventsDesc: 'Gli eventi più esclusivi a portata di app.'
+        eventsDesc: 'Gli eventi più esclusivi a portata di app'
       },
       banner: {
         title: 'THE LOW CULTURE IS HERE.',
