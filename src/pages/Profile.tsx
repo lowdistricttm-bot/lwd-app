@@ -1,5 +1,7 @@
 "use client";
-
+import { 
+  User, Settings, Car, MessageSquare, ShoppingBag, Loader2, Camera, ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Share2, Edit2, Truck, ExternalLink, ShieldAlert, Tag, Sparkles, Clock, Trophy // <--- AGGIUNGI TROPHY
+} from 'lucide-react';
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -93,11 +95,11 @@ const Profile = () => {
   }, [activeTab, refetchOrders, refetchPosts]);
 
   const fetchProfile = async (id: string) => {
-    const { data: profileData, error } = await supabase
-      .from('profiles')
-      .select('id, username, first_name, last_name, avatar_url, cover_url, role, is_admin, bio, city, instagram_handle, facebook_handle, tiktok_handle, website_url, wp_id, last_seen_at, license_plate_privacy')
-      .eq('id', id)
-      .maybeSingle();
+  const { data: profileData, error } = await supabase
+    .from('profiles')
+    .select('id, username, first_name, last_name, avatar_url, cover_url, role, is_admin, bio, city, instagram_handle, facebook_handle, tiktok_handle, website_url, wp_id, last_seen_at, license_plate_privacy, reputation') // <--- AGGIUNGI REPUTATION QUI
+    .eq('id', id)
+    .maybeSingle();
       
     if (error) console.error("[Profile] Errore caricamento:", error);
     setProfile(profileData);
@@ -280,13 +282,28 @@ const Profile = () => {
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mb-6">
-                <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.2em] italic leading-none">{t.profile.roles[userRole] || t.profile.roles.member}</p>
-                <div className="flex items-center gap-1.5">
-                  <div className={cn("w-1.5 h-1.5 rounded-full", isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500")} />
-                  <p className={cn("text-[8px] font-black uppercase tracking-widest leading-none", isOnline ? 'Online' : lastSeen ? `Accesso ${lastSeen}` : 'Offline')}>{isOnline ? 'Online' : lastSeen ? `Accesso ${lastSeen}` : 'Offline'}</p>
-                </div>
-              </div>
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mb-6">
+  {/* Ruolo dell'utente */}
+  <p className="text-zinc-500 text-[8px] font-black uppercase tracking-[0.2em] italic leading-none">
+    {t.profile.roles[userRole] || t.profile.roles.member}
+  </p>
+
+  {/* Badge Reputazione - INSERITO QUI */}
+  <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-2.5 py-1 rounded-full">
+    <Trophy size={10} className="text-yellow-500" />
+    <span className="text-[8px] font-black uppercase italic tracking-widest text-white">
+      {profile?.reputation || 0} REP
+    </span>
+  </div>
+
+  {/* Stato Online/Offline */}
+  <div className="flex items-center gap-1.5">
+    <div className={cn("w-1.5 h-1.5 rounded-full", isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500")} />
+    <p className={cn("text-[8px] font-black uppercase tracking-widest leading-none", isOnline ? 'Online' : lastSeen ? `Accesso ${lastSeen}` : 'Offline')}>
+      {isOnline ? 'Online' : lastSeen ? `Accesso ${lastSeen}` : 'Offline'}
+    </p>
+  </div>
+</div>
 
               <div className="flex justify-center gap-8 md:gap-12 mb-8">
                 <button onClick={() => setFollowModal({ type: 'followers', isOpen: true })} className="flex flex-col items-center group"><span className="text-xl font-black italic tracking-tighter leading-none mb-1">{loadingCounts ? '...' : counts?.followers}</span><span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 group-hover:text-white transition-colors">{t.profile.followers}</span></button>
