@@ -96,7 +96,7 @@ const AdminTrophyModal = ({ isOpen, onClose }: AdminTrophyModalProps) => {
               <div className="flex justify-between items-center">
                 <div>
                   <h2 className="text-2xl font-black italic uppercase tracking-tighter">Crea & Assegna Premio</h2>
-                  <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 mt-1">Personalizza il riconoscimento ufficiale</p>
+                  <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 mt-1">Riconoscimento ufficiale</p>
                 </div>
                 <button type="button" onClick={onClose} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors"><X size={24} /></button>
               </div>
