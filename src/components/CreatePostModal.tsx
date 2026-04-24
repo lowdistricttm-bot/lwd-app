@@ -78,7 +78,7 @@ const CreatePostModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
             <div className="flex justify-between items-center mb-8">
               <div>
                 <h2 className="text-2xl font-black italic uppercase tracking-tighter">Nuovo Post</h2>
-                <p className="text-[8px] text-zinc-400 font-black uppercase tracking-widest mt-1">Condividi con il District</p>
+                <p className="text-[8px] text-zinc-400 font-black uppercase tracking-widest mt-1">Condividi con il Distretto</p>
               </div>
               <button onClick={onClose} className="p-2 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-colors"><X size={20} /></button>
             </div>
