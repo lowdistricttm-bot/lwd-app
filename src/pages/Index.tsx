@@ -34,7 +34,7 @@ const Index = () => {
     { 
       icon: Users, 
       title: t?.home?.values?.community || 'COMMUNITY', 
-      desc: t?.home?.values?.communityDesc || 'Migliaia di utenti uniti dalla stessa passione.',
+      desc: t?.home?.values?.communityDesc || 'Migliaia di appassionati uniti dalla stessa passione.',
       href: '/bacheca',
       label: 'Entra nel Feed'
     },
