@@ -283,24 +283,26 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
                 Tieni premuto per parlare. Rilascia per chiudere.
               </p>
 
-              {/* Segnalazioni Rapide Piccole Centrate */}
-              <div className="flex items-center justify-center gap-6 mt-1">
-                {alerts.map((alert) => (
-                  <button
-                    key={alert.id}
-                    onClick={() => sendAlert(alert.id, alert.msg)}
-                    className="flex flex-col items-center gap-1.5 group"
-                  >
-                    <div className={cn(
-                      "w-10 h-10 rounded-full border flex items-center justify-center group-active:scale-95 transition-all shadow-lg",
-                      alert.bgClass, alert.borderClass
-                    )}>
-                      <alert.icon size={16} className={alert.iconColor} />
-                    </div>
-                    <span className="text-[7px] font-black uppercase tracking-widest text-zinc-500">{alert.label}</span>
-                  </button>
-                ))}
-              </div>
+              {/* Segnalazioni Rapide - Versione Ingrandita e Distanziata */}
+<div className="flex items-center justify-center gap-10 mt-8"> {/* Aumentato mt da 1 a 8 e gap da 6 a 10 */}
+  {alerts.map((alert) => (
+    <button
+      key={alert.id}
+      onClick={() => sendAlert(alert.id, alert.msg)}
+      className="flex flex-col items-center gap-3 group" // Aumentato gap interno da 1.5 a 3
+    >
+      <div className={cn(
+        "w-16 h-16 rounded-full border-2 flex items-center justify-center group-active:scale-90 transition-all shadow-2xl", // Aumentato da w-10 h-10 a w-16 h-16
+        alert.bgClass, alert.borderClass
+      )}>
+        <alert.icon size={28} className={alert.iconColor} /> {/* Aumentata dimensione icona da 16 a 28 */}
+      </div>
+      <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 group-active:text-white transition-colors">
+        {alert.label}
+      </span> {/* Aumentato font da 7px a 10px */}
+    </button>
+  ))}
+</div>
             </div>
 
           </div>
