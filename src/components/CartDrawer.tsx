@@ -50,7 +50,7 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
             <div className="p-6 border-b border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <ShoppingBag size={20} className="text-zinc-400" />
-                <h2 className="text-xl font-black italic uppercase tracking-tighter">Il tuo Carrello</h2>
+                <h2 className="text-xl font-black italic uppercase tracking-tighter">Carrello</h2>
               </div>
               <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
                 <X size={24} />
