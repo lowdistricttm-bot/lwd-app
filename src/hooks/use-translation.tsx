@@ -270,7 +270,7 @@ const translations: Record<Language, any> = {
       officialGear: 'OFFICIAL MERCH',
       viewAll: 'VIEW ALL',
       communityActivity: 'COMMUNITY ACTIVITY',
-      districtLive: 'DISTRICT LIVE',
+      districtLive: 'DISTRICT FEED',
       districtMeet: 'DISTRICT MEET',
       upcomingMeets: 'COMMUNITY GATHERINGS',
       enterFeed: 'ENTER FEED',
