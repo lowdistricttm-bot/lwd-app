@@ -251,45 +251,43 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
             </div>
           </div>
 
- {/* PTT Button & Quick Alerts Area */}
-<div className="relative z-10 pt-10 px-6 pb-[calc(2rem+env(safe-area-inset-bottom))] bg-zinc-900/80 backdrop-blur-2xl border-t border-white/10 flex flex-col items-center gap-12">
+ {/* PTT Button & Quick Alerts Area - Versione Compatta */}
+<div className="relative z-10 pt-6 px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] bg-zinc-900/80 backdrop-blur-2xl border-t border-white/10 flex flex-col items-center gap-6">
+  {/* ^ Ridotto pt a 6, pb a 1.5rem e gap a 6 per occupare meno spazio verticale */}
   
-  {/* 1. SEGNALAZIONI RAPIDE (Ora in alto) */}
-  <div className="flex items-center justify-center gap-10">
+  {/* 1. SEGNALAZIONI RAPIDE (In alto, più compatte) */}
+  <div className="flex items-center justify-center gap-8">
     {alerts.map((alert) => (
       <button
         key={alert.id}
         onClick={() => sendAlert(alert.id, alert.msg)}
-        className="flex flex-col items-center gap-3 group"
+        className="flex flex-col items-center gap-2 group"
       >
         <div className={cn(
-          "w-16 h-16 rounded-full border-2 flex items-center justify-center group-active:scale-90 transition-all shadow-2xl",
+          "w-14 h-14 rounded-full border-2 flex items-center justify-center group-active:scale-90 transition-all shadow-lg",
           alert.bgClass, alert.borderClass
         )}>
-          <alert.icon size={28} className={alert.iconColor} />
+          <alert.icon size={24} className={alert.iconColor} />
         </div>
-        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">
+        <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">
           {alert.label}
         </span>
       </button>
     ))}
   </div>
 
-  {/* Separatore visivo opzionale o semplice spazio */}
-  <div className="w-12 h-[1px] bg-white/10" />
-
-  {/* 2. SEZIONE PTT (Ora in basso) */}
-  <div className="flex flex-col items-center gap-6 w-full">
+  {/* 2. SEZIONE PTT (Sotto, più vicina alle segnalazioni) */}
+  <div className="flex flex-col items-center gap-4 w-full">
     
     {/* Badge di Stato */}
     <div className={cn(
-      "px-4 py-1 rounded-full text-[8px] font-black uppercase tracking-[0.3em] italic transition-all",
+      "px-3 py-0.5 rounded-full text-[7px] font-black uppercase tracking-[0.3em] italic transition-all",
       isSpeaking ? "bg-orange-600 text-black animate-pulse" : "bg-zinc-800 text-zinc-500"
     )}>
       {isSpeaking ? 'ON AIR' : 'STANDBY'}
     </div>
 
-    {/* Pulsante PTT */}
+    {/* Pulsante PTT leggermente più piccolo */}
     <motion.button
       onMouseDown={() => toggleMic(true)}
       onMouseUp={() => toggleMic(false)}
@@ -297,21 +295,22 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
       onTouchEnd={(e) => { e.preventDefault(); toggleMic(false); }}
       whileTap={{ scale: 0.9 }}
       className={cn(
-        "w-28 h-28 rounded-full flex flex-col items-center justify-center gap-2 transition-all duration-300 shadow-2xl border-4 shrink-0",
+        "w-24 h-24 rounded-full flex flex-col items-center justify-center gap-1 transition-all duration-300 shadow-xl border-4 shrink-0",
         isSpeaking 
-          ? "bg-orange-600 text-black border-orange-400 scale-110 shadow-[0_0_50px_rgba(249,115,22,0.4)]" 
+          ? "bg-orange-600 text-black border-orange-400 scale-105 shadow-[0_0_40px_rgba(249,115,22,0.4)]" 
           : "bg-zinc-800 text-zinc-500 border-white/5 hover:bg-zinc-700"
       )}
     >
-      {isSpeaking ? <Mic size={32} /> : <MicOff size={32} />}
-      <span className="text-[9px] font-black uppercase tracking-widest">PTT</span>
+      {isSpeaking ? <Mic size={28} /> : <MicOff size={28} />}
+      <span className="text-[8px] font-black uppercase tracking-widest">PTT</span>
     </motion.button>
 
     {/* Istruzioni */}
-    <p className="text-[8px] font-bold uppercase text-zinc-600 tracking-widest text-center max-w-[200px]">
+    <p className="text-[7px] font-bold uppercase text-zinc-600 tracking-widest text-center max-w-[200px]">
       Tieni premuto per parlare. Rilascia per chiudere.
     </p>
-  </div> {/* Chiude la SEZIONE PTT */}
+  </div>
+</div> {/* Chiude la SEZIONE PTT */}
 
 </div> {/* Chiude il contenitore principale PTT Button & Quick Alerts Area */}
 
