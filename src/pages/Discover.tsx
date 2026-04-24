@@ -1,5 +1,5 @@
 "use client";
-
+import DailyWinner from '@/components/DailyWinner';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
