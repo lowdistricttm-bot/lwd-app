@@ -307,14 +307,28 @@ useEffect(() => {
       {profile?.reputation || 0} REP
     </span>
   </div>
-{/* Banner se l'utente è in sfida (opzionale, richiede di caricare la battaglia nel file) */}
-<div className="w-full max-w-md mx-auto mb-6 bg-white/5 border border-yellow-500/20 p-4 rounded-2xl flex items-center justify-between cursor-pointer hover:bg-white/10 transition-all" onClick={() => navigate('/battles')}>
-  <div className="flex items-center gap-3">
-    <Swords size={16} className="text-yellow-500" />
-    <p className="text-[10px] font-black uppercase italic text-yellow-500">In Sfida Oggi!</p>
-  </div>
-  <ChevronRight size={16} className="text-yellow-500" />
-</div>
+{/* Banner "In Sfida" - Appare SOLO per i 2 utenti in gara */}
+{activeBattle && (activeBattle.car_a?.user_id === targetUserId || activeBattle.car_b?.user_id === targetUserId) && (
+  <motion.div 
+    initial={{ opacity: 0, scale: 0.9 }}
+    animate={{ opacity: 1, scale: 1 }}
+    onClick={() => navigate('/battles')}
+    className="w-full max-w-md mx-auto mb-8 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 p-4 rounded-2xl flex items-center justify-between cursor-pointer group hover:border-yellow-500 transition-all shadow-[0_0_30px_rgba(234,179,8,0.1)]"
+  >
+    <div className="flex items-center gap-4">
+      <div className="w-10 h-10 bg-yellow-500 rounded-xl flex items-center justify-center text-black group-hover:rotate-12 transition-transform">
+        <Swords size={20} />
+      </div>
+      <div className="text-left">
+        <p className="text-[10px] font-black uppercase italic text-yellow-500">In Sfida Oggi!</p>
+        <p className="text-[8px] font-bold uppercase text-zinc-400 tracking-widest">
+          {isOwnProfile ? "La tua auto sta combattendo nell'Arena" : "Quest'auto sta combattendo nell'Arena"}
+        </p>
+      </div>
+    </div>
+    <ChevronRight size={20} className="text-yellow-500" />
+  </motion.div>
+)}
   {/* Stato Online/Offline */}
   <div className="flex items-center gap-1.5">
     <div className={cn("w-1.5 h-1.5 rounded-full", isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500")} />
