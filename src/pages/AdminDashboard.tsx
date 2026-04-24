@@ -96,7 +96,7 @@ const AdminDashboard = () => {
     },
     {
       title: "Assegna Trofei",
-      desc: "Premia i vincitori degli eventi fisici con badge digitali",
+      desc: "Premia i vincitori degli eventi con badge digitali",
       icon: Trophy,
       action: () => setIsTrophyModalOpen(true),
       show: isAdmin || isStaff
