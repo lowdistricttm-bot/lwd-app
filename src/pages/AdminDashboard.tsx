@@ -64,7 +64,7 @@ const AdminDashboard = () => {
   const menuItems = [
     {
       title: "Centro Notifiche",
-      desc: "Invia messaggi diretti o annunci a tutta la community",
+      desc: "Invia annunci a tutta la community",
       icon: Bell,
       action: () => setIsNotifModalOpen(true),
       show: isAdmin || isStaff
