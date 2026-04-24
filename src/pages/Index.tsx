@@ -130,7 +130,7 @@ const Index = () => {
                   </h3>
                 </div>
                 <p className="text-zinc-400 text-[10px] md:text-sm font-bold uppercase tracking-tight italic whitespace-nowrap">
-                  Metti in play e goditi il viaggio nel District.
+                  Metti in play e goditi il viaggio nel Distretto.
                 </p>
                 <div className="flex justify-center md:justify-start">
                   <a 
