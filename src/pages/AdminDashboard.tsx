@@ -109,7 +109,7 @@ const AdminDashboard = () => {
       show: isAdmin || isStaff
     },
     {
-      title: "Configurazione Email",
+      title: "Email",
       desc: "Personalizza i template delle email",
       icon: Mail,
       action: () => setIsEmailModalOpen(true),
