@@ -320,7 +320,7 @@ const Profile = () => {
                         </div>
                         <div className="text-left">
                           <p className="text-xs font-black uppercase italic">Diventa ISCRITTO+</p>
-                          <p className="text-[8px] font-bold uppercase text-zinc-500">Sblocca post, storie e messaggi</p>
+                          <p className="text-[8px] font-bold uppercase text-zinc-500">Sblocca tutte le funzionalità</p>
                         </div>
                       </div>
                       {sendRequest.isPending ? <Loader2 className="animate-spin" size={18} /> : <ChevronRight size={20} />}
