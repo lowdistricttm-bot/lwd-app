@@ -34,7 +34,7 @@ const ApplicationsTab = () => {
       {applications?.length === 0 ? (
         <div className="bg-zinc-900/20 border border-dashed border-white/10 p-16 text-center rounded-[3rem]">
           <Calendar className="mx-auto text-zinc-800 mb-6" size={48} />
-          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest italic">Non hai ancora inviato candidature per gli eventi.</p>
+          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest italic">Nessuna Selezione Inviata.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
