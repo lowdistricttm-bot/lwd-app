@@ -113,10 +113,25 @@ const Bacheca = () => {
         ) : posts && posts.length > 0 ? (
           <div className="max-w-2xl mx-auto flex flex-col gap-6 w-full">
             {posts.map((post, index) => (
-              <div key={`post-${post.id}-${index}`}>
-                <FeedPost post={post} />
-              </div>
-            ))}
+  <div key={`post-${post.id}-${index}`}>
+    <FeedPost post={post} />
+    
+    {/* Banner Battaglia ogni 5 post */}
+    {index % 5 === 4 && (
+      <div 
+        onClick={() => navigate('/battles')}
+        className="my-6 bg-zinc-900 border border-white/10 rounded-[2rem] p-6 flex flex-col items-center text-center gap-4 cursor-pointer hover:border-yellow-500/50 transition-all"
+      >
+        <Swords size={32} className="text-yellow-500" />
+        <div>
+          <h4 className="text-lg font-black italic uppercase tracking-tighter">Stance Battle Live</h4>
+          <p className="text-[9px] font-bold uppercase text-zinc-500 tracking-[0.2em]">Vota la tua preferita e guadagna +1 REP</p>
+        </div>
+        <Button className="bg-white text-black rounded-full h-10 px-8 font-black uppercase italic text-[10px]">Vota Ora</Button>
+      </div>
+    )}
+  </div>
+))}
           </div>
         ) : user && !isLoading && (
           <div className="text-center py-20 opacity-20">
