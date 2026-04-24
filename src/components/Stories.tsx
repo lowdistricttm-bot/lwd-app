@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, Loader2, User, ShieldCheck, LogIn, ArrowRight } from 'lucide-react';
+import { Plus, Loader2, User, ShieldCheck, LogIn, ArrowRight, Swords } from 'lucide-react';
 import { useStories } from '@/hooks/use-stories';
 import { useAdmin } from '@/hooks/use-admin';
 import { useAuth } from '@/hooks/use-auth';
