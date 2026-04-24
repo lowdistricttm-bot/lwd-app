@@ -108,7 +108,7 @@ const MysteryBoxPopup = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-white/5 p-4 rounded-2xl border border-white/5 flex flex-col items-center gap-2 text-center">
                   <PackageCheck size={20} className="text-zinc-400" />
-                  <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500 whitespace-nowrap">Random Products</span>
+                  <span className="text-[6px] font-black uppercase tracking-widest text-zinc-500 whitespace-nowrap">Random Products</span>
                 </div>
                 <div className="bg-white/5 p-4 rounded-2xl border border-white/5 flex flex-col items-center gap-2 text-center">
                   <Ticket size={20} className="text-yellow-500" />
