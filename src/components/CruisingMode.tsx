@@ -252,66 +252,60 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
           </div>
 
           {/* PTT Button & Quick Alerts Area */}
-          {/* PTT Button & Quick Alerts Area */}
-<div className="relative z-10 pt-6 px-6 pb-[calc(3rem+env(safe-area-inset-bottom))] bg-zinc-900/80 backdrop-blur-2xl border-t border-white/10 flex flex-col items-center gap-10">
-  {/* ^ pt-12 e pb-3rem (48px) bilanciano lo spazio sopra e sotto. gap-10 distanzia i blocchi principali */}
-  
-  {/* Badge di Stato */}
-  <div className={cn(
-    "px-4 py-1 rounded-full text-[8px] font-black uppercase tracking-[0.3em] italic transition-all",
-    isSpeaking ? "bg-orange-600 text-black animate-pulse" : "bg-zinc-800 text-zinc-500"
-  )}>
-    {isSpeaking ? 'ON AIR' : 'STANDBY'}
-  </div>
+          <div className="relative z-10 p-6 pb-[calc(2.5rem+env(safe-area-inset-bottom))] bg-zinc-900/80 backdrop-blur-2xl border-t border-white/10 flex flex-col items-center gap-4">
+            
+            <div className={cn(
+              "px-4 py-1 rounded-full text-[8px] font-black uppercase tracking-[0.3em] italic transition-all",
+              isSpeaking ? "bg-orange-600 text-black animate-pulse" : "bg-zinc-800 text-zinc-500"
+            )}>
+              {isSpeaking ? 'ON AIR' : 'STANDBY'}
+            </div>
 
-  {/* Pulsante PTT Centrale */}
-  <motion.button
-    onMouseDown={() => toggleMic(true)}
-    onMouseUp={() => toggleMic(false)}
-    onTouchStart={(e) => { e.preventDefault(); toggleMic(true); }}
-    onTouchEnd={(e) => { e.preventDefault(); toggleMic(false); }}
-    whileTap={{ scale: 0.9 }}
-    className={cn(
-      "w-28 h-28 rounded-full flex flex-col items-center justify-center gap-2 transition-all duration-300 shadow-2xl border-4 shrink-0",
-      isSpeaking 
-        ? "bg-orange-600 text-black border-orange-400 scale-110 shadow-[0_0_50px_rgba(249,115,22,0.4)]" 
-        : "bg-zinc-800 text-zinc-500 border-white/5 hover:bg-zinc-700"
-    )}
-  >
-    {isSpeaking ? <Mic size={32} /> : <MicOff size={32} />}
-    <span className="text-[9px] font-black uppercase tracking-widest">PTT</span>
-  </motion.button>
+            <motion.button
+              onMouseDown={() => toggleMic(true)}
+              onMouseUp={() => toggleMic(false)}
+              onTouchStart={(e) => { e.preventDefault(); toggleMic(true); }}
+              onTouchEnd={(e) => { e.preventDefault(); toggleMic(false); }}
+              whileTap={{ scale: 0.9 }}
+              className={cn(
+                "w-28 h-28 rounded-full flex flex-col items-center justify-center gap-2 transition-all duration-300 shadow-2xl border-4 shrink-0",
+                isSpeaking 
+                  ? "bg-orange-600 text-black border-orange-400 scale-110 shadow-[0_0_50px_rgba(249,115,22,0.4)]" 
+                  : "bg-zinc-800 text-zinc-500 border-white/5 hover:bg-zinc-700"
+              )}
+            >
+              {isSpeaking ? <Mic size={32} /> : <MicOff size={32} />}
+              <span className="text-[9px] font-black uppercase tracking-widest">PTT</span>
+            </motion.button>
 
-  {/* Blocco Testo e Segnalazioni */}
-  <div className="flex flex-col items-center gap-12 w-full"> 
-    {/* ^ gap-12 crea il grande spazio che volevi tra il testo e i pulsanti sotto */}
-    
-    <p className="text-[8px] font-bold uppercase text-zinc-600 tracking-widest text-center max-w-[200px]">
-      Tieni premuto per parlare. Rilascia per chiudere.
-    </p>
+            <div className="flex flex-col items-center gap-4 w-full">
+              <p className="text-[8px] font-bold uppercase text-zinc-600 tracking-widest text-center max-w-[200px]">
+                Tieni premuto per parlare. Rilascia per chiudere.
+              </p>
 
-    {/* Segnalazioni Rapide (Dosso, Pattuglia, Sosta) */}
-    <div className="flex items-center justify-center gap-10">
-      {alerts.map((alert) => (
-        <button
-          key={alert.id}
-          onClick={() => sendAlert(alert.id, alert.msg)}
-          className="flex flex-col items-center gap-4 group"
-        >
-          <div className={cn(
-            "w-16 h-16 rounded-full border-2 flex items-center justify-center group-active:scale-90 transition-all shadow-2xl",
-            alert.bgClass, alert.borderClass
-          )}>
-            <alert.icon size={28} className={alert.iconColor} />
-          </div>
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 group-active:text-white transition-colors">
-            {alert.label}
-          </span>
-        </button>
-      ))}
-    </div>
-  </div>
+              {/* Segnalazioni Rapide - Versione Ingrandita e Distanziata */}
+<div className="flex items-center justify-center gap-10 mt-10"> {/* Aumentato mt da 1 a 8 e gap da 6 a 10 */}
+  {alerts.map((alert) => (
+    <button
+      key={alert.id}
+      onClick={() => sendAlert(alert.id, alert.msg)}
+      className="flex flex-col items-center gap-3 group" // Aumentato gap interno da 1.5 a 3
+    >
+      <div className={cn(
+        "w-16 h-16 rounded-full border-2 flex items-center justify-center group-active:scale-90 transition-all shadow-2xl", // Aumentato da w-10 h-10 a w-16 h-16
+        alert.bgClass, alert.borderClass
+      )}>
+        <alert.icon size={28} className={alert.iconColor} /> {/* Aumentata dimensione icona da 16 a 28 */}
+      </div>
+      <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 group-active:text-white transition-colors">
+        {alert.label}
+      </span> {/* Aumentato font da 7px a 10px */}
+    </button>
+  ))}
 </div>
+            </div>
+
+          </div>
         </motion.div>
       )}
     </AnimatePresence>,
