@@ -124,7 +124,7 @@ const translations: Record<Language, any> = {
       statusClosed: 'ISCRIZIONI CHIUSE',
       statusSoon: 'IN ARRIVO',
       location: 'LUOGO',
-      date: 'DATA EVENTO',
+      date: 'DATA',
       viewEvent: 'VISUALIZZA EVENTO',
       manage: 'GESTISCI',
       details: 'DETTAGLI EVENTO',
