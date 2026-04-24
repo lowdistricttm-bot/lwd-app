@@ -311,11 +311,10 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
     <p className="text-[8px] font-bold uppercase text-zinc-600 tracking-widest text-center max-w-[200px]">
       Tieni premuto per parlare. Rilascia per chiudere.
     </p>
-  </div>
+  </div> {/* Chiude la SEZIONE PTT */}
 
-            </div>
+</div> {/* Chiude il contenitore principale PTT Button & Quick Alerts Area */}
 
-          </div>
         </motion.div>
       )}
     </AnimatePresence>,
