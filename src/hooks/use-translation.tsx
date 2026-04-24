@@ -35,7 +35,7 @@ const translations: Record<Language, any> = {
       enterFeed: 'ENTRA NELLA BACHECA',
       values: {
         community: 'COMMUNITY',
-        communityDesc: 'Migliaia di utenti uniti dalla stessa passione.',
+        communityDesc: 'Migliaia di utenti uniti dalla stessa passione',
         quality: 'QUALITÀ',
         qualityDesc: 'Merchandising e drop in edizione limitata.',
         events: 'EVENTI',
