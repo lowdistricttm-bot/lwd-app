@@ -253,7 +253,7 @@ const Events = () => {
                         activeViewTab === 'info' ? "bg-white text-black" : "text-zinc-500 hover:text-white"
                       )}
                     >
-                      <Info size={14} /> Info Evento
+                      <Info size={14} /> Informazioni
                     </button>
                     <button 
                       onClick={() => setActiveViewTab('convoys')}
