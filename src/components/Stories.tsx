@@ -108,20 +108,7 @@ const Stories = () => {
             <span className="text-zinc-500 text-[8px] font-black uppercase tracking-widest italic">La tua storia</span>
           </div>
         )}
-<div 
-  onClick={() => navigate('/battles')}
-  className="flex flex-col items-center gap-2 cursor-pointer shrink-0 group"
->
-  <div className="relative">
-    <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-yellow-600 to-yellow-400 p-[2px] animate-pulse">
-      <div className="w-full h-full rounded-full bg-black flex items-center justify-center border-2 border-black">
-        <Swords size={24} className="text-yellow-500 group-hover:scale-110 transition-transform" />
-      </div>
-    </div>
-    <div className="absolute -bottom-1 -right-1 bg-red-600 text-[7px] font-black px-1.5 py-0.5 rounded-full border border-black uppercase italic">Live</div>
-  </div>
-  <span className="text-[9px] font-black uppercase italic text-yellow-500 tracking-tighter">Vota</span>
-</div>
+
         {otherStories.map((userGroup: any, index: number) => {
           const actualIndex = myStoriesGroup ? index + 1 : index;
           // Chiave composta per garantire l'univocità assoluta
