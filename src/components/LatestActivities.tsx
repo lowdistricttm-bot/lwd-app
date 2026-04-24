@@ -40,7 +40,7 @@ const LatestActivities = () => {
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-4">
           <div>
-            <h2 className="text-zinc-500 text-[9px] font-black uppercase tracking-[0.4em] mb-1 italic">District Live</h2>
+            <h2 className="text-zinc-500 text-[9px] font-black uppercase tracking-[0.4em] mb-1 italic">District Feed</h2>
             <h3 className="text-2xl xs:text-3xl md:text-4xl font-black italic tracking-tighter uppercase whitespace-nowrap">
               Community Activity
             </h3>
