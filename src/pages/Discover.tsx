@@ -1,5 +1,5 @@
 "use client";
-import DailyWinner from '@/components/DailyWinner';
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -105,17 +105,7 @@ const Discover = () => {
                 {debouncedSearch ? `"${debouncedSearch}"` : "Esplora"}
               </h1>
             </div>
-            <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-6 max-w-7xl mx-auto w-full">
-  <header className="mb-12">
-    <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Scopri il District</h2>
-    <h1 className="text-3xl md:text-6xl font-black italic tracking-tighter uppercase">Esplora</h1>
-  </header>
-
-  {/* INSERISCI QUI IL COMPONENTE */}
-  <DailyWinner />
-
-  {/* Resto del contenuto della pagina Esplora (Griglia post, ecc.) */}
-</main>
+            
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
               <div className="relative flex-1 sm:w-80">
                 <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={18} />
