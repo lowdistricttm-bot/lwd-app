@@ -187,7 +187,7 @@ const Navbar = () => {
             </div>
             <AlertDialogTitle className="text-white font-black uppercase italic text-center">Accesso Limitato</AlertDialogTitle>
             <AlertDialogDescription className="text-zinc-400 text-xs font-bold uppercase leading-relaxed text-center">
-              I messaggi privati sono una funzione esclusiva riservata ai membri ufficiali e agli Iscritti+.
+              I messaggi privati sono una funzione esclusiva riservata ai membri ufficiali e agli Iscritti+
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
