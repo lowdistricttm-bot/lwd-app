@@ -68,6 +68,7 @@ const Profile = () => {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [activeTab, setActiveTab] = useState('');
+  const [activeBattle, setActiveBattle] = useState<any>(null);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isUsernameNoticeOpen, setIsUsernameNoticeOpen] = useState(false);
   const [isRestrictedOpen, setIsRestrictedOpen] = useState(false);
