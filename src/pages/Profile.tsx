@@ -35,7 +35,7 @@ import { compressImage, validateVideo } from '@/utils/media';
 import { 
   User, Settings, Car, MessageSquare, ShoppingBag, Loader2, Camera, 
   ShieldCheck, ClipboardCheck, ChevronRight, Plus, Mail, Share2, 
-  Edit2, Truck, ExternalLink, ShieldAlert, Tag, Sparkles, Clock, Trophy 
+  Edit2, Truck, ExternalLink, ShieldAlert, Tag, Sparkles, Clock, Trophy, Swords
 } from 'lucide-react';
 import {
   AlertDialog,
