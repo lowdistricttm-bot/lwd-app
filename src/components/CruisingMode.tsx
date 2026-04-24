@@ -284,7 +284,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
     {/* Badge di Stato */}
     <div className={cn(
       "px-4 py-1 rounded-full text-[8px] font-black uppercase tracking-[0.3em] italic transition-all",
-      isSpeaking ? "bg-orange-600 text-black animate-pulse" : "bg-zinc-800 text-zinc-500"
+      isSpeaking ? "bg-orange-600 text-black animate" : "bg-zinc-800 text-zinc-500"
     )}>
       {isSpeaking ? 'ON AIR' : 'STANDBY'}
     </div>
