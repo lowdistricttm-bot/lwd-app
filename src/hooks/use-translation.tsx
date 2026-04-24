@@ -291,7 +291,7 @@ const translations: Record<Language, any> = {
     },
     shop: { 
       title: 'SHOP ONLINE', 
-      subtitle: 'OFFICIAL GEAR', 
+      subtitle: 'OFFICIAL MERCH', 
       search: 'SEARCH DISTRICT', 
       searchPlaceholder: 'WHAT ARE YOU LOOKING FOR?',
       results: 'SEARCH RESULTS',
