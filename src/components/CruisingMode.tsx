@@ -252,7 +252,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
           </div>
 
  {/* PTT Button & Quick Alerts Area */}
-<div className="relative z-10 pt-10 px-6 pb-[calc(2rem+env(safe-area-inset-bottom))] bg-zinc-900/80 backdrop-blur-2xl border-t border-white/10 flex flex-col items-center gap-12">
+<div className="relative z-10 pt-10 px-6 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-zinc-900/80 backdrop-blur-2xl border-t border-white/10 flex flex-col items-center gap-12">
   
   {/* 1. SEGNALAZIONI RAPIDE (Ora in alto) */}
   <div className="flex items-center justify-center gap-10">
