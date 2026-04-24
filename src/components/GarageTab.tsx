@@ -327,7 +327,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
                       variant="ghost"
                       className="w-full h-10 text-zinc-500 hover:text-white text-[8px] font-black uppercase tracking-[0.3em] italic"
                     >
-                      Vedi Dettagli Progetto <ChevronRight size={12} className="ml-1" />
+                      Vedi Dettagli Veicolo <ChevronRight size={12} className="ml-1" />
                     </Button>
                   </div>
                 </div>
