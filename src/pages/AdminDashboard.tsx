@@ -89,7 +89,7 @@ const AdminDashboard = () => {
     },
     {
       title: "Gestione Membri",
-      desc: "Modifica i ruoli e i gradi degli utenti del District",
+      desc: "Modifica i ruoli degli utenti del Distretto",
       icon: Users,
       action: () => navigate('/admin/users'),
       show: isAdmin === true
