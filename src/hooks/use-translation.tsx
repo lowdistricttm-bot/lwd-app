@@ -167,7 +167,7 @@ const translations: Record<Language, any> = {
       noOrders: 'NESSUN ORDINE TROVATO.',
       selections: 'SELEZIONI',
       noSelections: 'NON HAI ANCORA INVIATO CANDIDATURE.',
-      info: 'BIOGRAFIA',
+      info: 'INFO',
       settings: 'IMPOSTAZIONI',
       editProfile: 'MODIFICA PROFILO',
       shareProfile: 'CONDIVIDI QUESTO PROFILO',
