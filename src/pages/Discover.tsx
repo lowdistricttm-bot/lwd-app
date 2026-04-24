@@ -97,6 +97,17 @@ const Discover = () => {
       <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-4 md:px-8 max-w-7xl mx-auto w-full">
         <header className="mb-10">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-8">
+          <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] pb-32 px-6 max-w-7xl mx-auto w-full">
+  <header className="mb-12">
+    <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Scopri il District</h2>
+    <h1 className="text-3xl md:text-6xl font-black italic tracking-tighter uppercase">Esplora</h1>
+  </header>
+
+  {/* INSERISCI QUI IL COMPONENTE */}
+  <DailyWinner />
+
+  {/* Resto del contenuto della pagina Esplora (Griglia post, ecc.) */}
+</main>
             <div className="min-w-0 flex-1">
               <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">
                 {debouncedSearch ? "Risultati Ricerca" : "District Showroom"}
