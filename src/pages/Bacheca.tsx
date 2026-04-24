@@ -8,7 +8,7 @@ import { useSocialFeed } from '@/hooks/use-social-feed';
 import { useAdmin } from '@/hooks/use-admin';
 import { useAuth } from '@/hooks/use-auth';
 import { useRoleRequests } from '@/hooks/use-role-requests';
-import { Loader2, Plus, AlertCircle, LogIn, RefreshCw, ShieldAlert, Sparkles } from 'lucide-react';
+import { Loader2, Plus, AlertCircle, LogIn, RefreshCw, ShieldAlert, Sparkles, Swords } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
