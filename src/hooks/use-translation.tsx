@@ -168,7 +168,7 @@ const translations: Record<Language, any> = {
       selections: 'SELEZIONI',
       noSelections: 'NON HAI ANCORA INVIATO CANDIDATURE.',
       info: 'BIOGRAFIA',
-      settings: 'SET',
+      settings: 'IMPOSTAZIONI',
       editProfile: 'MODIFICA PROFILO',
       shareProfile: 'CONDIVIDI QUESTO PROFILO',
       changeCover: 'CAMBIA COPERTINA',
