@@ -226,7 +226,7 @@ const GarageTab = ({ userId, isOwnProfile = true }: { userId?: string, isOwnProf
 
       <div className="flex justify-between items-center">
         <h3 className="text-xl font-black italic uppercase tracking-tighter">
-          {isOwnProfile ? "Il Mio Garage" : "Garage"}
+          {isOwnProfile ? "Garage" : "Garage"}
         </h3>
         {isOwnProfile && (
           <Button 
