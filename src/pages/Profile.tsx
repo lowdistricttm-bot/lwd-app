@@ -322,7 +322,7 @@ useEffect(() => {
       <div className="text-left">
         <p className="text-[10px] font-black uppercase italic text-yellow-500">In Sfida Oggi!</p>
         <p className="text-[8px] font-bold uppercase text-zinc-400 tracking-widest">
-          {isOwnProfile ? "La tua auto sta combattendo nell'Arena" : "Quest'auto sta combattendo nell'Arena"}
+          {isOwnProfile ? "Vai all'arena!" : "Vai all'arena!"}
         </p>
       </div>
     </div>
