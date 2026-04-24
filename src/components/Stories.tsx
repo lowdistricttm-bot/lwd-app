@@ -73,54 +73,53 @@ const Stories = () => {
     <>
       <div className="flex gap-4 overflow-x-auto no-scrollbar py-4 items-center min-h-[120px] px-6 bg-gradient-to-b from-black via-black/95 to-zinc-950/20 border-b border-white/5">
         {currentUser && (!isSubscriber || myStoriesGroup) && (
-          <div className="flex flex-col items-center gap-2 shrink-0">
-            <div className="relative">
-              <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" multiple onChange={handleFileSelect} />
-              <button 
-                onClick={() => {
-                  if (myStoriesGroup) handleStoryClick(0);
-                  else if (!isSubscriber) fileInputRef.current?.click();
-                }}
-                className={cn(
-                  "w-16 h-16 rounded-full border-[2.5px] flex items-center justify-center bg-zinc-900 overflow-hidden transition-all",
-                  myStoriesGroup ? "border-white" : "border-zinc-800"
-                )}
-{/* 2. SPOSTA QUI IL BLOCCO STANCE BATTLE */}
-<div 
-  onClick={() => navigate('/battles')}
-  className="flex flex-col items-center gap-2 cursor-pointer shrink-0 group"
+          <><div className="flex flex-col items-center gap-2 shrink-0">
+<div className="relative">
+<input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" multiple onChange={handleFileSelect} />
+<button
+onClick={() => {
+if(myStoriesGroup) handleStoryClick(0);
+else if(!isSubscriber) fileInputRef.current?.click();
+} }
+className={cn(
+"w-16 h-16 rounded-full border-[2.5px] flex items-center justify-center bg-zinc-900 overflow-hidden transition-all",
+myStoriesGroup? "border-white":"border-zinc-800"
+)}
+{...} />
+<div
+onClick={() => navigate('/battles')}
+className="flex flex-col items-center gap-2 cursor-pointer shrink-0 group"
 >
-  <div className="relative">
-    <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-yellow-600 to-yellow-400 p-[2px] animate-pulse">
-      <div className="w-full h-full rounded-full bg-black flex items-center justify-center border-2 border-black">
-        <Swords size={24} className="text-yellow-500 group-hover:scale-110 transition-transform" />
-      </div>
-    </div>
-    <div className="absolute -bottom-1 -right-1 bg-red-600 text-[7px] font-black px-1.5 py-0.5 rounded-full border border-black uppercase italic">Live</div>
-  </div>
-  <span className="text-[9px] font-black uppercase italic text-yellow-500 tracking-tighter">Vota</span>
+<div className="relative">
+<div className="w-16 h-16 rounded-full bg-gradient-to-tr from-yellow-600 to-yellow-400 p-[2px] animate-pulse">
+<div className="w-full h-full rounded-full bg-black flex items-center justify-center border-2 border-black">
+<Swords size={24} className="text-yellow-500 group-hover:scale-110 transition-transform" />
 </div>
-              >
-                {uploadStory.isPending ? (
-                  <Loader2 className="animate-spin text-zinc-400" size={20} />
-                ) : (myStoriesGroup?.avatar_url || userProfile?.avatar_url) ? (
-                  <img src={myStoriesGroup?.avatar_url || userProfile?.avatar_url} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-zinc-800">
-                    <User size={24} className="text-zinc-600" />
-                  </div>
-                )}
-              </button>
-              {!isSubscriber && (
-                <button 
-                  onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
-                  className="absolute bottom-0 right-0 w-5 h-5 bg-white rounded-full flex items-center justify-center border-2 border-black shadow-lg"
-                >
-                  <Plus size={12} className="text-black font-bold" />
-                </button>
-              )}
-            </div>
-            <span className="text-zinc-500 text-[8px] font-black uppercase tracking-widest italic">La tua storia</span>
+</div>
+<div className="absolute -bottom-1 -right-1 bg-red-600 text-[7px] font-black px-1.5 py-0.5 rounded-full border border-black uppercase italic">Live</div>
+</div>
+<span className="text-[9px] font-black uppercase italic text-yellow-500 tracking-tighter">Vota</span>
+</div>
+>
+{uploadStory.isPending? (
+<Loader2 className="animate-spin text-zinc-400" size={20} />
+):(myStoriesGroup?.avatar_url||userProfile?.avatar_url)? (
+<img src={myStoriesGroup?.avatar_url||userProfile?.avatar_url} className="w-full h-full object-cover" />
+):(
+<div className="w-full h-full flex items-center justify-center bg-zinc-800">
+<User size={24} className="text-zinc-600" />
+</div>
+)}
+</button>
+{!isSubscriber&&(
+<button
+onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); } }
+className="absolute bottom-0 right-0 w-5 h-5 bg-white rounded-full flex items-center justify-center border-2 border-black shadow-lg"
+>
+<Plus size={12} className="text-black font-bold" />
+</button>
+)}
+</div><span className="text-zinc-500 text-[8px] font-black uppercase tracking-widest italic">La tua storia</span></>
           </div>
         )}
 
