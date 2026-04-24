@@ -252,7 +252,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
           </div>
 
           {/* PTT Button & Quick Alerts Area */}
-          <div className="relative z-10 p-6 pb-[calc(2.5rem+env(safe-area-inset-bottom))] bg-zinc-900/80 backdrop-blur-2xl border-t border-white/10 flex flex-col items-center gap-4">
+          <div className="relative z-10 p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] bg-zinc-900/80 backdrop-blur-2xl border-t border-white/10 flex flex-col items-center gap-4">
             
             <div className={cn(
               "px-4 py-1 rounded-full text-[8px] font-black uppercase tracking-[0.3em] italic transition-all",
