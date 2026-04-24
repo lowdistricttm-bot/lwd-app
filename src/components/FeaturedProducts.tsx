@@ -20,7 +20,7 @@ const FeaturedProducts = () => {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-end mb-12">
           <div>
-            <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Official Gear</h2>
+            <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Official Merch</h2>
             <h3 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase">Nuovi Drop</h3>
           </div>
           <Link to="/shop" className="hidden md:flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white border-b border-white/20 pb-1 hover:border-white transition-all">
