@@ -177,7 +177,7 @@ const translations: Record<Language, any> = {
       socials: 'SOCIAL & LINK',
       visit: 'VISITA',
       usernameNoticeTitle: 'CAMBIO USERNAME',
-      usernameNoticeDesc: 'PER GARANTIRE L\'INTEGRITÀ DEL DISTRICT, IL CAMBIO USERNAME DEVE ESSERE APPROVATO MANUALMENTE. CONTATTA L\'AMMINISTRAZIONE INDICANDO IL NUOVO NOME DESIDERATO.',
+      usernameNoticeDesc: 'PER GARANTIRE L\'INTEGRITÀ DEL DISTRETTO, IL CAMBIO USERNAME DEVE ESSERE APPROVATO MANUALMENTE. CONTATTA L\'AMMINISTRAZIONE INDICANDO IL NUOVO NOME DESIDERATO.',
       contactAdmin: 'CONTATTA STAFF',
       roles: {
         admin: 'ADMIN',
@@ -231,7 +231,7 @@ const translations: Record<Language, any> = {
     },
     auth: {
       title: 'AREA RISERVATA',
-      subtitle: 'ACCEDI CON LE TUE CREDENZIALI LOW DISTRICT',
+      subtitle: 'ACCEDI CON LE TUE CREDENZIALI LOW DISTRETTO',
       username: 'USERNAME',
       password: 'PASSWORD',
       forgot: 'SMARRITA?',
