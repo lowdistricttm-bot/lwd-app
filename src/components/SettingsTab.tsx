@@ -327,7 +327,7 @@ const SettingsTab = () => {
                     </div>
                     <div className="text-left">
                       <p className="text-[11px] font-black uppercase italic tracking-tight text-white">Diventa ISCRITTO+</p>
-                      <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-widest">Sblocca tutte le funzioni social</p>
+                      <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-widest">Sblocca tutte le funzionalità</p>
                     </div>
                   </div>
                   {sendRequest.isPending ? <Loader2 className="animate-spin text-zinc-500" size={14} /> : <ChevronRight size={14} className="text-zinc-700 group-hover:text-white transition-colors" />}
