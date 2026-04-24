@@ -99,7 +99,7 @@ const EmailSettingsModal = ({ isOpen, onClose }: EmailSettingsModalProps) => {
               <div className="flex justify-between items-center">
                 <div>
                   <h2 className="text-2xl font-black italic uppercase tracking-tighter">Configurazione Email</h2>
-                  <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mt-1">Personalizza i messaggi automatici per gli utenti</p>
+                  <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mt-1">Personalizza i messaggi automatici</p>
                 </div>
                 <button onClick={onClose} className="p-2 text-zinc-500 hover:text-white bg-white/5 rounded-full transition-colors"><X size={24} /></button>
               </div>
