@@ -48,7 +48,7 @@ const Index = () => {
     { 
       icon: Tag, 
       title: 'MARKETPLACE', 
-      desc: 'Compra e vendi componenti nel District.',
+      desc: 'Compra e vendi componenti in modo sicuro.',
       href: '/marketplace',
       label: 'Vai agli Annunci'
     },
