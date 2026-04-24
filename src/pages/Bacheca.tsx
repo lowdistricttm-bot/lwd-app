@@ -137,7 +137,7 @@ const Bacheca = () => {
             </div>
             <AlertDialogTitle className="text-white font-black uppercase italic text-center">Accesso Limitato</AlertDialogTitle>
             <AlertDialogDescription className="text-zinc-400 text-xs font-bold uppercase leading-relaxed text-center">
-              La pubblicazione di post è una funzione esclusiva riservata ai membri ufficiali del District e agli Iscritti+.
+              La pubblicazione di post è una funzione esclusiva riservata ai membri ufficiali e agli Iscritti+
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
