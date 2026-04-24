@@ -308,7 +308,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
     </motion.button>
 
     {/* Istruzioni */}
-    <p className="text-[8px] font-bold uppercase text-zinc-600 tracking-widest text-center max-w-[400px]">
+    <p className="text-[8px] font-bold uppercase text-zinc-600 tracking-widest text-center max-w-[600px]">
       Tieni premuto per parlare. Rilascia per chiudere.
     </p>
   </div> {/* Chiude la SEZIONE PTT */}
