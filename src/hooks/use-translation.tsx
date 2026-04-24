@@ -161,7 +161,7 @@ const translations: Record<Language, any> = {
       followers: 'FOLLOWER', 
       following: 'SEGUITI', 
       activeCar: 'PROGETTO ATTIVO', 
-      myPosts: 'I MIEI POST', 
+      myPosts: 'POST', 
       noPosts: 'NON HAI ANCORA PUBBLICATO NULLA.',
       orders: 'ORDINI',
       noOrders: 'NESSUN ORDINE TROVATO.',
