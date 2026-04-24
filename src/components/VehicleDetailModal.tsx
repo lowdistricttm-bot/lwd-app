@@ -143,7 +143,7 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicle, isOwnProfile, onLike, cu
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-white/5 border border-white/10 p-5 rounded-[2rem]">
-                    <p className="text-[8px] font-black uppercase text-zinc-500 tracking-[0.3em] italic mb-2">Anno Progetto</p>
+                    <p className="text-[8px] font-black uppercase text-zinc-500 tracking-[0.3em] italic mb-2">Anno</p>
                     <div className="flex items-center gap-2 text-white">
                       <Calendar size={14} className="text-zinc-400" />
                       <span className="text-sm font-black uppercase italic">{vehicle.year || 'N/A'}</span>
