@@ -96,7 +96,7 @@ const Bacheca = () => {
               <AlertCircle className="text-white shrink-0" size={32} />
               <div>
                 <p className="text-xs font-black uppercase tracking-widest text-white">{t.feed.private}</p>
-                <p className="text-[10px] text-zinc-400 font-bold uppercase mt-1">Accedi per partecipare alle discussioni del District.</p>
+                <p className="text-[10px] text-zinc-400 font-bold uppercase mt-1">Accedi per partecipare alle discussioni del Distretto.</p>
               </div>
             </div>
             <Button onClick={() => navigate('/login')} className="bg-white text-black hover:scale-105 rounded-full text-[10px] font-black uppercase tracking-widest h-12 px-8 italic shadow-xl">
