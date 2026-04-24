@@ -284,7 +284,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
               </p>
 
               {/* Segnalazioni Rapide - Versione Ingrandita e Distanziata */}
-<div className="flex items-center justify-center gap-10 mt-8"> {/* Aumentato mt da 1 a 8 e gap da 6 a 10 */}
+<div className="flex items-center justify-center gap-10 mt-16"> {/* Aumentato mt da 1 a 8 e gap da 6 a 10 */}
   {alerts.map((alert) => (
     <button
       key={alert.id}
