@@ -43,7 +43,7 @@ const translations: Record<Language, any> = {
       },
       banner: {
         title: 'THE LOW CULTURE IS HERE.',
-        subtitle: 'NON RESTARE A GUARDARE. ENTRA NEL DISTRICT.',
+        subtitle: 'NON RESTARE A GUARDARE. ENTRA NEL DISTRETTO.',
         applyBtn: 'INVIA SELEZIONE',
         shopBtn: 'ESPLORA LO SHOP'
       }
