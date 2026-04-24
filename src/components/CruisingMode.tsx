@@ -253,7 +253,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
 
           {/* PTT Button & Quick Alerts Area */}
           {/* PTT Button & Quick Alerts Area */}
-<div className="relative z-10 pt-12 px-6 pb-[calc(3rem+env(safe-area-inset-bottom))] bg-zinc-900/80 backdrop-blur-2xl border-t border-white/10 flex flex-col items-center gap-10">
+<div className="relative z-10 pt-6 px-6 pb-[calc(3rem+env(safe-area-inset-bottom))] bg-zinc-900/80 backdrop-blur-2xl border-t border-white/10 flex flex-col items-center gap-10">
   {/* ^ pt-12 e pb-3rem (48px) bilanciano lo spazio sopra e sotto. gap-10 distanzia i blocchi principali */}
   
   {/* Badge di Stato */}
