@@ -28,7 +28,8 @@ const AdminMysteryBoxModal = ({ isOpen, onClose }: AdminMysteryBoxModalProps) =>
 
   const [formData, setFormData] = useState({
     title: 'DISTRICT MYSTERY BOX',
-    description: 'La selezione definitiva Low District. Prodotti, sticker e forse un Golden Ticket!',
+    description: 'La selezione definitiva Low District.
+     Prodotti, sticker e forse un Golden Ticket!',
     price: '30',
     total_quantity: '50',
     expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
