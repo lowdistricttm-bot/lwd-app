@@ -168,7 +168,7 @@ const Navbar = () => {
             </button>
           </div>
           <form onSubmit={handleSearch} className="max-w-4xl mx-auto w-full mt-10">
-            <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-4 italic">Cerca nel District</h2>
+            <h2 className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] mb-4 italic">Cerca nel Distretto</h2>
             <Input placeholder="COSA STAI CERCANDO?" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-transparent border-none text-4xl md:text-6xl font-black uppercase italic tracking-tighter p-0 h-auto focus-visible:ring-0 placeholder:text-zinc-900" />
           </form>
         </div>
