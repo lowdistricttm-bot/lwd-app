@@ -100,7 +100,7 @@ const EditPostModal = ({ isOpen, onClose, post }: EditPostModalProps) => {
 
             <form onSubmit={handleSubmit} className="space-y-6 pb-[calc(4rem+env(safe-area-inset-bottom))]">
               <Textarea 
-                placeholder="Cosa succede nel District?"
+                placeholder="Cosa succede nel Distretto?"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 className="min-h-[100px] bg-transparent border-none text-lg font-bold uppercase italic tracking-tight p-0 focus-visible:ring-0 placeholder:text-zinc-800 resize-none text-white"
