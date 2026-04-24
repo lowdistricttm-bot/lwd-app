@@ -102,7 +102,7 @@ const translations: Record<Language, any> = {
       noPosts: 'NESSUN POST PRESENTE',
       noPostsDesc: 'INAUGURA LA BACHECA CON IL TUO PRIMO POST!',
       private: 'COMMUNITY PRIVATA',
-      privateDesc: 'ACCEDI PER PARTECIPARE ALLE DISCUSSIONI DEL DISTRICT.',
+      privateDesc: 'ACCEDI PER PARTECIPARE ALLE DISCUSSIONI DEL DISTRETTO.',
       syncing: 'SINCRONIZZAZIONE DISTRICT...',
       newPost: 'NUOVO POST',
       placeholder: 'COSA SUCCEDE NEL DISTRICT?',
