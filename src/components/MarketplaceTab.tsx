@@ -83,7 +83,7 @@ const MarketplaceTab = ({ userId, isOwnProfile }: { userId: string, isOwnProfile
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-xl font-black italic uppercase tracking-tighter">{isOwnProfile ? "I Miei Annunci" : "Annunci"}</h3>
+        <h3 className="text-xl font-black italic uppercase tracking-tighter">{isOwnProfile ? " Annunci" : "Annunci"}</h3>
         {isOwnProfile && (
           <Button 
             onClick={() => { setEditingItem(null); setIsCreateModalOpen(true); }}
