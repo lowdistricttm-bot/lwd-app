@@ -125,6 +125,17 @@ const Profile = () => {
 
   // Effetto per ascoltare il cambio di tab dall'esterno (URL)
   useEffect(() => {
+  const fetchActiveBattle = async () => {
+    const { data } = await supabase
+      .from('stance_battles')
+      .select('*, car_a:vehicles!car_a_id(user_id), car_b:vehicles!car_b_id(user_id)')
+      .eq('status', 'active')
+      .maybeSingle();
+    setActiveBattle(data);
+  };
+  fetchActiveBattle();
+}, []);
+useEffect(() => {
     const tabParam = searchParams.get('tab');
     if (tabParam) {
       setActiveTab(tabParam);
