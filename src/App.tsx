@@ -1,4 +1,3 @@
-import Battles from "./pages/Battles";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -38,6 +37,7 @@ import Marketplace from "./pages/Marketplace";
 import FitmentTool from "./pages/FitmentTool";
 import CamberHelper from "./pages/CamberHelper";
 import Leaderboards from "./pages/Leaderboards";
+import Battles from "./pages/Battles";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
