@@ -1,3 +1,4 @@
+import Battles from "./pages/Battles";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -57,6 +58,7 @@ const AppContent = () => {
         
         <main id="scroll-container" className="app-content-area">
           <Routes>
+<Route path="/battles" element={<Battles />} />
             <Route path="/" element={<Index />} />
             <Route path="/bacheca" element={<Bacheca />} />
             <Route path="/discover" element={<Discover />} />
