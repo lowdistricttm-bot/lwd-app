@@ -250,29 +250,6 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
               </div>
             </div>
           </div>
-{/* Segnalazioni Rapide - Versione Ingrandita e Distanziata */}
-<div className="flex items-center justify-center gap-10 mt-10"> {/* Aumentato mt da 1 a 8 e gap da 6 a 10 */}
-  {alerts.map((alert) => (
-    <button
-      key={alert.id}
-      onClick={() => sendAlert(alert.id, alert.msg)}
-      className="flex flex-col items-center gap-3 group" // Aumentato gap interno da 1.5 a 3
-    >
-      <div className={cn(
-        "w-16 h-16 rounded-full border-2 flex items-center justify-center group-active:scale-90 transition-all shadow-2xl", // Aumentato da w-10 h-10 a w-16 h-16
-        alert.bgClass, alert.borderClass
-      )}>
-        <alert.icon size={28} className={alert.iconColor} /> {/* Aumentata dimensione icona da 16 a 28 */}
-      </div>
-      <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 group-active:text-white transition-colors">
-        {alert.label}
-      </span> {/* Aumentato font da 7px a 10px */}
-    </button>
-  ))}
-</div>
-            </div>
-
-          </div>
 
           {/* PTT Button & Quick Alerts Area */}
           <div className="relative z-10 p-6 pb-[calc(2.5rem+env(safe-area-inset-bottom))] bg-zinc-900/80 backdrop-blur-2xl border-t border-white/10 flex flex-col items-center gap-4">
