@@ -267,7 +267,7 @@ const translations: Record<Language, any> = {
     },
     home: {
       newDrops: 'NEW DROPS',
-      officialGear: 'OFFICIAL GEAR',
+      officialGear: 'OFFICIAL MERCH',
       viewAll: 'VIEW ALL',
       communityActivity: 'COMMUNITY ACTIVITY',
       districtLive: 'DISTRICT LIVE',
