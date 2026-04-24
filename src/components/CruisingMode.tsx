@@ -276,7 +276,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
   </div>
 
   {/* Separatore visivo opzionale o semplice spazio */}
-  <div className="w-12 h-[1px] bg-white/10" />
+  <div className="w-12 h-[10px] bg-white/10" />
 
   {/* 2. SEZIONE PTT (Ora in basso) */}
   <div className="flex flex-col items-center gap-6 w-full">
