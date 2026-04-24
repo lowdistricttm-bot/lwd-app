@@ -95,6 +95,20 @@ const Stories = () => {
                     <User size={24} className="text-zinc-600" />
                   </div>
                 )}
+                      <div 
+  onClick={() => navigate('/battles')}
+  className="flex flex-col items-center gap-2 cursor-pointer shrink-0 group"
+>
+  <div className="relative">
+    <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-yellow-600 to-yellow-400 p-[2px] animate-pulse">
+      <div className="w-full h-full rounded-full bg-black flex items-center justify-center border-2 border-black">
+        <Swords size={24} className="text-yellow-500 group-hover:scale-110 transition-transform" />
+      </div>
+    </div>
+    <div className="absolute -bottom-1 -right-1 bg-red-600 text-[7px] font-black px-1.5 py-0.5 rounded-full border border-black uppercase italic">Live</div>
+  </div>
+  <span className="text-[9px] font-black uppercase italic text-yellow-500 tracking-tighter">Vota</span>
+</div>
               </button>
               {!isSubscriber && (
                 <button 
