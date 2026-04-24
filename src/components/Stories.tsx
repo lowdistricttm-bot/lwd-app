@@ -123,8 +123,7 @@ const Stories = () => {
           </div>
         )}
 
-        {otherStories.map((userGroup: any, index: number) => ( 
-          {
+        {otherStories.map((userGroup: any, index: number) => (
           const actualIndex = myStoriesGroup ? index + 1 : index;
           // Chiave composta per garantire l'univocità assoluta
           const key = `story-group-${userGroup.user_id || 'unknown'}-${index}`;
