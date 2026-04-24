@@ -163,7 +163,7 @@ const translations: Record<Language, any> = {
       activeCar: 'PROGETTO ATTIVO', 
       myPosts: 'I MIEI POST', 
       noPosts: 'NON HAI ANCORA PUBBLICATO NULLA.',
-      orders: 'I MIEI ORDINI',
+      orders: 'ORDINI',
       noOrders: 'NESSUN ORDINE TROVATO.',
       selections: 'LE MIE SELEZIONI',
       noSelections: 'NON HAI ANCORA INVIATO CANDIDATURE.',
