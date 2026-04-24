@@ -144,7 +144,7 @@ const Discover = () => {
             </div>
           </div>
         </header>
-
+  <DailyWinner />
         {!debouncedSearch && newMembers && newMembers.length > 0 && (
           <section className="mb-14">
             <h3 className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 flex items-center gap-2 italic mb-6">
