@@ -213,7 +213,7 @@ const translations: Record<Language, any> = {
       deleteAccount: 'ELIMINA ACCOUNT'
     },
     garage: { 
-      title: '', 
+      title: 'IL MIO GARAGE', 
       publicTitle: 'GARAGE',
       subtitle: 'I TUOI PROGETTI STANCE', 
       empty: 'NESSUN VEICOLO NEL GARAGE', 
