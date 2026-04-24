@@ -25,7 +25,7 @@ const ApplicationsTab = () => {
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center px-1">
-        <h3 className="text-xl font-black italic uppercase tracking-tighter">Le Mie Selezioni</h3>
+        <h3 className="text-xl font-black italic uppercase tracking-tighter"> Selezioni</h3>
         <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500 bg-white/5 px-3 py-1 rounded-full border border-white/5">
           {applications?.length || 0} Totali
         </span>
