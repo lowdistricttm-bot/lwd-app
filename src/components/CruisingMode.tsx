@@ -274,8 +274,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
       </button>
     ))}
   </div>
-</br>
-</br>
+
   {/* Separatore visivo opzionale o semplice spazio */}
   <div className="w-15 h-[1px] bg-white/10" />
 
