@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { playRogerBeep, playAlertSound, speakAlert, getGlobalAudioContext } from '@/utils/sound';
-import { showError } from '@/utils/toast';
 
 interface CruisingUnit {
   id: string;
@@ -76,12 +75,10 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   }, []);
 
   const leaveChannel = useCallback(() => {
-    console.log("[Cruising] Disconnessione in corso...");
     isConnectingRef.current = false;
     setStatus('idle');
     if (heartbeatRef.current) clearInterval(heartbeatRef.current);
     if (watchdogRef.current) clearTimeout(watchdogRef.current);
-    
     if (peerRef.current) {
       peerRef.current.destroy();
       peerRef.current = null;
@@ -109,55 +106,43 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
     const PeerClass = (window as any).Peer;
     if (!PeerClass) {
-      console.error("[Cruising] PeerJS non caricato");
       isConnectingRef.current = false;
-      setStatus('error');
       return;
     }
 
     setStatus('initializing');
 
     try {
-      // 1. Accesso al microfono (Prima della rete per evitare timeout inutili)
+      // 1. Recupero dinamico dei server ICE/TURN con timeout di sicurezza
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      const iceResponse = await fetch("https://lwdstrct.metered.live/api/v1/turn/credentials?apiKey=7156036f4bec000b0fac5c1054cef8efa44c", {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      
+      const iceServers = await iceResponse.json();
+
+      // 2. Accesso al microfono
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: { 
           echoCancellation: true, 
           noiseSuppression: true, 
           autoGainControl: true
         } 
-      }).catch(err => {
-        showError("Accesso al microfono negato. Controlla i permessi del browser.");
-        throw err;
       });
-
       streamRef.current = stream;
       stream.getAudioTracks().forEach(track => track.enabled = false);
 
-      // 2. Recupero server ICE/TURN con fallback
-      let iceServers = [{ urls: 'stun:stun.l.google.com:19302' }];
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
-        
-        const iceResponse = await fetch("https://lwdstrct.metered.live/api/v1/turn/credentials?apiKey=7156036f4bec000b0fac5c1054cef8efa44c", {
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        
-        if (iceResponse.ok) {
-          const turnServers = await iceResponse.json();
-          iceServers = [...iceServers, ...turnServers];
-        }
-      } catch (e) {
-        console.warn("[Cruising] Fallback su STUN pubblico (TURN non disponibile)");
-      }
-
       const myPeerId = `lwd-${Math.random().toString(36).substring(2, 8)}`;
       
-      // 3. Inizializzazione Peer con configurazione ottimizzata per Wi-Fi
+      // 3. Inizializzazione Peer con configurazione estesa per bypassare firewall Wi-Fi
       const peer = new PeerClass(myPeerId, {
         debug: 1,
         secure: true,
+        // Alcune versioni di PeerJS preferiscono iceServers al top level
+        iceServers: iceServers,
         config: {
           'iceServers': iceServers,
           'iceCandidatePoolSize': 10,
@@ -167,15 +152,15 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
       setStatus('connecting-server');
 
-      // Watchdog per la connessione al server di segnalazione
       if (watchdogRef.current) clearTimeout(watchdogRef.current);
       watchdogRef.current = setTimeout(() => {
-        if (status !== 'ready' && status !== 'connecting-units' && isConnectingRef.current) {
-          console.error("[Cruising] Timeout connessione server");
-          setStatus('error');
+        if (isConnectingRef.current && (status === 'connecting-server' || status === 'initializing')) {
+          console.warn("[Cruising] Watchdog timeout - Reconnecting...");
           isConnectingRef.current = false;
+          leaveChannel();
+          setStatus('error');
         }
-      }, 12000);
+      }, 15000);
 
       peer.on('open', (id: string) => {
         if (watchdogRef.current) clearTimeout(watchdogRef.current);
@@ -255,11 +240,8 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
       peer.on('error', (err: any) => {
         console.error('[Cruising] Peer Error:', err.type, err);
-        // Se l'errore è fatale, resettiamo
-        if (['network', 'server-error', 'socket-error'].includes(err.type)) {
-          isConnectingRef.current = false;
-          setStatus('error');
-        }
+        isConnectingRef.current = false;
+        setStatus('error');
       });
 
       peerRef.current = peer;
