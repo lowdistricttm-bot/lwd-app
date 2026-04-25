@@ -39,7 +39,7 @@ const Battles = () => {
 
   return (
     <div className="fixed inset-0 bg-black text-white z-[1000] flex flex-col overflow-hidden select-none">
-      {/* Header con tasto chiusura */}
+      {/* Header con tasto chiusura - Posizionato sopra tutto */}
       <div className="absolute top-0 left-0 right-0 z-[110] p-6 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent pt-[calc(1.5rem+env(safe-area-inset-top))]">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-white text-black rounded-xl flex items-center justify-center shadow-xl rotate-12">
@@ -59,7 +59,7 @@ const Battles = () => {
         </button>
       </div>
 
-      {/* Arena di Battaglia */}
+      {/* Arena di Battaglia - Occupa tutto lo spazio */}
       <div className="flex-1 relative flex flex-col md:flex-row">
         
         {/* CAR A */}

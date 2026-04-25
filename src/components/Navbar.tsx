@@ -103,8 +103,8 @@ const Navbar = () => {
     setIsRestrictedOpen(false);
   };
 
-  // Nascondi la Navbar nelle pagine di chat - Spostato qui per non rompere gli hook
-  if (location.pathname.startsWith('/chat/')) return null;
+  // Nascondi la Navbar nelle pagine di chat e nelle battaglie
+  if (location.pathname.startsWith('/chat/') || location.pathname === '/battles') return null;
 
   return (
     <>
