@@ -47,7 +47,7 @@ const Battles = () => {
             <Swords size={18} className="-rotate-12" />
           </div>
           <div>
-            <h2 className="text-base font-black italic uppercase tracking-tighter leading-none">Stance Battle</h2>
+            <h2 className="text-base font-black italic uppercase tracking-tighter leading-none">Low Battle</h2>
             <p className="text-[7px] font-black uppercase tracking-widest text-zinc-500 mt-1">Vota la tua preferita</p>
           </div>
         </div>
