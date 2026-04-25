@@ -21,7 +21,7 @@ export const getGlobalAudioContext = () => {
 
 /**
  * Sblocca l'audio in modo definitivo per iOS.
- * Utilizza sia AudioContext che un elemento audio silente per garantire i permessi.
+ * Ottimizzato per non bloccare il thread principale (UI).
  */
 export const unlockAudio = async () => {
   if (isAudioUnlocked) return true;
@@ -42,16 +42,18 @@ export const unlockAudio = async () => {
     source.start(0);
 
     // 2. Sblocco tramite HTMLAudioElement (fondamentale per flussi voce su iOS)
+    // Non usiamo await qui per evitare che un eventuale ritardo del browser blocchi l'apertura della modale
     const silentAudio = new Audio();
-    // WAV silente di 1 secondo
     silentAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
-    await silentAudio.play().catch(() => {});
+    silentAudio.play().catch(() => {
+      console.warn("[Sound] Silent play auto-blocked, will retry on next interaction");
+    });
 
     isAudioUnlocked = true;
-    console.log("[Sound] Audio engine fully unlocked via hybrid method");
+    console.log("[Sound] Audio engine unlocked");
     return true;
   } catch (err) {
-    console.error("[Sound] Audio unlock critical failure:", err);
+    console.error("[Sound] Audio unlock failure:", err);
     return false;
   }
 };
