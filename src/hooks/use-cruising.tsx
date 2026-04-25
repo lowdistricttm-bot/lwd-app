@@ -64,7 +64,9 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     const context = getGlobalAudioContext();
     if (context?.state === 'suspended') context.resume();
     
-    audio.play().catch(() => {});
+    audio.play().catch((err) => {
+      console.warn("[Cruising] Autoplay blocked for remote stream:", presenceId, err);
+    });
   }, []);
 
   useEffect(() => {
@@ -72,26 +74,18 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       if ('wakeLock' in navigator && isActive) {
         try {
           wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
-        } catch (err) {
-          // Silenziamo il warning per non sporcare la console
-        }
+        } catch (err) {}
       }
     };
 
-    if (isActive) {
-      requestWakeLock();
-    } else {
-      if (wakeLockRef.current) {
-        wakeLockRef.current.release();
-        wakeLockRef.current = null;
-      }
+    if (isActive) requestWakeLock();
+    else if (wakeLockRef.current) {
+      wakeLockRef.current.release();
+      wakeLockRef.current = null;
     }
 
     return () => {
-      if (wakeLockRef.current) {
-        wakeLockRef.current.release();
-        wakeLockRef.current = null;
-      }
+      if (wakeLockRef.current) wakeLockRef.current.release();
     };
   }, [isActive]);
 
@@ -100,8 +94,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     if (streamRef.current) streamRef.current.getTracks().forEach(track => track.stop());
     if (channelRef.current) supabase.removeChannel(channelRef.current);
     
-    const sinks = document.querySelectorAll('[id^="sink-"]');
-    sinks.forEach(s => s.remove());
+    document.querySelectorAll('[id^="sink-"]').forEach(s => s.remove());
     
     setIsActive(false);
     setUnits([]);
@@ -110,24 +103,31 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   }, []);
 
   const joinChannel = useCallback(async (carovanaId: string, username: string, avatarUrl: string, role: string, carName?: string) => {
-    // Rimosso il controllo su isActive qui per evitare loop infiniti nel componente che lo chiama
     const PeerClass = (window as any).Peer;
     if (!PeerClass) return;
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } 
+        audio: { 
+          echoCancellation: true, 
+          noiseSuppression: true, 
+          autoGainControl: true,
+          sampleRate: 16000 // Ottimizzato per voce su mobile
+        } 
       });
       streamRef.current = stream;
       stream.getAudioTracks().forEach(track => track.enabled = false);
 
       const myPeerId = `lwd-${carovanaId}-${username.replace(/\s+/g, '-')}-${Math.random().toString(36).substring(2, 6)}`;
       
+      // Configurazione ICE potenziata per 5G/4G
       const peer = new PeerClass(myPeerId, {
         config: {
           'iceServers': [
             { 'urls': 'stun:stun.l.google.com:19302' },
+            { 'urls': 'stun:stun1.l.google.com:19302' },
             {
+              // Server TURN su porta 443 (TCP) per bypassare i firewall mobili più restrittivi
               urls: [
                 'turn:lwdstrct.metered.live:443?transport=tcp', 
                 'turn:lwdstrct.metered.live:3478?transport=udp'
@@ -135,7 +135,9 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
               username: '5adb9880780dccfb855a62d9',
               credential: 'Ink+Z3uyHb+fOamN'
             }
-          ]
+          ],
+          'iceTransportPolicy': 'all',
+          'iceCandidatePoolSize': 10
         }
       });
 
@@ -165,6 +167,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
                   isSpeaking: false
                 });
 
+                // Logica di chiamata: chi ha l'ID "minore" chiama chi ha l'ID "maggiore"
                 if (id < presenceId && !peerRef.current.connections[presenceId]) {
                   const call = peerRef.current.call(presenceId, streamRef.current!);
                   if (call) {
@@ -204,6 +207,10 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
         });
       });
 
+      peer.on('error', (err: any) => {
+        console.error('[Cruising] Peer Error:', err.type, err);
+      });
+
       peerRef.current = peer;
     } catch (err) {
       console.error('[Cruising] Errore radio:', err);
@@ -211,13 +218,15 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   }, [playRemoteStream]);
 
   const toggleMic = useCallback((speaking: boolean) => {
-    if (!streamRef.current) return;
+    if (!streamRef.current || !channelRef.current) return;
+    
     streamRef.current.getAudioTracks().forEach(track => track.enabled = speaking);
     setIsSpeaking(speaking);
 
     if (!speaking) playRogerBeep();
 
-    channelRef.current?.send({
+    // Usiamo un invio sicuro che non fallisce se il socket è in fallback
+    channelRef.current.send({
       type: 'broadcast',
       event: 'speaking_state',
       payload: { username: currentUsername, isSpeaking: speaking }
@@ -225,8 +234,10 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   }, [currentUsername]);
 
   const sendAlert = useCallback((type: string, message: string) => {
+    if (!channelRef.current) return;
+    
     playAlertSound();
-    channelRef.current?.send({
+    channelRef.current.send({
       type: 'broadcast',
       event: 'road_alert',
       payload: { type, message, sender: currentUsername }
