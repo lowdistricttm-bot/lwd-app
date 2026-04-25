@@ -47,6 +47,8 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const audioElementsRef = useRef<Map<string, HTMLAudioElement>>(new Map());
 
   const playRemoteStream = useCallback((presenceId: string, remoteStream: MediaStream) => {
+    console.log(`[Cruising] Ricevuto stream audio da: ${presenceId}`);
+    
     if (audioElementsRef.current.has(presenceId)) {
       const oldAudio = audioElementsRef.current.get(presenceId);
       oldAudio?.pause();
@@ -56,14 +58,18 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     const audio = new Audio();
     audio.srcObject = remoteStream;
     audio.autoplay = true;
+    // Importante per iOS: assicura che l'audio non sia mutato
+    audio.muted = false;
+    
     audio.play().catch(err => {
-      console.warn(`[Cruising] Autoplay blocked for peer ${presenceId}:`, err);
+      console.warn(`[Cruising] Autoplay bloccato per peer ${presenceId}. L'utente deve interagire.`, err);
     });
     
     audioElementsRef.current.set(presenceId, audio);
   }, []);
 
   const leaveChannel = useCallback(() => {
+    console.log("[Cruising] Chiusura canale e pulizia risorse...");
     if (peerRef.current) peerRef.current.destroy();
     if (streamRef.current) streamRef.current.getTracks().forEach(track => track.stop());
     if (channelRef.current) supabase.removeChannel(channelRef.current);
@@ -81,14 +87,19 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   }, []);
 
   const joinChannel = useCallback(async (carovanaId: string, username: string, avatarUrl: string, role: string, carName?: string) => {
+    // 1. Sblocca l'audio (necessario per iOS)
     await unlockAudio();
 
     if (isActive) leaveChannel();
 
     const PeerClass = (window as any).Peer;
-    if (!PeerClass) return;
+    if (!PeerClass) {
+      console.error("[Cruising] PeerJS non caricato correttamente");
+      return;
+    }
 
     try {
+      // Richiesta permessi microfono con impostazioni ottimizzate per voce
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
@@ -97,17 +108,19 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
         } 
       });
       streamRef.current = stream;
+      // Inizialmente mutato (PTT mode)
       stream.getAudioTracks().forEach(track => track.enabled = false);
 
-      const peerId = `lwd-${carovanaId}-${username.replace(/\s+/g, '-')}-${Math.random().toString(36).substring(2, 6)}`;
+      // ID univoco per PeerJS
+      const myPeerId = `lwd-${carovanaId}-${username.replace(/\s+/g, '-')}-${Math.random().toString(36).substring(2, 6)}`;
       
-      // Configurazione con server TURN di Metered (Credenziali Utente)
-      const peer = new PeerClass(peerId, {
+      const peer = new PeerClass(myPeerId, {
         debug: 1,
         config: {
           'iceServers': [
             { 'urls': 'stun:stun.l.google.com:19302' },
             { 'urls': 'stun:stun1.l.google.com:19302' },
+            { 'urls': 'stun:stun2.l.google.com:19302' },
             {
               urls: 'turn:open.metered.ca:3478?transport=udp',
               username: '5adb9880780dccfb855a62d9',
@@ -129,6 +142,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       });
 
       peer.on('open', (id: string) => {
+        console.log(`[Cruising] Peer aperto con ID: ${id}`);
         setIsActive(true);
         setActiveCarovanaId(carovanaId);
         setCurrentUsername(username);
@@ -158,11 +172,16 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
                   isSpeaking: false
                 });
 
-                if (peerRef.current && !peerRef.current.connections[presenceId]) {
-                  const call = peerRef.current.call(presenceId, streamRef.current!);
-                  call.on('stream', (remoteStream: MediaStream) => {
-                    playRemoteStream(presenceId, remoteStream);
-                  });
+                // LOGICA DI CONNESSIONE: Solo chi ha l'ID "minore" chiama l'altro.
+                // Questo evita conflitti di doppia chiamata simultanea su reti mobili.
+                if (id < presenceId) {
+                  if (peerRef.current && !peerRef.current.connections[presenceId]) {
+                    console.log(`[Cruising] Inizializzazione chiamata verso: ${presenceId}`);
+                    const call = peerRef.current.call(presenceId, streamRef.current!);
+                    call.on('stream', (remoteStream: MediaStream) => {
+                      playRemoteStream(presenceId, remoteStream);
+                    });
+                  }
                 }
               }
             });
@@ -194,16 +213,28 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
         channelRef.current = channel;
       });
 
+      // Gestione chiamate in entrata
       peer.on('call', (call: any) => {
+        console.log(`[Cruising] Ricevuta chiamata da: ${call.peer}`);
         call.answer(streamRef.current!);
         call.on('stream', (remoteStream: MediaStream) => {
           playRemoteStream(call.peer, remoteStream);
         });
       });
 
+      peer.on('error', (err: any) => {
+        console.error(`[Cruising] PeerJS Error (${err.type}):`, err);
+        if (err.type === 'network' || err.type === 'disconnected') {
+          // Tentativo di riconnessione silenzioso
+          setTimeout(() => {
+            if (isActive) peer.reconnect();
+          }, 3000);
+        }
+      });
+
       peerRef.current = peer;
     } catch (err) {
-      console.error('[Cruising] Error:', err);
+      console.error('[Cruising] Errore inizializzazione:', err);
     }
   }, [isActive, leaveChannel, playRemoteStream]);
 
