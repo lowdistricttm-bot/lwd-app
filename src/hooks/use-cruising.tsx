@@ -46,7 +46,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const channelRef = useRef<any>(null);
   const audioContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // Funzione per agganciare l'audio al DOM (fondamentale per iOS su rete mobile)
   const playRemoteStream = useCallback((presenceId: string, remoteStream: MediaStream) => {
     console.log(`[Cruising] Tentativo riproduzione stream da: ${presenceId}`);
     
@@ -58,7 +57,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       audioContainerRef.current = container;
     }
 
-    // Rimuovi vecchi elementi per questo peer
     const oldAudio = document.getElementById(`audio-${presenceId}`);
     if (oldAudio) oldAudio.remove();
 
@@ -72,7 +70,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     audioContainerRef.current.appendChild(audio);
     
     audio.play().catch(err => {
-      console.warn(`[Cruising] Autoplay fallito per ${presenceId}. Riprovo al prossimo tocco.`, err);
+      console.warn(`[Cruising] Autoplay fallito per ${presenceId}.`, err);
     });
   }, []);
 
@@ -111,7 +109,8 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
       const myPeerId = `lwd-${carovanaId}-${username.replace(/\s+/g, '-')}-${Math.random().toString(36).substring(2, 6)}`;
       
-      // Configurazione ICE Servers potenziata per reti mobili
+      // Configurazione ICE Servers ottimizzata per reti mobili (4G/5G)
+      // Aggiunti server STUN multipli e configurazione TURN più robusta
       const peer = new PeerClass(myPeerId, {
         debug: 1,
         config: {
@@ -119,20 +118,20 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
             { 'urls': 'stun:stun.l.google.com:19302' },
             { 'urls': 'stun:stun1.l.google.com:19302' },
             { 'urls': 'stun:stun2.l.google.com:19302' },
-            { 'urls': 'stun:stun3.l.google.com:19302' },
-            { 'urls': 'stun:stun4.l.google.com:19302' },
+            { 'urls': 'stun:global.stun.twilio.com:3478' },
             {
-              urls: 'turn:open.metered.ca:3478?transport=udp',
-              username: '5adb9880780dccfb855a62d9',
-              credential: 'Ink+Z3uyHb+fOamN'
-            },
-            {
-              urls: 'turn:open.metered.ca:3478?transport=tcp',
+              // Server TURN di backup (Metered) - Configurazione UDP e TCP (fondamentale per mobile)
+              urls: [
+                'turn:open.metered.ca:3478?transport=udp',
+                'turn:open.metered.ca:3478?transport=tcp',
+                'turn:open.metered.ca:443?transport=tcp' // Porta 443 spesso bypassa i firewall mobili
+              ],
               username: '5adb9880780dccfb855a62d9',
               credential: 'Ink+Z3uyHb+fOamN'
             }
           ],
-          'iceCandidatePoolSize': 10
+          'iceCandidatePoolSize': 10,
+          'sdpSemantics': 'unified-plan'
         }
       });
 
@@ -163,15 +162,22 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
                   isSpeaking: false
                 });
 
-                // Chi ha l'ID minore avvia la chiamata
+                // Logica di connessione: chi ha l'ID alfabeticamente minore avvia la chiamata
                 if (id < presenceId && !peerRef.current.connections[presenceId]) {
-                  console.log(`[Cruising] Chiamata verso: ${presenceId}`);
+                  console.log(`[Cruising] Avvio chiamata verso: ${presenceId}`);
                   const call = peerRef.current.call(presenceId, streamRef.current!, {
                     metadata: { username }
                   });
-                  call.on('stream', (remoteStream: MediaStream) => {
-                    playRemoteStream(presenceId, remoteStream);
-                  });
+                  
+                  if (call) {
+                    call.on('stream', (remoteStream: MediaStream) => {
+                      playRemoteStream(presenceId, remoteStream);
+                    });
+                    
+                    call.on('error', (err: any) => {
+                      console.error(`[Cruising] Errore chiamata verso ${presenceId}:`, err);
+                    });
+                  }
                 }
               }
             });
@@ -207,14 +213,18 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
       peer.on('error', (err: any) => {
         console.error(`[Cruising] PeerJS Error:`, err);
-        if (err.type === 'network' || err.type === 'disconnected') {
-          setTimeout(() => isActive && peer.reconnect(), 3000);
+        // Gestione riconnessione automatica per instabilità rete mobile
+        if (err.type === 'network' || err.type === 'disconnected' || err.type === 'peer-unavailable') {
+          console.log("[Cruising] Tentativo di riconnessione...");
+          setTimeout(() => {
+            if (isActive && peer && !peer.destroyed) peer.reconnect();
+          }, 3000);
         }
       });
 
       peerRef.current = peer;
     } catch (err) {
-      console.error('[Cruising] Errore microfono:', err);
+      console.error('[Cruising] Errore inizializzazione:', err);
     }
   }, [isActive, leaveChannel, playRemoteStream]);
 
