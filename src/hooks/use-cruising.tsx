@@ -19,7 +19,7 @@ export interface RoadAlert {
   sender: string;
 }
 
-export type ConnectionStatus = 'idle' | 'initializing' | 'connecting' | 'ready' | 'error';
+export type ConnectionStatus = 'idle' | 'initializing' | 'connecting-server' | 'connecting-units' | 'ready' | 'error';
 
 interface CruisingContextType {
   isActive: boolean;
@@ -48,6 +48,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const peerRef = useRef<any>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const channelRef = useRef<any>(null);
+  const heartbeatRef = useRef<any>(null);
 
   const playRemoteStream = useCallback((presenceId: string, remoteStream: MediaStream) => {
     const sinkId = `sink-${presenceId}`;
@@ -57,27 +58,23 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       audio = document.createElement('audio');
       audio.id = sinkId;
       audio.autoplay = true;
-      // Cast a any per proprietà non standard su HTMLAudioElement ma necessarie per mobile
-      (audio as any).playsInline = true;
-      (audio as any).webkitPlaysInline = true;
+      // @ts-ignore
+      audio.playsInline = true;
+      // @ts-ignore
+      audio.webkitPlaysInline = true;
       audio.style.display = 'none';
       document.body.appendChild(audio);
     }
 
     audio.srcObject = remoteStream;
-    
-    const play = () => {
-      audio.play().catch(err => {
-        console.warn("[Cruising] Play blocked, waiting for interaction", err);
-        window.addEventListener('touchstart', () => audio.play(), { once: true });
-      });
-    };
-
-    play();
+    audio.play().catch(() => {
+      window.addEventListener('touchstart', () => audio.play(), { once: true });
+    });
   }, []);
 
   const leaveChannel = useCallback(() => {
     setStatus('idle');
+    if (heartbeatRef.current) clearInterval(heartbeatRef.current);
     if (peerRef.current) peerRef.current.destroy();
     if (streamRef.current) streamRef.current.getTracks().forEach(track => track.stop());
     if (channelRef.current) supabase.removeChannel(channelRef.current);
@@ -107,39 +104,42 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       streamRef.current = stream;
       stream.getAudioTracks().forEach(track => track.enabled = false);
 
-      const myPeerId = `lwd-v3-${carovanaId.substring(0,6)}-${username.replace(/[^a-zA-Z0-9]/g, '')}`;
+      // ID più corto per evitare problemi di buffer su reti mobili
+      const myPeerId = `lwd-${carovanaId.substring(0,4)}-${Math.random().toString(36).substring(2, 6)}`;
       
       const peer = new PeerClass(myPeerId, {
+        debug: 1,
         config: {
           'iceServers': [
             { 'urls': 'stun:stun.l.google.com:19302' },
-            { 'urls': 'stun:stun1.l.google.com:19302' },
-            { 'urls': 'stun:stun2.l.google.com:19302' },
             {
               urls: [
                 'turn:lwdstrct.metered.live:443?transport=tcp', 
-                'turn:lwdstrct.metered.live:3478?transport=udp',
-                'turn:lwdstrct.metered.live:80?transport=tcp'
+                'turn:lwdstrct.metered.live:80?transport=tcp',
+                'turn:lwdstrct.metered.live:443?transport=udp'
               ],
               username: '5adb9880780dccfb855a62d9',
               credential: 'Ink+Z3uyHb+fOamN'
             }
           ],
-          'iceTransportPolicy': 'all',
-          'sdpSemantics': 'unified-plan'
+          'iceCandidatePoolSize': 10,
+          'iceTransportPolicy': 'all'
         }
       });
 
-      setStatus('connecting');
+      setStatus('connecting-server');
 
       peer.on('open', (id: string) => {
         setIsActive(true);
-        setStatus('ready');
+        setStatus('connecting-units');
         setActiveCarovanaId(carovanaId);
         setCurrentUsername(username);
         
         const channel = supabase.channel(`cruising-${carovanaId}`, {
-          config: { presence: { key: id } },
+          config: { 
+            presence: { key: id },
+            broadcast: { ack: false }
+          },
         });
 
         channel
@@ -159,6 +159,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
                   isSpeaking: false
                 });
 
+                // Logica di chiamata: chi ha l'ID "minore" chiama chi ha l'ID "maggiore"
                 if (id < presenceId) {
                   const call = peerRef.current.call(presenceId, streamRef.current!);
                   if (call) {
@@ -170,6 +171,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
               }
             });
             setUnits(activeUnits);
+            if (status !== 'ready') setStatus('ready');
           })
           .on('broadcast', { event: 'speaking_state' }, ({ payload }) => {
             setUnits(prev => prev.map(u => u.username === payload.username ? { ...u, isSpeaking: payload.isSpeaking } : u));
@@ -182,9 +184,15 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
               setTimeout(() => setLastAlert(null), 8000);
             }
           })
-          .subscribe(async (status) => {
-            if (status === 'SUBSCRIBED') {
-              await channel.track({ username, avatarUrl, role, carName });
+          .subscribe(async (subStatus) => {
+            if (subStatus === 'SUBSCRIBED') {
+              await channel.track({ username, avatarUrl, role, carName, joinedAt: new Date().toISOString() });
+              
+              // Heartbeat per mantenere attiva la connessione mobile
+              if (heartbeatRef.current) clearInterval(heartbeatRef.current);
+              heartbeatRef.current = setInterval(() => {
+                channel.send({ type: 'broadcast', event: 'heartbeat', payload: { id } });
+              }, 5000);
             }
           });
         
@@ -200,11 +208,9 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
       peer.on('error', (err: any) => {
         console.error('[Cruising] Peer Error:', err.type);
-        if (err.type === 'unavailable-id') {
-          peer.destroy();
-          joinChannel(carovanaId, `${username}${Math.floor(Math.random()*100)}`, avatarUrl, role, carName);
-        } else {
-          setStatus('error');
+        setStatus('error');
+        if (err.type === 'network' || err.type === 'server-error') {
+          setTimeout(() => joinChannel(carovanaId, username, avatarUrl, role, carName), 3000);
         }
       });
 
@@ -213,12 +219,11 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       console.error('[Cruising] Errore inizializzazione:', err);
       setStatus('error');
     }
-  }, [playRemoteStream]);
+  }, [playRemoteStream, status]);
 
   const toggleMic = useCallback((speaking: boolean) => {
     if (!streamRef.current || !channelRef.current) return;
     
-    // Forza il resume dell'audio context ad ogni interazione PTT
     const context = getGlobalAudioContext();
     if (context?.state === 'suspended') context.resume();
 
