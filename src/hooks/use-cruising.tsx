@@ -105,7 +105,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
      const peerId = `lwd-${carovanaId}-${username.replace(/\s+/g, '-')}-${Math.random().toString(36).substring(2, 6)}`;
 
-      const peer = new (window as any).Peer(profile.id, {
+      const peer = new (window as any).Peer(peerId, {
   debug: 2,
   config: {
     'iceServers': [
