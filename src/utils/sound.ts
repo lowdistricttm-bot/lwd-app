@@ -5,35 +5,40 @@ const ROGER_BEEP_URL = "https://assets.mixkit.co/active_storage/sfx/2568/2568-pr
 const ALERT_SOUND_URL = "https://assets.mixkit.co/active_storage/sfx/951/951-preview.mp3";
 
 let isAudioUnlocked = false;
+let globalAudioContext: AudioContext | null = null;
 
 /**
- * Sblocca l'audio sui browser mobili. 
- * DEVE essere chiamato direttamente dentro un evento onClick.
+ * Sblocca l'audio in modo definitivo per iOS.
+ * Deve essere chiamato direttamente nell'evento onClick.
  */
 export const unlockAudio = async () => {
   if (isAudioUnlocked) return true;
   
   try {
-    // 1. Sveglia l'AudioContext
-    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-    if (AudioContext) {
-      const context = new AudioContext();
-      if (context.state === 'suspended') {
-        await context.resume();
-      }
+    // 1. Crea o riprendi l'AudioContext (fondamentale per WebRTC su iOS)
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!globalAudioContext) {
+      globalAudioContext = new AudioContextClass();
     }
 
-    // 2. Riproduci un suono silenzioso per forzare il browser a permettere l'audio
-    const silentAudio = new Audio();
-    // WAV silenzioso di 100ms
-    silentAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFWm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
-    await silentAudio.play();
-    
+    if (globalAudioContext?.state === 'suspended') {
+      await globalAudioContext.resume();
+    }
+
+    // 2. Riproduci un buffer di silenzio (metodo più affidabile di new Audio())
+    const buffer = globalAudioContext?.createBuffer(1, 1, 22050);
+    const source = globalAudioContext?.createBufferSource();
+    if (source && buffer) {
+      source.buffer = buffer;
+      source.connect(globalAudioContext!.destination);
+      source.start(0);
+    }
+
     isAudioUnlocked = true;
-    console.log("[Sound] Audio engine unlocked successfully");
+    console.log("[Sound] Audio engine unlocked via AudioContext");
     return true;
   } catch (err) {
-    console.warn("[Sound] Audio unlock failed:", err);
+    console.error("[Sound] Audio unlock critical failure:", err);
     return false;
   }
 };
