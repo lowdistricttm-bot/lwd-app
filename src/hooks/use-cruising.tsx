@@ -113,6 +113,11 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     setStatus('initializing');
 
     try {
+      // 1. Recupero dinamico dei server ICE/TURN tramite API Key
+      const iceResponse = await fetch("https://lwdstrct.metered.live/api/v1/turn/credentials?apiKey=7156036f4bec000b0fac5c1054cef8efa44c");
+      const iceServers = await iceResponse.json();
+
+      // 2. Accesso al microfono
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: { 
           echoCancellation: true, 
@@ -125,35 +130,12 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
       const myPeerId = `lwd-${Math.random().toString(36).substring(2, 8)}`;
       
-      // Configurazione PeerJS con i server Metered forniti dall'utente
+      // 3. Inizializzazione Peer con i server appena recuperati
       const peer = new PeerClass(myPeerId, {
         debug: 1,
         secure: true,
         config: {
-          'iceServers': [
-            { urls: "stun:stun.l.google.com:19302" },
-            { urls: "stun:stun.relay.metered.ca:80" },
-            {
-              urls: "turn:standard.relay.metered.ca:80",
-              username: "5adb9880780dccfb855a62d9",
-              credential: "Ink+Z3uyHb+fOamN",
-            },
-            {
-              urls: "turn:standard.relay.metered.ca:80?transport=tcp",
-              username: "5adb9880780dccfb855a62d9",
-              credential: "Ink+Z3uyHb+fOamN",
-            },
-            {
-              urls: "turn:standard.relay.metered.ca:443",
-              username: "5adb9880780dccfb855a62d9",
-              credential: "Ink+Z3uyHb+fOamN",
-            },
-            {
-              urls: "turns:standard.relay.metered.ca:443?transport=tcp",
-              username: "5adb9880780dccfb855a62d9",
-              credential: "Ink+Z3uyHb+fOamN",
-            }
-          ],
+          'iceServers': iceServers,
           'iceCandidatePoolSize': 10
         }
       });
@@ -166,7 +148,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
           isConnectingRef.current = false;
           leaveChannel();
         }
-      }, 10000);
+      }, 12000);
 
       peer.on('open', (id: string) => {
         if (watchdogRef.current) clearTimeout(watchdogRef.current);
