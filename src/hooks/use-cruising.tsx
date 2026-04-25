@@ -19,9 +19,12 @@ export interface RoadAlert {
   sender: string;
 }
 
+export type ConnectionStatus = 'idle' | 'initializing' | 'connecting' | 'ready' | 'error';
+
 interface CruisingContextType {
   isActive: boolean;
   isSpeaking: boolean;
+  status: ConnectionStatus;
   units: CruisingUnit[];
   activeCarovanaId: string | null;
   lastAlert: RoadAlert | null;
@@ -36,6 +39,7 @@ const CruisingContext = createContext<CruisingContextType | undefined>(undefined
 export const CruisingProvider = ({ children }: { children: React.ReactNode }) => {
   const [isActive, setIsActive] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [status, setStatus] = useState<ConnectionStatus>('idle');
   const [units, setUnits] = useState<CruisingUnit[]>([]);
   const [activeCarovanaId, setActiveCarovanaId] = useState<string | null>(null);
   const [currentUsername, setCurrentUsername] = useState<string>('');
@@ -90,6 +94,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   }, [isActive]);
 
   const leaveChannel = useCallback(() => {
+    setStatus('idle');
     if (peerRef.current) peerRef.current.destroy();
     if (streamRef.current) streamRef.current.getTracks().forEach(track => track.stop());
     if (channelRef.current) supabase.removeChannel(channelRef.current);
@@ -106,13 +111,15 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     const PeerClass = (window as any).Peer;
     if (!PeerClass) return;
 
+    setStatus('initializing');
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: { 
           echoCancellation: true, 
           noiseSuppression: true, 
           autoGainControl: true,
-          sampleRate: 16000 // Ottimizzato per voce su mobile
+          sampleRate: 16000 
         } 
       });
       streamRef.current = stream;
@@ -120,17 +127,22 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
       const myPeerId = `lwd-${carovanaId}-${username.replace(/\s+/g, '-')}-${Math.random().toString(36).substring(2, 6)}`;
       
-      // Configurazione ICE potenziata per 5G/4G
+      // Configurazione ICE ultra-aggressiva per 5G/4G
       const peer = new PeerClass(myPeerId, {
+        debug: 1,
         config: {
           'iceServers': [
             { 'urls': 'stun:stun.l.google.com:19302' },
             { 'urls': 'stun:stun1.l.google.com:19302' },
+            { 'urls': 'stun:stun2.l.google.com:19302' },
+            { 'urls': 'stun:stun3.l.google.com:19302' },
+            { 'urls': 'stun:stun4.l.google.com:19302' },
             {
               // Server TURN su porta 443 (TCP) per bypassare i firewall mobili più restrittivi
               urls: [
                 'turn:lwdstrct.metered.live:443?transport=tcp', 
-                'turn:lwdstrct.metered.live:3478?transport=udp'
+                'turn:lwdstrct.metered.live:3478?transport=udp',
+                'turn:lwdstrct.metered.live:80?transport=tcp'
               ],
               username: '5adb9880780dccfb855a62d9',
               credential: 'Ink+Z3uyHb+fOamN'
@@ -141,8 +153,11 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
         }
       });
 
+      setStatus('connecting');
+
       peer.on('open', (id: string) => {
         setIsActive(true);
+        setStatus('ready');
         setActiveCarovanaId(carovanaId);
         setCurrentUsername(username);
         
@@ -167,7 +182,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
                   isSpeaking: false
                 });
 
-                // Logica di chiamata: chi ha l'ID "minore" chiama chi ha l'ID "maggiore"
                 if (id < presenceId && !peerRef.current.connections[presenceId]) {
                   const call = peerRef.current.call(presenceId, streamRef.current!);
                   if (call) {
@@ -209,13 +223,21 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
       peer.on('error', (err: any) => {
         console.error('[Cruising] Peer Error:', err.type, err);
+        setStatus('error');
+        if (err.type === 'network' || err.type === 'disconnected') {
+          // Tentativo di riconnessione automatica per reti mobili instabili
+          setTimeout(() => {
+            if (isActive) peer.reconnect();
+          }, 3000);
+        }
       });
 
       peerRef.current = peer;
     } catch (err) {
       console.error('[Cruising] Errore radio:', err);
+      setStatus('error');
     }
-  }, [playRemoteStream]);
+  }, [playRemoteStream, isActive]);
 
   const toggleMic = useCallback((speaking: boolean) => {
     if (!streamRef.current || !channelRef.current) return;
@@ -225,7 +247,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
     if (!speaking) playRogerBeep();
 
-    // Usiamo un invio sicuro che non fallisce se il socket è in fallback
     channelRef.current.send({
       type: 'broadcast',
       event: 'speaking_state',
@@ -246,7 +267,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
   return (
     <CruisingContext.Provider value={{ 
-      isActive, isSpeaking, units, activeCarovanaId, lastAlert,
+      isActive, isSpeaking, status, units, activeCarovanaId, lastAlert,
       joinChannel, leaveChannel, toggleMic, sendAlert 
     }}>
       {children}

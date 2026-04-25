@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, X, Users, Radio, AlertTriangle, Info, Volume2, ShieldAlert, Zap, User, Power } from 'lucide-react';
+import { Mic, MicOff, X, Users, Radio, AlertTriangle, Info, Volume2, ShieldAlert, Zap, User, Power, Wifi, WifiOff, Loader2 } from 'lucide-react';
 import { useCruising } from '@/hooks/use-cruising';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { useTranslation } from '@/hooks/use-translation';
@@ -23,7 +23,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
   const [carName, setCarName] = useState<string>('');
 
   const { 
-    isActive, isSpeaking, units, lastAlert,
+    isActive, isSpeaking, status, units, lastAlert,
     joinChannel, leaveChannel, toggleMic, sendAlert 
   } = useCruising();
 
@@ -45,8 +45,6 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
     });
   }, []);
 
-  // L'audio è già stato sbloccato dal click che ha aperto questa modale.
-  // Qui ci limitiamo a unirci al canale.
   useEffect(() => {
     if (isOpen && !isActive && profile) {
       joinChannel(
@@ -64,6 +62,16 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
     setTimeout(() => {
       leaveChannel();
     }, 300);
+  };
+
+  const getStatusBadge = () => {
+    switch(status) {
+      case 'initializing': return <div className="flex items-center gap-2 bg-zinc-800 px-3 py-1 rounded-full text-[8px] font-black uppercase text-zinc-400"><Loader2 size={10} className="animate-spin" /> Inizializzazione...</div>;
+      case 'connecting': return <div className="flex items-center gap-2 bg-blue-500/20 px-3 py-1 rounded-full text-[8px] font-black uppercase text-blue-400"><Wifi size={10} className="animate-pulse" /> Connessione 5G...</div>;
+      case 'ready': return <div className="flex items-center gap-2 bg-green-500/20 px-3 py-1 rounded-full text-[8px] font-black uppercase text-green-500"><Wifi size={10} /> Radio Attiva</div>;
+      case 'error': return <div className="flex items-center gap-2 bg-red-500/20 px-3 py-1 rounded-full text-[8px] font-black uppercase text-red-500"><WifiOff size={10} /> Errore Rete</div>;
+      default: return null;
+    }
   };
 
   const alerts = [
@@ -126,7 +134,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
               </div>
               <div>
                 <h2 className="text-xl font-black italic uppercase tracking-tighter">Cruising Mode</h2>
-                <p className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Channel: {carovanaTitle}</p>
+                <div className="mt-1">{getStatusBadge()}</div>
               </div>
             </div>
             
