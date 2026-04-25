@@ -107,7 +107,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       { 'urls': 'stun:stun.l.google.com:19302' }, // STUN gratuito di Google
       { 
         'urls': 'turn:lwdstrct.metered.live', 
-        'username': 'tuo_username', 
+        'username': '5adb9880780dccfb855a62d9', 
         'credential': 'tua_password' 
       }
     ]
