@@ -103,12 +103,16 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       const peer = new PeerClass(peerId, {
         debug: 2,
         config: {
-          'iceServers': [
-            { 'urls': 'stun:stun.l.google.com:19302' },
-            { 'urls': 'stun:stun1.l.google.com:19302' }
-          ]
-        }
-      });
+           'iceServers': [
+      { 'urls': 'stun:stun.l.google.com:19302' }, // STUN gratuito di Google
+      { 
+        'urls': 'turn:lwdstrct', 
+        'username': 'tuo_username', 
+        'credential': 'tua_password' 
+      }
+    ]
+  }
+});
 
       peer.on('open', (id: string) => {
         setIsActive(true);
