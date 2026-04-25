@@ -97,11 +97,13 @@ export const useBPMember = (identifier?: string, type: 'username' | 'id' = 'user
       if (!identifier) return null;
       
       try {
-        // Se abbiamo l'ID, usiamo l'endpoint diretto che è infallibile
+        // Se abbiamo l'ID, usiamo l'endpoint diretto
         if (type === 'id') {
           const response = await fetch(`${BP_API_URL}/members/${identifier}`, {
             headers: getAuthHeader()
           });
+          // Se l'utente non esiste più (404), restituiamo null senza lanciare errori
+          if (response.status === 404) return null;
           if (response.ok) return response.json();
         }
 
