@@ -101,28 +101,27 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
       const peerId = `lwd-${carovanaId}-${username.replace(/\s+/g, '-')}-${Math.random().toString(36).substring(2, 6)}`;
       
-      // Configurazione con server TURN di Metered
+      // Configurazione con server TURN di Metered (Credenziali Utente)
       const peer = new PeerClass(peerId, {
         debug: 1,
         config: {
           'iceServers': [
             { 'urls': 'stun:stun.l.google.com:19302' },
             { 'urls': 'stun:stun1.l.google.com:19302' },
-            // Inserisci qui le tue credenziali Metered
             {
               urls: 'turn:open.metered.ca:3478?transport=udp',
-              username: '866666666666666666666666', // Esempio, sostituisci con il tuo
-              credential: 'YOUR_PASSWORD_HERE'
+              username: '5adb9880780dccfb855a62d9',
+              credential: 'Ink+Z3uyHb+fOamN'
             },
             {
               urls: 'turn:open.metered.ca:3478?transport=tcp',
-              username: '866666666666666666666666',
-              credential: 'YOUR_PASSWORD_HERE'
+              username: '5adb9880780dccfb855a62d9',
+              credential: 'Ink+Z3uyHb+fOamN'
             },
             {
               urls: 'turns:open.metered.ca:443?transport=tcp',
-              username: '866666666666666666666666',
-              credential: 'YOUR_PASSWORD_HERE'
+              username: '5adb9880780dccfb855a62d9',
+              credential: 'Ink+Z3uyHb+fOamN'
             }
           ],
           'iceTransportPolicy': 'all'
