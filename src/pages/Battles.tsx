@@ -168,9 +168,9 @@ const Battles = () => {
           <div className="w-8 h-8 bg-yellow-500/10 rounded-lg flex items-center justify-center text-yellow-500 border border-yellow-500/20">
             <Zap size={16} fill="currentColor" />
           </div>
-          <div className="hidden xs:block">
-            <p className="text-[8px] font-black uppercase tracking-widest italic text-white">Vota e Guadagna</p>
-            <p className="text-[7px] font-bold uppercase text-zinc-600">+1 REP per ogni voto</p>
+          <div className="flex flex-col">
+            <p className="text-[8px] font-black uppercase tracking-widest italic text-white leading-none mb-1">Guadagna Reputazione</p>
+            <p className="text-[7px] font-bold uppercase text-zinc-600 leading-none">+1 REP per ogni voto</p>
           </div>
         </div>
         
