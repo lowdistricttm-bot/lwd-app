@@ -108,7 +108,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       { 
         'urls': 'turn:lwdstrct.metered.live', 
         'username': '5adb9880780dccfb855a62d9', 
-        'credential': 'tua_password' 
+        'credential': 'Ink+Z3uyHb+fOamN' 
       }
     ]
   }
