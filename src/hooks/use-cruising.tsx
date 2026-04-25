@@ -50,6 +50,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const channelRef = useRef<any>(null);
   const heartbeatRef = useRef<any>(null);
   const watchdogRef = useRef<any>(null);
+  const isConnectingRef = useRef(false);
 
   const playRemoteStream = useCallback((presenceId: string, remoteStream: MediaStream) => {
     const sinkId = `sink-${presenceId}`;
@@ -74,6 +75,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   }, []);
 
   const leaveChannel = useCallback(() => {
+    isConnectingRef.current = false;
     setStatus('idle');
     if (heartbeatRef.current) clearInterval(heartbeatRef.current);
     if (watchdogRef.current) clearTimeout(watchdogRef.current);
@@ -99,19 +101,20 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   }, []);
 
   const joinChannel = useCallback(async (carovanaId: string, username: string, avatarUrl: string, role: string, carName?: string) => {
-    const PeerClass = (window as any).Peer;
-    if (!PeerClass) return;
+    // Impedisce chiamate multiple simultanee
+    if (isConnectingRef.current) return;
+    isConnectingRef.current = true;
 
-    // Se c'è già una connessione attiva o in corso, puliamo tutto prima di riprovare
-    if (peerRef.current) {
-      leaveChannel();
-      // Piccolo delay per permettere la pulizia delle risorse hardware
-      await new Promise(resolve => setTimeout(resolve, 500));
+    const PeerClass = (window as any).Peer;
+    if (!PeerClass) {
+      isConnectingRef.current = false;
+      return;
     }
 
     setStatus('initializing');
 
     try {
+      // Richiesta microfono (una sola volta)
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: { 
           echoCancellation: true, 
@@ -122,15 +125,13 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       streamRef.current = stream;
       stream.getAudioTracks().forEach(track => track.enabled = false);
 
-      // ID ultra-corto per massimizzare la compatibilità con i server di signaling
       const myPeerId = `lwd-${Math.random().toString(36).substring(2, 8)}`;
       
-      // Configurazione specifica per bypassare i blocchi 4G/5G
       const peer = new PeerClass(myPeerId, {
         debug: 1,
         secure: true,
-        host: '0.peerjs.com', // Esplicitiamo il server ufficiale
-        port: 443,           // Usiamo la porta HTTPS standard (raramente bloccata)
+        host: '0.peerjs.com',
+        port: 443,
         config: {
           'iceServers': [
             { 'urls': 'stun:stun.l.google.com:19302' },
@@ -151,14 +152,14 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
       setStatus('connecting-server');
 
-      // Watchdog: se non si connette al server entro 8 secondi, riprova
       if (watchdogRef.current) clearTimeout(watchdogRef.current);
       watchdogRef.current = setTimeout(() => {
-        if (status === 'connecting-server' || status === 'initializing') {
-          console.warn("[Cruising] Watchdog attivato: timeout connessione server. Riprovo...");
-          joinChannel(carovanaId, username, avatarUrl, role, carName);
+        if (isConnectingRef.current && (status === 'connecting-server' || status === 'initializing')) {
+          console.warn("[Cruising] Timeout connessione. Reset...");
+          isConnectingRef.current = false;
+          leaveChannel();
         }
-      }, 8000);
+      }, 10000);
 
       peer.on('open', (id: string) => {
         if (watchdogRef.current) clearTimeout(watchdogRef.current);
@@ -191,7 +192,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
                   isSpeaking: false
                 });
 
-                // Logica di chiamata: chi ha l'ID "minore" chiama chi ha l'ID "maggiore"
                 if (id < presenceId) {
                   const call = peerRef.current.call(presenceId, streamRef.current!);
                   if (call) {
@@ -219,8 +219,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
           .subscribe(async (subStatus) => {
             if (subStatus === 'SUBSCRIBED') {
               await channel.track({ username, avatarUrl, role, carName, joinedAt: new Date().toISOString() });
-              
-              // Heartbeat aggressivo per mantenere attiva la connessione mobile
               if (heartbeatRef.current) clearInterval(heartbeatRef.current);
               heartbeatRef.current = setInterval(() => {
                 channel.send({ type: 'broadcast', event: 'heartbeat', payload: { id } });
@@ -239,25 +237,18 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       });
 
       peer.on('error', (err: any) => {
-        console.error('[Cruising] Peer Error:', err.type, err);
-        if (watchdogRef.current) clearTimeout(watchdogRef.current);
-        
-        if (err.type === 'network' || err.type === 'server-error' || err.type === 'socket-closed') {
-          setStatus('connecting-server');
-          setTimeout(() => {
-            if (isActive) joinChannel(carovanaId, username, avatarUrl, role, carName);
-          }, 3000);
-        } else {
-          setStatus('error');
-        }
+        console.error('[Cruising] Peer Error:', err.type);
+        isConnectingRef.current = false;
+        setStatus('error');
       });
 
       peerRef.current = peer;
     } catch (err) {
       console.error('[Cruising] Errore inizializzazione:', err);
+      isConnectingRef.current = false;
       setStatus('error');
     }
-  }, [playRemoteStream, leaveChannel, status, isActive]);
+  }, [playRemoteStream, leaveChannel]);
 
   const toggleMic = useCallback((speaking: boolean) => {
     if (!streamRef.current || !channelRef.current) return;

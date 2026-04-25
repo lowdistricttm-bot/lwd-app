@@ -45,8 +45,9 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
     });
   }, []);
 
+  // Trigger di connessione corretto: solo se aperto e in stato 'idle'
   useEffect(() => {
-    if (isOpen && !isActive && profile) {
+    if (isOpen && status === 'idle' && profile) {
       joinChannel(
         carovanaId, 
         profile.username || 'Unit', 
@@ -55,18 +56,22 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
         carName
       );
     }
-  }, [isOpen, isActive, profile, carovanaId, carName, joinChannel]);
+  }, [isOpen, status, profile, carovanaId, carName, joinChannel]);
 
   const handleRetry = () => {
-    if (profile) {
-      joinChannel(
-        carovanaId, 
-        profile.username || 'Unit', 
-        profile.avatar_url || '', 
-        profile.role || 'member',
-        carName
-      );
-    }
+    leaveChannel();
+    // Piccolo timeout per resettare lo stato prima di riprovare
+    setTimeout(() => {
+      if (profile) {
+        joinChannel(
+          carovanaId, 
+          profile.username || 'Unit', 
+          profile.avatar_url || '', 
+          profile.role || 'member',
+          carName
+        );
+      }
+    }, 500);
   };
 
   const handleClose = () => {
@@ -198,7 +203,7 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
                       </h4>
                     </div>
                   </motion.div>
-                ) : status === 'connecting-server' ? (
+                ) : status === 'connecting-server' || status === 'initializing' ? (
                   <motion.div 
                     key="connecting-state"
                     initial={{ opacity: 0 }}
