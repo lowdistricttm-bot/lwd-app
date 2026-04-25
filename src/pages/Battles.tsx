@@ -177,7 +177,7 @@ const Battles = () => {
         <div className="flex items-center gap-6">
           <div className="text-right">
             <p className="text-lg font-black italic leading-none">{stats.total}</p>
-            <p className="text-[6px] font-black uppercase tracking-widest text-zinc-600 mt-1">Voti Totali</p>
+            <p className="text-[4px] font-black uppercase tracking-widest text-zinc-600 mt-1">Voti Totali</p>
           </div>
           <div className="w-[1px] h-6 bg-white/10" />
           <div className="flex items-center gap-2">
