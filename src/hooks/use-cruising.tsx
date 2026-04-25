@@ -72,11 +72,13 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     audio.srcObject = remoteStream;
     audio.play().catch(() => {
       console.log("[Cruising] Audio in attesa di interazione utente");
+      window.addEventListener('touchstart', () => audio.play(), { once: true });
+      window.addEventListener('click', () => audio.play(), { once: true });
     });
   }, []);
 
   const leaveChannel = useCallback(() => {
-    console.log("[Cruising] Disconnessione...");
+    console.log("[Cruising] Disconnessione e pulizia risorse...");
     isConnectingRef.current = false;
     setStatus('idle');
     
@@ -111,7 +113,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
     const PeerClass = (window as any).Peer;
     if (!PeerClass) {
-      console.error("[Cruising] PeerJS non caricato");
+      console.error("[Cruising] PeerJS non caricato nell'index.html");
       isConnectingRef.current = false;
       setStatus('error');
       return;
@@ -120,53 +122,77 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     setStatus('initializing');
 
     try {
-      // Controllo supporto MediaDevices (spesso bloccato in iframe/sandbox)
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        showError("Il tuo browser o l'ambiente di anteprima blocca l'accesso al microfono.");
-        throw new Error("MediaDevices not supported");
-      }
-
+      // 1. Accesso al microfono
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: { echoCancellation: true, noiseSuppression: true } 
+        audio: { 
+          echoCancellation: true, 
+          noiseSuppression: true, 
+          autoGainControl: true
+        } 
       }).catch(err => {
-        showError("Permesso microfono negato o occupato da un'altra app.");
+        showError("Microfono non disponibile. Controlla i permessi del browser.");
         throw err;
       });
 
       streamRef.current = stream;
       stream.getAudioTracks().forEach(track => track.enabled = false);
 
-      // Configurazione server STUN pubblici per NAT traversal
-      const iceServers = [
+      // 2. Configurazione ICE Server estesa per massima compatibilità
+      let iceServers = [
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
         { urls: 'stun:stun.services.mozilla.com' }
       ];
 
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500);
+        
+        const iceResponse = await fetch("https://lwdstrct.metered.live/api/v1/turn/credentials?apiKey=7156036f4bec000b0fac5c1054cef8efa44c", {
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        
+        if (iceResponse.ok) {
+          const turnServers = await iceResponse.json();
+          iceServers = [...iceServers, ...turnServers];
+        }
+      } catch (e) {
+        console.warn("[Cruising] Utilizzo STUN pubblici (TURN Metered non raggiungibile)");
+      }
+
+      // ID semplificato per evitare problemi di parsing su alcuni browser mobile
       const myPeerId = `lwd${Math.random().toString(36).substring(2, 10)}`;
       
-      // Inizializzazione Peer con configurazione standard per massima compatibilità
+      // 3. Inizializzazione Peer con parametri espliciti per bypassare proxy/firewall
       const peer = new PeerClass(myPeerId, {
+        host: '0.peerjs.com',
+        port: 443,
+        path: '/',
+        secure: true,
         debug: 1,
         config: {
           'iceServers': iceServers,
+          'iceCandidatePoolSize': 10,
           'sdpSemantics': 'unified-plan'
         }
       });
 
       setStatus('connecting-server');
 
+      // Watchdog più aggressivo per il feedback UI
       if (watchdogRef.current) clearTimeout(watchdogRef.current);
       watchdogRef.current = setTimeout(() => {
         if (status !== 'ready' && status !== 'connecting-units' && isConnectingRef.current) {
-          console.error("[Cruising] Timeout connessione");
+          console.error("[Cruising] Timeout connessione server di segnalazione");
           setStatus('error');
           isConnectingRef.current = false;
         }
-      }, 12000);
+      }, 15000);
 
       peer.on('open', (id: string) => {
-        console.log("[Cruising] Peer aperto:", id);
+        console.log("[Cruising] Connesso al server con ID:", id);
         if (watchdogRef.current) clearTimeout(watchdogRef.current);
         setIsActive(true);
         setStatus('connecting-units');
@@ -197,7 +223,9 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
                   isSpeaking: false
                 });
 
+                // Logica di chiamata: l'ID alfabeticamente minore chiama il maggiore per evitare doppie chiamate
                 if (id < presenceId) {
+                  console.log(`[Cruising] Chiamata verso unità: ${presenceInfo.username}`);
                   const call = peerRef.current.call(presenceId, streamRef.current!);
                   if (call) {
                     call.on('stream', (remoteStream: MediaStream) => {
@@ -236,6 +264,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       });
 
       peer.on('call', (call: any) => {
+        console.log("[Cruising] Ricezione chiamata in entrata...");
         call.answer(streamRef.current!);
         call.on('stream', (remoteStream: MediaStream) => {
           playRemoteStream(call.peer, remoteStream);
@@ -243,8 +272,8 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       });
 
       peer.on('error', (err: any) => {
-        console.error('[Cruising] PeerJS Error:', err.type);
-        if (['network', 'server-error', 'socket-error'].includes(err.type)) {
+        console.error('[Cruising] PeerJS Error:', err.type, err);
+        if (['network', 'server-error', 'socket-error', 'unavailable-id'].includes(err.type)) {
           isConnectingRef.current = false;
           setStatus('error');
         }
@@ -252,7 +281,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
       peerRef.current = peer;
     } catch (err) {
-      console.error('[Cruising] Errore:', err);
+      console.error('[Cruising] Errore critico inizializzazione:', err);
       isConnectingRef.current = false;
       setStatus('error');
     }
