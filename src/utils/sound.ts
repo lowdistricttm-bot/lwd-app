@@ -21,7 +21,7 @@ export const getGlobalAudioContext = () => {
 
 /**
  * Sblocca l'audio in modo definitivo per iOS.
- * Ottimizzato per non bloccare il thread principale (UI).
+ * Fondamentale per permettere a WebRTC di riprodurre flussi remoti.
  */
 export const unlockAudio = async () => {
   if (isAudioUnlocked) return true;
@@ -34,23 +34,25 @@ export const unlockAudio = async () => {
       await context.resume();
     }
 
-    // 1. Sblocco tramite AudioContext (per effetti sonori)
+    // 1. Sblocco tramite AudioContext
     const buffer = context.createBuffer(1, 1, 22050);
     const source = context.createBufferSource();
     source.buffer = buffer;
     source.connect(context.destination);
     source.start(0);
 
-    // 2. Sblocco tramite HTMLAudioElement (fondamentale per flussi voce su iOS)
-    // Non usiamo await qui per evitare che un eventuale ritardo del browser blocchi l'apertura della modale
+    // 2. Sblocco tramite HTMLAudioElement (Cruciale per PeerJS/WebRTC)
     const silentAudio = new Audio();
+    // Base64 di un secondo di silenzio
     silentAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
-    silentAudio.play().catch(() => {
+    
+    // Forziamo il play e la creazione di un elemento persistente se necessario
+    await silentAudio.play().catch(() => {
       console.warn("[Sound] Silent play auto-blocked, will retry on next interaction");
     });
 
     isAudioUnlocked = true;
-    console.log("[Sound] Audio engine unlocked");
+    console.log("[Sound] Audio engine fully unlocked for WebRTC");
     return true;
   } catch (err) {
     console.error("[Sound] Audio unlock failure:", err);

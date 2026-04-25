@@ -60,38 +60,30 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     audio.autoplay = true;
     audio.setAttribute('playsinline', 'true');
     audio.setAttribute('webkit-playsinline', 'true');
-    audio.muted = false; 
-    audio.volume = 1.0;
-    audio.style.display = 'none';
+    // Importante per iOS: l'elemento deve essere nel DOM e "attivo"
+    audio.style.position = 'fixed';
+    audio.style.pointerEvents = 'none';
+    audio.style.opacity = '0';
+    audio.style.width = '1px';
+    audio.style.height = '1px';
+    
     document.body.appendChild(audio);
 
     const context = getGlobalAudioContext();
-    if (context?.state === 'suspended') context.resume();
+    if (context?.state === 'suspended') {
+      context.resume().catch(() => {});
+    }
     
     audio.play().catch((err) => {
-      console.warn("[Cruising] Autoplay blocked for remote stream:", presenceId, err);
+      console.warn("[Cruising] Autoplay blocked, retrying on next interaction", err);
+      // Se fallisce, riproviamo al primo tocco dello schermo
+      const retry = () => {
+        audio.play();
+        window.removeEventListener('touchstart', retry);
+      };
+      window.addEventListener('touchstart', retry);
     });
   }, []);
-
-  useEffect(() => {
-    const requestWakeLock = async () => {
-      if ('wakeLock' in navigator && isActive) {
-        try {
-          wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
-        } catch (err) {}
-      }
-    };
-
-    if (isActive) requestWakeLock();
-    else if (wakeLockRef.current) {
-      wakeLockRef.current.release();
-      wakeLockRef.current = null;
-    }
-
-    return () => {
-      if (wakeLockRef.current) wakeLockRef.current.release();
-    };
-  }, [isActive]);
 
   const leaveChannel = useCallback(() => {
     setStatus('idle');
@@ -118,38 +110,33 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
         audio: { 
           echoCancellation: true, 
           noiseSuppression: true, 
-          autoGainControl: true,
-          sampleRate: 16000 
+          autoGainControl: true
         } 
       });
       streamRef.current = stream;
       stream.getAudioTracks().forEach(track => track.enabled = false);
 
-      const myPeerId = `lwd-${carovanaId}-${username.replace(/\s+/g, '-')}-${Math.random().toString(36).substring(2, 6)}`;
+      // ID più corto e pulito per evitare problemi di signaling
+      const myPeerId = `lwd-${carovanaId.substring(0,8)}-${username.replace(/[^a-zA-Z0-9]/g, '')}`;
       
-      // Configurazione ICE ultra-aggressiva per 5G/4G
       const peer = new PeerClass(myPeerId, {
         debug: 1,
         config: {
           'iceServers': [
             { 'urls': 'stun:stun.l.google.com:19302' },
             { 'urls': 'stun:stun1.l.google.com:19302' },
-            { 'urls': 'stun:stun2.l.google.com:19302' },
-            { 'urls': 'stun:stun3.l.google.com:19302' },
-            { 'urls': 'stun:stun4.l.google.com:19302' },
             {
-              // Server TURN su porta 443 (TCP) per bypassare i firewall mobili più restrittivi
+              // Server TURN Metered - Configurazione specifica per bypassare CGNAT 5G
               urls: [
                 'turn:lwdstrct.metered.live:443?transport=tcp', 
-                'turn:lwdstrct.metered.live:3478?transport=udp',
-                'turn:lwdstrct.metered.live:80?transport=tcp'
+                'turn:lwdstrct.metered.live:3478?transport=udp'
               ],
               username: '5adb9880780dccfb855a62d9',
               credential: 'Ink+Z3uyHb+fOamN'
             }
           ],
-          'iceTransportPolicy': 'all',
-          'iceCandidatePoolSize': 10
+          'iceTransportPolicy': 'all', // Prova tutto, ma il TURN è incluso
+          'sdpSemantics': 'unified-plan'
         }
       });
 
@@ -182,8 +169,11 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
                   isSpeaking: false
                 });
 
-                if (id < presenceId && !peerRef.current.connections[presenceId]) {
-                  const call = peerRef.current.call(presenceId, streamRef.current!);
+                // Logica di chiamata: chi ha l'ID "minore" chiama l'altro
+                if (id < presenceId) {
+                  const call = peerRef.current.call(presenceId, streamRef.current!, {
+                    metadata: { username, carName }
+                  });
                   if (call) {
                     call.on('stream', (remoteStream: MediaStream) => {
                       playRemoteStream(presenceId, remoteStream);
@@ -222,22 +212,22 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       });
 
       peer.on('error', (err: any) => {
-        console.error('[Cruising] Peer Error:', err.type, err);
-        setStatus('error');
-        if (err.type === 'network' || err.type === 'disconnected') {
-          // Tentativo di riconnessione automatica per reti mobili instabili
-          setTimeout(() => {
-            if (isActive) peer.reconnect();
-          }, 3000);
+        console.error('[Cruising] Peer Error:', err.type);
+        if (err.type === 'unavailable-id') {
+          // Se l'ID è occupato, riprova con un suffisso
+          peer.destroy();
+          joinChannel(carovanaId, `${username}${Math.floor(Math.random()*100)}`, avatarUrl, role, carName);
+        } else {
+          setStatus('error');
         }
       });
 
       peerRef.current = peer;
     } catch (err) {
-      console.error('[Cruising] Errore radio:', err);
+      console.error('[Cruising] Errore inizializzazione:', err);
       setStatus('error');
     }
-  }, [playRemoteStream, isActive]);
+  }, [playRemoteStream]);
 
   const toggleMic = useCallback((speaking: boolean) => {
     if (!streamRef.current || !channelRef.current) return;
