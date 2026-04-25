@@ -8,6 +8,18 @@ let isAudioUnlocked = false;
 let globalAudioContext: AudioContext | null = null;
 
 /**
+ * Restituisce l'AudioContext globale o ne crea uno se non esiste.
+ */
+export const getGlobalAudioContext = () => {
+  if (typeof window === 'undefined') return null;
+  if (!globalAudioContext) {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    globalAudioContext = new AudioContextClass();
+  }
+  return globalAudioContext;
+};
+
+/**
  * Sblocca l'audio in modo definitivo per iOS.
  * Deve essere chiamato direttamente nell'evento onClick.
  */
@@ -15,24 +27,19 @@ export const unlockAudio = async () => {
   if (isAudioUnlocked) return true;
   
   try {
-    // 1. Crea o riprendi l'AudioContext (fondamentale per WebRTC su iOS)
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!globalAudioContext) {
-      globalAudioContext = new AudioContextClass();
+    const context = getGlobalAudioContext();
+    if (!context) return false;
+
+    if (context.state === 'suspended') {
+      await context.resume();
     }
 
-    if (globalAudioContext?.state === 'suspended') {
-      await globalAudioContext.resume();
-    }
-
-    // 2. Riproduci un buffer di silenzio (metodo più affidabile di new Audio())
-    const buffer = globalAudioContext?.createBuffer(1, 1, 22050);
-    const source = globalAudioContext?.createBufferSource();
-    if (source && buffer) {
-      source.buffer = buffer;
-      source.connect(globalAudioContext!.destination);
-      source.start(0);
-    }
+    // Riproduci un buffer di silenzio per "svegliare" il motore audio
+    const buffer = context.createBuffer(1, 1, 22050);
+    const source = context.createBufferSource();
+    source.buffer = buffer;
+    source.connect(context.destination);
+    source.start(0);
 
     isAudioUnlocked = true;
     console.log("[Sound] Audio engine unlocked via AudioContext");

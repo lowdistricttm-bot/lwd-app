@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { playRogerBeep, playAlertSound, speakAlert, unlockAudio } from '@/utils/sound';
+import { playRogerBeep, playAlertSound, speakAlert, getGlobalAudioContext } from '@/utils/sound';
 
 interface CruisingUnit {
   id: string;
@@ -44,34 +44,44 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const peerRef = useRef<any>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const channelRef = useRef<any>(null);
-  const audioContainerRef = useRef<HTMLDivElement | null>(null);
+  const audioSourcesRef = useRef<Map<string, MediaStreamAudioSourceNode>>(new Map());
 
+  /**
+   * Audio Graph Injection: Collega lo stream remoto direttamente all'AudioContext sbloccato.
+   * Questo bypassa i blocchi del browser e garantisce la riproduzione su reti mobili.
+   */
   const playRemoteStream = useCallback((presenceId: string, remoteStream: MediaStream) => {
-    console.log(`[Cruising] Tentativo riproduzione stream da: ${presenceId}`);
+    console.log(`[Cruising] Injecting audio graph for: ${presenceId}`);
     
-    if (!audioContainerRef.current) {
-      const container = document.createElement('div');
-      container.id = 'lwd-audio-container';
-      container.style.display = 'none';
-      document.body.appendChild(container);
-      audioContainerRef.current = container;
+    const context = getGlobalAudioContext();
+    if (!context) return;
+
+    // 1. Rimuovi vecchia sorgente se esiste
+    if (audioSourcesRef.current.has(presenceId)) {
+      audioSourcesRef.current.get(presenceId)?.disconnect();
+      audioSourcesRef.current.delete(presenceId);
     }
 
-    const oldAudio = document.getElementById(`audio-${presenceId}`);
-    if (oldAudio) oldAudio.remove();
+    try {
+      // 2. Crea un nodo sorgente dallo stream WebRTC
+      const source = context.createMediaStreamSource(remoteStream);
+      
+      // 3. Collega alla destinazione finale (altoparlanti)
+      source.connect(context.destination);
+      
+      // 4. Salva il riferimento per pulizia futura
+      audioSourcesRef.current.set(presenceId, source);
 
-    const audio = document.createElement('audio');
-    audio.id = `audio-${presenceId}`;
-    audio.srcObject = remoteStream;
-    audio.autoplay = true;
-    audio.setAttribute('playsinline', 'true');
-    audio.setAttribute('webkit-playsinline', 'true');
-    
-    audioContainerRef.current.appendChild(audio);
-    
-    audio.play().catch(err => {
-      console.warn(`[Cruising] Autoplay fallito per ${presenceId}.`, err);
-    });
+      // 5. Fallback: Crea comunque un elemento audio nascosto (necessario per alcuni browser per mantenere attivo il flusso)
+      const audio = document.createElement('audio');
+      audio.id = `sink-${presenceId}`;
+      audio.srcObject = remoteStream;
+      audio.muted = true; // Muto perché l'audio esce già dal context.destination
+      audio.play().catch(() => {});
+      
+    } catch (err) {
+      console.error(`[Cruising] Audio Injection failed for ${presenceId}:`, err);
+    }
   }, []);
 
   const leaveChannel = useCallback(() => {
@@ -80,9 +90,9 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     if (streamRef.current) streamRef.current.getTracks().forEach(track => track.stop());
     if (channelRef.current) supabase.removeChannel(channelRef.current);
     
-    if (audioContainerRef.current) {
-      audioContainerRef.current.innerHTML = '';
-    }
+    // Pulisci i nodi audio
+    audioSourcesRef.current.forEach(source => source.disconnect());
+    audioSourcesRef.current.clear();
     
     setIsActive(false);
     setUnits([]);
@@ -109,22 +119,19 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
       const myPeerId = `lwd-${carovanaId}-${username.replace(/\s+/g, '-')}-${Math.random().toString(36).substring(2, 6)}`;
       
-      // Configurazione ICE Servers ottimizzata per reti mobili (4G/5G)
-      // Aggiunti server STUN multipli e configurazione TURN più robusta
+      // CONFIGURAZIONE METERED PERSONALIZZATA (lwdstrct.metered.live)
       const peer = new PeerClass(myPeerId, {
         debug: 1,
         config: {
           'iceServers': [
             { 'urls': 'stun:stun.l.google.com:19302' },
-            { 'urls': 'stun:stun1.l.google.com:19302' },
-            { 'urls': 'stun:stun2.l.google.com:19302' },
-            { 'urls': 'stun:global.stun.twilio.com:3478' },
+            { 'urls': 'stun:lwdstrct.metered.live:3478' }, // Tuo server STUN
             {
-              // Server TURN di backup (Metered) - Configurazione UDP e TCP (fondamentale per mobile)
+              // Tuoi server TURN Metered (usando le credenziali attive)
               urls: [
-                'turn:open.metered.ca:3478?transport=udp',
-                'turn:open.metered.ca:3478?transport=tcp',
-                'turn:open.metered.ca:443?transport=tcp' // Porta 443 spesso bypassa i firewall mobili
+                'turn:lwdstrct.metered.live:3478?transport=udp',
+                'turn:lwdstrct.metered.live:3478?transport=tcp',
+                'turn:lwdstrct.metered.live:443?transport=tcp'
               ],
               username: '5adb9880780dccfb855a62d9',
               credential: 'Ink+Z3uyHb+fOamN'
@@ -162,9 +169,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
                   isSpeaking: false
                 });
 
-                // Logica di connessione: chi ha l'ID alfabeticamente minore avvia la chiamata
                 if (id < presenceId && !peerRef.current.connections[presenceId]) {
-                  console.log(`[Cruising] Avvio chiamata verso: ${presenceId}`);
                   const call = peerRef.current.call(presenceId, streamRef.current!, {
                     metadata: { username }
                   });
@@ -172,10 +177,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
                   if (call) {
                     call.on('stream', (remoteStream: MediaStream) => {
                       playRemoteStream(presenceId, remoteStream);
-                    });
-                    
-                    call.on('error', (err: any) => {
-                      console.error(`[Cruising] Errore chiamata verso ${presenceId}:`, err);
                     });
                   }
                 }
@@ -204,7 +205,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       });
 
       peer.on('call', (call: any) => {
-        console.log(`[Cruising] Ricevuta chiamata da: ${call.peer}`);
         call.answer(streamRef.current!);
         call.on('stream', (remoteStream: MediaStream) => {
           playRemoteStream(call.peer, remoteStream);
@@ -213,9 +213,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
       peer.on('error', (err: any) => {
         console.error(`[Cruising] PeerJS Error:`, err);
-        // Gestione riconnessione automatica per instabilità rete mobile
-        if (err.type === 'network' || err.type === 'disconnected' || err.type === 'peer-unavailable') {
-          console.log("[Cruising] Tentativo di riconnessione...");
+        if (err.type === 'network' || err.type === 'disconnected') {
           setTimeout(() => {
             if (isActive && peer && !peer.destroyed) peer.reconnect();
           }, 3000);
