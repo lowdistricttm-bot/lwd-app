@@ -21,7 +21,7 @@ export const getGlobalAudioContext = () => {
 
 /**
  * Sblocca l'audio in modo definitivo per iOS.
- * Deve essere chiamato direttamente nell'evento onClick.
+ * Utilizza sia AudioContext che un elemento audio silente per garantire i permessi.
  */
 export const unlockAudio = async () => {
   if (isAudioUnlocked) return true;
@@ -34,15 +34,21 @@ export const unlockAudio = async () => {
       await context.resume();
     }
 
-    // Riproduci un buffer di silenzio per "svegliare" il motore audio
+    // 1. Sblocco tramite AudioContext (per effetti sonori)
     const buffer = context.createBuffer(1, 1, 22050);
     const source = context.createBufferSource();
     source.buffer = buffer;
     source.connect(context.destination);
     source.start(0);
 
+    // 2. Sblocco tramite HTMLAudioElement (fondamentale per flussi voce su iOS)
+    const silentAudio = new Audio();
+    // WAV silente di 1 secondo
+    silentAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
+    await silentAudio.play().catch(() => {});
+
     isAudioUnlocked = true;
-    console.log("[Sound] Audio engine unlocked via AudioContext");
+    console.log("[Sound] Audio engine fully unlocked via hybrid method");
     return true;
   } catch (err) {
     console.error("[Sound] Audio unlock critical failure:", err);
@@ -52,6 +58,8 @@ export const unlockAudio = async () => {
 
 export const playNotificationSound = async () => {
   try {
+    const context = getGlobalAudioContext();
+    if (context?.state === 'suspended') await context.resume();
     const audio = new Audio(NOTIFICATION_SOUND_URL);
     audio.volume = 0.5;
     await audio.play();
@@ -60,6 +68,8 @@ export const playNotificationSound = async () => {
 
 export const playRogerBeep = async () => {
   try {
+    const context = getGlobalAudioContext();
+    if (context?.state === 'suspended') await context.resume();
     const audio = new Audio(ROGER_BEEP_URL);
     audio.volume = 0.3;
     await audio.play();
@@ -68,6 +78,8 @@ export const playRogerBeep = async () => {
 
 export const playAlertSound = async () => {
   try {
+    const context = getGlobalAudioContext();
+    if (context?.state === 'suspended') await context.resume();
     const audio = new Audio(ALERT_SOUND_URL);
     audio.volume = 0.6;
     await audio.play();

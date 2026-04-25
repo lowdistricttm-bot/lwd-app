@@ -44,55 +44,86 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const peerRef = useRef<any>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const channelRef = useRef<any>(null);
-  const audioSourcesRef = useRef<Map<string, MediaStreamAudioSourceNode>>(new Map());
+  const wakeLockRef = useRef<any>(null);
 
   /**
-   * Audio Graph Injection: Collega lo stream remoto direttamente all'AudioContext sbloccato.
-   * Questo bypassa i blocchi del browser e garantisce la riproduzione su reti mobili.
+   * Riproduzione Audio Diretta: Utilizza elementi <audio> HTML5 iniettati nel DOM.
+   * Questo metodo è il più affidabile su iOS/Android per flussi voce WebRTC.
    */
   const playRemoteStream = useCallback((presenceId: string, remoteStream: MediaStream) => {
-    console.log(`[Cruising] Injecting audio graph for: ${presenceId}`);
+    console.log(`[Cruising] Attivazione sink audio per: ${presenceId}`);
     
+    // 1. Rimuovi eventuale sink precedente per questo peer
+    const existing = document.getElementById(`sink-${presenceId}`);
+    if (existing) existing.remove();
+
+    // 2. Crea un elemento audio reale
+    const audio = document.createElement('audio');
+    audio.id = `sink-${presenceId}`;
+    audio.srcObject = remoteStream;
+    audio.autoplay = true;
+    audio.setAttribute('playsinline', 'true');
+    audio.setAttribute('webkit-playsinline', 'true');
+    
+    // IMPORTANTE: L'audio deve essere NON muto e aggiunto al DOM per essere udibile su mobile
+    audio.muted = false; 
+    audio.volume = 1.0;
+    
+    // Nascondi l'elemento ma lascialo nel DOM
+    audio.style.display = 'none';
+    document.body.appendChild(audio);
+
+    // 3. Assicurati che l'AudioContext globale sia attivo (sincronizzazione permessi)
     const context = getGlobalAudioContext();
-    if (!context) return;
-
-    // 1. Rimuovi vecchia sorgente se esiste
-    if (audioSourcesRef.current.has(presenceId)) {
-      audioSourcesRef.current.get(presenceId)?.disconnect();
-      audioSourcesRef.current.delete(presenceId);
-    }
-
-    try {
-      // 2. Crea un nodo sorgente dallo stream WebRTC
-      const source = context.createMediaStreamSource(remoteStream);
-      
-      // 3. Collega alla destinazione finale (altoparlanti)
-      source.connect(context.destination);
-      
-      // 4. Salva il riferimento per pulizia futura
-      audioSourcesRef.current.set(presenceId, source);
-
-      // 5. Fallback: Crea comunque un elemento audio nascosto (necessario per alcuni browser per mantenere attivo il flusso)
-      const audio = document.createElement('audio');
-      audio.id = `sink-${presenceId}`;
-      audio.srcObject = remoteStream;
-      audio.muted = true; // Muto perché l'audio esce già dal context.destination
-      audio.play().catch(() => {});
-      
-    } catch (err) {
-      console.error(`[Cruising] Audio Injection failed for ${presenceId}:`, err);
-    }
+    if (context?.state === 'suspended') context.resume();
+    
+    // 4. Tenta il play immediato
+    audio.play().catch(err => {
+      console.warn(`[Cruising] Playback auto-bloccato per ${presenceId}. L'utente deve interagire.`, err);
+    });
   }, []);
 
+  /**
+   * Gestione WakeLock: Impedisce al dispositivo di entrare in standby mentre la radio è attiva.
+   */
+  useEffect(() => {
+    const requestWakeLock = async () => {
+      if ('wakeLock' in navigator && isActive) {
+        try {
+          wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
+          console.log("[Cruising] Screen Wake Lock attivo");
+        } catch (err) {
+          console.warn("[Cruising] Wake Lock non supportato o negato");
+        }
+      }
+    };
+
+    if (isActive) {
+      requestWakeLock();
+    } else {
+      if (wakeLockRef.current) {
+        wakeLockRef.current.release();
+        wakeLockRef.current = null;
+      }
+    }
+
+    return () => {
+      if (wakeLockRef.current) {
+        wakeLockRef.current.release();
+        wakeLockRef.current = null;
+      }
+    };
+  }, [isActive]);
+
   const leaveChannel = useCallback(() => {
-    console.log("[Cruising] Chiusura sessione...");
+    console.log("[Cruising] Chiusura sessione radio...");
     if (peerRef.current) peerRef.current.destroy();
     if (streamRef.current) streamRef.current.getTracks().forEach(track => track.stop());
     if (channelRef.current) supabase.removeChannel(channelRef.current);
     
-    // Pulisci i nodi audio
-    audioSourcesRef.current.forEach(source => source.disconnect());
-    audioSourcesRef.current.clear();
+    // Rimuovi tutti i sink audio dal DOM
+    const sinks = document.querySelectorAll('[id^="sink-"]');
+    sinks.forEach(s => s.remove());
     
     setIsActive(false);
     setUnits([]);
@@ -107,43 +138,46 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     if (!PeerClass) return;
 
     try {
+      // Richiesta microfono con parametri ottimizzati per la voce
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true
+          autoGainControl: true,
+          channelCount: 1
         } 
       });
       streamRef.current = stream;
+      // Inizialmente muto (PTT mode)
       stream.getAudioTracks().forEach(track => track.enabled = false);
 
       const myPeerId = `lwd-${carovanaId}-${username.replace(/\s+/g, '-')}-${Math.random().toString(36).substring(2, 6)}`;
       
-      // CONFIGURAZIONE METERED PERSONALIZZATA (lwdstrct.metered.live)
+      // CONFIGURAZIONE RESILIENTE PER RETI MOBILI (5G/4G)
       const peer = new PeerClass(myPeerId, {
         debug: 1,
         config: {
           'iceServers': [
             { 'urls': 'stun:stun.l.google.com:19302' },
-            { 'urls': 'stun:lwdstrct.metered.live:3478' }, // Tuo server STUN
             {
-              // Tuoi server TURN Metered (usando le credenziali attive)
+              // Server TURN Metered con priorità alla porta 443 TCP per bypassare i firewall carrier
               urls: [
+                'turn:lwdstrct.metered.live:443?transport=tcp', 
                 'turn:lwdstrct.metered.live:3478?transport=udp',
-                'turn:lwdstrct.metered.live:3478?transport=tcp',
-                'turn:lwdstrct.metered.live:443?transport=tcp'
+                'turn:lwdstrct.metered.live:3478?transport=tcp'
               ],
               username: '5adb9880780dccfb855a62d9',
               credential: 'Ink+Z3uyHb+fOamN'
             }
           ],
           'iceCandidatePoolSize': 10,
+          'iceTransportPolicy': 'all',
           'sdpSemantics': 'unified-plan'
         }
       });
 
       peer.on('open', (id: string) => {
-        console.log(`[Cruising] Connesso con ID: ${id}`);
+        console.log(`[Cruising] Radio connessa. ID Unità: ${id}`);
         setIsActive(true);
         setActiveCarovanaId(carovanaId);
         setCurrentUsername(username);
@@ -169,6 +203,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
                   isSpeaking: false
                 });
 
+                // Logica di chiamata automatica (Full Mesh)
                 if (id < presenceId && !peerRef.current.connections[presenceId]) {
                   const call = peerRef.current.call(presenceId, streamRef.current!, {
                     metadata: { username }
@@ -213,16 +248,20 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
       peer.on('error', (err: any) => {
         console.error(`[Cruising] PeerJS Error:`, err);
-        if (err.type === 'network' || err.type === 'disconnected') {
+        // Riconnessione automatica per instabilità di rete mobile
+        if (err.type === 'network' || err.type === 'disconnected' || err.type === 'peer-unavailable') {
           setTimeout(() => {
-            if (isActive && peer && !peer.destroyed) peer.reconnect();
+            if (isActive && peer && !peer.destroyed) {
+              console.log("[Cruising] Tentativo di riconnessione...");
+              peer.reconnect();
+            }
           }, 3000);
         }
       });
 
       peerRef.current = peer;
     } catch (err) {
-      console.error('[Cruising] Errore inizializzazione:', err);
+      console.error('[Cruising] Errore inizializzazione radio:', err);
     }
   }, [isActive, leaveChannel, playRemoteStream]);
 
