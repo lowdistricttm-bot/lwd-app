@@ -50,7 +50,8 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const streamRef = useRef<MediaStream | null>(null);
   const channelRef = useRef<any>(null);
   const isConnectingRef = useRef(false);
-  const reconnectTimerRef = useRef<any>(null);
+  const retryTimerRef = useRef<any>(null);
+  const retryDelayRef = useRef(2000); // Parte da 2 secondi
 
   const playRemoteStream = useCallback((presenceId: string, remoteStream: MediaStream) => {
     const sinkId = `sink-${presenceId}`;
@@ -69,15 +70,13 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     }
 
     audio.srcObject = remoteStream;
-    audio.play().catch(() => {
-      console.log("[Cruising] Audio in attesa di interazione utente");
-    });
+    audio.play().catch(() => console.log("[Cruising] Audio in attesa di interazione"));
   }, []);
 
   const leaveChannel = useCallback(() => {
-    console.log("[Cruising] Reset totale connessione...");
+    console.log("[Cruising] Reset connessione...");
     isConnectingRef.current = false;
-    if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+    if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
     setStatus('idle');
     
     if (peerRef.current) {
@@ -122,26 +121,22 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     try {
       if (!streamRef.current) {
         const stream = await navigator.mediaDevices.getUserMedia({ 
-          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } 
+          audio: { echoCancellation: true, noiseSuppression: true } 
         });
         streamRef.current = stream;
         stream.getAudioTracks().forEach(track => track.enabled = false);
       }
 
-      const myPeerId = `lwd${Math.random().toString(36).substring(2, 10)}`;
+      // ID corto e pulito per evitare problemi di parsing
+      const myPeerId = `lwd${Math.random().toString(36).substring(2, 7)}`;
       
+      // Configurazione MINIMALE: lasciamo che PeerJS usi i suoi server cloud ottimizzati
       const peer = new PeerClass(myPeerId, {
-        debug: 1,
-        secure: true,
-        host: '0.peerjs.com',
-        port: 443,
-        path: '/',
-        pingInterval: 2000, // Ping più frequente per tenere sveglio il Wi-Fi
+        debug: 2,
         config: {
           'iceServers': [
             { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' },
-            { urls: 'stun:stun2.l.google.com:19302' }
+            { urls: 'stun:stun1.l.google.com:19302' }
           ]
         }
       });
@@ -149,7 +144,8 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       setStatus('connecting-server');
 
       peer.on('open', (id: string) => {
-        console.log("[Cruising] Server District pronto. ID:", id);
+        console.log("[Cruising] Connesso al server. ID:", id);
+        retryDelayRef.current = 2000; // Reset delay al successo
         setIsActive(true);
         setStatus('connecting-units');
         setActiveCarovanaId(carovanaId);
@@ -179,9 +175,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
                 if (id < presenceId) {
                   const call = peerRef.current.call(presenceId, streamRef.current!);
                   if (call) {
-                    call.on('stream', (remoteStream: MediaStream) => {
-                      playRemoteStream(presenceId, remoteStream);
-                    });
+                    call.on('stream', (remoteStream: MediaStream) => playRemoteStream(presenceId, remoteStream));
                   }
                 }
               }
@@ -209,34 +203,35 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
         channelRef.current = channel;
       });
 
-      // GESTIONE DISCONNESSIONE: Riconnessione immediata
       peer.on('disconnected', () => {
-        console.warn("[Cruising] Connessione persa. Tentativo di riaggancio...");
+        console.warn("[Cruising] Disconnesso. Riconnessione...");
         peer.reconnect();
       });
 
       peer.on('call', (call: any) => {
         call.answer(streamRef.current!);
-        call.on('stream', (remoteStream: MediaStream) => {
-          playRemoteStream(call.peer, remoteStream);
-        });
+        call.on('stream', (remoteStream: MediaStream) => playRemoteStream(call.peer, remoteStream));
       });
 
       peer.on('error', (err: any) => {
-        console.error('[Cruising] Errore critico:', err.type);
+        console.error('[Cruising] Errore:', err.type);
         
-        // Se l'errore è fatale, distruggiamo tutto e ripartiamo da zero dopo 2 secondi
         if (['network', 'server-error', 'socket-closed', 'socket-error', 'lost-connection'].includes(err.type)) {
           leaveChannel();
-          reconnectTimerRef.current = setTimeout(() => {
+          // Strategia di Backoff: raddoppia il tempo di attesa fino a 30 secondi
+          const delay = retryDelayRef.current;
+          retryDelayRef.current = Math.min(retryDelayRef.current * 2, 30000);
+          
+          console.log(`[Cruising] Riprovo tra ${delay/1000} secondi...`);
+          retryTimerRef.current = setTimeout(() => {
             joinChannel(carovanaId, username, avatarUrl, role, carName);
-          }, 2000);
+          }, delay);
         }
       });
 
       peerRef.current = peer;
     } catch (err) {
-      console.error('[Cruising] Errore hardware:', err);
+      console.error('[Cruising] Errore fatale:', err);
       setStatus('error');
       isConnectingRef.current = false;
     }
@@ -244,15 +239,11 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
   const toggleMic = useCallback((speaking: boolean) => {
     if (!streamRef.current || !channelRef.current) return;
-    
     const context = getGlobalAudioContext();
     if (context?.state === 'suspended') context.resume();
-
     streamRef.current.getAudioTracks().forEach(track => track.enabled = speaking);
     setIsSpeaking(speaking);
-
     if (!speaking) playRogerBeep();
-
     channelRef.current.send({
       type: 'broadcast',
       event: 'speaking_state',
