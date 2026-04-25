@@ -118,7 +118,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     setStatus('initializing');
 
     try {
-      // 1. Ottieni accesso al microfono (Ottimizzato per mobile)
+      // 1. Ottieni accesso al microfono
       if (!streamRef.current) {
         const stream = await navigator.mediaDevices.getUserMedia({ 
           audio: { 
@@ -131,9 +131,9 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
         stream.getAudioTracks().forEach(track => track.enabled = false);
       }
 
-      // 2. Inizializza PeerJS con configurazione ibrida (Wi-Fi + Mobile)
-      // Non passiamo un ID fisso per permettere al server di assegnarne uno pulito (migliora Wi-Fi)
-      const peer = new PeerClass({
+      // 2. Inizializza PeerJS
+      // IMPORTANTE: Passiamo 'undefined' come primo argomento per forzare l'ID automatico del server
+      const peer = new PeerClass(undefined, {
         debug: 1,
         secure: true,
         config: {
@@ -144,17 +144,15 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
             { urls: 'stun:stun3.l.google.com:19302' },
             { urls: 'stun:stun4.l.google.com:19302' }
           ],
-          // Ottimizzazione per reti mobili instabili
           iceCandidatePoolSize: 10
         }
       });
 
       setStatus('connecting-server');
 
-      // Timeout di sicurezza per evitare blocchi infiniti
       connectionTimeoutRef.current = setTimeout(() => {
         if (status !== 'ready' && isConnectingRef.current) {
-          console.warn("[Cruising] Timeout connessione, riprovo...");
+          console.warn("[Cruising] Timeout connessione");
           isConnectingRef.current = false;
           setStatus('error');
         }
@@ -162,14 +160,13 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
       peer.on('open', (id: string) => {
         if (connectionTimeoutRef.current) clearTimeout(connectionTimeoutRef.current);
-        console.log("[Cruising] Radio Online. ID Unità:", id);
+        console.log("[Cruising] Radio Online. ID:", id);
         
         setIsActive(true);
         setStatus('connecting-units');
         setActiveCarovanaId(carovanaId);
         setCurrentUsername(username);
         
-        // 3. Sincronizzazione con Supabase Realtime
         const channel = supabase.channel(`cruising-${carovanaId}`, {
           config: { presence: { key: id } },
         });
@@ -191,7 +188,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
                   isSpeaking: false
                 });
 
-                // Logica di chiamata automatica (solo se il mio ID è minore per evitare doppie chiamate)
                 if (id < presenceId) {
                   const call = peerRef.current.call(presenceId, streamRef.current!);
                   if (call) {
@@ -230,7 +226,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
       peer.on('error', (err: any) => {
         console.error('[Cruising] Errore PeerJS:', err.type);
-        if (['network', 'server-error', 'socket-closed'].includes(err.type)) {
+        if (['network', 'server-error', 'socket-closed', 'invalid-id'].includes(err.type)) {
           setStatus('error');
           isConnectingRef.current = false;
         }
@@ -238,7 +234,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
       peerRef.current = peer;
     } catch (err) {
-      console.error('[Cruising] Errore inizializzazione:', err);
+      console.error('[Cruising] Errore:', err);
       setStatus('error');
       isConnectingRef.current = false;
     }
@@ -247,7 +243,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const toggleMic = useCallback((speaking: boolean) => {
     if (!streamRef.current || !channelRef.current) return;
     
-    // Assicurati che l'AudioContext sia attivo (richiesto da Chrome/iOS)
     const context = getGlobalAudioContext();
     if (context?.state === 'suspended') context.resume();
 
