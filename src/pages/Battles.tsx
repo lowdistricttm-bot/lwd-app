@@ -170,7 +170,7 @@ const Battles = () => {
           </div>
           <div className="flex flex-col">
             <p className="text-[6px] font-black uppercase tracking-widest italic text-white leading-none mb-1">Guadagna Reputazione</p>
-            <p className="text-[7px] font-bold uppercase text-zinc-600 leading-none">+1 REP per ogni voto</p>
+            <p className="text-[6px] font-bold uppercase text-zinc-600 leading-none">+1 REP per ogni voto</p>
           </div>
         </div>
         
