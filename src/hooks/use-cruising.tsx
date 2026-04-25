@@ -47,6 +47,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const audioElementsRef = useRef<Map<string, HTMLAudioElement>>(new Map());
 
   const playRemoteStream = useCallback((presenceId: string, remoteStream: MediaStream) => {
+    // Rimuoviamo eventuali vecchi elementi audio per questo peer
     if (audioElementsRef.current.has(presenceId)) {
       const oldAudio = audioElementsRef.current.get(presenceId);
       oldAudio?.pause();
@@ -56,6 +57,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     const audio = new Audio();
     audio.srcObject = remoteStream;
     audio.autoplay = true;
+    // Importante: su mobile l'audio deve essere "giocato" subito
     audio.play().catch(err => {
       console.warn(`[Cruising] Autoplay blocked for peer ${presenceId}:`, err);
     });
@@ -68,6 +70,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     if (streamRef.current) streamRef.current.getTracks().forEach(track => track.stop());
     if (channelRef.current) supabase.removeChannel(channelRef.current);
     
+    // Pulisce tutti gli elementi audio
     audioElementsRef.current.forEach(audio => {
       audio.pause();
       audio.srcObject = null;
@@ -81,6 +84,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   }, []);
 
   const joinChannel = useCallback(async (carovanaId: string, username: string, avatarUrl: string, role: string, carName?: string) => {
+    // Sblocca l'audio prima di iniziare
     await unlockAudio();
 
     if (isActive) leaveChannel();
@@ -98,21 +102,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       });
       streamRef.current = stream;
       stream.getAudioTracks().forEach(track => track.enabled = false);
-
-      const peerId = `lwd-${carovanaId}-${username.replace(/\s+/g, '-')}-${Math.random().toString(36).substring(2, 6)}`;
-      const peer = new PeerClass(peerId, {
-        debug: 2,
-        config: {
-           'iceServers': [
-      { 'urls': 'stun:stun.l.google.com:19302' }, // STUN gratuito di Google
-      { 
-        'urls': 'turn:lwdstrct.metered.live', 
-        'username': '5adb9880780dccfb855a62d9', 
-        'credential': 'Ink+Z3uyHb+fOamN' 
-      }
-    ]
-  }
-});
+c
 
       peer.on('open', (id: string) => {
         setIsActive(true);
@@ -144,6 +134,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
                   isSpeaking: false
                 });
 
+                // Se non siamo già connessi a questo peer, chiamiamolo
                 if (peerRef.current && !peerRef.current.connections[presenceId]) {
                   const call = peerRef.current.call(presenceId, streamRef.current!);
                   call.on('stream', (remoteStream: MediaStream) => {
