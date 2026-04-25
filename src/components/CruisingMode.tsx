@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, X, Users, Radio, AlertTriangle, Info, Volume2, ShieldAlert, Zap, User, Power, Wifi, WifiOff, Loader2, Server, Signal } from 'lucide-react';
+import { Mic, MicOff, X, Users, Radio, AlertTriangle, Info, Volume2, ShieldAlert, Zap, User, Power, Wifi, WifiOff, Loader2, Server, Signal, RefreshCw } from 'lucide-react';
 import { useCruising } from '@/hooks/use-cruising';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { useTranslation } from '@/hooks/use-translation';
@@ -56,6 +56,18 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
       );
     }
   }, [isOpen, isActive, profile, carovanaId, carName, joinChannel]);
+
+  const handleRetry = () => {
+    if (profile) {
+      joinChannel(
+        carovanaId, 
+        profile.username || 'Unit', 
+        profile.avatar_url || '', 
+        profile.role || 'member',
+        carName
+      );
+    }
+  };
 
   const handleClose = () => {
     onClose();
@@ -144,12 +156,22 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
               </div>
             </div>
             
-            <button 
-              onClick={handleClose} 
-              className="w-10 h-10 border border-red-500 text-red-500 bg-transparent rounded-full flex items-center justify-center transition-all hover:bg-red-500/10 active:scale-95"
-            >
-              <Power size={18} strokeWidth={2} />
-            </button>
+            <div className="flex items-center gap-2">
+              {(status === 'connecting-server' || status === 'error') && (
+                <button 
+                  onClick={handleRetry}
+                  className="w-10 h-10 border border-white/10 text-white bg-white/5 rounded-full flex items-center justify-center transition-all hover:bg-white/10 active:scale-95"
+                >
+                  <RefreshCw size={18} />
+                </button>
+              )}
+              <button 
+                onClick={handleClose} 
+                className="w-10 h-10 border border-red-500 text-red-500 bg-transparent rounded-full flex items-center justify-center transition-all hover:bg-red-500/10 active:scale-95"
+              >
+                <Power size={18} strokeWidth={2} />
+              </button>
+            </div>
           </div>
 
           <div className="relative z-10 flex-1 p-6 flex flex-col gap-8 overflow-y-auto no-scrollbar">
@@ -175,6 +197,17 @@ const CruisingMode = ({ isOpen, onClose, carovanaId, carovanaTitle }: CruisingMo
                         {lastAlert.message}
                       </h4>
                     </div>
+                  </motion.div>
+                ) : status === 'connecting-server' ? (
+                  <motion.div 
+                    key="connecting-state"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex flex-col items-center justify-center text-center py-8"
+                  >
+                    <Loader2 size={48} className="text-blue-500 animate-spin mb-4" />
+                    <p className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-400 mb-2">Sincronizzazione Rete Mobile...</p>
+                    <p className="text-[8px] font-bold uppercase text-zinc-600 max-w-[200px]">Se la scritta rimane fissa, prova a cambiare posizione o premi il tasto ripristina in alto.</p>
                   </motion.div>
                 ) : (
                   <motion.div 
