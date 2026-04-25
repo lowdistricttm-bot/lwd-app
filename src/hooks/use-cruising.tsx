@@ -103,7 +103,8 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       streamRef.current = stream;
       stream.getAudioTracks().forEach(track => track.enabled = false);
 
-      const peerId = `lwd-${carovanaId}-${username.replace(/\s+/g, '-')}-${Math.random().toString(36).substring(2, 6)}`;
+     const peerId = `lwd-${carovanaId}-${username.replace(/\s+/g, '-')}-${Math.random().toString(36).substring(2, 6)}`;
+
       const peer = new (window as any).Peer(profile.id, {
   debug: 2,
   config: {
