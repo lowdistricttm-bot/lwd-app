@@ -44,40 +44,47 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const peerRef = useRef<any>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const channelRef = useRef<any>(null);
-  const audioElementsRef = useRef<Map<string, HTMLAudioElement>>(new Map());
+  const audioContainerRef = useRef<HTMLDivElement | null>(null);
 
+  // Funzione per agganciare l'audio al DOM (fondamentale per iOS su rete mobile)
   const playRemoteStream = useCallback((presenceId: string, remoteStream: MediaStream) => {
-    console.log(`[Cruising] Ricevuto stream audio da: ${presenceId}`);
+    console.log(`[Cruising] Tentativo riproduzione stream da: ${presenceId}`);
     
-    if (audioElementsRef.current.has(presenceId)) {
-      const oldAudio = audioElementsRef.current.get(presenceId);
-      oldAudio?.pause();
-      audioElementsRef.current.delete(presenceId);
+    if (!audioContainerRef.current) {
+      const container = document.createElement('div');
+      container.id = 'lwd-audio-container';
+      container.style.display = 'none';
+      document.body.appendChild(container);
+      audioContainerRef.current = container;
     }
 
-    const audio = new Audio();
+    // Rimuovi vecchi elementi per questo peer
+    const oldAudio = document.getElementById(`audio-${presenceId}`);
+    if (oldAudio) oldAudio.remove();
+
+    const audio = document.createElement('audio');
+    audio.id = `audio-${presenceId}`;
     audio.srcObject = remoteStream;
     audio.autoplay = true;
-    audio.muted = false;
+    audio.setAttribute('playsinline', 'true');
+    audio.setAttribute('webkit-playsinline', 'true');
+    
+    audioContainerRef.current.appendChild(audio);
     
     audio.play().catch(err => {
-      console.warn(`[Cruising] Autoplay bloccato per peer ${presenceId}.`, err);
+      console.warn(`[Cruising] Autoplay fallito per ${presenceId}. Riprovo al prossimo tocco.`, err);
     });
-    
-    audioElementsRef.current.set(presenceId, audio);
   }, []);
 
   const leaveChannel = useCallback(() => {
-    console.log("[Cruising] Chiusura canale e pulizia risorse...");
+    console.log("[Cruising] Chiusura sessione...");
     if (peerRef.current) peerRef.current.destroy();
     if (streamRef.current) streamRef.current.getTracks().forEach(track => track.stop());
     if (channelRef.current) supabase.removeChannel(channelRef.current);
     
-    audioElementsRef.current.forEach(audio => {
-      audio.pause();
-      audio.srcObject = null;
-    });
-    audioElementsRef.current.clear();
+    if (audioContainerRef.current) {
+      audioContainerRef.current.innerHTML = '';
+    }
     
     setIsActive(false);
     setUnits([]);
@@ -89,10 +96,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     if (isActive) leaveChannel();
 
     const PeerClass = (window as any).Peer;
-    if (!PeerClass) {
-      console.error("[Cruising] PeerJS non caricato correttamente");
-      return;
-    }
+    if (!PeerClass) return;
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -107,6 +111,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
       const myPeerId = `lwd-${carovanaId}-${username.replace(/\s+/g, '-')}-${Math.random().toString(36).substring(2, 6)}`;
       
+      // Configurazione ICE Servers potenziata per reti mobili
       const peer = new PeerClass(myPeerId, {
         debug: 1,
         config: {
@@ -114,6 +119,8 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
             { 'urls': 'stun:stun.l.google.com:19302' },
             { 'urls': 'stun:stun1.l.google.com:19302' },
             { 'urls': 'stun:stun2.l.google.com:19302' },
+            { 'urls': 'stun:stun3.l.google.com:19302' },
+            { 'urls': 'stun:stun4.l.google.com:19302' },
             {
               urls: 'turn:open.metered.ca:3478?transport=udp',
               username: '5adb9880780dccfb855a62d9',
@@ -123,29 +130,20 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
               urls: 'turn:open.metered.ca:3478?transport=tcp',
               username: '5adb9880780dccfb855a62d9',
               credential: 'Ink+Z3uyHb+fOamN'
-            },
-            {
-              urls: 'turns:open.metered.ca:443?transport=tcp',
-              username: '5adb9880780dccfb855a62d9',
-              credential: 'Ink+Z3uyHb+fOamN'
             }
           ],
-          'iceTransportPolicy': 'all'
+          'iceCandidatePoolSize': 10
         }
       });
 
       peer.on('open', (id: string) => {
-        console.log(`[Cruising] Peer aperto con ID: ${id}`);
+        console.log(`[Cruising] Connesso con ID: ${id}`);
         setIsActive(true);
         setActiveCarovanaId(carovanaId);
         setCurrentUsername(username);
         
         const channel = supabase.channel(`cruising-${carovanaId}`, {
-          config: {
-            presence: {
-              key: id,
-            },
-          },
+          config: { presence: { key: id } },
         });
 
         channel
@@ -165,14 +163,15 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
                   isSpeaking: false
                 });
 
-                if (id < presenceId) {
-                  if (peerRef.current && !peerRef.current.connections[presenceId]) {
-                    console.log(`[Cruising] Inizializzazione chiamata verso: ${presenceId}`);
-                    const call = peerRef.current.call(presenceId, streamRef.current!);
-                    call.on('stream', (remoteStream: MediaStream) => {
-                      playRemoteStream(presenceId, remoteStream);
-                    });
-                  }
+                // Chi ha l'ID minore avvia la chiamata
+                if (id < presenceId && !peerRef.current.connections[presenceId]) {
+                  console.log(`[Cruising] Chiamata verso: ${presenceId}`);
+                  const call = peerRef.current.call(presenceId, streamRef.current!, {
+                    metadata: { username }
+                  });
+                  call.on('stream', (remoteStream: MediaStream) => {
+                    playRemoteStream(presenceId, remoteStream);
+                  });
                 }
               }
             });
@@ -191,13 +190,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
           })
           .subscribe(async (status) => {
             if (status === 'SUBSCRIBED') {
-              await channel.track({
-                username,
-                avatarUrl,
-                role,
-                carName,
-                joined_at: new Date().toISOString()
-              });
+              await channel.track({ username, avatarUrl, role, carName });
             }
           });
         
@@ -213,17 +206,15 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       });
 
       peer.on('error', (err: any) => {
-        console.error(`[Cruising] PeerJS Error (${err.type}):`, err);
+        console.error(`[Cruising] PeerJS Error:`, err);
         if (err.type === 'network' || err.type === 'disconnected') {
-          setTimeout(() => {
-            if (isActive) peer.reconnect();
-          }, 3000);
+          setTimeout(() => isActive && peer.reconnect(), 3000);
         }
       });
 
       peerRef.current = peer;
     } catch (err) {
-      console.error('[Cruising] Errore inizializzazione:', err);
+      console.error('[Cruising] Errore microfono:', err);
     }
   }, [isActive, leaveChannel, playRemoteStream]);
 
