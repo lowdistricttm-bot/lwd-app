@@ -104,7 +104,19 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       stream.getAudioTracks().forEach(track => track.enabled = false);
 
       const peerId = `lwd-${carovanaId}-${username.replace(/\s+/g, '-')}-${Math.random().toString(36).substring(2, 6)}`;
-      const peer = new PeerClass(peerId);
+      const peer = new (window as any).Peer(profile.id, {
+  debug: 2,
+  config: {
+    'iceServers': [
+      { 'urls': 'stun:stun.l.google.com:19302' }, // STUN gratuito di Google
+      { 
+        'urls': 'turn:IL_TUO_SERVER_TURN.com', 
+        'username': 'tuo_username', 
+        'credential': 'tua_password' 
+      }
+    ]
+  }
+});
 
       peer.on('open', (id: string) => {
         setIsActive(true);
