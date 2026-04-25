@@ -124,7 +124,7 @@ const Bacheca = () => {
       >
         <Swords size={32} className="text-yellow-500" />
         <div>
-          <h4 className="text-lg font-black italic uppercase tracking-tighter">Stance Battle Live</h4>
+          <h4 className="text-lg font-black italic uppercase tracking-tighter">Low Battle Live</h4>
           <p className="text-[9px] font-bold uppercase text-zinc-500 tracking-[0.2em]">Vota la tua preferita e guadagna +1 REP</p>
         </div>
         <Button className="bg-white text-black rounded-full h-10 px-8 font-black uppercase italic text-[10px]">Vota Ora</Button>
