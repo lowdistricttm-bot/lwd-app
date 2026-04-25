@@ -102,22 +102,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       });
       streamRef.current = stream;
       stream.getAudioTracks().forEach(track => track.enabled = false);
-
-     const peerId = `lwd-${carovanaId}-${username.replace(/\s+/g, '-')}-${Math.random().toString(36).substring(2, 6)}`;
-
-      const peer = new (window as any).Peer(peerId, {
-  debug: 2,
-  config: {
-    'iceServers': [
-      { 'urls': 'stun:stun.l.google.com:19302' }, // STUN gratuito di Google
-      { 
-        'urls': 'turn:lwdstrct.metered.live', 
-        'username': '5adb9880780dccfb855a62d9', 
-        'credential': 'Ink+Z3uyHb+fOamN' 
-      }
-    ]
-  }
-});
+c
 
       peer.on('open', (id: string) => {
         setIsActive(true);
