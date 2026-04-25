@@ -12,17 +12,17 @@ export const useBattles = () => {
 
   const fetchBattle = async () => {
     setLoading(true);
-    // Prendi la battaglia attiva più recente
+    // Prendi la battaglia attiva più recente includendo i profili dei proprietari
     const { data: battleData } = await supabase
       .from('stance_battles')
       .select(`
         *,
-        car_a:vehicles!car_a_id(*),
-        car_b:vehicles!car_b_id(*)
+        car_a:vehicles!car_a_id(*, profiles:profiles(username, avatar_url)),
+        car_b:vehicles!car_b_id(*, profiles:profiles(username, avatar_url))
       `)
       .eq('status', 'active')
       .order('created_at', { ascending: false })
-      .single();
+      .maybeSingle();
 
     if (battleData) {
       setBattle(battleData);
