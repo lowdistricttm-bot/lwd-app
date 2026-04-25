@@ -108,18 +108,19 @@ const Battles = () => {
           </div>
         </div>
 
-        {/* VS BADGE CENTRALE */}
+        {/* VS BADGE CENTRALE - iOS Style */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30">
           <motion.div 
-            initial={{ scale: 0, rotate: -180 }}
+            initial={{ scale: 0, rotate: -45 }}
             animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: 'spring', damping: 12, stiffness: 200, delay: 0.8 }}
+            transition={{ type: 'spring', damping: 20, stiffness: 300, delay: 0.8 }}
             className="relative"
           >
-            <div className="w-24 h-24 md:w-32 md:h-32 bg-white text-black rounded-full flex items-center justify-center shadow-[0_0_60px_rgba(255,255,255,0.4)] border-[10px] border-black">
-              <span className="text-3xl md:text-5xl font-black italic tracking-tighter">VS</span>
+            <div className="w-16 h-16 md:w-20 md:h-20 bg-white/10 backdrop-blur-2xl rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-white/20">
+              <span className="text-xl md:text-2xl font-black italic tracking-tighter text-white leading-none">VS</span>
             </div>
-            <div className="absolute inset-0 bg-white/20 blur-2xl rounded-full animate-pulse" />
+            {/* Glow sottile esterno */}
+            <div className="absolute inset-0 bg-white/5 blur-xl rounded-full -z-10" />
           </motion.div>
         </div>
 
