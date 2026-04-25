@@ -12,6 +12,7 @@ import { it } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { showSuccess } from '@/utils/toast';
+import { unlockAudio } from '@/utils/sound';
 import CruisingMode from './CruisingMode';
 
 interface CarovanaDetailModalProps {
@@ -34,6 +35,11 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
 
   const isCreator = currentUserId === carovana.creator_id;
   const participants = carovana.carovane_partecipanti || [];
+
+  const handleOpenRadio = async () => {
+    await unlockAudio();
+    setIsCruisingOpen(true);
+  };
 
   const handleJoin = async () => {
     const mainVehicle = vehicles?.find(v => v.is_main) || vehicles?.[0];
@@ -130,7 +136,6 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
                 </div>
               </div>
 
-              {/* Cruising Mode Button - Arancione Sottile con Testo/Icona Neri */}
               {carovana.is_joined && (
                 <motion.div 
                   initial={{ scale: 0.9, opacity: 0 }}
@@ -145,7 +150,7 @@ const CarovanaDetailModal = ({ isOpen, onClose, carovana, currentUserId, onEdit 
                   className="pt-2"
                 >
                   <Button 
-                    onClick={() => setIsCruisingOpen(true)}
+                    onClick={handleOpenRadio}
                     className="w-full h-14 rounded-full font-black uppercase italic text-[10px] tracking-widest bg-orange-500/90 backdrop-blur-xl text-black border border-orange-400/30 hover:bg-orange-400 transition-all duration-500 shadow-[0_0_30px_rgba(249,115,22,0.2)] flex items-center justify-center gap-3"
                   >
                     <Radio size={22} className="animate-pulse" />

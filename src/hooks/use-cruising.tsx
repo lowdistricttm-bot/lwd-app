@@ -58,11 +58,10 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     const audio = new Audio();
     audio.srcObject = remoteStream;
     audio.autoplay = true;
-    // Importante per iOS: assicura che l'audio non sia mutato
     audio.muted = false;
     
     audio.play().catch(err => {
-      console.warn(`[Cruising] Autoplay bloccato per peer ${presenceId}. L'utente deve interagire.`, err);
+      console.warn(`[Cruising] Autoplay bloccato per peer ${presenceId}.`, err);
     });
     
     audioElementsRef.current.set(presenceId, audio);
@@ -87,9 +86,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   }, []);
 
   const joinChannel = useCallback(async (carovanaId: string, username: string, avatarUrl: string, role: string, carName?: string) => {
-    // 1. Sblocca l'audio (necessario per iOS)
-    await unlockAudio();
-
     if (isActive) leaveChannel();
 
     const PeerClass = (window as any).Peer;
@@ -99,7 +95,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     }
 
     try {
-      // Richiesta permessi microfono con impostazioni ottimizzate per voce
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
@@ -108,10 +103,8 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
         } 
       });
       streamRef.current = stream;
-      // Inizialmente mutato (PTT mode)
       stream.getAudioTracks().forEach(track => track.enabled = false);
 
-      // ID univoco per PeerJS
       const myPeerId = `lwd-${carovanaId}-${username.replace(/\s+/g, '-')}-${Math.random().toString(36).substring(2, 6)}`;
       
       const peer = new PeerClass(myPeerId, {
@@ -172,8 +165,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
                   isSpeaking: false
                 });
 
-                // LOGICA DI CONNESSIONE: Solo chi ha l'ID "minore" chiama l'altro.
-                // Questo evita conflitti di doppia chiamata simultanea su reti mobili.
                 if (id < presenceId) {
                   if (peerRef.current && !peerRef.current.connections[presenceId]) {
                     console.log(`[Cruising] Inizializzazione chiamata verso: ${presenceId}`);
@@ -213,7 +204,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
         channelRef.current = channel;
       });
 
-      // Gestione chiamate in entrata
       peer.on('call', (call: any) => {
         console.log(`[Cruising] Ricevuta chiamata da: ${call.peer}`);
         call.answer(streamRef.current!);
@@ -225,7 +215,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       peer.on('error', (err: any) => {
         console.error(`[Cruising] PeerJS Error (${err.type}):`, err);
         if (err.type === 'network' || err.type === 'disconnected') {
-          // Tentativo di riconnessione silenzioso
           setTimeout(() => {
             if (isActive) peer.reconnect();
           }, 3000);

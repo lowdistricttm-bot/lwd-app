@@ -8,13 +8,13 @@ let isAudioUnlocked = false;
 
 /**
  * Sblocca l'audio sui browser mobili. 
- * Deve essere chiamato all'interno di un evento di click dell'utente.
+ * DEVE essere chiamato direttamente dentro un evento onClick.
  */
 export const unlockAudio = async () => {
-  if (isAudioUnlocked) return;
+  if (isAudioUnlocked) return true;
   
   try {
-    // Creiamo un contesto audio silenzioso per "svegliare" il motore audio del browser
+    // 1. Sveglia l'AudioContext
     const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
     if (AudioContext) {
       const context = new AudioContext();
@@ -23,15 +23,18 @@ export const unlockAudio = async () => {
       }
     }
 
-    // Riproduciamo un suono brevissimo e muto per confermare lo sblocco
+    // 2. Riproduci un suono silenzioso per forzare il browser a permettere l'audio
     const silentAudio = new Audio();
+    // WAV silenzioso di 100ms
     silentAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFWm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
     await silentAudio.play();
     
     isAudioUnlocked = true;
     console.log("[Sound] Audio engine unlocked successfully");
+    return true;
   } catch (err) {
     console.warn("[Sound] Audio unlock failed:", err);
+    return false;
   }
 };
 

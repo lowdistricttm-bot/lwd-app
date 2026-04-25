@@ -11,6 +11,7 @@ import { it } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { showSuccess } from '@/utils/toast';
+import { unlockAudio } from '@/utils/sound';
 import CruisingMode from './CruisingMode';
 
 interface MeetDetailModalProps {
@@ -27,6 +28,12 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
   useBodyLock(isOpen);
 
   if (!meet) return null;
+
+  const handleOpenRadio = async () => {
+    // Sblocca l'audio PRIMA di aprire la modale
+    await unlockAudio();
+    setIsRadioOpen(true);
+  };
 
   const handleOpenMap = () => {
     const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(meet.location)}`;
@@ -107,7 +114,6 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
                 </div>
               )}
 
-              {/* Cruising Mode Button - Arancione Sottile con Testo/Icona Neri */}
               {meet.is_participating && (
                 <motion.div 
                   initial={{ scale: 0.9, opacity: 0 }}
@@ -122,7 +128,7 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
                   className="pt-2"
                 >
                   <Button 
-                    onClick={() => setIsRadioOpen(true)}
+                    onClick={handleOpenRadio}
                     className="w-full h-14 rounded-full font-black uppercase italic text-[10px] tracking-widest bg-orange-500/90 backdrop-blur-xl text-black border border-orange-400/30 hover:bg-orange-400 transition-all duration-500 shadow-[0_0_30px_rgba(249,115,22,0.2)] flex items-center justify-center gap-3"
                   >
                     <Radio size={22} className="animate-pulse" />
@@ -159,7 +165,6 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
                 </div>
               </div>
 
-              {/* Sezione Partecipanti */}
               <div className="bg-white/5 border border-white/10 p-6 rounded-[2rem] space-y-4">
                 <div className="flex justify-between items-center">
                   <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.4em] italic flex items-center gap-2">
