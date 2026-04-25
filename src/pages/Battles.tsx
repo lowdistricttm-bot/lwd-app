@@ -12,14 +12,14 @@ const Battles = () => {
   const { battle, loading, userVote, stats, castVote } = useBattles();
 
   if (loading) return (
-    <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-[100]">
+    <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-[1000]">
       <Loader2 className="animate-spin text-white mb-4" size={40} />
       <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 italic">Caricamento Arena...</p>
     </div>
   );
 
   if (!battle) return (
-    <div className="fixed inset-0 bg-black text-white flex flex-col items-center justify-center p-6 text-center z-[100]">
+    <div className="fixed inset-0 bg-black text-white flex flex-col items-center justify-center p-6 text-center z-[1000]">
       <button 
         onClick={() => navigate(-1)}
         className="absolute top-[calc(1.5rem+env(safe-area-inset-top))] right-6 p-3 bg-white/5 rounded-full text-zinc-400 hover:text-white transition-all"
@@ -38,7 +38,7 @@ const Battles = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black text-white z-[100] flex flex-col overflow-hidden select-none">
+    <div className="fixed inset-0 bg-black text-white z-[1000] flex flex-col overflow-hidden select-none">
       {/* Header con tasto chiusura */}
       <div className="absolute top-0 left-0 right-0 z-[110] p-6 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent pt-[calc(1.5rem+env(safe-area-inset-top))]">
         <div className="flex items-center gap-3">
@@ -62,7 +62,7 @@ const Battles = () => {
       {/* Arena di Battaglia */}
       <div className="flex-1 relative flex flex-col md:flex-row">
         
-        {/* CAR A (Top su mobile, Left su desktop) */}
+        {/* CAR A */}
         <div 
           className="relative flex-1 group cursor-pointer overflow-hidden"
           onClick={() => !userVote && castVote(battle.car_a_id)}
@@ -117,12 +117,11 @@ const Battles = () => {
             <div className="w-24 h-24 md:w-32 md:h-32 bg-white text-black rounded-full flex items-center justify-center shadow-[0_0_60px_rgba(255,255,255,0.4)] border-[10px] border-black">
               <span className="text-3xl md:text-5xl font-black italic tracking-tighter">VS</span>
             </div>
-            {/* Effetti particelle/glow */}
             <div className="absolute inset-0 bg-white/20 blur-2xl rounded-full animate-pulse" />
           </motion.div>
         </div>
 
-        {/* CAR B (Bottom su mobile, Right su desktop) */}
+        {/* CAR B */}
         <div 
           className="relative flex-1 group cursor-pointer overflow-hidden border-t md:border-t-0 md:border-l border-white/5"
           onClick={() => !userVote && castVote(battle.car_b_id)}
@@ -169,7 +168,7 @@ const Battles = () => {
       </div>
 
       {/* Footer Info */}
-      <div className="bg-black border-t border-white/10 p-8 flex flex-col sm:flex-row justify-between items-center gap-6 pb-[calc(2rem+env(safe-area-inset-bottom))]">
+      <div className="bg-black border-t border-white/10 p-8 flex flex-col sm:flex-row justify-between items-center gap-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-500 border border-yellow-500/20">
             <Zap size={20} fill="currentColor" />
@@ -199,7 +198,7 @@ const Battles = () => {
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="absolute bottom-32 left-1/2 -translate-x-1/2 z-[120] pointer-events-none"
+            className="absolute bottom-32 left-1/2 -translate-x-1/2 z-[1200] pointer-events-none"
           >
             <div className="bg-white text-black px-8 py-3 rounded-full shadow-2xl flex items-center gap-3">
               <Trophy size={18} />

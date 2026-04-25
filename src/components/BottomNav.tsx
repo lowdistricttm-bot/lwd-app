@@ -27,8 +27,8 @@ const BottomNav = () => {
     }
   };
 
-  // Nascondi la BottomNav nelle pagine di chat
-  if (location.pathname.startsWith('/chat/')) return null;
+  // Nascondi la BottomNav nelle pagine di chat e nelle battaglie
+  if (location.pathname.startsWith('/chat/') || location.pathname === '/battles') return null;
 
   return (
     <div 
