@@ -101,7 +101,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   }, []);
 
   const joinChannel = useCallback(async (carovanaId: string, username: string, avatarUrl: string, role: string, carName?: string) => {
-    // Impedisce chiamate multiple simultanee
     if (isConnectingRef.current) return;
     isConnectingRef.current = true;
 
@@ -114,7 +113,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     setStatus('initializing');
 
     try {
-      // Richiesta microfono (una sola volta)
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: { 
           echoCancellation: true, 
@@ -127,23 +125,33 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
       const myPeerId = `lwd-${Math.random().toString(36).substring(2, 8)}`;
       
+      // Configurazione PeerJS con i server Metered forniti dall'utente
       const peer = new PeerClass(myPeerId, {
         debug: 1,
         secure: true,
-        host: '0.peerjs.com',
-        port: 443,
         config: {
           'iceServers': [
-            { 'urls': 'stun:stun.l.google.com:19302' },
-            { 'urls': 'stun:stun1.l.google.com:19302' },
+            { urls: "stun:stun.l.google.com:19302" },
+            { urls: "stun:stun.relay.metered.ca:80" },
             {
-              urls: [
-                'turn:lwdstrct.metered.live:443?transport=tcp', 
-                'turn:lwdstrct.metered.live:80?transport=tcp',
-                'turn:lwdstrct.metered.live:443?transport=udp'
-              ],
-              username: '5adb9880780dccfb855a62d9',
-              credential: 'Ink+Z3uyHb+fOamN'
+              urls: "turn:standard.relay.metered.ca:80",
+              username: "5adb9880780dccfb855a62d9",
+              credential: "Ink+Z3uyHb+fOamN",
+            },
+            {
+              urls: "turn:standard.relay.metered.ca:80?transport=tcp",
+              username: "5adb9880780dccfb855a62d9",
+              credential: "Ink+Z3uyHb+fOamN",
+            },
+            {
+              urls: "turn:standard.relay.metered.ca:443",
+              username: "5adb9880780dccfb855a62d9",
+              credential: "Ink+Z3uyHb+fOamN",
+            },
+            {
+              urls: "turns:standard.relay.metered.ca:443?transport=tcp",
+              username: "5adb9880780dccfb855a62d9",
+              credential: "Ink+Z3uyHb+fOamN",
             }
           ],
           'iceCandidatePoolSize': 10
@@ -155,7 +163,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       if (watchdogRef.current) clearTimeout(watchdogRef.current);
       watchdogRef.current = setTimeout(() => {
         if (isConnectingRef.current && (status === 'connecting-server' || status === 'initializing')) {
-          console.warn("[Cruising] Timeout connessione. Reset...");
           isConnectingRef.current = false;
           leaveChannel();
         }
