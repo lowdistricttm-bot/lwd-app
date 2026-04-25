@@ -169,7 +169,7 @@ const Battles = () => {
             <Zap size={16} fill="currentColor" />
           </div>
           <div className="flex flex-col">
-            <p className="text-[8px] font-black uppercase tracking-widest italic text-white leading-none mb-1">Guadagna Reputazione</p>
+            <p className="text-[6px] font-black uppercase tracking-widest italic text-white leading-none mb-1">Guadagna Reputazione</p>
             <p className="text-[7px] font-bold uppercase text-zinc-600 leading-none">+1 REP per ogni voto</p>
           </div>
         </div>
