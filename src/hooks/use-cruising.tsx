@@ -48,41 +48,32 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const peerRef = useRef<any>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const channelRef = useRef<any>(null);
-  const wakeLockRef = useRef<any>(null);
 
   const playRemoteStream = useCallback((presenceId: string, remoteStream: MediaStream) => {
-    const existing = document.getElementById(`sink-${presenceId}`);
-    if (existing) existing.remove();
-
-    const audio = document.createElement('audio');
-    audio.id = `sink-${presenceId}`;
-    audio.srcObject = remoteStream;
-    audio.autoplay = true;
-    audio.setAttribute('playsinline', 'true');
-    audio.setAttribute('webkit-playsinline', 'true');
-    // Importante per iOS: l'elemento deve essere nel DOM e "attivo"
-    audio.style.position = 'fixed';
-    audio.style.pointerEvents = 'none';
-    audio.style.opacity = '0';
-    audio.style.width = '1px';
-    audio.style.height = '1px';
+    const sinkId = `sink-${presenceId}`;
+    let audio = document.getElementById(sinkId) as HTMLAudioElement;
     
-    document.body.appendChild(audio);
-
-    const context = getGlobalAudioContext();
-    if (context?.state === 'suspended') {
-      context.resume().catch(() => {});
+    if (!audio) {
+      audio = document.createElement('audio');
+      audio.id = sinkId;
+      audio.autoplay = true;
+      // Cast a any per proprietà non standard su HTMLAudioElement ma necessarie per mobile
+      (audio as any).playsInline = true;
+      (audio as any).webkitPlaysInline = true;
+      audio.style.display = 'none';
+      document.body.appendChild(audio);
     }
+
+    audio.srcObject = remoteStream;
     
-    audio.play().catch((err) => {
-      console.warn("[Cruising] Autoplay blocked, retrying on next interaction", err);
-      // Se fallisce, riproviamo al primo tocco dello schermo
-      const retry = () => {
-        audio.play();
-        window.removeEventListener('touchstart', retry);
-      };
-      window.addEventListener('touchstart', retry);
-    });
+    const play = () => {
+      audio.play().catch(err => {
+        console.warn("[Cruising] Play blocked, waiting for interaction", err);
+        window.addEventListener('touchstart', () => audio.play(), { once: true });
+      });
+    };
+
+    play();
   }, []);
 
   const leaveChannel = useCallback(() => {
@@ -116,26 +107,25 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       streamRef.current = stream;
       stream.getAudioTracks().forEach(track => track.enabled = false);
 
-      // ID più corto e pulito per evitare problemi di signaling
-      const myPeerId = `lwd-${carovanaId.substring(0,8)}-${username.replace(/[^a-zA-Z0-9]/g, '')}`;
+      const myPeerId = `lwd-v3-${carovanaId.substring(0,6)}-${username.replace(/[^a-zA-Z0-9]/g, '')}`;
       
       const peer = new PeerClass(myPeerId, {
-        debug: 1,
         config: {
           'iceServers': [
             { 'urls': 'stun:stun.l.google.com:19302' },
             { 'urls': 'stun:stun1.l.google.com:19302' },
+            { 'urls': 'stun:stun2.l.google.com:19302' },
             {
-              // Server TURN Metered - Configurazione specifica per bypassare CGNAT 5G
               urls: [
                 'turn:lwdstrct.metered.live:443?transport=tcp', 
-                'turn:lwdstrct.metered.live:3478?transport=udp'
+                'turn:lwdstrct.metered.live:3478?transport=udp',
+                'turn:lwdstrct.metered.live:80?transport=tcp'
               ],
               username: '5adb9880780dccfb855a62d9',
               credential: 'Ink+Z3uyHb+fOamN'
             }
           ],
-          'iceTransportPolicy': 'all', // Prova tutto, ma il TURN è incluso
+          'iceTransportPolicy': 'all',
           'sdpSemantics': 'unified-plan'
         }
       });
@@ -169,11 +159,8 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
                   isSpeaking: false
                 });
 
-                // Logica di chiamata: chi ha l'ID "minore" chiama l'altro
                 if (id < presenceId) {
-                  const call = peerRef.current.call(presenceId, streamRef.current!, {
-                    metadata: { username, carName }
-                  });
+                  const call = peerRef.current.call(presenceId, streamRef.current!);
                   if (call) {
                     call.on('stream', (remoteStream: MediaStream) => {
                       playRemoteStream(presenceId, remoteStream);
@@ -214,7 +201,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       peer.on('error', (err: any) => {
         console.error('[Cruising] Peer Error:', err.type);
         if (err.type === 'unavailable-id') {
-          // Se l'ID è occupato, riprova con un suffisso
           peer.destroy();
           joinChannel(carovanaId, `${username}${Math.floor(Math.random()*100)}`, avatarUrl, role, carName);
         } else {
@@ -232,6 +218,10 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const toggleMic = useCallback((speaking: boolean) => {
     if (!streamRef.current || !channelRef.current) return;
     
+    // Forza il resume dell'audio context ad ogni interazione PTT
+    const context = getGlobalAudioContext();
+    if (context?.state === 'suspended') context.resume();
+
     streamRef.current.getAudioTracks().forEach(track => track.enabled = speaking);
     setIsSpeaking(speaking);
 
@@ -246,7 +236,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
   const sendAlert = useCallback((type: string, message: string) => {
     if (!channelRef.current) return;
-    
     playAlertSound();
     channelRef.current.send({
       type: 'broadcast',

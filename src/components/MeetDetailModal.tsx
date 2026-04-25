@@ -29,9 +29,10 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
 
   if (!meet) return null;
 
-  const handleOpenRadio = async () => {
-    // Sblocca l'audio PRIMA di aprire la modale
-    await unlockAudio();
+  const handleOpenRadio = () => {
+    // Sblocca l'audio in modo sincrono con il tocco
+    unlockAudio();
+    // Apri la modale immediatamente senza await
     setIsRadioOpen(true);
   };
 
@@ -42,11 +43,9 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
 
   const handleShare = async () => {
     let url = window.location.href;
-    
     if (meet.privacy === 'private' && meet.invite_code) {
       url = `${window.location.origin}/?code=${meet.invite_code}`;
     }
-    
     const shareData = {
       title: meet.title,
       text: meet.privacy === 'private' 
@@ -54,7 +53,6 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
         : `Partecipa al meet "${meet.title}" a ${meet.location}!`,
       url: url
     };
-
     try {
       if (navigator.share) await navigator.share(shareData);
       else {
@@ -117,14 +115,8 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
               {meet.is_participating && (
                 <motion.div 
                   initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ 
-                    scale: [1, 1.02, 1],
-                    opacity: 1 
-                  }}
-                  transition={{
-                    scale: { repeat: Infinity, duration: 2, ease: "easeInOut" },
-                    opacity: { duration: 0.5 }
-                  }}
+                  animate={{ scale: [1, 1.02, 1], opacity: 1 }}
+                  transition={{ scale: { repeat: Infinity, duration: 2, ease: "easeInOut" }, opacity: { duration: 0.5 } }}
                   className="pt-2"
                 >
                   <Button 
@@ -171,41 +163,25 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
                     <Users size={12} /> Partecipanti ({participants.length})
                   </h4>
                 </div>
-                
                 {participants.length > 0 ? (
                   <div className="flex flex-wrap gap-3">
                     {participants.map((p, i) => (
-                      <button 
-                        key={i} 
-                        onClick={() => { onClose(); navigate(`/profile/${p.user_id}`); }}
-                        className="group relative"
-                      >
+                      <button key={i} onClick={() => { onClose(); navigate(`/profile/${p.user_id}`); }} className="group relative">
                         <div className="w-10 h-10 rounded-full border-2 border-white/10 overflow-hidden bg-black group-hover:border-white transition-all">
-                          {p.profiles?.avatar_url ? (
-                            <img src={p.profiles.avatar_url} className="w-full h-full object-cover" alt={p.profiles.username} />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-zinc-700"><User size={16} /></div>
-                          )}
-                        </div>
-                        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-white text-black text-[7px] font-black uppercase px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
-                          {p.profiles?.username}
+                          {p.profiles?.avatar_url ? <img src={p.profiles.avatar_url} className="w-full h-full object-cover" alt={p.profiles.username} /> : <div className="w-full h-full flex items-center justify-center text-zinc-700"><User size={16} /></div>}
                         </div>
                       </button>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-[9px] font-bold uppercase text-zinc-600 italic">Nessun partecipante ancora. Sii il primo!</p>
+                  <p className="text-[9px] font-bold uppercase text-zinc-600 italic">Nessun partecipante ancora.</p>
                 )}
               </div>
 
               <div className="bg-white/5 border border-white/10 p-6 rounded-[2rem] flex items-center justify-between shadow-2xl">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-black rounded-full overflow-hidden border-2 border-white/10">
-                    {meet.profiles?.avatar_url ? (
-                      <img src={meet.profiles.avatar_url} className="w-full h-full object-cover" alt="" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-zinc-700"><User size={20} /></div>
-                    )}
+                    {meet.profiles?.avatar_url ? <img src={meet.profiles.avatar_url} className="w-full h-full object-cover" alt="" /> : <div className="w-full h-full flex items-center justify-center text-zinc-700"><User size={20} /></div>}
                   </div>
                   <div>
                     <p className="text-[7px] font-black uppercase tracking-widest text-zinc-500">Organizzato da</p>
@@ -215,13 +191,9 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
               </div>
 
               <div className="space-y-3 px-2">
-                <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.4em] italic flex items-center gap-2">
-                  <Info size={12} /> Descrizione e Programma
-                </h4>
+                <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.4em] italic flex items-center gap-2"><Info size={12} /> Descrizione e Programma</h4>
                 <div className="bg-white/5 border border-white/5 p-6 rounded-[2rem]">
-                  <p className="text-sm font-medium italic text-zinc-200 leading-relaxed whitespace-pre-wrap">
-                    {meet.description}
-                  </p>
+                  <p className="text-sm font-medium italic text-zinc-200 leading-relaxed whitespace-pre-wrap">{meet.description}</p>
                 </div>
               </div>
 
@@ -232,45 +204,17 @@ const MeetDetailModal = ({ isOpen, onClose, meet }: MeetDetailModalProps) => {
                     disabled={toggleParticipation.isPending}
                     className={cn(
                       "flex-1 h-16 rounded-full font-black uppercase italic text-[10px] tracking-widest transition-all duration-500 shadow-xl flex items-center justify-center gap-3 border",
-                      meet.is_participating 
-                        ? "bg-zinc-800 text-white border-white/10 hover:bg-red-600 hover:border-red-600" 
-                        : "bg-white text-black border-white hover:bg-zinc-200 hover:scale-105"
+                      meet.is_participating ? "bg-zinc-800 text-white border-white/10 hover:bg-red-600" : "bg-white text-black border-white hover:bg-zinc-200"
                     )}
                   >
-                    {toggleParticipation.isPending ? (
-                      <Loader2 className="animate-spin" size={18} />
-                    ) : meet.is_participating ? (
-                      <>ANNULLA PARTECIPAZIONE</>
-                    ) : (
-                      <>PARTECIPA ALL'INCONTRO</>
-                    )}
+                    {toggleParticipation.isPending ? <Loader2 className="animate-spin" size={18} /> : meet.is_participating ? 'ANNULLA PARTECIPAZIONE' : 'PARTECIPA ALL\'INCONTRO'}
                   </Button>
-                  
-                  <Button 
-                    onClick={handleOpenMap}
-                    variant="outline"
-                    className="flex-1 h-16 rounded-full font-black uppercase italic text-[10px] tracking-widest border-white/10 text-white hover:bg-white/5 flex items-center justify-center gap-3 hover:scale-105 transition-transform"
-                  >
-                    <Navigation size={18} />
-                    PORTAMI LÌ
-                  </Button>
+                  <Button onClick={handleOpenMap} variant="outline" className="flex-1 h-16 rounded-full font-black uppercase italic text-[10px] tracking-widest border-white/10 text-white hover:bg-white/5 flex items-center justify-center gap-3"><Navigation size={18} /> PORTAMI LÌ</Button>
                 </div>
-                
-                <Button 
-                  onClick={handleShare}
-                  variant="ghost"
-                  className="h-12 rounded-full font-black uppercase italic text-[9px] tracking-widest text-zinc-500 hover:text-white flex items-center justify-center gap-2"
-                >
-                  <Share2 size={16} /> CONDIVIDI INCONTRO
-                </Button>
+                <Button onClick={handleShare} variant="ghost" className="h-12 rounded-full font-black uppercase italic text-[9px] tracking-widest text-zinc-500 hover:text-white flex items-center justify-center gap-2"><Share2 size={16} /> CONDIVIDI INCONTRO</Button>
               </div>
 
-              <CruisingMode 
-                isOpen={isRadioOpen} 
-                onClose={() => setIsRadioOpen(false)} 
-                carovanaId={meet.id} 
-                carovanaTitle={meet.title} 
-              />
+              <CruisingMode isOpen={isRadioOpen} onClose={() => setIsRadioOpen(false)} carovanaId={meet.id} carovanaTitle={meet.title} />
             </div>
           </motion.div>
         </div>
