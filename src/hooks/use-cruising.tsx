@@ -113,8 +113,15 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     setStatus('initializing');
 
     try {
-      // 1. Recupero dinamico dei server ICE/TURN tramite API Key
-      const iceResponse = await fetch("https://lwdstrct.metered.live/api/v1/turn/credentials?apiKey=7156036f4bec000b0fac5c1054cef8efa44c");
+      // 1. Recupero dinamico dei server ICE/TURN con timeout di sicurezza
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      const iceResponse = await fetch("https://lwdstrct.metered.live/api/v1/turn/credentials?apiKey=7156036f4bec000b0fac5c1054cef8efa44c", {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      
       const iceServers = await iceResponse.json();
 
       // 2. Accesso al microfono
@@ -130,13 +137,16 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
       const myPeerId = `lwd-${Math.random().toString(36).substring(2, 8)}`;
       
-      // 3. Inizializzazione Peer con i server appena recuperati
+      // 3. Inizializzazione Peer con configurazione estesa per bypassare firewall Wi-Fi
       const peer = new PeerClass(myPeerId, {
         debug: 1,
         secure: true,
+        // Alcune versioni di PeerJS preferiscono iceServers al top level
+        iceServers: iceServers,
         config: {
           'iceServers': iceServers,
-          'iceCandidatePoolSize': 10
+          'iceCandidatePoolSize': 10,
+          'sdpSemantics': 'unified-plan'
         }
       });
 
@@ -145,10 +155,12 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       if (watchdogRef.current) clearTimeout(watchdogRef.current);
       watchdogRef.current = setTimeout(() => {
         if (isConnectingRef.current && (status === 'connecting-server' || status === 'initializing')) {
+          console.warn("[Cruising] Watchdog timeout - Reconnecting...");
           isConnectingRef.current = false;
           leaveChannel();
+          setStatus('error');
         }
-      }, 12000);
+      }, 15000);
 
       peer.on('open', (id: string) => {
         if (watchdogRef.current) clearTimeout(watchdogRef.current);
@@ -181,6 +193,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
                   isSpeaking: false
                 });
 
+                // Logica di chiamata: l'ID alfabeticamente minore chiama il maggiore
                 if (id < presenceId) {
                   const call = peerRef.current.call(presenceId, streamRef.current!);
                   if (call) {
@@ -226,7 +239,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       });
 
       peer.on('error', (err: any) => {
-        console.error('[Cruising] Peer Error:', err.type);
+        console.error('[Cruising] Peer Error:', err.type, err);
         isConnectingRef.current = false;
         setStatus('error');
       });
@@ -237,7 +250,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       isConnectingRef.current = false;
       setStatus('error');
     }
-  }, [playRemoteStream, leaveChannel]);
+  }, [playRemoteStream, leaveChannel, status]);
 
   const toggleMic = useCallback((speaking: boolean) => {
     if (!streamRef.current || !channelRef.current) return;
@@ -279,6 +292,8 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
 export const useCruising = () => {
   const context = useContext(CruisingContext);
-  if (!context) throw new Error('useCruising must be used within CruisingProvider');
+  if (context === undefined) {
+    throw new Error('useCruising must be used within CruisingProvider');
+  }
   return context;
 };
