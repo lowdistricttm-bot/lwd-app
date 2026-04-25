@@ -100,12 +100,21 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       stream.getAudioTracks().forEach(track => track.enabled = false);
 
       const peerId = `lwd-${carovanaId}-${username.replace(/\s+/g, '-')}-${Math.random().toString(36).substring(2, 6)}`;
+      
+      // Configurazione ICE migliorata per reti mobili
       const peer = new PeerClass(peerId, {
         debug: 2,
         config: {
           'iceServers': [
-            { 'urls': 'stun:stun.l.google.com:19302' }
-          ]
+            { 'urls': 'stun:stun.l.google.com:19302' },
+            { 'urls': 'stun:stun1.l.google.com:19302' },
+            { 'urls': 'stun:stun2.l.google.com:19302' },
+            { 'urls': 'stun:stun3.l.google.com:19302' },
+            { 'urls': 'stun:stun4.l.google.com:19302' },
+            // Nota: Per una produzione scalabile al 100% su mobile, 
+            // andrebbe aggiunto qui un server TURN (es. Twilio o Xirsys)
+          ],
+          'iceTransportPolicy': 'all'
         }
       });
 
