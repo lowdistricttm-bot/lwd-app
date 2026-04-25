@@ -49,8 +49,8 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const peerRef = useRef<any>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const channelRef = useRef<any>(null);
+  const retryCountRef = useRef(0);
   const isConnectingRef = useRef(false);
-  const reconnectTimerRef = useRef<any>(null);
 
   const playRemoteStream = useCallback((presenceId: string, remoteStream: MediaStream) => {
     const sinkId = `sink-${presenceId}`;
@@ -77,7 +77,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const leaveChannel = useCallback(() => {
     console.log("[Cruising] Reset totale connessione...");
     isConnectingRef.current = false;
-    if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+    retryCountRef.current = 0;
     setStatus('idle');
     
     if (peerRef.current) {
@@ -130,19 +130,23 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
       const myPeerId = `lwd${Math.random().toString(36).substring(2, 10)}`;
       
+      // Configurazione forzata su porta 443 per bypassare i firewall Wi-Fi
       const peer = new PeerClass(myPeerId, {
         debug: 1,
         secure: true,
         host: '0.peerjs.com',
         port: 443,
         path: '/',
-        pingInterval: 2000, // Ping più frequente per tenere sveglio il Wi-Fi
+        pingInterval: 2500,
         config: {
           'iceServers': [
             { urls: 'stun:stun.l.google.com:19302' },
             { urls: 'stun:stun1.l.google.com:19302' },
-            { urls: 'stun:stun2.l.google.com:19302' }
-          ]
+            { urls: 'stun:stun2.l.google.com:19302' },
+            { urls: 'stun:stun3.l.google.com:19302' },
+            { urls: 'stun:stun4.l.google.com:19302' }
+          ],
+          'sdpSemantics': 'unified-plan'
         }
       });
 
@@ -150,6 +154,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
       peer.on('open', (id: string) => {
         console.log("[Cruising] Server District pronto. ID:", id);
+        retryCountRef.current = 0;
         setIsActive(true);
         setStatus('connecting-units');
         setActiveCarovanaId(carovanaId);
@@ -176,6 +181,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
                   isSpeaking: false
                 });
 
+                // Logica di chiamata: chi ha l'ID minore chiama chi ha l'ID maggiore
                 if (id < presenceId) {
                   const call = peerRef.current.call(presenceId, streamRef.current!);
                   if (call) {
@@ -209,10 +215,15 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
         channelRef.current = channel;
       });
 
-      // GESTIONE DISCONNESSIONE: Riconnessione immediata
       peer.on('disconnected', () => {
-        console.warn("[Cruising] Connessione persa. Tentativo di riaggancio...");
-        peer.reconnect();
+        console.warn("[Cruising] Connessione Wi-Fi instabile. Riconnessione...");
+        if (retryCountRef.current < 5) {
+          retryCountRef.current++;
+          peer.reconnect();
+        } else {
+          leaveChannel();
+          setTimeout(() => joinChannel(carovanaId, username, avatarUrl, role, carName), 1500);
+        }
       });
 
       peer.on('call', (call: any) => {
@@ -223,14 +234,18 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       });
 
       peer.on('error', (err: any) => {
-        console.error('[Cruising] Errore critico:', err.type);
+        console.error('[Cruising] Errore Radio:', err.type);
         
-        // Se l'errore è fatale, distruggiamo tutto e ripartiamo da zero dopo 2 secondi
-        if (['network', 'server-error', 'socket-closed', 'socket-error', 'lost-connection'].includes(err.type)) {
-          leaveChannel();
-          reconnectTimerRef.current = setTimeout(() => {
-            joinChannel(carovanaId, username, avatarUrl, role, carName);
-          }, 2000);
+        // Se l'errore è di rete, proviamo a forzare un nuovo ciclo
+        if (['network', 'server-error', 'socket-closed', 'socket-error'].includes(err.type)) {
+          if (retryCountRef.current < 5) {
+            retryCountRef.current++;
+            isConnectingRef.current = false;
+            setTimeout(() => joinChannel(carovanaId, username, avatarUrl, role, carName), 1500);
+          } else {
+            setStatus('error');
+            isConnectingRef.current = false;
+          }
         }
       });
 
