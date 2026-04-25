@@ -49,8 +49,8 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const peerRef = useRef<any>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const channelRef = useRef<any>(null);
-  const heartbeatRef = useRef<any>(null);
   const watchdogRef = useRef<any>(null);
+  const retryCountRef = useRef(0);
   const isConnectingRef = useRef(false);
 
   const playRemoteStream = useCallback((presenceId: string, remoteStream: MediaStream) => {
@@ -78,9 +78,9 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const leaveChannel = useCallback(() => {
     console.log("[Cruising] Reset totale connessione...");
     isConnectingRef.current = false;
+    retryCountRef.current = 0;
     setStatus('idle');
     
-    if (heartbeatRef.current) clearInterval(heartbeatRef.current);
     if (watchdogRef.current) clearTimeout(watchdogRef.current);
     
     if (peerRef.current) {
@@ -101,7 +101,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       channelRef.current = null;
     }
     
-    // Rimuovi tutti i sink audio
     document.querySelectorAll('[id^="sink-"]').forEach(s => s.remove());
     
     setIsActive(false);
@@ -116,69 +115,58 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
     const PeerClass = (window as any).Peer;
     if (!PeerClass) {
-      console.error("[Cruising] PeerJS non caricato");
-      isConnectingRef.current = false;
       setStatus('error');
+      isConnectingRef.current = false;
       return;
     }
 
     setStatus('initializing');
 
     try {
-      // Richiesta microfono
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } 
-      }).catch(err => {
-        showError("Accesso al microfono negato. Controlla i permessi del browser.");
-        throw err;
-      });
+      if (!streamRef.current) {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } 
+        });
+        streamRef.current = stream;
+        stream.getAudioTracks().forEach(track => track.enabled = false);
+      }
 
-      streamRef.current = stream;
-      stream.getAudioTracks().forEach(track => track.enabled = false);
-
-      // Configurazione PeerJS ottimizzata per ambienti cloud/sviluppo
-      const myPeerId = `lwd${Math.random().toString(36).substring(2, 12)}`;
+      // ID molto semplice per evitare problemi di parsing
+      const myPeerId = `lwd${Math.random().toString(36).substring(2, 10)}`;
       
+      // Configurazione "Zero-Config" per massima compatibilità con i proxy
       const peer = new PeerClass(myPeerId, {
-        host: '0.peerjs.com', // Host esplicito
-        port: 443,
-        secure: true,
         debug: 1,
-        pingInterval: 5000, // Heartbeat per mantenere vivo il socket
+        secure: true,
         config: {
           'iceServers': [
             { urls: 'stun:stun.l.google.com:19302' },
             { urls: 'stun:stun1.l.google.com:19302' }
-          ],
-          'sdpSemantics': 'unified-plan'
+          ]
         }
       });
 
       setStatus('connecting-server');
 
-      // Watchdog per il timeout
       if (watchdogRef.current) clearTimeout(watchdogRef.current);
       watchdogRef.current = setTimeout(() => {
-        if (status !== 'ready' && status !== 'connecting-units' && isConnectingRef.current) {
-          console.error("[Cruising] Timeout server di segnalazione");
-          setStatus('error');
-          isConnectingRef.current = false;
+        if (status !== 'ready' && isConnectingRef.current) {
+          console.warn("[Cruising] Timeout connessione, tentativo di ripristino...");
+          peer.emit('error', { type: 'network' });
         }
-      }, 15000);
+      }, 12000);
 
       peer.on('open', (id: string) => {
-        console.log("[Cruising] Connesso al server con ID:", id);
+        console.log("[Cruising] Server pronto. ID:", id);
         if (watchdogRef.current) clearTimeout(watchdogRef.current);
+        retryCountRef.current = 0;
         setIsActive(true);
         setStatus('connecting-units');
         setActiveCarovanaId(carovanaId);
         setCurrentUsername(username);
         
         const channel = supabase.channel(`cruising-${carovanaId}`, {
-          config: { 
-            presence: { key: id },
-            broadcast: { ack: false }
-          },
+          config: { presence: { key: id } },
         });
 
         channel
@@ -198,7 +186,6 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
                   isSpeaking: false
                 });
 
-                // Logica di chiamata: chi ha l'ID "minore" chiama l'altro
                 if (id < presenceId) {
                   const call = peerRef.current.call(presenceId, streamRef.current!);
                   if (call) {
@@ -225,7 +212,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
           })
           .subscribe(async (subStatus) => {
             if (subStatus === 'SUBSCRIBED') {
-              await channel.track({ username, avatarUrl, role, carName, joinedAt: new Date().toISOString() });
+              await channel.track({ username, avatarUrl, role, carName });
             }
           });
         
@@ -240,18 +227,26 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       });
 
       peer.on('error', (err: any) => {
-        console.error('[Cruising] PeerJS Error:', err.type, err);
-        if (['network', 'server-error', 'socket-error', 'unavailable-id'].includes(err.type)) {
-          isConnectingRef.current = false;
-          setStatus('error');
+        console.error('[Cruising] PeerJS Error:', err.type);
+        
+        if (err.type === 'network' || err.type === 'server-error') {
+          if (retryCountRef.current < 3) {
+            retryCountRef.current++;
+            console.log(`[Cruising] Tentativo di riconnessione ${retryCountRef.current}/3...`);
+            isConnectingRef.current = false;
+            setTimeout(() => joinChannel(carovanaId, username, avatarUrl, role, carName), 2000);
+          } else {
+            setStatus('error');
+            isConnectingRef.current = false;
+          }
         }
       });
 
       peerRef.current = peer;
     } catch (err) {
-      console.error('[Cruising] Errore inizializzazione:', err);
-      isConnectingRef.current = false;
+      console.error('[Cruising] Errore critico:', err);
       setStatus('error');
+      isConnectingRef.current = false;
     }
   }, [playRemoteStream, status]);
 
