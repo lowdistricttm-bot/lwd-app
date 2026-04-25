@@ -106,7 +106,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
            'iceServers': [
       { 'urls': 'stun:stun.l.google.com:19302' }, // STUN gratuito di Google
       { 
-        'urls': 'turn:lwdstrct', 
+        'urls': 'turn:lwdstrct.metered.live', 
         'username': 'tuo_username', 
         'credential': 'tua_password' 
       }
