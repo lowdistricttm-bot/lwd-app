@@ -50,6 +50,7 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   const streamRef = useRef<MediaStream | null>(null);
   const channelRef = useRef<any>(null);
   const isConnectingRef = useRef(false);
+  const connectionTimeoutRef = useRef<any>(null);
 
   const playRemoteStream = useCallback((presenceId: string, remoteStream: MediaStream) => {
     const sinkId = `sink-${presenceId}`;
@@ -61,6 +62,8 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       audio.autoplay = true;
       // @ts-ignore
       audio.playsInline = true;
+      // @ts-ignore
+      audio.webkitPlaysInline = true;
       audio.style.display = 'none';
       document.body.appendChild(audio);
     }
@@ -70,11 +73,16 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
   }, []);
 
   const leaveChannel = useCallback(() => {
+    console.log("[Cruising] Disconnessione radio...");
     isConnectingRef.current = false;
+    if (connectionTimeoutRef.current) clearTimeout(connectionTimeoutRef.current);
+    
     setStatus('idle');
     
     if (peerRef.current) {
-      try { peerRef.current.destroy(); } catch (e) {}
+      try {
+        peerRef.current.destroy();
+      } catch (e) {}
       peerRef.current = null;
     }
     
@@ -110,31 +118,50 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
     setStatus('initializing');
 
     try {
-      // 1. Microfono
+      // 1. Ottieni accesso al microfono
       if (!streamRef.current) {
-        streamRef.current = await navigator.mediaDevices.getUserMedia({ 
-          audio: { echoCancellation: true, noiseSuppression: true } 
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: { 
+            echoCancellation: true, 
+            noiseSuppression: true,
+            autoGainControl: true
+          } 
         });
-        streamRef.current.getAudioTracks().forEach(track => track.enabled = false);
+        streamRef.current = stream;
+        stream.getAudioTracks().forEach(track => track.enabled = false);
       }
 
-      // 2. Inizializzazione PeerJS (Configurazione Standard Cloud)
-      // Usiamo il costruttore più semplice che è il più compatibile con i Wi-Fi
-      const peer = new PeerClass({
+      // 2. Inizializza PeerJS
+      // IMPORTANTE: Passiamo 'undefined' come primo argomento per forzare l'ID automatico del server
+      const peer = new PeerClass(undefined, {
         debug: 1,
+        secure: true,
         config: {
           'iceServers': [
             { urls: 'stun:stun.l.google.com:19302' },
             { urls: 'stun:stun1.l.google.com:19302' },
-            { urls: 'stun:stun2.l.google.com:19302' }
-          ]
+            { urls: 'stun:stun2.l.google.com:19302' },
+            { urls: 'stun:stun3.l.google.com:19302' },
+            { urls: 'stun:stun4.l.google.com:19302' }
+          ],
+          iceCandidatePoolSize: 10
         }
       });
 
       setStatus('connecting-server');
 
+      connectionTimeoutRef.current = setTimeout(() => {
+        if (status !== 'ready' && isConnectingRef.current) {
+          console.warn("[Cruising] Timeout connessione");
+          isConnectingRef.current = false;
+          setStatus('error');
+        }
+      }, 15000);
+
       peer.on('open', (id: string) => {
+        if (connectionTimeoutRef.current) clearTimeout(connectionTimeoutRef.current);
         console.log("[Cruising] Radio Online. ID:", id);
+        
         setIsActive(true);
         setStatus('connecting-units');
         setActiveCarovanaId(carovanaId);
@@ -199,8 +226,10 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
 
       peer.on('error', (err: any) => {
         console.error('[Cruising] Errore PeerJS:', err.type);
-        setStatus('error');
-        isConnectingRef.current = false;
+        if (['network', 'server-error', 'socket-closed', 'invalid-id'].includes(err.type)) {
+          setStatus('error');
+          isConnectingRef.current = false;
+        }
       });
 
       peerRef.current = peer;
@@ -209,15 +238,19 @@ export const CruisingProvider = ({ children }: { children: React.ReactNode }) =>
       setStatus('error');
       isConnectingRef.current = false;
     }
-  }, [playRemoteStream]);
+  }, [playRemoteStream, status]);
 
   const toggleMic = useCallback((speaking: boolean) => {
     if (!streamRef.current || !channelRef.current) return;
+    
     const context = getGlobalAudioContext();
     if (context?.state === 'suspended') context.resume();
+
     streamRef.current.getAudioTracks().forEach(track => track.enabled = speaking);
     setIsSpeaking(speaking);
+
     if (!speaking) playRogerBeep();
+
     channelRef.current.send({
       type: 'broadcast',
       event: 'speaking_state',
