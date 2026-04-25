@@ -81,14 +81,7 @@ const Battles = () => {
           
           <div className="absolute bottom-12 left-8 right-8 md:bottom-20 md:left-12 z-10">
             <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.5 }}>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-5 h-5 rounded-full overflow-hidden border border-white/20">
-                  {battle.car_a.profiles?.avatar_url ? (
-                    <img src={battle.car_a.profiles.avatar_url} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-zinc-800"><User size={10} /></div>
-                  )}
-                </div>
+              <div className="mb-2">
                 <p className="text-[10px] font-black uppercase italic text-white tracking-widest">@{battle.car_a.profiles?.username}</p>
               </div>
               <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter leading-none">
@@ -150,15 +143,8 @@ const Battles = () => {
           
           <div className="absolute top-12 left-8 right-8 md:top-auto md:bottom-20 md:right-12 z-10 text-right">
             <motion.div initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.7 }}>
-              <div className="flex items-center justify-end gap-2 mb-2">
+              <div className="mb-2">
                 <p className="text-[10px] font-black uppercase italic text-white tracking-widest">@{battle.car_b.profiles?.username}</p>
-                <div className="w-5 h-5 rounded-full overflow-hidden border border-white/20">
-                  {battle.car_b.profiles?.avatar_url ? (
-                    <img src={battle.car_b.profiles.avatar_url} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-zinc-800"><User size={10} /></div>
-                  )}
-                </div>
               </div>
               <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter leading-none">
                 {battle.car_b.brand} <br />
