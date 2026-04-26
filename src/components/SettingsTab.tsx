@@ -9,6 +9,7 @@ import FAQModal from './FAQModal';
 import AcademyModal from './AcademyModal';
 import { useRoleRequests } from '@/hooks/use-role-requests';
 import { useAdmin } from '@/hooks/use-admin';
+import { usePushNotifications } from '@/hooks/use-push-notifications';
 import { 
   LogOut, 
   Bell, 
@@ -26,7 +27,8 @@ import {
   CheckCircle2,
   Sparkles,
   Clock,
-  GraduationCap
+  GraduationCap,
+  RefreshCw
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import {
@@ -42,12 +44,12 @@ const SettingsTab = () => {
   const { language, setLanguage, t } = useTranslation();
   const { role } = useAdmin();
   const { myRequest, sendRequest } = useRoleRequests();
+  const { requestPermission, isSyncing, registerToken } = usePushNotifications();
   const [loading, setLoading] = useState(true);
   const [platePrivacy, setPlatePrivacy] = useState('private');
   const [isFAQOpen, setIsFAQOpen] = useState(false);
   const [isAcademyOpen, setIsAcademyOpen] = useState(false);
 
-  // Il banner deve essere visibile solo per il ruolo base 'subscriber'
   const isSubscriber = role === 'subscriber';
 
   useEffect(() => {
@@ -69,6 +71,14 @@ const SettingsTab = () => {
 
     fetchSettings();
   }, []);
+
+  const handleSyncDevice = async () => {
+    const status = await requestPermission();
+    if (status === 'granted') {
+      const t = await registerToken(true);
+      if (t) showSuccess("Dispositivo sincronizzato!");
+    }
+  };
 
   const updateSetting = async (field: string, value: any) => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -126,7 +136,15 @@ const SettingsTab = () => {
           icon: Bell, 
           label: t.settings?.notifications || "Notifiche Push", 
           desc: language === 'it' ? "Avvisi in tempo reale" : "Real-time alerts",
-          action: <ActiveIndicator />,
+          action: (
+            <button 
+              onClick={(e) => { e.stopPropagation(); handleSyncDevice(); }}
+              className="flex items-center gap-2 bg-white text-black px-3 py-1.5 rounded-full hover:bg-zinc-200 transition-all"
+            >
+              {isSyncing ? <Loader2 size={10} className="animate-spin" /> : <RefreshCw size={10} />}
+              <span className="text-[7px] font-black uppercase tracking-widest italic">Sincronizza</span>
+            </button>
+          ),
           iconBg: "bg-blue-500"
         },
         { 
@@ -295,7 +313,6 @@ const SettingsTab = () => {
           </div>
         ))}
 
-        {/* Sezione Upgrade per Iscritti - Appare solo se il ruolo è 'subscriber' */}
         {isSubscriber && (
           <div className="space-y-3">
             <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.3em] italic ml-4">
