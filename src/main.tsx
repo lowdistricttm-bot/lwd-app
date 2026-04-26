@@ -7,7 +7,8 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     // Utilizziamo un piccolo timeout per evitare collisioni durante il caricamento immediato
     setTimeout(() => {
-      navigator.serviceWorker.register('/sw.js')
+      // Percorso aggiornato per compatibilità Firebase
+      navigator.serviceWorker.register('/firebase-messaging-sw.js')
         .then(reg => {
           console.log('[SW] Registrato con successo');
           

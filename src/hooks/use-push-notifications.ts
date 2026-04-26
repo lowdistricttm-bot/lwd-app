@@ -46,6 +46,14 @@ export const usePushNotifications = () => {
 
         const messaging = firebase.messaging();
         
+        // Gestione messaggi in primo piano (Foreground)
+        messaging.onMessage((payload: any) => {
+          console.log('[Push] Messaggio ricevuto in primo piano:', payload);
+          if (payload.notification) {
+            showSuccess(`${payload.notification.title}: ${payload.notification.body}`);
+          }
+        });
+
         // Recupera il token FCM usando la tua VAPID KEY
         const currentToken = await messaging.getToken({
           vapidKey: 'BKOClir8CoHy_rYFSu5P4jbuH9rI6q99zeYSKPuZ2dLAvyT5boVZMxID9Tufm08rIXzoBKXihEHtyVPoo9lciG0'
