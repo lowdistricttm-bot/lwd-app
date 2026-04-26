@@ -49,12 +49,7 @@ export const usePushNotifications = () => {
     try {
       const firebase = (window as any).firebase;
       if (!firebase || !firebase.messaging) {
-        if (retryCount.current < 5) {
-          retryCount.current++;
-          setTimeout(() => registerToken(force), 2000);
-        }
-        setIsSyncing(false);
-        return null;
+        throw new Error("Libreria Firebase non caricata correttamente.");
       }
 
       if (firebase.apps.length === 0) {
@@ -63,8 +58,15 @@ export const usePushNotifications = () => {
 
       const messaging = firebase.messaging();
       
-      // Attendiamo che il service worker sia pronto
-      const registration = await navigator.serviceWorker.ready;
+      // Recuperiamo la registrazione del Service Worker esistente
+      const registration = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js') 
+                         || await navigator.serviceWorker.ready;
+
+      if (!registration) {
+        throw new Error("Service Worker non trovato. Prova a ricaricare la pagina.");
+      }
+
+      console.log("[Push] Richiesta token a Firebase...");
       
       const currentToken = await messaging.getToken({
         vapidKey: 'BKOClir8CoHy_rYFSu5P4jbuH9rI6q99zeYSKPuZ2dLAvyT5boVZMxID9Tufm08rIXzoBKXihEHtyVPoo9lciG0',
@@ -87,15 +89,30 @@ export const usePushNotifications = () => {
 
           setToken(currentToken);
           setHasTokenInDb(true);
-          console.log("[Push] Token registrato:", currentToken);
+          console.log("[Push] Token salvato nel database.");
           setIsSyncing(false);
           return currentToken;
         }
+      } else {
+        throw new Error("Nessun token restituito da Firebase.");
       }
+      
       setIsSyncing(false);
       return null;
     } catch (err: any) {
-      console.error("[Push] Errore dettagliato:", err?.message || err || "Unknown error");
+      const msg = err?.message || "Errore sconosciuto durante la generazione del token.";
+      console.error("[Push] Errore critico:", msg, err);
+      
+      // Se siamo su iOS e non in modalità standalone, spieghiamo il motivo
+      const isIos = /iPhone|iPad|iPod/.test(window.navigator.userAgent);
+      const isStandalone = (window.navigator as any).standalone || window.matchMedia('(display-mode: standalone)').matches;
+      
+      if (isIos && !isStandalone) {
+        showError("Su iPhone le notifiche funzionano solo se aggiungi l'app alla Home Screen.");
+      } else {
+        showError(msg);
+      }
+      
       setIsSyncing(false);
       return null;
     }
@@ -103,7 +120,7 @@ export const usePushNotifications = () => {
 
   const requestPermission = async () => {
     if (typeof window === 'undefined' || !('Notification' in window)) {
-      showError("Notifiche non supportate.");
+      showError("Notifiche non supportate su questo dispositivo.");
       return 'denied';
     }
     
@@ -112,6 +129,8 @@ export const usePushNotifications = () => {
 
     if (status === 'granted') {
       await registerToken(true);
+    } else {
+      showError("Permesso notifiche negato.");
     }
     return status;
   };
