@@ -12,7 +12,24 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    storageKey: 'lwd-auth-token-v1', // Chiave esplicita per stabilizzare il lock
+    storageKey: 'lwd-auth-token-v1',
     flowType: 'pkce',
+    // Gestore lock personalizzato per evitare il crash "Lock was released because another request stole it"
+    // Aggiunto il parametro acquireTimeout per rispettare la firma del tipo LockFunc
+    lock: async (name: string, _acquireTimeout: number, callback: () => Promise<any>) => {
+      try {
+        if (typeof navigator !== 'undefined' && navigator.locks) {
+          return await navigator.locks.request(name, callback);
+        }
+        return await callback();
+      } catch (e: any) {
+        // Se il lock viene rubato o fallisce, eseguiamo comunque il callback per non bloccare l'app
+        if (e.message?.includes('stole') || e.name === 'AbortError') {
+          console.warn('[Supabase] Auth lock conflict detected, proceeding without lock.');
+          return await callback();
+        }
+        throw e;
+      }
+    }
   }
 });
