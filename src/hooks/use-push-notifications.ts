@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { initializeApp } from "firebase/app";
-import { getMessaging, getToken, onMessage } from "firebase/messaging";
+import { initializeApp, getApp, getApps } from "firebase/app";
+import { getMessaging, getToken, Messaging } from "firebase/messaging";
 import { supabase } from "@/integrations/supabase/client";
-import { showSuccess, showError } from '@/utils/toast';
+import { showSuccess } from '@/utils/toast';
 
-// CONFIGURAZIONE FIREBASE (Sostituisci con i tuoi dati)
+// CONFIGURAZIONE FIREBASE (Sostituisci con i tuoi dati reali dalla console Firebase)
 const firebaseConfig = {
   apiKey: "INSERISCI_API_KEY",
   authDomain: "IL_TUO_PROGETTO.firebaseapp.com",
@@ -28,12 +28,15 @@ export const usePushNotifications = () => {
 
   const requestPermission = async () => {
     try {
+      if (typeof window === 'undefined' || !('Notification' in window)) return 'default';
+
       const status = await Notification.requestPermission();
       setPermission(status);
 
       if (status === 'granted') {
-        const app = initializeApp(firebaseConfig);
-        const messaging = getMessaging(app);
+        // Inizializza Firebase solo se non è già stato fatto
+        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+        const messaging: Messaging = getMessaging(app);
         
         // Recupera il token FCM
         const currentToken = await getToken(messaging, {
@@ -45,7 +48,7 @@ export const usePushNotifications = () => {
           const { data: { user } } = await supabase.auth.getUser();
           
           if (user) {
-            // Salva il token su Supabase
+            // Salva il token su Supabase nel profilo utente
             await supabase
               .from('profiles')
               .update({ fcm_token: currentToken })
