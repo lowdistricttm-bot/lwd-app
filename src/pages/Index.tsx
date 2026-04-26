@@ -19,16 +19,22 @@ import { useAuth } from '@/hooks/use-auth';
 
 const Index = () => {
   const { t } = useTranslation();
-  const { permission, requestPermission } = usePushNotifications();
+  const { permission, requestPermission, syncTokenIfMissing } = usePushNotifications();
   const { user } = useAuth();
   const [showPrompt, setShowPrompt] = useState(false);
 
   useEffect(() => {
-    if (user && permission === 'default') {
-      const timer = setTimeout(() => setShowPrompt(true), 5000);
-      return () => clearTimeout(timer);
+    if (user) {
+      // Prova a sincronizzare il token se il permesso è già stato dato in precedenza
+      syncTokenIfMissing();
+
+      // Se non ha mai dato il permesso, mostra il prompt dopo 5 secondi
+      if (permission === 'default') {
+        const timer = setTimeout(() => setShowPrompt(true), 5000);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [user, permission]);
+  }, [user, permission, syncTokenIfMissing]);
 
   const navigationTabs = [
     { 

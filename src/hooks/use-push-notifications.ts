@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { showSuccess } from '@/utils/toast';
+import { showSuccess, showError } from '@/utils/toast';
 
-// CONFIGURAZIONE FIREBASE REALE
 const firebaseConfig = {
   apiKey: "AIzaSyAZdHvkdl-RWQzHODT58HG8TK-cZPZyXs8",
   authDomain: "lwdstrct-app.firebaseapp.com",
@@ -25,66 +24,76 @@ export const usePushNotifications = () => {
     }
   }, []);
 
-  const requestPermission = async () => {
+  const registerToken = useCallback(async () => {
     try {
-      if (typeof window === 'undefined' || !('Notification' in window)) return 'default';
+      const firebase = (window as any).firebase;
+      if (!firebase) return null;
 
-      const status = await Notification.permission;
-      
-      // Se il permesso non è già garantito, lo chiediamo
-      const finalStatus = status === 'default' ? await Notification.requestPermission() : status;
-      setPermission(finalStatus);
+      if (firebase.apps.length === 0) {
+        firebase.initializeApp(firebaseConfig);
+      }
 
-      if (finalStatus === 'granted') {
-        const firebase = (window as any).firebase;
-        if (!firebase) throw new Error("Firebase SDK non caricato. Verifica index.html");
+      const messaging = firebase.messaging();
+      const currentToken = await messaging.getToken({
+        vapidKey: 'BKOClir8CoHy_rYFSu5P4jbuH9rI6q99zeYSKPuZ2dLAvyT5boVZMxID9Tufm08rIXzoBKXihEHtyVPoo9lciG0'
+      });
 
-        // Inizializza Firebase se non già fatto
-        if (firebase.apps.length === 0) {
-          firebase.initializeApp(firebaseConfig);
-        }
-
-        const messaging = firebase.messaging();
-        
-        // Gestione messaggi in primo piano (Foreground)
-        messaging.onMessage((payload: any) => {
-          console.log('[Push] Messaggio ricevuto in primo piano:', payload);
-          if (payload.notification) {
-            // Mostra un toast all'utente mentre usa l'app
-            showSuccess(`${payload.notification.title}: ${payload.notification.body}`);
-          }
-        });
-
-        // Recupera il token FCM usando la tua VAPID KEY
-        const currentToken = await messaging.getToken({
-          vapidKey: 'BKOClir8CoHy_rYFSu5P4jbuH9rI6q99zeYSKPuZ2dLAvyT5boVZMxID9Tufm08rIXzoBKXihEHtyVPoo9lciG0'
-        });
-
-        if (currentToken) {
-          console.log("[Push] Token generato:", currentToken);
-          setToken(currentToken);
+      if (currentToken) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase
+            .from('profiles')
+            .update({ 
+              fcm_token: currentToken,
+              push_notifications: true,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', user.id);
           
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            // Salviamo il token nel profilo dell'utente su Supabase
-            const { error } = await supabase
-              .from('profiles')
-              .update({ fcm_token: currentToken })
-              .eq('id', user.id);
-            
-            if (error) console.error("[Push] Errore salvataggio token:", error);
-            else showSuccess("Notifiche attivate con successo!");
-          }
-        } else {
-          console.warn("[Push] Nessun token ricevuto. Controlla i premessi del browser.");
+          setToken(currentToken);
+          return currentToken;
         }
       }
-      return finalStatus;
-    } catch (err: any) {
-      console.error("[Push] Errore attivazione:", err);
-      return 'default';
+      return null;
+    } catch (err) {
+      console.error("[Push] Errore registrazione:", err);
+      return null;
     }
+  }, []);
+
+  const requestPermission = async () => {
+    if (typeof window === 'undefined' || !('Notification' in window)) return 'default';
+    
+    const status = await Notification.requestPermission();
+    setPermission(status);
+
+    if (status === 'granted') {
+      const t = await registerToken();
+      if (t) showSuccess("Notifiche attivate con successo!");
+    }
+    return status;
   };
 
-  return { permission, requestPermission, token };
+  // Funzione per sincronizzare il token se manca ma il permesso è già presente
+  const syncTokenIfMissing = useCallback(async () => {
+    if (typeof window === 'undefined' || !('Notification' in window)) return;
+    
+    if (Notification.permission === 'granted') {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('fcm_token')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (!profile?.fcm_token) {
+        console.log("[Push] Token mancante nel DB, avvio sincronizzazione...");
+        await registerToken();
+      }
+    }
+  }, [registerToken]);
+
+  return { permission, requestPermission, token, syncTokenIfMissing };
 };
