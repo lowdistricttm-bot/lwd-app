@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from '@/utils/toast';
 
+// NOTA: Se hai rigenerato la chiave in Firebase Console, sostituiscila qui sotto
 const firebaseConfig = {
   apiKey: "AIzaSyAZdHvkdl-RWQzHODT58HG8TK-cZPZyXs8",
   authDomain: "lwdstrct-app.firebaseapp.com",
@@ -19,7 +20,6 @@ export const usePushNotifications = () => {
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [hasTokenInDb, setHasTokenInDb] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const retryCount = useRef(0);
 
   const checkDbToken = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -49,7 +49,7 @@ export const usePushNotifications = () => {
     try {
       const firebase = (window as any).firebase;
       if (!firebase || !firebase.messaging) {
-        throw new Error("Libreria Firebase non caricata correttamente.");
+        throw new Error("Libreria Firebase non pronta.");
       }
 
       if (firebase.apps.length === 0) {
@@ -57,16 +57,9 @@ export const usePushNotifications = () => {
       }
 
       const messaging = firebase.messaging();
-      
-      // Recuperiamo la registrazione del Service Worker esistente
-      const registration = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js') 
-                         || await navigator.serviceWorker.ready;
+      const registration = await navigator.serviceWorker.ready;
 
-      if (!registration) {
-        throw new Error("Service Worker non trovato. Prova a ricaricare la pagina.");
-      }
-
-      console.log("[Push] Richiesta token a Firebase...");
+      console.log("[Push] Generazione token...");
       
       const currentToken = await messaging.getToken({
         vapidKey: 'BKOClir8CoHy_rYFSu5P4jbuH9rI6q99zeYSKPuZ2dLAvyT5boVZMxID9Tufm08rIXzoBKXihEHtyVPoo9lciG0',
@@ -76,7 +69,7 @@ export const usePushNotifications = () => {
       if (currentToken) {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          const { error } = await supabase
+          await supabase
             .from('profiles')
             .update({ 
               fcm_token: currentToken,
@@ -85,32 +78,22 @@ export const usePushNotifications = () => {
             })
             .eq('id', user.id);
           
-          if (error) throw error;
-
           setToken(currentToken);
           setHasTokenInDb(true);
-          console.log("[Push] Token salvato nel database.");
           setIsSyncing(false);
           return currentToken;
         }
-      } else {
-        throw new Error("Nessun token restituito da Firebase.");
       }
       
       setIsSyncing(false);
       return null;
     } catch (err: any) {
-      const msg = err?.message || "Errore sconosciuto durante la generazione del token.";
-      console.error("[Push] Errore critico:", msg, err);
+      console.error("[Push] Errore critico:", err);
       
-      // Se siamo su iOS e non in modalità standalone, spieghiamo il motivo
-      const isIos = /iPhone|iPad|iPod/.test(window.navigator.userAgent);
-      const isStandalone = (window.navigator as any).standalone || window.matchMedia('(display-mode: standalone)').matches;
-      
-      if (isIos && !isStandalone) {
-        showError("Su iPhone le notifiche funzionano solo se aggiungi l'app alla Home Screen.");
+      if (err?.message?.includes('suspended') || err?.message?.includes('403')) {
+        showError("Errore critico Firebase: La chiave API del progetto è stata sospesa da Google. Controlla la console Firebase.");
       } else {
-        showError(msg);
+        showError("Impossibile attivare le notifiche. Riprova più tardi.");
       }
       
       setIsSyncing(false);
@@ -119,19 +102,10 @@ export const usePushNotifications = () => {
   }, [isSyncing]);
 
   const requestPermission = async () => {
-    if (typeof window === 'undefined' || !('Notification' in window)) {
-      showError("Notifiche non supportate su questo dispositivo.");
-      return 'denied';
-    }
-    
+    if (typeof window === 'undefined' || !('Notification' in window)) return 'denied';
     const status = await Notification.requestPermission();
     setPermission(status);
-
-    if (status === 'granted') {
-      await registerToken(true);
-    } else {
-      showError("Permesso notifiche negato.");
-    }
+    if (status === 'granted') await registerToken(true);
     return status;
   };
 
