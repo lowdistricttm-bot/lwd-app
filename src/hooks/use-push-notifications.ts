@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { initializeApp, getApp, getApps } from "firebase/app";
-import { getMessaging, getToken, Messaging } from "firebase/messaging";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess } from '@/utils/toast';
 
@@ -34,12 +32,18 @@ export const usePushNotifications = () => {
       setPermission(status);
 
       if (status === 'granted') {
-        // Inizializza Firebase solo se non è già stato fatto
-        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-        const messaging: Messaging = getMessaging(app);
+        const firebase = (window as any).firebase;
+        if (!firebase) throw new Error("Firebase SDK non caricato");
+
+        // Inizializza se non già fatto
+        if (firebase.apps.length === 0) {
+          firebase.initializeApp(firebaseConfig);
+        }
+
+        const messaging = firebase.messaging();
         
         // Recupera il token FCM
-        const currentToken = await getToken(messaging, {
+        const currentToken = await messaging.getToken({
           vapidKey: 'LA_TUA_VAPID_KEY_PUBBLICA_DA_FIREBASE'
         });
 
@@ -48,7 +52,6 @@ export const usePushNotifications = () => {
           const { data: { user } } = await supabase.auth.getUser();
           
           if (user) {
-            // Salva il token su Supabase nel profilo utente
             await supabase
               .from('profiles')
               .update({ fcm_token: currentToken })
