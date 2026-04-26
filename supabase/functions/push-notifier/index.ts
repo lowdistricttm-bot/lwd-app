@@ -8,7 +8,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Funzione per ottenere il token di accesso OAuth2 da Google
 async function getAccessToken(serviceAccount: any) {
   const jwt = await new jose.SignJWT({
     iss: serviceAccount.client_email,
@@ -46,7 +45,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 1. Recupera il token FCM dell'utente destinatario
+    // 1. Recupera il token FCM del destinatario
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('fcm_token, username')
@@ -54,26 +53,37 @@ serve(async (req) => {
       .single()
 
     if (profileError || !profile?.fcm_token) {
-      console.log(`[push-notifier] Token non trovato per l'utente ${record.user_id}. Notifica push annullata.`);
       return new Response(JSON.stringify({ message: 'Token non trovato' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       })
     }
 
-    // 2. Recupera il Service Account dai segreti di Supabase
+    // 2. Recupera il profilo di chi ha scatenato la notifica (actor)
+    const { data: actorProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('username')
+      .eq('id', record.actor_id)
+      .single()
+
+    // 3. Recupera il Service Account
     const serviceAccountStr = Deno.env.get('FIREBASE_SERVICE_ACCOUNT');
-    if (!serviceAccountStr) throw new Error("FIREBASE_SERVICE_ACCOUNT secret mancante in Supabase");
+    if (!serviceAccountStr) throw new Error("FIREBASE_SERVICE_ACCOUNT secret mancante");
     const serviceAccount = JSON.parse(serviceAccountStr);
 
-    // 3. Ottieni il token di accesso
     const accessToken = await getAccessToken(serviceAccount);
 
-    // 4. Prepara il testo della notifica
+    // 4. Prepara il contenuto in base al tipo
     let title = "Low District";
-    let body = record.content || "Hai una nuova attività nel Distretto";
+    let body = record.content || "Hai una nuova attività";
+    let url = "/profile?tab=notifications";
 
     switch (record.type) {
+      case 'message':
+        title = actorProfile?.username || "Nuovo Messaggio";
+        body = record.content;
+        url = `/chat/${record.actor_id}`;
+        break;
       case 'like': title = "Nuovo Like!"; break;
       case 'comment': title = "Nuovo Commento!"; break;
       case 'follow': title = "Nuovo Follower!"; break;
@@ -81,9 +91,9 @@ serve(async (req) => {
       case 'application_status': title = "Aggiornamento Selezione"; break;
     }
 
-    console.log(`[push-notifier] Invio push v1 (Data-only) a @${profile.username}...`);
+    console.log(`[push-notifier] Invio push a @${profile.username} per tipo: ${record.type}`);
 
-    // 5. Invio tramite FCM v1 API - Usiamo solo 'data' per evitare il duplicato del browser
+    // 5. Invio tramite FCM v1
     const fcmResponse = await fetch(`https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`, {
       method: 'POST',
       headers: {
@@ -93,34 +103,27 @@ serve(async (req) => {
       body: JSON.stringify({
         message: {
           token: profile.fcm_token,
-          // Rimuoviamo il blocco 'notification' per evitare che il browser mostri la notifica automatica (quella con la L)
           data: {
             title: title,
             body: body,
             icon: "/icon-only.png",
-            url: "/profile?tab=notifications"
+            url: url
           },
           webpush: {
-            headers: {
-              Urgency: "high"
-            },
-            fcm_options: {
-              link: "https://lwd-app.vercel.app/profile?tab=notifications"
-            }
+            headers: { Urgency: "high" },
+            fcm_options: { link: `https://lwd-app.vercel.app${url}` }
           }
         }
       }),
     });
 
     const fcmData = await fcmResponse.json();
-    console.log("[push-notifier] Risposta Firebase v1:", fcmData);
-
-    return new Response(JSON.stringify({ success: true }), {
+    return new Response(JSON.stringify({ success: true, fcm: fcmData }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
   } catch (error) {
-    console.error("[push-notifier] Errore critico:", error.message);
+    console.error("[push-notifier] Errore:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,

@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Bell, Heart, MessageSquare, ClipboardCheck, User, Loader2, Trash2, Calendar, Car, UserPlus, ShieldCheck, Megaphone, AlertTriangle, Zap, MapPin, Truck } from 'lucide-react';
+import { X, Bell, Heart, MessageSquare, ClipboardCheck, User, Loader2, Trash2, Calendar, Car, UserPlus, ShieldCheck, Megaphone, AlertTriangle, Zap, MapPin, Truck, Mail } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/use-notifications';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { formatDistanceToNow } from 'date-fns';
@@ -28,6 +28,11 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
     }
     onClose();
     
+    if (n.type === 'message') {
+      navigate(`/chat/${n.actor_id}`);
+      return;
+    }
+
     // Navigazione specifica per notifiche staff su candidature
     if (n.type === 'admin_info' && n.application_id) {
       navigate('/admin/applications');
@@ -48,7 +53,7 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
     } else if (n.type === 'meet_new') {
       navigate('/meets');
     } else if (n.type === 'carovana_nearby') {
-      navigate('/events'); // Porta alla pagina eventi dove si vedono le carovane
+      navigate('/events');
     }
   };
 
@@ -58,7 +63,6 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
   };
 
   const getAdminStyles = (n: Notification) => {
-    // Caso specifico per le nuove candidature (notifiche staff)
     if (n.type === 'admin_info' && n.application_id) {
       return { 
         icon: ClipboardCheck, 
@@ -71,7 +75,7 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
 
     switch (n.type) {
       case 'admin_info': return { icon: Megaphone, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', label: 'ANNUNCIO' };
-      case 'admin_warning': return { icon: AlertTriangle, color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/20', label: 'AVVISO' };
+      case 'admin_warning': return { icon: AlertTriangle, color: 'text-orange-400', bg: 'bg-blue-500/10', border: 'border-orange-500/20', label: 'AVVISO' };
       case 'admin_important': return { icon: Zap, color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20', label: 'IMPORTANTE' };
       default: return null;
     }
@@ -80,6 +84,7 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
   const getIcon = (type: string) => {
     if (type.startsWith('event_')) return <Calendar size={14} className="text-purple-500" />;
     switch (type) {
+      case 'message': return <Mail size={14} className="text-blue-400" />;
       case 'like': return <Heart size={14} className="text-red-500 fill-red-500" />;
       case 'vehicle_like': return <Car size={14} className="text-red-500" />;
       case 'comment': return <MessageSquare size={14} className="text-blue-500" />;
@@ -94,6 +99,7 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
   const getMessage = (n: Notification) => {
     const actorName = n.actor?.username || 'Membro District';
     switch (n.type) {
+      case 'message': return <><span className="font-black">{actorName}</span> ti ha inviato un messaggio: <span className="italic text-zinc-400">"{n.content}"</span></>;
       case 'like': return <><span className="font-black">{actorName}</span> ha messo like al tuo post</>;
       case 'comment': return <><span className="font-black">{actorName}</span> ha commentato il tuo post</>;
       case 'vehicle_like': return <><span className="font-black">{actorName}</span> ha apprezzato il tuo veicolo <span className="font-black">{n.vehicles?.brand}</span></>;
@@ -175,7 +181,6 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
                 notifications?.map((n, index) => {
                   const adminStyles = getAdminStyles(n);
                   const isAdminType = !!adminStyles;
-                  // Chiave composta per garantire l'univocità
                   const key = `notif-${n.id}-${index}`;
 
                   return (
