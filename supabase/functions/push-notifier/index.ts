@@ -81,9 +81,9 @@ serve(async (req) => {
       case 'application_status': title = "Aggiornamento Selezione"; break;
     }
 
-    console.log(`[push-notifier] Invio push v1 a @${profile.username}...`);
+    console.log(`[push-notifier] Invio push v1 (Data-only) a @${profile.username}...`);
 
-    // 5. Invio tramite FCM v1 API
+    // 5. Invio tramite FCM v1 API - Usiamo solo 'data' per evitare il duplicato del browser
     const fcmResponse = await fetch(`https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`, {
       method: 'POST',
       headers: {
@@ -93,17 +93,19 @@ serve(async (req) => {
       body: JSON.stringify({
         message: {
           token: profile.fcm_token,
-          notification: {
+          // Rimuoviamo il blocco 'notification' per evitare che il browser mostri la notifica automatica (quella con la L)
+          data: {
             title: title,
-            body: body
+            body: body,
+            icon: "/icon-only.png",
+            url: "/profile?tab=notifications"
           },
           webpush: {
             headers: {
               Urgency: "high"
             },
-            notification: {
-              icon: "https://www.lowdistrict.it/wp-content/uploads/icon-only.png",
-              click_action: "https://lwd-app.vercel.app/profile?tab=notifications"
+            fcm_options: {
+              link: "https://lwd-app.vercel.app/profile?tab=notifications"
             }
           }
         }
