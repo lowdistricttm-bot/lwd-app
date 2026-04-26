@@ -1,10 +1,37 @@
 // @ts-nocheck
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
+import * as jose from 'https://esm.sh/jose@5.2.3'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+// Funzione per ottenere il token di accesso OAuth2 da Google
+async function getAccessToken(serviceAccount: any) {
+  const jwt = await new jose.SignJWT({
+    iss: serviceAccount.client_email,
+    sub: serviceAccount.client_email,
+    aud: serviceAccount.token_uri,
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + 3600,
+    scope: 'https://www.googleapis.com/auth/firebase.messaging',
+  })
+    .setProtectedHeader({ alg: 'RS256' })
+    .sign(await jose.importPKCS8(serviceAccount.private_key, 'RS256'))
+
+  const res = await fetch(serviceAccount.token_uri, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: jwt,
+    }),
+  })
+
+  const data = await res.json()
+  return data.access_token
 }
 
 serve(async (req) => {
@@ -34,7 +61,15 @@ serve(async (req) => {
       })
     }
 
-    // 2. Prepara il testo della notifica
+    // 2. Recupera il Service Account dai segreti di Supabase
+    const serviceAccountStr = Deno.env.get('FIREBASE_SERVICE_ACCOUNT');
+    if (!serviceAccountStr) throw new Error("FIREBASE_SERVICE_ACCOUNT secret mancante in Supabase");
+    const serviceAccount = JSON.parse(serviceAccountStr);
+
+    // 3. Ottieni il token di accesso
+    const accessToken = await getAccessToken(serviceAccount);
+
+    // 4. Prepara il testo della notifica
     let title = "Low District";
     let body = record.content || "Hai una nuova attività nel Distretto";
 
@@ -46,31 +81,37 @@ serve(async (req) => {
       case 'application_status': title = "Aggiornamento Selezione"; break;
     }
 
-    const FIREBASE_SERVER_KEY = Deno.env.get('FIREBASE_SERVER_KEY');
-    if (!FIREBASE_SERVER_KEY) throw new Error("FIREBASE_SERVER_KEY mancante");
+    console.log(`[push-notifier] Invio push v1 a @${profile.username}...`);
 
-    console.log(`[push-notifier] Invio push a @${profile.username} via Firebase...`);
-
-    const fcmResponse = await fetch('https://fcm.googleapis.com/fcm/send', {
+    // 5. Invio tramite FCM v1 API
+    const fcmResponse = await fetch(`https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `key=${FIREBASE_SERVER_KEY}`,
+        'Authorization': `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
-        to: profile.fcm_token,
-        notification: {
-          title: title,
-          body: body,
-          icon: "https://www.lowdistrict.it/wp-content/uploads/icon-only.png",
-          click_action: "https://lwd-app.vercel.app/profile?tab=notifications"
-        },
-        priority: "high"
+        message: {
+          token: profile.fcm_token,
+          notification: {
+            title: title,
+            body: body
+          },
+          webpush: {
+            headers: {
+              Urgency: "high"
+            },
+            notification: {
+              icon: "https://www.lowdistrict.it/wp-content/uploads/icon-only.png",
+              click_action: "https://lwd-app.vercel.app/profile?tab=notifications"
+            }
+          }
+        }
       }),
     });
 
     const fcmData = await fcmResponse.json();
-    console.log("[push-notifier] Risposta Firebase:", fcmData);
+    console.log("[push-notifier] Risposta Firebase v1:", fcmData);
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
