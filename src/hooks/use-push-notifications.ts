@@ -17,14 +17,30 @@ const firebaseConfig = {
 export const usePushNotifications = () => {
   const [token, setToken] = useState<string | null>(null);
   const [permission, setPermission] = useState<NotificationPermission>('default');
+  const [hasTokenInDb, setHasTokenInDb] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const retryCount = useRef(0);
+
+  const checkDbToken = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('fcm_token')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    setHasTokenInDb(!!profile?.fcm_token);
+    if (profile?.fcm_token) setToken(profile.fcm_token);
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
       setPermission(Notification.permission);
+      checkDbToken();
     }
-  }, []);
+  }, [checkDbToken]);
 
   const registerToken = useCallback(async (force = false) => {
     if (isSyncing && !force) return null;
@@ -32,12 +48,10 @@ export const usePushNotifications = () => {
 
     try {
       const firebase = (window as any).firebase;
-      
-      // Se Firebase non è ancora caricato dai tag script, riproviamo tra 1 secondo
       if (!firebase || !firebase.messaging) {
         if (retryCount.current < 5) {
           retryCount.current++;
-          setTimeout(() => registerToken(force), 1500);
+          setTimeout(() => registerToken(force), 2000);
         }
         setIsSyncing(false);
         return null;
@@ -49,15 +63,17 @@ export const usePushNotifications = () => {
 
       const messaging = firebase.messaging();
       
-      // Recupero token da Firebase
+      // Attendiamo che il service worker sia pronto
+      const registration = await navigator.serviceWorker.ready;
+      
       const currentToken = await messaging.getToken({
-        vapidKey: 'BKOClir8CoHy_rYFSu5P4jbuH9rI6q99zeYSKPuZ2dLAvyT5boVZMxID9Tufm08rIXzoBKXihEHtyVPoo9lciG0'
+        vapidKey: 'BKOClir8CoHy_rYFSu5P4jbuH9rI6q99zeYSKPuZ2dLAvyT5boVZMxID9Tufm08rIXzoBKXihEHtyVPoo9lciG0',
+        serviceWorkerRegistration: registration
       });
 
       if (currentToken) {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          // Salvataggio nel profilo Supabase
           const { error } = await supabase
             .from('profiles')
             .update({ 
@@ -70,15 +86,16 @@ export const usePushNotifications = () => {
           if (error) throw error;
 
           setToken(currentToken);
-          console.log("[Push] Token sincronizzato con successo");
+          setHasTokenInDb(true);
+          console.log("[Push] Token registrato:", currentToken);
           setIsSyncing(false);
           return currentToken;
         }
       }
       setIsSyncing(false);
       return null;
-    } catch (err) {
-      console.error("[Push] Errore registrazione:", err);
+    } catch (err: any) {
+      console.error("[Push] Errore dettagliato:", err?.message || err || "Unknown error");
       setIsSyncing(false);
       return null;
     }
@@ -86,7 +103,7 @@ export const usePushNotifications = () => {
 
   const requestPermission = async () => {
     if (typeof window === 'undefined' || !('Notification' in window)) {
-      showError("Le notifiche non sono supportate su questo browser.");
+      showError("Notifiche non supportate.");
       return 'denied';
     }
     
@@ -94,34 +111,16 @@ export const usePushNotifications = () => {
     setPermission(status);
 
     if (status === 'granted') {
-      const t = await registerToken(true);
-      if (t) showSuccess("Notifiche attivate correttamente!");
-    } else if (status === 'denied') {
-      showError("Hai negato i permessi. Abilitali nelle impostazioni del browser.");
+      await registerToken(true);
     }
     return status;
   };
 
   const syncTokenIfMissing = useCallback(async () => {
-    if (typeof window === 'undefined' || !('Notification' in window)) return;
-    
-    if (Notification.permission === 'granted') {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('fcm_token')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      // Se il token manca nel DB ma abbiamo il permesso, lo rigeneriamo
-      if (!profile?.fcm_token) {
-        console.log("[Push] Token mancante nel DB, avvio recupero automatico...");
-        await registerToken();
-      }
+    if (Notification.permission === 'granted' && !hasTokenInDb) {
+      await registerToken();
     }
-  }, [registerToken]);
+  }, [hasTokenInDb, registerToken]);
 
-  return { permission, requestPermission, token, syncTokenIfMissing, isSyncing, registerToken };
+  return { permission, requestPermission, token, hasTokenInDb, syncTokenIfMissing, isSyncing, registerToken };
 };

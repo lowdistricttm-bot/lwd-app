@@ -28,7 +28,8 @@ import {
   Sparkles,
   Clock,
   GraduationCap,
-  RefreshCw
+  RefreshCw,
+  AlertCircle
 } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import {
@@ -44,13 +45,11 @@ const SettingsTab = () => {
   const { language, setLanguage, t } = useTranslation();
   const { role } = useAdmin();
   const { myRequest, sendRequest } = useRoleRequests();
-  const { requestPermission, isSyncing, registerToken } = usePushNotifications();
+  const { permission, hasTokenInDb, requestPermission, isSyncing, registerToken } = usePushNotifications();
   const [loading, setLoading] = useState(true);
   const [platePrivacy, setPlatePrivacy] = useState('private');
   const [isFAQOpen, setIsFAQOpen] = useState(false);
   const [isAcademyOpen, setIsAcademyOpen] = useState(false);
-
-  const isSubscriber = role === 'subscriber';
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -73,10 +72,12 @@ const SettingsTab = () => {
   }, []);
 
   const handleSyncDevice = async () => {
-    const status = await requestPermission();
-    if (status === 'granted') {
+    if (permission === 'default') {
+      await requestPermission();
+    } else {
       const t = await registerToken(true);
       if (t) showSuccess("Dispositivo sincronizzato!");
+      else showError("Impossibile generare il token. Controlla i permessi del browser.");
     }
   };
 
@@ -121,12 +122,37 @@ const SettingsTab = () => {
     );
   }
 
-  const ActiveIndicator = () => (
-    <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/10">
-      <CheckCircle2 size={10} className="text-white" />
-      <span className="text-[7px] font-black uppercase tracking-widest text-white italic">Attive</span>
-    </div>
-  );
+  const getPushAction = () => {
+    if (permission === 'granted' && hasTokenInDb) {
+      return (
+        <div className="flex items-center gap-2 bg-green-500/10 px-3 py-1.5 rounded-full border border-green-500/20">
+          <CheckCircle2 size={10} className="text-green-500" />
+          <span className="text-[7px] font-black uppercase tracking-widest text-green-500 italic">Attive</span>
+        </div>
+      );
+    }
+
+    if (permission === 'denied') {
+      return (
+        <div className="flex items-center gap-2 bg-red-500/10 px-3 py-1.5 rounded-full border border-red-500/20">
+          <AlertCircle size={10} className="text-red-500" />
+          <span className="text-[7px] font-black uppercase tracking-widest text-red-500 italic">Bloccate</span>
+        </div>
+      );
+    }
+
+    return (
+      <button 
+        onClick={(e) => { e.stopPropagation(); handleSyncDevice(); }}
+        className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-full hover:bg-zinc-200 transition-all shadow-lg"
+      >
+        {isSyncing ? <Loader2 size={10} className="animate-spin" /> : permission === 'granted' ? <RefreshCw size={10} /> : <Bell size={10} />}
+        <span className="text-[7px] font-black uppercase tracking-widest italic">
+          {permission === 'granted' ? 'Sincronizza' : 'Attiva'}
+        </span>
+      </button>
+    );
+  };
 
   const settingsGroups = [
     {
@@ -135,23 +161,20 @@ const SettingsTab = () => {
         { 
           icon: Bell, 
           label: t.settings?.notifications || "Notifiche Push", 
-          desc: language === 'it' ? "Avvisi in tempo reale" : "Real-time alerts",
-          action: (
-            <button 
-              onClick={(e) => { e.stopPropagation(); handleSyncDevice(); }}
-              className="flex items-center gap-2 bg-white text-black px-3 py-1.5 rounded-full hover:bg-zinc-200 transition-all"
-            >
-              {isSyncing ? <Loader2 size={10} className="animate-spin" /> : <RefreshCw size={10} />}
-              <span className="text-[7px] font-black uppercase tracking-widest italic">Sincronizza</span>
-            </button>
-          ),
+          desc: permission === 'granted' && hasTokenInDb ? "Ricezione attiva" : "Avvisi in tempo reale",
+          action: getPushAction(),
           iconBg: "bg-blue-500"
         },
         { 
           icon: Smartphone, 
           label: t.settings?.emailNotifications || "Notifiche Email", 
-          desc: language === 'it' ? "Aggiornamenti ufficiali" : "Official updates",
-          action: <ActiveIndicator />,
+          desc: "Aggiornamenti ufficiali",
+          action: (
+            <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/10">
+              <CheckCircle2 size={10} className="text-white" />
+              <span className="text-[7px] font-black uppercase tracking-widest text-white italic">Attive</span>
+            </div>
+          ),
           iconBg: "bg-zinc-700"
         }
       ]
@@ -176,7 +199,7 @@ const SettingsTab = () => {
         { 
           icon: Trash2, 
           label: t.settings?.deleteAccount || "Elimina Account", 
-          desc: language === 'it' ? "Info cancellazione" : "Deletion info",
+          desc: "Info cancellazione",
           onClick: () => alert("Contatta info@lowdistrict.it per la cancellazione."),
           action: <Info size={16} className="text-zinc-600" />,
           iconBg: "bg-red-500"
@@ -189,14 +212,14 @@ const SettingsTab = () => {
         { 
           icon: HelpCircle, 
           label: t.settings?.support || "Centro Assistenza", 
-          desc: language === 'it' ? "FAQ e Supporto Staff" : "FAQ and Staff Support",
+          desc: "FAQ e Supporto Staff",
           onClick: () => setIsFAQOpen(true),
           iconBg: "bg-amber-500"
         },
         { 
           icon: GraduationCap, 
           label: "Low Academy", 
-          desc: language === 'it' ? "Wiki tecnica e tutorial" : "Technical wiki and tutorials",
+          desc: "Wiki tecnica e tutorial",
           onClick: () => setIsAcademyOpen(true),
           iconBg: "bg-emerald-500"
         }
@@ -313,7 +336,7 @@ const SettingsTab = () => {
           </div>
         ))}
 
-        {isSubscriber && (
+        {role === 'subscriber' && (
           <div className="space-y-3">
             <h4 className="text-[9px] font-black uppercase text-zinc-500 tracking-[0.3em] italic ml-4">
               Upgrade Account
