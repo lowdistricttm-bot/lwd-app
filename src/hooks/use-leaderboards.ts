@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Vehicle } from './use-garage';
 
 export const useLeaderboards = () => {
+  // 1. Classifica per Low Score (AI)
   const { data: topScored, isLoading: loadingScores } = useQuery({
     queryKey: ['leaderboard-scores'],
     queryFn: async () => {
@@ -12,12 +13,9 @@ export const useLeaderboards = () => {
         .from('vehicles')
         .select(`
           *,
-          profiles:user_id (username, avatar_url, role),
+          profiles:user_id (username, avatar_url, role, is_admin),
           vehicle_likes (user_id),
-          user_trophies (
-            id,
-            trophies (*)
-          )
+          user_trophies (id, trophies (*))
         `)
         .not('stance_score', 'is', null)
         .order('stance_score', { ascending: false })
@@ -31,6 +29,7 @@ export const useLeaderboards = () => {
     }
   });
 
+  // 2. Classifica per Like della Community
   const { data: mostLiked, isLoading: loadingLikes } = useQuery({
     queryKey: ['leaderboard-likes'],
     queryFn: async () => {
@@ -38,32 +37,43 @@ export const useLeaderboards = () => {
         .from('vehicles')
         .select(`
           *,
-          profiles:user_id (username, avatar_url, role),
+          profiles:user_id (username, avatar_url, role, is_admin),
           vehicle_likes (user_id),
-          user_trophies (
-            id,
-            trophies (*)
-          )
+          user_trophies (id, trophies (*))
         `)
         .limit(100);
 
       if (error) throw error;
 
-      const sorted = (data || [])
+      return (data || [])
         .map((v: any) => ({
           ...v,
           likes_count: v.vehicle_likes?.length || 0
         }))
         .sort((a, b) => b.likes_count - a.likes_count)
-        .slice(0, 10);
+        .slice(0, 10) as (Vehicle & { likes_count: number })[];
+    }
+  });
 
-      return sorted as (Vehicle & { likes_count: number })[];
+  // 3. Classifica per Reputazione (Attività)
+  const { data: topReputation, isLoading: loadingRep } = useQuery({
+    queryKey: ['leaderboard-reputation'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url, role, is_admin, reputation')
+        .order('reputation', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      return data || [];
     }
   });
 
   return { 
     topScored, 
     mostLiked, 
-    isLoading: loadingScores || loadingLikes 
+    topReputation,
+    isLoading: loadingScores || loadingLikes || loadingRep 
   };
 };

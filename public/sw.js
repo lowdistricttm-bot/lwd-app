@@ -1,15 +1,15 @@
-// Service Worker per Low District - Versione v11 (FCM Integrated)
+// Service Worker per Low District - Versione v12 (FCM Configured)
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
-// CONFIGURAZIONE FIREBASE (Sostituisci con i tuoi dati dalla console Firebase)
+// CONFIGURAZIONE FIREBASE REALE
 const firebaseConfig = {
-  apiKey: "INSERISCI_API_KEY",
-  authDomain: "IL_TUO_PROGETTO.firebaseapp.com",
-  projectId: "IL_TUO_PROGETTO",
-  storageBucket: "IL_TUO_PROGETTO.appspot.com",
-  messagingSenderId: "IL_TUO_SENDER_ID",
-  appId: "IL_TUO_APP_ID"
+  apiKey: "AIzaSyAZdHvkdl-RWQzHODT58HG8TK-cZPZyXs8",
+  authDomain: "lwdstrct-app.firebaseapp.com",
+  projectId: "lwdstrct-app",
+  storageBucket: "lwdstrct-app.firebasestorage.app",
+  messagingSenderId: "345289653724",
+  appId: "1:345289653724:web:0ae739a60a99abba37a319"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -30,9 +30,8 @@ messaging.onBackgroundMessage((payload) => {
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// --- LOGICA CACHING ESISTENTE ---
-const CACHE_NAME = 'low-district-v11';
-const MEDIA_CACHE = 'low-district-media-v1';
+// --- LOGICA CACHING ---
+const CACHE_NAME = 'low-district-v12';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -43,7 +42,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME && cacheName !== MEDIA_CACHE) {
+          if (cacheName !== CACHE_NAME) {
             return caches.delete(cacheName);
           }
         })
@@ -55,16 +54,13 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // Bypass per API e Supabase
   const url = new URL(event.request.url);
   if (
     url.hostname.includes('supabase.co') || 
-    url.hostname.includes('supabase.net') ||
     url.hostname.includes('lowdistrict.it') ||
-    url.pathname.includes('/wp-json/') ||
-    url.pathname.includes('/functions/v1/') ||
-    event.request.method !== 'GET'
+    url.pathname.includes('/functions/v1/')
   ) {
     return; 
   }
-  // ... resto della logica di caching ...
 });
