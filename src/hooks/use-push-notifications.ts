@@ -50,6 +50,7 @@ export const usePushNotifications = () => {
         messaging.onMessage((payload: any) => {
           console.log('[Push] Messaggio ricevuto in primo piano:', payload);
           if (payload.notification) {
+            // Mostra un toast all'utente mentre usa l'app
             showSuccess(`${payload.notification.title}: ${payload.notification.body}`);
           }
         });
@@ -75,7 +76,7 @@ export const usePushNotifications = () => {
             else showSuccess("Notifiche attivate con successo!");
           }
         } else {
-          console.warn("[Push] Nessun token ricevuto. Controlla i permessi del browser.");
+          console.warn("[Push] Nessun token ricevuto. Controlla i premessi del browser.");
         }
       }
       return finalStatus;
