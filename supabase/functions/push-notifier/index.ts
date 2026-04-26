@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
 
@@ -11,6 +12,7 @@ serve(async (req) => {
 
   try {
     const { record } = await req.json()
+    console.log("[push-notifier] Ricevuto record notifica:", record);
     
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -25,13 +27,14 @@ serve(async (req) => {
       .single()
 
     if (profileError || !profile?.fcm_token) {
-      return new Response(JSON.stringify({ message: 'Token non trovato o utente non registrato per le push' }), {
+      console.log(`[push-notifier] Token non trovato per l'utente ${record.user_id}. Notifica push annullata.`);
+      return new Response(JSON.stringify({ message: 'Token non trovato' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       })
     }
 
-    // 2. Prepara il testo della notifica in base al tipo
+    // 2. Prepara il testo della notifica
     let title = "Low District";
     let body = record.content || "Hai una nuova attività nel Distretto";
 
@@ -43,14 +46,10 @@ serve(async (req) => {
       case 'application_status': title = "Aggiornamento Selezione"; break;
     }
 
-    // 3. Invia a Firebase (Legacy API per semplicità di configurazione tramite Server Key)
     const FIREBASE_SERVER_KEY = Deno.env.get('FIREBASE_SERVER_KEY');
-    
-    if (!FIREBASE_SERVER_KEY) {
-      throw new Error("FIREBASE_SERVER_KEY non configurata nei Secrets di Supabase");
-    }
+    if (!FIREBASE_SERVER_KEY) throw new Error("FIREBASE_SERVER_KEY mancante");
 
-    console.log(`[push-notifier] Invio notifica a @${profile.username}`);
+    console.log(`[push-notifier] Invio push a @${profile.username} via Firebase...`);
 
     const fcmResponse = await fetch('https://fcm.googleapis.com/fcm/send', {
       method: 'POST',
@@ -71,13 +70,14 @@ serve(async (req) => {
     });
 
     const fcmData = await fcmResponse.json();
+    console.log("[push-notifier] Risposta Firebase:", fcmData);
 
-    return new Response(JSON.stringify({ success: true, fcm: fcmData }), {
+    return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
   } catch (error) {
-    console.error("[push-notifier] Errore:", error.message);
+    console.error("[push-notifier] Errore critico:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
