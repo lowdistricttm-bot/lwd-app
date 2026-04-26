@@ -1,14 +1,14 @@
-// Service Worker per Low District - Versione v13
+// Service Worker per Low District - Versione v14
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAZdHvkdl-RWQzHODT58HG8TK-cZPZyXs8",
-  authDomain: "lwdstrct-app.firebaseapp.com",
-  projectId: "lwdstrct-app",
-  storageBucket: "lwdstrct-app.firebasestorage.app",
-  messagingSenderId: "345289653724",
-  appId: "1:345289653724:web:0ae739a60a99abba37a319"
+  apiKey: "AIzaSyAO695SEU4tcw1Cfy7zRakQ55K14tMG5jg",
+  authDomain: "my-project-23-46087.firebaseapp.com",
+  projectId: "my-project-23-46087",
+  storageBucket: "my-project-23-46087.firebasestorage.app",
+  messagingSenderId: "273028606272",
+  appId: "1:273028606272:web:c6d476ba2b97e7f22bb2a5"
 };
 
 firebase.initializeApp(firebaseConfig);

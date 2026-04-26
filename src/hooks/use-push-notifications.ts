@@ -4,15 +4,13 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from '@/utils/toast';
 
-// NOTA: Se hai rigenerato la chiave in Firebase Console, sostituiscila qui sotto
 const firebaseConfig = {
-  apiKey: "AIzaSyAZdHvkdl-RWQzHODT58HG8TK-cZPZyXs8",
-  authDomain: "lwdstrct-app.firebaseapp.com",
-  projectId: "lwdstrct-app",
-  storageBucket: "lwdstrct-app.firebasestorage.app",
-  messagingSenderId: "345289653724",
-  appId: "1:345289653724:web:0ae739a60a99abba37a319",
-  measurementId: "G-Y4CRR1RK4F"
+  apiKey: "AIzaSyAO695SEU4tcw1Cfy7zRakQ55K14tMG5jg",
+  authDomain: "my-project-23-46087.firebaseapp.com",
+  projectId: "my-project-23-46087",
+  storageBucket: "my-project-23-46087.firebasestorage.app",
+  messagingSenderId: "273028606272",
+  appId: "1:273028606272:web:c6d476ba2b97e7f22bb2a5"
 };
 
 export const usePushNotifications = () => {
@@ -59,10 +57,10 @@ export const usePushNotifications = () => {
       const messaging = firebase.messaging();
       const registration = await navigator.serviceWorker.ready;
 
-      console.log("[Push] Generazione token...");
+      console.log("[Push] Generazione token con nuovo progetto...");
       
       const currentToken = await messaging.getToken({
-        vapidKey: 'BKOClir8CoHy_rYFSu5P4jbuH9rI6q99zeYSKPuZ2dLAvyT5boVZMxID9Tufm08rIXzoBKXihEHtyVPoo9lciG0',
+        vapidKey: 'BASj2TpxGmTE-HehOnwkCI4vsEsj2k76Q8t4uIG-i14yIyBZ-1a5bf-c0zO0wo36feRidv6P_hqyk24DPjDDagA',
         serviceWorkerRegistration: registration
       });
 
@@ -88,14 +86,8 @@ export const usePushNotifications = () => {
       setIsSyncing(false);
       return null;
     } catch (err: any) {
-      console.error("[Push] Errore critico:", err);
-      
-      if (err?.message?.includes('suspended') || err?.message?.includes('403')) {
-        showError("Errore critico Firebase: La chiave API del progetto è stata sospesa da Google. Controlla la console Firebase.");
-      } else {
-        showError("Impossibile attivare le notifiche. Riprova più tardi.");
-      }
-      
+      console.error("[Push] Errore:", err);
+      showError("Impossibile attivare le notifiche. Riprova più tardi.");
       setIsSyncing(false);
       return null;
     }
