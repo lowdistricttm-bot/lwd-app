@@ -1,78 +1,66 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { initializeApp } from "firebase/app";
+import { getMessaging, getToken, onMessage } from "firebase/messaging";
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from '@/utils/toast';
 
+// CONFIGURAZIONE FIREBASE (Sostituisci con i tuoi dati)
+const firebaseConfig = {
+  apiKey: "INSERISCI_API_KEY",
+  authDomain: "IL_TUO_PROGETTO.firebaseapp.com",
+  projectId: "IL_TUO_PROGETTO",
+  storageBucket: "IL_TUO_PROGETTO.appspot.com",
+  messagingSenderId: "IL_TUO_SENDER_ID",
+  appId: "IL_TUO_APP_ID"
+};
+
 export const usePushNotifications = () => {
-  const [isSupported, setIsSupported] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
   const [permission, setPermission] = useState<NotificationPermission>('default');
-  const [subscription, setSubscription] = useState<PushSubscription | null>(null);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window) {
-      setIsSupported(true);
-      
-      // Controllo sicuro per l'esistenza dell'API Notification
-      if ('Notification' in window) {
-        setPermission(Notification.permission);
-      }
-      
-      navigator.serviceWorker.ready.then((registration) => {
-        registration.pushManager.getSubscription().then((sub) => {
-          setSubscription(sub);
-        });
-      });
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setPermission(Notification.permission);
     }
   }, []);
 
   const requestPermission = async () => {
-    if (!('Notification' in window)) return 'default';
-
     try {
-      const result = await Notification.requestPermission();
-      setPermission(result);
-      
-      if (result === 'granted') {
-        showSuccess("Notifiche attivate con successo!");
+      const status = await Notification.requestPermission();
+      setPermission(status);
+
+      if (status === 'granted') {
+        const app = initializeApp(firebaseConfig);
+        const messaging = getMessaging(app);
+        
+        // Recupera il token FCM
+        const currentToken = await getToken(messaging, {
+          vapidKey: 'LA_TUA_VAPID_KEY_PUBBLICA_DA_FIREBASE'
+        });
+
+        if (currentToken) {
+          setToken(currentToken);
+          const { data: { user } } = await supabase.auth.getUser();
+          
+          if (user) {
+            // Salva il token su Supabase
+            await supabase
+              .from('profiles')
+              .update({ fcm_token: currentToken })
+              .eq('id', user.id);
+            
+            showSuccess("Notifiche attivate con successo!");
+          }
+        }
       }
-      return result;
+      return status;
     } catch (err) {
-      console.error("Errore richiesta permessi:", err);
+      console.error("Errore attivazione notifiche:", err);
       return 'default';
     }
   };
 
-  const subscribeUser = async () => {
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      const vapidPublicKey = 'BEl627_5_2W-9ID99S3Y-9E2_7_5_2W-9ID99S3Y-9E2_7_5_2W-9ID99S3Y-9E2';
-      const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
-
-      const sub = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: convertedVapidKey
-      });
-
-      setSubscription(sub);
-      setPermission('granted');
-      return sub;
-    } catch (error) {
-      console.error('Errore durante la sottoscrizione:', error);
-      return null;
-    }
-  };
-
-  return { isSupported, permission, subscription, subscribeUser, requestPermission };
+  return { permission, requestPermission, token };
 };
-
-function urlBase64ToUint8Array(base64String: string) {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-  return outputArray;
-}
