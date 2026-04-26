@@ -44,7 +44,7 @@ export const usePushNotifications = () => {
         
         // Recupera il token FCM
         const currentToken = await messaging.getToken({
-          vapidKey: 'LA_TUA_VAPID_KEY_PUBBLICA_DA_FIREBASE'
+          vapidKey: 'BKOClir8CoHy_rYFSu5P4jbuH9rI6q99zeYSKPuZ2dLAvyT5boVZMxID9Tufm08rIXzoBKXihEHtyVPoo9lciG0'
         });
 
         if (currentToken) {
