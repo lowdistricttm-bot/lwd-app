@@ -91,7 +91,7 @@ const translations: Record<Language, any> = {
       syncing: 'SINCRONIZZAZIONE TARIFFE...',
       success: {
         title: 'ORDINE RICEVUTO',
-        desc: 'IL TUO ORDINE È STATO REGISTRATO NEL DISTRICT. RICEVERAI UNA MAIL DI CONFERMA A BREVE.',
+        desc: 'IL TUO ORDINE È STATO INVIATO. RICEVERAI UNA MAIL DI CONFERMA A BREVE.',
         payWhatsApp: 'PAGA SU WHATSAPP',
         backHome: 'TORNA ALLA HOME'
       }
