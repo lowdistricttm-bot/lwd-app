@@ -62,7 +62,7 @@ const translations: Record<Language, any> = {
       noProductsDesc: 'PROVA CON TERMINI DIVERSI O ESPLORA LE CATEGORIE.',
       showAll: 'MOSTRA TUTTI I PRODOTTI',
       backToShop: 'TORNA ALLO SHOP',
-      sale: 'SALE',
+      sale: 'OFFERTA',
       addToCart: 'AGGIUNGI AL CARRELLO',
       outOfStock: 'ESAURITO',
       selectSize: 'SELEZIONA TAGLIA',
