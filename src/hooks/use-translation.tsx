@@ -203,12 +203,12 @@ const translations: Record<Language, any> = {
     },
     settings: { 
       title: 'IMPOSTAZIONI', 
-      language: 'LINGUA APPLICAZIONE', 
+      language: 'LINGUA', 
       notifications: 'NOTIFICHE PUSH', 
       emailNotifications: 'NOTIFICHE EMAIL',
       account: 'ACCOUNT E SICUREZZA', 
       logout: 'ESCI', 
-      privacy: 'PRIVACY PROFILO',
+      privacy: 'PRIVACY',
       support: 'CENTRO ASSISTENZA',
       deleteAccount: 'ELIMINA ACCOUNT'
     },
