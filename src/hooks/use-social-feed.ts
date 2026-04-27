@@ -24,8 +24,9 @@ export interface Post {
   comments?: any[];
 }
 
-export const useSocialFeed = (userId?: string) => {
+export const useSocialFeed = (userId?: string, limit = 10) => {
   const queryClient = useQueryClient();
+  const [page, setPage] = useState(0);
 
   const { data: posts, isLoading, error, refetch } = useQuery({
     // Aggiungiamo userId alla queryKey per distinguere tra feed globale e profilo
