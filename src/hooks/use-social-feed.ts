@@ -24,13 +24,18 @@ export interface Post {
   comments?: any[];
 }
 
-export const useSocialFeed = (userId?: string, limit = 10) => {
-  const queryClient = useQueryClient();
-  const [page, setPage] = useState(0);
-
-  const { data: posts, isLoading, error, refetch } = useQuery({
-    queryKey: ['social-posts', userId, page], // La chiave ora include la pagina
-    queryFn: async () => {
+ const { 
+    data, 
+    fetchNextPage, 
+    hasNextPage, 
+    isFetchingNextPage, 
+    isLoading, 
+    error, 
+    refetch 
+  } = useInfiniteQuery({
+    queryKey: ['social-posts', userId],
+    initialPageParam: 0,
+    queryFn: async ({ pageParam = 0 }) => {
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
       
