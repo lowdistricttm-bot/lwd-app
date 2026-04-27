@@ -53,8 +53,7 @@ export interface Post {
         .order('created_at', { ascending: false })
         .range(from, to);
 
-       if (userId) {
-        query = query.eq('user_id', userId);
+       if (userId) query = query.eq('user_id', userId);
       }
 
       const { data: postsData, error: postsError } = await query;
