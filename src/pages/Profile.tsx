@@ -76,7 +76,8 @@ const Profile = () => {
   const [dbLastSeen, setDbLastSeen] = useState<string | null>(null);
   const [followModal, setFollowModal] = useState<{ type: 'followers' | 'following', isOpen: boolean } | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
-  
+ 
+ const targetUserId = userId || currentUser?.id; 
  const { posts: userPostsData, isLoading: loadingPosts, refetch: refetchPosts } = useSocialFeed(targetUserId);
   const targetUserId = userId || currentUser?.id;
   const isOwnProfile = !userId || userId === currentUser?.id;
