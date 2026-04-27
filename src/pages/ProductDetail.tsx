@@ -16,6 +16,22 @@ import { useCart } from '@/hooks/use-cart';
 import { motion } from 'framer-motion';
 
 const ProductDetail = () => {
+  const [api, setApi] = useState<CarouselApi>();
+const [current, setCurrent] = useState(0);
+
+// Effetto per aggiornare l'indice quando si scorre il carosello
+React.useEffect(() => {
+  if (!api) return;
+  
+  api.on("select", () => {
+    setCurrent(api.selectedScrollSnap());
+  });
+}, [api]);
+
+// Funzione per andare a un'immagine specifica cliccando sulla miniatura
+const scrollTo = (index: number) => {
+  api?.scrollTo(index);
+};
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
