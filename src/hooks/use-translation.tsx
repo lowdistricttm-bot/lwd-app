@@ -149,10 +149,10 @@ const translations: Record<Language, any> = {
         rejected: 'NEGATA',
         vehicle: 'VEICOLO CANDIDATO',
         notes: 'NOTE SELEZIONE',
-        pendingNote: 'LA TUA CANDIDATURA È IN FASE DI REVISIONE DALLO STAFF.',
-        approvedNote: 'CONGRATULAZIONI! IL TUO PROGETTO È STATO SELEZIONATO.',
-        rejectedNote: 'PURTROPPO IL TUO PROGETTO NON È STATO SELEZIONATO.',
-        cancel: 'ANNULLA CANDIDATURA',
+        pendingNote: 'LA TUA SELEZIONE È IN FASE DI REVISIONE DALLO STAFF.',
+        approvedNote: 'CONGRATULAZIONI! IL TUO VEICOLO È STATO SELEZIONATO.',
+        rejectedNote: 'PURTROPPO IL TUO VEICOLO NON È STATO SELEZIONATO.',
+        cancel: 'ANNULLA SELEZIONE',
         remove: 'RIMUOVI E RIPROVA'
       }
     },
