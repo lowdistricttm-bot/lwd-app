@@ -181,7 +181,7 @@ const translations: Record<Language, any> = {
       contactAdmin: 'CONTATTA STAFF',
       roles: {
         admin: 'ADMIN',
-        staff: 'MEMBRO DELLO STAFF',
+        staff: 'STAFF',
         support: 'SUPPORTO STAFF',
         member: 'MEMBRO UFFICIALE',
         subscriber: 'ISCRITTO',
