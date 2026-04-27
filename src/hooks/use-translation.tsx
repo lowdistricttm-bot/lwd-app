@@ -303,7 +303,7 @@ const translations: Record<Language, any> = {
       noProductsDesc: 'TRY DIFFERENT TERMS OR EXPLORE CATEGORIES.',
       showAll: 'SHOW ALL PRODUCTS',
       backToShop: 'BACK TO SHOP',
-      sale: 'OFFERTA',
+      sale: 'OFFERTA !',
       addToCart: 'ADD TO CART',
       outOfStock: 'OUT OF STOCK',
       selectSize: 'SELECT SIZE',
