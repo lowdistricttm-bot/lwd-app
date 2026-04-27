@@ -215,7 +215,7 @@ const translations: Record<Language, any> = {
     garage: { 
       title: 'GARAGE', 
       publicTitle: 'GARAGE',
-      subtitle: 'I TUOI PROGETTI STANCE', 
+      subtitle: 'I TUOI VEICOLI', 
       empty: 'NESSUN VEICOLO NEL GARAGE', 
       addBtn: 'AGGIUNGI', 
       active: 'PRINCIPALE', 
@@ -224,18 +224,18 @@ const translations: Record<Language, any> = {
       year: 'ANNO',
       suspension: 'ASSETTO',
       licensePlate: 'TARGA',
-      description: 'DESCRIZIONE PROGETTO',
+      description: 'DESCRIZIONE VEICOLO',
       photos: 'VEHICLE PHOTOS',
       save: 'SALVA VEICOLO',
       update: 'AGGIORNA VEICOLO'
     },
     auth: {
       title: 'AREA RISERVATA',
-      subtitle: 'ACCEDI CON LE TUE CREDENZIALI LOW DISTRETTO',
+      subtitle: 'ACCEDI CON LE TUE CREDENZIALI LOW DISTRICT',
       username: 'USERNAME',
       password: 'PASSWORD',
       forgot: 'SMARRITA?',
-      login: 'ACCEDI ORA',
+      login: 'ACCEDI',
       notMember: 'NON SEI ANCORA UN MEMBRO?',
       register: 'REGISTRATI SUL SITO UFFICIALE'
     },
