@@ -1,11 +1,6 @@
 "use client";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  type CarouselApi,
-} from "@/components/ui/carousel";
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { ChevronLeft, Loader2, Plus, Minus, ShoppingCart } from 'lucide-react';
@@ -14,24 +9,14 @@ import { cn } from '@/lib/utils';
 import { useWcProduct, useWcVariations } from '@/hooks/use-woocommerce';
 import { useCart } from '@/hooks/use-cart';
 import { motion } from 'framer-motion';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  type CarouselApi,
+} from "@/components/ui/carousel";
 
 const ProductDetail = () => {
-  const [api, setApi] = useState<CarouselApi>();
-const [current, setCurrent] = useState(0);
-
-// Effetto per aggiornare l'indice quando si scorre il carosello
-React.useEffect(() => {
-  if (!api) return;
-  
-  api.on("select", () => {
-    setCurrent(api.selectedScrollSnap());
-  });
-}, [api]);
-
-// Funzione per andare a un'immagine specifica cliccando sulla miniatura
-const scrollTo = (index: number) => {
-  api?.scrollTo(index);
-};
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
@@ -40,6 +25,21 @@ const scrollTo = (index: number) => {
   
   const [selectedVariation, setSelectedVariation] = useState<any>(null);
   const [quantity, setQuantity] = useState(1);
+  const [api, setApi] = useState<CarouselApi>();
+  const [current, setCurrent] = useState(0);
+
+  // Sincronizza l'indice delle miniature con lo scorrimento del carosello
+  useEffect(() => {
+    if (!api) return;
+    
+    api.on("select", () => {
+      setCurrent(api.selectedScrollSnap());
+    });
+  }, [api]);
+
+  const scrollTo = (index: number) => {
+    api?.scrollTo(index);
+  };
 
   if (isLoading) {
     return (
@@ -72,6 +72,7 @@ const scrollTo = (index: number) => {
 
   return (
     <div className="min-h-screen bg-transparent text-white pb-32">
+      <Navbar />
       <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] px-6 max-w-7xl mx-auto w-full">
         <button 
           onClick={() => navigate(-1)} 
@@ -80,54 +81,57 @@ const scrollTo = (index: number) => {
           <ChevronLeft size={14} /> Torna allo Shop
         </button>
 
-        {/* Contenitore Immagini e Miniature */}
-<div className="w-full md:w-1/2 space-y-6">
-  {/* Carosello Principale */}
-  <motion.div 
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    className="w-full aspect-[4/5] bg-zinc-900/40 backdrop-blur-md rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl relative group"
-  >
-    <Carousel setApi={setApi} className="w-full h-full">
-      <CarouselContent className="h-full ml-0">
-        {product.images.map((img: any, index: number) => (
-          <CarouselItem key={index} className="pl-0 h-full">
-            <img 
-              src={img.src} 
-              alt={`${product.name} ${index}`} 
-              className="w-full h-full object-cover" 
-            />
-          </CarouselItem>
-        ))}
-      </CarouselContent>
-    </Carousel>
-    
-    {/* Badge numero foto (opzionale) */}
-    <div className="absolute bottom-6 right-8 bg-black/50 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 text-[8px] font-black uppercase tracking-widest">
-      {current + 1} / {product.images.length}
-    </div>
-  </motion.div>
+        <div className="flex flex-col md:flex-row gap-12 items-start">
+          {/* Contenitore Immagini e Miniature */}
+          <div className="w-full md:w-1/2 space-y-6">
+            {/* Carosello Principale */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="w-full aspect-[4/5] bg-zinc-900/40 backdrop-blur-md rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl relative group"
+            >
+              <Carousel setApi={setApi} className="w-full h-full">
+                <CarouselContent className="h-full ml-0">
+                  {product.images.map((img: any, index: number) => (
+                    <CarouselItem key={index} className="pl-0 h-full">
+                      <img 
+                        src={img.src} 
+                        alt={`${product.name} ${index}`} 
+                        className="w-full h-full object-cover" 
+                      />
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+              </Carousel>
+              
+              {/* Badge numero foto */}
+              {product.images.length > 1 && (
+                <div className="absolute bottom-6 right-8 bg-black/50 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 text-[8px] font-black uppercase tracking-widest">
+                  {current + 1} / {product.images.length}
+                </div>
+              )}
+            </motion.div>
 
-  {/* Miniature Sotto */}
-  {product.images.length > 1 && (
-    <div className="flex flex-wrap gap-3 justify-center md:justify-start px-2">
-      {product.images.map((img: any, index: number) => (
-        <button
-          key={index}
-          onClick={() => scrollTo(index)}
-          className={cn(
-            "w-16 h-20 rounded-2xl overflow-hidden border-2 transition-all duration-300 bg-zinc-900",
-            current === index 
-              ? "border-white scale-110 shadow-lg shadow-white/10" 
-              : "border-transparent opacity-40 hover:opacity-100"
-          )}
-        >
-          <img src={img.src} className="w-full h-full object-cover" alt="thumbnail" />
-        </button>
-      ))}
-    </div>
-  )}
-</div>
+            {/* Miniature Sotto */}
+            {product.images.length > 1 && (
+              <div className="flex flex-wrap gap-3 justify-center md:justify-start px-2">
+                {product.images.map((img: any, index: number) => (
+                  <button
+                    key={index}
+                    onClick={() => scrollTo(index)}
+                    className={cn(
+                      "w-16 h-20 rounded-2xl overflow-hidden border-2 transition-all duration-300 bg-zinc-900",
+                      current === index 
+                        ? "border-white scale-110 shadow-lg shadow-white/10" 
+                        : "border-transparent opacity-40 hover:opacity-100"
+                    )}
+                  >
+                    <img src={img.src} className="w-full h-full object-cover" alt="thumbnail" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Info Prodotto */}
           <div className="w-full md:w-1/2 flex flex-col space-y-10 md:sticky md:top-[calc(4rem+env(safe-area-inset-top)+2rem)]">
