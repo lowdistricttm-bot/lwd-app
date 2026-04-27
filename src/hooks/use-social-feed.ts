@@ -144,15 +144,38 @@ export const useSocialFeed = (userId?: string, limit = 10) => {
     onError: (error: any) => showError(error.message)
   });
 
-  const toggleLike = useMutation({
-    mutationFn: async (postId: string) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Accedi per mettere like");
-      const { data: existingLike } = await supabase.from('likes').select('id').eq('post_id', postId).eq('user_id', user.id).maybeSingle();
-      if (existingLike) await supabase.from('likes').delete().eq('id', existingLike.id);
-      else await supabase.from('likes').insert([{ post_id: postId, user_id: user.id }]);
+  const updatePost = useMutation({
+    mutationFn: async ({ postId, content, files, removeImages }: { postId: string, content: string, files?: File[], removeImages?: boolean }) => {
+      let imageUrls: string[] = [];
+      if (files && files.length > 0) {
+        for (const file of files) imageUrls.push(await processAndUpload(file));
+      }
+      const updateData: any = { content };
+      if (imageUrls.length > 0) {
+        updateData.images = imageUrls;
+        updateData.image_url = imageUrls[0];
+      } else if (removeImages) {
+        updateData.images = [];
+        updateData.image_url = null;
+      }
+      const { error } = await supabase.from('posts').update(updateData).eq('id', postId);
+      if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['social-posts'] })
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['social-posts'] }); showSuccess("Post aggiornato!"); },
+    onError: (error: any) => showError(error.message)
+  });
+
+  const addComment = useMutation({
+    mutationFn: async ({ postId, content, parentId, file }: { postId: string, content: string, parentId?: string, file?: File }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Accedi per commentare");
+      let image_url = null;
+      if (file) image_url = await processAndUpload(file);
+      const { error } = await supabase.from('comments').insert([{ post_id: postId, user_id: user.id, content, parent_id: parentId, image_url }]);
+      if (error) throw error;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['social-posts'] }); showSuccess("Commento aggiunto!"); },
+    onError: (error: any) => showError(error.message)
   });
 
   const deletePost = useMutation({
@@ -165,7 +188,40 @@ export const useSocialFeed = (userId?: string, limit = 10) => {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['social-posts'] }); showSuccess("Post eliminato"); }
   });
 
-  return { posts, isLoading, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage, createPost, toggleLike, deletePost };
+  const deleteComment = useMutation({
+    mutationFn: async (commentId: string) => {
+      const { error } = await supabase.from('comments').delete().eq('id', commentId);
+      if (error) throw error;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['social-posts'] }); }
+  });
+
+  const toggleLike = useMutation({
+    mutationFn: async (postId: string) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Accedi per mettere like");
+      const { data: existingLike } = await supabase.from('likes').select('id').eq('post_id', postId).eq('user_id', user.id).maybeSingle();
+      if (existingLike) await supabase.from('likes').delete().eq('id', existingLike.id);
+      else await supabase.from('likes').insert([{ post_id: postId, user_id: user.id }]);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['social-posts'] })
+  });
+
+  return { 
+    posts, 
+    isLoading, 
+    error, 
+    refetch, 
+    fetchNextPage, 
+    hasNextPage, 
+    isFetchingNextPage, 
+    createPost, 
+    updatePost, 
+    addComment, 
+    deletePost, 
+    deleteComment, 
+    toggleLike 
+  };
 };
 
 export const usePost = (postId?: string) => {
