@@ -81,56 +81,59 @@ const ProductDetail = () => {
           <ChevronLeft size={14} /> Torna allo Shop
         </button>
 
-        {/* Contenitore Immagini e Miniature */}
-<div className="w-full md:w-1/2 space-y-6">
-  {/* Carosello Principale */}
-  <motion.div 
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    className="w-full aspect-square md:aspect-[4/5] bg-white rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl relative group"
-  >
-    <Carousel setApi={setApi} className="w-full h-full">
-      <CarouselContent className="h-full ml-0">
-        {product.images.map((img: any, index: number) => (
-          <CarouselItem key={index} className="pl-0 h-full flex items-center justify-center bg-white">
-            <img 
-              src={img.src} 
-              alt={`${product.name} ${index}`} 
-              className="w-full h-full object-contain p-4 md:p-8" 
-            />
-          </CarouselItem>
-        ))}
-      </CarouselContent>
-    </Carousel>
-    
-    {/* Badge numero foto - reso più visibile su sfondo bianco */}
-    {product.images.length > 1 && (
-      <div className="absolute bottom-6 right-8 bg-black/80 backdrop-blur-md px-3 py-1 rounded-full text-white text-[8px] font-black uppercase tracking-widest z-10">
-        {current + 1} / {product.images.length}
-      </div>
-    )}
-  </motion.div>
+        {/* CONTENITORE PRINCIPALE (FONDAMENTALE) */}
+        <div className="flex flex-col md:flex-row gap-12 items-start">
+          
+          {/* Contenitore Immagini e Miniature */}
+          <div className="w-full md:w-1/2 space-y-6">
+            {/* Carosello Principale */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="w-full aspect-square md:aspect-[4/5] bg-white rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl relative group"
+            >
+              <Carousel setApi={setApi} className="w-full h-full">
+                <CarouselContent className="h-full ml-0">
+                  {product.images.map((img: any, index: number) => (
+                    <CarouselItem key={index} className="pl-0 h-full flex items-center justify-center bg-white">
+                      <img 
+                        src={img.src} 
+                        alt={`${product.name} ${index}`} 
+                        className="w-full h-full object-contain p-4 md:p-8" 
+                      />
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+              </Carousel>
+              
+              {/* Badge numero foto */}
+              {product.images.length > 1 && (
+                <div className="absolute bottom-6 right-8 bg-black/80 backdrop-blur-md px-3 py-1 rounded-full text-white text-[8px] font-black uppercase tracking-widest z-10">
+                  {current + 1} / {product.images.length}
+                </div>
+              )}
+            </motion.div>
 
-  {/* Miniature Sotto */}
-  {product.images.length > 1 && (
-    <div className="flex flex-wrap gap-3 justify-center md:justify-start px-2">
-      {product.images.map((img: any, index: number) => (
-        <button
-          key={index}
-          onClick={() => scrollTo(index)}
-          className={cn(
-            "w-16 h-20 rounded-2xl overflow-hidden border-2 transition-all duration-300 bg-white",
-            current === index 
-              ? "border-white scale-110 shadow-lg shadow-white/20" 
-              : "border-transparent opacity-40 hover:opacity-100"
-          )}
-        >
-          <img src={img.src} className="w-full h-full object-contain p-1" alt="thumbnail" />
-        </button>
-      ))}
-    </div>
-  )}
-</div>
+            {/* Miniature Sotto */}
+            {product.images.length > 1 && (
+              <div className="flex flex-wrap gap-3 justify-center md:justify-start px-2">
+                {product.images.map((img: any, index: number) => (
+                  <button
+                    key={index}
+                    onClick={() => scrollTo(index)}
+                    className={cn(
+                      "w-16 h-20 rounded-2xl overflow-hidden border-2 transition-all duration-300 bg-white",
+                      current === index 
+                        ? "border-white scale-110 shadow-lg shadow-white/20" 
+                        : "border-transparent opacity-40 hover:opacity-100"
+                    )}
+                  >
+                    <img src={img.src} className="w-full h-full object-contain p-1" alt="thumbnail" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Info Prodotto */}
           <div className="w-full md:w-1/2 flex flex-col space-y-10 md:sticky md:top-[calc(4rem+env(safe-area-inset-top)+2rem)]">
