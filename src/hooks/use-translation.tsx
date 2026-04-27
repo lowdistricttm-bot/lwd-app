@@ -140,7 +140,7 @@ const translations: Record<Language, any> = {
         selectVehicle: 'SELEZIONA VEICOLO DAL GARAGE',
         interiorPhotos: 'FOTO INTERNI (MINIMO 3)',
         uploadPhotos: 'CARICA FOTO INTERNI',
-        submit: 'INVIA CANDIDATURA'
+        submit: 'INVIA SELEZIONE'
       },
       manageApp: {
         status: 'STATO',
