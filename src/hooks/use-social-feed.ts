@@ -29,8 +29,7 @@ export const useSocialFeed = (userId?: string, limit = 10) => {
   const [page, setPage] = useState(0);
 
   const { data: posts, isLoading, error, refetch } = useQuery({
-    // Aggiungiamo userId alla queryKey per distinguere tra feed globale e profilo
-    queryKey: ['social-posts', userId],
+    queryKey: ['social-posts', userId, page], // La chiave ora include la pagina
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
