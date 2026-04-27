@@ -124,7 +124,7 @@ const SharePostModal = ({ isOpen, onClose, postId, postImageUrl, postContent }: 
                   </div>
                 ))
               ) : (
-                <div className="text-center py-20 opacity-20"><Search size={48} className="mx-auto mb-4" /><p className="text-[10px] font-black uppercase tracking-widest">Cerca Prodotti</p></div>
+                <div className="text-center py-20 opacity-20"><Search size={48} className="mx-auto mb-4" /><p className="text-[10px] font-black uppercase tracking-widest">Cerca nel Distretto</p></div>
               )}
             </div>
           </motion.div>
