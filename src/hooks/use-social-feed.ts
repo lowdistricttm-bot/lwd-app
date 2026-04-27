@@ -34,6 +34,9 @@ export const useSocialFeed = (userId?: string, limit = 10) => {
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
       
+      const from = page * limit;
+      const to = from + limit - 1;
+      
       let query = supabase
         .from('posts')
         .select(`
