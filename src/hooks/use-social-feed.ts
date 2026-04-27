@@ -24,16 +24,17 @@ export interface Post {
   comments?: any[];
 }
 
-export const useSocialFeed = () => {
+export const useSocialFeed = (userId?: string) => {
   const queryClient = useQueryClient();
 
   const { data: posts, isLoading, error, refetch } = useQuery({
-    queryKey: ['social-posts'],
+    // Aggiungiamo userId alla queryKey per distinguere tra feed globale e profilo
+    queryKey: ['social-posts', userId],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
       
-      const { data: postsData, error: postsError } = await supabase
+      let query = supabase
         .from('posts')
         .select(`
           id, user_id, content, image_url, images, created_at,
@@ -41,8 +42,17 @@ export const useSocialFeed = () => {
           likes (user_id, profiles:user_id (username, avatar_url)),
           comments (id, post_id, user_id, content, created_at, parent_id, image_url, profiles:user_id (id, username, avatar_url))
         `)
-        .order('created_at', { ascending: false })
-        .limit(20);
+        .order('created_at', { ascending: false });
+
+      // SE c'è un userId, filtriamo per quell'utente specifico
+      if (userId) {
+        query = query.eq('user_id', userId);
+      } else {
+        // ALTRIMENTI limitiamo a 20 per il feed generale
+        query = query.limit(20);
+      }
+
+      const { data: postsData, error: postsError } = await query;
 
       if (postsError) {
         console.error("[SocialFeed] Errore query:", postsError);
@@ -51,7 +61,6 @@ export const useSocialFeed = () => {
       
       if (!postsData) return [];
 
-      // Deduplicazione per ID per sicurezza
       const uniquePosts = Array.from(new Map(postsData.map(p => [p.id, p])).values());
 
       return uniquePosts.map((post: any) => {
