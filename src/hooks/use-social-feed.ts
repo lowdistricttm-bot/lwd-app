@@ -39,7 +39,7 @@ export interface Post {
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
       
-      const from = page * limit;
+      const from = pageParam * limit;
       const to = from + limit - 1;
       
       let query = supabase
