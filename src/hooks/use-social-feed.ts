@@ -48,12 +48,8 @@ export const useSocialFeed = (userId?: string, limit = 10) => {
         .order('created_at', { ascending: false })
         .range(from, to);
 
-      // SE c'è un userId, filtriamo per quell'utente specifico
-      if (userId) {
+       if (userId) {
         query = query.eq('user_id', userId);
-      } else {
-        // ALTRIMENTI limitiamo a 20 per il feed generale
-        query = query.limit(20);
       }
 
       const { data: postsData, error: postsError } = await query;
