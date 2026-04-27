@@ -194,7 +194,7 @@ const translations: Record<Language, any> = {
       noConvs: 'NESSUNA CONVERSAZIONE ATTIVA.',
       newMessage: 'NUOVO MESSAGGIO',
       search: 'CERCA USERNAME...',
-      found: 'MEMBRI TROVATI',
+      found: 'UTENTI TROVATI',
       startChat: 'INIZIA LA CONVERSAZIONE',
       online: 'ONLINE',
       deleteConv: 'ELIMINA CONVERSAZIONE?',
