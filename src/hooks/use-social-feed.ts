@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { showError, showSuccess } from '@/utils/toast';
 import { compressImage, validateVideo } from '@/utils/media';
 import { uploadToCloudinary } from '@/utils/cloudinary';
