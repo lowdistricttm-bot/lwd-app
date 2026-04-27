@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FeedPost from '@/components/FeedPost';
 import CreatePostModal from '@/components/CreatePostModal';
@@ -26,7 +26,15 @@ import {
 const Bacheca = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { posts, isLoading, refetch } = useSocialFeed();
+  const { 
+    posts, 
+    isLoading, 
+    refetch, 
+    fetchNextPage, 
+    hasNextPage, 
+    isFetchingNextPage 
+  } = useSocialFeed();
+  
   const { role } = useAdmin();
   const { user, isLoading: authLoading } = useAuth();
   const { myRequest, sendRequest } = useRoleRequests();
@@ -34,10 +42,26 @@ const Bacheca = () => {
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isRestrictedOpen, setIsRestrictedOpen] = useState(false);
+  
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
+  // Infinite Scroll Observer
   useEffect(() => {
-    refetch();
-  }, [refetch]);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const isSubscriber = role === 'subscriber';
 
@@ -105,33 +129,50 @@ const Bacheca = () => {
           </div>
         ) : null}
 
-        {isLoading && !posts ? (
+        {isLoading && posts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Loader2 className="animate-spin text-zinc-500" size={40} />
             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{t.feed.syncing}</p>
           </div>
-        ) : posts && posts.length > 0 ? (
+        ) : posts.length > 0 ? (
           <div className="max-w-2xl mx-auto flex flex-col gap-6 w-full">
             {posts.map((post, index) => (
-  <div key={`post-${post.id}-${index}`}>
-    <FeedPost post={post} />
-    
-    {/* Banner Battaglia ogni 5 post */}
-    {index % 5 === 4 && (
-      <div 
-        onClick={() => navigate('/battles')}
-        className="my-6 bg-zinc-900 border border-white/10 rounded-[2rem] p-6 flex flex-col items-center text-center gap-4 cursor-pointer hover:border-yellow-500/50 transition-all"
-      >
-        <Swords size={32} className="text-yellow-500" />
-        <div>
-          <h4 className="text-lg font-black italic uppercase tracking-tighter">Low Battle Live</h4>
-          <p className="text-[9px] font-bold uppercase text-zinc-500 tracking-[0.2em]">Vota la tua preferita e guadagna +1 REP</p>
-        </div>
-        <Button className="bg-white text-black rounded-full h-10 px-8 font-black uppercase italic text-[10px]">Vota Ora</Button>
-      </div>
-    )}
-  </div>
-))}
+              <div key={`post-${post.id}-${index}`}>
+                <FeedPost post={post} />
+                
+                {/* Banner Battaglia ogni 5 post */}
+                {index % 5 === 4 && (
+                  <div 
+                    onClick={() => navigate('/battles')}
+                    className="my-6 bg-zinc-900 border border-white/10 rounded-[2rem] p-6 flex flex-col items-center text-center gap-4 cursor-pointer hover:border-yellow-500/50 transition-all"
+                  >
+                    <Swords size={32} className="text-yellow-500" />
+                    <div>
+                      <h4 className="text-lg font-black italic uppercase tracking-tighter">Low Battle Live</h4>
+                      <p className="text-[9px] font-bold uppercase text-zinc-500 tracking-[0.2em]">Vota la tua preferita e guadagna +1 REP</p>
+                    </div>
+                    <Button className="bg-white text-black rounded-full h-10 px-8 font-black uppercase italic text-[10px]">Vota Ora</Button>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {/* Elemento Sentinella per Infinite Scroll */}
+            <div ref={loadMoreRef} className="py-12 flex flex-col items-center justify-center gap-4">
+              {isFetchingNextPage ? (
+                <>
+                  <Loader2 className="animate-spin text-zinc-500" size={24} />
+                  <p className="text-[8px] font-black uppercase tracking-widest text-zinc-600 italic">Caricamento altri post...</p>
+                </>
+              ) : !hasNextPage && posts.length > 0 ? (
+                <div className="flex flex-col items-center gap-2 opacity-40">
+                  <div className="w-12 h-[1px] bg-zinc-800 mb-2" />
+                  <p className="text-[8px] font-black uppercase tracking-[0.3em] text-zinc-600 italic text-center">
+                    Hai visualizzato tutti i post del Distretto
+                  </p>
+                </div>
+              ) : null}
+            </div>
           </div>
         ) : user && !isLoading && (
           <div className="text-center py-20 opacity-20">
