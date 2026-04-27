@@ -148,7 +148,7 @@ const translations: Record<Language, any> = {
         approved: 'APPROVATA',
         rejected: 'NEGATA',
         vehicle: 'VEICOLO CANDIDATO',
-        notes: 'NOTE CANDIDATURA',
+        notes: 'NOTE SELEZIONE',
         pendingNote: 'LA TUA CANDIDATURA È IN FASE DI REVISIONE DALLO STAFF.',
         approvedNote: 'CONGRATULAZIONI! IL TUO PROGETTO È STATO SELEZIONATO.',
         rejectedNote: 'PURTROPPO IL TUO PROGETTO NON È STATO SELEZIONATO.',
