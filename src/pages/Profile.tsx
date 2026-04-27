@@ -245,8 +245,7 @@ useEffect(() => {
   tabs.push({ id: 'profile', label: t.profile.info, icon: User });
   if (isOwnProfile) tabs.push({ id: 'settings', label: t.profile.settings, icon: Settings });
 
- const userPosts = userPostsData || [];
-
+  const userPosts = userPostsData || [];
   return (
     <div className="min-h-full text-white flex flex-col bg-transparent">
       <main className="pt-[calc(4rem+env(safe-area-inset-top))] pb-32 flex-1 w-full">
