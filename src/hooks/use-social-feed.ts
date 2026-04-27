@@ -67,7 +67,7 @@ export interface Post {
 
       const uniquePosts = Array.from(new Map(postsData.map(p => [p.id, p])).values());
 
-      return uniquePosts.map((post: any) => {
+       return (postsData || []).map((post: any) => {
         const profile = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles;
         const likes_count = post.likes?.length || 0;
         const is_liked = user ? post.likes?.some((l: any) => l.user_id === user.id) : false;
