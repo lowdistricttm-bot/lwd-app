@@ -274,7 +274,20 @@ export const useSocialFeed = (userId?: string, limit = 10) => {
     }
   });
 
-  return { posts, isLoading, error, refetch, createPost, updatePost, deletePost, toggleLike, addComment, deleteComment };
+  return { 
+  posts, 
+  isLoading, 
+  error, 
+  refetch, 
+  createPost, 
+  updatePost, 
+  deletePost, 
+  toggleLike, 
+  addComment, 
+  deleteComment,
+  setPage, // Aggiungi questo
+  page     // Aggiungi questo
+};
 };
 
 export const usePost = (postId?: string) => {
