@@ -45,7 +45,8 @@ export const useSocialFeed = (userId?: string, limit = 10) => {
           likes (user_id, profiles:user_id (username, avatar_url)),
           comments (id, post_id, user_id, content, created_at, parent_id, image_url, profiles:user_id (id, username, avatar_url))
         `)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
       // SE c'è un userId, filtriamo per quell'utente specifico
       if (userId) {
