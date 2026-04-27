@@ -79,7 +79,6 @@ const Profile = () => {
  
  const targetUserId = userId || currentUser?.id; 
  const { posts: userPostsData, isLoading: loadingPosts, refetch: refetchPosts } = useSocialFeed(targetUserId);
-  const targetUserId = userId || currentUser?.id;
    const isOwnProfile = !userId || userId === currentUser?.id;
   const isOnline = isUserOnline(targetUserId);
   const lastSeen = getLastSeen(targetUserId) || dbLastSeen;
