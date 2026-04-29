@@ -108,13 +108,13 @@ const Discover = () => {
             
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
               <div className="relative flex-1 sm:w-80">
-                <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={10} />
+                <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={18} />
                 <input 
                   type="text"
                   placeholder="CERCA AUTO O MEMBRI..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-white/5 backdrop-blur-2xl border border-white/10 rounded-full h-14 pl-14 text-[11px] font-black uppercase tracking-widest focus:border-white/20 focus:bg-white/10 transition-all placeholder:text-zinc-700"
+                  className="w-full bg-white/5 backdrop-blur-2xl border border-white/10 rounded-full h-14 pl-14 text-[8px] font-black uppercase tracking-widest focus:border-white/20 focus:bg-white/10 transition-all placeholder:text-zinc-700"
                 />
                 {isLoading && <Loader2 className="absolute right-5 top-1/2 -translate-y-1/2 animate-spin text-zinc-600" size={16} />}
               </div>
