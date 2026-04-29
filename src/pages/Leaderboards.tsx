@@ -18,7 +18,9 @@ const Leaderboards = () => {
   const navigate = useNavigate();
   const { topScored, mostLiked, topReputation, isLoading } = useLeaderboards();
   const { toggleLike } = useGarage();
-  const [activeTab, setActiveTab] = useState<'score' | 'likes' | 'reputation'>('score');
+  
+  // Impostato 'reputation' come tab iniziale
+  const [activeTab, setActiveTab] = useState<'reputation' | 'score' | 'likes'>('reputation');
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
@@ -45,15 +47,28 @@ const Leaderboards = () => {
           <h1 className="text-3xl md:text-6xl font-black italic tracking-tighter uppercase">Classifiche</h1>
         </header>
 
+        {/* Tab Bar con ordine: Reputazione, Score, Like */}
         <div className="flex bg-zinc-900/50 backdrop-blur-md rounded-full p-1 mb-10 border border-white/5 max-w-4xl overflow-x-auto no-scrollbar">
-          <button onClick={() => setActiveTab('score')} className={cn("flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-full transition-all duration-500 whitespace-nowrap", activeTab === 'score' ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-zinc-300")}>
-            <Sparkles size={16} /> <span className="text-[10px] font-black uppercase tracking-widest italic">Score</span>
+          <button 
+            onClick={() => setActiveTab('reputation')} 
+            className={cn("flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-full transition-all duration-500 whitespace-nowrap", 
+            activeTab === 'reputation' ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-zinc-300")}
+          >
+            <Users size={16} /> <span className="text-[10px] font-black uppercase tracking-widest italic">Reputazione</span>
           </button>
-          <button onClick={() => setActiveTab('likes')} className={cn("flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-full transition-all duration-500 whitespace-nowrap", activeTab === 'likes' ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-zinc-300")}>
-            <Heart size={16} /> <span className="text-[10px] font-black uppercase tracking-widest italic">Like</span>
+          <button 
+            onClick={() => setActiveTab('score')} 
+            className={cn("flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-full transition-all duration-500 whitespace-nowrap", 
+            activeTab === 'score' ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-zinc-300")}
+          >
+            <Sparkles size={16} /> <span className="text-[10px] font-black uppercase tracking-widest italic">Top Low</span>
           </button>
-          <button onClick={() => setActiveTab('reputation')} className={cn("flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-full transition-all duration-500 whitespace-nowrap", activeTab === 'reputation' ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-zinc-300")}>
-            <Users size={16} /> <span className="text-[10px] font-black uppercase tracking-widest italic">Rep</span>
+          <button 
+            onClick={() => setActiveTab('likes')} 
+            className={cn("flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-full transition-all duration-500 whitespace-nowrap", 
+            activeTab === 'likes' ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-zinc-300")}
+          >
+            <Heart size={16} /> <span className="text-[10px] font-black uppercase tracking-widest italic">Community</span>
           </button>
         </div>
 
