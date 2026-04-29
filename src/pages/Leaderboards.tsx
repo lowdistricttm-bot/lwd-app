@@ -54,21 +54,21 @@ const Leaderboards = () => {
             className={cn("flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-full transition-all duration-500 whitespace-nowrap", 
             activeTab === 'reputation' ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-zinc-300")}
           >
-            <Users size={16} /> <span className="text-[10px] font-black uppercase tracking-widest italic">Reputazione</span>
+            <Users size={16} /> <span className="text-[10px] font-black uppercase tracking-widest italic">Rep</span>
           </button>
           <button 
             onClick={() => setActiveTab('score')} 
             className={cn("flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-full transition-all duration-500 whitespace-nowrap", 
             activeTab === 'score' ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-zinc-300")}
           >
-            <Sparkles size={16} /> <span className="text-[10px] font-black uppercase tracking-widest italic">Top Low</span>
+            <Sparkles size={16} /> <span className="text-[10px] font-black uppercase tracking-widest italic">Score</span>
           </button>
           <button 
             onClick={() => setActiveTab('likes')} 
             className={cn("flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-full transition-all duration-500 whitespace-nowrap", 
             activeTab === 'likes' ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-zinc-300")}
           >
-            <Heart size={16} /> <span className="text-[10px] font-black uppercase tracking-widest italic">Community</span>
+            <Heart size={16} /> <span className="text-[10px] font-black uppercase tracking-widest italic">Like</span>
           </button>
         </div>
 
