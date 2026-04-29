@@ -67,13 +67,13 @@ const AdminDashboard = () => {
       desc: "Invia annunci a tutta la community",
       icon: Bell,
       action: () => setIsNotifModalOpen(true),
-      show: isAdmin || isStaff
+      show: isAdmin === true
     },
     {
       title: "Gestione Selezioni",
       desc: isAdmin || isStaff 
-        ? "Approva o rifiuta le candidature" 
-        : "Visualizza e vota le candidature agli eventi",
+        ? "Approva o rifiuta le selezioni" 
+        : "Visualizza e vota le selezioni agli eventi",
       icon: ClipboardCheck,
       action: () => navigate('/admin/applications'),
       show: true,
@@ -99,14 +99,14 @@ const AdminDashboard = () => {
       desc: "Premia i vincitori degli eventi con badge digitali",
       icon: Trophy,
       action: () => setIsTrophyModalOpen(true),
-      show: isAdmin || isStaff
+      show: isAdmin === true
     },
     {
       title: "Mystery Box",
       desc: "Configura la box mensile a stock limitato",
       icon: Gift,
       action: () => setIsMysteryModalOpen(true),
-      show: isAdmin || isStaff
+      show: isAdmin === true
     },
     {
       title: "Email",
