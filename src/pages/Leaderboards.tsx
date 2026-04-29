@@ -53,7 +53,7 @@ const Leaderboards = () => {
             <Heart size={16} /> <span className="text-[10px] font-black uppercase tracking-widest italic">Like</span>
           </button>
           <button onClick={() => setActiveTab('reputation')} className={cn("flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-full transition-all duration-500 whitespace-nowrap", activeTab === 'reputation' ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-zinc-300")}>
-            <Users size={16} /> <span className="text-[10px] font-black uppercase tracking-widest italic">Reputazione</span>
+            <Users size={16} /> <span className="text-[10px] font-black uppercase tracking-widest italic">Rep</span>
           </button>
         </div>
 
