@@ -251,7 +251,7 @@ const Discover = () => {
           <section className="mb-14">
             <div className="flex justify-between items-end mb-6">
               <h3 className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 flex items-center gap-2 italic">
-                <Star size={12} className="text-blue-500" /> Top 5 Low Reputation
+                <Star size={12} className="text-blue-500" /> Top 5 Low Rep
               </h3>
               <Link to="/leaderboards?tab=reputation" className="text-[6px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors flex items-center gap-1">
                 Classifica Completa <ArrowRight size={10} />
