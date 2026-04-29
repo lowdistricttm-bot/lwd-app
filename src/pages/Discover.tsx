@@ -239,27 +239,36 @@ const Discover = () => {
             </div>
           </section>
           {/* Top 5 Low Reputation */}
-<section className="space-y-4">
-  <div className="flex items-center justify-between px-4">
-    <div className="flex items-center gap-2">
-      {/* Puoi usare un'icona come Star o Award di lucide-react */}
-      <Star className="w-5 h-5 text-blue-500" /> 
-      <h2 className="text-lg font-bold tracking-tighter italic uppercase">
-        Top 5 Low Reputation
-      </h2>
+{!debouncedSearch && topReputation && topReputation.length > 0 && (
+  <section className="mb-14">
+    <div className="flex justify-between items-end mb-6">
+      <h3 className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 flex items-center gap-2 italic">
+        <Star size={12} className="text-blue-500" /> Top 5 Low Reputation
+      </h3>
+      <Link to="/leaderboards?tab=reputation" className="text-[6px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors flex items-center gap-1">
+        Classifica Completa <ArrowRight size={10} />
+      </Link>
     </div>
-    <Link 
-      to="/leaderboards?tab=reputation" 
-      className="text-xs font-bold tracking-widest uppercase text-muted-foreground flex items-center gap-1"
-    >
-      Classifica completa <ArrowRight className="w-3 h-3" />
-    </Link>
-  </div>
-  <div className="px-4">
-    <VehicleCarousel vehicles={leaderboards?.topReputation?.slice(0, 5) || []} />
-  </div>
-</section>
-        )}
+    <div className="embla overflow-hidden cursor-grab active:cursor-grabbing" ref={emblaRepRef}>
+      <div className="embla__container flex gap-4">
+        {topReputation.slice(0, 5).map((v, i) => (
+          <div key={`rep-${v.id}-${i}`} onClick={() => handleOpenProject(v)} className="embla__slide flex-[0_0_70%] sm:flex-[0_0_40%] md:flex-[0_0_25%] min-w-0 bg-white/5 backdrop-blur-xl border border-white/5 rounded-[2rem] overflow-hidden group cursor-pointer">
+            <div className="aspect-video relative overflow-hidden">
+              <img src={v.images?.[0] || v.image_url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-700 group-hover:scale-110" alt="" />
+              <div className="absolute top-3 left-3">
+                <RankBadge rank={i + 1} type="score" /> {/* O un nuovo tipo se disponibile */}
+              </div>
+            </div>
+            <div className="p-4">
+              <p className="text-[10px] font-black uppercase italic truncate">{v.brand} {v.model}</p>
+              <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest mt-1">@{v.profiles?.username}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+)}
 
         <AnimatePresence>
           {debouncedSearch && users && users.length > 0 && (
