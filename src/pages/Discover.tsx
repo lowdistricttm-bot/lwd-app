@@ -108,7 +108,7 @@ const Discover = () => {
             
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
               <div className="relative flex-1 sm:w-80">
-                <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={18} />
+                <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={10} />
                 <input 
                   type="text"
                   placeholder="CERCA AUTO O MEMBRI..."
