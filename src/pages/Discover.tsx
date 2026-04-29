@@ -39,7 +39,7 @@ const Discover = () => {
 
   const [emblaScoreRef] = useEmblaCarousel({ align: 'start', containScroll: 'trimSnaps', dragFree: true });
   const [emblaLikeRef] = useEmblaCarousel({ align: 'start', containScroll: 'trimSnaps', dragFree: true });
-
+const [emblaRepRef] = useEmblaCarousel({ align: 'start', containScroll: 'trimSnaps', dragFree: true });
   const stanceId = searchParams.get('stance_id');
 
   useEffect(() => {
