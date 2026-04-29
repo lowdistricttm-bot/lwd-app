@@ -8,7 +8,11 @@ import { useGarage, Vehicle } from '@/hooks/use-garage';
 import { useAdmin } from '@/hooks/use-admin';
 import { usePresence } from '@/hooks/use-presence';
 import { useLeaderboards } from '@/hooks/use-leaderboards';
-import { Loader2, Car, Search, LayoutGrid, StretchHorizontal, User, ChevronRight, ShieldCheck, Sparkles, Users, Heart, Gauge, Calendar, CreditCard, Trophy, ArrowRight, Star } from 'lucide-react';
+import { 
+  Loader2, Car, Search, LayoutGrid, StretchHorizontal, User, 
+  ChevronRight, ShieldCheck, Sparkles, Users, Heart, Gauge, 
+  Calendar, CreditCard, Trophy, ArrowRight, Star 
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import VehicleDetailModal from '@/components/VehicleDetailModal';
@@ -25,8 +29,8 @@ const Discover = () => {
   const { t } = useTranslation();
   const { canVote } = useAdmin();
   const { isUserOnline } = usePresence();
-    
-  const { topScored, mostLiked, topReputation } = useLeaderboards();
+  const { topScored, mostLiked, topReputation, isLoading: leaderboardsLoading } = useLeaderboards();
+  
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -36,7 +40,8 @@ const Discover = () => {
 
   const [emblaScoreRef] = useEmblaCarousel({ align: 'start', containScroll: 'trimSnaps', dragFree: true });
   const [emblaLikeRef] = useEmblaCarousel({ align: 'start', containScroll: 'trimSnaps', dragFree: true });
-const [emblaRepRef] = useEmblaCarousel({ align: 'start', containScroll: 'trimSnaps', dragFree: true });
+  const [emblaRepRef] = useEmblaCarousel({ align: 'start', containScroll: 'trimSnaps', dragFree: true });
+
   const stanceId = searchParams.get('stance_id');
 
   useEffect(() => {
@@ -144,7 +149,9 @@ const [emblaRepRef] = useEmblaCarousel({ align: 'start', containScroll: 'trimSna
             </div>
           </div>
         </header>
-  <DailyWinner />
+
+        <DailyWinner />
+
         {!debouncedSearch && newMembers && newMembers.length > 0 && (
           <section className="mb-14">
             <h3 className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 flex items-center gap-2 italic mb-6">
@@ -238,71 +245,38 @@ const [emblaRepRef] = useEmblaCarousel({ align: 'start', containScroll: 'trimSna
               </div>
             </div>
           </section>
-          {/* Top 5 Low Reputation */}
-{!debouncedSearch && mostLiked && mostLiked.length > 0 && (
-  <>
-    <section className="mb-14">
-      <div className="flex justify-between items-end mb-6">
-        <h3 className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 flex items-center gap-2 italic">
-          <Heart size={12} className="text-red-500" /> Top 5 Like Score
-        </h3>
-        <Link to="/leaderboards" className="text-[6px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors flex items-center gap-1">
-          Classifica Completa <ArrowRight size={10} />
-        </Link>
-      </div>
-      <div className="embla overflow-hidden cursor-grab active:cursor-grabbing" ref={emblaLikeRef}>
-        <div className="embla__container flex gap-4">
-          {mostLiked.slice(0, 5).map((v, i) => (
-            <div key={`liked-${v.id}-${i}`} onClick={() => handleOpenProject(v)} className="embla__slide flex-[0_0_70%] sm:flex-[0_0_40%] md:flex-[0_0_25%] min-w-0 bg-white/5 backdrop-blur-xl border border-white/5 rounded-[2rem] overflow-hidden group cursor-pointer">
-              <div className="aspect-video relative overflow-hidden">
-                <img src={v.images?.[0] || v.image_url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-700 group-hover:scale-110" alt="" />
-                <div className="absolute top-3 left-3">
-                  <RankBadge rank={i + 1} type="likes" />
-                </div>
-              </div>
-              <div className="p-4">
-                <p className="text-[10px] font-black uppercase italic truncate">{v.brand} {v.model}</p>
-                <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest mt-1">@{v.profiles?.username}</p>
+        )}
+
+        {!debouncedSearch && topReputation && topReputation.length > 0 && (
+          <section className="mb-14">
+            <div className="flex justify-between items-end mb-6">
+              <h3 className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 flex items-center gap-2 italic">
+                <Star size={12} className="text-blue-500" /> Top 5 Low Reputation
+              </h3>
+              <Link to="/leaderboards?tab=reputation" className="text-[6px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors flex items-center gap-1">
+                Classifica Completa <ArrowRight size={10} />
+              </Link>
+            </div>
+            <div className="embla overflow-hidden cursor-grab active:cursor-grabbing" ref={emblaRepRef}>
+              <div className="embla__container flex gap-4">
+                {topReputation.slice(0, 5).map((v, i) => (
+                  <div key={`rep-${v.id}-${i}`} onClick={() => handleOpenProject(v)} className="embla__slide flex-[0_0_70%] sm:flex-[0_0_40%] md:flex-[0_0_25%] min-w-0 bg-white/5 backdrop-blur-xl border border-white/5 rounded-[2rem] overflow-hidden group cursor-pointer">
+                    <div className="aspect-video relative overflow-hidden">
+                      <img src={v.images?.[0] || v.image_url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-700 group-hover:scale-110" alt="" />
+                      <div className="absolute top-3 left-3">
+                        <RankBadge rank={i + 1} type="score" />
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <p className="text-[10px] font-black uppercase italic truncate">{v.brand} {v.model}</p>
+                      <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest mt-1">@{v.profiles?.username}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
-      </div>
-    </section>
-
-    {/* Top 5 Low Reputation */}
-    {topReputation && topReputation.length > 0 && (
-      <section className="mb-14">
-        <div className="flex justify-between items-end mb-6">
-          <h3 className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 flex items-center gap-2 italic">
-            <Star size={12} className="text-blue-500" /> Top 5 Low Reputation
-          </h3>
-          <Link to="/leaderboards?tab=reputation" className="text-[6px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors flex items-center gap-1">
-            Classifica Completa <ArrowRight size={10} />
-          </Link>
-        </div>
-        <div className="embla overflow-hidden cursor-grab active:cursor-grabbing" ref={emblaRepRef}>
-          <div className="embla__container flex gap-4">
-            {topReputation.slice(0, 5).map((v, i) => (
-              <div key={`rep-${v.id}-${i}`} onClick={() => handleOpenProject(v)} className="embla__slide flex-[0_0_70%] sm:flex-[0_0_40%] md:flex-[0_0_25%] min-w-0 bg-white/5 backdrop-blur-xl border border-white/5 rounded-[2rem] overflow-hidden group cursor-pointer">
-                <div className="aspect-video relative overflow-hidden">
-                  <img src={v.images?.[0] || v.image_url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-700 group-hover:scale-110" alt="" />
-                  <div className="absolute top-3 left-3">
-                    <RankBadge rank={i + 1} type="score" />
-                  </div>
-                </div>
-                <div className="p-4">
-                  <p className="text-[10px] font-black uppercase italic truncate">{v.brand} {v.model}</p>
-                  <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest mt-1">@{v.profiles?.username}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-    )}
-  </>
-)}
+          </section>
+        )}
 
         <AnimatePresence>
           {debouncedSearch && users && users.length > 0 && (
