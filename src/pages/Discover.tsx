@@ -25,8 +25,7 @@ const Discover = () => {
   const { t } = useTranslation();
   const { canVote } = useAdmin();
   const { isUserOnline } = usePresence();
-  const { topScored, mostLiked } = useLeaderboards();
-  
+    
   const { topScored, mostLiked, topReputation } = useLeaderboards();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
