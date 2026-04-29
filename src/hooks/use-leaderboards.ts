@@ -55,19 +55,36 @@ export const useLeaderboards = () => {
     }
   });
 
-  // 3. Classifica per Reputazione
+  // 3. Classifica per Reputazione (Recupera i veicoli degli utenti con più REP)
   const { data: topReputation, isLoading: loadingRep } = useQuery({
-  queryKey: ['leaderboard-reputation'],
-  queryFn: async () => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .order('reputation', { ascending: false })
-      .limit(10);
-    if (error) throw error;
-    return data;
-  }
-});
+    queryKey: ['leaderboard-reputation-vehicles'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('vehicles')
+        .select(`
+          *,
+          profiles!inner (
+            id,
+            username,
+            avatar_url,
+            role,
+            is_admin,
+            reputation
+          ),
+          vehicle_likes (user_id),
+          user_trophies (id, trophies (*))
+        `)
+        .order('profiles(reputation)', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      
+      return (data || []).map((v: any) => ({
+        ...v,
+        likes_count: v.vehicle_likes?.length || 0
+      })) as (Vehicle & { likes_count: number })[];
+    }
+  });
 
   return { 
     topScored, 
