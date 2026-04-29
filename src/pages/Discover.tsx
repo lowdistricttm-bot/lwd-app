@@ -238,6 +238,27 @@ const Discover = () => {
               </div>
             </div>
           </section>
+          {/* Top 5 Low Reputation */}
+<section className="space-y-4">
+  <div className="flex items-center justify-between px-4">
+    <div className="flex items-center gap-2">
+      {/* Puoi usare un'icona come Star o Award di lucide-react */}
+      <Star className="w-5 h-5 text-blue-500" /> 
+      <h2 className="text-lg font-bold tracking-tighter italic uppercase">
+        Top 5 Low Reputation
+      </h2>
+    </div>
+    <Link 
+      to="/leaderboards?tab=reputation" 
+      className="text-xs font-bold tracking-widest uppercase text-muted-foreground flex items-center gap-1"
+    >
+      Classifica completa <ArrowRight className="w-3 h-3" />
+    </Link>
+  </div>
+  <div className="px-4">
+    <VehicleCarousel vehicles={leaderboards?.topReputation?.slice(0, 5) || []} />
+  </div>
+</section>
         )}
 
         <AnimatePresence>
