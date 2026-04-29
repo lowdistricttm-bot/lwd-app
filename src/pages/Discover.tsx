@@ -184,7 +184,7 @@ const Discover = () => {
               <h3 className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 flex items-center gap-2 italic">
                 <Trophy size={12} className="text-yellow-500" /> Top 5 Low Score
               </h3>
-              <Link to="/leaderboards" className="text-[8px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors flex items-center gap-1">
+              <Link to="/leaderboards" className="text-[6px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors flex items-center gap-1">
                 Classifica Completa <ArrowRight size={10} />
               </Link>
             </div>
