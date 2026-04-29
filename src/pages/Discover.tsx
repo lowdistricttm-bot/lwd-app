@@ -112,7 +112,7 @@ const Discover = () => {
             </div>
             
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-              <div className="relative flex-1 sm:w-80">
+              <div className="relative flex-1 sm:w-96">
                 <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600" size={18} />
                 <input 
                   type="text"
@@ -122,29 +122,6 @@ const Discover = () => {
                   className="w-full bg-white/5 backdrop-blur-2xl border border-white/10 rounded-full h-14 pl-14 text-[11px] font-black uppercase tracking-widest focus:border-white/20 focus:bg-white/10 transition-all placeholder:text-zinc-700"
                 />
                 {isLoading && <Loader2 className="absolute right-5 top-1/2 -translate-y-1/2 animate-spin text-zinc-600" size={16} />}
-              </div>
-
-              <div className="flex bg-white/5 backdrop-blur-2xl border border-white/10 rounded-full p-1 h-14">
-                <button 
-                  onClick={() => setViewMode('grid')}
-                  className={cn(
-                    "flex-1 sm:w-14 flex items-center justify-center gap-2 px-4 rounded-full transition-all duration-500", 
-                    viewMode === 'grid' ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-white"
-                  )}
-                >
-                  <LayoutGrid size={18} />
-                  <span className="text-[9px] font-black uppercase tracking-widest sm:hidden">Griglia</span>
-                </button>
-                <button 
-                  onClick={() => setViewMode('list')}
-                  className={cn(
-                    "flex-1 sm:w-14 flex items-center justify-center gap-2 px-4 rounded-full transition-all duration-500", 
-                    viewMode === 'list' ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-white"
-                  )}
-                >
-                  <StretchHorizontal size={18} />
-                  <span className="text-[9px] font-black uppercase tracking-widest sm:hidden">Lista</span>
-                </button>
               </div>
             </div>
           </div>
@@ -322,10 +299,31 @@ const Discover = () => {
         </AnimatePresence>
 
         <section>
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-8">
             <h3 className="text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 flex items-center gap-2 italic">
               <Car size={12} /> {debouncedSearch ? "Progetti Corrispondenti" : "Ultimi Veicoli Caricati"}
             </h3>
+
+            <div className="flex bg-white/5 backdrop-blur-2xl border border-white/10 rounded-full p-1 h-10">
+              <button 
+                onClick={() => setViewMode('grid')}
+                className={cn(
+                  "w-10 flex items-center justify-center rounded-full transition-all duration-500", 
+                  viewMode === 'grid' ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-white"
+                )}
+              >
+                <LayoutGrid size={14} />
+              </button>
+              <button 
+                onClick={() => setViewMode('list')}
+                className={cn(
+                  "w-10 flex items-center justify-center rounded-full transition-all duration-500", 
+                  viewMode === 'list' ? "bg-white text-black shadow-xl" : "text-zinc-500 hover:text-white"
+                )}
+              >
+                <StretchHorizontal size={14} />
+              </button>
+            </div>
           </div>
 
           {isLoading ? (
