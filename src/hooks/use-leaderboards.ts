@@ -56,14 +56,19 @@ export const useLeaderboards = () => {
   });
 
   // 3. Classifica per Reputazione (Attività)
-  const { data: topReputation, isLoading: loadingRep } = useQuery({
-    queryKey: ['leaderboard-reputation'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, username, avatar_url, role, is_admin, reputation')
-        .order('reputation', { ascending: false })
-        .limit(10);
+  const { data: reputationData } = await supabase
+  .from('vehicles')
+  .select(`
+    *,
+    profiles!inner (
+      id,
+      username,
+      avatar_url,
+      reputation
+    )
+  `)
+  .order('profiles(reputation)', { ascending: false }) // Ordina per reputazione del profilo
+  .limit(5);
 
       if (error) throw error;
       return data || [];
