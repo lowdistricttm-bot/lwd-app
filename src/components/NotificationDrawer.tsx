@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Bell, Heart, MessageSquare, ClipboardCheck, User, Loader2, Trash2, Calendar, Car, UserPlus, ShieldCheck, Megaphone, AlertTriangle, Zap, MapPin, Truck, Mail } from 'lucide-react';
+import { X, Bell, Heart, MessageSquare, ClipboardCheck, User, Loader2, Trash2, Calendar, Car, UserPlus, ShieldCheck, Megaphone, AlertTriangle, Zap, MapPin, Truck, Mail, CloudSun } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/use-notifications';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { formatDistanceToNow } from 'date-fns';
@@ -33,7 +33,6 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
       return;
     }
 
-    // Navigazione specifica per notifiche staff su candidature
     if (n.type === 'admin_info' && n.application_id) {
       navigate('/admin/applications');
       return;
@@ -63,6 +62,17 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
   };
 
   const getAdminStyles = (n: Notification) => {
+    // Caso specifico per il meteo
+    if (n.type === 'weather_alert') {
+      return { 
+        icon: CloudSun, 
+        color: 'text-sky-400', 
+        bg: 'bg-sky-500/10', 
+        border: 'border-sky-500/20', 
+        label: 'METEO' 
+      };
+    }
+
     if (n.type === 'admin_info' && n.application_id) {
       return { 
         icon: ClipboardCheck, 
