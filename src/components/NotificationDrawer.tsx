@@ -64,8 +64,8 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
     if (n.type === 'weather_alert') {
       return { 
         icon: Sun, 
-        color: 'text-sky-400', 
-        bg: 'bg-sky-500/10', 
+        color: 'text-yellow-400', 
+        bg: 'bg-yellow-500/10', 
         border: 'border-sky-500/20', 
         label: 'METEO' 
       };
