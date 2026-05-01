@@ -268,4 +268,3 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
 };
 
 export default NotificationDrawer;
-```<dyad-set-chat-summary summary="Correzione errori TypeScript e pulizia codice NotificationDrawer"/>
