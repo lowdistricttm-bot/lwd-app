@@ -61,7 +61,6 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
   };
 
   const getAdminStyles = (n: Notification) => {
-    // Ora TypeScript non darà più errore perché weather_alert è nel tipo Notification
     if (n.type === 'weather_alert') {
       return { 
         icon: CloudSun, 
@@ -269,4 +268,4 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
 };
 
 export default NotificationDrawer;
-```<dyad-set-chat-summary summary="Soluzione definitiva errore TypeScript tipo notifica"/>
+```<dyad-set-chat-summary summary="Correzione errori TypeScript e pulizia codice NotificationDrawer"/>
