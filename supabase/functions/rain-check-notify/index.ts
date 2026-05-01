@@ -42,11 +42,11 @@ serve(async (req) => {
 
         // Se il meteo è perfetto (prob < 15% per oggi e domani)
         if (todayProb < 15 && tomorrowProb < 15) {
-          // Inserisci notifica nel DB
+          // Inserisci notifica nel DB con il nuovo tipo 'weather_alert'
           await supabaseAdmin.from('notifications').insert({
             user_id: profile.id,
-            actor_id: profile.id, // Notifica di sistema
-            type: 'weather_alert', // Usiamo admin_info per visibilità, o creiamo un tipo custom
+            actor_id: profile.id, 
+            type: 'weather_alert', 
             content: `District Alert: Meteo perfetto a ${profile.city}! È il momento ideale per lavare l'auto e far splendere il tuo progetto.`
           });
         }
