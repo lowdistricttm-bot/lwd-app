@@ -66,7 +66,7 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
         icon: Sun, 
         color: 'text-yellow-400', 
         bg: 'bg-yellow-500/10', 
-        border: 'border-sky-500/20', 
+        border: 'border-yellow-500/20', 
         label: 'METEO' 
       };
     }
