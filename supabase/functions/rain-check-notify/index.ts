@@ -46,7 +46,7 @@ serve(async (req) => {
           await supabaseAdmin.from('notifications').insert({
             user_id: profile.id,
             actor_id: profile.id, // Notifica di sistema
-            type: 'admin_info', // Usiamo admin_info per visibilità, o creiamo un tipo custom
+            type: 'weather_alert', // Usiamo admin_info per visibilità, o creiamo un tipo custom
             content: `District Alert: Meteo perfetto a ${profile.city}! È il momento ideale per lavare l'auto e far splendere il tuo progetto.`
           });
         }
