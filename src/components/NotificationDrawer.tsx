@@ -63,7 +63,7 @@ const NotificationDrawer = ({ isOpen, onClose }: NotificationDrawerProps) => {
   const getAdminStyles = (n: Notification) => {
     if (n.type === 'weather_alert') {
       return { 
-        icon: CloudSun, 
+        icon: Sun, 
         color: 'text-sky-400', 
         bg: 'bg-sky-500/10', 
         border: 'border-sky-500/20', 
