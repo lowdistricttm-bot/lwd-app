@@ -1,19 +1,15 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight, Trash2, Loader2, Volume2, VolumeX, Send, Heart, Eye, User, Star, AtSign, Music } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Loader2, Volume2, VolumeX, Send, Music } from 'lucide-react';
 import { useStories, useStoryViews } from '@/hooks/use-stories';
 import { useHighlights } from '@/hooks/use-highlights';
 import { useMessages } from '@/hooks/use-messages';
 import { useAdmin } from '@/hooks/use-admin';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { Input } from './ui/input';
-import { showSuccess, showError } from '@/utils/toast';
-import ShareStoryModal from './ShareStoryModal';
-import HighlightModal from './HighlightModal';
-import AddMentionModal from './AddMentionModal';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/use-translation';
@@ -29,24 +25,18 @@ let globalMuteState = false;
 
 const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: StoryViewerProps) => {
   const navigate = useNavigate();
-  const { t, language } = useTranslation();
+  const { t } = useTranslation();
   const { role } = useAdmin();
   const [userIndex, setUserIndex] = useState(initialUserIndex);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [isMuted, setIsMuted] = useState(globalMuteState);
   const [replyText, setReplyText] = useState('');
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [isHighlightModalOpen, setIsHighlightModalOpen] = useState(false);
-  const [isMentionModalOpen, setIsMentionModalOpen] = useState(false);
-  const [showViewers, setShowViewers] = useState(false);
   const [isMediaLoading, setIsMediaLoading] = useState(true);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const storyAudioRef = useRef<HTMLAudioElement | null>(null);
-  const { deleteStory, recordView, toggleStoryLike } = useStories();
-  const { removeFromHighlight } = useHighlights(currentUserId || undefined);
-  const { sendMessage } = useMessages(allStories[userIndex]?.user_id);
+  const { recordView } = useStories();
   
   useBodyLock(true);
 
@@ -56,8 +46,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   const isVideo = currentStory?.image_url.match(/\.(mp4|webm|ogg|mov)$/i) || currentStory?.image_url.includes('video');
   const isOwner = currentUserId !== null && currentUserId === userStories?.user_id;
   const isHighlight = userStories?.role === 'highlight';
-
-  const { data: views } = useStoryViews(isOwner && !isHighlight ? currentStory?.id : null);
 
   // --- GESTIONE AUDIO MUSICA ---
   useEffect(() => {
@@ -116,7 +104,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   }, [currentIndex, userIndex, allStories]);
 
   useEffect(() => {
-    if (isVideo || isShareModalOpen || isHighlightModalOpen || isMentionModalOpen || showViewers || !currentStory || isMediaLoading) return;
+    if (isVideo || !currentStory || isMediaLoading) return;
     const duration = 10000;
     const interval = 50; 
     const increment = (interval / duration) * 100;
@@ -127,14 +115,14 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
       });
     }, interval);
     return () => clearInterval(timer);
-  }, [userIndex, currentIndex, isVideo, isShareModalOpen, isHighlightModalOpen, isMentionModalOpen, showViewers, currentStory, isMediaLoading]);
+  }, [userIndex, currentIndex, isVideo, currentStory, isMediaLoading]);
 
   useEffect(() => {
     if (progress >= 100 && !isVideo) handleNext();
   }, [progress, isVideo, handleNext]);
 
   const handleVideoTimeUpdate = () => {
-    if (videoRef.current && !isShareModalOpen && !isHighlightModalOpen && !isMentionModalOpen && !showViewers) {
+    if (videoRef.current) {
       const p = (videoRef.current.currentTime / videoRef.current.duration) * 100;
       setProgress(p);
     }
@@ -171,7 +159,10 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-black uppercase italic text-white">{userStories.username}</span>
-              <span className="text-[8px] font-bold text-white/80 uppercase">{isHighlight ? 'RACCOLTA' : 'MEMBRO'}</span>
+              {/* RUOLO DINAMICO DELL'UTENTE */}
+              <span className="text-[8px] font-bold text-white/80 uppercase">
+                {isHighlight ? 'RACCOLTA' : (userStories.role || 'MEMBRO')}
+              </span>
             </div>
           </div>
           <div className="flex items-center gap-1">
