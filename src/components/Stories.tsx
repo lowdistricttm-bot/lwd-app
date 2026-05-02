@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, Loader2, User, ShieldCheck, LogIn, ArrowRight, Swords } from 'lucide-react';
+import { Plus, Loader2, User, ShieldCheck, ArrowRight, Swords, Music } from 'lucide-react';
 import { useStories } from '@/hooks/use-stories';
 import { useAdmin } from '@/hooks/use-admin';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from "@/integrations/supabase/client";
 import StoryViewer from './StoryViewer';
+import MusicSelector from './MusicSelector';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { showError } from '@/utils/toast';
@@ -31,6 +32,10 @@ const Stories = () => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
+  
+  // Stati per la musica nelle storie
+  const [isMusicSelectorOpen, setIsMusicSelectorOpen] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
 
   useEffect(() => {
     if (currentUser) {
@@ -43,12 +48,12 @@ const Stories = () => {
   const isSubscriber = role === 'subscriber';
   const myStoriesGroup: any = (stories as any[])?.find((group: any) => group.user_id === currentUser?.id);
   const otherStories: any[] = (stories as any[])?.filter((group: any) => group.user_id !== currentUser?.id) || [];
-
   const combinedStories = myStoriesGroup ? [myStoriesGroup, ...otherStories] : otherStories;
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []) as File[];
     if (files.length === 0) return;
+    
     if (!currentUser) {
       setIsAuthModalOpen(true);
       return;
@@ -57,8 +62,28 @@ const Stories = () => {
       showError("Solo i membri ufficiali possono pubblicare storie.");
       return;
     }
-    await uploadStory.mutateAsync({ files });
-    if (fileInputRef.current) fileInputRef.current.value = '';
+
+    // Invece di caricare subito, salviamo i file e chiediamo la musica
+    setPendingFiles(files);
+    setIsMusicSelectorOpen(true);
+  };
+
+  const handleUploadWithMusic = async (musicMetadata?: any) => {
+    if (pendingFiles.length === 0) return;
+    
+    try {
+      // @ts-ignore - Passiamo la musica alla mutation aggiornata
+      await uploadStory.mutateAsync({ 
+        files: pendingFiles, 
+        music_metadata: musicMetadata 
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setPendingFiles([]);
+      setIsMusicSelectorOpen(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   const handleStoryClick = (index: number) => {
@@ -108,23 +133,21 @@ const Stories = () => {
             <span className="text-zinc-500 text-[8px] font-black uppercase tracking-widest italic">La tua storia</span>
           </div>
         )}
-<div 
-  onClick={() => navigate('/battles')}
-  className="flex flex-col items-center gap-2 cursor-pointer shrink-0 group"
->
-  <div className="relative">
-    <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-yellow-600 to-yellow-400 p-[2px] animate-pulse">
-      <div className="w-full h-full rounded-full bg-black flex items-center justify-center border-2 border-black">
-        <Swords size={24} className="text-yellow-500 group-hover:scale-110 transition-transform" />
-      </div>
-    </div>
-    <div className="absolute -bottom-1 -right-1 bg-red-600 text-[7px] font-black px-1.5 py-0.5 rounded-full border border-black uppercase italic">Live</div>
-  </div>
-  <span className="text-[9px] font-black uppercase italic text-yellow-500 tracking-tighter">Vota</span>
-</div>
+
+        <div onClick={() => navigate('/battles')} className="flex flex-col items-center gap-2 cursor-pointer shrink-0 group">
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-yellow-600 to-yellow-400 p-[2px] animate-pulse">
+              <div className="w-full h-full rounded-full bg-black flex items-center justify-center border-2 border-black">
+                <Swords size={24} className="text-yellow-500 group-hover:scale-110 transition-transform" />
+              </div>
+            </div>
+            <div className="absolute -bottom-1 -right-1 bg-red-600 text-[7px] font-black px-1.5 py-0.5 rounded-full border border-black uppercase italic">Live</div>
+          </div>
+          <span className="text-[9px] font-black uppercase italic text-yellow-500 tracking-tighter">Vota</span>
+        </div>
+
         {otherStories.map((userGroup: any, index: number) => {
           const actualIndex = myStoriesGroup ? index + 1 : index;
-          // Chiave composta per garantire l'univocità assoluta
           const key = `story-group-${userGroup.user_id || 'unknown'}-${index}`;
           return (
             <button key={key} onClick={() => handleStoryClick(actualIndex)} className="flex flex-col items-center gap-2 shrink-0">
@@ -148,6 +171,13 @@ const Stories = () => {
         )}
       </div>
 
+      {/* Selettore Musicale per le Storie */}
+      <MusicSelector 
+        isOpen={isMusicSelectorOpen}
+        onClose={() => handleUploadWithMusic()} // Carica senza musica se chiude
+        onSelect={(music) => handleUploadWithMusic(music)} // Carica con musica
+      />
+
       <AlertDialog open={isAuthModalOpen} onOpenChange={setIsAuthModalOpen}>
         <AlertDialogContent className="bg-black border border-white/10 rounded-[2rem] shadow-2xl">
           <AlertDialogHeader>
@@ -162,10 +192,7 @@ const Stories = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex flex-col gap-2 sm:flex-col">
-            <AlertDialogAction 
-              onClick={() => navigate('/login')} 
-              className="rounded-full bg-white text-black hover:bg-zinc-200 font-black uppercase italic text-[10px] w-full h-12 transition-all shadow-xl"
-            >
+            <AlertDialogAction onClick={() => navigate('/login')} className="rounded-full bg-white text-black hover:bg-zinc-200 font-black uppercase italic text-[10px] w-full h-12 transition-all shadow-xl">
               Accedi Ora <ArrowRight size={14} className="ml-2" />
             </AlertDialogAction>
             <AlertDialogCancel className="rounded-full border border-white/10 text-white hover:bg-white/5 font-black uppercase italic text-[10px] w-full h-12 mt-0 transition-all">
