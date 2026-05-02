@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { Heart, MessageSquare, User, MoreHorizontal, Send, Loader2, CornerDownRight, Trash2, Camera, X, Share2, Edit3, Music, Volume2, VolumeX } from 'lucide-react';
-// ... (altri import invariati)
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Post, useSocialFeed } from '@/hooks/use-social-feed';
@@ -29,7 +28,7 @@ import {
 
 const isVideo = (url: string) => url.match(/\.(mp4|webm|ogg|mov)$/i) || url.includes('video');
 
-// Componente CommentItem integrato per gestire i commenti e le risposte
+// Componente CommentItem per gestire i commenti e le risposte
 const CommentItem = ({ 
   comment, 
   allComments, 
@@ -129,6 +128,11 @@ const FeedPost = ({ post }: { post: Post }) => {
   const { t, language } = useTranslation();
   const { toggleLike, addComment, deletePost, deleteComment } = useSocialFeed();
   const { role } = useAdmin();
+  
+  // Ref per il container del post per rilevare il focus
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(containerRef, { amount: 0.6 }); // Focus quando il 60% è visibile
+
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [commentFile, setCommentFile] = useState<File | null>(null);
@@ -140,7 +144,7 @@ const FeedPost = ({ post }: { post: Post }) => {
   const [isLikesModalOpen, setIsLikesModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [showHeartPop, setShowHeartPop] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(true); 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const commentFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -148,11 +152,13 @@ const FeedPost = ({ post }: { post: Post }) => {
     supabase.auth.getUser().then(({ data: { user } }) => setCurrentUserId(user?.id || null));
   }, []);
 
+  // Inizializzazione Audio
   useEffect(() => {
     if (post.music_metadata?.audio_url) {
       audioRef.current = new Audio(post.music_metadata.audio_url);
       audioRef.current.loop = true;
       audioRef.current.volume = isMuted ? 0 : 0.4;
+      
       return () => {
         audioRef.current?.pause();
         audioRef.current = null;
@@ -160,16 +166,20 @@ const FeedPost = ({ post }: { post: Post }) => {
     }
   }, [post.music_metadata]);
 
+  // Gestione Focus Audio (Play/Pause in base alla visibilità)
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = isMuted ? 0 : 0.4;
-      if (!isMuted) {
-        audioRef.current.play().catch(() => console.log("Autoplay blocked"));
+      
+      if (isInView && !isMuted) {
+        audioRef.current.play().catch(() => {
+          console.log("Autoplay blocked - interaction needed");
+        });
       } else {
         audioRef.current.pause();
       }
     }
-  }, [isMuted]);
+  }, [isInView, isMuted]);
 
   const handleLike = () => {
     if (!currentUserId) {
@@ -260,9 +270,13 @@ const FeedPost = ({ post }: { post: Post }) => {
   return (
     <>
       <motion.div 
+        ref={containerRef}
         initial={{ opacity: 0, y: 20 }} 
         animate={{ opacity: 1, y: 0 }} 
-        className="bg-zinc-900/30 backdrop-blur-xl border border-white/5 mb-8 overflow-hidden group rounded-[2.5rem] shadow-2xl"
+        className={cn(
+          "bg-zinc-900/30 backdrop-blur-xl border border-white/5 mb-8 overflow-hidden group rounded-[2.5rem] shadow-2xl transition-all duration-500",
+          isInView ? "ring-1 ring-white/20 scale-[1.01]" : "opacity-60 scale-100"
+        )}
       >
         {/* Header */}
         <div className="p-5 flex items-center justify-between">
@@ -286,7 +300,10 @@ const FeedPost = ({ post }: { post: Post }) => {
             {post.music_metadata && (
               <button 
                 onClick={() => setIsMuted(!isMuted)}
-                className="p-2 bg-white/5 rounded-full text-white hover:bg-white/10 transition-all"
+                className={cn(
+                  "p-2 rounded-full text-white transition-all",
+                  isMuted ? "bg-white/5" : "bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]"
+                )}
               >
                 {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} className="animate-pulse" />}
               </button>
@@ -319,7 +336,10 @@ const FeedPost = ({ post }: { post: Post }) => {
           
           {post.music_metadata && (
             <div className="mt-4 flex items-center gap-2 bg-white/5 border border-white/10 p-2 pr-4 rounded-full w-fit">
-              <div className="w-7 h-7 bg-white rounded-full flex items-center justify-center text-black animate-spin-slow">
+              <div className={cn(
+                "w-7 h-7 bg-white rounded-full flex items-center justify-center text-black",
+                !isMuted && isInView && "animate-spin-slow"
+              )}>
                 <Music size={12} />
               </div>
               <div className="flex flex-col">
