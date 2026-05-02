@@ -21,7 +21,6 @@ const MusicSelector = ({ isOpen, onClose, onSelect, selectedMusicId }: MusicSele
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { data: musicResults, isLoading } = useMusicSearch(search);
 
-  // Gestione della riproduzione audio
   const togglePreview = async (e: React.MouseEvent | null, music: any) => {
     if (e) e.stopPropagation();
 
@@ -38,7 +37,6 @@ const MusicSelector = ({ isOpen, onClose, onSelect, selectedMusicId }: MusicSele
     }
 
     const audio = new Audio(music.audio_url);
-    // Se è la traccia attiva, iniziamo dal punto selezionato
     if (activeTrack?.id === music.id) {
       audio.currentTime = startTime;
     }
@@ -66,7 +64,6 @@ const MusicSelector = ({ isOpen, onClose, onSelect, selectedMusicId }: MusicSele
     }
   };
 
-  // Reset quando si chiude o si cambia ricerca
   useEffect(() => {
     if (!isOpen) {
       if (audioRef.current) audioRef.current.pause();
@@ -113,7 +110,7 @@ const MusicSelector = ({ isOpen, onClose, onSelect, selectedMusicId }: MusicSele
                   placeholder="CERCA BRANO O ARTISTA..." 
                   value={search} 
                   onChange={(e) => setSearch(e.target.value)} 
-                  className="bg-white/5 border-white/10 rounded-full h-14 pl-12 font-black uppercase text-xs tracking-widest focus-visible:ring-white/20" 
+                  className="bg-white/5 border-white/10 rounded-full h-14 pl-12 font-black uppercase text-xs tracking-widest focus-visible:ring-white/20 text-white" 
                 />
               </div>
             </div>
@@ -132,8 +129,10 @@ const MusicSelector = ({ isOpen, onClose, onSelect, selectedMusicId }: MusicSele
                     <div 
                       key={music.id} 
                       className={cn(
-                        "flex flex-col p-3 rounded-2xl border transition-all group cursor-pointer gap-3", 
-                        isSelected ? "bg-white border-white" : "bg-white/5 border-white/5 hover:bg-white/10"
+                        "flex flex-col p-3 rounded-2xl border transition-all duration-300 group cursor-pointer gap-3", 
+                        isSelected 
+                          ? "bg-zinc-900 border-white/20 shadow-lg shadow-black/50" 
+                          : "bg-white/5 border-white/5 hover:bg-white/10"
                       )}
                       onClick={() => {
                         if (activeTrack?.id !== music.id) {
@@ -145,7 +144,7 @@ const MusicSelector = ({ isOpen, onClose, onSelect, selectedMusicId }: MusicSele
                     >
                       <div className="flex items-center justify-between w-full">
                         <div className="flex items-center gap-4 flex-1 min-w-0">
-                          <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-zinc-900 shrink-0">
+                          <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-zinc-800 shrink-0">
                             <img src={music.cover_url} className="w-full h-full object-cover" alt="" />
                             <button 
                               onClick={(e) => togglePreview(e, music)} 
@@ -160,16 +159,10 @@ const MusicSelector = ({ isOpen, onClose, onSelect, selectedMusicId }: MusicSele
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <h4 className={cn(
-                              "text-sm font-black italic uppercase truncate", 
-                              isSelected ? "text-black" : "text-white"
-                            )}>
+                            <h4 className="text-sm font-black italic uppercase truncate text-white">
                               {music.title}
                             </h4>
-                            <p className={cn(
-                              "text-[9px] font-bold uppercase tracking-widest truncate", 
-                              isSelected ? "text-black/60" : "text-zinc-500"
-                            )}>
+                            <p className="text-[9px] font-bold uppercase tracking-widest truncate text-zinc-500">
                               {music.artist}
                             </p>
                           </div>
@@ -181,7 +174,7 @@ const MusicSelector = ({ isOpen, onClose, onSelect, selectedMusicId }: MusicSele
                               e.stopPropagation();
                               onSelect({ ...music, startTime });
                             }}
-                            className="w-10 h-10 bg-black rounded-full flex items-center justify-center text-white shrink-0 ml-2 hover:scale-110 transition-transform"
+                            className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-black shrink-0 ml-2 hover:scale-110 active:scale-95 transition-all shadow-lg"
                           >
                             <Check size={20} strokeWidth={3} />
                           </button>
@@ -192,23 +185,25 @@ const MusicSelector = ({ isOpen, onClose, onSelect, selectedMusicId }: MusicSele
                         <motion.div 
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
-                          className="space-y-2 pt-2 border-t border-black/5"
+                          className="space-y-3 pt-3 border-t border-white/5"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <div className="flex justify-between items-center">
-                            <span className="text-[9px] font-black text-black uppercase italic">Punto di inizio</span>
-                            <span className="text-[9px] font-black text-black uppercase">
+                            <span className="text-[9px] font-black text-zinc-400 uppercase italic tracking-widest">Punto di inizio</span>
+                            <span className="text-[10px] font-black text-white bg-white/10 px-2 py-0.5 rounded-md">
                               {Math.floor(startTime / 60)}:{(Math.floor(startTime % 60)).toString().padStart(2, '0')}
                             </span>
                           </div>
-                          <Slider
-                            value={[startTime]}
-                            max={music.duration}
-                            step={1}
-                            onValueChange={handleSeek}
-                            className="py-2"
-                          />
-                          <p className="text-[7px] font-bold text-black/40 uppercase tracking-tighter">Trascina per scegliere il momento perfetto</p>
+                          <div className="px-1">
+                            <Slider
+                              value={[startTime]}
+                              max={music.duration}
+                              step={1}
+                              onValueChange={handleSeek}
+                              className="[&_[role=slider]]:bg-white [&_[role=slider]]:border-none [&_.relative]:bg-white/10 [&_.absolute]:bg-white"
+                            />
+                          </div>
+                          <p className="text-[7px] font-bold text-zinc-600 uppercase tracking-widest text-center">Trascina per scegliere il momento perfetto</p>
                         </motion.div>
                       )}
                     </div>
