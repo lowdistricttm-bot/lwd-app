@@ -28,6 +28,9 @@ import {
 
 const isVideo = (url: string) => url.match(/\.(mp4|webm|ogg|mov)$/i) || url.includes('video');
 
+// Stato globale per il mute della bacheca (attivo di default = false)
+let globalFeedMuteState = false;
+
 // Componente CommentItem per gestire i commenti e le risposte
 const CommentItem = ({ 
   comment, 
@@ -129,9 +132,8 @@ const FeedPost = ({ post }: { post: Post }) => {
   const { toggleLike, addComment, deletePost, deleteComment } = useSocialFeed();
   const { role } = useAdmin();
   
-  // Ref per il container del post per rilevare il focus
   const containerRef = useRef<HTMLDivElement>(null);
-  const isInView = useInView(containerRef, { amount: 0.6 }); // Focus quando il 60% è visibile
+  const isInView = useInView(containerRef, { amount: 0.6 });
 
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
@@ -144,12 +146,23 @@ const FeedPost = ({ post }: { post: Post }) => {
   const [isLikesModalOpen, setIsLikesModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [showHeartPop, setShowHeartPop] = useState(false);
-  const [isMuted, setIsMuted] = useState(true); 
+  
+  // Inizializza con lo stato globale (false = audio attivo)
+  const [isMuted, setIsMuted] = useState(globalFeedMuteState); 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const commentFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => setCurrentUserId(user?.id || null));
+  }, []);
+
+  // Sincronizzazione del mute tra tutti i post
+  useEffect(() => {
+    const handleMuteChange = (e: any) => {
+      setIsMuted(e.detail);
+    };
+    window.addEventListener('feedMuteChange', handleMuteChange);
+    return () => window.removeEventListener('feedMuteChange', handleMuteChange);
   }, []);
 
   // Inizializzazione Audio
@@ -166,7 +179,7 @@ const FeedPost = ({ post }: { post: Post }) => {
     }
   }, [post.music_metadata]);
 
-  // Gestione Focus Audio (Play/Pause in base alla visibilità)
+  // Gestione Focus Audio
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = isMuted ? 0 : 0.4;
@@ -180,6 +193,14 @@ const FeedPost = ({ post }: { post: Post }) => {
       }
     }
   }, [isInView, isMuted]);
+
+  const toggleMute = () => {
+    const newState = !isMuted;
+    setIsMuted(newState);
+    globalFeedMuteState = newState;
+    // Notifica tutti gli altri post del cambio di stato
+    window.dispatchEvent(new CustomEvent('feedMuteChange', { detail: newState }));
+  };
 
   const handleLike = () => {
     if (!currentUserId) {
@@ -225,10 +246,7 @@ const FeedPost = ({ post }: { post: Post }) => {
   };
 
   const handleShareClick = () => {
-    if (!currentUserId) {
-      navigate('/login');
-      return;
-    }
+    if (!currentUserId) { navigate('/login'); return; }
     if (role === 'subscriber') {
       showError(language === 'it' ? "L'inoltro dei post è riservato ai membri ufficiali." : "Forwarding posts is reserved for official members.");
       return;
@@ -299,7 +317,7 @@ const FeedPost = ({ post }: { post: Post }) => {
           <div className="flex items-center gap-2">
             {post.music_metadata && (
               <button 
-                onClick={() => setIsMuted(!isMuted)}
+                onClick={toggleMute}
                 className={cn(
                   "p-2 rounded-full text-white transition-all",
                   isMuted ? "bg-white/5" : "bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]"
@@ -367,7 +385,7 @@ const FeedPost = ({ post }: { post: Post }) => {
                 )}
               >
                 {isVideo(url) ? (
-                  <VideoPlayer src={url} className="w-full h-full" />
+                  <VideoPlayer src={url} className="w-full h-full" initialMuted={isMuted} />
                 ) : (
                   <img 
                     src={url} 
