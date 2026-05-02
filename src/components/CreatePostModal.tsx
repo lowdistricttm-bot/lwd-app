@@ -11,6 +11,8 @@ import { showError } from '@/utils/toast';
 import MusicSelector from './MusicSelector';
 import { Music } from 'lucide-react';
 
+const [isMusicSelectorOpen, setIsMusicSelectorOpen] = useState(false);
+const [selectedMusic, setSelectedMusic] = useState<any>(null);
 const CreatePostModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
   const [content, setContent] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
