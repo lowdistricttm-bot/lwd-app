@@ -14,7 +14,7 @@ export interface Story {
   created_at: string;
   expires_at: string;
   mentions?: string[];
-  music_metadata?: any;
+  music_metadata?: any; // Aggiunto per la musica
   reshared_from_profile_id?: string;
   reshared_from?: {
     username: string;
@@ -91,7 +91,6 @@ export const useStories = () => {
           user_id: story.user_id,
           username: story.profiles?.username || 'Utente',
           avatar_url: story.profiles?.avatar_url,
-          // Estrazione corretta del ruolo dal profilo
           role: story.profiles?.role || (story.profiles?.is_admin ? 'admin' : 'member'),
           items: []
         };
@@ -110,6 +109,7 @@ export const useStories = () => {
   };
 
   const uploadStory = useMutation({
+    // Aggiornato per accettare music_metadata
     mutationFn: async ({ files, music_metadata }: { files: File[], music_metadata?: any }) => {
       if (!user) throw new Error("Accedi per caricare una storia");
 
@@ -130,7 +130,7 @@ export const useStories = () => {
             user_id: user.id, 
             image_url: publicUrl,
             mentions: [],
-            music_metadata: music_metadata // Salvataggio dei metadati musicali
+            music_metadata: music_metadata // Salvataggio metadati musicali
           }]);
 
         if (dbError) throw dbError;
@@ -152,6 +152,7 @@ export const useStories = () => {
       
       if (isCurrentlyLiked) return 'already_liked';
 
+      // 1. Inserisci il like nel database
       const { error: likeError } = await supabase
         .from('story_likes')
         .insert([{ story_id: storyId, user_id: user.id }]);
@@ -161,6 +162,7 @@ export const useStories = () => {
         throw likeError;
       }
 
+      // 2. Invia il messaggio in direct (DM)
       const { error: msgError } = await supabase.from('messages').insert([{
         sender_id: user.id,
         receiver_id: authorId,
@@ -252,10 +254,12 @@ export const useStories = () => {
     mutationFn: async (storyId: string) => {
       if (!user) return;
       try {
+        // Usiamo upsert per registrare la visualizzazione
         await supabase
           .from('story_views')
           .upsert([{ story_id: storyId, user_id: user.id }], { onConflict: 'story_id, user_id' });
       } catch (err) {
+        // Errore silenzioso per non disturbare l'utente se il tracciamento fallisce
         console.warn("[Stories] Impossibile registrare visualizzazione:", storyId);
       }
     }
