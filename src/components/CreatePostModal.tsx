@@ -8,6 +8,8 @@ import { Textarea } from './ui/textarea';
 import { useSocialFeed } from '@/hooks/use-social-feed';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { showError } from '@/utils/toast';
+import MusicSelector from './MusicSelector';
+import { Music } from 'lucide-react';
 
 const CreatePostModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
   const [content, setContent] = useState('');
