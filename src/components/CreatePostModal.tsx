@@ -44,11 +44,9 @@ const CreatePostModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
     if (!content.trim() && selectedFiles.length === 0) return;
     
     try {
-      // Passiamo anche music_metadata alla mutation
       await createPost.mutateAsync({ 
         content, 
         files: selectedFiles,
-        // @ts-ignore - Aggiungiamo il supporto per la musica
         music_metadata: selectedMusic 
       });
       setContent('');
