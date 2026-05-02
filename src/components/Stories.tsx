@@ -33,7 +33,6 @@ const Stories = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
   
-  // Stati per la musica nelle storie
   const [isMusicSelectorOpen, setIsMusicSelectorOpen] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
 
@@ -63,7 +62,6 @@ const Stories = () => {
       return;
     }
 
-    // Invece di caricare subito, salviamo i file e chiediamo la musica
     setPendingFiles(files);
     setIsMusicSelectorOpen(true);
   };
@@ -72,7 +70,6 @@ const Stories = () => {
     if (pendingFiles.length === 0) return;
     
     try {
-      // @ts-ignore - Passiamo la musica alla mutation aggiornata
       await uploadStory.mutateAsync({ 
         files: pendingFiles, 
         music_metadata: musicMetadata 
@@ -171,11 +168,10 @@ const Stories = () => {
         )}
       </div>
 
-      {/* Selettore Musicale per le Storie */}
       <MusicSelector 
         isOpen={isMusicSelectorOpen}
-        onClose={() => handleUploadWithMusic()} // Carica senza musica se chiude
-        onSelect={(music) => handleUploadWithMusic(music)} // Carica con musica
+        onClose={() => handleUploadWithMusic()} 
+        onSelect={(music) => handleUploadWithMusic(music)} 
       />
 
       <AlertDialog open={isAuthModalOpen} onOpenChange={setIsAuthModalOpen}>
