@@ -131,16 +131,32 @@ export const useSocialFeed = (userId?: string, limit = 10) => {
   };
 
   const createPost = useMutation({
-    mutationFn: async ({ content, files }: { content: string, files?: File[] }) => {
+    mutationFn: async ({ content, files, music_metadata }: { content: string, files?: File[], music_metadata?: any }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Devi accedere per pubblicare");
+      
       let imageUrls: string[] = [];
-      if (files) for (const file of files) imageUrls.push(await processAndUpload(file));
-      const { data, error } = await supabase.from('posts').insert([{ user_id: user.id, content, images: imageUrls, image_url: imageUrls[0] || null }]).select('id').single();
+      if (files) {
+        for (const file of files) {
+          imageUrls.push(await processAndUpload(file));
+        }
+      }
+
+      const { data, error } = await supabase.from('posts').insert([{ 
+        user_id: user.id, 
+        content, 
+        images: imageUrls, 
+        image_url: imageUrls[0] || null,
+        music_metadata: music_metadata // <--- AGGIUNTO QUESTO
+      }]).select('id').single();
+
       if (error) throw error;
       return data;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['social-posts'] }); showSuccess("Post pubblicato!"); },
+    onSuccess: () => { 
+      queryClient.invalidateQueries({ queryKey: ['social-posts'] }); 
+      showSuccess("Post pubblicato!"); 
+    },
     onError: (error: any) => showError(error.message)
   });
 
