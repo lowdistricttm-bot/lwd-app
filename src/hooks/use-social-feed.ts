@@ -13,6 +13,7 @@ export interface Post {
   content: string;
   image_url?: string;
   images?: string[];
+  music_metadata?: any; // Aggiunto supporto musica
   created_at: string;
   profiles?: {
     username: string;
@@ -48,7 +49,7 @@ export const useSocialFeed = (userId?: string, limit = 10) => {
       let query = supabase
         .from('posts')
         .select(`
-          id, user_id, content, image_url, images, created_at,
+          id, user_id, content, image_url, images, music_metadata, created_at,
           profiles:user_id (id, username, avatar_url),
           likes (user_id, profiles:user_id (username, avatar_url)),
           comments (id, post_id, user_id, content, created_at, parent_id, image_url, profiles:user_id (id, username, avatar_url))
@@ -108,7 +109,6 @@ export const useSocialFeed = (userId?: string, limit = 10) => {
 
   const posts = data?.pages.flat() || [];
 
-  // --- REALTIME LISTENER ---
   useEffect(() => {
     const channelId = `feed-${Math.random().toString(36).substring(2, 9)}`;
     const channel = supabase
@@ -147,7 +147,7 @@ export const useSocialFeed = (userId?: string, limit = 10) => {
         content, 
         images: imageUrls, 
         image_url: imageUrls[0] || null,
-        music_metadata: music_metadata // <--- AGGIUNTO QUESTO
+        music_metadata: music_metadata // Salvataggio musica
       }]).select('id').single();
 
       if (error) throw error;
@@ -161,7 +161,7 @@ export const useSocialFeed = (userId?: string, limit = 10) => {
   });
 
   const updatePost = useMutation({
-    mutationFn: async ({ postId, content, files, removeImages }: { postId: string, content: string, files?: File[], removeImages?: boolean }) => {
+    mutationFn: async ({ postId, content, files, removeImages, music_metadata }: { postId: string, content: string, files?: File[], removeImages?: boolean, music_metadata?: any }) => {
       let imageUrls: string[] = [];
       if (files && files.length > 0) {
         for (const file of files) imageUrls.push(await processAndUpload(file));
@@ -174,6 +174,12 @@ export const useSocialFeed = (userId?: string, limit = 10) => {
         updateData.images = [];
         updateData.image_url = null;
       }
+      
+      // Aggiorna musica se fornita (o null se rimossa)
+      if (music_metadata !== undefined) {
+        updateData.music_metadata = music_metadata;
+      }
+
       const { error } = await supabase.from('posts').update(updateData).eq('id', postId);
       if (error) throw error;
     },
@@ -181,6 +187,7 @@ export const useSocialFeed = (userId?: string, limit = 10) => {
     onError: (error: any) => showError(error.message)
   });
 
+  // ... (restante codice addComment, deletePost, toggleLike invariato)
   const addComment = useMutation({
     mutationFn: async ({ postId, content, parentId, file }: { postId: string, content: string, parentId?: string, file?: File }) => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -247,7 +254,7 @@ export const usePost = (postId?: string) => {
       if (!postId) return null;
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
-      const { data: post, error } = await supabase.from('posts').select(`id, user_id, content, image_url, images, created_at, profiles:user_id (id, username, first_name, last_name, avatar_url), likes (user_id, profiles:user_id (username, avatar_url)), comments (id, post_id, user_id, content, created_at, parent_id, image_url, profiles:user_id (id, username, avatar_url))`).eq('id', postId).maybeSingle();
+      const { data: post, error } = await supabase.from('posts').select(`id, user_id, content, image_url, images, music_metadata, created_at, profiles:user_id (id, username, first_name, last_name, avatar_url), likes (user_id, profiles:user_id (username, avatar_url)), comments (id, post_id, user_id, content, created_at, parent_id, image_url, profiles:user_id (id, username, avatar_url))`).eq('id', postId).maybeSingle();
       if (error) throw error;
       if (!post) return null;
       const profile = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles;
