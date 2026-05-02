@@ -91,6 +91,7 @@ export const useStories = () => {
           user_id: story.user_id,
           username: story.profiles?.username || 'Utente',
           avatar_url: story.profiles?.avatar_url,
+          // Estrazione corretta del ruolo dal profilo
           role: story.profiles?.role || (story.profiles?.is_admin ? 'admin' : 'member'),
           items: []
         };
@@ -129,7 +130,7 @@ export const useStories = () => {
             user_id: user.id, 
             image_url: publicUrl,
             mentions: [],
-            music_metadata: music_metadata
+            music_metadata: music_metadata // Salvataggio dei metadati musicali
           }]);
 
         if (dbError) throw dbError;
