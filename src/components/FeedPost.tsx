@@ -320,7 +320,7 @@ const FeedPost = ({ post }: { post: Post }) => {
                 onClick={toggleMute}
                 className={cn(
                   "p-2 rounded-full text-white transition-all",
-                  isMuted ? "bg-white/5" : "bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]"
+                  isMuted ? "bg-white/5" : "bg-zinc-800 shadow-[0_0_15px_rgba(59,130,246,0.5)]"
                 )}
               >
                 {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} className="animate-pulse" />}
