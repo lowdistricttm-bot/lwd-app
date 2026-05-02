@@ -29,7 +29,100 @@ import {
 
 const isVideo = (url: string) => url.match(/\.(mp4|webm|ogg|mov)$/i) || url.includes('video');
 
-// ... (CommentItem invariato)
+// Componente CommentItem integrato per gestire i commenti e le risposte
+const CommentItem = ({ 
+  comment, 
+  allComments, 
+  onReply, 
+  onDelete, 
+  currentUserId, 
+  onImageClick 
+}: { 
+  comment: any, 
+  allComments: any[], 
+  onReply: (id: string, name: string) => void, 
+  onDelete: (id: string) => void, 
+  currentUserId: string | null, 
+  onImageClick: (url: string) => void 
+}) => {
+  const replies = allComments.filter(c => c.parent_id === comment.id);
+  const canDelete = currentUserId === comment.user_id;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-3 group/comment">
+        <div className="w-8 h-8 bg-zinc-800 border border-white/10 overflow-hidden rounded-full shrink-0">
+          {comment.profiles?.avatar_url ? (
+            <img src={comment.profiles.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-zinc-600"><User size={14} /></div>
+          )}
+        </div>
+        <div className="flex-1 space-y-1.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-black uppercase italic tracking-widest text-white">
+                {comment.profiles?.username || 'Membro'}
+              </span>
+              <span className="text-[8px] text-zinc-500 font-bold uppercase tracking-tighter">
+                {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: it })}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 opacity-0 group-hover/comment:opacity-100 transition-opacity">
+              <button 
+                onClick={() => onReply(comment.id, comment.profiles?.username || 'Membro')}
+                className="text-[8px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
+              >
+                Rispondi
+              </button>
+              {canDelete && (
+                <button 
+                  onClick={() => onDelete(comment.id)}
+                  className="text-zinc-500 hover:text-red-500 transition-colors"
+                >
+                  <Trash2 size={12} />
+                </button>
+              )}
+            </div>
+          </div>
+          
+          <div className="bg-white/5 rounded-2xl rounded-tl-none px-4 py-3 border border-white/5">
+            <p className="text-[11px] text-zinc-300 leading-relaxed font-medium italic">{comment.content}</p>
+            
+            {comment.media_url && (
+              <div 
+                className="mt-3 rounded-xl overflow-hidden border border-white/10 max-w-[200px] cursor-pointer hover:opacity-90 transition-opacity"
+                onClick={() => onImageClick(comment.media_url)}
+              >
+                {comment.media_type === 'video' ? (
+                  <video src={comment.media_url} className="w-full aspect-video object-cover" />
+                ) : (
+                  <img src={comment.media_url} className="w-full object-cover" alt="" />
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {replies.length > 0 && (
+        <div className="ml-11 space-y-4 border-l border-white/5 pl-4">
+          {replies.map(reply => (
+            <CommentItem 
+              key={reply.id} 
+              comment={reply} 
+              allComments={allComments}
+              onReply={onReply}
+              onDelete={onDelete}
+              currentUserId={currentUserId}
+              onImageClick={onImageClick}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const FeedPost = ({ post }: { post: Post }) => {
   const navigate = useNavigate();
@@ -47,7 +140,7 @@ const FeedPost = ({ post }: { post: Post }) => {
   const [isLikesModalOpen, setIsLikesModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [showHeartPop, setShowHeartPop] = useState(false);
-  const [isMuted, setIsMuted] = useState(true); // Default muto per il feed
+  const [isMuted, setIsMuted] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const commentFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -55,14 +148,11 @@ const FeedPost = ({ post }: { post: Post }) => {
     supabase.auth.getUser().then(({ data: { user } }) => setCurrentUserId(user?.id || null));
   }, []);
 
-  // Gestione Audio Post
   useEffect(() => {
     if (post.music_metadata?.audio_url) {
       audioRef.current = new Audio(post.music_metadata.audio_url);
       audioRef.current.loop = true;
       audioRef.current.volume = isMuted ? 0 : 0.4;
-      
-      // Nota: l'autoplay nel feed è spesso bloccato dai browser finché l'utente non interagisce
       return () => {
         audioRef.current?.pause();
         audioRef.current = null;
@@ -81,7 +171,6 @@ const FeedPost = ({ post }: { post: Post }) => {
     }
   }, [isMuted]);
 
-  // ... (handleLike, handleAddComment, handleShareClick, handleNativeShare, handleDeletePost invariati)
   const handleLike = () => {
     if (!currentUserId) {
       showError(language === 'it' ? "Accedi per mettere like" : "Login to like");
@@ -228,7 +317,6 @@ const FeedPost = ({ post }: { post: Post }) => {
             {post.content}
           </p>
           
-          {/* Sticker Musica */}
           {post.music_metadata && (
             <div className="mt-4 flex items-center gap-2 bg-white/5 border border-white/10 p-2 pr-4 rounded-full w-fit">
               <div className="w-7 h-7 bg-white rounded-full flex items-center justify-center text-black animate-spin-slow">
@@ -242,7 +330,6 @@ const FeedPost = ({ post }: { post: Post }) => {
           )}
         </div>
 
-        {/* ... (restante codice Media Grid, Actions, Comments invariato) */}
         {images.length > 0 && (
           <div 
             className={cn(
