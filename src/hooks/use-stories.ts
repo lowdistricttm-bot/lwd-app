@@ -266,7 +266,7 @@ export const useStories = () => {
   });
 
   const reshareStory = useMutation({
-    mutationFn: async ({ storyUrl, originalAuthorId, music_metadata }: { storyUrl: string, originalAuthorId: string }) => {
+    mutationFn: async ({ storyUrl, originalAuthorId }: { storyUrl: string, originalAuthorId: string }) => {
       if (!user) throw new Error("Accedi per ricondividere");
 
       const { error } = await supabase
