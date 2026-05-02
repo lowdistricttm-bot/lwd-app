@@ -3,13 +3,16 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight, Loader2, Volume2, VolumeX, Send, Music } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Trash2, Loader2, Volume2, VolumeX, Send, Eye, User, Star, AtSign, Music } from 'lucide-react';
 import { useStories, useStoryViews } from '@/hooks/use-stories';
 import { useHighlights } from '@/hooks/use-highlights';
 import { useMessages } from '@/hooks/use-messages';
 import { useAdmin } from '@/hooks/use-admin';
 import { useBodyLock } from '@/hooks/use-body-lock';
 import { Input } from './ui/input';
+import ShareStoryModal from './ShareStoryModal';
+import HighlightModal from './HighlightModal';
+import AddMentionModal from './AddMentionModal';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/use-translation';
@@ -32,11 +35,16 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   const [progress, setProgress] = useState(0);
   const [isMuted, setIsMuted] = useState(globalMuteState);
   const [replyText, setReplyText] = useState('');
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isHighlightModalOpen, setIsHighlightModalOpen] = useState(false);
+  const [isMentionModalOpen, setIsMentionModalOpen] = useState(false);
+  const [showViewers, setShowViewers] = useState(false);
   const [isMediaLoading, setIsMediaLoading] = useState(true);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const storyAudioRef = useRef<HTMLAudioElement | null>(null);
-  const { recordView } = useStories();
+  const { deleteStory, recordView } = useStories();
+  const { removeFromHighlight } = useHighlights(currentUserId || undefined);
   
   useBodyLock(true);
 
@@ -46,6 +54,8 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   const isVideo = currentStory?.image_url.match(/\.(mp4|webm|ogg|mov)$/i) || currentStory?.image_url.includes('video');
   const isOwner = currentUserId !== null && currentUserId === userStories?.user_id;
   const isHighlight = userStories?.role === 'highlight';
+
+  const { data: views } = useStoryViews(isOwner && !isHighlight ? currentStory?.id : null);
 
   // --- GESTIONE AUDIO MUSICA ---
   useEffect(() => {
@@ -104,7 +114,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   }, [currentIndex, userIndex, allStories]);
 
   useEffect(() => {
-    if (isVideo || !currentStory || isMediaLoading) return;
+    if (isVideo || isShareModalOpen || isHighlightModalOpen || isMentionModalOpen || showViewers || !currentStory || isMediaLoading) return;
     const duration = 10000;
     const interval = 50; 
     const increment = (interval / duration) * 100;
@@ -115,14 +125,14 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
       });
     }, interval);
     return () => clearInterval(timer);
-  }, [userIndex, currentIndex, isVideo, currentStory, isMediaLoading]);
+  }, [userIndex, currentIndex, isVideo, isShareModalOpen, isHighlightModalOpen, isMentionModalOpen, showViewers, currentStory, isMediaLoading]);
 
   useEffect(() => {
     if (progress >= 100 && !isVideo) handleNext();
   }, [progress, isVideo, handleNext]);
 
   const handleVideoTimeUpdate = () => {
-    if (videoRef.current) {
+    if (videoRef.current && !isShareModalOpen && !isHighlightModalOpen && !isMentionModalOpen && !showViewers) {
       const p = (videoRef.current.currentTime / videoRef.current.duration) * 100;
       setProgress(p);
     }
@@ -159,7 +169,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-black uppercase italic text-white">{userStories.username}</span>
-              {/* RUOLO DINAMICO DELL'UTENTE */}
               <span className="text-[8px] font-bold text-white/80 uppercase">
                 {isHighlight ? 'RACCOLTA' : (userStories.role || 'MEMBRO')}
               </span>
@@ -211,7 +220,57 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
         {/* Footer */}
         <div className="absolute bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-black via-black/80 to-transparent p-6 pt-20 pointer-events-none">
-          {!isOwner && (
+          {isOwner ? (
+            <div className="flex items-center justify-between pointer-events-auto">
+              <div className="flex items-center gap-4">
+                {!isHighlight && (
+                  <button onClick={() => setShowViewers(true)} className="flex flex-col items-center gap-1 text-white">
+                    <div className="flex -space-x-2">
+                      {views?.slice(0, 3).map((v: any, i: number) => (
+                        <div key={i} className="w-6 h-6 rounded-full border border-black overflow-hidden bg-zinc-800">
+                          {v.profiles?.avatar_url ? <img src={v.profiles.avatar_url} className="w-full h-full object-cover" /> : <User size={12} className="m-auto" />}
+                        </div>
+                      ))}
+                    </div>
+                    <span className="text-[10px] font-black uppercase italic flex items-center gap-1">
+                      <Eye size={12} /> {views?.length || 0}
+                    </span>
+                  </button>
+                )}
+                <button onClick={() => setIsHighlightModalOpen(true)} className="flex flex-col items-center gap-1 text-white">
+                  <Star size={20} className={cn(currentStory.is_highlighted && "fill-yellow-400 text-yellow-400")} />
+                  <span className="text-[8px] font-black uppercase italic">In evidenza</span>
+                </button>
+              </div>
+              
+              <div className="flex items-center gap-4">
+                {!isHighlight && (
+                  <button onClick={() => setIsMentionModalOpen(true)} className="flex flex-col items-center gap-1 text-white">
+                    <AtSign size={20} />
+                    <span className="text-[8px] font-black uppercase italic">Menziona</span>
+                  </button>
+                )}
+                <button onClick={() => setIsShareModalOpen(true)} className="flex flex-col items-center gap-1 text-white">
+                  <Send size={20} />
+                  <span className="text-[8px] font-black uppercase italic">Invia</span>
+                </button>
+                <button 
+                  onClick={() => {
+                    if (isHighlight) {
+                      removeFromHighlight.mutate({ storyId: currentStory.id });
+                    } else {
+                      deleteStory.mutate(currentStory.id);
+                    }
+                    handleNext();
+                  }} 
+                  className="flex flex-col items-center gap-1 text-red-500"
+                >
+                  <Trash2 size={20} />
+                  <span className="text-[8px] font-black uppercase italic">Elimina</span>
+                </button>
+              </div>
+            </div>
+          ) : (
             <div className="flex items-center gap-3 pointer-events-auto">
               <Input 
                 placeholder="Rispondi..." value={replyText} onChange={(e) => setReplyText(e.target.value)}
@@ -225,6 +284,39 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
       <button onClick={handlePrev} className="hidden md:flex fixed left-[calc(50%-320px)] top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 rounded-full z-[10000] text-white border border-white/10"><ChevronLeft size={32} /></button>
       <button onClick={handleNext} className="hidden md:flex fixed right-[calc(50%-320px)] top-1/2 -translate-y-1/2 w-14 h-14 items-center justify-center bg-white/5 rounded-full z-[10000] text-white border border-white/10"><ChevronRight size={32} /></button>
+
+      {/* Modals */}
+      <ShareStoryModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} storyUrl={currentStory.image_url} />
+      <HighlightModal isOpen={isHighlightModalOpen} onClose={() => setIsHighlightModalOpen(false)} storyId={currentStory.id} />
+      <AddMentionModal isOpen={isMentionModalOpen} onClose={() => setIsMentionModalOpen(false)} storyId={currentStory.id} storyUrl={currentStory.image_url} />
+      
+      {/* Viewers Modal */}
+      <AnimatePresence>
+        {showViewers && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowViewers(false)} className="fixed inset-0 bg-black/60 z-[10001] backdrop-blur-sm" />
+            <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed inset-x-0 bottom-0 z-[10002] bg-zinc-950 rounded-t-[2.5rem] p-8 max-h-[70vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-black uppercase italic text-white">Visualizzazioni ({views?.length || 0})</h3>
+                <button onClick={() => setShowViewers(false)} className="p-2 bg-white/5 rounded-full text-white"><X size={20} /></button>
+              </div>
+              <div className="space-y-4">
+                {views?.map((view: any) => (
+                  <div key={view.id} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-900">
+                        {view.profiles?.avatar_url ? <img src={view.profiles.avatar_url} className="w-full h-full object-cover" /> : <User size={20} className="m-auto text-zinc-700" />}
+                      </div>
+                      <span className="text-sm font-bold text-white uppercase">{view.profiles?.username}</span>
+                    </div>
+                  </div>
+                ))}
+                {(!views || views.length === 0) && <p className="text-zinc-500 text-center py-10 font-bold uppercase text-xs">Nessuna visualizzazione ancora</p>}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </motion.div>,
     document.body
   );
