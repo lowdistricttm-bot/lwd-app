@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Music, Play, Pause, X, Check, Loader2, Disc } from 'lucide-react';
 import { Input } from './ui/input';
+import { Slider } from './ui/slider';
 import { useMusicSearch } from '@/hooks/use-music-api';
 import { cn } from '@/lib/utils';
 
@@ -15,14 +16,15 @@ interface MusicSelectorProps {
 const MusicSelector = ({ isOpen, onClose, onSelect, selectedMusicId }: MusicSelectorProps) => {
   const [search, setSearch] = useState('');
   const [playingId, setPlayingId] = useState<string | null>(null);
+  const [activeTrack, setActiveTrack] = useState<any>(null);
+  const [startTime, setStartTime] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { data: musicResults, isLoading } = useMusicSearch(search);
 
-  // Funzione corretta per gestire la riproduzione audio asincrona
-  const togglePreview = async (e: React.MouseEvent, music: any) => {
-    e.stopPropagation();
+  // Gestione della riproduzione audio
+  const togglePreview = async (e: React.MouseEvent | null, music: any) => {
+    if (e) e.stopPropagation();
 
-    // Se clicchiamo sullo stesso brano che sta suonando, mettiamo in pausa
     if (playingId === music.id) {
       if (audioRef.current) {
         audioRef.current.pause();
@@ -31,39 +33,47 @@ const MusicSelector = ({ isOpen, onClose, onSelect, selectedMusicId }: MusicSele
       return;
     }
 
-    // Se c'è un altro brano in riproduzione, fermalo prima di iniziare il nuovo
     if (audioRef.current) {
       audioRef.current.pause();
     }
 
-    // Crea una nuova istanza audio
     const audio = new Audio(music.audio_url);
+    // Se è la traccia attiva, iniziamo dal punto selezionato
+    if (activeTrack?.id === music.id) {
+      audio.currentTime = startTime;
+    }
+    
     audioRef.current = audio;
     
     try {
       setPlayingId(music.id);
-      
-      // Il metodo play() restituisce una Promise che va gestita
       await audio.play();
       
       audio.onended = () => {
         if (playingId === music.id) setPlayingId(null);
       };
     } catch (error) {
-      // Gestisce l'errore se il play() viene interrotto o bloccato dal browser
-      console.warn("Riproduzione audio interrotta o non consentita:", error);
+      console.warn("Riproduzione audio interrotta:", error);
       setPlayingId(null);
     }
   };
 
-  // Pulizia dell'audio quando il componente viene chiuso o smontato
+  const handleSeek = (value: number[]) => {
+    const newTime = value[0];
+    setStartTime(newTime);
+    if (audioRef.current && playingId === activeTrack?.id) {
+      audioRef.current.currentTime = newTime;
+    }
+  };
+
+  // Reset quando si chiude o si cambia ricerca
   useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
+    if (!isOpen) {
+      if (audioRef.current) audioRef.current.pause();
+      setPlayingId(null);
+      setActiveTrack(null);
+      setStartTime(0);
+    }
   }, [isOpen]);
 
   return (
@@ -115,52 +125,95 @@ const MusicSelector = ({ isOpen, onClose, onSelect, selectedMusicId }: MusicSele
                   <p className="text-[8px] font-black uppercase tracking-widest text-zinc-600">Caricamento libreria...</p>
                 </div>
               ) : (
-                musicResults?.map((music: any) => (
-                  <div 
-                    key={music.id} 
-                    onClick={() => onSelect(music)} 
-                    className={cn(
-                      "flex items-center justify-between p-3 rounded-2xl border transition-all group cursor-pointer", 
-                      selectedMusicId === music.id ? "bg-white border-white" : "bg-white/5 border-white/5 hover:bg-white/10"
-                    )}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-zinc-900 shrink-0">
-                        <img src={music.cover_url} className="w-full h-full object-cover" alt="" />
-                        <button 
-                          onClick={(e) => togglePreview(e, music)} 
-                          className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          {playingId === music.id ? <Pause size={20} fill="white" /> : <Play size={20} fill="white" />}
-                        </button>
-                        {playingId === music.id && (
-                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                            <Disc className="animate-spin text-white" size={24} />
+                musicResults?.map((music: any) => {
+                  const isSelected = activeTrack?.id === music.id || (!activeTrack && selectedMusicId === music.id);
+                  
+                  return (
+                    <div 
+                      key={music.id} 
+                      className={cn(
+                        "flex flex-col p-3 rounded-2xl border transition-all group cursor-pointer gap-3", 
+                        isSelected ? "bg-white border-white" : "bg-white/5 border-white/5 hover:bg-white/10"
+                      )}
+                      onClick={() => {
+                        if (activeTrack?.id !== music.id) {
+                          setActiveTrack(music);
+                          setStartTime(0);
+                          togglePreview(null, music);
+                        }
+                      }}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-4 flex-1 min-w-0">
+                          <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-zinc-900 shrink-0">
+                            <img src={music.cover_url} className="w-full h-full object-cover" alt="" />
+                            <button 
+                              onClick={(e) => togglePreview(e, music)} 
+                              className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              {playingId === music.id ? <Pause size={20} fill="white" /> : <Play size={20} fill="white" />}
+                            </button>
+                            {playingId === music.id && (
+                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                <Disc className="animate-spin text-white" size={24} />
+                              </div>
+                            )}
                           </div>
+                          <div className="min-w-0 flex-1">
+                            <h4 className={cn(
+                              "text-sm font-black italic uppercase truncate", 
+                              isSelected ? "text-black" : "text-white"
+                            )}>
+                              {music.title}
+                            </h4>
+                            <p className={cn(
+                              "text-[9px] font-bold uppercase tracking-widest truncate", 
+                              isSelected ? "text-black/60" : "text-zinc-500"
+                            )}>
+                              {music.artist}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {isSelected && (
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onSelect({ ...music, startTime });
+                            }}
+                            className="w-10 h-10 bg-black rounded-full flex items-center justify-center text-white shrink-0 ml-2 hover:scale-110 transition-transform"
+                          >
+                            <Check size={20} strokeWidth={3} />
+                          </button>
                         )}
                       </div>
-                      <div className="min-w-0">
-                        <h4 className={cn(
-                          "text-sm font-black italic uppercase truncate", 
-                          selectedMusicId === music.id ? "text-black" : "text-white"
-                        )}>
-                          {music.title}
-                        </h4>
-                        <p className={cn(
-                          "text-[9px] font-bold uppercase tracking-widest", 
-                          selectedMusicId === music.id ? "text-black/60" : "text-zinc-500"
-                        )}>
-                          {music.artist}
-                        </p>
-                      </div>
+
+                      {isSelected && (
+                        <motion.div 
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          className="space-y-2 pt-2 border-t border-black/5"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="text-[9px] font-black text-black uppercase italic">Punto di inizio</span>
+                            <span className="text-[9px] font-black text-black uppercase">
+                              {Math.floor(startTime / 60)}:{(Math.floor(startTime % 60)).toString().padStart(2, '0')}
+                            </span>
+                          </div>
+                          <Slider
+                            value={[startTime]}
+                            max={music.duration}
+                            step={1}
+                            onValueChange={handleSeek}
+                            className="py-2"
+                          />
+                          <p className="text-[7px] font-bold text-black/40 uppercase tracking-tighter">Trascina per scegliere il momento perfetto</p>
+                        </motion.div>
+                      )}
                     </div>
-                    {selectedMusicId === music.id && (
-                      <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-white">
-                        <Check size={16} strokeWidth={3} />
-                      </div>
-                    )}
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </motion.div>
