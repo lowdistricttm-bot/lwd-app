@@ -151,7 +151,7 @@ export const useStories = () => {
       
       if (isCurrentlyLiked) return 'already_liked';
 
-      // 1. Inseriamo il like
+      // 1. Inserimento like
       const { error: likeError } = await supabase
         .from('story_likes')
         .insert([{ story_id: storyId, user_id: user.id }]);
@@ -161,18 +161,17 @@ export const useStories = () => {
         throw likeError;
       }
 
-      // 2. Inviamo il messaggio in chat come notifica
-      const { error: msgError } = await supabase.from('messages').insert([{
+      // 2. Invio messaggio automatico in chat (come le menzioni)
+      await supabase.from('messages').insert([{
         sender_id: user.id,
         receiver_id: authorId,
         content: "❤️ Ha messo like alla tua storia",
         image_url: imageUrl,
-        images: [{ url: imageUrl, type: 'story_like' }]
+        images: [{ 
+          url: imageUrl, 
+          type: 'story_like' 
+        }]
       }]);
-
-      if (msgError) {
-        console.error("[Stories] Errore invio messaggio like:", msgError);
-      }
 
       return 'liked';
     },
@@ -195,16 +194,16 @@ export const useStories = () => {
 
       return { previousStories };
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['active-stories'] });
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['chat'] });
+    },
     onError: (err: any, variables, context) => {
       if (context?.previousStories) {
         queryClient.setQueryData(['active-stories'], context.previousStories);
       }
       showError(err.message || "Errore durante il like");
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['active-stories'] });
-      queryClient.invalidateQueries({ queryKey: ['chat'] });
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
     }
   });
 
