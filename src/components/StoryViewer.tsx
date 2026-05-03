@@ -12,11 +12,12 @@ interface StoryViewerProps {
   isOpen?: boolean;
   onClose: () => void;
   initialStoryIndex?: number;
-  allStories?: any[]; // Fondamentale per vedere le storie raggruppate
+  allStories?: any[];
   initialUserIndex?: number;
   currentUserId?: string | null;
 }
 
+// Cambiato in Named Export
 export const StoryViewer = ({ 
   isOpen = true, 
   onClose, 
@@ -28,10 +29,9 @@ export const StoryViewer = ({
   const { stories: hookStories, toggleStoryLike, deleteStory } = useStories();
   const { user: currentUser } = useAuth();
   
-  // Questa logica sceglie se usare le storie passate dalla Home o quelle caricate dal hook
-  const displayGroups = allStories && allStories.length > 0 ? allStories : hookStories;
-  const currentGroup = displayGroups[initialUserIndex] || { items: [] };
-  const displayStories = currentGroup.items;
+  const displayStories = allStories && allStories.length > 0 
+    ? (allStories[initialUserIndex]?.items || [])
+    : hookStories;
 
   const [currentIndex, setCurrentIndex] = useState(initialStoryIndex);
 
@@ -39,7 +39,7 @@ export const StoryViewer = ({
     setCurrentIndex(initialStoryIndex);
   }, [initialStoryIndex, initialUserIndex]);
 
-  if (!displayStories || displayStories.length === 0) return null;
+  if (!displayStories.length) return null;
 
   const currentStory = displayStories[currentIndex];
 
@@ -107,6 +107,9 @@ export const StoryViewer = ({
               </button>
               {currentStory.likes_count > 0 && <span className="text-white text-sm font-medium bg-black/40 px-3 py-1 rounded-full">{currentStory.likes_count}</span>}
             </div>
+            {currentUser?.id === currentStory.user_id && (
+              <Button variant="destructive" size="icon" className="rounded-full" onClick={handleDelete}><Trash2 className="w-5 h-5" /></Button>
+            )}
           </div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/40 pointer-events-none" />
         </div>

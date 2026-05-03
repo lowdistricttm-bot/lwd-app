@@ -48,7 +48,7 @@ export const useStories = (userId?: string) => {
         likes_count: story.likes?.length || 0,
       })) as Story[];
 
-      // RAGGRUPPAMENTO PER UTENTE: Questo è ciò che fa vedere i cerchi nella Home
+      // RAGGRUPPAMENTO PER UTENTE (Essenziale per Stories.tsx)
       const groups: any[] = [];
       flatStories.forEach((story) => {
         let group = groups.find(g => g.user_id === story.user_id);
@@ -118,7 +118,6 @@ export const useStories = (userId?: string) => {
       }
     },
     onSettled: () => {
-      // FIX: Invalida silenziosamente senza causare il "Failed to fetch"
       queryClient.invalidateQueries({ queryKey: ["active-stories"], refetchType: 'none' });
     },
   });
