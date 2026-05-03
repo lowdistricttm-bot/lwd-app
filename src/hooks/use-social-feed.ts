@@ -28,49 +28,29 @@ export interface Post {
 export const useSocialFeed = (userId?: string, limit = 10) => {
   const queryClient = useQueryClient();
 
-  const { 
-    data, 
-    fetchNextPage, 
-    hasNextPage, 
-    isFetchingNextPage, 
-    isLoading, 
-    error, 
-    refetch 
-  } = useInfiniteQuery({
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, error, refetch } = useInfiniteQuery({
     queryKey: ['social-posts', userId],
     initialPageParam: 0,
     queryFn: async ({ pageParam = 0 }) => {
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
-      
       const from = pageParam * limit;
       const to = from + limit - 1;
       
-      let query = supabase
-        .from('posts')
-        .select(`
+      let query = supabase.from('posts').select(`
           id, user_id, content, image_url, images, music_metadata, created_at,
           profiles:user_id (id, username, avatar_url),
           likes (user_id, profiles:user_id (username, avatar_url)),
           comments (id, post_id, user_id, content, created_at, parent_id, image_url, profiles:user_id (id, username, avatar_url))
-        `)
-        .order('created_at', { ascending: false })
-        .range(from, to);
+        `).order('created_at', { ascending: false }).range(from, to);
 
-      if (userId) {
-        query = query.eq('user_id', userId);
-      }
-
+      if (userId) query = query.eq('user_id', userId);
       const { data: postsData, error: postsError } = await query;
-
       if (postsError) throw postsError;
       if (!postsData) return [];
 
       return postsData.map((post: any) => {
         const profile = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles;
-        const username = profile?.username || 'Membro District';
-        
-        // DEDUPLICAZIONE LIKE: Assicura che un utente compaia una sola volta
         const rawLikes = post.likes || [];
         const uniqueLikesMap = new Map();
         rawLikes.forEach((l: any) => {
@@ -84,155 +64,25 @@ export const useSocialFeed = (userId?: string, limit = 10) => {
           }
         });
         const liked_by = Array.from(uniqueLikesMap.values());
-        const likes_count = liked_by.length;
-        const is_liked = user ? uniqueLikesMap.has(user.id) : false;
-
-        // DEDUPLICAZIONE COMMENTI
-        const rawComments = post.comments || [];
-        const uniqueCommentsMap = new Map();
-        rawComments.forEach((c: any) => {
-          if (!uniqueCommentsMap.has(c.id)) {
-            const commentProfile = Array.isArray(c.profiles) ? c.profiles[0] : c.profiles;
-            uniqueCommentsMap.set(c.id, {
-              ...c,
-              profiles: {
-                ...commentProfile,
-                username: commentProfile?.username || 'Utente'
-              }
-            });
-          }
-        });
-        const comments = Array.from(uniqueCommentsMap.values());
-
         return {
           ...post,
           images: Array.isArray(post.images) ? post.images : (post.image_url ? [post.image_url] : []),
-          profiles: { username, avatar_url: profile?.avatar_url },
-          likes_count,
-          is_liked,
+          profiles: { username: profile?.username || 'Membro District', avatar_url: profile?.avatar_url },
+          likes_count: liked_by.length,
+          is_liked: user ? uniqueLikesMap.has(user.id) : false,
           liked_by,
-          comments
+          comments: post.comments?.filter((c: any, idx: number, self: any[]) => self.findIndex(t => t.id === c.id) === idx) || []
         };
       }) as Post[];
     },
-    getNextPageParam: (lastPage, allPages) => {
-      return lastPage.length === limit ? allPages.length : undefined;
-    },
+    getNextPageParam: (lastPage, allPages) => lastPage.length === limit ? allPages.length : undefined,
     staleTime: 1000 * 60 * 2,
   });
 
-  // DEDUPLICAZIONE POST FINALE: Rimuove duplicati tra pagine diverse dell'infinite scroll
   const allPosts = data?.pages.flat() || [];
-  const posts = allPosts.filter((post, index, self) => 
-    index === self.findIndex((p) => p.id === post.id)
-  );
+  const posts = allPosts.filter((post, index, self) => index === self.findIndex((p) => p.id === post.id));
 
-  useEffect(() => {
-    const channelId = `feed-${Math.random().toString(36).substring(2, 9)}`;
-    const channel = supabase
-      .channel(channelId)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => queryClient.invalidateQueries({ queryKey: ['social-posts'] }))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'likes' }, () => queryClient.invalidateQueries({ queryKey: ['social-posts'] }))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, () => queryClient.invalidateQueries({ queryKey: ['social-posts'] }))
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [queryClient]);
-
-  const processAndUpload = async (file: File) => {
-    if (file.type.startsWith('video/')) {
-      const validation = await validateVideo(file);
-      if (!validation.ok) throw new Error(validation.error);
-    } else {
-      file = await compressImage(file);
-    }
-    return await uploadToCloudinary(file);
-  };
-
-  const createPost = useMutation({
-    mutationFn: async ({ content, files, music_metadata }: { content: string, files?: File[], music_metadata?: any }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Devi accedere per pubblicare");
-      
-      let imageUrls: string[] = [];
-      if (files) {
-        for (const file of files) {
-          imageUrls.push(await processAndUpload(file));
-        }
-      }
-
-      const { data, error } = await supabase.from('posts').insert([{ 
-        user_id: user.id, 
-        content, 
-        images: imageUrls, 
-        image_url: imageUrls[0] || null,
-        music_metadata: music_metadata
-      }]).select('id').single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => { 
-      queryClient.invalidateQueries({ queryKey: ['social-posts'] }); 
-      showSuccess("Post pubblicato!"); 
-    },
-    onError: (error: any) => showError(error.message)
-  });
-
-  const updatePost = useMutation({
-    mutationFn: async ({ postId, content, files, removeImages, music_metadata }: { postId: string, content: string, files?: File[], removeImages?: boolean, music_metadata?: any }) => {
-      let imageUrls: string[] = [];
-      if (files && files.length > 0) {
-        for (const file of files) imageUrls.push(await processAndUpload(file));
-      }
-      const updateData: any = { content };
-      if (imageUrls.length > 0) {
-        updateData.images = imageUrls;
-        updateData.image_url = imageUrls[0];
-      } else if (removeImages) {
-        updateData.images = [];
-        updateData.image_url = null;
-      }
-      if (music_metadata !== undefined) updateData.music_metadata = music_metadata;
-
-      const { error } = await supabase.from('posts').update(updateData).eq('id', postId);
-      if (error) throw error;
-    },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['social-posts'] }); showSuccess("Post aggiornato!"); },
-    onError: (error: any) => showError(error.message)
-  });
-
-  const addComment = useMutation({
-    mutationFn: async ({ postId, content, parentId, file }: { postId: string, content: string, parentId?: string, file?: File }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Accedi per commentare");
-      let image_url = null;
-      if (file) image_url = await processAndUpload(file);
-      const { error } = await supabase.from('comments').insert([{ post_id: postId, user_id: user.id, content, parent_id: parentId, image_url }]);
-      if (error) throw error;
-    },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['social-posts'] }); showSuccess("Commento aggiunto!"); },
-    onError: (error: any) => showError(error.message)
-  });
-
-  const deletePost = useMutation({
-    mutationFn: async (postId: string) => {
-      await supabase.from('likes').delete().eq('post_id', postId);
-      await supabase.from('comments').delete().eq('post_id', postId);
-      const { error } = await supabase.from('posts').delete().eq('id', postId);
-      if (error) throw error;
-    },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['social-posts'] }); showSuccess("Post eliminato"); }
-  });
-
-  const deleteComment = useMutation({
-    mutationFn: async (commentId: string) => {
-      const { error } = await supabase.from('comments').delete().eq('id', commentId);
-      if (error) throw error;
-    },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['social-posts'] }); }
-  });
-
-  const toggleLike = useMutation({
+  return { posts, isLoading, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage, toggleLike: useMutation({
     mutationFn: async (postId: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Accedi per mettere like");
@@ -241,39 +91,26 @@ export const useSocialFeed = (userId?: string, limit = 10) => {
       else await supabase.from('likes').insert([{ post_id: postId, user_id: user.id }]);
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['social-posts'] })
-  });
-
-  return { 
-    posts, 
-    isLoading, 
-    error, 
-    refetch, 
-    fetchNextPage, 
-    hasNextPage, 
-    isFetchingNextPage, 
-    createPost, 
-    updatePost, 
-    addComment, 
-    deletePost, 
-    deleteComment, 
-    toggleLike 
-  };
-};
-
-export const usePost = (postId?: string) => {
-  return useQuery({
-    queryKey: ['social-post', postId],
-    queryFn: async () => {
-      if (!postId) return null;
-      const { data: { session } } = await supabase.auth.getSession();
-      const user = session?.user;
-      const { data: post, error } = await supabase.from('posts').select(`id, user_id, content, image_url, images, music_metadata, created_at, profiles:user_id (id, username, first_name, last_name, avatar_url), likes (user_id, profiles:user_id (username, avatar_url)), comments (id, post_id, user_id, content, created_at, parent_id, image_url, profiles:user_id (id, username, avatar_url))`).eq('id', postId).maybeSingle();
+  }), deletePost: useMutation({
+    mutationFn: async (postId: string) => {
+      await supabase.from('likes').delete().eq('post_id', postId);
+      await supabase.from('comments').delete().eq('post_id', postId);
+      const { error } = await supabase.from('posts').delete().eq('id', postId);
       if (error) throw error;
-      if (!post) return null;
-      const profile = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles;
-      return { ...post, images: Array.isArray(post.images) ? post.images : (post.image_url ? [post.image_url] : []), profiles: { username: profile?.username || 'Membro District', avatar_url: profile?.avatar_url }, likes_count: post.likes?.length || 0, is_liked: user ? post.likes?.some((l: any) => l.user_id === user.id) : false, comments: post.comments || [] } as Post;
     },
-    enabled: !!postId,
-    retry: 1
-  });
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['social-posts'] }); showSuccess("Post eliminato"); }
+  }), addComment: useMutation({
+    mutationFn: async ({ postId, content, parentId, file }: any) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Accedi per commentare");
+      let image_url = null;
+      if (file) image_url = await uploadToCloudinary(file);
+      const { error } = await supabase.from('comments').insert([{ post_id: postId, user_id: user.id, content, parent_id: parentId, image_url }]);
+      if (error) throw error;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['social-posts'] }); showSuccess("Commento aggiunto!"); }
+  }), deleteComment: useMutation({
+    mutationFn: async (commentId: string) => { await supabase.from('comments').delete().eq('id', commentId); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['social-posts'] }); }
+  })};
 };
