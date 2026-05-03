@@ -104,4 +104,102 @@ export const useStories = (userId?: string) => {
         if (!old) return [];
         return old.map(group => ({
           ...group,
-          items: group.items.map
+          items: group.items.map((s: Story) => 
+            s.id === storyId ? { ...s, is_liked: true, likes_count: (s.likes_count || 0) + 1 } : s
+          )
+        }));
+      });
+
+      return { previousStories };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousStories) {
+        queryClient.setQueryData(["active-stories"], context.previousStories);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["active-stories"], refetchType: 'none' });
+    },
+  });
+
+  const uploadStory = useMutation({
+    mutationFn: async ({ files, music_metadata }: { files: File[], music_metadata?: any }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Non autenticato");
+
+      for (const file of files) {
+        const fileExt = file.name.split('.').pop();
+        const filePath = `${user.id}/${Math.random()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage.from('stories').upload(filePath, file);
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage.from('stories').getPublicUrl(filePath);
+        await supabase.from('stories').insert({
+          user_id: user.id,
+          image_url: publicUrl,
+          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          music_metadata
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["active-stories"] });
+      toast.success("Storia pubblicata!");
+    }
+  });
+
+  const deleteStory = useMutation({
+    mutationFn: async (id: string) => {
+      await supabase.from("stories").delete().eq("id", id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["active-stories"] });
+    }
+  });
+
+  const reshareStory = useMutation({
+    mutationFn: async (data: { storyUrl: string; originalAuthorId: string; music_metadata?: any }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Non autenticato");
+
+      await supabase.from("stories").insert({
+        user_id: user.id,
+        image_url: data.storyUrl,
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        music_metadata: data.music_metadata
+      });
+      
+      await supabase.from("messages").insert({
+        sender_id: user.id,
+        receiver_id: data.originalAuthorId,
+        content: "Ha aggiunto la tua storia alla sua!",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["active-stories"] });
+      toast.success("Storia aggiunta!");
+    }
+  });
+
+  const addMention = useMutation({
+    mutationFn: async (data: { storyId: string; mentionId: string; storyUrl: string; music_metadata?: any }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Non autenticato");
+
+      await supabase.from("story_mentions").insert({
+        story_id: data.storyId,
+        user_id: data.mentionId
+      });
+
+      await supabase.from("messages").insert({
+        sender_id: user.id,
+        receiver_id: data.mentionId,
+        content: `Ti ha menzionato in una storia!`,
+        images: [{ url: data.storyUrl, music_metadata: data.music_metadata }]
+      });
+    },
+    onSuccess: () => toast.success("Membro menzionato!")
+  });
+
+  return { stories, isLoading, toggleStoryLike, deleteStory, uploadStory, reshareStory, addMention };
+};
