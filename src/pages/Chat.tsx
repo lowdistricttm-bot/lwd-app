@@ -119,35 +119,13 @@ const Chat = () => {
     setPreviews(newFiles.map(file => URL.createObjectURL(file)));
   };
 
-  // LOGICA DI INVIO IMMEDIATO (COME LE MENZIONI)
-  const handleSend = (e: React.FormEvent) => {
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if ((!message.trim() && selectedFiles.length === 0) || !userId) return;
-    
-    const currentMessage = message;
-    const currentFiles = selectedFiles;
-    const currentPreviews = previews;
-
-    // Svuotiamo subito l'interfaccia per dare feedback istantaneo
+    await sendMessage.mutateAsync({ receiverId: userId, content: message, files: selectedFiles });
     setMessage('');
     setSelectedFiles([]);
     setPreviews([]);
-
-    // Invio in background senza await
-    sendMessage.mutate({ 
-      receiverId: userId, 
-      content: currentMessage, 
-      files: currentFiles 
-    }, {
-      onError: (err: any) => {
-        // Se fallisce, ripristiniamo il contenuto così l'utente non lo perde
-        setMessage(currentMessage);
-        setSelectedFiles(currentFiles);
-        setPreviews(currentPreviews);
-        showError("Errore nell'invio. Riprova.");
-        console.error("Errore invio chat:", err);
-      }
-    });
   };
 
   const handleReshare = async (url: string, originalAuthorId: string, musicMetadata?: any) => {
