@@ -1,124 +1,295 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
-import { Story } from "@/types/story";
-import { toast } from "sonner";
+import { showError, showSuccess } from '@/utils/toast';
+import { compressImage, validateVideo } from '@/utils/media';
+import { uploadToCloudinary } from '@/utils/cloudinary';
+import { useAuth } from './use-auth';
 
-export const useStories = (userId?: string) => {
-  const queryClient = useQueryClient();
+export interface Story {
+  id: string;
+  user_id: string;
+  image_url: string;
+  created_at: string;
+  expires_at: string;
+  mentions?: string[];
+  music_metadata?: any;
+  reshared_from_profile_id?: string;
+  reshared_from?: {
+    username: string;
+  };
+  profiles?: {
+    username: string;
+    avatar_url: string;
+    role?: string;
+    is_admin?: boolean;
+  };
+}
 
-  const { data: stories = [], isLoading } = useQuery({
-    queryKey: ["active-stories"],
+export const useStoryViews = (storyId: string | null) => {
+  return useQuery({
+    queryKey: ['story-views', storyId],
     queryFn: async () => {
-      console.log("Fetching active stories...");
-      const { data: storiesData, error: storiesError } = await supabase
-        .from("stories")
+      if (!storyId) return [];
+      const { data, error } = await supabase
+        .from('story_views')
         .select(`
           *,
-          user:profiles!stories_user_id_fkey(id, username, avatar_url),
-          likes:story_likes(user_id)
+          profiles:user_id (username, avatar_url)
         `)
-        .eq("status", "active")
-        .gt("expires_at", new Date().toISOString())
-        .order("created_at", { ascending: false });
+        .eq('story_id', storyId)
+        .order('viewed_at', { ascending: false });
 
-      if (storiesError) throw storiesError;
-
-      const currentUserId = (await supabase.auth.getUser()).data.user?.id;
-
-      return (storiesData || []).map((story) => ({
-        ...story,
-        is_liked: story.likes?.some((like: any) => like.user_id === currentUserId) || false,
-        likes_count: story.likes?.length || 0,
-      })) as Story[];
+      if (error) throw error;
+      return data;
     },
+    enabled: !!storyId
+  });
+};
+
+export const useStories = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  const { data: stories, isLoading } = useQuery({
+    queryKey: ['active-stories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('stories')
+        .select(`
+          *,
+          profiles:user_id (
+            username,
+            avatar_url,
+            role,
+            is_admin
+          ),
+          reshared_from:reshared_from_profile_id (
+            username
+          ),
+          story_likes (user_id)
+        `)
+        .gt('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        if (error.message?.includes('AbortError') || error.message?.includes('Lock broken')) {
+          return [];
+        }
+        console.error("[Stories] Errore caricamento:", error);
+        return [];
+      }
+      return formatStories(data || []);
+    }
+  });
+
+  const formatStories = (data: any[]) => {
+    const grouped = data.reduce((acc: any, story: any) => {
+      if (!acc[story.user_id]) {
+        acc[story.user_id] = {
+          user_id: story.user_id,
+          username: story.profiles?.username || 'Utente',
+          avatar_url: story.profiles?.avatar_url,
+          role: story.profiles?.role || (story.profiles?.is_admin ? 'admin' : 'member'),
+          items: []
+        };
+      }
+      
+      const isLiked = user ? story.story_likes?.some((l: any) => l.user_id === user.id) : false;
+
+      acc[story.user_id].items.push({
+        ...story,
+        mentions: Array.isArray(story.mentions) ? story.mentions : [],
+        is_liked: isLiked
+      });
+      return acc;
+    }, {});
+    return Object.values(grouped);
+  };
+
+  const uploadStory = useMutation({
+    mutationFn: async ({ files, music_metadata }: { files: File[], music_metadata?: any }) => {
+      if (!user) throw new Error("Accedi per caricare una storia");
+
+      const uploadPromises = files.map(async (originalFile) => {
+        let file = originalFile;
+        if (file.type.startsWith('video/')) {
+          const validation = await validateVideo(file);
+          if (!validation.ok) throw new Error(validation.error);
+        } else {
+          file = await compressImage(file);
+        }
+
+        const publicUrl = await uploadToCloudinary(file);
+
+        const { error: dbError } = await supabase
+          .from('stories')
+          .insert([{ 
+            user_id: user.id, 
+            image_url: publicUrl,
+            mentions: [],
+            music_metadata: music_metadata
+          }]);
+
+        if (dbError) throw dbError;
+        return publicUrl;
+      });
+
+      return Promise.all(uploadPromises);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['active-stories'] });
+      showSuccess("Storia pubblicata!");
+    },
+    onError: (error: any) => showError(error)
   });
 
   const toggleStoryLike = useMutation({
-    mutationFn: async ({ storyId, userId }: { storyId: string; userId: string }) => {
-      // Controllo preventivo rapido
-      const { data: existingLike } = await supabase
-        .from("story_likes")
-        .select("id")
-        .eq("story_id", storyId)
-        .eq("user_id", userId)
-        .maybeSingle();
+    mutationFn: async ({ storyId, authorId, imageUrl, isCurrentlyLiked }: { storyId: string, authorId: string, imageUrl: string, isCurrentlyLiked: boolean }) => {
+      if (!user) throw new Error("Accedi per mettere like");
+      
+      if (isCurrentlyLiked) return 'already_liked';
 
-      if (existingLike) return "already_liked";
-
+      // 1. Inseriamo il like
       const { error: likeError } = await supabase
-        .from("story_likes")
-        .insert({ story_id: storyId, user_id: userId });
-
-      if (likeError) throw likeError;
-
-      const { data: storyData } = await supabase
-        .from("stories")
-        .select("user_id")
-        .eq("id", storyId)
-        .single();
-
-      if (storyData && storyData.user_id !== userId) {
-        await supabase.from("messages").insert({
-          sender_id: userId,
-          receiver_id: storyData.user_id,
-          content: "❤️ ha messo like alla tua storia",
-          story_id: storyId,
-        });
+        .from('story_likes')
+        .insert([{ story_id: storyId, user_id: user.id }]);
+      
+      if (likeError) {
+        if (likeError.code === '23505') return 'already_liked';
+        throw likeError;
       }
 
-      return "success";
+      // 2. Inviamo il messaggio in chat come notifica
+      const { error: msgError } = await supabase.from('messages').insert([{
+        sender_id: user.id,
+        receiver_id: authorId,
+        content: "❤️ Ha messo like alla tua storia",
+        image_url: imageUrl,
+        images: [{ url: imageUrl, type: 'story_like' }]
+      }]);
+
+      if (msgError) {
+        console.error("[Stories] Errore invio messaggio like:", msgError);
+      }
+
+      return 'liked';
     },
     onMutate: async ({ storyId }) => {
-      // Blocca refetch in corso per non sovrascrivere l'update ottimistico
-      await queryClient.cancelQueries({ queryKey: ["active-stories"] });
-      const previousStories = queryClient.getQueryData<Story[]>(["active-stories"]);
+      await queryClient.cancelQueries({ queryKey: ['active-stories'] });
+      const previousStories = queryClient.getQueryData(['active-stories']);
 
-      queryClient.setQueryData<Story[]>(["active-stories"], (old) => {
-        if (!old) return [];
-        return old.map((s) =>
-          s.id === storyId ? { ...s, is_liked: true, likes_count: (s.likes_count || 0) + 1 } : s
-        );
+      queryClient.setQueryData(['active-stories'], (old: any) => {
+        if (!old) return old;
+        return old.map((userGroup: any) => ({
+          ...userGroup,
+          items: userGroup.items.map((item: any) => {
+            if (item.id === storyId) {
+              return { ...item, is_liked: true };
+            }
+            return item;
+          })
+        }));
       });
 
       return { previousStories };
     },
-    onError: (err, variables, context) => {
+    onError: (err: any, variables, context) => {
       if (context?.previousStories) {
-        queryClient.setQueryData(["active-stories"], context.previousStories);
+        queryClient.setQueryData(['active-stories'], context.previousStories);
       }
-      // Non mostriamo il toast di errore per il fetch fallito per non disturbare l'utente
-      if (err instanceof TypeError && err.message === "Failed to fetch") {
-        console.warn("Rilevato Failed to fetch durante il like - operazione ignorata graficamente");
-      } else {
-        toast.error("Errore durante l'invio del like");
-      }
+      showError(err.message || "Errore durante il like");
     },
     onSettled: () => {
-      // Invalida silenziosamente senza forzare il refresh immediato dell'UI
-      queryClient.invalidateQueries({ queryKey: ["active-stories"], refetchType: 'none' });
+      queryClient.invalidateQueries({ queryKey: ['active-stories'] });
+      queryClient.invalidateQueries({ queryKey: ['chat'] });
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+    }
+  });
+
+  const addMention = useMutation({
+    mutationFn: async ({ storyId, mentionId, storyUrl, music_metadata }: { storyId: string, mentionId: string, storyUrl: string, music_metadata?: any }) => {
+      if (!user) throw new Error("Accedi per menzionare");
+
+      const { data: story } = await supabase.from('stories').select('mentions').eq('id', storyId).single();
+      const currentMentions = Array.isArray(story?.mentions) ? story.mentions : [];
+      
+      if (!currentMentions.includes(mentionId)) {
+        const { error: updateError } = await supabase
+          .from('stories')
+          .update({ mentions: [...currentMentions, mentionId] })
+          .eq('id', storyId);
+
+        if (updateError) throw updateError;
+      }
+
+      await supabase.from('messages').insert([{
+        sender_id: user.id,
+        receiver_id: mentionId,
+        content: `✨ Ti ha menzionato in una storia!`,
+        image_url: storyUrl,
+        images: [{
+          url: storyUrl,
+          type: 'story_mention',
+          music_metadata: music_metadata
+        }]
+      }]);
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['active-stories'] });
+      showSuccess("Menzione inviata!");
+    },
+    onError: (error: any) => showError(error)
   });
 
   const deleteStory = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('stories').delete().eq('id', id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['active-stories'] });
+      showSuccess("Storia eliminata");
+    },
+    onError: (error: any) => showError(error)
+  });
+
+  const recordView = useMutation({
     mutationFn: async (storyId: string) => {
-      const { error } = await supabase.from("stories").delete().eq("id", storyId);
+      if (!user) return;
+      try {
+        await supabase
+          .from('story_views')
+          .upsert([{ story_id: storyId, user_id: user.id }], { onConflict: 'story_id, user_id' });
+      } catch (err) {
+        console.warn("[Stories] Impossibile registrare visualizzazione:", storyId);
+      }
+    }
+  });
+
+  const reshareStory = useMutation({
+    mutationFn: async ({ storyUrl, originalAuthorId, music_metadata }: { storyUrl: string, originalAuthorId: string, music_metadata?: any }) => {
+      if (!user) throw new Error("Accedi per ricondividere");
+
+      const { error } = await supabase
+        .from('stories')
+        .insert([{ 
+          user_id: user.id, 
+          image_url: storyUrl,
+          mentions: [],
+          reshared_from_profile_id: originalAuthorId,
+          music_metadata: music_metadata
+        }]);
+
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["active-stories"] });
-      toast.success("Storia eliminata");
+      queryClient.invalidateQueries({ queryKey: ['active-stories'] });
+      showSuccess("Storia ricondivisa!");
     },
-    onError: () => {
-      toast.error("Errore durante l'eliminazione della storia");
-    },
+    onError: (error: any) => showError(error)
   });
 
-  return {
-    stories,
-    isLoading,
-    toggleStoryLike,
-    deleteStory,
-  };
+  return { stories, isLoading, uploadStory, addMention, deleteStory, recordView, reshareStory, toggleStoryLike };
 };
