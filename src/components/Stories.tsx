@@ -6,7 +6,7 @@ import { useStories } from '@/hooks/use-stories';
 import { useAdmin } from '@/hooks/use-admin';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from "@/integrations/supabase/client";
-import StoryViewer from './StoryViewer';
+import { StoryViewer } from './StoryViewer';
 import MusicSelector from './MusicSelector';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
