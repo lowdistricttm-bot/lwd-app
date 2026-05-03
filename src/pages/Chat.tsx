@@ -193,7 +193,7 @@ const Chat = () => {
           const isMe = msg.sender_id === currentUser?.id;
           const isMention = msg.content.includes('Ti ha menzionato');
           const isSharedPost = msg.content.includes('Ti ha inviato un post');
-          const msgImages = msg.images || [];
+          const msgImages = (msg.images as any[]) || [];
 
           let displayContent = msg.content;
           let sharedPostId = null;
