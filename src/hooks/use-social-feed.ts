@@ -13,7 +13,7 @@ export interface Post {
   content: string;
   image_url?: string;
   images?: string[];
-  music_metadata?: any; // Aggiunto supporto musica
+  music_metadata?: any;
   created_at: string;
   profiles?: {
     username: string;
@@ -68,18 +68,41 @@ export const useSocialFeed = (userId?: string, limit = 10) => {
 
       return postsData.map((post: any) => {
         const profile = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles;
-        const likes_count = post.likes?.length || 0;
-        const is_liked = user ? post.likes?.some((l: any) => l.user_id === user.id) : false;
         const username = profile?.username || 'Membro District';
         
-        const liked_by = post.likes?.map((l: any) => {
-          const likerProfile = Array.isArray(l.profiles) ? l.profiles[0] : l.profiles;
-          return {
-            user_id: l.user_id,
-            username: likerProfile?.username || 'Membro',
-            avatar_url: likerProfile?.avatar_url
-          };
-        }) || [];
+        // DEDUPLICAZIONE LIKE: Assicura che un utente compaia una sola volta
+        const rawLikes = post.likes || [];
+        const uniqueLikesMap = new Map();
+        rawLikes.forEach((l: any) => {
+          if (!uniqueLikesMap.has(l.user_id)) {
+            const likerProfile = Array.isArray(l.profiles) ? l.profiles[0] : l.profiles;
+            uniqueLikesMap.set(l.user_id, {
+              user_id: l.user_id,
+              username: likerProfile?.username || 'Membro',
+              avatar_url: likerProfile?.avatar_url
+            });
+          }
+        });
+        const liked_by = Array.from(uniqueLikesMap.values());
+        const likes_count = liked_by.length;
+        const is_liked = user ? uniqueLikesMap.has(user.id) : false;
+
+        // DEDUPLICAZIONE COMMENTI
+        const rawComments = post.comments || [];
+        const uniqueCommentsMap = new Map();
+        rawComments.forEach((c: any) => {
+          if (!uniqueCommentsMap.has(c.id)) {
+            const commentProfile = Array.isArray(c.profiles) ? c.profiles[0] : c.profiles;
+            uniqueCommentsMap.set(c.id, {
+              ...c,
+              profiles: {
+                ...commentProfile,
+                username: commentProfile?.username || 'Utente'
+              }
+            });
+          }
+        });
+        const comments = Array.from(uniqueCommentsMap.values());
 
         return {
           ...post,
@@ -88,16 +111,7 @@ export const useSocialFeed = (userId?: string, limit = 10) => {
           likes_count,
           is_liked,
           liked_by,
-          comments: post.comments?.map((c: any) => {
-            const commentProfile = Array.isArray(c.profiles) ? c.profiles[0] : c.profiles;
-            return {
-              ...c,
-              profiles: {
-                ...commentProfile,
-                username: commentProfile?.username || 'Utente'
-              }
-            };
-          }) || []
+          comments
         };
       }) as Post[];
     },
@@ -107,7 +121,11 @@ export const useSocialFeed = (userId?: string, limit = 10) => {
     staleTime: 1000 * 60 * 2,
   });
 
-  const posts = data?.pages.flat() || [];
+  // DEDUPLICAZIONE POST FINALE: Rimuove duplicati tra pagine diverse dell'infinite scroll
+  const allPosts = data?.pages.flat() || [];
+  const posts = allPosts.filter((post, index, self) => 
+    index === self.findIndex((p) => p.id === post.id)
+  );
 
   useEffect(() => {
     const channelId = `feed-${Math.random().toString(36).substring(2, 9)}`;
@@ -147,7 +165,7 @@ export const useSocialFeed = (userId?: string, limit = 10) => {
         content, 
         images: imageUrls, 
         image_url: imageUrls[0] || null,
-        music_metadata: music_metadata // Salvataggio musica
+        music_metadata: music_metadata
       }]).select('id').single();
 
       if (error) throw error;
@@ -174,11 +192,7 @@ export const useSocialFeed = (userId?: string, limit = 10) => {
         updateData.images = [];
         updateData.image_url = null;
       }
-      
-      // Aggiorna musica se fornita (o null se rimossa)
-      if (music_metadata !== undefined) {
-        updateData.music_metadata = music_metadata;
-      }
+      if (music_metadata !== undefined) updateData.music_metadata = music_metadata;
 
       const { error } = await supabase.from('posts').update(updateData).eq('id', postId);
       if (error) throw error;
@@ -187,7 +201,6 @@ export const useSocialFeed = (userId?: string, limit = 10) => {
     onError: (error: any) => showError(error.message)
   });
 
-  // ... (restante codice addComment, deletePost, toggleLike invariato)
   const addComment = useMutation({
     mutationFn: async ({ postId, content, parentId, file }: { postId: string, content: string, parentId?: string, file?: File }) => {
       const { data: { user } } = await supabase.auth.getUser();
