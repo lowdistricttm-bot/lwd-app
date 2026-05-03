@@ -151,6 +151,7 @@ export const useStories = () => {
       
       if (isCurrentlyLiked) return 'already_liked';
 
+      // 1. Inseriamo il like
       const { error: likeError } = await supabase
         .from('story_likes')
         .insert([{ story_id: storyId, user_id: user.id }]);
@@ -160,13 +161,18 @@ export const useStories = () => {
         throw likeError;
       }
 
-      await supabase.from('messages').insert([{
+      // 2. Inviamo il messaggio in chat come notifica
+      const { error: msgError } = await supabase.from('messages').insert([{
         sender_id: user.id,
         receiver_id: authorId,
         content: "❤️ Ha messo like alla tua storia",
         image_url: imageUrl,
-        images: [imageUrl]
+        images: [{ url: imageUrl, type: 'story_like' }]
       }]);
+
+      if (msgError) {
+        console.error("[Stories] Errore invio messaggio like:", msgError);
+      }
 
       return 'liked';
     },
@@ -197,6 +203,8 @@ export const useStories = () => {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['active-stories'] });
+      queryClient.invalidateQueries({ queryKey: ['chat'] });
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
     }
   });
 
