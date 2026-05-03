@@ -2,8 +2,24 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Story } from "@/types/story";
 import { toast } from "sonner";
+
+// Definizione dell'interfaccia Story per risolvere l'errore TS2307
+export interface Story {
+  id: string;
+  user_id: string;
+  image_url: string;
+  created_at: string;
+  expires_at: string;
+  status: string;
+  is_liked?: boolean;
+  likes_count?: number;
+  user?: {
+    id: string;
+    username: string;
+    avatar_url: string;
+  };
+}
 
 export const useStories = (userId?: string) => {
   const queryClient = useQueryClient();
@@ -11,7 +27,6 @@ export const useStories = (userId?: string) => {
   const { data: stories = [], isLoading } = useQuery({
     queryKey: ["active-stories"],
     queryFn: async () => {
-      console.log("Fetching active stories...");
       const { data: storiesData, error: storiesError } = await supabase
         .from("stories")
         .select(`
@@ -37,7 +52,6 @@ export const useStories = (userId?: string) => {
 
   const toggleStoryLike = useMutation({
     mutationFn: async ({ storyId, userId }: { storyId: string; userId: string }) => {
-      // Controllo preventivo rapido
       const { data: existingLike } = await supabase
         .from("story_likes")
         .select("id")
@@ -71,7 +85,6 @@ export const useStories = (userId?: string) => {
       return "success";
     },
     onMutate: async ({ storyId }) => {
-      // Blocca refetch in corso per non sovrascrivere l'update ottimistico
       await queryClient.cancelQueries({ queryKey: ["active-stories"] });
       const previousStories = queryClient.getQueryData<Story[]>(["active-stories"]);
 
@@ -88,17 +101,49 @@ export const useStories = (userId?: string) => {
       if (context?.previousStories) {
         queryClient.setQueryData(["active-stories"], context.previousStories);
       }
-      // Non mostriamo il toast di errore per il fetch fallito per non disturbare l'utente
-      if (err instanceof TypeError && err.message === "Failed to fetch") {
-        console.warn("Rilevato Failed to fetch durante il like - operazione ignorata graficamente");
-      } else {
+      if (!(err instanceof TypeError && err.message === "Failed to fetch")) {
         toast.error("Errore durante l'invio del like");
       }
     },
     onSettled: () => {
-      // Invalida silenziosamente senza forzare il refresh immediato dell'UI
       queryClient.invalidateQueries({ queryKey: ["active-stories"], refetchType: 'none' });
     },
+  });
+
+  const uploadStory = useMutation({
+    mutationFn: async (file: File) => {
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) throw new Error("Utente non autenticato");
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('stories')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('stories')
+        .getPublicUrl(filePath);
+
+      const { error: dbError } = await supabase.from('stories').insert({
+        user_id: user.id,
+        image_url: publicUrl,
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      });
+
+      if (dbError) throw dbError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["active-stories"] });
+      toast.success("Storia pubblicata con successo!");
+    },
+    onError: (error: any) => {
+      toast.error("Errore nel caricamento della storia: " + error.message);
+    }
   });
 
   const deleteStory = useMutation({
@@ -110,9 +155,25 @@ export const useStories = (userId?: string) => {
       queryClient.invalidateQueries({ queryKey: ["active-stories"] });
       toast.success("Storia eliminata");
     },
-    onError: () => {
-      toast.error("Errore durante l'eliminazione della storia");
+  });
+
+  const reshareStory = useMutation({
+    mutationFn: async (storyId: string) => {
+      toast.info("Funzionalità reshare in arrivo");
+    }
+  });
+
+  const addMention = useMutation({
+    mutationFn: async ({ storyId, userId }: { storyId: string; userId: string }) => {
+      const { error } = await supabase.from("story_mentions").insert({
+        story_id: storyId,
+        user_id: userId
+      });
+      if (error) throw error;
     },
+    onSuccess: () => {
+      toast.success("Menzione aggiunta!");
+    }
   });
 
   return {
@@ -120,5 +181,8 @@ export const useStories = (userId?: string) => {
     isLoading,
     toggleStoryLike,
     deleteStory,
+    uploadStory,
+    reshareStory,
+    addMention
   };
 };
