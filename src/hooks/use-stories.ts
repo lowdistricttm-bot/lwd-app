@@ -119,11 +119,9 @@ export const useStories = () => {
       if (!user) throw new Error("Accedi per mettere like");
       if (isCurrentlyLiked) return 'already_liked';
 
-      // 1. Inserimento like
       const { error: likeError } = await supabase.from('story_likes').insert([{ story_id: storyId, user_id: user.id }]);
       if (likeError && likeError.code !== '23505') throw likeError;
 
-      // 2. Invio automatico in chat (identico a menzione)
       await supabase.from('messages').insert([{
         sender_id: user.id,
         receiver_id: authorId,
