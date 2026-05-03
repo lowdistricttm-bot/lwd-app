@@ -80,11 +80,13 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   const storyAudioRef = useRef<HTMLAudioElement | null>(null);
   const { deleteStory, recordView, toggleStoryLike } = useStories();
   const { removeFromHighlight } = useHighlights(currentUserId || undefined);
-  const { sendMessage } = useMessages(allStories[userIndex]?.user_id);
+  
+  // Utilizziamo l'ID dell'utente corrente della storia per inizializzare le chat
+  const userStories = allStories[userIndex];
+  const { sendMessage } = useMessages(userStories?.user_id);
   
   useBodyLock(true);
 
-  const userStories = allStories[userIndex];
   const currentStory = userStories?.items[currentIndex];
   
   const nextStory = useMemo(() => {
@@ -102,7 +104,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
   const { data: views } = useStoryViews(isOwner && !isHighlight ? currentStory?.id : null);
 
-  // Effetto per la riproduzione immediata dell'audio
+  // Effetto per la riproduzione dell'audio
   useEffect(() => {
     if (storyAudioRef.current) {
       storyAudioRef.current.pause();
@@ -112,10 +114,9 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
     if (currentStory?.music_metadata?.audio_url) {
       const audio = new Audio(currentStory.music_metadata.audio_url);
       audio.loop = true;
-      audio.preload = 'auto'; // Forza il caricamento immediato
+      audio.preload = 'auto';
       audio.volume = isMuted ? 0 : 0.5;
       
-      // Rimosso il controllo !isMediaLoading: l'audio parte subito
       audio.play().catch(() => console.log("Autoplay blocked"));
       
       storyAudioRef.current = audio;
@@ -124,15 +125,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
     return () => {
       storyAudioRef.current?.pause();
     };
-  }, [currentStory?.id, isMuted]); // Rimosso isMediaLoading dalle dipendenze
-
-  // Precaricamento audio della prossima storia per una transizione istantanea
-  useEffect(() => {
-    if (nextStory?.music_metadata?.audio_url) {
-      const preloadAudio = new Audio(nextStory.music_metadata.audio_url);
-      preloadAudio.preload = 'auto';
-    }
-  }, [nextStory?.id]);
+  }, [currentStory?.id, isMuted]);
 
   useEffect(() => {
     setProgress(0);
@@ -218,18 +211,22 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
   const handleReply = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!replyText.trim() || !currentUserId) return;
+    if (!replyText.trim() || !currentUserId || !userStories?.user_id) return;
     
     const textToSend = replyText;
     setReplyText(''); 
     
-    sendMessage.mutate({
-      receiverId: userStories.user_id,
-      content: textToSend,
-      imageUrl: currentStory.image_url
-    });
-    
-    showSuccess("Risposta inviata!");
+    try {
+      await sendMessage.mutateAsync({
+        receiverId: userStories.user_id,
+        content: textToSend,
+        imageUrl: currentStory.image_url
+      });
+      showSuccess("Risposta inviata!");
+    } catch (err) {
+      showError("Impossibile inviare la risposta. Riprova.");
+      setReplyText(textToSend); // Ripristina il testo in caso di errore
+    }
   };
 
   const handleShareClick = () => {
@@ -290,6 +287,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
     >
       <div className="relative w-full h-full md:h-[85vh] md:w-[420px] md:aspect-[9/16] bg-black md:rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl md:border md:border-white/10 z-10">
         
+        {/* Progress Bars */}
         <div className="absolute top-[calc(0.5rem+env(safe-area-inset-top))] md:top-6 left-4 right-4 z-50 flex gap-1.5">
           {userStories.items.map((_, i) => (
             <div key={i} className="h-1 flex-1 bg-white/30 rounded-full overflow-hidden">
@@ -301,6 +299,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           ))}
         </div>
 
+        {/* Header */}
         <div className="absolute top-[calc(2rem+env(safe-area-inset-top))] md:top-12 left-4 right-4 z-50 flex items-center justify-between">
           <button onClick={handleProfileClick} className="flex items-center gap-3 group text-left">
             <div className="w-10 h-10 rounded-full border-2 border-white/40 shadow-lg overflow-hidden bg-black group-hover:border-white transition-all">
@@ -346,11 +345,13 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </div>
         </div>
 
+        {/* Navigation Layers */}
         <div className="absolute inset-0 z-20 flex">
           <div className="w-1/3 h-full cursor-pointer" onClick={handlePrev} />
           <div className="w-2/3 h-full cursor-pointer" onClick={handleNext} />
         </div>
 
+        {/* Media Container */}
         <div className="absolute inset-0 flex items-center justify-center bg-black z-10 overflow-hidden">
           <div className="absolute inset-0 z-0 pointer-events-none">
             <img 
@@ -405,6 +406,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </AnimatePresence>
         </div>
 
+        {/* Bottom Bar / Interactions */}
         <div className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black via-black/80 to-transparent pt-32 pointer-events-none">
           <div className="px-4 flex w-full max-w-md mx-auto items-end pointer-events-auto pb-1">
             {isOwner ? (
@@ -444,15 +446,20 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                     className="bg-black border border-white/20 rounded-full h-10 px-5 text-[11px] font-bold uppercase tracking-widest text-white placeholder:text-white/70 focus-visible:ring-white/40 shadow-xl" 
                   />
                   <AnimatePresence>
-                    {replyText.trim() && (
+                    {(replyText.trim() || sendMessage.isPending) && (
                       <motion.button 
                         initial={{ scale: 0, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0, opacity: 0 }}
                         type="submit" 
+                        disabled={sendMessage.isPending}
                         className="absolute right-1 top-1 w-8 h-8 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shrink-0 shadow-lg"
                       >
-                        <Send size={12} className="-rotate-12 ml-0.5" />
+                        {sendMessage.isPending ? (
+                          <Loader2 size={12} className="animate-spin" />
+                        ) : (
+                          <Send size={12} className="-rotate-12 ml-0.5" />
+                        )}
                       </motion.button>
                     )}
                   </AnimatePresence>
@@ -461,14 +468,18 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                   <motion.button 
                     whileTap={{ scale: 1.4 }}
                     onClick={handleLike} 
-                    disabled={currentStory.is_liked}
+                    disabled={currentStory.is_liked || toggleStoryLike.isPending}
                     className={cn(
                       "w-10 h-10 rounded-full flex items-center justify-center transition-all border shadow-xl", 
                       currentStory.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-black border-white/20 text-white hover:bg-white/20 hover:scale-105",
-                      currentStory.is_liked && "cursor-default"
+                      (currentStory.is_liked || toggleStoryLike.isPending) && "cursor-default"
                     )}
                   >
-                    <Heart size={18} fill={currentStory.is_liked ? "currentColor" : "none"} />
+                    {toggleStoryLike.isPending ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <Heart size={18} fill={currentStory.is_liked ? "currentColor" : "none"} />
+                    )}
                   </motion.button>
                   <button onClick={handleShareClick} className="w-10 h-10 bg-black border border-white/20 text-white rounded-full flex items-center justify-center hover:bg-white/20 hover:scale-105 transition-all shadow-xl">
                     <Send size={18} className="-rotate-12 mr-0.5" />
@@ -479,6 +490,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </div>
         </div>
 
+        {/* Viewers Bottom Sheet */}
         <AnimatePresence>
           {showViewers && (
             <>
