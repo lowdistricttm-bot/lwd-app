@@ -18,6 +18,7 @@ import AddMentionModal from './AddMentionModal';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/use-translation';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface StoryViewerProps {
   allStories: any[];
@@ -54,6 +55,7 @@ const getTimeAgo = (dateString: string) => {
 
 const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: StoryViewerProps) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { t, language } = useTranslation();
   const { role } = useAdmin();
   const [userIndex, setUserIndex] = useState(initialUserIndex);
@@ -61,7 +63,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   const [progress, setProgress] = useState(0);
   const [isMuted, setIsMuted] = useState(globalMuteState);
   const [replyText, setReplyText] = useState('');
-  const [justSent, setJustSent] = useState(false); // Feedback immediato per il messaggio
+  const [justSent, setJustSent] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isHighlightModalOpen, setIsHighlightModalOpen] = useState(false);
   const [isMentionModalOpen, setIsMentionModalOpen] = useState(false);
@@ -156,7 +158,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
   const handleLike = () => {
     if (isOwner || !currentUserId || currentStory.is_liked) return;
-    // La mutazione è ottimistica, quindi la UI cambierà istantaneamente grazie a use-stories.ts
     toggleStoryLike.mutate({
       storyId: currentStory.id,
       authorId: userStories.user_id,
@@ -165,25 +166,28 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
     });
   };
 
-  const handleReply = async (e: React.FormEvent) => {
+  const handleReply = (e: React.FormEvent) => {
     e.preventDefault();
     if (!replyText.trim() || !currentUserId || !userStories?.user_id) return;
     
     const textToSend = replyText;
     setReplyText(''); 
-    setJustSent(true); // Feedback visivo istantaneo
+    setJustSent(true);
     
-    // Rimuoviamo il feedback visivo dopo 2 secondi
     setTimeout(() => setJustSent(false), 2000);
     
-    // Invio in background (non usiamo await qui per non bloccare l'icona)
+    // Invio automatico immediato (come la menzione)
     sendMessage.mutate({
       receiverId: userStories.user_id,
       content: textToSend,
       imageUrl: currentStory.image_url
     }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['conversations', currentUserId] });
+        queryClient.invalidateQueries({ queryKey: ['chat'] });
+      },
       onError: () => {
-        showError("Errore nell'invio. Riprova.");
+        showError("Errore nell'invio della risposta");
         setReplyText(textToSend);
         setJustSent(false);
       }
@@ -335,12 +339,13 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
                   <motion.button 
                     whileTap={{ scale: 1.4 }} 
                     onClick={handleLike} 
+                    disabled={currentStory.is_liked || toggleStoryLike.isPending}
                     className={cn(
                       "w-10 h-10 rounded-full flex items-center justify-center transition-all border shadow-xl", 
                       currentStory.is_liked ? "bg-red-500 border-red-500 text-white" : "bg-black border-white/20 text-white hover:bg-white/20 hover:scale-105"
                     )}
                   >
-                    <Heart size={18} fill={currentStory.is_liked ? "currentColor" : "none"} />
+                    {toggleStoryLike.isPending ? <Loader2 size={18} className="animate-spin" /> : <Heart size={18} fill={currentStory.is_liked ? "currentColor" : "none"} />}
                   </motion.button>
                   <button onClick={handleShareClick} className="w-10 h-10 bg-black border border-white/20 text-white rounded-full flex items-center justify-center hover:bg-white/20 hover:scale-105 transition-all shadow-xl"><Send size={18} className="-rotate-12 mr-0.5" /></button>
                 </div>
