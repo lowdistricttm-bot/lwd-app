@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-// Definizione interfaccia Story per risolvere TS2307
+// Definizione dell'interfaccia Story per risolvere l'errore TS2307
 export interface Story {
   id: string;
   user_id: string;
@@ -61,9 +61,18 @@ export const useStories = (userId?: string) => {
 
       if (existingLike) return "already_liked";
 
-      await supabase.from("story_likes").insert({ story_id: storyId, user_id: userId });
+      const { error: likeError } = await supabase
+        .from("story_likes")
+        .insert({ story_id: storyId, user_id: userId });
 
-      const { data: storyData } = await supabase.from("stories").select("user_id").eq("id", storyId).single();
+      if (likeError) throw likeError;
+
+      const { data: storyData } = await supabase
+        .from("stories")
+        .select("user_id")
+        .eq("id", storyId)
+        .single();
+
       if (storyData && storyData.user_id !== userId) {
         await supabase.from("messages").insert({
           sender_id: userId,
@@ -72,19 +81,29 @@ export const useStories = (userId?: string) => {
           story_id: storyId,
         });
       }
+
       return "success";
     },
     onMutate: async ({ storyId }) => {
       await queryClient.cancelQueries({ queryKey: ["active-stories"] });
       const previousStories = queryClient.getQueryData<Story[]>(["active-stories"]);
+
       queryClient.setQueryData<Story[]>(["active-stories"], (old) => {
         if (!old) return [];
-        return old.map((s) => s.id === storyId ? { ...s, is_liked: true, likes_count: (s.likes_count || 0) + 1 } : s);
+        return old.map((s) =>
+          s.id === storyId ? { ...s, is_liked: true, likes_count: (s.likes_count || 0) + 1 } : s
+        );
       });
+
       return { previousStories };
     },
     onError: (err, variables, context) => {
-      if (context?.previousStories) queryClient.setQueryData(["active-stories"], context.previousStories);
+      if (context?.previousStories) {
+        queryClient.setQueryData(["active-stories"], context.previousStories);
+      }
+      if (!(err instanceof TypeError && err.message === "Failed to fetch")) {
+        toast.error("Errore durante l'invio del like");
+      }
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["active-stories"], refetchType: 'none' });
@@ -92,81 +111,78 @@ export const useStories = (userId?: string) => {
   });
 
   const uploadStory = useMutation({
-    mutationFn: async ({ files, music_metadata }: { files: File[], music_metadata?: any }) => {
+    mutationFn: async (file: File) => {
       const user = (await supabase.auth.getUser()).data.user;
-      if (!user) throw new Error("Non autenticato");
+      if (!user) throw new Error("Utente non autenticato");
 
-      for (const file of files) {
-        const fileExt = file.name.split('.').pop();
-        const filePath = `${user.id}/${Math.random()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage.from('stories').upload(filePath, file);
-        if (uploadError) throw uploadError;
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
 
-        const { data: { publicUrl } } = supabase.storage.from('stories').getPublicUrl(filePath);
-        await supabase.from('stories').insert({
-          user_id: user.id,
-          image_url: publicUrl,
-          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-          music_metadata // Se la colonna esiste nel DB
-        });
-      }
+      const { error: uploadError } = await supabase.storage
+        .from('stories')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('stories')
+        .getPublicUrl(filePath);
+
+      const { error: dbError } = await supabase.from('stories').insert({
+        user_id: user.id,
+        image_url: publicUrl,
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      });
+
+      if (dbError) throw dbError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["active-stories"] });
-      toast.success("Storia pubblicata!");
+      toast.success("Storia pubblicata con successo!");
+    },
+    onError: (error: any) => {
+      toast.error("Errore nel caricamento della storia: " + error.message);
     }
   });
 
   const deleteStory = useMutation({
-    mutationFn: async (id: string) => {
-      await supabase.from("stories").delete().eq("id", id);
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["active-stories"] })
-  });
-
-  const reshareStory = useMutation({
-    mutationFn: async (data: { storyUrl: string; originalAuthorId: string; music_metadata?: any }) => {
-      const user = (await supabase.auth.getUser()).data.user;
-      if (!user) throw new Error("Non autenticato");
-
-      await supabase.from("stories").insert({
-        user_id: user.id,
-        image_url: data.storyUrl,
-        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        music_metadata: data.music_metadata
-      });
-      
-      await supabase.from("messages").insert({
-        sender_id: user.id,
-        receiver_id: data.originalAuthorId,
-        content: "Ha aggiunto la tua storia alla sua!",
-      });
+    mutationFn: async (storyId: string) => {
+      const { error } = await supabase.from("stories").delete().eq("id", storyId);
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["active-stories"] });
-      toast.success("Storia aggiunta!");
+      toast.success("Storia eliminata");
+    },
+  });
+
+  const reshareStory = useMutation({
+    mutationFn: async (storyId: string) => {
+      toast.info("Funzionalità reshare in arrivo");
     }
   });
 
   const addMention = useMutation({
-    mutationFn: async (data: { storyId: string; mentionId: string; storyUrl: string; music_metadata?: any }) => {
-      const user = (await supabase.auth.getUser()).data.user;
-      if (!user) throw new Error("Non autenticato");
-
-      await supabase.from("story_mentions").insert({
-        story_id: data.storyId,
-        user_id: data.mentionId
+    mutationFn: async ({ storyId, userId }: { storyId: string; userId: string }) => {
+      const { error } = await supabase.from("story_mentions").insert({
+        story_id: storyId,
+        user_id: userId
       });
-
-      await supabase.from("messages").insert({
-        sender_id: user.id,
-        receiver_id: data.mentionId,
-        content: `Ti ha menzionato in una storia!`,
-        images: [{ url: data.storyUrl, music_metadata: data.music_metadata }]
-      });
+      if (error) throw error;
     },
-    onSuccess: () => toast.success("Membro menzionato!")
+    onSuccess: () => {
+      toast.success("Menzione aggiunta!");
+    }
   });
 
-  return { stories, isLoading, toggleStoryLike, deleteStory, uploadStory, reshareStory, addMention };
+  return {
+    stories,
+    isLoading,
+    toggleStoryLike,
+    deleteStory,
+    uploadStory,
+    reshareStory,
+    addMention
+  };
 };
