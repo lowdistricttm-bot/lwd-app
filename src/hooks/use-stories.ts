@@ -276,6 +276,7 @@ export const useStories = () => {
           image_url: storyUrl,
           mentions: [],
           reshared_from_profile_id: originalAuthorId, music_metadata: music_metadata
+          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
         }]);
 
       if (error) throw error;
