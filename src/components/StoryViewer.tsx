@@ -48,7 +48,7 @@ const getTimeAgo = (dateString: string) => {
 const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: StoryViewerProps) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { t, language } = useTranslation();
+  const { t } = useTranslation();
   const { role } = useAdmin();
   const [userIndex, setUserIndex] = useState(initialUserIndex);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -66,28 +66,21 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   const storyAudioRef = useRef<HTMLAudioElement | null>(null);
   const { deleteStory, recordView, toggleStoryLike } = useStories();
   const { removeFromHighlight } = useHighlights(currentUserId || undefined);
+  
   const userStories = allStories[userIndex];
   const { sendMessage } = useMessages(userStories?.user_id);
   
   useBodyLock(true);
   const currentStory = userStories?.items[currentIndex];
 
-  useEffect(() => {
-    if (storyAudioRef.current) { storyAudioRef.current.pause(); storyAudioRef.current = null; }
-    if (currentStory?.music_metadata?.audio_url) {
-      const audio = new Audio(currentStory.music_metadata.audio_url);
-      audio.loop = true; audio.volume = isMuted ? 0 : 0.5;
-      audio.play().catch(() => {});
-      storyAudioRef.current = audio;
-    }
-    return () => { storyAudioRef.current?.pause(); };
-  }, [currentStory?.id, isMuted]);
+  const isVideo = useMemo(() => 
+    currentStory?.image_url.match(/\.(mp4|webm|ogg|mov)$/i) || currentStory?.image_url.includes('video'),
+    [currentStory?.image_url]
+  );
 
-  useEffect(() => { setProgress(0); setIsMediaLoading(true); }, [currentStory?.id, userIndex]);
-
-  useEffect(() => {
-    if (currentStory?.id && currentUserId && !isOwner && !isHighlight) recordView.mutate(currentStory.id);
-  }, [currentStory?.id]);
+  const isOwner = currentUserId === userStories?.user_id;
+  const isHighlight = userStories?.role === 'highlight';
+  const { data: views } = useStoryViews(isOwner && !isHighlight ? currentStory?.id : null);
 
   const handleNext = useCallback(() => {
     if (currentIndex < allStories[userIndex].items.length - 1) setCurrentIndex(prev => prev + 1);
@@ -105,6 +98,23 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   }, [currentIndex, userIndex, allStories]);
 
   useEffect(() => {
+    if (storyAudioRef.current) { storyAudioRef.current.pause(); storyAudioRef.current = null; }
+    if (currentStory?.music_metadata?.audio_url) {
+      const audio = new Audio(currentStory.music_metadata.audio_url);
+      audio.loop = true; audio.volume = isMuted ? 0 : 0.5;
+      audio.play().catch(() => {});
+      storyAudioRef.current = audio;
+    }
+    return () => { storyAudioRef.current?.pause(); };
+  }, [currentStory?.id, isMuted]);
+
+  useEffect(() => { setProgress(0); setIsMediaLoading(true); }, [currentStory?.id, userIndex]);
+
+  useEffect(() => {
+    if (currentStory?.id && currentUserId && !isOwner && !isHighlight) recordView.mutate(currentStory.id);
+  }, [currentStory?.id, currentUserId, isOwner, isHighlight, recordView]);
+
+  useEffect(() => {
     if (isVideo || isShareModalOpen || isHighlightModalOpen || isMentionModalOpen || showViewers || !currentStory || isMediaLoading) return;
     const interval = setInterval(() => {
       setProgress(prev => {
@@ -115,11 +125,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
     return () => clearInterval(interval);
   }, [userIndex, currentIndex, isVideo, isShareModalOpen, isHighlightModalOpen, isMentionModalOpen, showViewers, currentStory, isMediaLoading]);
 
-  useEffect(() => { if (progress >= 100 && !isVideo) handleNext(); }, [progress]);
-
-  const isOwner = currentUserId === userStories?.user_id;
-  const isHighlight = userStories?.role === 'highlight';
-  const { data: views } = useStoryViews(isOwner && !isHighlight ? currentStory?.id : null);
+  useEffect(() => { if (progress >= 100 && !isVideo) handleNext(); }, [progress, isVideo, handleNext]);
 
   const handleLike = () => {
     if (isOwner || !currentUserId || currentStory.is_liked) return;
@@ -137,13 +143,31 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
     });
   };
 
+  const handleProfileClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isHighlight) return;
+    onClose();
+    navigate(`/profile/${userStories.user_id}`);
+  };
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!currentStory) return;
+    if (confirm("Vuoi eliminare questa storia?")) {
+      try {
+        await deleteStory.mutateAsync(currentStory.id);
+        if (userStories.items.length === 1) handleNext();
+        else setCurrentIndex(prev => Math.max(0, prev - 1));
+      } catch (err) {}
+    }
+  };
+
   if (!userStories || !currentStory) return null;
 
   return createPortal(
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[9999] bg-black flex items-center justify-center overflow-hidden touch-none">
       <div className="relative w-full h-full md:h-[85vh] md:w-[420px] bg-black md:rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl md:border md:border-white/10">
         
-        {/* Bars */}
         <div className="absolute top-[calc(0.5rem+env(safe-area-inset-top))] left-4 right-4 z-50 flex gap-1.5">
           {userStories.items.map((_, i) => (
             <div key={i} className="h-1 flex-1 bg-white/30 rounded-full overflow-hidden">
@@ -152,7 +176,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           ))}
         </div>
 
-        {/* Header */}
         <div className="absolute top-[calc(2rem+env(safe-area-inset-top))] left-4 right-4 z-50 flex items-center justify-between">
           <button onClick={handleProfileClick} className="flex items-center gap-3 text-left">
             <div className="w-10 h-10 rounded-full border-2 border-white/40 overflow-hidden bg-black">
@@ -169,12 +192,11 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           <button onClick={onClose} className="p-2 text-white bg-black/40 rounded-full"><X size={24} /></button>
         </div>
 
-        {/* Media */}
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-black overflow-hidden">
           <AnimatePresence mode="wait">
             <motion.div key={currentStory.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full flex items-center justify-center">
               {isVideo ? (
-                <video src={currentStory.image_url} className="w-full h-full object-contain" autoPlay playsInline muted={isMuted} onTimeUpdate={() => setProgress((videoRef.current?.currentTime || 0) / (videoRef.current?.duration || 1) * 100)} onEnded={handleNext} />
+                <video ref={videoRef} src={currentStory.image_url} className="w-full h-full object-contain" autoPlay playsInline muted={isMuted} onTimeUpdate={() => setProgress((videoRef.current?.currentTime || 0) / (videoRef.current?.duration || 1) * 100)} onEnded={handleNext} />
               ) : (
                 <img src={currentStory.image_url} className="w-full h-full object-contain" onLoad={() => setIsMediaLoading(false)} />
               )}
@@ -182,13 +204,11 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </AnimatePresence>
         </div>
 
-        {/* Interaction Layer */}
         <div className="absolute inset-0 z-20 flex">
           <div className="w-1/3 h-full cursor-pointer" onClick={handlePrev} />
           <div className="w-2/3 h-full cursor-pointer" onClick={handleNext} />
         </div>
 
-        {/* Footer */}
         <div className="absolute bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-black via-black/80 to-transparent pt-32 p-4">
           {!isOwner && (
             <div className="flex items-center gap-3">
@@ -211,6 +231,12 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           )}
         </div>
       </div>
+
+      <ShareStoryModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} storyUrl={currentStory.image_url} authorName={userStories.username} bottomOffset="0px" />
+      {currentUserId && <HighlightModal isOpen={isHighlightModalOpen} onClose={() => setIsHighlightModalOpen(false)} story={currentStory} userId={currentUserId} bottomOffset="0px" />}
+      {isOwner && !isHighlight && (
+        <AddMentionModal isOpen={isMentionModalOpen} onClose={() => setIsMentionModalOpen(false)} storyId={currentStory.id} storyUrl={currentStory.image_url} existingMentions={currentStory.mentions || []} musicMetadata={currentStory.music_metadata} bottomOffset="0px" />
+      )}
     </motion.div>,
     document.body
   );
