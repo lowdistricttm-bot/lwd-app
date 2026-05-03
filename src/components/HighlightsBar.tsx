@@ -5,7 +5,7 @@ import { useHighlights } from '@/hooks/use-highlights';
 import { Loader2, Edit2, Trash2, X, Check } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
 import { supabase } from "@/integrations/supabase/client";
-import { StoryViewer } from './StoryViewer';
+import StoryViewer from './StoryViewer';
 import { Input } from './ui/input';
 import { cn } from '@/lib/utils';
 
