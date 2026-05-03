@@ -148,11 +148,8 @@ export const useMessages = (otherUserId?: string) => {
 
       return { previousChat };
     },
-    onError: (err, variables, context) => {
-      if (context?.previousChat) {
-        queryClient.setQueryData(['chat', variables.receiverId, user?.id], context.previousChat);
-      }
-      showError("Errore nell'invio");
+    onError: (err) => {
+  showError(err.message || "Errore nell'invio");
     },
     onSettled: (data, error, variables) => {
       queryClient.invalidateQueries({ queryKey: ['chat', variables.receiverId, user?.id] });
