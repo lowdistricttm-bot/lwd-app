@@ -39,29 +39,30 @@ export const useStories = (userId?: string) => {
 
       if (storiesError) throw storiesError;
 
-      const currentUserId = (await supabase.auth.getUser()).data.user?.id;
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const currentUserId = currentUser?.id;
 
-      const mappedStories = (storiesData || []).map((story) => ({
+      const flatStories = (storiesData || []).map((story) => ({
         ...story,
         is_liked: story.likes?.some((like: any) => like.user_id === currentUserId) || false,
         likes_count: story.likes?.length || 0,
       })) as Story[];
 
-      // RAGGRUPPAMENTO PER UTENTE: Necessario per Stories.tsx
-      const groups = mappedStories.reduce((acc: any[], story) => {
-        const existingGroup = acc.find(g => g.user_id === story.user_id);
-        if (existingGroup) {
-          existingGroup.items.push(story);
-        } else {
-          acc.push({
+      // RAGGRUPPAMENTO PER UTENTE (Essenziale per la visualizzazione nella barra home)
+      const groups: any[] = [];
+      flatStories.forEach((story) => {
+        let group = groups.find(g => g.user_id === story.user_id);
+        if (!group) {
+          group = {
             user_id: story.user_id,
-            username: story.user?.username || 'Unknown',
+            username: story.user?.username || 'Membro District',
             avatar_url: story.user?.avatar_url,
-            items: [story]
-          });
+            items: []
+          };
+          groups.push(group);
         }
-        return acc;
-      }, []);
+        group.items.push(story);
+      });
 
       return groups;
     },
@@ -69,6 +70,7 @@ export const useStories = (userId?: string) => {
 
   const toggleStoryLike = useMutation({
     mutationFn: async ({ storyId, userId }: { storyId: string; userId: string }) => {
+      // Controllo esistenza like
       const { data: existingLike } = await supabase
         .from("story_likes")
         .select("id")
@@ -78,7 +80,11 @@ export const useStories = (userId?: string) => {
 
       if (existingLike) return "already_liked";
 
-      await supabase.from("story_likes").insert({ story_id: storyId, user_id: userId });
+      const { error: likeError } = await supabase
+        .from("story_likes")
+        .insert({ story_id: storyId, user_id: userId });
+
+      if (likeError) throw likeError;
 
       const { data: storyData } = await supabase.from("stories").select("user_id").eq("id", storyId).single();
       if (storyData && storyData.user_id !== userId) {
@@ -95,29 +101,38 @@ export const useStories = (userId?: string) => {
       await queryClient.cancelQueries({ queryKey: ["active-stories"] });
       const previousStories = queryClient.getQueryData<any[]>(["active-stories"]);
 
+      // Update ottimistico nei gruppi
       queryClient.setQueryData<any[]>(["active-stories"], (old) => {
         if (!old) return [];
-        return old.map((group) => ({
+        return old.map(group => ({
           ...group,
           items: group.items.map((s: Story) => 
             s.id === storyId ? { ...s, is_liked: true, likes_count: (s.likes_count || 0) + 1 } : s
           )
         }));
       });
+
       return { previousStories };
     },
     onError: (err, variables, context) => {
-      if (context?.previousStories) queryClient.setQueryData(["active-stories"], context.previousStories);
+      if (context?.previousStories) {
+        queryClient.setQueryData(["active-stories"], context.previousStories);
+      }
+      // Ignora silenziosamente l'errore di fetch per non bloccare l'UI
+      if (!(err instanceof TypeError && err.message === "Failed to fetch")) {
+        console.error("Like error:", err);
+      }
     },
     onSettled: () => {
+      // Invalida senza forzare il caricamento immediato per evitare crash di fetch
       queryClient.invalidateQueries({ queryKey: ["active-stories"], refetchType: 'none' });
     },
   });
 
   const uploadStory = useMutation({
     mutationFn: async ({ files, music_metadata }: { files: File[], music_metadata?: any }) => {
-      const user = (await supabase.auth.getUser()).data.user;
-      if (!user) throw new Error("Non autenticato");
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Utente non autenticato");
 
       for (const file of files) {
         const fileExt = file.name.split('.').pop();
@@ -144,12 +159,14 @@ export const useStories = (userId?: string) => {
     mutationFn: async (id: string) => {
       await supabase.from("stories").delete().eq("id", id);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["active-stories"] })
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["active-stories"] });
+    }
   });
 
   const reshareStory = useMutation({
     mutationFn: async (data: { storyUrl: string; originalAuthorId: string; music_metadata?: any }) => {
-      const user = (await supabase.auth.getUser()).data.user;
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Non autenticato");
 
       await supabase.from("stories").insert({
@@ -173,23 +190,7 @@ export const useStories = (userId?: string) => {
 
   const addMention = useMutation({
     mutationFn: async (data: { storyId: string; mentionId: string; storyUrl: string; music_metadata?: any }) => {
-      const user = (await supabase.auth.getUser()).data.user;
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Non autenticato");
 
-      await supabase.from("story_mentions").insert({
-        story_id: data.storyId,
-        user_id: data.mentionId
-      });
-
-      await supabase.from("messages").insert({
-        sender_id: user.id,
-        receiver_id: data.mentionId,
-        content: `Ti ha menzionato in una storia!`,
-        images: [{ url: data.storyUrl, music_metadata: data.music_metadata }]
-      });
-    },
-    onSuccess: () => toast.success("Membro menzionato!")
-  });
-
-  return { stories, isLoading, toggleStoryLike, deleteStory, uploadStory, reshareStory, addMention };
-};
+      await supabase.from("story
