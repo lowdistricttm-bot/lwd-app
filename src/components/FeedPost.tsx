@@ -306,11 +306,31 @@ const FeedPost = ({ post }: { post: Post }) => {
                 <div className="w-full h-full flex items-center justify-center text-zinc-600"><User size={20} /></div>
               )}
             </div>
-            <div>
+            <div className="flex flex-col">
   <h4 className="text-[10px] font-black uppercase italic tracking-widest text-white">{post.profiles?.username}</h4>
-  <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-tighter">
-    {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: it })}
-  </p>
+  <div className="flex flex-col">
+    <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-tighter">
+      {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: it })}
+    </p>
+    {post.music_metadata && (
+      <div className="flex items-center gap-1 mt-0.5 max-w-[150px] overflow-hidden">
+        {/* Icona nota musicale molto piccola, come nell'immagine */}
+        <Music size={8} className="text-zinc-400 shrink-0" />
+        <div className="relative flex overflow-hidden whitespace-nowrap">
+          {/* Testo scorrevole (marquee) */}
+          <div className="animate-marquee flex gap-4">
+            <span className="text-[8px] font-bold uppercase tracking-tighter text-zinc-400">
+              {post.music_metadata.artist} • {post.music_metadata.title}
+            </span>
+            {/* Duplichiamo il testo per l'effetto scorrimento continuo */}
+            <span className="text-[8px] font-bold uppercase tracking-tighter text-zinc-400">
+              {post.music_metadata.artist} • {post.music_metadata.title}
+            </span>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
 </div>
           </Link>
           
