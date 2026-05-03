@@ -14,7 +14,7 @@ export interface Story {
   created_at: string;
   expires_at: string;
   mentions?: string[];
-  music_metadata?: any; // Aggiunto per la musica
+  music_metadata?: any;
   reshared_from_profile_id?: string;
   reshared_from?: {
     username: string;
@@ -109,7 +109,6 @@ export const useStories = () => {
   };
 
   const uploadStory = useMutation({
-    // Aggiornato per accettare music_metadata
     mutationFn: async ({ files, music_metadata }: { files: File[], music_metadata?: any }) => {
       if (!user) throw new Error("Accedi per caricare una storia");
 
@@ -130,7 +129,7 @@ export const useStories = () => {
             user_id: user.id, 
             image_url: publicUrl,
             mentions: [],
-            music_metadata: music_metadata // Salvataggio metadati musicali
+            music_metadata: music_metadata
           }]);
 
         if (dbError) throw dbError;
@@ -152,7 +151,6 @@ export const useStories = () => {
       
       if (isCurrentlyLiked) return 'already_liked';
 
-      // 1. Inserisci il like nel database
       const { error: likeError } = await supabase
         .from('story_likes')
         .insert([{ story_id: storyId, user_id: user.id }]);
@@ -162,18 +160,13 @@ export const useStories = () => {
         throw likeError;
       }
 
-      // 2. Invia il messaggio in direct (DM)
-      const { error: msgError } = await supabase.from('messages').insert([{
+      await supabase.from('messages').insert([{
         sender_id: user.id,
         receiver_id: authorId,
         content: "❤️ Ha messo like alla tua storia",
         image_url: imageUrl,
         images: [imageUrl]
       }]);
-
-      if (msgError) {
-        console.warn("[Stories] Errore invio notifica DM:", msgError);
-      }
 
       return 'liked';
     },
@@ -208,7 +201,7 @@ export const useStories = () => {
   });
 
   const addMention = useMutation({
-    mutationFn: async ({ storyId, mentionId, storyUrl }: { storyId: string, mentionId: string, storyUrl: string }) => {
+    mutationFn: async ({ storyId, mentionId, storyUrl, music_metadata }: { storyId: string, mentionId: string, storyUrl: string, music_metadata?: any }) => {
       if (!user) throw new Error("Accedi per menzionare");
 
       const { data: story } = await supabase.from('stories').select('mentions').eq('id', storyId).single();
@@ -228,7 +221,11 @@ export const useStories = () => {
         receiver_id: mentionId,
         content: `✨ Ti ha menzionato in una storia!`,
         image_url: storyUrl,
-        images: [storyUrl]
+        images: [{
+          url: storyUrl,
+          type: 'story_mention',
+          music_metadata: music_metadata
+        }]
       }]);
     },
     onSuccess: () => {
@@ -254,12 +251,10 @@ export const useStories = () => {
     mutationFn: async (storyId: string) => {
       if (!user) return;
       try {
-        // Usiamo upsert per registrare la visualizzazione
         await supabase
           .from('story_views')
           .upsert([{ story_id: storyId, user_id: user.id }], { onConflict: 'story_id, user_id' });
       } catch (err) {
-        // Errore silenzioso per non disturbare l'utente se il tracciamento fallisce
         console.warn("[Stories] Impossibile registrare visualizzazione:", storyId);
       }
     }
@@ -275,7 +270,8 @@ export const useStories = () => {
           user_id: user.id, 
           image_url: storyUrl,
           mentions: [],
-          reshared_from_profile_id: originalAuthorId, music_metadata: music_metadata
+          reshared_from_profile_id: originalAuthorId,
+          music_metadata: music_metadata
         }]);
 
       if (error) throw error;
