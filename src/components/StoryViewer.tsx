@@ -44,7 +44,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
   const [isMediaLoading, setIsMediaLoading] = useState(true);
   
   const videoRef = useRef<HTMLVideoElement>(null);
-  const storyAudioRef = useRef<HTMLAudioElement | null>(null); // Ref per la musica
+  const storyAudioRef = useRef<HTMLAudioElement | null>(null);
   const { deleteStory, recordView, toggleStoryLike } = useStories();
   const { removeFromHighlight } = useHighlights(currentUserId || undefined);
   const { sendMessage } = useMessages(allStories[userIndex]?.user_id);
@@ -69,7 +69,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
   const { data: views } = useStoryViews(isOwner && !isHighlight ? currentStory?.id : null);
 
-  // --- INTEGRAZIONE LOGICA MUSICA ---
   useEffect(() => {
     if (storyAudioRef.current) {
       storyAudioRef.current.pause();
@@ -82,7 +81,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
       audio.volume = isMuted ? 0 : 0.5;
       
       if (!isMediaLoading) {
-        audio.play().catch(() => console.log("Autoplay blocked or interrupted"));
+        audio.play().catch(() => console.log("Autoplay blocked"));
       }
       
       storyAudioRef.current = audio;
@@ -160,7 +159,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
     const newState = !isMuted;
     setIsMuted(newState);
     globalMuteState = newState;
-    // Aggiorna volume musica se presente
     if (storyAudioRef.current) {
       storyAudioRef.current.volume = newState ? 0 : 0.5;
     }
@@ -282,7 +280,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </div>
         </div>
 
-        {/* INTEGRAZIONE STICKER MUSICALE */}
         {currentStory.music_metadata && (
           <motion.div 
             initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }}
@@ -298,16 +295,12 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </motion.div>
         )}
 
-        {/* Navigation Layers */}
         <div className="absolute inset-0 z-20 flex">
           <div className="w-1/3 h-full cursor-pointer" onClick={handlePrev} />
           <div className="w-2/3 h-full cursor-pointer" onClick={handleNext} />
         </div>
 
-        {/* Main Content (Image/Video) */}
         <div className="absolute inset-0 flex items-center justify-center bg-black z-10 overflow-hidden">
-          
-          {/* Blurred Background effect */}
           <div className="absolute inset-0 z-0 pointer-events-none">
             <img 
               src={currentStory.image_url} 
@@ -360,13 +353,8 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
           </AnimatePresence>
         </div>
 
-        {/* Footer Interaction Area */}
-        <div 
-          className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black via-black/80 to-transparent pt-32 pointer-events-none"
-        >
-          <div 
-            className="px-4 flex w-full max-w-md mx-auto items-end pointer-events-auto pb-1" 
-          >
+        <div className="absolute bottom-0 left-0 right-0 z-50 select-none bg-gradient-to-t from-black via-black/80 to-transparent pt-32 pointer-events-none">
+          <div className="px-4 flex w-full max-w-md mx-auto items-end pointer-events-auto pb-1">
             {isOwner ? (
               <div className="flex items-center justify-between w-full gap-2 mb-1">
                 {!isHighlight && (
@@ -485,7 +473,17 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
 
       <ShareStoryModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} storyUrl={currentStory.image_url} authorName={userStories.username} bottomOffset={modalBottomOffset} />
       {currentUserId && <HighlightModal isOpen={isHighlightModalOpen} onClose={() => setIsHighlightModalOpen(false)} story={currentStory} userId={currentUserId} bottomOffset={modalBottomOffset} />}
-      {isOwner && !isHighlight && <AddMentionModal isOpen={isMentionModalOpen} onClose={() => setIsMentionModalOpen(false)} storyId={currentStory.id} storyUrl={currentStory.image_url} existingMentions={currentStory.mentions || []} bottomOffset={modalBottomOffset} />}
+      {isOwner && !isHighlight && (
+        <AddMentionModal 
+          isOpen={isMentionModalOpen} 
+          onClose={() => setIsMentionModalOpen(false)} 
+          storyId={currentStory.id} 
+          storyUrl={currentStory.image_url} 
+          existingMentions={currentStory.mentions || []} 
+          musicMetadata={currentStory.music_metadata}
+          bottomOffset={modalBottomOffset} 
+        />
+      )}
     </motion.div>,
     document.body
   );
