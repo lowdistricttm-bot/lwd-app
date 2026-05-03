@@ -10,7 +10,6 @@ export interface Story {
   image_url: string;
   created_at: string;
   expires_at: string;
-  status: string;
   is_liked?: boolean;
   likes_count?: number;
   user?: {
@@ -26,18 +25,21 @@ export const useStories = (userId?: string) => {
   const { data: stories = [], isLoading } = useQuery({
     queryKey: ["active-stories"],
     queryFn: async () => {
+      // Query corretta: rimosso il filtro "status" che non esiste nel DB
       const { data: storiesData, error: storiesError } = await supabase
         .from("stories")
         .select(`
           *,
-          user:profiles!stories_user_id_fkey(id, username, avatar_url),
+          user:profiles(id, username, avatar_url),
           likes:story_likes(user_id)
         `)
-        .eq("status", "active")
         .gt("expires_at", new Date().toISOString())
         .order("created_at", { ascending: false });
 
-      if (storiesError) throw storiesError;
+      if (storiesError) {
+        console.error("Errore caricamento storie:", storiesError);
+        throw storiesError;
+      }
 
       const { data: { user: authUser } } = await supabase.auth.getUser();
       const currentUserId = authUser?.id;
@@ -48,7 +50,7 @@ export const useStories = (userId?: string) => {
         likes_count: story.likes?.length || 0,
       })) as Story[];
 
-      // RAGGRUPPAMENTO PER UTENTE: Questo è ciò che fa vedere i cerchi nella Home
+      // RAGGRUPPAMENTO PER UTENTE: Essenziale per la barra della Home
       const groups: any[] = [];
       flatStories.forEach((story) => {
         let group = groups.find(g => g.user_id === story.user_id);
@@ -118,7 +120,6 @@ export const useStories = (userId?: string) => {
       }
     },
     onSettled: () => {
-      // FIX: Invalida silenziosamente senza causare il "Failed to fetch"
       queryClient.invalidateQueries({ queryKey: ["active-stories"], refetchType: 'none' });
     },
   });
