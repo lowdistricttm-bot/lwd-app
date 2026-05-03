@@ -117,7 +117,7 @@ export const useMessages = (otherUserId?: string) => {
           sender_id: user.id, 
           receiver_id: receiverId, 
           content,
-          images: imageUrls,
+          images: imageUrls.map(url => ({ url, type: 'message' })),
           image_url: imageUrls[0] || null 
         }])
         .select()
