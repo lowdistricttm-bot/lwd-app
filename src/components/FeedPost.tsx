@@ -307,11 +307,11 @@ const FeedPost = ({ post }: { post: Post }) => {
               )}
             </div>
             <div>
-              <h4 className="text-[10px] font-black uppercase italic tracking-widest text-white">{post.profiles?.username}</h4>
-              <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-tighter">
-                {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: it })}
-              </p>
-            </div>
+  <h4 className="text-[10px] font-black uppercase italic tracking-widest text-white">{post.profiles?.username}</h4>
+  <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-tighter">
+    {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: it })}
+  </p>
+</div>
           </Link>
           
           <div className="flex items-center gap-2">
