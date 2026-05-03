@@ -12,7 +12,6 @@ export interface Message {
   receiver_id: string;
   content: string;
   image_url?: string;
-  images?: string[];
   is_read: boolean;
   created_at: string;
   sender?: { username: string, avatar_url: string };
