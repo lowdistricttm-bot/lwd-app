@@ -28,10 +28,8 @@ import {
 
 const isVideo = (url: string) => url.match(/\.(mp4|webm|ogg|mov)$/i) || url.includes('video');
 
-// Stato globale per il mute della bacheca (attivo di default = false)
 let globalFeedMuteState = false;
 
-// Componente CommentItem per gestire i commenti e le risposte
 const CommentItem = ({ 
   comment, 
   allComments, 
@@ -90,7 +88,6 @@ const CommentItem = ({
           
           <div className="bg-white/5 rounded-2xl rounded-tl-none px-4 py-3 border border-white/5">
             <p className="text-[11px] text-zinc-300 leading-relaxed font-medium italic">{comment.content}</p>
-            
             {comment.media_url && (
               <div 
                 className="mt-3 rounded-xl overflow-hidden border border-white/10 max-w-[200px] cursor-pointer hover:opacity-90 transition-opacity"
@@ -109,9 +106,9 @@ const CommentItem = ({
 
       {replies.length > 0 && (
         <div className="ml-11 space-y-4 border-l border-white/5 pl-4">
-          {replies.map(reply => (
+          {replies.map((reply, idx) => (
             <CommentItem 
-              key={reply.id} 
+              key={`reply-${reply.id}-${idx}`} 
               comment={reply} 
               allComments={allComments}
               onReply={onReply}
@@ -146,8 +143,6 @@ const FeedPost = ({ post }: { post: Post }) => {
   const [isLikesModalOpen, setIsLikesModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [showHeartPop, setShowHeartPop] = useState(false);
-  
-  // Inizializza con lo stato globale (false = audio attivo)
   const [isMuted, setIsMuted] = useState(globalFeedMuteState); 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const commentFileInputRef = useRef<HTMLInputElement>(null);
@@ -156,22 +151,17 @@ const FeedPost = ({ post }: { post: Post }) => {
     supabase.auth.getUser().then(({ data: { user } }) => setCurrentUserId(user?.id || null));
   }, []);
 
-  // Sincronizzazione del mute tra tutti i post
   useEffect(() => {
-    const handleMuteChange = (e: any) => {
-      setIsMuted(e.detail);
-    };
+    const handleMuteChange = (e: any) => setIsMuted(e.detail);
     window.addEventListener('feedMuteChange', handleMuteChange);
     return () => window.removeEventListener('feedMuteChange', handleMuteChange);
   }, []);
 
-  // Inizializzazione Audio
   useEffect(() => {
     if (post.music_metadata?.audio_url) {
       audioRef.current = new Audio(post.music_metadata.audio_url);
       audioRef.current.loop = true;
       audioRef.current.volume = isMuted ? 0 : 0.4;
-      
       return () => {
         audioRef.current?.pause();
         audioRef.current = null;
@@ -179,18 +169,11 @@ const FeedPost = ({ post }: { post: Post }) => {
     }
   }, [post.music_metadata]);
 
-  // Gestione Focus Audio
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = isMuted ? 0 : 0.4;
-      
-      if (isInView && !isMuted) {
-        audioRef.current.play().catch(() => {
-          console.log("Autoplay blocked - interaction needed");
-        });
-      } else {
-        audioRef.current.pause();
-      }
+      if (isInView && !isMuted) audioRef.current.play().catch(() => {});
+      else audioRef.current.pause();
     }
   }, [isInView, isMuted]);
 
@@ -198,16 +181,11 @@ const FeedPost = ({ post }: { post: Post }) => {
     const newState = !isMuted;
     setIsMuted(newState);
     globalFeedMuteState = newState;
-    // Notifica tutti gli altri post del cambio di stato
     window.dispatchEvent(new CustomEvent('feedMuteChange', { detail: newState }));
   };
 
   const handleLike = () => {
-    if (!currentUserId) {
-      showError(language === 'it' ? "Accedi per mettere like" : "Login to like");
-      navigate('/login');
-      return;
-    }
+    if (!currentUserId) { navigate('/login'); return; }
     if (!post.is_liked) {
       setShowHeartPop(true);
       setTimeout(() => setShowHeartPop(false), 1000);
@@ -217,11 +195,7 @@ const FeedPost = ({ post }: { post: Post }) => {
 
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentUserId) {
-      showError(language === 'it' ? "Accedi per commentare" : "Login to comment");
-      navigate('/login');
-      return;
-    }
+    if (!currentUserId) { navigate('/login'); return; }
     if (!commentText.trim() && !commentFile) return;
     try {
       await addComment.mutateAsync({ 
@@ -235,49 +209,6 @@ const FeedPost = ({ post }: { post: Post }) => {
       setCommentPreview(null);
       setReplyingTo(null);
     } catch (err) {}
-  };
-
-  const handleCommentFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setCommentFile(file);
-      setCommentPreview(URL.createObjectURL(file));
-    }
-  };
-
-  const handleShareClick = () => {
-    if (!currentUserId) { navigate('/login'); return; }
-    if (role === 'subscriber') {
-      showError(language === 'it' ? "L'inoltro dei post è riservato ai membri ufficiali." : "Forwarding posts is reserved for official members.");
-      return;
-    }
-    setIsShareModalOpen(true);
-  };
-
-  const handleNativeShare = async () => {
-    const username = post.profiles?.username || 'Membro';
-    const shareData = {
-      title: `Post di ${username} | Low District`,
-      text: `Guarda questo post di ${username} su Low District!`,
-      url: `${window.location.origin}/post/${post.id}`
-    };
-
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(shareData.url);
-        showSuccess(language === 'it' ? "Link post copiato!" : "Post link copied!");
-      }
-    } catch (err) {
-      console.error('Errore condivisione:', err);
-    }
-  };
-
-  const handleDeletePost = () => {
-    if (confirm(language === 'it' ? "Sei sicuro di voler eliminare questo post?" : "Are you sure you want to delete this post?")) {
-      deletePost.mutate(post.id);
-    }
   };
 
   const isAuthor = currentUserId === post.user_id;
@@ -296,7 +227,6 @@ const FeedPost = ({ post }: { post: Post }) => {
           isInView ? "ring-1 ring-white/20 scale-[1.01]" : "opacity-60 scale-100"
         )}
       >
-        {/* Header */}
         <div className="p-5 flex items-center justify-between">
           <Link to={`/profile/${post.user_id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <div className="w-11 h-11 bg-zinc-800 border border-white/10 overflow-hidden rounded-full">
@@ -307,58 +237,30 @@ const FeedPost = ({ post }: { post: Post }) => {
               )}
             </div>
             <div className="flex flex-col">
-  <h4 className="text-[10px] font-black uppercase italic tracking-widest text-white">{post.profiles?.username}</h4>
-  <div className="flex flex-col">
-    <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-tighter">
-      {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: it })}
-    </p>
-    {post.music_metadata && (
-      <div className="flex items-center gap-1 mt-0.5 max-w-[150px] overflow-hidden">
-        {/* Icona nota musicale molto piccola, come nell'immagine */}
-        <Music size={8} className="text-zinc-400 shrink-0" />
-        <div className="relative flex overflow-hidden whitespace-nowrap">
-          {/* Testo scorrevole (marquee) */}
-          <div className="animate-marquee flex gap-4">
-            <span className="text-[8px] font-bold uppercase tracking-tighter text-zinc-400">
-              {post.music_metadata.artist} • {post.music_metadata.title}
-            </span>
-            {/* Duplichiamo il testo per l'effetto scorrimento continuo */}
-            <span className="text-[8px] font-bold uppercase tracking-tighter text-zinc-400">
-              {post.music_metadata.artist} • {post.music_metadata.title}
-            </span>
-          </div>
-        </div>
-      </div>
-    )}
-  </div>
-</div>
+              <h4 className="text-[10px] font-black uppercase italic tracking-widest text-white">{post.profiles?.username}</h4>
+              <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-tighter">
+                {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: it })}
+              </p>
+            </div>
           </Link>
           
           <div className="flex items-center gap-2">
             {post.music_metadata && (
-              <button 
-                onClick={toggleMute}
-                className={cn(
-                  "p-2 rounded-full text-white transition-all",
-                  isMuted ? "bg-white/5" : "bg-zinc-800 shadow-[0_0_15px_rgba(255,255,255,0.1)]"
-                )}
-              >
+              <button onClick={toggleMute} className={cn("p-2 rounded-full text-white transition-all", isMuted ? "bg-white/5" : "bg-zinc-800")}>
                 {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} className="animate-pulse" />}
               </button>
             )}
             {isAuthor && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="text-zinc-600 hover:text-white p-2 bg-white/5 rounded-full transition-colors">
-                    <MoreHorizontal size={18} />
-                  </button>
+                  <button className="text-zinc-600 hover:text-white p-2 bg-white/5 rounded-full"><MoreHorizontal size={18} /></button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-zinc-900 border-white/10 rounded-2xl p-2">
-                  <DropdownMenuItem onClick={() => setIsEditModalOpen(true)} className="text-[9px] font-black uppercase tracking-widest italic text-white focus:bg-white/10 focus:text-white cursor-pointer rounded-xl py-3 px-4 mb-1">
-                    <Edit3 size={14} className="mr-2" /> Modifica Post
+                  <DropdownMenuItem onClick={() => setIsEditModalOpen(true)} className="text-[9px] font-black uppercase italic text-white rounded-xl py-3 px-4">
+                    <Edit3 size={14} className="mr-2" /> Modifica
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleDeletePost} className="text-[9px] font-black uppercase tracking-widest italic text-red-400 focus:bg-red-500/10 focus:text-red-400 cursor-pointer rounded-xl py-3 px-4">
-                    <Trash2 size={14} className="mr-2" /> Elimina Post
+                  <DropdownMenuItem onClick={() => deletePost.mutate(post.id)} className="text-[9px] font-black uppercase italic text-red-400 rounded-xl py-3 px-4">
+                    <Trash2 size={14} className="mr-2" /> Elimina
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -366,54 +268,17 @@ const FeedPost = ({ post }: { post: Post }) => {
           </div>
         </div>
 
-        {/* Content */}
         <div className="px-6 pb-5">
-          <p className="text-sm text-zinc-200 leading-relaxed font-medium italic">
-            {post.content}
-          </p>
+          <p className="text-sm text-zinc-200 leading-relaxed font-medium italic">{post.content}</p>
         </div>
 
         {images.length > 0 && (
-          <div 
-            className={cn(
-              "grid gap-1 bg-black/20 relative mx-4 rounded-[1.5rem] overflow-hidden border border-white/5",
-              images.length === 1 ? "grid-cols-1" : "grid-cols-2"
-            )}
-            onDoubleClick={handleLike}
-          >
+          <div className={cn("grid gap-1 bg-black/20 mx-4 rounded-[1.5rem] overflow-hidden border border-white/5", images.length === 1 ? "grid-cols-1" : "grid-cols-2")} onDoubleClick={handleLike}>
             {images.map((url, idx) => (
-              <div 
-                key={idx} 
-                className={cn(
-                  "aspect-square bg-zinc-950 overflow-hidden relative",
-                  images.length === 3 && idx === 0 ? "row-span-2 h-full" : ""
-                )}
-              >
-                {isVideo(url) ? (
-                  <VideoPlayer src={url} className="w-full h-full" initialMuted={isMuted} />
-                ) : (
-                  <img 
-                    src={url} 
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-1000 cursor-pointer" 
-                    alt="" 
-                    onClick={() => setLightboxData({ images, index: idx })}
-                  />
-                )}
+              <div key={`img-${post.id}-${idx}`} className={cn("aspect-square bg-zinc-950 overflow-hidden relative", images.length === 3 && idx === 0 ? "row-span-2 h-full" : "")}>
+                {isVideo(url) ? <VideoPlayer src={url} className="w-full h-full" initialMuted={isMuted} /> : <img src={url} className="w-full h-full object-cover" alt="" onClick={() => setLightboxData({ images, index: idx })} />}
               </div>
             ))}
-
-            <AnimatePresence>
-              {showHeartPop && (
-                <motion.div 
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1.5, opacity: 1 }}
-                  exit={{ scale: 2, opacity: 0 }}
-                  className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
-                >
-                  <Heart size={100} className="text-white fill-white drop-shadow-[0_0_30px_rgba(255,255,255,0.5)]" />
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
         )}
 
@@ -422,114 +287,56 @@ const FeedPost = ({ post }: { post: Post }) => {
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[9px] font-bold uppercase tracking-widest text-zinc-500 px-1">
               <div className="flex -space-x-2 mr-1">
                 {likedBy.slice(0, 3).map((liker, i) => (
-                  <div key={i} className="w-5 h-5 rounded-full border-2 border-black bg-zinc-800 overflow-hidden">
-                    {liker.avatar_url ? (
-                      <img src={liker.avatar_url} className="w-full h-full object-cover" alt="" />
-                    ) : (
-                      <User size={8} className="m-auto h-full" />
-                    )}
+                  <div key={`avatar-${post.id}-${liker.user_id}-${i}`} className="w-5 h-5 rounded-full border-2 border-black bg-zinc-800 overflow-hidden">
+                    {liker.avatar_url ? <img src={liker.avatar_url} className="w-full h-full object-cover" alt="" /> : <User size={8} className="m-auto h-full" />}
                   </div>
                 ))}
               </div>
               <span className="text-zinc-600 italic">Piace a</span>
-              
-              {likedBy.length <= 2 ? (
-                likedBy.map((liker, idx) => (
-                  <React.Fragment key={liker.user_id}>
-                    <Link to={`/profile/${liker.user_id}`} className="text-zinc-300 hover:text-white transition-colors italic">{liker.username}</Link>
-                    {idx < likedBy.length - 1 && <span className="text-zinc-800">•</span>}
-                  </React.Fragment>
-                ))
-              ) : (
+              {likedBy.length <= 2 ? likedBy.map((liker, idx) => (
+                <React.Fragment key={`liker-name-${post.id}-${liker.user_id}-${idx}`}>
+                  <Link to={`/profile/${liker.user_id}`} className="text-zinc-300 hover:text-white transition-colors italic">{liker.username}</Link>
+                  {idx < likedBy.length - 1 && <span className="text-zinc-800">•</span>}
+                </React.Fragment>
+              )) : (
                 <>
                   <Link to={`/profile/${likedBy[0].user_id}`} className="text-zinc-300 hover:text-white transition-colors italic">{likedBy[0].username}</Link>
                   <span className="text-zinc-800">•</span>
-                  <button onClick={() => setIsLikesModalOpen(true)} className="text-zinc-300 hover:text-white transition-colors italic">
-                    e altri {likedBy.length - 1}
-                  </button>
+                  <button onClick={() => setIsLikesModalOpen(true)} className="text-zinc-300 hover:text-white italic">e altri {likedBy.length - 1}</button>
                 </>
               )}
             </div>
           )}
 
           <div className="flex items-center gap-6 px-1">
-            <button 
-              onClick={handleLike} 
-              className={cn(
-                "flex items-center gap-2.5 transition-all group", 
-                post.is_liked ? "text-white" : "text-zinc-500 hover:text-white"
-              )}
-            >
-              <div className={cn(
-                "p-2 rounded-full transition-colors",
-                post.is_liked ? "bg-red-500/10" : "bg-white/5 group-hover:bg-white/10"
-              )}>
+            <button onClick={handleLike} className={cn("flex items-center gap-2.5 transition-all group", post.is_liked ? "text-white" : "text-zinc-500 hover:text-white")}>
+              <div className={cn("p-2 rounded-full", post.is_liked ? "bg-red-500/10" : "bg-white/5")}>
                 <Heart size={20} fill={post.is_liked ? "currentColor" : "none"} className={cn(post.is_liked && "text-red-500")} />
               </div>
               <span className="text-[10px] font-black uppercase tracking-widest">{post.likes_count || 0}</span>
             </button>
 
-            <button 
-              onClick={() => setShowComments(!showComments)} 
-              className={cn(
-                "flex items-center gap-2.5 transition-colors group", 
-                showComments ? "text-white" : "text-zinc-500 hover:text-white"
-              )}
-            >
-              <div className={cn(
-                "p-2 rounded-full transition-colors",
-                showComments ? "bg-blue-500/10" : "bg-white/5 group-hover:bg-white/10"
-              )}>
+            <button onClick={() => setShowComments(!showComments)} className={cn("flex items-center gap-2.5 transition-colors group", showComments ? "text-white" : "text-zinc-500 hover:text-white")}>
+              <div className={cn("p-2 rounded-full", showComments ? "bg-blue-500/10" : "bg-white/5")}>
                 <MessageSquare size={20} className={cn(showComments && "text-blue-400")} />
               </div>
               <span className="text-[10px] font-black uppercase tracking-widest">{post.comments?.length || 0}</span>
-            </button>
-            
-            <button 
-              onClick={handleShareClick} 
-              className="flex items-center gap-2.5 text-zinc-500 hover:text-white transition-colors group"
-            >
-              <div className="p-2 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors">
-                <Send size={20} className="-rotate-12" />
-              </div>
-              <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">Invia</span>
-            </button>
-
-            <button 
-              onClick={handleNativeShare} 
-              className="flex items-center gap-2.5 text-zinc-500 hover:text-white transition-colors ml-auto group"
-            >
-              <div className="p-2 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors">
-                <Share2 size={20} />
-              </div>
             </button>
           </div>
         </div>
 
         <AnimatePresence>
           {showComments && (
-            <motion.div 
-              initial={{ height: 0, opacity: 0 }} 
-              animate={{ height: 'auto', opacity: 1 }} 
-              exit={{ height: 0, opacity: 0 }} 
-              className="border-t border-white/5 bg-black/40 overflow-hidden"
-            >
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="border-t border-white/5 bg-black/40 overflow-hidden">
               <div className="p-5 space-y-6">
                 {mainComments.length > 0 ? (
-                  <div className="space-y-6 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                    {mainComments.map((comment: any) => (
+                  <div className="space-y-6 max-h-[400px] overflow-y-auto pr-2">
+                    {mainComments.map((comment: any, idx: number) => (
                       <CommentItem 
-                        key={comment.id} 
+                        key={`comment-${comment.id}-${idx}`} 
                         comment={comment} 
                         allComments={post.comments || []} 
-                        onReply={(id, name) => {
-                          if (!currentUserId) {
-                            showError(language === 'it' ? "Accedi per rispondere" : "Login to reply");
-                            navigate('/login');
-                            return;
-                          }
-                          setReplyingTo({ id, name });
-                        }}
+                        onReply={(id, name) => setReplyingTo({ id, name })}
                         onDelete={(id) => deleteComment.mutate(id)}
                         currentUserId={currentUserId}
                         onImageClick={(url) => setLightboxData({ images: [url], index: 0 })}
@@ -539,95 +346,17 @@ const FeedPost = ({ post }: { post: Post }) => {
                 ) : (
                   <div className="text-center py-8 opacity-30">
                     <MessageSquare size={32} className="mx-auto mb-2" />
-                    <p className="text-[9px] font-black uppercase tracking-widest">Nessun commento. Sii il primo!</p>
+                    <p className="text-[9px] font-black uppercase tracking-widest">Nessun commento</p>
                   </div>
                 )}
-
-                <div className="pt-5 border-t border-white/5">
-                  {!currentUserId ? (
-                    <div className="text-center py-4 bg-white/5 rounded-2xl border border-white/5">
-                      <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-3">Accedi per partecipare alla discussione</p>
-                      <Button onClick={() => navigate('/login')} className="bg-white text-black rounded-full text-[9px] font-black uppercase italic h-9 px-6 shadow-xl">Accedi</Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {replyingTo && (
-                        <div className="flex items-center justify-between bg-white/5 px-4 py-2 rounded-full border border-white/10 animate-in slide-in-from-bottom-2">
-                          <p className="text-[9px] font-black uppercase text-zinc-400 italic flex items-center gap-2">
-                            <CornerDownRight size={10} /> Risposta a {replyingTo.name}
-                          </p>
-                          <button onClick={() => setReplyingTo(null)} className="text-[9px] text-zinc-500 hover:text-white uppercase font-black">Annulla</button>
-                        </div>
-                      )}
-                      
-                      {commentPreview && (
-                        <div className="relative w-24 h-24 mb-2 bg-zinc-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl animate-in zoom-in-95">
-                          {commentFile?.type.startsWith('video/') ? (
-                            <video src={commentPreview} className="w-full h-full object-cover" />
-                          ) : (
-                            <img src={commentPreview} className="w-full h-full object-cover" alt="" />
-                          )}
-                          <button onClick={() => { setCommentFile(null); setCommentPreview(null); }} className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 text-white rounded-full hover:bg-red-500 transition-colors"><X size={12} /></button>
-                        </div>
-                      )}
-
-                      <form onSubmit={handleAddComment} className="flex gap-3 items-center">
-                        <input type="file" ref={commentFileInputRef} className="hidden" accept="image/*,video/*" onChange={handleCommentFileChange} />
-                        <button 
-                          type="button" 
-                          onClick={() => commentFileInputRef.current?.click()} 
-                          className="w-11 h-11 bg-white/5 border border-white/10 text-zinc-400 flex items-center justify-center rounded-full hover:text-white hover:bg-white/10 transition-all shrink-0"
-                        >
-                          <Camera size={18} />
-                        </button>
-                        <div className="flex-1 relative">
-                          <Input 
-                            placeholder="Scrivi un commento..." 
-                            value={commentText} 
-                            onChange={(e) => setCommentText(e.target.value)} 
-                            className="bg-white/5 border-white/10 rounded-full h-11 px-5 text-xs font-bold uppercase tracking-widest focus-visible:ring-white/20 placeholder:text-zinc-600" 
-                          />
-                        </div>
-                        <button 
-                          type="submit" 
-                          disabled={addComment.isPending || (!commentText.trim() && !commentFile)} 
-                          className="w-11 h-11 bg-white text-black flex items-center justify-center rounded-full hover:scale-105 active:scale-95 transition-all shrink-0 shadow-xl disabled:opacity-50"
-                        >
-                          {addComment.isPending ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} strokeWidth={2.5} className="-rotate-12" />}
-                        </button>
-                      </form>
-                    </div>
-                  )}
-                </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </motion.div>
-
       <ImageLightbox images={lightboxData?.images || []} initialIndex={lightboxData?.index || 0} isOpen={!!lightboxData} onClose={() => setLightboxData(null)} />
-      
-      <SharePostModal 
-        isOpen={isShareModalOpen} 
-        onClose={() => setIsShareModalOpen(false)} 
-        postId={post.id}
-        postImageUrl={post.images?.[0]}
-        postContent={post.content}
-      />
-
-      <LikesModal 
-        isOpen={isLikesModalOpen}
-        onClose={() => setIsLikesModalOpen(false)}
-        likes={likedBy}
-      />
-
-      {isAuthor && (
-        <EditPostModal 
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          post={post}
-        />
-      )}
+      <LikesModal isOpen={isLikesModalOpen} onClose={() => setIsLikesModalOpen(false)} likes={likedBy} />
+      {isAuthor && <EditPostModal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} post={post} />}
     </>
   );
 };
