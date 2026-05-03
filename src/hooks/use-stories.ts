@@ -34,9 +34,13 @@ export const useStoryViews = (storyId: string | null) => {
       if (!storyId) return [];
       const { data, error } = await supabase
         .from('story_views')
-        .select(`*, profiles:user_id (username, avatar_url)`)
+        .select(`
+          *,
+          profiles:user_id (username, avatar_url)
+        `)
         .eq('story_id', storyId)
         .order('viewed_at', { ascending: false });
+
       if (error) throw error;
       return data;
     },
@@ -55,14 +59,27 @@ export const useStories = () => {
         .from('stories')
         .select(`
           *,
-          profiles:user_id (username, avatar_url, role, is_admin),
-          reshared_from:reshared_from_profile_id (username),
+          profiles:user_id (
+            username,
+            avatar_url,
+            role,
+            is_admin
+          ),
+          reshared_from:reshared_from_profile_id (
+            username
+          ),
           story_likes (user_id)
         `)
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false });
 
-      if (error) return [];
+      if (error) {
+        if (error.message?.includes('AbortError') || error.message?.includes('Lock broken')) {
+          return [];
+        }
+        console.error("[Stories] Errore caricamento:", error);
+        return [];
+      }
       return formatStories(data || []);
     }
   });
@@ -78,7 +95,9 @@ export const useStories = () => {
           items: []
         };
       }
+      
       const isLiked = user ? story.story_likes?.some((l: any) => l.user_id === user.id) : false;
+
       acc[story.user_id].items.push({
         ...story,
         mentions: Array.isArray(story.mentions) ? story.mentions : [],
@@ -92,19 +111,31 @@ export const useStories = () => {
   const uploadStory = useMutation({
     mutationFn: async ({ files, music_metadata }: { files: File[], music_metadata?: any }) => {
       if (!user) throw new Error("Accedi per caricare una storia");
+
       const uploadPromises = files.map(async (originalFile) => {
         let file = originalFile;
         if (file.type.startsWith('video/')) {
           const validation = await validateVideo(file);
           if (!validation.ok) throw new Error(validation.error);
-        } else { file = await compressImage(file); }
+        } else {
+          file = await compressImage(file);
+        }
+
         const publicUrl = await uploadToCloudinary(file);
-        const { error: dbError } = await supabase.from('stories').insert([{ 
-          user_id: user.id, image_url: publicUrl, mentions: [], music_metadata: music_metadata 
-        }]);
+
+        const { error: dbError } = await supabase
+          .from('stories')
+          .insert([{ 
+            user_id: user.id, 
+            image_url: publicUrl,
+            mentions: [],
+            music_metadata: music_metadata
+          }]);
+
         if (dbError) throw dbError;
         return publicUrl;
       });
+
       return Promise.all(uploadPromises);
     },
     onSuccess: () => {
@@ -117,12 +148,21 @@ export const useStories = () => {
   const toggleStoryLike = useMutation({
     mutationFn: async ({ storyId, authorId, imageUrl, isCurrentlyLiked }: { storyId: string, authorId: string, imageUrl: string, isCurrentlyLiked: boolean }) => {
       if (!user) throw new Error("Accedi per mettere like");
+      
       if (isCurrentlyLiked) return 'already_liked';
 
-      const { error: likeError } = await supabase.from('story_likes').insert([{ story_id: storyId, user_id: user.id }]);
-      if (likeError && likeError.code !== '23505') throw likeError;
+      // 1. Inseriamo il like
+      const { error: likeError } = await supabase
+        .from('story_likes')
+        .insert([{ story_id: storyId, user_id: user.id }]);
+      
+      if (likeError) {
+        if (likeError.code === '23505') return 'already_liked';
+        throw likeError;
+      }
 
-      await supabase.from('messages').insert([{
+      // 2. Inviamo il messaggio in chat come notifica
+      const { error: msgError } = await supabase.from('messages').insert([{
         sender_id: user.id,
         receiver_id: authorId,
         content: "❤️ Ha messo like alla tua storia",
@@ -130,70 +170,125 @@ export const useStories = () => {
         images: [{ url: imageUrl, type: 'story_like' }]
       }]);
 
+      if (msgError) {
+        console.error("[Stories] Errore invio messaggio like:", msgError);
+      }
+
       return 'liked';
     },
     onMutate: async ({ storyId }) => {
       await queryClient.cancelQueries({ queryKey: ['active-stories'] });
       const previousStories = queryClient.getQueryData(['active-stories']);
+
       queryClient.setQueryData(['active-stories'], (old: any) => {
         if (!old) return old;
         return old.map((userGroup: any) => ({
           ...userGroup,
           items: userGroup.items.map((item: any) => {
-            if (item.id === storyId) return { ...item, is_liked: true };
+            if (item.id === storyId) {
+              return { ...item, is_liked: true };
+            }
             return item;
           })
         }));
       });
+
       return { previousStories };
     },
-    onSuccess: () => {
+    onError: (err: any, variables, context) => {
+      if (context?.previousStories) {
+        queryClient.setQueryData(['active-stories'], context.previousStories);
+      }
+      showError(err.message || "Errore durante il like");
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['active-stories'] });
       queryClient.invalidateQueries({ queryKey: ['chat'] });
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
-    },
-    onError: (err: any, v, context) => {
-      if (context?.previousStories) queryClient.setQueryData(['active-stories'], context.previousStories);
     }
   });
 
   const addMention = useMutation({
     mutationFn: async ({ storyId, mentionId, storyUrl, music_metadata }: { storyId: string, mentionId: string, storyUrl: string, music_metadata?: any }) => {
       if (!user) throw new Error("Accedi per menzionare");
+
       const { data: story } = await supabase.from('stories').select('mentions').eq('id', storyId).single();
       const currentMentions = Array.isArray(story?.mentions) ? story.mentions : [];
+      
       if (!currentMentions.includes(mentionId)) {
-        await supabase.from('stories').update({ mentions: [...currentMentions, mentionId] }).eq('id', storyId);
+        const { error: updateError } = await supabase
+          .from('stories')
+          .update({ mentions: [...currentMentions, mentionId] })
+          .eq('id', storyId);
+
+        if (updateError) throw updateError;
       }
+
       await supabase.from('messages').insert([{
-        sender_id: user.id, receiver_id: mentionId, content: `✨ Ti ha menzionato in una storia!`, image_url: storyUrl,
-        images: [{ url: storyUrl, type: 'story_mention', music_metadata }]
+        sender_id: user.id,
+        receiver_id: mentionId,
+        content: `✨ Ti ha menzionato in una storia!`,
+        image_url: storyUrl,
+        images: [{
+          url: storyUrl,
+          type: 'story_mention',
+          music_metadata: music_metadata
+        }]
       }]);
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['active-stories'] }); showSuccess("Menzione inviata!"); },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['active-stories'] });
+      showSuccess("Menzione inviata!");
+    },
     onError: (error: any) => showError(error)
   });
 
   const deleteStory = useMutation({
-    mutationFn: async (id: string) => { await supabase.from('stories').delete().eq('id', id); },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['active-stories'] }); showSuccess("Storia eliminata"); }
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('stories').delete().eq('id', id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['active-stories'] });
+      showSuccess("Storia eliminata");
+    },
+    onError: (error: any) => showError(error)
   });
 
   const recordView = useMutation({
     mutationFn: async (storyId: string) => {
       if (!user) return;
-      await supabase.from('story_views').upsert([{ story_id: storyId, user_id: user.id }], { onConflict: 'story_id, user_id' });
+      try {
+        await supabase
+          .from('story_views')
+          .upsert([{ story_id: storyId, user_id: user.id }], { onConflict: 'story_id, user_id' });
+      } catch (err) {
+        console.warn("[Stories] Impossibile registrare visualizzazione:", storyId);
+      }
     }
   });
 
   const reshareStory = useMutation({
     mutationFn: async ({ storyUrl, originalAuthorId, music_metadata }: { storyUrl: string, originalAuthorId: string, music_metadata?: any }) => {
       if (!user) throw new Error("Accedi per ricondividere");
-      await supabase.from('stories').insert([{ 
-        user_id: user.id, image_url: storyUrl, mentions: [], reshared_from_profile_id: originalAuthorId, music_metadata 
-      }]);
+
+      const { error } = await supabase
+        .from('stories')
+        .insert([{ 
+          user_id: user.id, 
+          image_url: storyUrl,
+          mentions: [],
+          reshared_from_profile_id: originalAuthorId,
+          music_metadata: music_metadata
+        }]);
+
+      if (error) throw error;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['active-stories'] }); showSuccess("Storia ricondivisa!"); }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['active-stories'] });
+      showSuccess("Storia ricondivisa!");
+    },
+    onError: (error: any) => showError(error)
   });
 
   return { stories, isLoading, uploadStory, addMention, deleteStory, recordView, reshareStory, toggleStoryLike };
