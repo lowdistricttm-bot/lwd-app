@@ -15,7 +15,7 @@ interface AddMentionModalProps {
   storyId: string;
   storyUrl: string;
   existingMentions: string[];
-  musicMetadata?: any; // Aggiunta prop per la musica
+  musicMetadata?: any;
   bottomOffset?: string;
 }
 
@@ -25,7 +25,7 @@ const AddMentionModal = ({
   storyId, 
   storyUrl, 
   existingMentions, 
-  musicMetadata, // Recupero prop
+  musicMetadata,
   bottomOffset = '0px' 
 }: AddMentionModalProps) => {
   const [search, setSearch] = useState('');
@@ -62,7 +62,6 @@ const AddMentionModal = ({
   }, [search]);
 
   const handleAdd = async (user: any) => {
-    // Passiamo anche la musica alla mutazione
     await addMention.mutateAsync({ 
       storyId, 
       mentionId: user.id, 
