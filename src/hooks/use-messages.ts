@@ -112,14 +112,14 @@ export const useMessages = (otherUserId?: string) => {
       }
 
       const { data, error } = await supabase
-        .from('messages')
-        .insert([{ 
-          sender_id: user.id, 
-          receiver_id: receiverId, 
-          content,
-          images: imageUrls.map(url => ({ url, type: 'message' })),
-          image_url: imageUrls[0] || null 
-        }])
+  .from('messages')
+  .insert([{ 
+    sender_id: user.id, 
+    receiver_id: receiverId, 
+    content,
+    images: imageUrls.map(url => ({ url, type: 'message_reply' })), // Usa oggetti
+    image_url: imageUrls[0] || null 
+  }])
         .select()
         .single();
 
