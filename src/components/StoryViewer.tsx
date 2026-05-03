@@ -182,7 +182,7 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
       content: textToSend,
       imageUrl: currentStory.image_url
     }, {
-      onError: () => {
+      onError: (err: any) => {
          showError(err.message || "Errore nell'invio"); 
   console.error("Dettaglio errore:", err);
         setReplyText(textToSend);
