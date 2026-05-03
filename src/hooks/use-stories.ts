@@ -39,8 +39,8 @@ export const useStories = (userId?: string) => {
 
       if (storiesError) throw storiesError;
 
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      const currentUserId = authUser?.id;
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const currentUserId = currentUser?.id;
 
       const flatStories = (storiesData || []).map((story) => ({
         ...story,
@@ -48,7 +48,7 @@ export const useStories = (userId?: string) => {
         likes_count: story.likes?.length || 0,
       })) as Story[];
 
-      // RAGGRUPPAMENTO PER UTENTE (Essenziale per Stories.tsx)
+      // RAGGRUPPAMENTO PER UTENTE (Essenziale per la visualizzazione nella barra home)
       const groups: any[] = [];
       flatStories.forEach((story) => {
         let group = groups.find(g => g.user_id === story.user_id);
@@ -70,6 +70,7 @@ export const useStories = (userId?: string) => {
 
   const toggleStoryLike = useMutation({
     mutationFn: async ({ storyId, userId }: { storyId: string; userId: string }) => {
+      // Controllo esistenza like
       const { data: existingLike } = await supabase
         .from("story_likes")
         .select("id")
@@ -100,6 +101,7 @@ export const useStories = (userId?: string) => {
       await queryClient.cancelQueries({ queryKey: ["active-stories"] });
       const previousStories = queryClient.getQueryData<any[]>(["active-stories"]);
 
+      // Update ottimistico nei gruppi
       queryClient.setQueryData<any[]>(["active-stories"], (old) => {
         if (!old) return [];
         return old.map(group => ({
@@ -116,8 +118,13 @@ export const useStories = (userId?: string) => {
       if (context?.previousStories) {
         queryClient.setQueryData(["active-stories"], context.previousStories);
       }
+      // Ignora silenziosamente l'errore di fetch per non bloccare l'UI
+      if (!(err instanceof TypeError && err.message === "Failed to fetch")) {
+        console.error("Like error:", err);
+      }
     },
     onSettled: () => {
+      // Invalida senza forzare il caricamento immediato per evitare crash di fetch
       queryClient.invalidateQueries({ queryKey: ["active-stories"], refetchType: 'none' });
     },
   });
@@ -125,7 +132,7 @@ export const useStories = (userId?: string) => {
   const uploadStory = useMutation({
     mutationFn: async ({ files, music_metadata }: { files: File[], music_metadata?: any }) => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Non autenticato");
+      if (!user) throw new Error("Utente non autenticato");
 
       for (const file of files) {
         const fileExt = file.name.split('.').pop();
@@ -186,20 +193,4 @@ export const useStories = (userId?: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Non autenticato");
 
-      await supabase.from("story_mentions").insert({
-        story_id: data.storyId,
-        user_id: data.mentionId
-      });
-
-      await supabase.from("messages").insert({
-        sender_id: user.id,
-        receiver_id: data.mentionId,
-        content: `Ti ha menzionato in una storia!`,
-        images: [{ url: data.storyUrl, music_metadata: data.music_metadata }]
-      });
-    },
-    onSuccess: () => toast.success("Membro menzionato!")
-  });
-
-  return { stories, isLoading, toggleStoryLike, deleteStory, uploadStory, reshareStory, addMention };
-};
+      await supabase.from("story
