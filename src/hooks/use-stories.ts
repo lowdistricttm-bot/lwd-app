@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-// Definizione interfaccia Story per risolvere TS2307
 export interface Story {
   id: string;
   user_id: string;
@@ -42,11 +41,29 @@ export const useStories = (userId?: string) => {
 
       const currentUserId = (await supabase.auth.getUser()).data.user?.id;
 
-      return (storiesData || []).map((story) => ({
+      const mappedStories = (storiesData || []).map((story) => ({
         ...story,
         is_liked: story.likes?.some((like: any) => like.user_id === currentUserId) || false,
         likes_count: story.likes?.length || 0,
       })) as Story[];
+
+      // RAGGRUPPAMENTO PER UTENTE: Necessario per Stories.tsx
+      const groups = mappedStories.reduce((acc: any[], story) => {
+        const existingGroup = acc.find(g => g.user_id === story.user_id);
+        if (existingGroup) {
+          existingGroup.items.push(story);
+        } else {
+          acc.push({
+            user_id: story.user_id,
+            username: story.user?.username || 'Unknown',
+            avatar_url: story.user?.avatar_url,
+            items: [story]
+          });
+        }
+        return acc;
+      }, []);
+
+      return groups;
     },
   });
 
@@ -76,10 +93,16 @@ export const useStories = (userId?: string) => {
     },
     onMutate: async ({ storyId }) => {
       await queryClient.cancelQueries({ queryKey: ["active-stories"] });
-      const previousStories = queryClient.getQueryData<Story[]>(["active-stories"]);
-      queryClient.setQueryData<Story[]>(["active-stories"], (old) => {
+      const previousStories = queryClient.getQueryData<any[]>(["active-stories"]);
+
+      queryClient.setQueryData<any[]>(["active-stories"], (old) => {
         if (!old) return [];
-        return old.map((s) => s.id === storyId ? { ...s, is_liked: true, likes_count: (s.likes_count || 0) + 1 } : s);
+        return old.map((group) => ({
+          ...group,
+          items: group.items.map((s: Story) => 
+            s.id === storyId ? { ...s, is_liked: true, likes_count: (s.likes_count || 0) + 1 } : s
+          )
+        }));
       });
       return { previousStories };
     },
@@ -107,7 +130,7 @@ export const useStories = (userId?: string) => {
           user_id: user.id,
           image_url: publicUrl,
           expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-          music_metadata // Se la colonna esiste nel DB
+          music_metadata
         });
       }
     },
