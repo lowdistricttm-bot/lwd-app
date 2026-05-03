@@ -371,21 +371,6 @@ const FeedPost = ({ post }: { post: Post }) => {
           <p className="text-sm text-zinc-200 leading-relaxed font-medium italic">
             {post.content}
           </p>
-          
-          {post.music_metadata && (
-            <div className="mt-4 flex items-center gap-2 bg-white/5 border border-white/10 p-2 pr-4 rounded-full w-fit">
-              <div className={cn(
-                "w-7 h-7 bg-white rounded-full flex items-center justify-center text-black",
-                !isMuted && isInView && "animate-spin-slow"
-              )}>
-                <Music size={12} />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[9px] font-black uppercase italic text-white leading-none">{post.music_metadata.title}</span>
-                <span className="text-[7px] font-bold uppercase text-zinc-500 leading-none mt-1">{post.music_metadata.artist}</span>
-              </div>
-            </div>
-          )}
         </div>
 
         {images.length > 0 && (
