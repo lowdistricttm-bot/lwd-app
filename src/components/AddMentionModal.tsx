@@ -15,16 +15,24 @@ interface AddMentionModalProps {
   storyId: string;
   storyUrl: string;
   existingMentions: string[];
+  musicMetadata?: any; // Aggiunta prop per la musica
   bottomOffset?: string;
 }
 
-const AddMentionModal = ({ isOpen, onClose, storyId, storyUrl, existingMentions, bottomOffset = '0px' }: AddMentionModalProps) => {
+const AddMentionModal = ({ 
+  isOpen, 
+  onClose, 
+  storyId, 
+  storyUrl, 
+  existingMentions, 
+  musicMetadata, // Recupero prop
+  bottomOffset = '0px' 
+}: AddMentionModalProps) => {
   const [search, setSearch] = useState('');
   const [results, setResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { addMention } = useStories();
 
-  // Blocco background
   useBodyLock(isOpen);
 
   useEffect(() => {
@@ -54,7 +62,13 @@ const AddMentionModal = ({ isOpen, onClose, storyId, storyUrl, existingMentions,
   }, [search]);
 
   const handleAdd = async (user: any) => {
-    await addMention.mutateAsync({ storyId, mentionId: user.id, storyUrl });
+    // Passiamo anche la musica alla mutazione
+    await addMention.mutateAsync({ 
+      storyId, 
+      mentionId: user.id, 
+      storyUrl,
+      music_metadata: musicMetadata 
+    });
   };
 
   return (
