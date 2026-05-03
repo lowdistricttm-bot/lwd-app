@@ -275,7 +275,7 @@ export const useStories = () => {
           user_id: user.id, 
           image_url: storyUrl,
           mentions: [],
-          reshared_from_profile_id: originalAuthorId
+          reshared_from_profile_id: originalAuthorId, music_metadata: music_metadata
         }]);
 
       if (error) throw error;
