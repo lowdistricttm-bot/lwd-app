@@ -1,168 +1,172 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, X, Heart, Trash2 } from "lucide-react";
-import { useStories } from "@/hooks/use-stories";
-import { useAuth } from "@/hooks/use-auth";
-import { cn } from "@/lib/utils";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-interface StoryViewerProps {
-  isOpen: boolean;
-  onClose: () => void;
-  initialStoryIndex?: number;
-  allStories?: any[];
-  initialUserIndex?: number;
-  currentUserId?: string;
+// Definizione interfaccia Story per risolvere TS2307
+export interface Story {
+  id: string;
+  user_id: string;
+  image_url: string;
+  created_at: string;
+  expires_at: string;
+  status: string;
+  is_liked?: boolean;
+  likes_count?: number;
+  user?: {
+    id: string;
+    username: string;
+    avatar_url: string;
+  };
 }
 
-const StoryViewer = ({ 
-  isOpen, 
-  onClose, 
-  initialStoryIndex = 0,
-  allStories,
-  initialUserIndex = 0,
-  currentUserId: providedUserId
-}: StoryViewerProps) => {
-  const { stories: hookStories, toggleStoryLike, deleteStory } = useStories();
-  const { user: authUser } = useAuth();
-  
-  // Se allStories è fornito (es. Highlights), usiamo quella struttura, altrimenti le storie normali
-  const displayStories = allStories && allStories.length > 0 
-    ? (allStories[initialUserIndex]?.items || [])
-    : hookStories;
+export const useStories = (userId?: string) => {
+  const queryClient = useQueryClient();
 
-  const [currentIndex, setCurrentIndex] = useState(initialStoryIndex);
+  const { data: stories = [], isLoading } = useQuery({
+    queryKey: ["active-stories"],
+    queryFn: async () => {
+      const { data: storiesData, error: storiesError } = await supabase
+        .from("stories")
+        .select(`
+          *,
+          user:profiles!stories_user_id_fkey(id, username, avatar_url),
+          likes:story_likes(user_id)
+        `)
+        .eq("status", "active")
+        .gt("expires_at", new Date().toISOString())
+        .order("created_at", { ascending: false });
 
-  useEffect(() => {
-    setCurrentIndex(initialStoryIndex);
-  }, [initialStoryIndex, initialUserIndex]);
+      if (storiesError) throw storiesError;
 
-  if (!displayStories.length) return null;
+      const currentUserId = (await supabase.auth.getUser()).data.user?.id;
 
-  const currentStory = displayStories[currentIndex];
-  const currentUser = authUser;
+      return (storiesData || []).map((story) => ({
+        ...story,
+        is_liked: story.likes?.some((like: any) => like.user_id === currentUserId) || false,
+        likes_count: story.likes?.length || 0,
+      })) as Story[];
+    },
+  });
 
-  const handleNext = () => {
-    if (currentIndex < displayStories.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-    } else {
-      onClose();
-    }
-  };
+  const toggleStoryLike = useMutation({
+    mutationFn: async ({ storyId, userId }: { storyId: string; userId: string }) => {
+      const { data: existingLike } = await supabase
+        .from("story_likes")
+        .select("id")
+        .eq("story_id", storyId)
+        .eq("user_id", userId)
+        .maybeSingle();
 
-  const handlePrev = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-    }
-  };
+      if (existingLike) return "already_liked";
 
-  const handleLike = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+      await supabase.from("story_likes").insert({ story_id: storyId, user_id: userId });
 
-    if (!currentUser || !currentStory) return;
-    if (toggleStoryLike.isPending || currentStory.is_liked) return;
-
-    try {
-      await toggleStoryLike.mutateAsync({
-        storyId: currentStory.id,
-        userId: currentUser.id,
+      const { data: storyData } = await supabase.from("stories").select("user_id").eq("id", storyId).single();
+      if (storyData && storyData.user_id !== userId) {
+        await supabase.from("messages").insert({
+          sender_id: userId,
+          receiver_id: storyData.user_id,
+          content: "❤️ ha messo like alla tua storia",
+          story_id: storyId,
+        });
+      }
+      return "success";
+    },
+    onMutate: async ({ storyId }) => {
+      await queryClient.cancelQueries({ queryKey: ["active-stories"] });
+      const previousStories = queryClient.getQueryData<Story[]>(["active-stories"]);
+      queryClient.setQueryData<Story[]>(["active-stories"], (old) => {
+        if (!old) return [];
+        return old.map((s) => s.id === storyId ? { ...s, is_liked: true, likes_count: (s.likes_count || 0) + 1 } : s);
       });
-    } catch (error) {
-      console.error("Like error:", error);
+      return { previousStories };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousStories) queryClient.setQueryData(["active-stories"], context.previousStories);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["active-stories"], refetchType: 'none' });
+    },
+  });
+
+  const uploadStory = useMutation({
+    mutationFn: async ({ files, music_metadata }: { files: File[], music_metadata?: any }) => {
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) throw new Error("Non autenticato");
+
+      for (const file of files) {
+        const fileExt = file.name.split('.').pop();
+        const filePath = `${user.id}/${Math.random()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage.from('stories').upload(filePath, file);
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage.from('stories').getPublicUrl(filePath);
+        await supabase.from('stories').insert({
+          user_id: user.id,
+          image_url: publicUrl,
+          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          music_metadata // Se la colonna esiste nel DB
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["active-stories"] });
+      toast.success("Storia pubblicata!");
     }
-  };
+  });
 
-  const handleDelete = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (window.confirm("Eliminare questa storia?")) {
-      await deleteStory.mutateAsync(currentStory.id);
-      if (displayStories.length <= 1) onClose();
-      else handleNext();
+  const deleteStory = useMutation({
+    mutationFn: async (id: string) => {
+      await supabase.from("stories").delete().eq("id", id);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["active-stories"] })
+  });
+
+  const reshareStory = useMutation({
+    mutationFn: async (data: { storyUrl: string; originalAuthorId: string; music_metadata?: any }) => {
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) throw new Error("Non autenticato");
+
+      await supabase.from("stories").insert({
+        user_id: user.id,
+        image_url: data.storyUrl,
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        music_metadata: data.music_metadata
+      });
+      
+      await supabase.from("messages").insert({
+        sender_id: user.id,
+        receiver_id: data.originalAuthorId,
+        content: "Ha aggiunto la tua storia alla sua!",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["active-stories"] });
+      toast.success("Storia aggiunta!");
     }
-  };
+  });
 
-  return (
-    <Dialog open={isOpen} onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-[450px] p-0 bg-black border-none h-[90vh] flex flex-col overflow-hidden sm:rounded-3xl">
-        <div className="relative flex-1 group">
-          <img
-            src={currentStory.image_url}
-            alt="Story"
-            className="w-full h-full object-cover"
-          />
+  const addMention = useMutation({
+    mutationFn: async (data: { storyId: string; mentionId: string; storyUrl: string; music_metadata?: any }) => {
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) throw new Error("Non autenticato");
 
-          <div className="absolute top-4 left-4 right-4 flex gap-1 z-20">
-            {displayStories.map((_: any, idx: number) => (
-              <div key={idx} className="h-1 flex-1 bg-white/30 rounded-full overflow-hidden">
-                <div
-                  className={cn(
-                    "h-full bg-white transition-all duration-300",
-                    idx === currentIndex ? "w-full" : idx < currentIndex ? "w-full" : "w-0"
-                  )}
-                />
-              </div>
-            ))}
-          </div>
+      await supabase.from("story_mentions").insert({
+        story_id: data.storyId,
+        user_id: data.mentionId
+      });
 
-          <div className="absolute top-8 left-4 right-4 flex items-center justify-between z-20">
-            <div className="flex items-center gap-3">
-              <img
-                src={currentStory.user?.avatar_url || "/placeholder.svg"}
-                alt="User"
-                className="w-10 h-10 rounded-full object-cover border-2 border-primary p-0.5"
-              />
-              <span className="text-white font-semibold text-sm shadow-sm">
-                {currentStory.user?.username || "Utente"}
-              </span>
-            </div>
-            <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={onClose}>
-              <X className="w-6 h-6" />
-            </Button>
-          </div>
+      await supabase.from("messages").insert({
+        sender_id: user.id,
+        receiver_id: data.mentionId,
+        content: `Ti ha menzionato in una storia!`,
+        images: [{ url: data.storyUrl, music_metadata: data.music_metadata }]
+      });
+    },
+    onSuccess: () => toast.success("Membro menzionato!")
+  });
 
-          <div className="absolute inset-0 flex items-center justify-between px-2">
-            <Button variant="ghost" className={cn(currentIndex === 0 && "invisible")} onClick={handlePrev}>
-              <ChevronLeft className="w-8 h-8 text-white" />
-            </Button>
-            <Button variant="ghost" onClick={handleNext}>
-              <ChevronRight className="w-8 h-8 text-white" />
-            </Button>
-          </div>
-
-          <div className="absolute bottom-6 left-0 right-0 px-6 flex items-center justify-between z-20">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={handleLike}
-                disabled={toggleStoryLike.isPending}
-                className={cn(
-                  "p-3 rounded-full transition-all",
-                  currentStory.is_liked ? "bg-red-500 text-white" : "bg-white/10 text-white backdrop-blur-md"
-                )}
-              >
-                <Heart className={cn("w-6 h-6", currentStory.is_liked && "fill-current")} />
-              </button>
-              {currentStory.likes_count > 0 && (
-                <span className="text-white text-sm font-medium bg-black/40 px-3 py-1 rounded-full backdrop-blur-sm">
-                  {currentStory.likes_count}
-                </span>
-              )}
-            </div>
-
-            {currentUser?.id === currentStory.user_id && (
-              <Button variant="destructive" size="icon" className="rounded-full" onClick={handleDelete}>
-                <Trash2 className="w-5 h-5" />
-              </Button>
-            )}
-          </div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/40 pointer-events-none" />
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
+  return { stories, isLoading, toggleStoryLike, deleteStory, uploadStory, reshareStory, addMention };
 };
-
-export default StoryViewer;
