@@ -18,6 +18,7 @@ export interface Message {
   sender?: { username: string, avatar_url: string };
   receiver?: { username: string, avatar_url: string };
   is_optimistic?: boolean;
+  images?: any[];
 }
 
 export const useMessages = (otherUserId?: string) => {
