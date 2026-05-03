@@ -151,7 +151,7 @@ export const useStories = () => {
       
       if (isCurrentlyLiked) return 'already_liked';
 
-      // 1. Inseriamo il like
+      // 1. Inseriamo il like (Operazione principale)
       const { error: likeError } = await supabase
         .from('story_likes')
         .insert([{ story_id: storyId, user_id: user.id }]);
@@ -161,17 +161,19 @@ export const useStories = () => {
         throw likeError;
       }
 
-      // 2. Inviamo il messaggio in chat come notifica
-      const { error: msgError } = await supabase.from('messages').insert([{
-        sender_id: user.id,
-        receiver_id: authorId,
-        content: "❤️ Ha messo like alla tua storia",
-        image_url: imageUrl,
-        images: [{ url: imageUrl, type: 'story_like' }]
-      }]);
-
-      if (msgError) {
-        console.error("[Stories] Errore invio messaggio like:", msgError);
+      // 2. Inviamo il messaggio in chat come notifica (Operazione non bloccante)
+      try {
+        supabase.from('messages').insert([{
+          sender_id: user.id,
+          receiver_id: authorId,
+          content: "❤️ Ha messo like alla tua storia",
+          image_url: imageUrl,
+          images: [{ url: imageUrl, type: 'story_like' }]
+        }]).then(({ error }) => {
+          if (error) console.warn("[Stories] Errore silenzioso invio messaggio like:", error);
+        });
+      } catch (e) {
+        console.warn("[Stories] Eccezione invio messaggio like:", e);
       }
 
       return 'liked';
@@ -199,7 +201,10 @@ export const useStories = () => {
       if (context?.previousStories) {
         queryClient.setQueryData(['active-stories'], context.previousStories);
       }
-      showError(err.message || "Errore durante il like");
+      // Se l'errore è di rete (fetch), non mostriamo l'errore all'utente se il like è già nel DB
+      if (err.message !== 'Failed to fetch') {
+        showError(err.message || "Errore durante il like");
+      }
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['active-stories'] });
@@ -224,23 +229,34 @@ export const useStories = () => {
         if (updateError) throw updateError;
       }
 
-      await supabase.from('messages').insert([{
-        sender_id: user.id,
-        receiver_id: mentionId,
-        content: `✨ Ti ha menzionato in una storia!`,
-        image_url: storyUrl,
-        images: [{
-          url: storyUrl,
-          type: 'story_mention',
-          music_metadata: music_metadata
-        }]
-      }]);
+      // Invio messaggio menzione (Non bloccante)
+      try {
+        supabase.from('messages').insert([{
+          sender_id: user.id,
+          receiver_id: mentionId,
+          content: `✨ Ti ha menzionato in una storia!`,
+          image_url: storyUrl,
+          images: [{
+            url: storyUrl,
+            type: 'story_mention',
+            music_metadata: music_metadata
+          }]
+        }]).then(({ error }) => {
+          if (error) console.warn("[Stories] Errore invio messaggio menzione:", error);
+        });
+      } catch (e) {
+        console.warn("[Stories] Eccezione invio messaggio menzione:", e);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['active-stories'] });
       showSuccess("Menzione inviata!");
     },
-    onError: (error: any) => showError(error)
+    onError: (error: any) => {
+      if (error.message !== 'Failed to fetch') {
+        showError(error);
+      }
+    }
   });
 
   const deleteStory = useMutation({
