@@ -128,8 +128,8 @@ const Chat = () => {
     setPreviews([]);
   };
 
-  const handleReshare = async (url: string, originalAuthorId: string) => {
-    await reshareStory.mutateAsync({ storyUrl: url, originalAuthorId });
+  const handleReshare = async (url: string, originalAuthorId: string, musicMetadata?: any) => {
+    await reshareStory.mutateAsync({ storyUrl: url, originalAuthorId, music_metadata: musicMetadata });
     navigate('/');
   };
 
@@ -142,7 +142,6 @@ const Chat = () => {
 
   if (loadingChat || authLoading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="animate-spin text-zinc-500" size={40} /></div>;
 
-  // Altezza fissa 38px ignorando la safe area
   const inputBarHeight = "38px";
 
   return (
@@ -254,15 +253,19 @@ const Chat = () => {
                         if (isSharedPost && sharedPostId) {
                           navigate(`/post/${sharedPostId}`);
                         } else {
-                          setLightboxData({ images: msgImages, index: 0 });
+                          const imageUrls = msgImages.map((img: any) => typeof img === 'string' ? img : img.url);
+                          setLightboxData({ images: imageUrls, index: 0 });
                         }
                       }}
                     >
-                      {msgImages[0].match(/\.(mp4|webm|ogg|mov)$/i) || msgImages[0].includes('video') ? (
-                        <video src={msgImages[0]} className="w-full h-full object-cover" controls />
-                      ) : (
-                        <img src={msgImages[0]} className="w-full h-full object-cover" />
-                      )}
+                      {(() => {
+                        const imgData = msgImages[0];
+                        const url = typeof imgData === 'string' ? imgData : imgData.url;
+                        if (url.match(/\.(mp4|webm|ogg|mov)$/i) || url.includes('video')) {
+                          return <video src={url} className="w-full h-full object-cover" controls />;
+                        }
+                        return <img src={url} className="w-full h-full object-cover" />;
+                      })()}
                       
                       {isMention && (
                         <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
@@ -271,7 +274,12 @@ const Chat = () => {
                           <button 
                             onClick={(e) => { 
                               e.stopPropagation(); 
-                              if(!isDragging.current) handleReshare(msgImages[0], msg.sender_id); 
+                              if(!isDragging.current) {
+                                const imgData = msgImages[0];
+                                const url = typeof imgData === 'string' ? imgData : imgData.url;
+                                const music = typeof imgData === 'string' ? null : imgData.music_metadata;
+                                handleReshare(url, msg.sender_id, music); 
+                              }
                             }}
                             disabled={reshareStory.isPending}
                             className="bg-white text-black px-8 py-3 rounded-full text-[10px] font-black uppercase italic flex items-center gap-2 hover:scale-105 transition-all shadow-2xl"
