@@ -28,6 +28,39 @@ interface StoryViewerProps {
 
 let globalMuteState = false;
 
+// Componente per l'equalizzatore animato in stile Instagram
+const MusicEqualizer = () => (
+  <div className="flex items-end gap-[2px] h-2.5 w-2.5 mb-0.5">
+    {[0, 1, 2].map((i) => (
+      <motion.div
+        key={i}
+        animate={{
+          height: ["20%", "100%", "20%"],
+        }}
+        transition={{
+          duration: 0.5 + i * 0.1,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+        className="w-[1.5px] bg-white rounded-full"
+      />
+    ))}
+  </div>
+);
+
+// Utility per il calcolo del tempo trascorso
+const getTimeAgo = (dateString: string) => {
+  const now = new Date();
+  const created = new Date(dateString);
+  const diffInHours = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60));
+  
+  if (diffInHours < 1) {
+    const diffInMinutes = Math.floor((now.getTime() - created.getTime()) / (1000 * 60));
+    return `${diffInMinutes} min`;
+  }
+  return `${diffInHours} h`;
+};
+
 const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: StoryViewerProps) => {
   const navigate = useNavigate();
   const { t, language } = useTranslation();
@@ -265,8 +298,32 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
               {userStories.avatar_url && <img src={userStories.avatar_url} className="w-full h-full object-cover" alt="" />}
             </div>
             <div className="flex flex-col drop-shadow-md">
-              <span className="text-sm font-black uppercase italic tracking-widest text-white drop-shadow-lg group-hover:text-zinc-300 transition-colors">{userStories.username}</span>
-              <span className="text-[8px] font-bold text-white/80 uppercase tracking-widest">{roleLabel}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-black uppercase italic tracking-widest text-white drop-shadow-lg group-hover:text-zinc-300 transition-colors">
+                  {userStories.username}
+                </span>
+                <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest">
+                  {getTimeAgo(currentStory.created_at)}
+                </span>
+              </div>
+              
+              <span className="text-[8px] font-bold text-white/80 uppercase tracking-widest">
+                {roleLabel}
+              </span>
+
+              {currentStory.music_metadata && (
+                <motion.div 
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="flex items-center gap-1.5 mt-1"
+                >
+                  <MusicEqualizer />
+                  <span className="text-[10px] font-bold text-white uppercase tracking-tight">
+                    {currentStory.music_metadata.artist} · {currentStory.music_metadata.title}
+                  </span>
+                  <ChevronRight size={10} className="text-white/80" />
+                </motion.div>
+              )}
             </div>
           </button>
           
@@ -279,21 +336,6 @@ const StoryViewer = ({ allStories, initialUserIndex, onClose, currentUserId }: S
             <button onClick={onClose} className="p-2 text-white hover:text-zinc-300 transition-all drop-shadow-lg bg-black/40 rounded-full ml-2"><X size={24} /></button>
           </div>
         </div>
-
-        {currentStory.music_metadata && (
-          <motion.div 
-            initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }}
-            className="absolute top-32 left-4 z-50 flex items-center gap-2 bg-black/40 backdrop-blur-md p-2 pr-4 rounded-full border border-white/10 pointer-events-none"
-          >
-            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-black animate-spin-slow">
-              <Music size={14} />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[9px] font-black uppercase italic text-white leading-none">{currentStory.music_metadata.title}</span>
-              <span className="text-[7px] font-bold uppercase text-white/60 leading-none mt-1">{currentStory.music_metadata.artist}</span>
-            </div>
-          </motion.div>
-        )}
 
         <div className="absolute inset-0 z-20 flex">
           <div className="w-1/3 h-full cursor-pointer" onClick={handlePrev} />
